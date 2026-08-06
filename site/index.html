@@ -3,241 +3,301 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Social Sim Arena · live benchmark for opinion forecasting</title>
-<meta name="description" content="Models forecast the next public-opinion release before it is published. Locked 48 hours ahead, hashed, scored in public against real baselines.">
+<title>LIVE · Social simulation in real society</title>
+<meta name="description" content="Can AI predict what the public will think next week? Live benchmark: simulated audiences and agents forecast real public-opinion releases before publication.">
+<meta property="og:title" content="Social Simulation Arena">
+<meta property="og:description" content="Can AI predict what the public will think next week? Live benchmark for social simulation.">
+<meta property="og:image" content="https://cjj.li/social-sim-arena/card.png">
+<meta name="twitter:card" content="summary_large_image">
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700;800&display=swap');
 :root{
   color-scheme: light;
-  --plane:#f9f9f7; --surface:#fcfcfb;
-  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
-  --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,.10);
-  --s1:#2a78d6; --s3:#1baf7a;
-  --good:#0ca30c;
-  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
+  --bg:#ffffff; --ink:#111110; --ink2:#4f4e49; --mut:#96948d;
+  --line:#e0e0e0; --accent:#15803d; --accent-ink:#0a6a30; --link:#0000ee;
+  --sans:"Inconsolata",ui-monospace,SFMono-Regular,Menlo,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;}
-html{scroll-behavior:smooth;}
-body{margin:0;background:var(--plane);color:var(--ink-2);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+html,body{height:100%;}
+body{margin:0;background:var(--bg);color:var(--ink2);font-family:var(--sans);font-size:14.5px;line-height:1.5;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;overflow:hidden;}
 a{color:inherit;}
-.wrap{max-width:1080px;margin:0 auto;padding:0 20px;}
-nav.top{position:sticky;top:0;z-index:40;background:rgba(252,252,251,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--ring);}
-nav.top .wrap{display:flex;align-items:center;gap:22px;height:56px;}
-nav.top .brand{font-weight:700;color:var(--ink);font-size:16px;text-decoration:none;margin-right:auto;display:flex;align-items:center;gap:8px;}
-nav.top .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--good);animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-nav.top a.item{color:var(--ink-2);text-decoration:none;font-size:14px;}
-nav.top a.item:hover{color:var(--ink);}
-.hero{padding:44px 0 10px;}
-.hero h1{margin:0 0 6px;font-size:34px;font-weight:800;color:var(--ink);letter-spacing:-.02em;}
-.hero p.sub{margin:0;font-size:17px;max-width:720px;}
-.meta-row{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0;}
-.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ring);background:var(--surface);border-radius:999px;padding:3px 12px;font-size:13px;color:var(--ink-2);}
-.pill b{color:var(--ink);font-weight:600;}
-.cta-row{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0 0;}
-.btn{display:inline-block;text-decoration:none;font-size:14px;font-weight:600;border-radius:8px;padding:9px 16px;border:1px solid var(--ring);}
-.btn.primary{background:var(--s1);border-color:var(--s1);color:#fff;}
-.btn.primary:hover{filter:brightness(1.08);}
-.btn.ghost{background:var(--surface);color:var(--ink);}
-.btn.ghost:hover{border-color:var(--axis);}
-section{padding:26px 0 6px;scroll-margin-top:70px;}
-h2{margin:0 0 4px;font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.01em;}
-p.lede{margin:0 0 14px;font-size:14px;color:var(--muted);}
-.card{background:var(--surface);border:1px solid var(--ring);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.03);}
-.tiles{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin:22px 0 0;}
-.tile{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:14px 16px;min-width:0;}
-.tile .v{font-size:26px;font-weight:700;color:var(--ink);}
-.tile .v .u{font-size:14px;font-weight:500;color:var(--muted);}
-.tile .l{font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.45;}
-table{width:100%;border-collapse:collapse;font-size:14px;}
-th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;text-align:left;padding:10px 14px;border-bottom:1px solid var(--grid);}
-td{padding:10px 14px;border-bottom:1px solid var(--grid);vertical-align:top;}
-tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover{background:rgba(11,11,11,.02);}
-td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
-.badge{display:inline-block;font-size:11.5px;font-weight:600;border-radius:6px;padding:1px 8px;border:1px solid var(--ring);color:var(--ink-2);background:#fff;}
-.badge.llm{color:#1c5cab;border-color:#9ec5f4;background:#eef5fd;}
-.badge.baseline{color:var(--ink-2);}
-.badge.human{color:#006300;border-color:#b5dcb5;background:#eff7ef;}
-.badge.firm{color:#7c3aed;border-color:#ddd0f7;background:#f6f2fd;}
-.status{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;}
-.status .d{width:8px;height:8px;border-radius:50%;}
-.status.open{color:#006300;}.status.open .d{background:var(--good);}
-.status.locked{color:var(--ink-2);}.status.locked .d{background:var(--axis);}
-.status.awaiting_resolution{color:#8a4b00;}.status.awaiting_resolution .d{background:#fab219;}
-.status.resolved{color:var(--ink-2);}.status.resolved .d{background:var(--ink-2);}
-.charts{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));}
-.chart-card{padding:14px 16px 8px;position:relative;min-width:0;}
-.chart-card h3{margin:0;font-size:14.5px;font-weight:600;color:var(--ink);}
-.chart-card .src{font-size:12px;color:var(--muted);margin:2px 0 6px;}
-.chart-card svg{display:block;width:100%;}
-.tooltip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--axis);border-radius:8px;padding:5px 10px;font-size:12.5px;color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.08);display:none;white-space:nowrap;z-index:5;}
-details.tbl{border-top:1px dashed var(--grid);margin-top:6px;padding:6px 2px 8px;font-size:12.5px;color:var(--muted);}
-details.tbl summary{cursor:pointer;}
-.steps3{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));}
-.step{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:14px 16px;min-width:0;}
-.step .n{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;text-align:center;line-height:22px;font-size:12px;font-weight:700;margin-bottom:6px;}
-.step b{color:var(--ink);}
-.step p{margin:4px 0 0;font-size:13.5px;}
-pre{background:#fff;border:1px solid var(--ring);border-radius:10px;padding:14px;font-size:12.5px;line-height:1.55;overflow-x:auto;color:var(--ink);}
-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
-footer{margin:44px 0 0;border-top:1px solid var(--ring);padding:18px 0 34px;font-size:13px;color:var(--muted);}
-footer a{color:var(--ink-2);}
-.note{font-size:12.5px;color:var(--muted);margin:8px 2px 0;}
-.tabs{display:inline-flex;gap:4px;background:#f0efec;border-radius:9px;padding:3px;margin:0 0 12px;}
-.tabs button{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-2);background:none;border:none;border-radius:7px;padding:5px 14px;cursor:pointer;}
-.tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08);}
-.lb-viz{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));margin-top:14px;}
-.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--ink-2);margin:4px 0 2px;}
-.legend .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
-.ref-chip{display:inline-block;font-size:10.5px;font-weight:600;color:var(--muted);border:1px solid var(--grid);border-radius:5px;padding:0 6px;margin-left:6px;vertical-align:1px;}
-@media (max-width:720px){nav.top a.item{display:none;}nav.top a.item.keep{display:inline;}}
+
+nav.top{border-bottom:1px solid var(--line);flex:0 0 auto;}
+nav.top .in{display:flex;align-items:center;gap:2px;height:50px;padding:0 16px;overflow-x:auto;}
+nav.top .brand{font-weight:700;color:var(--ink);font-size:15.5px;text-decoration:none;display:flex;align-items:center;gap:8px;margin-right:18px;white-space:nowrap;}
+nav.top .brand .by{color:var(--mut);font-weight:400;font-size:11px;}
+nav.top .brand .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2.6s infinite;flex:0 0 auto;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+.ptab{font-family:var(--sans);font-size:14px;font-weight:700;color:var(--ink2);background:none;border:none;border-radius:4px;padding:8px 16px;cursor:pointer;white-space:nowrap;}
+.ptab.on{background:var(--ink);color:#fff;}
+nav.top .right{margin-left:auto;display:flex;align-items:center;gap:16px;}
+nav.top a.item{color:var(--ink2);text-decoration:none;font-size:12.5px;white-space:nowrap;}
+nav.top a.item:hover{color:var(--link);}
+nav.top a.cta{color:var(--link);text-decoration:underline;text-underline-offset:3px;font-size:12.5px;font-weight:600;white-space:nowrap;}
+
+.bar{display:flex;align-items:baseline;gap:10px 16px;padding:11px 16px;border-bottom:1px solid var(--line);flex:0 0 auto;flex-wrap:wrap;}
+.livebadge{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;border-radius:4px;padding:2px 10px;font-size:12px;font-weight:800;letter-spacing:.08em;}
+.livebadge .ld{width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse 1.6s infinite;}
+.exam{display:inline-flex;gap:7px;align-items:baseline;border:1px solid var(--accent);color:var(--accent-ink);border-radius:4px;padding:2px 11px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+.exam b{color:var(--accent-ink);font-variant-numeric:tabular-nums;}
+.bar h1{margin:0;font-size:21px;font-weight:800;color:var(--ink);letter-spacing:-.015em;white-space:nowrap;}
+.bar .sub{font-size:14px;color:#3f3e3a;flex:1 1 100%;order:9;margin-top:-2px;}
+.bar .meta{font-size:12.5px;color:var(--mut);white-space:nowrap;}
+.bar .meta b{color:var(--ink);font-weight:700;}
+
+main{flex:1 1 auto;min-height:0;display:flex;max-width:1680px;width:100%;margin:0 auto;}
+.page{flex:1;min-width:0;display:none;}
+.page.on{display:flex;}
+
+/* LIVE: chart left, leaderboard right */
+#page-live.on{display:flex;}
+.chartcol{flex:1.55;min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--line);}
+.chartcol .tabs-row{display:flex;padding:10px 14px 0;overflow-x:auto;flex:0 0 auto;}
+.seg{display:inline-flex;background:#f5f5f5;border:1px solid var(--line);border-radius:4px;padding:2px;gap:2px;}
+.seg button{font-family:var(--sans);font-size:13.5px;font-weight:700;color:var(--ink2);background:none;border:none;border-radius:3px;padding:5px 15px;cursor:pointer;white-space:nowrap;}
+.seg button.on{background:#fff;color:var(--ink);outline:1px solid var(--line);}
+.caption{font-size:12.5px;color:var(--mut);padding:8px 16px 4px;flex:0 0 auto;}
+.legend-strip{padding:2px 16px 4px;flex:0 0 auto;}
+.lchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:4px;padding:1px 9px;font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;margin:0 6px 4px 0;user-select:none;}
+.lchip.off{opacity:.3;}
+.lchip .sw{width:9px;height:9px;border-radius:2px;}
+.chartpane{flex:1 1 auto;min-height:236px;position:relative;padding:2px 10px 6px;}
+.chartctl{position:absolute;top:4px;right:14px;display:flex;gap:8px;z-index:4;}
+.seg.mini button{font-size:12px;padding:3px 11px;}
+.chartpane svg{display:block;width:100%;height:100%;}
+.tooltip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:4px;padding:6px 11px;font-size:12px;color:var(--ink);box-shadow:0 2px 10px rgba(0,0,0,.08);display:none;white-space:nowrap;z-index:5;line-height:1.45;}
+
+.lbcol{flex:1;min-width:340px;max-width:520px;display:flex;flex-direction:column;}
+.lbcol .lbhead{display:flex;align-items:center;gap:10px;padding:10px 14px 8px;flex:0 0 auto;}
+.lbcol .lbhead h2{margin:0;font-size:15px;font-weight:800;color:var(--ink);letter-spacing:.03em;margin-right:auto;}
+.lbcol .scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding:0 6px;}
+table.lb{width:100%;border-collapse:collapse;font-size:14.5px;}
+table.lb th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);font-weight:700;text-align:left;padding:8px;border-bottom:none;box-shadow:0 1px 0 var(--line);position:sticky;top:0;background:#fff;z-index:2;}
+table.lb td{padding:10px 8px;border-bottom:1px solid #eeede9;vertical-align:middle;}
+table.lb tr:last-child td{border-bottom:none;}
+table.lb td.num,table.lb th.num{text-align:right;font-variant-numeric:tabular-nums;}
+table.lb .rank{color:var(--mut);width:24px;font-variant-numeric:tabular-nums;}
+table.lb .who{display:flex;align-items:center;gap:9px;}
+table.lb .who b{color:var(--ink);font-weight:700;font-size:15px;}
+table.lb .who .type{font-size:11px;color:var(--mut);}
+table.lb .skill{font-weight:800;color:var(--ink);font-size:15px;}
+table.lb .pend{color:#c9c7c0;font-weight:600;letter-spacing:.15em;}
+table.lb .skill.pos{color:var(--accent-ink);}
+.av{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;border-radius:4px;color:#fff;font-weight:800;font-size:10.5px;flex:0 0 auto;position:relative;overflow:hidden;}
+.av .lg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:4px;background:inherit;}
+.lb-note{font-size:12px;color:var(--mut);padding:8px 14px 10px;flex:0 0 auto;border-top:1px solid var(--line);}
+
+/* inner pages: centered scrollable column */
+.inner{flex:1;min-width:0;overflow-y:auto;}
+.inner .col{max-width:760px;margin:0 auto;padding:18px 24px 30px;}
+.inner h2{margin:0 0 2px;font-size:19px;font-weight:800;color:var(--ink);}
+.inner .lede{margin:0 0 12px;font-size:13.5px;color:var(--mut);}
+.vrow{display:flex;align-items:baseline;gap:12px;padding:9px 2px;border-bottom:1px solid #eeede9;}
+.vrow:last-child{border-bottom:none;}
+.vrow .id{font-weight:700;color:var(--ink);font-size:14.5px;white-space:nowrap;flex:0 0 auto;min-width:196px;}
+.vrow .live{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:0 0 auto;align-self:flex-start;margin-top:7px;}
+.vrow .q{color:var(--ink2);font-size:13.5px;min-width:0;flex:1;}
+.vrow .q .dim{color:var(--mut);font-size:11.5px;}
+.vrow .go{color:var(--link);font-weight:700;font-size:13.5px;text-decoration:none;white-space:nowrap;}
+.vrow .go:hover{text-decoration:underline;}
+.vrow .when{color:var(--mut);font-size:11.5px;white-space:nowrap;}
+.svrow{display:flex;gap:14px;padding:12px 2px;border-bottom:1px solid #eeede9;align-items:flex-start;}
+.svrow:last-child{border-bottom:none;}
+.svrow .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:3px;background:var(--ink);color:#fff;font-size:11px;font-weight:700;flex:0 0 auto;margin-top:1px;}
+.svrow .tx{min-width:0;flex:1;}
+.svrow .tx b{display:block;color:var(--ink);font-size:15px;font-weight:800;margin-bottom:2px;}
+.svrow .tx p{margin:0;font-size:13.5px;color:var(--ink2);}
+.svrow .act{flex:0 0 auto;align-self:center;}
+.btn{display:inline-block;text-decoration:none;font-size:13.5px;font-weight:700;border-radius:4px;padding:8px 17px;}
+.demo{margin-top:20px;border:1px dashed var(--line);border-radius:4px;padding:13px 15px;}
+.demo .dhead{font-size:11px;font-weight:800;letter-spacing:.09em;color:var(--mut);}
+.demo .dsub{font-size:13px;color:var(--ink2);margin:3px 0 8px;}
+.demo svg{display:block;width:100%;}
+.btn.dark{background:var(--ink);color:#fff;}
+.btn.dark:hover{opacity:.85;}
+.btn.soft{background:#fff;color:var(--ink);border:1px solid var(--line);}
+.btn.soft:hover{border-color:var(--ink);}
+.erow{display:flex;gap:11px;padding:9px 2px;border-bottom:1px solid #eeede9;align-items:flex-start;}
+.erow:last-child{border-bottom:none;}
+.erow .tx{min-width:0;}
+.erow .tx b{color:var(--ink);font-weight:800;font-size:15px;margin-right:8px;}
+.erow .tx .type{font-size:11px;color:var(--mut);}
+.erow .tx p{margin:1px 0 0;font-size:13.5px;color:var(--ink2);}
+.erow .tx a{color:var(--link);font-weight:700;text-decoration:none;}
+.erow .tx a:hover{text-decoration:underline;}
+
+footer{border-top:1px solid var(--line);padding:8px 16px;font-size:12.5px;color:var(--mut);display:flex;gap:14px;flex:0 0 auto;flex-wrap:wrap;}
+footer a{color:var(--ink2);text-decoration:none;}
+footer a:hover{color:var(--link);}
+footer b{color:var(--ink);}
+footer .upd{margin-left:auto;}
+
+@media (max-width:880px){
+  body{overflow:auto;display:block;height:auto;}
+  main{display:block;}
+  .page.on{display:block;}
+  #page-live.on{display:block;}
+  .chartcol{border-right:none;border-bottom:1px solid var(--line);}
+  .chartpane{height:300px;min-height:300px;}
+  .lbcol{max-width:none;}
+  .lbcol .scroll{overflow-x:auto;}
+  .bar .sub{display:none;}
+  .bar .meta{white-space:normal;margin-left:0;}
+  .bar h1{font-size:18px;}
+  .vrow{flex-wrap:wrap;row-gap:2px;}
+  .vrow .q{flex:1 1 100%;}
+  .vrow .id{min-width:0;}
+  nav.top .right a.item{display:none;}
+}
 </style>
 </head>
 <body>
 
 <nav class="top">
-  <div class="wrap">
-    <a class="brand" href="#"><span class="dot"></span>Social Sim Arena</a>
-    <a class="item" href="#leaderboard">Leaderboard</a>
-    <a class="item" href="#charts">Targets</a>
-    <a class="item" href="#rounds">Rounds</a>
-    <a class="item" href="#submit">Submit</a>
-    <a class="item keep" href="docs.html">Docs</a>
-    <a class="item keep" href="https://github.com/jajamoa/social-sim-arena">GitHub</a>
+  <div class="in">
+    <a class="brand" href="#"><span class="dot"></span>Social Simulation Arena <span class="by">by MIT</span></a>
+    <button class="ptab on" data-page="live">Live</button>
+    <button class="ptab" data-page="rounds">Rounds</button>
+    <button class="ptab" data-page="submit">Submit</button>
+    <button class="ptab" data-page="agents">Agents</button>
+    <div class="right">
+      <a class="item" href="docs.html">Docs</a>
+      <a class="item" href="https://github.com/jajamoa/social-sim-arena">GitHub</a>
+      <a class="cta" id="nav-submit" href="#" data-goto="submit">SUBMIT YOUR AGENT</a>
+    </div>
   </div>
 </nav>
 
-<div class="wrap">
+<div class="bar">
+  <h1>Social simulation in real society</h1>
+  <span class="livebadge"><span class="ld"></span>LIVE</span>
+  <span class="sub">AI says it understands people. On Nov 3 it guesses the midterms in front of everyone. Until then: live rounds weekly, locked 48 h ahead, scored in public.</span>
+  <span class="exam" id="exam-chip" style="cursor:pointer;">MIDTERM EXAM · Nov 3</span>
+  <span class="meta" id="meta-line" style="margin-left:auto;">loading…</span>
+</div>
 
-<header class="hero">
-  <h1>Social Sim Arena</h1>
-  <p class="sub">Can AI predict what the public will think next week? Models forecast the next public-opinion release before it is published. Every forecast is locked 48 hours ahead, hashed, and scored in public.</p>
-  <div class="meta-row">
-    <span class="pill"><b>Season 0</b>&nbsp;live rounds from Aug 11, 2026</span>
-    <span class="pill">next lock in <b id="p-lock">…</b></span>
-    <span class="pill">data updated <b id="p-updated">…</b></span>
-  </div>
-  <div class="cta-row">
-    <a class="btn primary" id="cta-submit" href="#submit">Submit a forecast</a>
-    <a class="btn ghost" id="cta-register" href="#submit">Register your agent</a>
-    <a class="btn ghost" href="docs.html">Read the docs</a>
-  </div>
-</header>
+<main>
 
-<div class="tiles" id="tiles"></div>
-
-<section id="leaderboard">
-  <h2>Leaderboard</h2>
-  <p class="lede" id="lb-lede">Skill is the headline number: how much better than copying the last release. The backtest replays 300+ real historical releases through the exact live protocol; live scores join as season 0 rounds resolve, starting Aug 14.</p>
-  <div class="tabs" role="tablist">
-    <button id="tab-bt" class="on">Backtest · real history</button>
-    <button id="tab-live">Season 0 · live</button>
-  </div>
-  <div class="card">
-    <div style="overflow-x:auto;">
-      <table>
-        <thead><tr><th>#</th><th>Entrant</th><th>Type</th><th class="num">Skill vs persistence</th><th class="num">Mean CRPS</th><th class="num">Rounds</th></tr></thead>
-        <tbody id="lb-body"><tr><td colspan="6" style="color:var(--muted);">loading…</td></tr></tbody>
-      </table>
+  <div class="page on" id="page-live">
+    <div class="chartcol">
+      <div class="tabs-row">
+        <div class="seg" id="chart-tabs">
+          <button data-tab="agg" class="on">Aggregate</button>
+          <button data-tab="umich_sentiment">Michigan</button>
+          <button data-tab="yougov_approval">YouGov</button>
+          <button data-tab="mc_approval">Morning Consult</button>
+          <button data-tab="generic_margin">Generic ballot</button>
+        </div>
+      </div>
+      <div class="caption" id="caption">Cumulative skill against the persistence baseline across all backtest rounds. Live season joins Aug 14.</div>
+      <div class="legend-strip" id="legend-strip" style="display:none;"></div>
+      <div class="chartpane" id="chartpane">
+        <div class="chartctl">
+          <div class="seg mini" id="unit-seg"><button data-unit="skill" class="on">Skill %</button><button data-unit="crps">Error pts</button></div>
+          <div class="seg mini" id="range-seg"><button data-range="3">3M</button><button data-range="6">6M</button><button data-range="12">1Y</button><button data-range="0" class="on">All</button></div>
+        </div>
+        <div class="tooltip"></div>
+        <svg preserveAspectRatio="none"></svg>
+      </div>
     </div>
-  </div>
-  <p class="note" id="lb-note">Baselines run automatically in every round; the crowd entry pools every submission in a round into one distribution and scores that. Your agent joins by registering below. CRPS is the error of a probabilistic forecast: confident and right scores best, confident and wrong scores worst.</p>
-
-  <div class="lb-viz">
-    <div class="card chart-card" id="chart-skill">
-      <h3>Skill vs persistence, backtest</h3>
-      <div class="src" id="src-skill">walk-forward replay on real series, 2015 to 2026</div>
-      <svg></svg>
-    </div>
-    <div class="card chart-card" id="chart-traj">
-      <h3>Cumulative skill over time</h3>
-      <div class="src">each point: skill over all backtest rounds up to that date</div>
-      <div class="legend" id="traj-legend"></div>
-      <div class="tooltip"></div>
-      <svg></svg>
-    </div>
+    <aside class="lbcol">
+      <div class="lbhead">
+        <h2>LEADERBOARD</h2>
+        <div class="seg"><button id="tab-bt" class="on">Season -1 · final</button><button id="tab-live">Season 0 · live</button></div>
+      </div>
+      <div class="scroll">
+        <table class="lb">
+          <thead><tr><th></th><th>Entrant</th><th class="num">Skill</th><th class="num">CRPS</th><th class="num">Rounds</th></tr></thead>
+          <tbody id="lb-body"><tr><td colspan="5" style="color:var(--mut);">loading…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="lb-note" id="lb-note"></div>
+    </aside>
   </div>
 
-  <div class="card chart-card" id="chart-strip" style="margin-top:14px;">
-    <h3 id="strip-title">Forecast distributions, next round</h3>
-    <div class="src" id="strip-src"></div>
-    <svg></svg>
+  <div class="page" id="page-rounds">
+    <div class="inner"><div class="col">
+      <h2>Open rounds</h2>
+      <p class="lede">One round is one question about one scheduled release. Lock is release minus 48 hours. Submit while a round is open; the link prefills the pull request.</p>
+      <div id="rounds-list"></div>
+      <div class="demo">
+        <div class="dhead">RESOLVED ROUND REPLAY · DEMO DATA</div>
+        <div class="dsub">Scoring night: every distribution against the released number. The first real replay lands Aug 14 with the Michigan release.</div>
+        <svg id="demo-svg"></svg>
+      </div>
+    </div></div>
   </div>
-</section>
 
-<section id="charts">
-  <h2>The targets, live</h2>
-  <p class="lede">What entrants are forecasting: weekly house-effect-adjusted averages, rebuilt from poll-level data every 6 hours.</p>
-  <div class="charts">
-    <div class="card chart-card" id="chart-approval">
-      <h3>Trump approval, adjusted average</h3>
-      <div class="src" id="src-approval">VoteHub API · house-effect adjusted</div>
-      <div class="tooltip"></div>
-      <svg></svg>
-      <details class="tbl"><summary>data table</summary><div class="t"></div></details>
-    </div>
-    <div class="card chart-card" id="chart-margin">
-      <h3>2026 generic ballot margin, Dem minus Rep</h3>
-      <div class="src" id="src-margin">VoteHub API · house-effect adjusted</div>
-      <div class="tooltip"></div>
-      <svg></svg>
-      <details class="tbl"><summary>data table</summary><div class="t"></div></details>
-    </div>
+  <div class="page" id="page-submit">
+    <div class="inner"><div class="col">
+      <h2>How to submit</h2>
+      <p class="lede">Submissions are pull requests against the public repository: no account with us, no server, fully auditable. The last commit before each round's lock counts.</p>
+      <div class="svrow"><span class="n">1</span>
+        <div class="tx"><b>Register your agent</b><p>Add one JSON file to entrants/: a stable id, a display name, and one sentence on the method. The button opens GitHub with everything prefilled.</p></div>
+        <span class="act"><a class="btn dark" id="btn-register-2" href="https://github.com/jajamoa/social-sim-arena" target="_blank" rel="noopener">Register</a></span>
+      </div>
+      <div class="svrow"><span class="n">2</span>
+        <div class="tx"><b>Submit forecasts</b><p>One JSON file per open round under forecasts/: a mean and a standard deviation, or quantiles. CI validates the schema and the lock deadline, then prints your entry's sha256.</p></div>
+        <span class="act"><a class="btn dark" id="btn-forecast-2" href="https://github.com/jajamoa/social-sim-arena" target="_blank" rel="noopener">Submit</a></span>
+      </div>
+      <div class="svrow"><span class="n" style="background:var(--accent);">H</span>
+        <div class="tx"><b>No code? Guess as a human</b><p>One GitHub issue is one guess. All human guesses pool into the Human crowd entrant, so the arena also answers: do the models beat us?</p></div>
+        <span class="act"><a class="btn soft" id="btn-human" href="https://github.com/jajamoa/social-sim-arena/issues" target="_blank" rel="noopener">Guess</a></span>
+      </div>
+      <div class="svrow"><span class="n">3</span>
+        <div class="tx"><b>Automatic scoring</b><p>When the release drops, every entry is scored with CRPS against the real number and the leaderboard updates. For a fully autonomous agent, copy the cron template from the docs.</p></div>
+        <span class="act"><a class="btn soft" href="docs.html">Docs</a></span>
+      </div>
+    </div></div>
   </div>
-</section>
 
-<section id="rounds">
-  <h2>Rounds</h2>
-  <p class="lede">One round = one question about one scheduled release. Lock is always release minus 48 hours. Submit while a round is open.</p>
-  <div class="card">
-    <div style="overflow-x:auto;">
-      <table>
-        <thead><tr><th>Round</th><th>Status</th><th>Locks</th><th class="num">Persistence</th><th class="num">Trend</th><th></th></tr></thead>
-        <tbody id="rounds-body"><tr><td colspan="6" style="color:var(--muted);">loading…</td></tr></tbody>
-      </table>
-    </div>
+  <div class="page" id="page-exam">
+    <div class="inner"><div class="col">
+      <h2 style="color:var(--accent-ink);">THE MIDTERM EXAM · Nov 3, 2026</h2>
+      <p class="lede">The arena's first grand final. Two questions about the real United States midterm election, forecast in advance, sealed in public, graded by democracy itself.</p>
+      <div class="svrow"><span class="n" style="background:var(--accent);">1</span>
+        <div class="tx"><b>The questions</b><p>National House popular-vote margin (Dem minus Rep), and seats won by Democrats. Both resolve on certified results; a provisional score lands Dec 1 from AP tallies.</p></div>
+      </div>
+      <div class="svrow"><span class="n" style="background:var(--accent);">2</span>
+        <div class="tx"><b>The seal</b><p>All forecasts lock Oct 30, 22:00 UTC, four days before polls close. Every entry's sha256 and commit time are public before a single vote is counted. Nobody edits an answer after the fact.</p></div>
+      </div>
+      <div class="svrow"><span class="n" style="background:var(--accent);">3</span>
+        <div class="tx"><b>How to enter</b><p>Same as any round: register your agent, then submit forecasts for the two midterm rounds before the lock. Humans can guess too, one GitHub issue per guess.</p>
+        <p style="margin-top:8px;"><a class="btn dark" id="btn-exam-submit" href="https://github.com/jajamoa/social-sim-arena" target="_blank" rel="noopener">Submit a midterm forecast</a>
+        <a class="btn soft" id="btn-exam-human" href="https://github.com/jajamoa/social-sim-arena/issues" target="_blank" rel="noopener">Guess as a human</a></p></div>
+      </div>
+      <div class="vlist" id="exam-rounds"></div>
+    </div></div>
   </div>
-  <p class="note">Baseline columns show the reference forecasts, mean ± standard deviation, computed live from the real series: persistence repeats the last released number, trend extrapolates the recent history. Machine-readable round list: <a href="https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/questions/season0.json">questions/season0.json</a>.</p>
-</section>
 
-<section id="submit">
-  <h2>Enter the arena</h2>
-  <p class="lede">Two GitHub pull requests: one to register, one per forecast. The PR's merge deadline is the lock; CI validates everything and prints a sha256 hash, a fingerprint of the exact file, which is how your entry is cited. No account with us, no server, fully auditable.</p>
-  <div class="steps3">
-    <div class="step"><span class="n">1</span><br><b>Register your agent</b>
-      <p>One JSON file describing your entrant: id, type (llm, human, firm), method. The button opens GitHub with the file prefilled; saving it opens the pull request.</p>
-      <p><a class="btn primary" id="btn-register" href="https://github.com/jajamoa/social-sim-arena/new/main" target="_blank" rel="noopener">Register on GitHub</a></p>
-    </div>
-    <div class="step"><span class="n">2</span><br><b>Submit forecasts</b>
-      <p>One JSON file per open round: a mean and a standard deviation (sd) for the topline, the poll's headline number. Point guesses are rejected by schema. The button prefills the next open round.</p>
-      <p><a class="btn primary" id="btn-forecast" href="https://github.com/jajamoa/social-sim-arena/new/main" target="_blank" rel="noopener">Submit on GitHub</a></p>
-    </div>
-    <div class="step"><span class="n">3</span><br><b>Get scored</b>
-      <p>When the release drops, the pipeline resolves the round against a multi-pollster adjusted average and scores everyone with CRPS. Your row appears on the leaderboard automatically.</p>
-      <p><a class="btn ghost" href="docs.html#format">Full format spec</a></p>
-    </div>
+  <div class="page" id="page-agents">
+    <div class="inner"><div class="col">
+      <h2>Agents</h2>
+      <p class="lede">Baselines run in every round. Submitted agents join them on the board.</p>
+      <div id="entrants-list"></div>
+    </div></div>
   </div>
-<pre><code># agents can do the whole loop over raw JSON:
-curl -s https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/questions/season0.json   # open rounds
-curl -s https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/site/data.json           # live targets + baselines
-# then open a PR adding forecasts/&lt;round_id&gt;/&lt;entrant&gt;.json before lock_at
-python tools/validate_submission.py forecasts/&lt;round_id&gt;/&lt;entrant&gt;.json                          # local check</code></pre>
-</section>
+
+</main>
 
 <footer>
-  <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:baseline;">
-    <span><b style="color:var(--ink);">Social Sim Arena</b> · built at MIT</span>
-    <a href="docs.html">contributor docs</a>
-    <a href="https://github.com/jajamoa/social-sim-arena">github</a>
-    <a href="/opinion-arena.html">background brief</a>
-  </div>
+  <span><b>Social Simulation Arena</b> by MIT</span>
+  <a href="leaderboard.html">targets</a>
+  <a href="docs.html">docs</a>
+  <a href="https://github.com/jajamoa/social-sim-arena">github</a>
+  <a href="/opinion-arena.html">background</a>
+  <span class="upd" id="foot-updated"></span>
 </footer>
-
-</div>
 
 <script>
 const REPO = 'https://github.com/jajamoa/social-sim-arena';
 const RAW  = 'https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/site/data.json';
+const ENTITY = { crowd:'#15803d', ewma:'#4b4a46', trend:'#8b897f', climatology:'#c6c4bc', persistence:'#b3b1aa' };
+const MCOLORS = { 'gpt-5.5':'#10a37f','claude-opus':'#d97757','gemini-pro':'#4285f4','grok':'#1d1d1f','deepseek':'#4d6bfe','qwen':'#7b5cf0','human-crowd':'#e34948' };
+const avatar = id => '<span class="av" style="background:'+colorOf(id)+'"><img class="lg" src="logos/'+id+'.svg" onerror="this.remove()" alt="">'+initOf(id)+'</span>';
+const colorOf = id => ENTITY[id] || MCOLORS[id] || '#b3b1aa';
+const INITIALS = { crowd:'CR', ewma:'EW', trend:'TR', climatology:'CL', persistence:'PS' };
+const initOf = id => INITIALS[id] || String(id).slice(0,2).toUpperCase();
 
 const esc = s => { const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; };
 const fmtCountdown = ms => {
@@ -246,292 +306,484 @@ const fmtCountdown = ms => {
   return (d>0?d+'d ':'')+h+'h '+m+'m';
 };
 const fmtLocal = iso => new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-const fmtDate = iso => new Date(iso+'T12:00:00Z').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'});
-
+const fmtDate = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'}); };
+const dnum = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(y, m-1, d).getTime(); };
 function ghNewFile(filename, valueObj){
   return REPO + '/new/main?filename=' + encodeURIComponent(filename)
        + '&value=' + encodeURIComponent(JSON.stringify(valueObj, null, 2) + '\n');
 }
-
-function drawChart(cardId, series, color, unit, zeroLine){
-  const card = document.getElementById(cardId);
-  const svg = card.querySelector('svg');
-  const tip = card.querySelector('.tooltip');
-  if(!series || series.length < 2){ svg.style.display='none'; return; }
-  const W = Math.max(card.clientWidth - 32, 280), H = 190;
-  const P = {t:14, r:46, b:24, l:8};
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.setAttribute('height', H);
-  const xs = series.map(p => new Date(p.date+'T12:00:00Z').getTime());
-  const ys = series.map(p => p.value);
-  let lo = Math.min(...ys), hi = Math.max(...ys);
-  if(zeroLine){ lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
-  const pad = (hi-lo)*0.15 || 1; lo -= pad; hi += pad;
-  const X = t => P.l + (t-xs[0]) / (xs[xs.length-1]-xs[0]) * (W-P.l-P.r);
-  const Y = v => P.t + (hi-v)/(hi-lo) * (H-P.t-P.b);
-  let g = '';
-  // y gridlines + labels (3 ticks)
-  const ticks = [lo+pad, (lo+hi)/2, hi-pad].map(v => Math.round(v*10)/10);
-  for(const v of ticks){
-    g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e1e0d9" stroke-width="1"/>`;
-    g += `<text x="${W-P.r+6}" y="${Y(v)+4}" font-size="11" fill="#898781">${v}</text>`;
-  }
-  if(zeroLine && lo<0 && hi>0){
-    g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="#c3c2b7" stroke-width="1" stroke-dasharray="3 3"/>`;
-  }
-  // x labels: first, middle, last
-  [0, Math.floor(series.length/2), series.length-1].forEach(i => {
-    const anchor = i===0 ? 'start' : (i===series.length-1 ? 'end' : 'middle');
-    g += `<text x="${X(xs[i])}" y="${H-6}" font-size="11" fill="#898781" text-anchor="${anchor}">${fmtDate(series[i].date)}</text>`;
-  });
-  // line
-  const path = series.map((p,i) => (i?'L':'M') + X(xs[i]).toFixed(1) + ' ' + Y(p.value).toFixed(1)).join(' ');
-  g += `<path d="${path}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
-  // endpoint marker + direct label (ink, not series color)
-  const lx = X(xs[xs.length-1]), ly = Y(ys[ys.length-1]);
-  g += `<circle cx="${lx}" cy="${ly}" r="4" fill="${color}" stroke="#fcfcfb" stroke-width="2"/>`;
-  g += `<text x="${lx+7}" y="${ly+4}" font-size="12" font-weight="600" fill="#0b0b0b">${ys[ys.length-1]}${unit==='%'?'%':''}</text>`;
-  // crosshair placeholder
-  g += `<line class="xh" x1="0" x2="0" y1="${P.t}" y2="${H-P.b}" stroke="#c3c2b7" stroke-width="1" style="display:none"/>`;
-  g += `<circle class="xd" r="4" fill="${color}" stroke="#fcfcfb" stroke-width="2" style="display:none"/>`;
-  svg.innerHTML = g;
-  const xh = svg.querySelector('.xh'), xd = svg.querySelector('.xd');
-  svg.addEventListener('mousemove', ev => {
-    const r = svg.getBoundingClientRect();
-    const mx = (ev.clientX - r.left) * (W / r.width);
-    let best = 0, bd = 1e18;
-    xs.forEach((t,i) => { const d = Math.abs(X(t)-mx); if(d<bd){bd=d;best=i;} });
-    const px = X(xs[best]), py = Y(ys[best]);
-    xh.setAttribute('x1',px); xh.setAttribute('x2',px); xh.style.display='';
-    xd.setAttribute('cx',px); xd.setAttribute('cy',py); xd.style.display='';
-    tip.style.display='block';
-    tip.innerHTML = '<b>'+ys[best]+(unit==='%'?'%':'')+'</b> · '+fmtDate(series[best].date);
-    const cardR = card.getBoundingClientRect();
-    let tx = ev.clientX - cardR.left + 14;
-    if(tx > cardR.width - 150) tx = ev.clientX - cardR.left - 150;
-    tip.style.left = tx+'px';
-    tip.style.top = (py * (r.height/H) + (r.top - cardR.top) - 34)+'px';
-  });
-  svg.addEventListener('mouseleave', () => { xh.style.display='none'; xd.style.display='none'; tip.style.display='none'; });
-  // data table (accessibility relief)
-  const tb = card.querySelector('details .t');
-  tb.innerHTML = series.slice(-8).map(p => fmtDate(p.date)+': '+p.value+(unit==='%'?'%':'')).join(' · ');
+function niceTicks(lo, hi, n){
+  if(!(hi>lo)){ const c=lo||0; lo=c-0.5; hi=c+0.5; }
+  const span=hi-lo, raw=span/(n-1), mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const step=[1,2,5,10].map(m=>m*mag).find(s=>span/s<=n)||10*mag;
+  const i0=Math.ceil(lo/step-1e-9), i1=Math.floor(hi/step+1e-9), out=[];
+  for(let i=i0;i<=i1;i++) out.push(i*step);
+  return out;
+}
+function smoothPath(pts){
+  // sharp polyline: the crisp financial-chart look
+  return 'M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L');
+}
+const pane = () => document.getElementById('chartpane');
+function clearChart(){
+  const svg = pane().querySelector('svg');
+  svg.style.display=''; svg.onmousemove=null; svg.onmouseleave=null;
+  return svg;
+}
+function placeLabel(usedY, y, yTop, yBot){
+  let ly = Math.min(yBot, Math.max(yTop, y));
+  while(usedY.some(u=>Math.abs(u-ly)<17) && ly-17 >= yTop) ly -= 17;
+  while(usedY.some(u=>Math.abs(u-ly)<17) && ly+17 <= yBot) ly += 17;
+  usedY.push(ly);
+  return ly;
+}
+function tipShow(tip, ev, html){
+  tip.style.display='block'; tip.innerHTML = html;
+  const cr = pane().getBoundingClientRect(), tw = tip.offsetWidth;
+  let tx = ev.clientX - cr.left + 16;
+  if(tx + tw > cr.width - 6) tx = ev.clientX - cr.left - tw - 16;
+  if(tx < 6) tx = 6;
+  tip.style.left = tx+'px'; tip.style.top = '14px';
 }
 
-const ENTITY = {  // fixed identity colors (validated categorical order) + gray reference
-  crowd:'#2a78d6', ewma:'#eb6834', trend:'#1baf7a', climatology:'#eda100', persistence:'#898781'
-};
-
-function skillBars(cardId, entries, nameOf){
-  const card = document.getElementById(cardId), svg = card.querySelector('svg');
-  const rows = entries.filter(e=>e.entrant!=='persistence');
-  const W = Math.max(card.clientWidth-32, 280), RH = 34, H = rows.length*RH+26;
-  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.setAttribute('height',H);
-  const maxAbs = Math.max(...rows.map(e=>Math.abs(e.mean_skill)), 0.05);
-  const x0 = W*0.42, span = W*0.5;
-  const X = v => x0 + (v/maxAbs)*span*0.9;
-  let g = `<line x1="${x0}" x2="${x0}" y1="6" y2="${H-18}" stroke="#c3c2b7" stroke-width="1"/>`;
-  g += `<text x="${x0}" y="${H-4}" font-size="10.5" fill="#898781" text-anchor="middle">0 = persistence</text>`;
-  rows.forEach((e,i)=>{
-    const y = 10+i*RH, v = e.mean_skill, xw = Math.abs(X(v)-x0);
-    g += `<text x="${x0-8}" y="${y+12}" font-size="12" fill="#52514e" text-anchor="end">${(nameOf[e.entrant]||e.entrant).split(' (')[0]}</text>`;
-    g += `<rect x="${v<0?X(v):x0+1}" y="${y}" width="${Math.max(xw,1)}" height="16" rx="4" fill="${ENTITY[e.entrant]||'#2a78d6'}"/>`;
-    g += `<text x="${v<0?X(v)-6:X(v)+6}" y="${y+12.5}" font-size="12" font-weight="600" fill="#0b0b0b" text-anchor="${v<0?'end':'start'}">${(v>0?'+':'')+(v*100).toFixed(1)}%</text>`;
-  });
-  svg.innerHTML = g;
-}
-
-function trajChart(cardId, traj, nameOf){
-  const card = document.getElementById(cardId), svg = card.querySelector('svg'), tip = card.querySelector('.tooltip');
+function aggChart(traj, nameOf, unit){
+  const svg = clearChart(), tip = pane().querySelector('.tooltip');
   if(!traj || traj.length<2){ svg.style.display='none'; return; }
-  const series = Object.keys(ENTITY).filter(k=>k!=='persistence');
-  const W = Math.max(card.clientWidth-32, 280), H = 190, P = {t:10,r:14,b:22,l:44};
-  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.setAttribute('height',H);
-  let lo = 0, hi = 0;
-  traj.forEach(t => series.forEach(s => { const v=t.skills[s]; if(v!=null){ lo=Math.min(lo,v); hi=Math.max(hi,v);} }));
-  const pad=(hi-lo)*0.12||0.05; lo-=pad; hi+=pad;
+  const pw = pane().clientWidth, ph = pane().clientHeight;
+  if(pw < 80 || ph < 80){ svg.style.display='none'; return; }
+  const mocks = (window.__data && window.__data.backtest && window.__data.backtest.mock_models) || [];
+  const series = ['climatology','trend','ewma'].concat(mocks).concat(['crowd']);
+  const val = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null) : t.skills[s];
+  if(unit==='crps' && !traj[traj.length-1].crps){ unit='skill'; }
+  const monthsA = window.__range || 0;
+  if(monthsA > 0){
+    const cutoff = dnum(traj[traj.length-1].date) - monthsA*30.44*86400000;
+    const f = traj.filter(tt => dnum(tt.date) >= cutoff);
+    if(f.length >= 2) traj = f;
+  }
+  const W = pw-8, small = W < 640, H = ph-6, P = {t:36,r:small?116:170,b:26,l:48};
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  let lo=Infinity, hi=-Infinity;
+  traj.forEach(t => series.forEach(s => { const v=val(t,s); if(v!=null){ lo=Math.min(lo,v); hi=Math.max(hi,v);} }));
+  if(unit!=='crps'){ lo=Math.min(lo,0); hi=Math.max(hi,0); lo=Math.max(lo,-0.30); }
+  const pad=(hi-lo)*0.08||0.05; lo-=pad; hi+=pad;
   const X = i => P.l + i/(traj.length-1)*(W-P.l-P.r);
   const Y = v => P.t + (hi-v)/(hi-lo)*(H-P.t-P.b);
-  let g = '';
-  [lo+pad,(lo+hi)/2,hi-pad].map(v=>Math.round(v*100)/100).forEach(v=>{
-    g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e1e0d9"/>`;
-    g += `<text x="${P.l-6}" y="${Y(v)+4}" font-size="11" fill="#898781" text-anchor="end">${(v>0?'+':'')+(v*100).toFixed(0)}%</text>`;
-  });
-  g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="#c3c2b7" stroke-dasharray="3 3"/>`;
-  [0, traj.length-1].forEach(i=>{
-    g += `<text x="${X(i)}" y="${H-6}" font-size="11" fill="#898781" text-anchor="${i?'end':'start'}">${fmtDate(traj[i].date)}</text>`;
-  });
-  for(const s of series){
-    const path = traj.map((t,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(t.skills[s]??0).toFixed(1)).join(' ');
-    g += `<path d="${path}" fill="none" stroke="${ENTITY[s]}" stroke-width="2" stroke-linejoin="round"/>`;
-    const last = traj[traj.length-1].skills[s]??0;
-    g += `<circle cx="${X(traj.length-1)}" cy="${Y(last)}" r="3.5" fill="${ENTITY[s]}" stroke="#fcfcfb" stroke-width="2"/>`;
+  const fmtV = v => unit==='crps' ? v.toFixed(2) : (v>0?'+':'')+(v*100).toFixed(1)+'%';
+  const fmtT = v => unit==='crps' ? v.toFixed(1) : (v>0?'+':'')+(v*100).toFixed(0)+'%';
+  let g = `<defs><linearGradient id="lead" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#15803d" stop-opacity=".10"/>
+    <stop offset="1" stop-color="#15803d" stop-opacity="0"/></linearGradient>
+    <clipPath id="clip-agg"><rect x="${P.l}" y="${P.t}" width="${W-P.l-P.r}" height="${H-P.t-P.b}"/></clipPath></defs>`;
+  g += `<rect x="${P.l}" y="${P.t}" width="${W-P.l-P.r}" height="${H-P.t-P.b}" fill="none" stroke="#e0e0e0"/>`;
+  for(const v of niceTicks(lo,hi,6)){
+    g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="rgba(0,0,0,.05)"/>`;
+    g += `<line x1="${P.l-4}" x2="${P.l}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="#c9c7c0"/>`;
+    g += `<text x="${P.l-9}" y="${(Y(v)+3.5).toFixed(1)}" font-size="11" fill="#96948d" text-anchor="end">${fmtT(v)}</text>`;
   }
-  g += `<line class="xh" x1="0" x2="0" y1="${P.t}" y2="${H-P.b}" stroke="#c3c2b7" style="display:none"/>`;
+  if(unit!=='crps') g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="#96948d" stroke-dasharray="2 5"/>`;
+  const nx = small?3:5, seen = new Set();
+  for(let k=0;k<nx;k++){
+    const i = Math.round(k*(traj.length-1)/(nx-1));
+    if(seen.has(i)) continue; seen.add(i);
+    const anchor = k===0?'start':(k===nx-1?'end':'middle');
+    g += `<line x1="${X(i)}" x2="${X(i)}" y1="${P.t}" y2="${H-P.b}" stroke="rgba(0,0,0,.03)"/>`;
+    g += `<line x1="${X(i)}" x2="${X(i)}" y1="${H-P.b}" y2="${H-P.b+4}" stroke="#c9c7c0"/>`;
+    g += `<text x="${X(i)}" y="${H-8}" font-size="11" fill="#96948d" text-anchor="${anchor}">${fmtDate(traj[i].date)}</text>`;
+  }
+  if(unit!=='crps'){
+    const pts = traj.map((tt,i)=>[X(i), Y(val(tt,'crowd')??0)]);
+    g += `<g clip-path="url(#clip-agg)"><path d="${smoothPath(pts)} L ${X(traj.length-1).toFixed(1)} ${(H-P.b).toFixed(1)} L ${P.l} ${(H-P.b).toFixed(1)} Z" fill="url(#lead)" stroke="none"/></g>`;
+  }
+  const lastCk = traj[traj.length-1];
+  const yTop = P.t+9, yBot = H-P.b-9;
+  g += '<g clip-path="url(#clip-agg)">';
+  for(const s of series){
+    const heavy = s==='crowd';
+    const isModel = mocks.indexOf(s) >= 0;
+    const pts = traj.map((tt,i)=>[X(i), Y(val(tt,s)??0)]);
+    g += `<path d="${smoothPath(pts)}" fill="none" stroke="${colorOf(s)}" stroke-width="${heavy?2.8:(isModel?1.6:1.9)}" ${isModel?'opacity=".9"':''} stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+  g += '</g>';
+  const avail = P.r - 33, maxCh = Math.max(4, Math.floor(avail/7.2) - 7);
+  // strict ranking layout: best at the top, monotonic downward, no shuffling
+  const labelOrder = series.slice().sort((a,b)=>{
+    const va = val(lastCk,a)??-9, vb = val(lastCk,b)??-9;
+    return unit==='crps' ? va-vb : vb-va;
+  });
+  const LH = 17;
+  const slots = [];
+  let prevY = yTop - LH;
+  for(const s of labelOrder){
+    let y = Math.max(Y(val(lastCk,s)??0), prevY + LH);
+    slots.push(y); prevY = y;
+  }
+  // if the stack ran past the bottom, shift the whole tail back up
+  const over = slots[slots.length-1] - yBot;
+  if(over > 0){
+    for(let i=slots.length-1;i>=0;i--){
+      slots[i] = Math.min(slots[i], yBot - (slots.length-1-i)*LH);
+    }
+  }
+  labelOrder.forEach((s, i)=>{
+    const last = val(lastCk,s)??0, ly = slots[i];
+    let nm = (nameOf[s]||s).split(' (')[0];
+    if(nm.length > maxCh) nm = nm.slice(0, maxCh-1)+'…';
+    const heavy = s==='crowd';
+    g += `<line x1="${X(traj.length-1)}" x2="${X(traj.length-1)+8}" y1="${Y(last)}" y2="${ly}" stroke="${colorOf(s)}" stroke-width="1" opacity=".5"/>`;
+    g += `<circle cx="${X(traj.length-1)}" cy="${Y(last)}" r="3" fill="${colorOf(s)}" stroke="#fff" stroke-width="1.5"/>`;
+    g += `<rect x="${X(traj.length-1)+8}" y="${ly-8.5}" width="19" height="17" rx="3" fill="${colorOf(s)}"/>`;
+    g += `<text x="${X(traj.length-1)+17.5}" y="${ly+3.5}" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">${initOf(s)}</text>`;
+    g += `<text x="${X(traj.length-1)+31}" y="${ly+4}" font-size="12.5" font-weight="${heavy?800:600}" fill="${heavy?'#0a6a30':'#4f4e49'}">${esc(nm)} ${fmtV(last)}</text>`;
+  });
+  g += `<line class="xh" x1="0" x2="0" y1="${P.t}" y2="${H-P.b}" stroke="#96948d" stroke-dasharray="3 3" style="display:none"/>`;
   svg.innerHTML = g;
-  document.getElementById('traj-legend').innerHTML = series.map(s=>
-    '<span><span class="sw" style="background:'+ENTITY[s]+'"></span>'+esc((nameOf[s]||s).split(' (')[0])+'</span>').join('')
-    + '<span><span class="sw" style="background:#c3c2b7"></span>persistence = 0</span>';
   const xh = svg.querySelector('.xh');
-  svg.addEventListener('mousemove', ev=>{
+  svg.onmousemove = ev=>{
     const r = svg.getBoundingClientRect();
     const mx = (ev.clientX-r.left)*(W/r.width);
     let best=0,bd=1e9;
     traj.forEach((t,i)=>{const d=Math.abs(X(i)-mx); if(d<bd){bd=d;best=i;}});
     xh.setAttribute('x1',X(best)); xh.setAttribute('x2',X(best)); xh.style.display='';
-    tip.style.display='block';
-    tip.innerHTML = '<b>'+fmtDate(traj[best].date)+'</b> · '+traj[best].n+' rounds<br>'
-      + series.map(s=>(nameOf[s]||s).split(' (')[0]+': '+((traj[best].skills[s]>0?'+':'')+((traj[best].skills[s]??0)*100).toFixed(1))+'%').join('<br>');
-    const cr = card.getBoundingClientRect();
-    let tx = ev.clientX-cr.left+14; if(tx>cr.width-170) tx = ev.clientX-cr.left-170;
-    tip.style.left = tx+'px'; tip.style.top = '40px';
-  });
-  svg.addEventListener('mouseleave', ()=>{ xh.style.display='none'; tip.style.display='none'; });
+    tipShow(tip, ev, '<b>'+fmtDate(traj[best].date)+'</b> · '+traj[best].n+' rounds<br>'
+      + ['crowd','ewma','trend','climatology'].map(s=>(nameOf[s]||s).split(' (')[0]+' '+fmtV(val(traj[best],s)??0)).join('<br>'));
+  };
+  svg.onmouseleave = ()=>{ xh.style.display='none'; tip.style.display='none'; };
 }
 
-function forecastStrip(cardId, round, nameOf){
-  const card = document.getElementById(cardId), svg = card.querySelector('svg');
-  document.getElementById('strip-title').textContent = 'Forecast distributions · next round: '+round.round_id;
-  document.getElementById('strip-src').textContent = round.question+' · locks '+fmtLocal(round.lock_at)+' · mean dot, thick bar ±1 sd, thin line ±2 sd';
-  const names = Object.keys(round.baselines);
-  const W = Math.max(card.clientWidth-32, 280), RH = 34, H = names.length*RH+26;
-  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.setAttribute('height',H);
-  let lo=1e9, hi=-1e9;
-  names.forEach(n=>{const b=round.baselines[n]; lo=Math.min(lo,b.mean-2.4*b.sd); hi=Math.max(hi,b.mean+2.4*b.sd);});
-  const P={l:110,r:70};
-  const X = v => P.l + (v-lo)/(hi-lo)*(W-P.l-P.r);
-  let g = '';
-  [lo,(lo+hi)/2,hi].map(v=>Math.round(v*10)/10).forEach(v=>{
-    g += `<line x1="${X(v)}" x2="${X(v)}" y1="6" y2="${H-18}" stroke="#e1e0d9"/>`;
-    g += `<text x="${X(v)}" y="${H-4}" font-size="10.5" fill="#898781" text-anchor="middle">${v}</text>`;
-  });
-  names.forEach((n,i)=>{
-    const b = round.baselines[n], y = 16+i*RH, c = ENTITY[n]||'#2a78d6';
-    g += `<text x="${P.l-10}" y="${y+4}" font-size="12" fill="#52514e" text-anchor="end">${(nameOf[n]||n).split(' (')[0]}</text>`;
-    g += `<line x1="${X(b.mean-2*b.sd)}" x2="${X(b.mean+2*b.sd)}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="1.5" opacity=".55"/>`;
-    g += `<rect x="${X(b.mean-b.sd)}" y="${y-4.5}" width="${X(b.mean+b.sd)-X(b.mean-b.sd)}" height="9" rx="4" fill="${c}" opacity=".3"/>`;
-    g += `<circle cx="${X(b.mean)}" cy="${y}" r="4.5" fill="${c}" stroke="#fcfcfb" stroke-width="2"/>`;
-    g += `<text x="${X(b.mean+2*b.sd)+8}" y="${y+4}" font-size="12" font-weight="600" fill="#0b0b0b">${b.mean} ± ${b.sd}</text>`;
+function seriesChart(key, data){
+  const d = TABDEFS[key];
+  const svg = clearChart(), tip = pane().querySelector('.tooltip');
+  let series = (data.charts||{})[d.chart];
+  if(!series || series.length<2){ svg.style.display='none'; return; }
+  const pw = pane().clientWidth, ph = pane().clientHeight;
+  if(pw < 80 || ph < 80){ svg.style.display='none'; return; }
+  const hidden = window.__hidden = window.__hidden || new Set();
+  const upcoming = (data.rounds||[]).filter(r =>
+    r.series === d.rseries && r.forecasts && Object.keys(r.forecasts).length &&
+    (r.status==='open' || r.status==='locked'));
+  const W = pw-8, small = W < 640, H = ph-6, P = {t:36,r:70,b:26,l:14};
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const months = window.__range || 0;
+  if(months > 0){
+    const cutoff = dnum(series[series.length-1].date) - months*30.44*86400000;
+    const f = series.filter(pt => dnum(pt.date) >= cutoff);
+    series = f.length >= 2 ? f : series.slice(-2);
+  }
+  const xs = series.map(p => dnum(p.date));
+  const ys = series.map(p => p.value);
+  let xmax = xs[xs.length-1];
+  const marks = [];
+  upcoming.forEach(r => { xmax = Math.max(xmax, dnum(r.release_at)); });
+  let lo = Math.min(...ys), hi = Math.max(...ys);
+  upcoming.forEach(r => Object.entries(r.forecasts).forEach(([id,f])=>{
+    if(hidden.has(id)) return;
+    lo = Math.min(lo, f.mean - f.sd); hi = Math.max(hi, f.mean + f.sd);
+  }));
+  if(d.zero){ lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+  const pad = (hi-lo)*0.1 || 1; lo -= pad; hi += pad;
+  const xspan = (xmax - xs[0]) || 1;
+  const X = t => P.l + (t-xs[0])/xspan*(W-P.l-P.r);
+  const Y = v => P.t + (hi-v)/(hi-lo)*(H-P.t-P.b);
+  let g = `<defs><clipPath id="clip-ser"><rect x="${P.l}" y="${P.t}" width="${W-P.l-P.r}" height="${H-P.t-P.b}"/></clipPath></defs>`;
+  g += `<rect x="${P.l}" y="${P.t}" width="${W-P.l-P.r}" height="${H-P.t-P.b}" fill="none" stroke="#e0e0e0"/>`;
+  for(const v of niceTicks(lo,hi,6)){
+    g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="rgba(0,0,0,.05)"/>`;
+    g += `<line x1="${W-P.r}" x2="${W-P.r+4}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="#c9c7c0"/>`;
+    g += `<text x="${W-P.r+9}" y="${(Y(v)+3.5).toFixed(1)}" font-size="11" fill="#96948d">${Math.round(v*10)/10}</text>`;
+  }
+  if(d.zero && lo<0 && hi>0) g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="#96948d" stroke-dasharray="2 5"/>`;
+  const nx = small?3:5, seenX = new Set();
+  const alld = series.map(p=>p.date).concat(upcoming.map(r=>r.release_at.slice(0,10)));
+  for(let k=0;k<nx;k++){
+    const i = Math.round(k*(alld.length-1)/(nx-1));
+    if(seenX.has(i)) continue; seenX.add(i);
+    const t0 = dnum(alld[i]);
+    const anchor = k===0?'start':(k===nx-1?'end':'middle');
+    g += `<line x1="${X(t0)}" x2="${X(t0)}" y1="${H-P.b}" y2="${H-P.b+4}" stroke="#c9c7c0"/>`;
+    g += `<text x="${X(t0)}" y="${H-8}" font-size="11" fill="#96948d" text-anchor="${anchor}">${fmtDate(alld[i])}</text>`;
+  }
+  const pts = series.map((p,i)=>[X(xs[i]), Y(p.value)]);
+  g += `<g clip-path="url(#clip-ser)"><path d="${smoothPath(pts)}" fill="none" stroke="#111110" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+  const lx = X(xs[xs.length-1]), lyv = Y(ys[ys.length-1]);
+  g += `<circle cx="${lx}" cy="${lyv}" r="3.4" fill="#111110" stroke="#fff" stroke-width="1.6"/>`;
+  g += `<text x="${lx-8}" y="${lyv-9}" font-size="12.5" font-weight="800" fill="#111110" text-anchor="end">${ys[ys.length-1]}${d.unit==='%'?'%':''}</text>`;
+  // forecast overlays for upcoming rounds
+  upcoming.forEach(r => {
+    const rx = X(dnum(r.release_at));
+    g += `<line x1="${rx}" x2="${rx}" y1="${P.t}" y2="${H-P.b}" stroke="#e0e0e0" stroke-dasharray="3 4"/>`;
+    g += `<text x="${rx}" y="${P.t-3}" font-size="9.5" fill="#96948d" text-anchor="middle">${fmtDate(r.release_at)}</text>`;
+    const ids = Object.keys(r.forecasts).filter(id=>!hidden.has(id)).sort();
+    ids.forEach((id,j)=>{
+      const f = r.forecasts[id];
+      const dx = (j - (ids.length-1)/2) * 5;
+      const mxp = rx+dx, c = colorOf(id);
+      g += `<line x1="${mxp}" x2="${mxp}" y1="${Y(f.mean-f.sd)}" y2="${Y(f.mean+f.sd)}" stroke="${c}" stroke-width="1.4" opacity=".7"/>`;
+      g += `<circle cx="${mxp}" cy="${Y(f.mean)}" r="3.4" fill="${c}" stroke="#fff" stroke-width="1.3"/>`;
+      marks.push({x:mxp, y:Y(f.mean), id:id, mean:f.mean, sd:f.sd, round:r.round_id});
+    });
   });
   svg.innerHTML = g;
+  const nameOf = {}; (data.entrants||[]).forEach(e => nameOf[e.entrant_id]=e.name);
+  svg.onmousemove = ev=>{
+    const r = svg.getBoundingClientRect();
+    const mx = (ev.clientX-r.left)*(W/r.width), my = (ev.clientY-r.top)*(H/r.height);
+    let mBest=null, mD=144;
+    marks.forEach(m=>{const dd=(m.x-mx)**2+(m.y-my)**2; if(dd<mD){mD=dd;mBest=m;}});
+    if(mBest){
+      tipShow(tip, ev, '<b>'+esc((nameOf[mBest.id]||mBest.id).split(' (')[0])+'</b> · '+mBest.mean+' ± '+mBest.sd+'<br><span style="color:#96948d;">'+esc(mBest.round)+'</span>');
+      return;
+    }
+    let best=0,bd=1e18;
+    xs.forEach((t0,i)=>{const dd=Math.abs(X(t0)-mx); if(dd<bd){bd=dd;best=i;}});
+    tipShow(tip, ev, '<b>'+ys[best]+(d.unit==='%'?'%':'')+'</b> · '+fmtDate(series[best].date));
+  };
+  svg.onmouseleave = ()=>{ tip.style.display='none'; };
+  // legend chips with visibility toggles
+  const allIds = new Set();
+  upcoming.forEach(r => Object.keys(r.forecasts).forEach(id=>allIds.add(id)));
+  const strip = document.getElementById('legend-strip');
+  if(allIds.size){
+    strip.style.display='';
+    strip.innerHTML = [...allIds].sort().map(id =>
+      '<span class="lchip'+(hidden.has(id)?' off':'')+'" data-ent="'+esc(id)+'"><span class="sw" style="background:'+colorOf(id)+'"></span>'+esc((nameOf[id]||id).split(' (')[0])+'</span>').join('')
+      + '<span style="font-size:11.5px;color:var(--mut);margin-left:4px;">forecasts for the next releases · click to toggle</span>';
+    strip.querySelectorAll('.lchip').forEach(ch => ch.onclick = ()=>{
+      const id = ch.dataset.ent;
+      if(hidden.has(id)) hidden.delete(id); else hidden.add(id);
+      seriesChart(key, data);
+    });
+  } else { strip.style.display='none'; strip.innerHTML=''; }
 }
 
-function render(data){
-  document.getElementById('p-updated').textContent = new Date(data.generated_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+function demoReplay(){
+  const svg = document.getElementById('demo-svg');
+  if(!svg || svg.dataset.done) return;
+  const box = svg.parentElement.getBoundingClientRect();
+  const W = Math.max(box.width-30, 300);
+  const rows = [['crowd',49.3,1.2],['gpt-5.5',50.4,1.6],['claude-opus',48.6,1.4],['persistence',49.5,1.5],['trend',48.1,2.2]];
+  const outcome = 49.1, RH = 30, PL = 118, PR = 86, H = rows.length*RH+30;
+  let lo=1e9, hi=-1e9;
+  rows.forEach(([,m,s])=>{lo=Math.min(lo,m-2.3*s);hi=Math.max(hi,m+2.3*s);});
+  const X = v => PL + (v-lo)/(hi-lo)*(W-PL-PR);
+  let g = '';
+  rows.forEach(([id,m,s],i)=>{
+    const y = 20+i*RH, c = colorOf(id);
+    g += `<text x="${PL-10}" y="${y+4}" font-size="12" font-weight="600" fill="#4f4e49" text-anchor="end">${id}</text>`;
+    g += `<line x1="${X(m-2*s)}" x2="${X(m+2*s)}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="1.4" opacity=".55"/>`;
+    g += `<rect x="${X(m-s)}" y="${y-4.5}" width="${X(m+s)-X(m-s)}" height="9" rx="3" fill="${c}" opacity=".3"/>`;
+    g += `<circle cx="${X(m)}" cy="${y}" r="4" fill="${c}" stroke="#fff" stroke-width="1.4"/>`;
+    g += `<text x="${W-PR+10}" y="${y+4}" font-size="11.5" fill="#96948d">off by ${Math.abs(m-outcome).toFixed(1)}</text>`;
+  });
+  g += `<line x1="${X(outcome)}" x2="${X(outcome)}" y1="6" y2="${H-16}" stroke="#15803d" stroke-width="2"/>`;
+  g += `<text x="${X(outcome)}" y="${H-2}" font-size="11.5" font-weight="800" fill="#0a6a30" text-anchor="middle">released ${outcome}</text>`;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.setAttribute('height',H);
+  svg.innerHTML = g; svg.dataset.done = '1';
+}
 
-  // next open round drives countdown + submit deep link
-  const open = data.rounds.filter(r=>r.status==='open').sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
-  const next = open[0];
-  function tick(){
-    document.getElementById('p-lock').textContent = next ? fmtCountdown(new Date(next.lock_at)-Date.now()) : 'n/a';
+const TABDEFS = {
+  agg: {},
+  umich_sentiment: { chart:'umich_sentiment', unit:'', label:'Michigan consumer sentiment', tracker:'umich_sentiment', per:'umich_sentiment', rseries:'umich_sentiment' },
+  yougov_approval: { chart:'yougov_approval', unit:'%', label:'Economist/YouGov Trump approval', tracker:'yougov_approval', per:'yougov_approval', rseries:'yougov_approval' },
+  mc_approval: { chart:'mc_approval', unit:'%', label:'Morning Consult Trump approval', tracker:'mc_approval', per:'mc_approval', rseries:'mc_approval' },
+  generic_margin: { chart:'generic_margin', unit:'', zero:true, label:'2026 generic ballot margin, Dem minus Rep', tracker:'generic_ballot_avg', per:'yougov_generic_margin', rseries:'yougov_generic_margin' },
+};
+
+function setTab(key){
+  window.__tab = key;
+  document.querySelectorAll('#chart-tabs button').forEach(b=>b.classList.toggle('on', b.dataset.tab===key));
+  const data = window.__data; if(!data) return;
+  const nameOf = {}; (data.entrants||[]).forEach(e => nameOf[e.entrant_id]=e.name);
+  const unitSeg = document.getElementById('unit-seg');
+  if(key==='agg'){
+    unitSeg.style.display='';
+    document.getElementById('legend-strip').style.display='none';
+    const unit = window.__unit || 'skill';
+    document.getElementById('caption').textContent = unit==='crps'
+      ? 'Average forecast error (CRPS, in points) across all backtest rounds, lower is better. Model lines are placeholders until API keys connect. Live season joins Aug 14.'
+      : 'Cumulative skill vs the persistence baseline, higher is better. Model lines are placeholders until API keys connect. Live season joins Aug 14.';
+    aggChart((data.backtest||{}).trajectory, nameOf, unit);
+  } else {
+    unitSeg.style.display='none';
+    const d = TABDEFS[key];
+    const tr = (data.trackers||{})[d.tracker]||{};
+    const per = ((data.backtest||{}).per_series||{})[d.per];
+    const top = per && per[0] ? ' · best model here: '+(nameOf[per[0].entrant]||per[0].entrant).split(' (')[0]+' '+(per[0].mean_skill>0?'+':'')+(per[0].mean_skill*100).toFixed(1)+'%' : '';
+    document.getElementById('caption').textContent =
+      d.label+' · latest '+(tr.value!=null?tr.value:'n/a')+(d.unit||'')+', as of '+(tr.asof||'n/a')+top+' · dots: forecasts for the next releases';
+    seriesChart(key, data);
   }
-  tick(); setInterval(tick, 30000);
+}
 
-  // deep links (real submission entry points)
-  const regTemplate = { entrant_id: "your-agent-id", name: "Your Agent", type: "llm",
-    method: "One or two sentences: what generates the forecasts.", arms: ["web"], contact: "you@example.com" };
-  document.getElementById('btn-register').href = ghNewFile('entrants/your-agent-id.json', regTemplate);
-  document.getElementById('cta-register').href = document.getElementById('btn-register').href;
-  if(next){
-    const fcTemplate = { round_id: next.round_id, entrant: "your-agent-id",
-      topline: { mean: next.baselines ? next.baselines.persistence.mean : 50.0, sd: 2.0 },
-      notes: "how this forecast was produced" };
-    document.getElementById('btn-forecast').href = ghNewFile('forecasts/'+next.round_id+'/your-agent-id.json', fcTemplate);
-  }
-
-  // stat tiles
-  const t = data.trackers;
-  const tiles = [];
-  if(t.trump_approval_avg) tiles.push({v:t.trump_approval_avg.value, u:'%', l:'Trump approval, adjusted average · as of '+t.trump_approval_avg.asof});
-  if(t.generic_ballot_avg) tiles.push({v:(t.generic_ballot_avg.value>0?'D+':'R+')+Math.abs(t.generic_ballot_avg.value), u:'', l:'2026 generic ballot · as of '+t.generic_ballot_avg.asof});
-  if(t.umich_sentiment) tiles.push({v:t.umich_sentiment.value, u:'', l:'Michigan consumer sentiment · next release '+fmtLocal(t.umich_sentiment.next_release)});
-  tiles.push({v:open.length+' / '+data.rounds.length, u:'', l:'rounds open / listed · '+data.leaderboard.resolved_rounds+' resolved'});
-  document.getElementById('tiles').innerHTML = tiles.map(x =>
-    '<div class="tile"><div class="v">'+esc(x.v)+'<span class="u">'+esc(x.u)+'</span></div><div class="l">'+esc(x.l)+'</div></div>').join('');
-
-  // leaderboard with two tabs: backtest (real history) and live season 0
-  const nameOf = {}, typeOf = {}, methodOf = {};
-  (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; methodOf[e.entrant_id]=e.method; });
-  function boardRow(id, s, rank){
-    const ref = id==='persistence' ? '<span class="ref-chip">reference</span>' : '';
-    return '<tr><td class="num">'+(rank||'·')+'</td>'
-      + '<td><b style="color:var(--ink);">'+esc(nameOf[id]||id)+'</b>'+ref+'<br><span style="font-size:12px;color:var(--muted);">'+esc(methodOf[id]||'')+'</span></td>'
-      + '<td><span class="badge '+esc(typeOf[id]||'baseline')+'">'+esc(typeOf[id]||'baseline')+'</span></td>'
-      + '<td class="num">'+(s ? ((s.mean_skill>0?'+':'')+(s.mean_skill*100).toFixed(1)+'%') : '<span style="color:var(--muted);">pending</span>')+'</td>'
-      + '<td class="num">'+(s ? s.mean_crps.toFixed(2) : '<span style="color:var(--muted);">·</span>')+'</td>'
+function renderBoard(mode){
+  const data = window.__data; if(!data) return;
+  window.__board = mode;
+  document.getElementById('tab-bt').classList.toggle('on', mode==='bt');
+  document.getElementById('tab-live').classList.toggle('on', mode==='live');
+  const lb = data.leaderboard || {};
+  const nameOf = {}, typeOf = {};
+  (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; });
+  const btMap = {}; ((data.backtest&&data.backtest.overall)||[]).forEach(e=>btMap[e.entrant]=e);
+  function row(id, s, rank, ref){
+    const skillTxt = s ? ((s.mean_skill>0?'+':'')+(s.mean_skill*100).toFixed(1)+'%') : '<span class="pend">···</span>';
+    const pos = s && s.mean_skill>0;
+    const mockTag = s && s.mock ? ' · <span style="color:#96948d;">placeholder</span>' : '';
+    const refLine = ref && btMap[id] ? '<br><span class="type">last season '+((btMap[id].mean_skill>0?'+':'')+(btMap[id].mean_skill*100).toFixed(1))+'%</span>' : '';
+    return '<tr><td class="rank">'+(rank||'·')+'</td>'
+      + '<td><span class="who">'+avatar(id)
+      + '<span><b>'+esc((nameOf[id]||id).split(' (')[0])+'</b>'
+      + (id==='persistence'?' <span class="type">· reference</span>':'')
+      + '<br><span class="type">'+esc(typeOf[id]||'baseline')+mockTag+'</span></span></span></td>'
+      + '<td class="num skill'+(pos?' pos':'')+'">'+skillTxt+refLine+'</td>'
+      + '<td class="num">'+(s ? s.mean_crps.toFixed(2) : '·')+'</td>'
       + '<td class="num">'+(s ? s.rounds : 0)+'</td></tr>';
   }
   const body = document.getElementById('lb-body');
-  function renderBoard(mode){
-    document.getElementById('tab-bt').classList.toggle('on', mode==='bt');
-    document.getElementById('tab-live').classList.toggle('on', mode==='live');
-    body.innerHTML = '';
-    if(mode==='bt'){
-      const entries = (data.backtest&&data.backtest.overall)||[];
-      body.innerHTML = entries.map((e,i)=>boardRow(e.entrant, e, i+1)).join('')
-        || '<tr><td colspan="6" style="color:var(--muted);">backtest pending</td></tr>';
-      document.getElementById('lb-note').textContent =
-        'Backtest: every forecast uses only data published before its release, replayed over '
-        + ((data.backtest&&data.backtest.n_rounds)||0)
-        + ' real releases (Michigan sentiment since 2015; YouGov, Morning Consult and generic-ballot waves since 2025). The crowd entry pools all models in a round into one distribution: pooling already beats every single model.';
-    } else {
-      const scores = {}; (data.leaderboard.entries||[]).forEach(e => scores[e.entrant]=e);
-      const ids = (data.entrants||[]).map(e=>e.entrant_id);
-      const scored = ids.filter(id=>scores[id]).sort((a,b)=>scores[b].mean_skill-scores[a].mean_skill);
-      const pending = ids.filter(id=>!scores[id]);
-      let rank = 0;
-      body.innerHTML = scored.concat(pending).map(id=>boardRow(id, scores[id], scores[id]?++rank:null)).join('')
-        || '<tr><td colspan="6" style="color:var(--muted);">no entrants yet</td></tr>';
-      document.getElementById('lb-note').textContent =
-        'Season 0 live scores: first resolution is the Michigan release on Aug 14. Baselines run automatically in every round; your agent joins by registering below. CRPS is the error of a probabilistic forecast: confident and right scores best, confident and wrong scores worst.';
-    }
-  }
-  document.getElementById('tab-bt').onclick = ()=>renderBoard('bt');
-  document.getElementById('tab-live').onclick = ()=>renderBoard('live');
-  renderBoard('bt');
-
-  // leaderboard visuals
-  if(data.backtest){
-    skillBars('chart-skill', data.backtest.overall, nameOf);
-    trajChart('chart-traj', data.backtest.trajectory, nameOf);
-  }
-  const stripRound = open[0];
-  if(stripRound && stripRound.baselines) forecastStrip('chart-strip', stripRound, nameOf);
-
-  // charts
-  const ca = data.charts || {};
-  if(t.trump_approval_avg) document.getElementById('src-approval').textContent =
-    'VoteHub API · house-effect adjusted · as of ' + t.trump_approval_avg.asof;
-  if(t.generic_ballot_avg) document.getElementById('src-margin').textContent =
-    'VoteHub API · house-effect adjusted · as of ' + t.generic_ballot_avg.asof;
-  drawChart('chart-approval', ca.approval_avg, '#2a78d6', '%', false);
-  drawChart('chart-margin', ca.generic_margin, '#1baf7a', '', true);
-
-  // rounds table
-  const rb = document.getElementById('rounds-body');
-  rb.innerHTML = '';
-  for(const r of data.rounds){
-    const b = r.baselines;
-    const canSubmit = r.status === 'open';
-    const link = canSubmit ? ghNewFile('forecasts/'+r.round_id+'/your-agent-id.json',
-      { round_id: r.round_id, entrant: "your-agent-id",
-        topline: { mean: b ? b.persistence.mean : 50.0, sd: 2.0 }, notes: "" }) : null;
-    const tr = document.createElement('tr');
-    tr.innerHTML = '<td><b style="color:var(--ink);">'+esc(r.round_id)+'</b><br><span style="font-size:12px;color:var(--muted);">'+esc(r.question)+'</span></td>'
-      + '<td><span class="status '+esc(r.status)+'"><span class="d"></span>'+esc(r.status.replace('_',' '))+'</span></td>'
-      + '<td style="white-space:nowrap;">'+esc(fmtLocal(r.lock_at))+(r.release_estimated?' <span style="color:var(--muted);font-size:11px;">est.</span>':'')+'</td>'
-      + '<td class="num">'+(b?esc(b.persistence.mean+' ± '+b.persistence.sd):'<span style="color:var(--muted);">n/a</span>')+'</td>'
-      + '<td class="num">'+(b?esc(b.trend.mean+' ± '+b.trend.sd):'<span style="color:var(--muted);">n/a</span>')+'</td>'
-      + '<td>'+(link?'<a href="'+link+'" target="_blank" rel="noopener" style="font-weight:600;color:#1c5cab;text-decoration:none;">submit →</a>':'')+'</td>';
-    rb.appendChild(tr);
+  if(mode==='bt'){
+    const entries = (data.backtest&&data.backtest.overall)||[];
+    body.innerHTML = entries.map((e,i)=>row(e.entrant, e, i+1)).join('') || '<tr><td colspan="5">…</td></tr>';
+    document.getElementById('lb-note').textContent =
+      'Season -1: the protocol replayed over '+((data.backtest&&data.backtest.n_rounds)||0)+' real historical releases (2015 to 2026); forecasts use only data published before each release. Frontier-model rows are placeholder numbers until API keys connect; baselines are real. A new season starts with each cycle.';
+  } else {
+    const scores = {}; (lb.entries||[]).forEach(e => scores[e.entrant]=e);
+    const ids = (data.entrants||[]).map(e=>e.entrant_id);
+    const scored = ids.filter(id=>scores[id]).sort((a,b)=>scores[b].mean_skill-scores[a].mean_skill);
+    const pending = ids.filter(id=>!scores[id]);
+    let rank = 0;
+    body.innerHTML = scored.concat(pending).map(id=>row(id, scores[id], scores[id]?++rank:null, true)).join('');
+    document.getElementById('lb-note').textContent =
+      'Season 0 is live now: first scores land with the Michigan release on Aug 14, the season finale is the Nov 3 midterm exam. Models run in a uniform harness (mock forecasts until API keys connect); every entrant carries its last-season mark until real scores replace it.';
   }
 }
 
-// Fetch the deployed copy and the repo copy, render whichever is newer:
-// the repo copy refreshes every 6 hours via cron but sits behind a CDN cache;
-// the local copy is a deploy-time snapshot that always exists.
+function roundsList(data){
+  const el = document.getElementById('rounds-list');
+  const open = data.rounds.filter(r=>r.status==='open').sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
+  el.innerHTML = open.slice(0,6).map(r=>{
+    const per = r.baselines && r.baselines.persistence ? r.baselines.persistence.mean : 50.0;
+    const link = ghNewFile('forecasts/'+r.round_id+'/your-agent-id.json',
+      { round_id: r.round_id, entrant: "your-agent-id",
+        topline: { mean: per, sd: 2.0 }, notes: "" });
+    return '<div class="vrow"><span class="live"></span><span class="id">'+esc(r.round_id)+'</span>'
+      + '<span class="q">'+esc(r.question)
+      + ' <span class="dim">· '+(r.n_forecasts||0)+' forecasts in</span></span>'
+      + '<span class="when">locks '+esc(fmtLocal(r.lock_at))+(r.release_estimated?' est.':'')+'</span>'
+      + '<a class="go" href="'+link+'" target="_blank" rel="noopener">Submit forecast</a></div>';
+  }).join('') + '<div class="vrow"><span class="q" style="text-align:center;"><a href="leaderboard.html#rounds" style="color:var(--mut);text-decoration:none;">all '+data.rounds.length+' rounds →</a></span></div>';
+  demoReplay();
+}
+
+function entrantsList(data){
+  const el = document.getElementById('entrants-list');
+  const regLink = ghNewFile('entrants/your-agent-id.json',
+    { entrant_id: "your-agent-id", name: "Your Agent", type: "llm",
+      method: "One or two sentences: what generates the forecasts.", arms: ["web"], contact: "you@example.com" });
+  el.innerHTML = (data.entrants||[]).map(e=>{
+    return '<div class="erow">'+avatar(e.entrant_id)
+      + '<span class="tx"><b>'+esc(e.name.split(' (')[0])+'</b><span class="type">'+esc(e.type)+'</span>'
+      + '<p>'+esc(e.method||'')+'</p></span></div>';
+  }).join('')
+  + '<div class="erow"><span class="av" style="background:#e4e3de;color:#96948d;">?</span>'
+  + '<span class="tx"><b>Your agent</b><span class="type">llm · human team · firm</span>'
+  + '<p>One pull request registers it; a second submits its first forecast. <a href="'+regLink+'" target="_blank" rel="noopener">Register →</a></p></span></div>';
+}
+
+function render(data){
+  window.__data = data;
+  const lb = data.leaderboard || {};
+
+  function meta(){
+    const openNow = data.rounds.filter(r=>r.status==='open' && new Date(r.lock_at) > Date.now()).sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
+    const nx = openNow[0];
+    const parts = ['<b>season 0</b> starts Aug 11'];
+    if(nx) parts.push('next lock in <b>'+fmtCountdown(new Date(nx.lock_at)-Date.now())+'</b>');
+    parts.push(openNow.length+' rounds open');
+    parts.push((lb.resolved_rounds||0)+' resolved');
+    document.getElementById('meta-line').innerHTML = parts.join(' &nbsp;·&nbsp; ');
+    const days = Math.max(0, Math.ceil((new Date(2026,10,3) - Date.now())/86400000));
+    const mids = data.rounds.filter(r=>r.round_id.indexOf('midterm-')===0);
+    const nf = mids.reduce((a,r)=>a+(r.n_forecasts||0), 0);
+    document.getElementById('exam-chip').innerHTML = 'MIDTERM EXAM · Nov 3 · <b>'+days+'d</b> · <b>'+nf+'</b> forecasts locked in';
+  }
+  meta();
+  clearInterval(window.__metaInt); window.__metaInt = setInterval(meta, 30000);
+
+  const openNow = data.rounds.filter(r=>r.status==='open').sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
+  const next = openNow[0];
+  const regTemplate = { entrant_id: "your-agent-id", name: "Your Agent", type: "llm",
+    method: "One or two sentences: what generates the forecasts.", arms: ["web"], contact: "you@example.com" };
+  document.getElementById('btn-register-2').href = ghNewFile('entrants/your-agent-id.json', regTemplate);
+  if(next){
+    const per = next.baselines && next.baselines.persistence ? next.baselines.persistence.mean : 50.0;
+    document.getElementById('btn-forecast-2').href = ghNewFile('forecasts/'+next.round_id+'/your-agent-id.json',
+      { round_id: next.round_id, entrant: "your-agent-id",
+        topline: { mean: per, sd: 2.0 }, notes: "how this forecast was produced" });
+    document.getElementById('btn-human').href = REPO+'/issues/new?template=human-forecast.yml&title='+encodeURIComponent('guess: '+next.round_id);
+  }
+  document.getElementById('foot-updated').textContent = 'data updated '+new Date(data.generated_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+' · refreshed every 6 hours';
+
+  requestAnimationFrame(()=>setTab(window.__tab || 'agg'));
+  renderBoard(window.__board || 'bt');
+  roundsList(data);
+  entrantsList(data);
+  examRounds(data);
+}
+
+function examRounds(data){
+  const el = document.getElementById('exam-rounds');
+  const mids = data.rounds.filter(r=>r.round_id.indexOf('midterm-')===0);
+  el.innerHTML = mids.map(r=>{
+    const per = r.baselines && r.baselines.persistence ? r.baselines.persistence.mean : 0;
+    const link = ghNewFile('forecasts/'+r.round_id+'/your-agent-id.json',
+      { round_id: r.round_id, entrant: "your-agent-id", topline: { mean: per, sd: 3.0 }, notes: "" });
+    return '<div class="vrow"><span class="live"></span><span class="id">'+esc(r.round_id)+'</span>'
+      + '<span class="q">'+esc(r.question)+' <span class="dim">· '+(r.n_forecasts||0)+' forecasts locked in</span></span>'
+      + '<span class="when">locks '+esc(fmtLocal(r.lock_at))+'</span>'
+      + '<a class="go" href="'+link+'" target="_blank" rel="noopener">Submit forecast</a></div>';
+  }).join('');
+  const first = mids[0];
+  if(first){
+    const per = first.baselines && first.baselines.persistence ? first.baselines.persistence.mean : 0;
+    document.getElementById('btn-exam-submit').href = ghNewFile('forecasts/'+first.round_id+'/your-agent-id.json',
+      { round_id: first.round_id, entrant: "your-agent-id", topline: { mean: per, sd: 3.0 }, notes: "" });
+    document.getElementById('btn-exam-human').href = REPO+'/issues/new?template=human-forecast.yml&title='+encodeURIComponent('guess: '+first.round_id);
+  }
+}
+
+const PAGES=['live','rounds','submit','agents','exam'];
+function showPage(k){
+  PAGES.forEach(pg=>{
+    document.getElementById('page-'+pg).classList.toggle('on', pg===k);
+    const b=document.querySelector('.ptab[data-page="'+pg+'"]'); if(b) b.classList.toggle('on', pg===k);
+  });
+  window.__page = k;
+  if(k==='live' && window.__data) requestAnimationFrame(()=>setTab(window.__tab||'agg'));
+  if(k==='rounds') demoReplay();
+}
+document.querySelectorAll('.ptab').forEach(b=> b.onclick = ()=> showPage(b.dataset.page));
+document.getElementById('exam-chip').onclick = ()=> showPage('exam');
+document.getElementById('nav-submit').onclick = e=>{ e.preventDefault(); showPage('submit'); };
+document.querySelectorAll('#chart-tabs button').forEach(b=> b.onclick = ()=> setTab(b.dataset.tab));
+document.querySelectorAll('#range-seg button').forEach(b=> b.onclick = ()=>{
+  window.__range = Number(b.dataset.range);
+  document.querySelectorAll('#range-seg button').forEach(x=>x.classList.toggle('on', x===b));
+  if(window.__data) setTab(window.__tab||'agg');
+});
+document.querySelectorAll('#unit-seg button').forEach(b=> b.onclick = ()=>{
+  window.__unit = b.dataset.unit;
+  document.querySelectorAll('#unit-seg button').forEach(x=>x.classList.toggle('on', x===b));
+  if(window.__data) setTab('agg');
+});
+document.getElementById('tab-bt').onclick = ()=>renderBoard('bt');
+document.getElementById('tab-live').onclick = ()=>{ renderBoard('live'); if((window.__tab||'agg')==='agg') setTab('umich_sentiment'); };
+let rsz;
+function redraw(){ if(window.__data && (window.__page||'live')==='live') setTab(window.__tab||'agg'); }
+addEventListener('resize', ()=>{ clearTimeout(rsz); rsz = setTimeout(redraw, 200); });
+new ResizeObserver(()=>{ clearTimeout(rsz); rsz = setTimeout(redraw, 120); }).observe(document.getElementById('chartpane'));
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>setTimeout(redraw, 50));
+
 Promise.allSettled([
-  fetch('data.json').then(r => { if(!r.ok) throw 0; return r.json(); }),
+  fetch('data.json', {cache:'no-store'}).then(r => { if(!r.ok) throw 0; return r.json(); }),
   fetch(RAW, {cache:'no-store'}).then(r => { if(!r.ok) throw 0; return r.json(); }),
 ]).then(results => {
   const ok = results.filter(x => x.status==='fulfilled').map(x => x.value);
@@ -539,8 +791,7 @@ Promise.allSettled([
   ok.sort((a,b) => (b.generated_at||'').localeCompare(a.generated_at||''));
   render(ok[0]);
 }).catch(err => {
-  document.getElementById('p-updated').textContent = 'unavailable';
-  document.getElementById('lb-body').innerHTML = '<tr><td colspan="6">could not load data ('+esc(err)+')</td></tr>';
+  document.getElementById('caption').textContent = 'could not load data ('+err+')';
 });
 </script>
 </body>
