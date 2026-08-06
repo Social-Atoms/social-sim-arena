@@ -12,7 +12,7 @@ import os
 from datetime import date, datetime, timezone
 
 from .adapters import fredcsv, votehub
-from . import average, baselines, scoring
+from . import average, backtest, baselines, scoring
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 QUESTIONS = os.path.join(ROOT, "questions", "season0.json")
@@ -165,10 +165,7 @@ def build_rounds(season, series, resolved, now):
         hist = [p for p in (series.get(r["series"]) or []) if p["date"] < lock_date]
         if len(hist) >= 3:
             target = r["release_at"][:10]
-            row["baselines"] = {
-                "persistence": baselines.persistence(hist),
-                "trend": baselines.trend(hist, target),
-            }
+            row["baselines"] = baselines.all_baselines(hist, target)
         else:
             row["baselines"] = None
             row["baseline_note"] = "no machine-readable series yet for this tracker"
@@ -176,6 +173,31 @@ def build_rounds(season, series, resolved, now):
             row["resolution"] = resolved[r["round_id"]]
         out.append(row)
     return out
+
+
+def file_baseline_forecasts(rounds):
+    """The hosted always-on agents: while a round is open, the refresh cron
+    keeps each baseline's forecast file current; the last commit before
+    lock_at is the one that counts. After lock the files are left alone."""
+    written = 0
+    for r in rounds:
+        if r["status"] != "open" or not r.get("baselines"):
+            continue
+        rdir = os.path.join(FORECASTS, r["round_id"])
+        os.makedirs(rdir, exist_ok=True)
+        for name, fc in r["baselines"].items():
+            path = os.path.join(rdir, name + ".json")
+            body = {
+                "round_id": r["round_id"],
+                "entrant": name,
+                "topline": {"mean": fc["mean"], "sd": fc["sd"]},
+                "notes": "auto-filed baseline (" + fc.get("method", name) + "), refreshed until lock",
+            }
+            with open(path, "w") as f:
+                json.dump(body, f, indent=2)
+                f.write("\n")
+            written += 1
+    return written
 
 
 def load_entrants():
@@ -202,13 +224,22 @@ def build_leaderboard(rounds, resolved):
         rdir = os.path.join(FORECASTS, r["round_id"])
         if not os.path.isdir(rdir):
             continue
+        round_fcs = []
         for fn in sorted(os.listdir(rdir)):
             if not fn.endswith(".json"):
                 continue
             with open(os.path.join(rdir, fn)) as f:
                 fc = json.load(f)
-            c = scoring.crps_normal(fc["topline"]["mean"], fc["topline"]["sd"], outcome)
+            round_fcs.append(fc)
+            c = scoring.crps_forecast(fc["topline"], outcome)
             e = entries.setdefault(fc["entrant"], {"crps": [], "skill": []})
+            e["crps"].append(c)
+            e["skill"].append(scoring.skill(c, per_crps))
+        # crowd: equal-weight mixture of every submission in the round
+        if len(round_fcs) >= 2:
+            xs = scoring.pool_samples(round_fcs)
+            c = scoring.crps_samples(xs, outcome)
+            e = entries.setdefault("crowd", {"crps": [], "skill": []})
             e["crps"].append(c)
             e["skill"].append(scoring.skill(c, per_crps))
     board = []
@@ -241,7 +272,14 @@ def main():
             resolved = json.load(f)
 
     rounds = build_rounds(season, series, resolved, now)
+    file_baseline_forecasts(rounds)
     board = build_leaderboard(rounds, resolved)
+    bt = backtest.run({
+        "umich_sentiment": series["umich_sentiment"],
+        "yougov_approval": series["yougov_approval"],
+        "mc_approval": series["mc_approval"],
+        "yougov_generic_margin": series["yougov_generic_margin"],
+    })
 
     data = {
         "generated_at": iso(now),
@@ -253,6 +291,7 @@ def main():
             "resolved_rounds": sum(1 for r in rounds if r["status"] == "resolved"),
             "entries": board,
         },
+        "backtest": bt,
         "charts": {
             "approval_avg": average.weekly_series(approval, 52),
             "generic_margin": average.weekly_series(generic, 52),

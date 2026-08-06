@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-08-06T04:55:23Z",
+ "generated_at": "2026-08-06T05:06:48Z",
  "season": 0,
  "trackers": {
   "trump_approval_avg": {
@@ -65,6 +65,16 @@
      "mean": 48.1,
      "sd": 9.83,
      "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 49.51,
+     "sd": 2.82,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 59.25,
+     "sd": 8.46,
+     "method": "climatology"
     }
    }
   },
@@ -103,6 +113,16 @@
      "mean": 42.44,
      "sd": 2.25,
      "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 43.22,
+     "sd": 1.66,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 43.09,
+     "sd": 1.77,
+     "method": "climatology"
     }
    }
   },
@@ -127,6 +147,16 @@
      "mean": 39.47,
      "sd": 4.67,
      "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 37.86,
+     "sd": 1.5,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 37.5,
+     "sd": 1.79,
+     "method": "climatology"
     }
    }
   },
@@ -151,6 +181,16 @@
      "mean": 2.47,
      "sd": 3.23,
      "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 3.4,
+     "sd": 1.08,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 4.54,
+     "sd": 1.61,
+     "method": "climatology"
     }
    }
   },
@@ -189,6 +229,16 @@
      "mean": 42.44,
      "sd": 2.33,
      "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 43.22,
+     "sd": 1.66,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 43.09,
+     "sd": 1.77,
+     "method": "climatology"
     }
    }
   },
@@ -213,6 +263,16 @@
      "mean": 39.47,
      "sd": 4.86,
      "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 37.86,
+     "sd": 1.5,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 37.5,
+     "sd": 1.79,
+     "method": "climatology"
     }
    }
   },
@@ -237,6 +297,16 @@
      "mean": 2.47,
      "sd": 3.36,
      "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 3.4,
+     "sd": 1.08,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 4.54,
+     "sd": 1.61,
+     "method": "climatology"
     }
    }
   },
@@ -261,6 +331,16 @@
      "mean": 48.1,
      "sd": 10.47,
      "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 49.51,
+     "sd": 2.82,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 59.25,
+     "sd": 8.46,
+     "method": "climatology"
     }
    }
   },
@@ -285,6 +365,16 @@
      "mean": 48.1,
      "sd": 11.08,
      "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 49.51,
+     "sd": 2.82,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 59.25,
+     "sd": 8.46,
+     "method": "climatology"
     }
    }
   },
@@ -309,6 +399,16 @@
      "mean": 4.61,
      "sd": 2.49,
      "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 5.05,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 5.12,
+     "sd": 1.0,
+     "method": "climatology"
     }
    }
   },
@@ -329,6 +429,27 @@
  ],
  "entrants": [
   {
+   "entrant_id": "climatology",
+   "name": "Climatology (long-run average)",
+   "type": "baseline",
+   "method": "Mean and spread of the last two years of the target series. The 'seasonal average' null borrowed from weather forecasting.",
+   "homepage": "https://github.com/jajamoa/social-sim-arena"
+  },
+  {
+   "entrant_id": "crowd",
+   "name": "Crowd (pool of all submissions)",
+   "type": "baseline",
+   "method": "Equal-weight mixture of every forecast submitted in the round, scored as one distribution. The community aggregate that individual entrants have to beat.",
+   "homepage": "https://github.com/jajamoa/social-sim-arena"
+  },
+  {
+   "entrant_id": "ewma",
+   "name": "EWMA (smoothed recent average)",
+   "type": "baseline",
+   "method": "Exponentially weighted moving average of the target series: recent values count more, old values fade out.",
+   "homepage": "https://github.com/jajamoa/social-sim-arena"
+  },
+  {
    "entrant_id": "persistence",
    "name": "Persistence (copy last release)",
    "type": "baseline",
@@ -346,6 +467,390 @@
  "leaderboard": {
   "resolved_rounds": 0,
   "entries": []
+ },
+ "backtest": {
+  "note": "walk-forward replay on real historical series; each forecast uses only data before its release",
+  "n_rounds": 323,
+  "overall": [
+   {
+    "entrant": "crowd",
+    "rounds": 323,
+    "mean_crps": 1.643,
+    "mean_skill": 0.046
+   },
+   {
+    "entrant": "ewma",
+    "rounds": 323,
+    "mean_crps": 1.659,
+    "mean_skill": 0.036
+   },
+   {
+    "entrant": "persistence",
+    "rounds": 323,
+    "mean_crps": 1.722,
+    "mean_skill": 0.0
+   },
+   {
+    "entrant": "trend",
+    "rounds": 323,
+    "mean_crps": 1.954,
+    "mean_skill": -0.135
+   },
+   {
+    "entrant": "climatology",
+    "rounds": 323,
+    "mean_crps": 2.884,
+    "mean_skill": -0.675
+   }
+  ],
+  "per_series": {
+   "umich_sentiment": [
+    {
+     "entrant": "crowd",
+     "rounds": 138,
+     "mean_crps": 2.637,
+     "mean_skill": 0.006
+    },
+    {
+     "entrant": "persistence",
+     "rounds": 138,
+     "mean_crps": 2.654,
+     "mean_skill": 0.0
+    },
+    {
+     "entrant": "ewma",
+     "rounds": 138,
+     "mean_crps": 2.693,
+     "mean_skill": -0.015
+    },
+    {
+     "entrant": "trend",
+     "rounds": 138,
+     "mean_crps": 3.215,
+     "mean_skill": -0.211
+    },
+    {
+     "entrant": "climatology",
+     "rounds": 138,
+     "mean_crps": 5.177,
+     "mean_skill": -0.951
+    }
+   ],
+   "yougov_approval": [
+    {
+     "entrant": "ewma",
+     "rounds": 66,
+     "mean_crps": 0.864,
+     "mean_skill": 0.096
+    },
+    {
+     "entrant": "crowd",
+     "rounds": 66,
+     "mean_crps": 0.899,
+     "mean_skill": 0.058
+    },
+    {
+     "entrant": "persistence",
+     "rounds": 66,
+     "mean_crps": 0.955,
+     "mean_skill": 0.0
+    },
+    {
+     "entrant": "trend",
+     "rounds": 66,
+     "mean_crps": 0.988,
+     "mean_skill": -0.035
+    },
+    {
+     "entrant": "climatology",
+     "rounds": 66,
+     "mean_crps": 1.445,
+     "mean_skill": -0.513
+    }
+   ],
+   "mc_approval": [
+    {
+     "entrant": "ewma",
+     "rounds": 77,
+     "mean_crps": 0.881,
+     "mean_skill": 0.17
+    },
+    {
+     "entrant": "crowd",
+     "rounds": 77,
+     "mean_crps": 0.883,
+     "mean_skill": 0.168
+    },
+    {
+     "entrant": "trend",
+     "rounds": 77,
+     "mean_crps": 0.993,
+     "mean_skill": 0.064
+    },
+    {
+     "entrant": "climatology",
+     "rounds": 77,
+     "mean_crps": 1.046,
+     "mean_skill": 0.014
+    },
+    {
+     "entrant": "persistence",
+     "rounds": 77,
+     "mean_crps": 1.061,
+     "mean_skill": 0.0
+    }
+   ],
+   "yougov_generic_margin": [
+    {
+     "entrant": "crowd",
+     "rounds": 42,
+     "mean_crps": 0.936,
+     "mean_skill": 0.13
+    },
+    {
+     "entrant": "ewma",
+     "rounds": 42,
+     "mean_crps": 0.941,
+     "mean_skill": 0.126
+    },
+    {
+     "entrant": "climatology",
+     "rounds": 42,
+     "mean_crps": 0.977,
+     "mean_skill": 0.092
+    },
+    {
+     "entrant": "persistence",
+     "rounds": 42,
+     "mean_crps": 1.076,
+     "mean_skill": 0.0
+    },
+    {
+     "entrant": "trend",
+     "rounds": 42,
+     "mean_crps": 1.091,
+     "mean_skill": -0.014
+    }
+   ]
+  },
+  "trajectory": [
+   {
+    "date": "2017-03-01",
+    "n": 27,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.081,
+     "ewma": 0.056,
+     "persistence": 0.0,
+     "trend": -0.062,
+     "climatology": -0.803
+    }
+   },
+   {
+    "date": "2019-06-01",
+    "n": 54,
+    "ranks": {
+     "ewma": 1,
+     "crowd": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "ewma": 0.1,
+     "crowd": 0.099,
+     "persistence": 0.0,
+     "trend": -0.09,
+     "climatology": -0.536
+    }
+   },
+   {
+    "date": "2021-09-01",
+    "n": 81,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.052,
+     "ewma": 0.036,
+     "persistence": 0.0,
+     "trend": -0.18,
+     "climatology": -0.65
+    }
+   },
+   {
+    "date": "2023-12-01",
+    "n": 108,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.063,
+     "ewma": 0.049,
+     "persistence": 0.0,
+     "trend": -0.101,
+     "climatology": -0.802
+    }
+   },
+   {
+    "date": "2025-04-19",
+    "n": 135,
+    "ranks": {
+     "crowd": 1,
+     "persistence": 2,
+     "ewma": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.019,
+     "persistence": 0.0,
+     "ewma": -0.014,
+     "trend": -0.174,
+     "climatology": -0.831
+    }
+   },
+   {
+    "date": "2025-07-04",
+    "n": 162,
+    "ranks": {
+     "crowd": 1,
+     "persistence": 2,
+     "ewma": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.012,
+     "persistence": 0.0,
+     "ewma": -0.02,
+     "trend": -0.206,
+     "climatology": -0.86
+    }
+   },
+   {
+    "date": "2025-09-13",
+    "n": 188,
+    "ranks": {
+     "crowd": 1,
+     "persistence": 2,
+     "ewma": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.012,
+     "persistence": 0.0,
+     "ewma": -0.011,
+     "trend": -0.203,
+     "climatology": -0.864
+    }
+   },
+   {
+    "date": "2025-11-08",
+    "n": 215,
+    "ranks": {
+     "crowd": 1,
+     "persistence": 2,
+     "ewma": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.006,
+     "persistence": 0.0,
+     "ewma": -0.012,
+     "trend": -0.199,
+     "climatology": -0.88
+    }
+   },
+   {
+    "date": "2026-01-03",
+    "n": 242,
+    "ranks": {
+     "crowd": 1,
+     "persistence": 2,
+     "ewma": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.016,
+     "persistence": 0.0,
+     "ewma": -0.0,
+     "trend": -0.188,
+     "climatology": -0.829
+    }
+   },
+   {
+    "date": "2026-02-28",
+    "n": 269,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.028,
+     "ewma": 0.014,
+     "persistence": 0.0,
+     "trend": -0.172,
+     "climatology": -0.758
+    }
+   },
+   {
+    "date": "2026-04-25",
+    "n": 296,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.045,
+     "ewma": 0.034,
+     "persistence": 0.0,
+     "trend": -0.143,
+     "climatology": -0.69
+    }
+   },
+   {
+    "date": "2026-06-27",
+    "n": 323,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.046,
+     "ewma": 0.036,
+     "persistence": 0.0,
+     "trend": -0.135,
+     "climatology": -0.675
+    }
+   }
+  ]
  },
  "charts": {
   "approval_avg": [

@@ -1,0 +1,57 @@
+# Run YOUR agent continuously against Social Sim Arena.
+#
+# Copy this file into your own repo at .github/workflows/agent-cron.yml,
+# replace the "run your agent" step with whatever produces your forecasts,
+# and add a GH_TOKEN secret with permission to fork/PR. Your agent then
+# wakes up on a schedule, reads the open rounds, forecasts, and opens a
+# pull request against the arena. The arena's CI does the rest: schema
+# check, lock check, sha256. The last PR merged before lock counts.
+#
+# Input your agent reads (public, no auth):
+#   https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/questions/season0.json
+#   https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/site/data.json
+# Output your agent writes (via PR):
+#   forecasts/<round_id>/<your-entrant-id>.json
+
+name: my-arena-agent
+on:
+  schedule:
+    - cron: "0 9 * * *"    # daily; anything before each round's lock works
+  workflow_dispatch:
+
+jobs:
+  forecast:
+    runs-on: ubuntu-latest
+    steps:
+      - name: fork checkout
+        uses: actions/checkout@v4
+        with:
+          repository: jajamoa/social-sim-arena
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: read open rounds
+        run: |
+          curl -s https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/questions/season0.json -o rounds.json
+          curl -s https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/site/data.json -o data.json
+
+      - name: run your agent            # <-- replace this block
+        run: |
+          # produce one forecast file per open round, e.g.:
+          # python my_agent.py rounds.json data.json --entrant my-agent_web --out forecasts/
+          echo "your agent goes here"
+
+      - name: open pull request
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          BRANCH=agent-$(date -u +%Y%m%d%H%M)
+          git config user.name "my-arena-agent"
+          git config user.email "agent@example.com"
+          git checkout -b "$BRANCH"
+          git add forecasts/
+          git diff --cached --quiet && { echo "nothing new"; exit 0; }
+          git commit -m "forecasts from my-arena-agent"
+          git push origin "$BRANCH"
+          gh pr create --repo jajamoa/social-sim-arena \
+            --title "forecasts: my-arena-agent" \
+            --body "automated submission; validated by arena CI"

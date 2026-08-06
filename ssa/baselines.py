@@ -50,6 +50,37 @@ def trend(history, target_date, lookback=8, min_sd=1.0, max_horizon_days=21):
     return {"mean": round(mean, 2), "sd": round(sd, 2), "method": "trend_ols"}
 
 
+def ewma(history, alpha=0.4, min_sd=1.0):
+    """Exponentially weighted moving average of the series."""
+    if not history:
+        raise ValueError("empty history")
+    m = history[0]["value"]
+    for p in history[1:]:
+        m = alpha * p["value"] + (1 - alpha) * m
+    diffs = [abs(b["value"] - a["value"]) for a, b in zip(history, history[1:])][-12:]
+    sd = max(sum(diffs) / len(diffs) if diffs else min_sd, min_sd)
+    return {"mean": round(m, 2), "sd": round(sd, 2), "method": "ewma"}
+
+
+def climatology(history, lookback=24, min_sd=1.0):
+    """Long-run mean and spread of the series: the 'seasonal average' null."""
+    pts = [p["value"] for p in history[-lookback:]]
+    if not pts:
+        raise ValueError("empty history")
+    m = sum(pts) / len(pts)
+    var = sum((x - m) ** 2 for x in pts) / max(len(pts) - 1, 1)
+    return {"mean": round(m, 2), "sd": round(max(var ** 0.5, min_sd), 2), "method": "climatology"}
+
+
+def all_baselines(history, target_date):
+    return {
+        "persistence": persistence(history),
+        "trend": trend(history, target_date),
+        "ewma": ewma(history),
+        "climatology": climatology(history),
+    }
+
+
 def _ordinal(d):
     if isinstance(d, str):
         d = date.fromisoformat(d[:10])
