@@ -6,7 +6,7 @@
 <title>LIVE · Social simulation in real society</title>
 <meta name="description" content="Can AI predict what the public will think next week? Live benchmark: simulated audiences and agents forecast real public-opinion releases before publication.">
 <meta property="og:title" content="Social Simulation Arena">
-<meta property="og:description" content="Can AI predict what the public will think next week? Live benchmark for social simulation.">
+<meta property="og:description" content="Simulated societies, graded by reality: forecasts sealed before the numbers exist. No reruns, no cherry-picked tests.">
 <meta property="og:image" content="https://cjj.li/social-sim-arena/card.png">
 <meta name="twitter:card" content="summary_large_image">
 <style>
@@ -171,7 +171,7 @@ footer .upd{margin-left:auto;}
 <div class="bar">
   <h1>Social simulation in real society</h1>
   <span class="livebadge"><span class="ld"></span>LIVE</span>
-  <span class="sub">Simulated societies have only ever been graded on the past. Here they face the future: real public opinion, forecast in advance, locked and scored in public.</span>
+  <span class="sub">Every simulated society so far was graded on the past, where the answers were already known. Here the forecasts are sealed before the numbers exist, and reality does the grading. No reruns. No cherry-picked tests.</span>
   <span class="exam" id="exam-chip" style="cursor:pointer;">MIDTERM EXAM · Nov 3</span>
   <span class="meta" id="meta-line" style="margin-left:auto;">loading…</span>
 </div>
@@ -433,7 +433,11 @@ function aggChart(traj, nameOf, unit){
     g += `<line x1="${X(traj.length-1)}" x2="${X(traj.length-1)+8}" y1="${Y(last)}" y2="${ly}" stroke="${colorOf(s)}" stroke-width="1" opacity=".5"/>`;
     g += `<circle cx="${X(traj.length-1)}" cy="${Y(last)}" r="3" fill="${colorOf(s)}" stroke="#fff" stroke-width="1.5"/>`;
     g += `<rect x="${X(traj.length-1)+8}" y="${ly-8.5}" width="19" height="17" rx="3" fill="${colorOf(s)}"/>`;
-    g += `<text x="${X(traj.length-1)+17.5}" y="${ly+3.5}" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">${initOf(s)}</text>`;
+    if(MCOLORS[s] && s!=='human-crowd'){
+      g += `<image href="logos/${s}.svg" x="${X(traj.length-1)+10.5}" y="${ly-6}" width="14" height="12"/>`;
+    } else {
+      g += `<text x="${X(traj.length-1)+17.5}" y="${ly+3.5}" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">${initOf(s)}</text>`;
+    }
     g += `<text x="${X(traj.length-1)+31}" y="${ly+4}" font-size="12.5" font-weight="${heavy?800:600}" fill="${heavy?'#0a6a30':'#4f4e49'}">${esc(nm)} ${fmtV(last)}</text>`;
   });
   g += `<line class="xh" x1="0" x2="0" y1="${P.t}" y2="${H-P.b}" stroke="#96948d" stroke-dasharray="3 3" style="display:none"/>`;
