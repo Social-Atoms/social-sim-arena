@@ -370,14 +370,21 @@ function render(data){
   }
 }
 
-fetch(RAW, {cache:'no-store'})
-  .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
-  .catch(() => fetch('data.json').then(r => r.json()))
-  .then(render)
-  .catch(err => {
-    document.getElementById('p-updated').textContent = 'unavailable';
-    document.getElementById('lb-body').innerHTML = '<tr><td colspan="6">could not load data ('+esc(err)+')</td></tr>';
-  });
+// Fetch the deployed copy and the repo copy, render whichever is newer:
+// the repo copy refreshes every 6 hours via cron but sits behind a CDN cache;
+// the local copy is a deploy-time snapshot that always exists.
+Promise.allSettled([
+  fetch('data.json').then(r => { if(!r.ok) throw 0; return r.json(); }),
+  fetch(RAW, {cache:'no-store'}).then(r => { if(!r.ok) throw 0; return r.json(); }),
+]).then(results => {
+  const ok = results.filter(x => x.status==='fulfilled').map(x => x.value);
+  if(!ok.length) throw new Error('no data source reachable');
+  ok.sort((a,b) => (b.generated_at||'').localeCompare(a.generated_at||''));
+  render(ok[0]);
+}).catch(err => {
+  document.getElementById('p-updated').textContent = 'unavailable';
+  document.getElementById('lb-body').innerHTML = '<tr><td colspan="6">could not load data ('+esc(err)+')</td></tr>';
+});
 </script>
 </body>
 </html>
