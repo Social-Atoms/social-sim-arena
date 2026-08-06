@@ -81,6 +81,7 @@ footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--border);color
   <a href="#sources">data + APIs</a>
   <a href="#format">format</a>
   <a href="#scoring">scoring</a>
+  <a href="#next">next</a>
   <a href="#join">join</a>
 </nav>
 
@@ -248,8 +249,35 @@ GET https://api.votehub.com/polls?poll_type=generic-ballot</code></pre>
   </ul>
 </section>
 
+<section id="next">
+  <h2><span class="section-num">07</span>Next steps</h2>
+
+  <h3>Toward a solid paper, before the ICLR deadline</h3>
+  <ol class="steps">
+    <li><b>Real model runs.</b> Wire the six providers into the harness (keys via Actions secrets), replace every placeholder with real output, and re-run the full 2015-2026 backtest through the same harness: fixed prompts, temperature 0, three samples, logs committed.</li>
+    <li><b>A bigger question set.</b> Add state-level approval, per-wave crosstab targets (party, age, race), and issue questions. Run a power analysis: how many rounds are needed before model differences clear the bootstrap confidence intervals.</li>
+    <li><b>Scoring rigor.</b> Sensitivity analysis of the house-effect parameters (window, halflife, shrinkage); robustness of rankings under alternative resolutions (single poll, unadjusted average); calibration reporting (PIT histograms, interval coverage) alongside CRPS.</li>
+    <li><b>Stronger baselines.</b> AR(1) and a local-level Kalman filter, Holt-Winters, a fine-tuned small model, and a paid human forecaster panel on a question subset. The human anchor is what makes the leaderboard credible.</li>
+    <li><b>Contamination audit.</b> Verify release dates against each model's training cutoff, plant canary questions, and document lock enforcement with commit-hash evidence in an appendix.</li>
+    <li><b>Pre-registration.</b> Freeze season 0 questions and the scoring spec in a public pre-registration; print the midterm forecast hashes in the submitted paper.</li>
+    <li><b>Analysis with a finding.</b> Skill decomposition into calm weeks vs event weeks; why pooling wins (error correlation between models); whether any single model beats the crowd; per-target difficulty profiles.</li>
+    <li><b>Writing.</b> ForecastBench-style structure: protocol as the contribution, initial cohort results, living leaderboard. Related-work table against OpinionQA, SubPOP, and the retrospective silicon-sampling literature.</li>
+  </ol>
+
+  <h3>Engineering, in value order</h3>
+  <ol class="steps">
+    <li><b>First-party adapters.</b> Economist/YouGov crosstab PDF parser and Morning Consult HTML parser kill the five-week VoteHub lag; archive every raw fetch under resolutions/raw/ and pin adapter fixtures as regression tests.</li>
+    <li><b>Resolution automation.</b> Release detectors that open an auto-resolve pull request with the official value, a screenshot, and a hash; the scorer excludes any forecast whose first commit on main postdates the lock.</li>
+    <li><b>Harness productionization.</b> Provider implementations with retries and cost caps, per-round logs committed, weekly spend report.</li>
+    <li><b>Human pipeline.</b> A cron that parses the guess issues into one pooled human-crowd distribution per round.</li>
+    <li><b>Site.</b> Official logo SVGs in site/logos/, a per-round detail page with the forecast strip and resolution replay, a share card per resolved round, and a Chinese mirror page.</li>
+    <li><b>Operations.</b> Freshness alarms (data older than 45 days fails the cron and opens an issue), value sanity bounds, a backtest determinism test in CI, pinned dependencies.</li>
+    <li><b>Data quality.</b> Dual-source cross-checks with divergence alerts, and the quarterly commissioned never-asked questions as the contamination-free gold standard.</li>
+  </ol>
+</section>
+
 <section id="refs">
-  <h2><span class="section-num">07</span>References</h2>
+  <h2><span class="section-num">08</span>References</h2>
   <ul>
     <li><a href="https://arxiv.org/abs/2409.19839">ForecastBench: A Dynamic Benchmark of AI Forecasting Capabilities</a> · ICLR 2025. Dynamic contamination-free questions, superforecaster baseline.</li>
     <li><a href="https://arxiv.org/html/2512.20761v2">TS-Arena</a> · ICLR 2026. Live time-series arena; forecasts registered before the data exists; Elo with bootstrapped confidence intervals.</li>
@@ -267,7 +295,7 @@ GET https://api.votehub.com/polls?poll_type=generic-ballot</code></pre>
 </section>
 
 <section id="join">
-  <h2><span class="section-num">08</span>How to join</h2>
+  <h2><span class="section-num">09</span>How to join</h2>
   <ul>
     <li><b>Adapters</b>: pick a source above, write the fetcher and parser, add a fixture test.</li>
     <li><b>Harness</b>: prompt template, API runners, retry and logging.</li>
