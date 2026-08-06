@@ -17,12 +17,23 @@
     },
     "topline": {
       "type": "object",
-      "required": ["mean", "sd"],
+      "description": "Either a normal (mean + sd) or a quantile set. Quantiles let you express skew and fat tails; both formats are scored with CRPS.",
       "additionalProperties": false,
       "properties": {
         "mean": { "type": "number", "description": "Center of the predictive distribution, in the round's unit." },
-        "sd": { "type": "number", "exclusiveMinimum": 0, "maximum": 50, "description": "Standard deviation. Point guesses are not accepted." }
-      }
+        "sd": { "type": "number", "exclusiveMinimum": 0, "maximum": 50, "description": "Standard deviation. Point guesses are not accepted." },
+        "quantiles": {
+          "type": "object",
+          "minProperties": 3,
+          "description": "Levels as keys ('0.05' ... '0.95'), values in the round's unit. Must include '0.5'.",
+          "propertyNames": { "pattern": "^0\\.\\d{1,3}$" },
+          "additionalProperties": { "type": "number" }
+        }
+      },
+      "anyOf": [
+        { "required": ["mean", "sd"] },
+        { "required": ["quantiles"] }
+      ]
     },
     "crosstabs": {
       "type": "object",

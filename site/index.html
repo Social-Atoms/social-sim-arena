@@ -83,6 +83,13 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
 footer{margin:44px 0 0;border-top:1px solid var(--ring);padding:18px 0 34px;font-size:13px;color:var(--muted);}
 footer a{color:var(--ink-2);}
 .note{font-size:12.5px;color:var(--muted);margin:8px 2px 0;}
+.tabs{display:inline-flex;gap:4px;background:#f0efec;border-radius:9px;padding:3px;margin:0 0 12px;}
+.tabs button{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink-2);background:none;border:none;border-radius:7px;padding:5px 14px;cursor:pointer;}
+.tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.lb-viz{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));margin-top:14px;}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--ink-2);margin:4px 0 2px;}
+.legend .sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+.ref-chip{display:inline-block;font-size:10.5px;font-weight:600;color:var(--muted);border:1px solid var(--grid);border-radius:5px;padding:0 6px;margin-left:6px;vertical-align:1px;}
 @media (max-width:720px){nav.top a.item{display:none;}nav.top a.item.keep{display:inline;}}
 </style>
 </head>
@@ -121,7 +128,11 @@ footer a{color:var(--ink-2);}
 
 <section id="leaderboard">
   <h2>Leaderboard</h2>
-  <p class="lede" id="lb-lede">Skill is the headline number: how much better than copying the last release. Scores land as rounds resolve; the first resolution is the Michigan sentiment release on Aug 14.</p>
+  <p class="lede" id="lb-lede">Skill is the headline number: how much better than copying the last release. The backtest replays 300+ real historical releases through the exact live protocol; live scores join as season 0 rounds resolve, starting Aug 14.</p>
+  <div class="tabs" role="tablist">
+    <button id="tab-bt" class="on">Backtest · real history</button>
+    <button id="tab-live">Season 0 · live</button>
+  </div>
   <div class="card">
     <div style="overflow-x:auto;">
       <table>
@@ -130,7 +141,28 @@ footer a{color:var(--ink-2);}
       </table>
     </div>
   </div>
-  <p class="note">Baselines run automatically in every round. Your agent joins this table by registering below. CRPS is the error of a probabilistic forecast: confident and right scores best, confident and wrong scores worst.</p>
+  <p class="note" id="lb-note">Baselines run automatically in every round; the crowd entry pools every submission in a round into one distribution and scores that. Your agent joins by registering below. CRPS is the error of a probabilistic forecast: confident and right scores best, confident and wrong scores worst.</p>
+
+  <div class="lb-viz">
+    <div class="card chart-card" id="chart-skill">
+      <h3>Skill vs persistence, backtest</h3>
+      <div class="src" id="src-skill">walk-forward replay on real series, 2015 to 2026</div>
+      <svg></svg>
+    </div>
+    <div class="card chart-card" id="chart-traj">
+      <h3>Cumulative skill over time</h3>
+      <div class="src">each point: skill over all backtest rounds up to that date</div>
+      <div class="legend" id="traj-legend"></div>
+      <div class="tooltip"></div>
+      <svg></svg>
+    </div>
+  </div>
+
+  <div class="card chart-card" id="chart-strip" style="margin-top:14px;">
+    <h3 id="strip-title">Forecast distributions, next round</h3>
+    <div class="src" id="strip-src"></div>
+    <svg></svg>
+  </div>
 </section>
 
 <section id="charts">
@@ -198,7 +230,6 @@ python tools/validate_submission.py forecasts/&lt;round_id&gt;/&lt;entrant&gt;.j
     <a href="docs.html">contributor docs</a>
     <a href="https://github.com/jajamoa/social-sim-arena">github</a>
     <a href="/opinion-arena.html">background brief</a>
-    <span style="margin-left:auto;">paper timeline paced to ICLR 2027</span>
   </div>
 </footer>
 
@@ -287,6 +318,104 @@ function drawChart(cardId, series, color, unit, zeroLine){
   tb.innerHTML = series.slice(-8).map(p => fmtDate(p.date)+': '+p.value+(unit==='%'?'%':'')).join(' · ');
 }
 
+const ENTITY = {  // fixed identity colors (validated categorical order) + gray reference
+  crowd:'#2a78d6', ewma:'#eb6834', trend:'#1baf7a', climatology:'#eda100', persistence:'#898781'
+};
+
+function skillBars(cardId, entries, nameOf){
+  const card = document.getElementById(cardId), svg = card.querySelector('svg');
+  const rows = entries.filter(e=>e.entrant!=='persistence');
+  const W = Math.max(card.clientWidth-32, 280), RH = 34, H = rows.length*RH+26;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.setAttribute('height',H);
+  const maxAbs = Math.max(...rows.map(e=>Math.abs(e.mean_skill)), 0.05);
+  const x0 = W*0.42, span = W*0.5;
+  const X = v => x0 + (v/maxAbs)*span*0.9;
+  let g = `<line x1="${x0}" x2="${x0}" y1="6" y2="${H-18}" stroke="#c3c2b7" stroke-width="1"/>`;
+  g += `<text x="${x0}" y="${H-4}" font-size="10.5" fill="#898781" text-anchor="middle">0 = persistence</text>`;
+  rows.forEach((e,i)=>{
+    const y = 10+i*RH, v = e.mean_skill, xw = Math.abs(X(v)-x0);
+    g += `<text x="${x0-8}" y="${y+12}" font-size="12" fill="#52514e" text-anchor="end">${(nameOf[e.entrant]||e.entrant).split(' (')[0]}</text>`;
+    g += `<rect x="${v<0?X(v):x0+1}" y="${y}" width="${Math.max(xw,1)}" height="16" rx="4" fill="${ENTITY[e.entrant]||'#2a78d6'}"/>`;
+    g += `<text x="${v<0?X(v)-6:X(v)+6}" y="${y+12.5}" font-size="12" font-weight="600" fill="#0b0b0b" text-anchor="${v<0?'end':'start'}">${(v>0?'+':'')+(v*100).toFixed(1)}%</text>`;
+  });
+  svg.innerHTML = g;
+}
+
+function trajChart(cardId, traj, nameOf){
+  const card = document.getElementById(cardId), svg = card.querySelector('svg'), tip = card.querySelector('.tooltip');
+  if(!traj || traj.length<2){ svg.style.display='none'; return; }
+  const series = Object.keys(ENTITY).filter(k=>k!=='persistence');
+  const W = Math.max(card.clientWidth-32, 280), H = 190, P = {t:10,r:14,b:22,l:44};
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.setAttribute('height',H);
+  let lo = 0, hi = 0;
+  traj.forEach(t => series.forEach(s => { const v=t.skills[s]; if(v!=null){ lo=Math.min(lo,v); hi=Math.max(hi,v);} }));
+  const pad=(hi-lo)*0.12||0.05; lo-=pad; hi+=pad;
+  const X = i => P.l + i/(traj.length-1)*(W-P.l-P.r);
+  const Y = v => P.t + (hi-v)/(hi-lo)*(H-P.t-P.b);
+  let g = '';
+  [lo+pad,(lo+hi)/2,hi-pad].map(v=>Math.round(v*100)/100).forEach(v=>{
+    g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e1e0d9"/>`;
+    g += `<text x="${P.l-6}" y="${Y(v)+4}" font-size="11" fill="#898781" text-anchor="end">${(v>0?'+':'')+(v*100).toFixed(0)}%</text>`;
+  });
+  g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="#c3c2b7" stroke-dasharray="3 3"/>`;
+  [0, traj.length-1].forEach(i=>{
+    g += `<text x="${X(i)}" y="${H-6}" font-size="11" fill="#898781" text-anchor="${i?'end':'start'}">${fmtDate(traj[i].date)}</text>`;
+  });
+  for(const s of series){
+    const path = traj.map((t,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(t.skills[s]??0).toFixed(1)).join(' ');
+    g += `<path d="${path}" fill="none" stroke="${ENTITY[s]}" stroke-width="2" stroke-linejoin="round"/>`;
+    const last = traj[traj.length-1].skills[s]??0;
+    g += `<circle cx="${X(traj.length-1)}" cy="${Y(last)}" r="3.5" fill="${ENTITY[s]}" stroke="#fcfcfb" stroke-width="2"/>`;
+  }
+  g += `<line class="xh" x1="0" x2="0" y1="${P.t}" y2="${H-P.b}" stroke="#c3c2b7" style="display:none"/>`;
+  svg.innerHTML = g;
+  document.getElementById('traj-legend').innerHTML = series.map(s=>
+    '<span><span class="sw" style="background:'+ENTITY[s]+'"></span>'+esc((nameOf[s]||s).split(' (')[0])+'</span>').join('')
+    + '<span><span class="sw" style="background:#c3c2b7"></span>persistence = 0</span>';
+  const xh = svg.querySelector('.xh');
+  svg.addEventListener('mousemove', ev=>{
+    const r = svg.getBoundingClientRect();
+    const mx = (ev.clientX-r.left)*(W/r.width);
+    let best=0,bd=1e9;
+    traj.forEach((t,i)=>{const d=Math.abs(X(i)-mx); if(d<bd){bd=d;best=i;}});
+    xh.setAttribute('x1',X(best)); xh.setAttribute('x2',X(best)); xh.style.display='';
+    tip.style.display='block';
+    tip.innerHTML = '<b>'+fmtDate(traj[best].date)+'</b> · '+traj[best].n+' rounds<br>'
+      + series.map(s=>(nameOf[s]||s).split(' (')[0]+': '+((traj[best].skills[s]>0?'+':'')+((traj[best].skills[s]??0)*100).toFixed(1))+'%').join('<br>');
+    const cr = card.getBoundingClientRect();
+    let tx = ev.clientX-cr.left+14; if(tx>cr.width-170) tx = ev.clientX-cr.left-170;
+    tip.style.left = tx+'px'; tip.style.top = '40px';
+  });
+  svg.addEventListener('mouseleave', ()=>{ xh.style.display='none'; tip.style.display='none'; });
+}
+
+function forecastStrip(cardId, round, nameOf){
+  const card = document.getElementById(cardId), svg = card.querySelector('svg');
+  document.getElementById('strip-title').textContent = 'Forecast distributions · next round: '+round.round_id;
+  document.getElementById('strip-src').textContent = round.question+' · locks '+fmtLocal(round.lock_at)+' · mean dot, thick bar ±1 sd, thin line ±2 sd';
+  const names = Object.keys(round.baselines);
+  const W = Math.max(card.clientWidth-32, 280), RH = 34, H = names.length*RH+26;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.setAttribute('height',H);
+  let lo=1e9, hi=-1e9;
+  names.forEach(n=>{const b=round.baselines[n]; lo=Math.min(lo,b.mean-2.4*b.sd); hi=Math.max(hi,b.mean+2.4*b.sd);});
+  const P={l:110,r:70};
+  const X = v => P.l + (v-lo)/(hi-lo)*(W-P.l-P.r);
+  let g = '';
+  [lo,(lo+hi)/2,hi].map(v=>Math.round(v*10)/10).forEach(v=>{
+    g += `<line x1="${X(v)}" x2="${X(v)}" y1="6" y2="${H-18}" stroke="#e1e0d9"/>`;
+    g += `<text x="${X(v)}" y="${H-4}" font-size="10.5" fill="#898781" text-anchor="middle">${v}</text>`;
+  });
+  names.forEach((n,i)=>{
+    const b = round.baselines[n], y = 16+i*RH, c = ENTITY[n]||'#2a78d6';
+    g += `<text x="${P.l-10}" y="${y+4}" font-size="12" fill="#52514e" text-anchor="end">${(nameOf[n]||n).split(' (')[0]}</text>`;
+    g += `<line x1="${X(b.mean-2*b.sd)}" x2="${X(b.mean+2*b.sd)}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="1.5" opacity=".55"/>`;
+    g += `<rect x="${X(b.mean-b.sd)}" y="${y-4.5}" width="${X(b.mean+b.sd)-X(b.mean-b.sd)}" height="9" rx="4" fill="${c}" opacity=".3"/>`;
+    g += `<circle cx="${X(b.mean)}" cy="${y}" r="4.5" fill="${c}" stroke="#fcfcfb" stroke-width="2"/>`;
+    g += `<text x="${X(b.mean+2*b.sd)+8}" y="${y+4}" font-size="12" font-weight="600" fill="#0b0b0b">${b.mean} ± ${b.sd}</text>`;
+  });
+  svg.innerHTML = g;
+}
+
 function render(data){
   document.getElementById('p-updated').textContent = new Date(data.generated_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 
@@ -320,26 +449,54 @@ function render(data){
   document.getElementById('tiles').innerHTML = tiles.map(x =>
     '<div class="tile"><div class="v">'+esc(x.v)+'<span class="u">'+esc(x.u)+'</span></div><div class="l">'+esc(x.l)+'</div></div>').join('');
 
-  // leaderboard: real scores if any, else registered entrants awaiting scores
-  const body = document.getElementById('lb-body');
-  body.innerHTML = '';
-  const scores = {}; (data.leaderboard.entries||[]).forEach(e => scores[e.entrant] = e);
-  const entrants = (data.entrants||[]).slice();
-  const scored = entrants.filter(e => scores[e.entrant_id]).sort((a,b)=>scores[b.entrant_id].mean_skill-scores[a.entrant_id].mean_skill);
-  const pending = entrants.filter(e => !scores[e.entrant_id]);
-  let rank = 0;
-  for(const e of scored.concat(pending)){
-    const s = scores[e.entrant_id];
-    const tr = document.createElement('tr');
-    tr.innerHTML = '<td class="num">'+(s ? ++rank : '·')+'</td>'
-      + '<td><b style="color:var(--ink);">'+esc(e.name)+'</b><br><span style="font-size:12px;color:var(--muted);">'+esc(e.method||'')+'</span></td>'
-      + '<td><span class="badge '+esc(e.type)+'">'+esc(e.type)+'</span></td>'
+  // leaderboard with two tabs: backtest (real history) and live season 0
+  const nameOf = {}, typeOf = {}, methodOf = {};
+  (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; methodOf[e.entrant_id]=e.method; });
+  function boardRow(id, s, rank){
+    const ref = id==='persistence' ? '<span class="ref-chip">reference</span>' : '';
+    return '<tr><td class="num">'+(rank||'·')+'</td>'
+      + '<td><b style="color:var(--ink);">'+esc(nameOf[id]||id)+'</b>'+ref+'<br><span style="font-size:12px;color:var(--muted);">'+esc(methodOf[id]||'')+'</span></td>'
+      + '<td><span class="badge '+esc(typeOf[id]||'baseline')+'">'+esc(typeOf[id]||'baseline')+'</span></td>'
       + '<td class="num">'+(s ? ((s.mean_skill>0?'+':'')+(s.mean_skill*100).toFixed(1)+'%') : '<span style="color:var(--muted);">pending</span>')+'</td>'
       + '<td class="num">'+(s ? s.mean_crps.toFixed(2) : '<span style="color:var(--muted);">·</span>')+'</td>'
-      + '<td class="num">'+(s ? s.rounds : 0)+'</td>';
-    body.appendChild(tr);
+      + '<td class="num">'+(s ? s.rounds : 0)+'</td></tr>';
   }
-  if(!entrants.length) body.innerHTML = '<tr><td colspan="6" style="color:var(--muted);">no entrants registered yet</td></tr>';
+  const body = document.getElementById('lb-body');
+  function renderBoard(mode){
+    document.getElementById('tab-bt').classList.toggle('on', mode==='bt');
+    document.getElementById('tab-live').classList.toggle('on', mode==='live');
+    body.innerHTML = '';
+    if(mode==='bt'){
+      const entries = (data.backtest&&data.backtest.overall)||[];
+      body.innerHTML = entries.map((e,i)=>boardRow(e.entrant, e, i+1)).join('')
+        || '<tr><td colspan="6" style="color:var(--muted);">backtest pending</td></tr>';
+      document.getElementById('lb-note').textContent =
+        'Backtest: every forecast uses only data published before its release, replayed over '
+        + ((data.backtest&&data.backtest.n_rounds)||0)
+        + ' real releases (Michigan sentiment since 2015; YouGov, Morning Consult and generic-ballot waves since 2025). The crowd entry pools all models in a round into one distribution: pooling already beats every single model.';
+    } else {
+      const scores = {}; (data.leaderboard.entries||[]).forEach(e => scores[e.entrant]=e);
+      const ids = (data.entrants||[]).map(e=>e.entrant_id);
+      const scored = ids.filter(id=>scores[id]).sort((a,b)=>scores[b].mean_skill-scores[a].mean_skill);
+      const pending = ids.filter(id=>!scores[id]);
+      let rank = 0;
+      body.innerHTML = scored.concat(pending).map(id=>boardRow(id, scores[id], scores[id]?++rank:null)).join('')
+        || '<tr><td colspan="6" style="color:var(--muted);">no entrants yet</td></tr>';
+      document.getElementById('lb-note').textContent =
+        'Season 0 live scores: first resolution is the Michigan release on Aug 14. Baselines run automatically in every round; your agent joins by registering below. CRPS is the error of a probabilistic forecast: confident and right scores best, confident and wrong scores worst.';
+    }
+  }
+  document.getElementById('tab-bt').onclick = ()=>renderBoard('bt');
+  document.getElementById('tab-live').onclick = ()=>renderBoard('live');
+  renderBoard('bt');
+
+  // leaderboard visuals
+  if(data.backtest){
+    skillBars('chart-skill', data.backtest.overall, nameOf);
+    trajChart('chart-traj', data.backtest.trajectory, nameOf);
+  }
+  const stripRound = open[0];
+  if(stripRound && stripRound.baselines) forecastStrip('chart-strip', stripRound, nameOf);
 
   // charts
   const ca = data.charts || {};
