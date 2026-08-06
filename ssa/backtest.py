@@ -56,12 +56,29 @@ def run(series_map):
     all_records.sort(key=lambda r: r["date"])
     overall = summarize(all_records)
     trajectory = rank_trajectory(all_records)
+
+    def span(days):
+        if not all_records:
+            return []
+        last = all_records[-1]["date"]
+        import datetime as _dt
+        cutoff = (_dt.date.fromisoformat(last[:10]) - _dt.timedelta(days=days)).isoformat()
+        return summarize([r for r in all_records if r["date"] >= cutoff])
+
+    last_date = all_records[-1]["date"] if all_records else None
+    spans = {
+        "all": overall,
+        "m6": span(183),
+        "d30": span(30),
+        "last": summarize([r for r in all_records if r["date"] == last_date]) if last_date else [],
+    }
     return {
         "note": "walk-forward replay on real historical series; each forecast uses only data before its release",
         "n_rounds": len(all_records),
         "overall": overall,
         "per_series": per_series,
         "trajectory": trajectory,
+        "spans": spans,
     }
 
 
