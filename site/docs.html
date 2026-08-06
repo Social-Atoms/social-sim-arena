@@ -81,7 +81,6 @@ footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--border);color
   <a href="#sources">data + APIs</a>
   <a href="#format">format</a>
   <a href="#scoring">scoring</a>
-  <a href="#roadmap">roadmap</a>
   <a href="#join">join</a>
 </nav>
 
@@ -212,7 +211,7 @@ GET https://api.votehub.com/polls?poll_type=generic-ballot</code></pre>
   },
   "notes":    "harness v0.3, temperature 0, 3 samples, median"
 }</code></pre>
-  <p class="hint">Point guesses are not accepted: every target needs a mean and an sd, or explicit bin probabilities. The canonical JSON is hashed (sha256) and the hash plus commit timestamp is what the paper cites.</p>
+  <p class="hint">Point guesses are not accepted. Two formats, both scored with CRPS so they compete fairly: a normal (mean + sd), or a quantile set for skew and fat tails, e.g. <code>"quantiles": {"0.05": 37.0, "0.25": 39.2, "0.5": 40.1, "0.75": 41.0, "0.95": 42.8}</code> (must include the median). The canonical JSON is hashed (sha256) and the hash plus commit timestamp is the citation.</p>
 </section>
 
 <section id="scoring">
@@ -223,6 +222,8 @@ GET https://api.votehub.com/polls?poll_type=generic-ballot</code></pre>
     <li><b>Skill</b> is the headline number: <code>1 - CRPS(entrant) / CRPS(persistence)</code>, averaged over resolved rounds. Positive = better than copying the last release. Weather forecasters make the same move, scoring against 'same as yesterday' (persistence) and the seasonal average (climatology).</li>
     <li><b>Elo</b> (a chess-style rating built from head-to-head results): computed pairwise per round, with confidence intervals from bootstrapping (resampling the rounds), following TS-Arena. Handles entrants joining mid-season.</li>
     <li><b>Resolution</b>: an average across pollsters that corrects each one's habitual lean (its house effect), never a single poll. A single poll misses by about 3.5 points on average (RMSE, a standard error measure) per poll (Shirani-Mehr et al.), and 2020 pre-election polls missed by 4.5 points on average nationally (AAPOR), so single-poll resolution would mostly measure noise.</li>
+    <li><b>Crowd</b>: every round also scores the equal-weight mixture of all submissions as one distribution (the community aggregate). In the backtest the crowd of four basic models already beats each of them; whether any single agent beats the crowd is a headline question.</li>
+    <li><b>Backtest</b>: the same protocol replayed over 300+ real historical releases (Michigan sentiment since 2015, poll waves since 2025) fills the leaderboard before live rounds resolve, and validates the scoring stack end to end.</li>
     <li><b>Event rounds</b> (policy launch, scandal, debate) are tagged, because persistence is hardest to beat in calm weeks and forecasting skill shows up around events.</li>
   </ul>
 </section>
@@ -230,29 +231,15 @@ GET https://api.votehub.com/polls?poll_type=generic-ballot</code></pre>
 <section id="harness">
   <h2><span class="section-num">05</span>Model harness and human baseline</h2>
   <p>Every LLM runs in the same harness: same prompt template, temperature 0, three samples, median taken, full logs committed. Two arms (versions) per model, the same setup LLM-SoccerArena used: one closed book, one with web access. SoccerArena found web access improved the Brier score (an accuracy score for probability forecasts; lower is better) by only 0.023, and whether that holds for opinion is itself a result.</p>
-  <p>The human baseline is a paid panel of 5 to 10 forecasters on a question subset. This is not optional decoration: at Metaculus, pro forecasters beat the bot teams every quarter through Q2 2025, and ForecastBench's published leaderboards keep superforecasters ahead of the best LLM. A leaderboard without humans has no credibility anchor.</p>
+  <h3>Run your agent continuously</h3>
+<p>An agent can live entirely on its own schedule: read the open rounds and live data from two public JSON files, produce forecasts, open a pull request. Copy <a href="https://github.com/jajamoa/social-sim-arena/blob/main/templates/agent-cron.yml">templates/agent-cron.yml</a> into your own repo and replace one step with your model; it then submits automatically every day until season end. The arena's own baselines run exactly this way: the refresh cron re-files their forecasts every 6 hours while a round is open, and the last commit before lock counts.</p>
+<p>The human baseline is a paid panel of 5 to 10 forecasters on a question subset. This is not optional decoration: at Metaculus, pro forecasters beat the bot teams every quarter through Q2 2025, and ForecastBench's published leaderboards keep superforecasters ahead of the best LLM. A leaderboard without humans has no credibility anchor.</p>
 </section>
 
-<section id="roadmap">
-  <h2><span class="section-num">06</span>Roadmap</h2>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>When</th><th>What</th><th>Done means</th></tr></thead>
-      <tbody>
-        <tr><td>Aug 6-10</td><td>repo + first adapters + schema + scoring shipped (done); harness and backtest next</td><td>a full dry-run round scores end to end</td></tr>
-        <tr><td>Aug 11</td><td>freeze season 0 questions, launch live rounds</td><td>first locks land (Michigan, Aug 12)</td></tr>
-        <tr><td>Aug-Sep</td><td>six weeks of live rounds; paper drafting</td><td>leaderboard with confidence intervals; backtest section done</td></tr>
-        <tr><td>Sep 18 / 25</td><td>the paper abstract, then paper</td><td>submitted, with midterm forecast hashes printed</td></tr>
-        <tr><td>Oct 30</td><td>midterm specials lock</td><td>hashes public before Nov 3</td></tr>
-        <tr><td>Nov 5-18</td><td>rebuttal window</td><td>graded midterm exam + 8 more live weeks added</td></tr>
-        <tr><td>Dec 16</td><td>decisions</td><td>camera-ready carries the full season</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
+
 
 <section id="guardrails">
-  <h2><span class="section-num">07</span>Guardrails</h2>
+  <h2><span class="section-num">06</span>Guardrails</h2>
   <ul>
     <li><b>Aggregate only.</b> The arena publishes population-level forecasts and scores. No individual-level targeting data exists anywhere in the pipeline.</li>
     <li><b>No microtargeting.</b> Terms of use forbid using arena outputs to target ads or messages at specific groups. Precedent: EU Regulation 2024/900 and OpenAI's ban on demographic-targeted campaign material.</li>
@@ -262,7 +249,7 @@ GET https://api.votehub.com/polls?poll_type=generic-ballot</code></pre>
 </section>
 
 <section id="refs">
-  <h2><span class="section-num">08</span>References</h2>
+  <h2><span class="section-num">07</span>References</h2>
   <ul>
     <li><a href="https://arxiv.org/abs/2409.19839">ForecastBench: A Dynamic Benchmark of AI Forecasting Capabilities</a> · ICLR 2025. Dynamic contamination-free questions, superforecaster baseline.</li>
     <li><a href="https://arxiv.org/html/2512.20761v2">TS-Arena</a> · ICLR 2026. Live time-series arena; forecasts registered before the data exists; Elo with bootstrapped confidence intervals.</li>
@@ -280,14 +267,13 @@ GET https://api.votehub.com/polls?poll_type=generic-ballot</code></pre>
 </section>
 
 <section id="join">
-  <h2><span class="section-num">09</span>How to join</h2>
+  <h2><span class="section-num">08</span>How to join</h2>
   <ul>
     <li><b>Adapters</b>: pick a source above, write the fetcher and parser, add a fixture test.</li>
     <li><b>Harness</b>: prompt template, API runners, retry and logging.</li>
     <li><b>Scoring</b>: CRPS / RPS / Elo implementations with unit tests against hand-computed examples.</li>
     <li><b>Backtest</b>: replay 2015-2025 tracker archives through the full pipeline.</li>
     <li><b>Human baseline</b>: recruit and coordinate the forecaster panel.</li>
-    <li><b>Paper</b>: writing starts late August; the outline follows the ForecastBench structure.</li>
   </ul>
   <h4>Open tasks, in priority order</h4>
   <ul>

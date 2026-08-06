@@ -85,9 +85,27 @@ def validate(path, now=None):
         for key in ("round_id", "entrant", "topline"):
             if key not in fc:
                 fail(f"{rel}: missing required field '{key}'")
-        sd = fc["topline"].get("sd") if isinstance(fc["topline"], dict) else None
-        if isinstance(sd, bool) or not isinstance(sd, (int, float)) or sd <= 0:
-            fail(f"{rel}: topline.sd must be a positive number")
+        t = fc["topline"] if isinstance(fc["topline"], dict) else {}
+        if "quantiles" not in t:
+            sd = t.get("sd")
+            if isinstance(sd, bool) or not isinstance(sd, (int, float)) or sd <= 0:
+                fail(f"{rel}: topline needs mean+sd (sd > 0) or quantiles")
+
+    # semantic checks for quantile submissions (beyond the JSON schema)
+    t = fc.get("topline") or {}
+    q = t.get("quantiles")
+    if q:
+        try:
+            items = sorted((float(k), float(v)) for k, v in q.items())
+        except (TypeError, ValueError):
+            fail(f"{rel}: quantiles must map numeric levels to numbers")
+        if not any(abs(l - 0.5) < 1e-9 for l, _ in items):
+            fail(f"{rel}: quantiles must include the median ('0.5')")
+        if any(l <= 0 or l >= 1 for l, _ in items):
+            fail(f"{rel}: quantile levels must be strictly between 0 and 1")
+        vals = [v for _, v in items]
+        if any(b < a for a, b in zip(vals, vals[1:])):
+            fail(f"{rel}: quantile values must be non-decreasing in level")
     except Exception as e:
         fail(f"{rel}: schema violation: {e}")
 
