@@ -59,10 +59,15 @@ def house_effects(polls, asof, key="value"):
     return effects
 
 
-def adjusted_average(polls, asof=None, key="value"):
-    """House-effect-adjusted average as of a date. Returns (value, n_polls_in_window)."""
+def adjusted_average(polls, asof=None, key="value", effects=None):
+    """House-effect-adjusted average as of a date. Returns (value, n_polls_in_window).
+
+    Pass precomputed `effects` when calling repeatedly over many dates: house
+    effects move slowly, so one computation at the anchor date is fine for a
+    year of weekly points, and it avoids quadratic recomputation."""
     asof = asof or date.today()
-    effects = house_effects(polls, asof, key)
+    if effects is None:
+        effects = house_effects(polls, asof, key)
     adjusted = []
     n_window = 0
     for p in polls:
@@ -72,3 +77,19 @@ def adjusted_average(polls, asof=None, key="value"):
         if _weight(p, asof) > 0:
             n_window += 1
     return raw_average(adjusted, asof, key), n_window
+
+
+def weekly_series(polls, n_weeks=52, key="value"):
+    """Weekly adjusted-average points ending at the newest poll date.
+    House effects computed once at the anchor and reused."""
+    if not polls:
+        return []
+    anchor = polls[-1]["date"]
+    effects = house_effects(polls, anchor, key)
+    out = []
+    for weeks_back in range(n_weeks - 1, -1, -1):
+        asof = anchor.fromordinal(anchor.toordinal() - 7 * weeks_back)
+        val, _ = adjusted_average(polls, asof, key, effects=effects)
+        if val is not None:
+            out.append({"date": asof.isoformat(), "value": round(val, 2)})
+    return out

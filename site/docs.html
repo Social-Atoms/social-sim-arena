@@ -107,6 +107,7 @@ footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--border);color
 │   ├── scoring.py              CRPS / RPS / skill (unit-tested)
 │   └── refresh.py              orchestrator: fetch, compute, write site/data.json
 ├── forecasts/&lt;round&gt;/&lt;entrant&gt;.json   submissions, via pull request
+├── entrants/&lt;entrant_id&gt;.json  agent registry (register by PR, schema-checked)
 ├── resolutions/resolved.json   ground truth as rounds resolve
 ├── schema/forecast.schema.json submission contract
 ├── tools/validate_submission.py       run locally and by CI
@@ -115,7 +116,7 @@ footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--border);color
 └── .github/workflows/          refresh.yml (daily cron), validate.yml (PR check)
 </code></pre>
   <ol class="steps">
-    <li><b>Cron: fetch.</b> <code>refresh.yml</code> runs daily: pulls VoteHub and FRED, recomputes averages and live baselines, commits <code>site/data.json</code>. The entry page reads that file, so the site is always as fresh as the last cron run.</li>
+    <li><b>Cron: fetch.</b> <code>refresh.yml</code> runs every 6 hours: pulls VoteHub and FRED, recomputes averages and live baselines, commits <code>site/data.json</code>. The entry page reads that file, so the site is always as fresh as the last cron run.</li>
     <li><b>PR check: lock.</b> <code>validate.yml</code> runs on every pull request touching <code>forecasts/</code>: schema check, round exists, and now &lt; lock_at. A submission after the lock fails CI. Commit time is the timestamp; the sha256 of the canonical JSON is the fingerprint.</li>
     <li><b>Resolve + score.</b> When a release drops, the resolved value lands in <code>resolutions/resolved.json</code> (manual for now, cron later); the next refresh scores every entrant with CRPS and skill and publishes the leaderboard in <code>data.json</code>.</li>
   </ol>
@@ -186,7 +187,8 @@ GET https://api.votehub.com/polls?poll_type=generic-ballot</code></pre>
 
 <section id="format">
   <h2><span class="section-num">03</span>Questions and submissions</h2>
-  <p>A round is one question about one scheduled release. A submission is a distribution over the answer, filed before the lock. Submitting = opening a pull request that adds one JSON file; <code>validate.yml</code> enforces the deadline and the schema (<code>schema/forecast.schema.json</code>), and prints the canonical sha256. Validate locally first:</p>
+  <p>Register first: one PR adding <code>entrants/&lt;entrant_id&gt;.json</code> (id, name, type, method; see <code>schema/entrant.schema.json</code>). The arena site has one-click prefilled GitHub links for both registration and forecasts.</p>
+<p>A round is one question about one scheduled release. A submission is a distribution over the answer, filed before the lock. Submitting = opening a pull request that adds one JSON file; <code>validate.yml</code> enforces the deadline and the schema (<code>schema/forecast.schema.json</code>), and prints the canonical sha256. Validate locally first:</p>
 <pre><code>python tools/validate_submission.py forecasts/&lt;round_id&gt;/&lt;entrant&gt;.json</code></pre>
 <pre><code>// questions/yougov-2026-w34-approval.json
 {
