@@ -6,7 +6,7 @@
 <title>LIVE · Social simulation in real society</title>
 <meta name="description" content="Can AI predict what the public will think next week? Live benchmark: simulated audiences and agents forecast real public-opinion releases before publication.">
 <meta property="og:title" content="Social Simulation Arena">
-<meta property="og:description" content="Simulated societies, graded by reality: forecasts sealed before the numbers exist. No reruns, no cherry-picked tests.">
+<meta property="og:description" content="The first prospective test of simulated societies: forecasts sealed before the numbers exist, scored by reality.">
 <meta property="og:image" content="https://cjj.li/social-sim-arena/card.png">
 <meta name="twitter:card" content="summary_large_image">
 <style>
@@ -137,9 +137,18 @@ footer .upd{margin-left:auto;}
   main{display:block;}
   .page.on{display:block;}
   #page-live.on{display:block;}
+  nav.top .in{flex-wrap:wrap;height:auto;padding:8px 12px;gap:4px 8px;overflow:visible;}
+  nav.top .brand{width:100%;margin-right:0;}
+  nav.top .right{margin-left:auto;gap:12px;}
+  .ptab{padding:6px 12px;font-size:13px;}
+  .seg{flex-wrap:wrap;}
+  .chartcol .tabs-row{overflow:visible;flex-wrap:wrap;}
   .chartcol{border-right:none;border-bottom:1px solid var(--line);}
-  .chartpane{height:300px;min-height:300px;}
+  .chartctl{position:static;display:flex;flex-wrap:wrap;gap:6px;padding:6px 14px 0;}
+  .chartpane{height:auto;min-height:0;display:flex;flex-direction:column;}
+  .chartpane svg{height:380px;}
   .lbcol{max-width:none;}
+  .lbcol .lbhead{flex-wrap:wrap;}
   .lbcol .scroll{overflow-x:auto;}
   .bar .sub{display:none;}
   .bar .meta{white-space:normal;margin-left:0;}
@@ -171,7 +180,7 @@ footer .upd{margin-left:auto;}
 <div class="bar">
   <h1>Social simulation in real society</h1>
   <span class="livebadge"><span class="ld"></span>LIVE</span>
-  <span class="sub">Every simulated society so far was graded on the past, where the answers were already known. Here the forecasts are sealed before the numbers exist, and reality does the grading. No reruns. No cherry-picked tests.</span>
+  <span class="sub">The first prospective test of simulated societies: forecasts sealed before the numbers exist, scored by reality.</span>
   <span class="exam" id="exam-chip" style="cursor:pointer;">MIDTERM EXAM · Nov 3</span>
   <span class="meta" id="meta-line" style="margin-left:auto;">loading…</span>
 </div>
@@ -349,7 +358,7 @@ function tipShow(tip, ev, html){
 function aggChart(traj, nameOf, unit){
   const svg = clearChart(), tip = pane().querySelector('.tooltip');
   if(!traj || traj.length<2){ svg.style.display='none'; return; }
-  const pw = pane().clientWidth, ph = pane().clientHeight;
+  const pw = pane().clientWidth, ph = (innerWidth<880?386:pane().clientHeight);
   if(pw < 80 || ph < 80){ svg.style.display='none'; return; }
   const mocks = (window.__data && window.__data.backtest && window.__data.backtest.mock_models) || [];
   const series = ['climatology','trend','ewma'].concat(mocks).concat(['crowd']);
