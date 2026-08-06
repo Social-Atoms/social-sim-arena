@@ -69,7 +69,9 @@ def build_series(approval, generic, umich):
     }
 
 
-def build_trackers(approval, generic, series):
+def build_trackers(approval, generic, series, next_umich_release=None):
+    if not approval or not generic:
+        raise RuntimeError("VoteHub returned no polls; refusing to build trackers from empty data")
     # Anchor each average at its source's real freshness, not the wall clock.
     # The VoteHub API snapshot lags the live site by a few weeks; we label the
     # as-of date instead of pretending the number is from today.
@@ -127,10 +129,17 @@ def build_trackers(approval, generic, series):
             "unit": "index",
             "value": um["value"],
             "asof": um["date"],
-            "next_release": UMICH_NEXT_RELEASE,
+            "next_release": next_umich_release or UMICH_NEXT_RELEASE,
             "source": "FRED (UMCSENT, lags one month); release-day values from sca.isr.umich.edu",
         }
     return t
+
+
+def next_release_for(season, tracker, now):
+    """Next scheduled release for a tracker, from the season file itself."""
+    upcoming = [r["release_at"] for r in season["rounds"]
+                if r["tracker"] == tracker and parse_iso(r["release_at"]) > now]
+    return min(upcoming) if upcoming else None
 
 
 def round_status(r, resolved, now):
@@ -149,7 +158,11 @@ def build_rounds(season, series, resolved, now):
         row = {k: r[k] for k in ("round_id", "tracker", "series", "question", "unit",
                                   "release_at", "release_estimated", "lock_at", "resolve")}
         row["status"] = round_status(r, resolved, now)
-        hist = series.get(r["series"]) or []
+        # Baselines are frozen at lock time: only history strictly before the
+        # lock date counts. Otherwise, once a release lands in the series, the
+        # persistence null would contain the outcome it is scored against.
+        lock_date = r["lock_at"][:10]
+        hist = [p for p in (series.get(r["series"]) or []) if p["date"] < lock_date]
         if len(hist) >= 3:
             target = r["release_at"][:10]
             row["baselines"] = {
@@ -216,11 +229,12 @@ def main():
     generic = votehub.generic_ballot_polls()
     umich = fredcsv.umich_sentiment()
 
-    series = build_series(approval, generic, umich)
-    trackers = build_trackers(approval, generic, series)
-
     with open(QUESTIONS) as f:
         season = json.load(f)
+
+    series = build_series(approval, generic, umich)
+    trackers = build_trackers(approval, generic, series,
+                              next_release_for(season, "umich_sentiment", now))
     resolved = {}
     if os.path.exists(RESOLVED):
         with open(RESOLVED) as f:

@@ -46,10 +46,13 @@ def house_effects(polls, asof, key="value"):
     """pollster -> shrunken mean gap vs the same-day raw rolling average."""
     start = asof - timedelta(days=HOUSE_LOOKBACK_DAYS)
     gaps = {}
+    base_by_date = {}  # many polls share a field date; one rolling-average pass each
     for p in polls:
         if p["date"] < start or p["date"] > asof:
             continue
-        base = raw_average(polls, p["date"], key)
+        if p["date"] not in base_by_date:
+            base_by_date[p["date"]] = raw_average(polls, p["date"], key)
+        base = base_by_date[p["date"]]
         if base is None:
             continue
         gaps.setdefault(p["pollster"], []).append(p[key] - base)

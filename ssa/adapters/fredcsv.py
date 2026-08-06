@@ -22,7 +22,9 @@ def series(series_id, timeout=30):
     r.raise_for_status()
     rows = []
     reader = csv.reader(io.StringIO(r.text))
-    header = next(reader)
+    header = next(reader, None)
+    if header is None:
+        raise RuntimeError("FRED returned an empty body for series " + series_id)
     for row in reader:
         if len(row) < 2 or row[1] in (".", ""):
             continue

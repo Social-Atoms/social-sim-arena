@@ -85,7 +85,8 @@ def validate(path, now=None):
         for key in ("round_id", "entrant", "topline"):
             if key not in fc:
                 fail(f"{rel}: missing required field '{key}'")
-        if not (isinstance(fc["topline"].get("sd"), (int, float)) and fc["topline"]["sd"] > 0):
+        sd = fc["topline"].get("sd") if isinstance(fc["topline"], dict) else None
+        if isinstance(sd, bool) or not isinstance(sd, (int, float)) or sd <= 0:
             fail(f"{rel}: topline.sd must be a positive number")
     except Exception as e:
         fail(f"{rel}: schema violation: {e}")
