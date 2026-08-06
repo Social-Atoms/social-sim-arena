@@ -317,13 +317,21 @@ def main():
     per_crps = next((e["mean_crps"] for e in bt["overall"] if e["entrant"] == "persistence"), 1.7)
     mock_skill = {"gpt-5.5": 0.024, "claude-opus": 0.031, "gemini-pro": 0.012,
                   "grok": -0.008, "deepseek": 0.018, "qwen": -0.019}
-    for mid, sk in mock_skill.items():
-        bt["overall"].append({
-            "entrant": mid, "rounds": bt["n_rounds"],
-            "mean_crps": round(per_crps * (1 - sk), 3),
-            "mean_skill": sk, "mock": True,
-        })
-    bt["overall"].sort(key=lambda x: -x["mean_skill"])
+    import hashlib as _hh
+    for key, board in bt["spans"].items():
+        base_crps = next((e["mean_crps"] for e in board if e["entrant"] == "persistence"), per_crps)
+        n_rounds = board[0]["rounds"] if board else 0
+        for mid, sk in mock_skill.items():
+            hb = _hh.sha256(f"{mid}:{key}".encode()).digest()
+            spread = 0.05 if key == "last" else (0.02 if key == "d30" else 0.008)
+            sk_i = round(sk + ((hb[0] / 255.0) - 0.5) * 2 * spread, 3)
+            board.append({
+                "entrant": mid, "rounds": n_rounds,
+                "mean_crps": round(base_crps * (1 - sk_i), 3),
+                "mean_skill": sk_i, "mock": True,
+            })
+        board.sort(key=lambda x: -x["mean_skill"])
+    bt["overall"] = bt["spans"]["all"]
     # placeholder trajectories for the models so the aggregate chart can
     # compare them over time; deterministic wobble around a ramp to the
     # final mock skill. Flagged via bt["mock_models"].

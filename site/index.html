@@ -171,7 +171,7 @@ footer .upd{margin-left:auto;}
 <div class="bar">
   <h1>Social simulation in real society</h1>
   <span class="livebadge"><span class="ld"></span>LIVE</span>
-  <span class="sub">AI says it understands people. On Nov 3 it guesses the midterms in front of everyone. Until then: live rounds weekly, locked 48 h ahead, scored in public.</span>
+  <span class="sub">Simulated societies have only ever been graded on the past. Here they face the future: real public opinion, forecast in advance, locked and scored in public.</span>
   <span class="exam" id="exam-chip" style="cursor:pointer;">MIDTERM EXAM · Nov 3</span>
   <span class="meta" id="meta-line" style="margin-left:auto;">loading…</span>
 </div>
@@ -203,7 +203,7 @@ footer .upd{margin-left:auto;}
     <aside class="lbcol">
       <div class="lbhead">
         <h2>LEADERBOARD</h2>
-        <div class="seg"><button id="tab-bt" class="on">Season -1 · final</button><button id="tab-live">Season 0 · live</button></div>
+        <div class="seg" id="span-seg"><button data-span="all" class="on">All time</button><button data-span="m6">6M</button><button data-span="d30">30D</button><button data-span="last">Last round</button></div>
       </div>
       <div class="scroll">
         <table class="lb">
@@ -445,8 +445,13 @@ function aggChart(traj, nameOf, unit){
     let best=0,bd=1e9;
     traj.forEach((t,i)=>{const d=Math.abs(X(i)-mx); if(d<bd){bd=d;best=i;}});
     xh.setAttribute('x1',X(best)); xh.setAttribute('x2',X(best)); xh.style.display='';
-    tipShow(tip, ev, '<b>'+fmtDate(traj[best].date)+'</b> · '+traj[best].n+' rounds<br>'
-      + ['crowd','ewma','trend','climatology'].map(s=>(nameOf[s]||s).split(' (')[0]+' '+fmtV(val(traj[best],s)??0)).join('<br>'));
+    const ck = traj[best];
+    const lineup = series.slice().sort((a,b)=>{
+      const va = val(ck,a)??-9, vb = val(ck,b)??-9;
+      return unit==='crps' ? va-vb : vb-va;
+    });
+    tipShow(tip, ev, '<b>'+fmtDate(ck.date)+'</b> · '+ck.n+' rounds<br>'
+      + lineup.map((s,i)=>(i+1)+'. '+(nameOf[s]||s).split(' (')[0]+' '+fmtV(val(ck,s)??0)).join('<br>'));
   };
   svg.onmouseleave = ()=>{ xh.style.display='none'; tip.style.display='none'; };
 }
@@ -458,7 +463,8 @@ function seriesChart(key, data){
   if(!series || series.length<2){ svg.style.display='none'; return; }
   const pw = pane().clientWidth, ph = pane().clientHeight;
   if(pw < 80 || ph < 80){ svg.style.display='none'; return; }
-  const hidden = window.__hidden = window.__hidden || new Set();
+  if(!window.__hidden){ window.__hidden = new Set(['persistence','trend','ewma','climatology']); }
+  const hidden = window.__hidden;
   const upcoming = (data.rounds||[]).filter(r =>
     r.series === d.rseries && r.forecasts && Object.keys(r.forecasts).length &&
     (r.status==='open' || r.status==='locked'));
@@ -485,7 +491,10 @@ function seriesChart(key, data){
   const xspan = (xmax - xs[0]) || 1;
   const X = t => P.l + (t-xs[0])/xspan*(W-P.l-P.r);
   const Y = v => P.t + (hi-v)/(hi-lo)*(H-P.t-P.b);
-  let g = `<defs><clipPath id="clip-ser"><rect x="${P.l}" y="${P.t}" width="${W-P.l-P.r}" height="${H-P.t-P.b}"/></clipPath></defs>`;
+  let g = `<defs><clipPath id="clip-ser"><rect x="${P.l}" y="${P.t}" width="${W-P.l-P.r}" height="${H-P.t-P.b}"/></clipPath>
+    <linearGradient id="serfill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#111110" stop-opacity=".07"/>
+      <stop offset="1" stop-color="#111110" stop-opacity="0"/></linearGradient></defs>`;
   g += `<rect x="${P.l}" y="${P.t}" width="${W-P.l-P.r}" height="${H-P.t-P.b}" fill="none" stroke="#e0e0e0"/>`;
   for(const v of niceTicks(lo,hi,6)){
     g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="rgba(0,0,0,.05)"/>`;
@@ -504,15 +513,17 @@ function seriesChart(key, data){
     g += `<text x="${X(t0)}" y="${H-8}" font-size="11" fill="#96948d" text-anchor="${anchor}">${fmtDate(alld[i])}</text>`;
   }
   const pts = series.map((p,i)=>[X(xs[i]), Y(p.value)]);
-  g += `<g clip-path="url(#clip-ser)"><path d="${smoothPath(pts)}" fill="none" stroke="#111110" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+  g += `<g clip-path="url(#clip-ser)"><path d="${smoothPath(pts)} L ${X(xs[xs.length-1]).toFixed(1)} ${(H-P.b).toFixed(1)} L ${P.l} ${(H-P.b).toFixed(1)} Z" fill="url(#serfill)" stroke="none"/>`
+     + `<path d="${smoothPath(pts)}" fill="none" stroke="#111110" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g>`;
   const lx = X(xs[xs.length-1]), lyv = Y(ys[ys.length-1]);
   g += `<circle cx="${lx}" cy="${lyv}" r="3.4" fill="#111110" stroke="#fff" stroke-width="1.6"/>`;
   g += `<text x="${lx-8}" y="${lyv-9}" font-size="12.5" font-weight="800" fill="#111110" text-anchor="end">${ys[ys.length-1]}${d.unit==='%'?'%':''}</text>`;
   // forecast overlays for upcoming rounds
   upcoming.forEach(r => {
     const rx = X(dnum(r.release_at));
-    g += `<line x1="${rx}" x2="${rx}" y1="${P.t}" y2="${H-P.b}" stroke="#e0e0e0" stroke-dasharray="3 4"/>`;
-    g += `<text x="${rx}" y="${P.t-3}" font-size="9.5" fill="#96948d" text-anchor="middle">${fmtDate(r.release_at)}</text>`;
+    g += `<rect x="${rx-11}" y="${P.t}" width="22" height="${H-P.t-P.b}" fill="#15803d" opacity=".05"/>`;
+    g += `<line x1="${rx}" x2="${rx}" y1="${P.t}" y2="${H-P.b}" stroke="#c9e5d2" stroke-width="1"/>`;
+    g += `<text x="${rx}" y="${P.t-3}" font-size="9.5" fill="#0a6a30" font-weight="700" text-anchor="middle">${fmtDate(r.release_at)}</text>`;
     const ids = Object.keys(r.forecasts).filter(id=>!hidden.has(id)).sort();
     ids.forEach((id,j)=>{
       const f = r.forecasts[id];
@@ -583,10 +594,10 @@ function demoReplay(){
 
 const TABDEFS = {
   agg: {},
-  umich_sentiment: { chart:'umich_sentiment', unit:'', label:'Michigan consumer sentiment', tracker:'umich_sentiment', per:'umich_sentiment', rseries:'umich_sentiment' },
-  yougov_approval: { chart:'yougov_approval', unit:'%', label:'Economist/YouGov Trump approval', tracker:'yougov_approval', per:'yougov_approval', rseries:'yougov_approval' },
-  mc_approval: { chart:'mc_approval', unit:'%', label:'Morning Consult Trump approval', tracker:'mc_approval', per:'mc_approval', rseries:'mc_approval' },
-  generic_margin: { chart:'generic_margin', unit:'', zero:true, label:'2026 generic ballot margin, Dem minus Rep', tracker:'generic_ballot_avg', per:'yougov_generic_margin', rseries:'yougov_generic_margin' },
+  umich_sentiment: { chart:'umich_sentiment', unit:'', label:'Michigan consumer sentiment', tracker:'umich_sentiment', per:'umich_sentiment', rseries:'umich_sentiment', srcName:'sca.isr.umich.edu', srcUrl:'https://www.sca.isr.umich.edu/' },
+  yougov_approval: { chart:'yougov_approval', unit:'%', label:'Economist/YouGov Trump approval', tracker:'yougov_approval', per:'yougov_approval', rseries:'yougov_approval', srcName:'yougov.com', srcUrl:'https://yougov.com/en-us/topics/topic/The_Economist_YouGov_polls' },
+  mc_approval: { chart:'mc_approval', unit:'%', label:'Morning Consult Trump approval', tracker:'mc_approval', per:'mc_approval', rseries:'mc_approval', srcName:'morningconsult.com', srcUrl:'https://pro.morningconsult.com/trackers/donald-trump-congress-policy-republicans-polling' },
+  generic_margin: { chart:'generic_margin', unit:'', zero:true, label:'2026 generic ballot margin, Dem minus Rep', tracker:'generic_ballot_avg', per:'yougov_generic_margin', rseries:'yougov_generic_margin', srcName:'votehub.com', srcUrl:'https://votehub.com/polls/' },
 };
 
 function setTab(key){
@@ -609,17 +620,18 @@ function setTab(key){
     const tr = (data.trackers||{})[d.tracker]||{};
     const per = ((data.backtest||{}).per_series||{})[d.per];
     const top = per && per[0] ? ' · best model here: '+(nameOf[per[0].entrant]||per[0].entrant).split(' (')[0]+' '+(per[0].mean_skill>0?'+':'')+(per[0].mean_skill*100).toFixed(1)+'%' : '';
-    document.getElementById('caption').textContent =
-      d.label+' · latest '+(tr.value!=null?tr.value:'n/a')+(d.unit||'')+', as of '+(tr.asof||'n/a')+top+' · dots: forecasts for the next releases';
+    document.getElementById('caption').innerHTML =
+      esc(d.label)+' · latest '+esc(tr.value!=null?tr.value:'n/a')+esc(d.unit||'')+', as of '+esc(tr.asof||'n/a')+esc(top)
+      +' · dots: forecasts for the next releases · data source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener" style="color:var(--link);text-decoration:none;font-weight:600;">'+esc(d.srcName)+'</a>';
     seriesChart(key, data);
   }
 }
 
+const SPANLABEL = {all:'all 323 backtest releases (2015 to 2026)', m6:'the last six months of releases', d30:'the last 30 days of releases', last:'the most recent release only'};
 function renderBoard(mode){
   const data = window.__data; if(!data) return;
   window.__board = mode;
-  document.getElementById('tab-bt').classList.toggle('on', mode==='bt');
-  document.getElementById('tab-live').classList.toggle('on', mode==='live');
+  document.querySelectorAll('#span-seg button').forEach(b=>b.classList.toggle('on', b.dataset.span===mode));
   const lb = data.leaderboard || {};
   const nameOf = {}, typeOf = {};
   (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; });
@@ -639,21 +651,12 @@ function renderBoard(mode){
       + '<td class="num">'+(s ? s.rounds : 0)+'</td></tr>';
   }
   const body = document.getElementById('lb-body');
-  if(mode==='bt'){
-    const entries = (data.backtest&&data.backtest.overall)||[];
-    body.innerHTML = entries.map((e,i)=>row(e.entrant, e, i+1)).join('') || '<tr><td colspan="5">…</td></tr>';
-    document.getElementById('lb-note').textContent =
-      'Season -1: the protocol replayed over '+((data.backtest&&data.backtest.n_rounds)||0)+' real historical releases (2015 to 2026); forecasts use only data published before each release. Frontier-model rows are placeholder numbers until API keys connect; baselines are real. A new season starts with each cycle.';
-  } else {
-    const scores = {}; (lb.entries||[]).forEach(e => scores[e.entrant]=e);
-    const ids = (data.entrants||[]).map(e=>e.entrant_id);
-    const scored = ids.filter(id=>scores[id]).sort((a,b)=>scores[b].mean_skill-scores[a].mean_skill);
-    const pending = ids.filter(id=>!scores[id]);
-    let rank = 0;
-    body.innerHTML = scored.concat(pending).map(id=>row(id, scores[id], scores[id]?++rank:null, true)).join('');
-    document.getElementById('lb-note').textContent =
-      'Season 0 is live now: first scores land with the Michigan release on Aug 14, the season finale is the Nov 3 midterm exam. Models run in a uniform harness (mock forecasts until API keys connect); every entrant carries its last-season mark until real scores replace it.';
-  }
+  const spans = (data.backtest && data.backtest.spans) || {};
+  const entries = spans[mode] || (data.backtest&&data.backtest.overall) || [];
+  body.innerHTML = entries.map((e,i)=>row(e.entrant, e, i+1)).join('') || '<tr><td colspan="5">…</td></tr>';
+  const n = entries.length ? entries[0].rounds : 0;
+  document.getElementById('lb-note').textContent =
+    'Skill over '+(SPANLABEL[mode]||mode)+' · '+n+' scored release'+(n===1?'':'s')+' per entrant. Live rounds join the window as they resolve, starting Aug 14; the Nov 3 midterm exam is the finale. Frontier-model rows are placeholder numbers until API keys connect; baselines are real.';
 }
 
 function roundsList(data){
@@ -723,7 +726,7 @@ function render(data){
   document.getElementById('foot-updated').textContent = 'data updated '+new Date(data.generated_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+' · refreshed every 6 hours';
 
   requestAnimationFrame(()=>setTab(window.__tab || 'agg'));
-  renderBoard(window.__board || 'bt');
+  renderBoard(window.__board || 'all');
   roundsList(data);
   entrantsList(data);
   examRounds(data);
@@ -774,8 +777,10 @@ document.querySelectorAll('#unit-seg button').forEach(b=> b.onclick = ()=>{
   document.querySelectorAll('#unit-seg button').forEach(x=>x.classList.toggle('on', x===b));
   if(window.__data) setTab('agg');
 });
-document.getElementById('tab-bt').onclick = ()=>renderBoard('bt');
-document.getElementById('tab-live').onclick = ()=>{ renderBoard('live'); if((window.__tab||'agg')==='agg') setTab('umich_sentiment'); };
+document.querySelectorAll('#span-seg button').forEach(b=> b.onclick = ()=>{
+  renderBoard(b.dataset.span);
+  if(b.dataset.span==='last' && (window.__tab||'agg')==='agg') setTab('umich_sentiment');
+});
 let rsz;
 function redraw(){ if(window.__data && (window.__page||'live')==='live') setTab(window.__tab||'agg'); }
 addEventListener('resize', ()=>{ clearTimeout(rsz); rsz = setTimeout(redraw, 200); });
