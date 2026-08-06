@@ -1,0 +1,26 @@
+name: Human forecast
+description: One guess for one open round. All human guesses pool into the "Human crowd" entrant.
+title: "guess: <round_id>"
+labels: [human-forecast]
+body:
+  - type: input
+    id: round_id
+    attributes:
+      label: Round id
+      description: From the Rounds page, e.g. umich-2026-08-prelim
+    validations:
+      required: true
+  - type: input
+    id: guess
+    attributes:
+      label: Your guess
+      description: The number you think will be released (the round's unit)
+    validations:
+      required: true
+  - type: input
+    id: sure
+    attributes:
+      label: How far off might you be?
+      description: Plus or minus how many points (this becomes your sd)
+    validations:
+      required: true

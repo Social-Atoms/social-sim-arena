@@ -1,4 +1,4 @@
-# Social Sim Arena
+# Social Simulation Arena
 
 A live benchmark for social simulation. Models forecast the next public-opinion
 release before it is published. Every forecast is locked 48 hours ahead,

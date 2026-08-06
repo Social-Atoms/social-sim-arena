@@ -90,6 +90,8 @@ def validate(path, now=None):
             sd = t.get("sd")
             if isinstance(sd, bool) or not isinstance(sd, (int, float)) or sd <= 0:
                 fail(f"{rel}: topline needs mean+sd (sd > 0) or quantiles")
+    except Exception as e:
+        fail(f"{rel}: schema violation: {e}")
 
     # semantic checks for quantile submissions (beyond the JSON schema)
     t = fc.get("topline") or {}
@@ -106,8 +108,6 @@ def validate(path, now=None):
         vals = [v for _, v in items]
         if any(b < a for a, b in zip(vals, vals[1:])):
             fail(f"{rel}: quantile values must be non-decreasing in level")
-    except Exception as e:
-        fail(f"{rel}: schema violation: {e}")
 
     if fc["round_id"] != round_dir:
         fail(f"{rel}: round_id '{fc['round_id']}' does not match directory '{round_dir}'")
