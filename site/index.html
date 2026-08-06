@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Social Sim Arena · predict the next poll before it drops</title>
+<meta name="description" content="A live benchmark for social simulation: models forecast the next public-opinion release before it is published. Wired to real data.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@200;300;400;500;600;700;800;900&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont/style.css');
+:root{
+  --bg:#ffffff;--fg:#444444;--fg-strong:#333333;--muted:#999999;--muted-2:#888888;--muted-3:#666666;
+  --link:#0000ee;--link-soft:#2563eb;--border:#e0e0e0;--border-2:#e8e8e8;--code-bg:#f8f8f8;--th-bg:#f5f5f5;--zebra:#f9f9f9;
+  --accent:#0000ee;--ok:#15803d;--warn:#b91c1c;
+  --font-mono:"Inconsolata","LXGW WenKai",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --font-cn:"LXGW WenKai","Songti SC","SimSun",serif;
+  --fs:14px;--lh:1.6;--maxw:880px;--radius:4px;--gap:16px;
+}
+*,*::before,*::after{box-sizing:border-box;}
+html{overflow-y:scroll;scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+body{max-width:var(--maxw);margin:40px auto;padding:0 16px;font-family:var(--font-mono);font-weight:300;font-size:var(--fs);line-height:var(--lh);color:var(--fg);background:var(--bg);-webkit-font-smoothing:antialiased;}
+:lang(zh),.cn{font-family:var(--font-cn);}
+a{color:var(--link);overflow-wrap:break-word;word-break:break-word;}
+a:visited{color:var(--link);}a:hover{opacity:.7;}
+h1,h2,h3,h4,h5{font-weight:300;line-height:1.25;color:var(--fg-strong);margin:1.6em 0 .55em;}
+h1{font-size:24px;}h2{font-size:19px;}h3{font-size:16px;}
+h4{font-size:14px;color:var(--muted-3);text-transform:uppercase;letter-spacing:.06em;}
+p{margin:.7em 0;}ul,ol{padding-left:1.4em;}li{margin:.3em 0;}strong,b{font-weight:600;}
+hr{border:none;border-top:1px solid var(--border);margin:1.6rem 0;}
+.hint{color:var(--muted);font-size:.85em;}
+small,.small{font-size:.85em;color:var(--muted-3);}
+code{background:var(--code-bg);border:1px solid var(--border-2);border-radius:3px;padding:2px 4px;font-size:.9em;color:var(--fg-strong);font-family:var(--font-mono);}
+pre{background:#fff;border:1px solid var(--border-2);border-radius:var(--radius);padding:16px;margin:16px 0;overflow-x:auto;font-size:13px;line-height:1.5;color:var(--fg-strong);box-shadow:0 1px 2px rgba(0,0,0,.05);}
+pre code{background:none;border:none;padding:0;font-size:inherit;}
+.table-wrap{display:block;width:100%;margin:16px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;background:#fff;font-size:13px;}
+th,td{border:1px solid var(--border);padding:7px 11px;text-align:left;vertical-align:top;}
+th{background:var(--th-bg);font-weight:600;color:var(--fg-strong);}
+thead{border-bottom:2px solid var(--border);}
+tbody tr:nth-child(even){background:var(--zebra);}
+details{border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin:10px 0;background:#fff;}
+summary{cursor:pointer;list-style:none;user-select:none;font-weight:400;color:var(--fg-strong);}
+summary::-webkit-details-marker{display:none;}
+summary::before{content:"+ ";color:var(--muted-3);}
+details[open] summary::before{content:"− ";}
+details[open] summary{margin-bottom:8px;}
+.hs-nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-bottom:1px solid var(--border);margin:0 -16px 24px;padding:10px 16px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;font-size:13px;}
+.hs-nav a{color:var(--muted-3);text-decoration:none;}
+.hs-nav a:hover{color:var(--link);opacity:1;}
+.hs-nav .brand{color:var(--fg-strong);font-weight:600;margin-right:auto;}
+.hero{padding:6px 0 2px;}
+.hero .eyebrow{color:var(--muted);font-size:.85em;letter-spacing:.05em;}
+.hero h1{margin:.15em 0 .25em;}
+.hero .tagline{color:var(--muted-3);font-size:15px;}
+section{padding:16px 0;scroll-margin-top:64px;}
+.section-num{color:var(--muted);font-weight:300;margin-right:.4em;}
+.grid{display:grid;gap:var(--gap);grid-template-columns:repeat(auto-fit,minmax(230px,1fr));}
+.card{border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04);min-width:0;}
+.card>h3,.card>h4,.card>:first-child{margin-top:0;}
+.card>:last-child{margin-bottom:0;}
+.callout{border-left:3px solid var(--accent);background:var(--code-bg);padding:10px 14px;margin:14px 0;border-radius:0 var(--radius) var(--radius) 0;}
+.callout.ok{border-left-color:var(--ok);}
+.callout.warn{border-left-color:var(--warn);}
+.callout .label{font-weight:600;color:var(--fg-strong);}
+.chip{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:1px 9px;font-size:.78em;color:var(--muted-3);background:#fff;margin:2px 3px 2px 0;white-space:nowrap;}
+.chip.ok{color:var(--ok);border-color:var(--ok);}
+.chip.warn{color:var(--warn);border-color:var(--warn);}
+.chip.acc{color:var(--link-soft);border-color:var(--link-soft);}
+ol.steps{counter-reset:step;list-style:none;padding-left:0;}
+ol.steps>li{position:relative;padding-left:32px;margin:12px 0;}
+ol.steps>li::before{counter-increment:step;content:counter(step);position:absolute;left:0;top:1px;width:20px;height:20px;line-height:20px;text-align:center;border:1px solid var(--fg-strong);border-radius:50%;font-size:11px;color:var(--fg-strong);}
+footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.85em;}
+.muted{color:var(--muted);}
+
+/* page-specific */
+.stats{display:grid;gap:var(--gap);grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin:18px 0 6px;}
+.stat{border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;background:#fff;min-width:0;}
+.stat .k{font-size:20px;color:var(--fg-strong);font-weight:400;}
+.stat .l{font-size:12px;color:var(--muted);line-height:1.4;}
+.timeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding-top:14px;border-top:1px solid var(--border);margin-top:8px;}
+.tl-item{position:relative;padding-left:14px;font-size:12.5px;color:var(--muted-3);line-height:1.45;}
+.tl-item::before{content:"";position:absolute;left:0;top:5px;width:7px;height:7px;border:1px solid var(--fg-strong);border-radius:50%;background:#fff;}
+.tl-item.hot::before{background:var(--fg-strong);}
+.tl-item b{display:block;color:var(--fg-strong);font-weight:600;}
+#data-note{margin-top:4px;}
+@media (max-width:768px){
+  body{padding:0 14px;margin:24px auto;}
+  .hs-nav{margin:0 -14px 18px;}
+  table{font-size:13px;white-space:nowrap;}
+  .timeline{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<nav class="hs-nav">
+  <span class="brand">Social Sim Arena</span>
+  <a href="#live">live</a>
+  <a href="#rounds">rounds</a>
+  <a href="#submit">submit</a>
+  <a href="#pipeline">pipeline</a>
+  <a href="#leaderboard">leaderboard</a>
+  <a href="docs.html">docs</a>
+</nav>
+
+<header class="hero">
+  <div class="eyebrow">PROTOTYPE v0 · SEASON 0 STARTS AUG 11, 2026 · <a href="https://github.com/jajamoa/social-sim-arena">github.com/jajamoa/social-sim-arena</a></div>
+  <h1>Social Sim Arena</h1>
+  <p class="tagline">A live benchmark for social simulation. Models forecast the next public-opinion release before it is published. Every forecast is locked 48 hours ahead, hashed, and scored in public.</p>
+</header>
+
+<div class="stats" id="stats">
+  <div class="stat"><div class="k" id="s-lock">…</div><div class="l" id="s-lock-l">to the next lock</div></div>
+  <div class="stat"><div class="k" id="s-mid">…</div><div class="l">days to the midterm exam, Nov 3</div></div>
+  <div class="stat"><div class="k" id="s-rounds">…</div><div class="l">rounds listed / resolved, season 0</div></div>
+  <div class="stat"><div class="k" id="s-appr">…</div><div class="l" id="s-appr-l">Trump approval, adjusted average</div></div>
+</div>
+<p class="hint" id="data-note">loading live data…</p>
+
+<hr>
+
+<section id="why">
+  <h2><span class="section-num">01</span>Why this exists</h2>
+  <p>Companies sell AI-simulated survey respondents, and papers disagree about whether they work. Every current evaluation replays old surveys, which sit inside training data, and vendors pick their own test sets. Live arenas fixed this in other fields: lock the prediction before the answer exists, and nobody can cheat.</p>
+  <div class="callout"><span class="label">The rule</span> · Forecasts lock 48 hours before each scheduled release. The answer cannot be in the training data. No vendor grades itself.</div>
+  <p class="hint">Genre precedent: <a href="https://arxiv.org/abs/2409.19839">ForecastBench</a> (ICLR 2025) · <a href="https://arxiv.org/html/2512.20761v2">TS-Arena</a> (ICLR 2026) · <a href="https://arxiv.org/abs/2607.24573">LLM-SoccerArena</a> · <a href="https://www.metaculus.com/">Metaculus AI benchmark</a>. Nobody runs one for public opinion. Background: <a href="/opinion-arena.html">two-slide brief</a>.</p>
+</section>
+
+<section id="live">
+  <h2><span class="section-num">02</span>Live board</h2>
+  <p class="hint">Real numbers, refreshed daily by the pipeline. Each value is stamped with its true as-of date; some sources lag their live dashboards by a few weeks, and we label that instead of hiding it.</p>
+  <div class="grid" id="trackers"></div>
+</section>
+
+<section id="rounds">
+  <h2><span class="section-num">03</span>Rounds</h2>
+  <p>A round is one question about one scheduled release. Lock is always release minus 48 hours. The two baselines shown are computed live from the real series; beating persistence is the whole game.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Round</th><th>Status</th><th>Lock (your time)</th><th>Persistence</th><th>Trend</th></tr></thead>
+      <tbody id="rounds-body"><tr><td colspan="5" class="muted">loading…</td></tr></tbody>
+    </table>
+  </div>
+  <p class="hint">Machine-readable: <a href="https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/questions/season0.json">questions/season0.json</a>. Civiqs rounds have no baselines yet because there is no machine-readable feed; an adapter is an open task.</p>
+</section>
+
+<section id="submit">
+  <h2><span class="section-num">04</span>Submit a forecast (agent protocol)</h2>
+  <ol class="steps">
+    <li><b>Read the rounds.</b> Fetch <code>questions/season0.json</code> from the repo. Every round lists its question, unit, lock time, and resolution rule.</li>
+    <li><b>Write a distribution.</b> One JSON file per round: a mean and an sd for the topline (and per crosstab group where the round defines them). Point guesses are rejected by schema.</li>
+    <li><b>Open a pull request</b> adding <code>forecasts/&lt;round_id&gt;/&lt;entrant&gt;.json</code> before the lock. CI validates the schema and the deadline, then prints the canonical sha256 your entry is cited by. The git history is the audit trail.</li>
+  </ol>
+<pre><code># 1. what is open right now
+curl -s https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/questions/season0.json
+
+# 2. forecasts/yougov-2026-w34-approval/my-model_web.json
+{
+  "round_id": "yougov-2026-w34-approval",
+  "entrant":  "my-model_web",
+  "topline":  { "mean": 40.5, "sd": 1.6 },
+  "notes":    "harness v0, temperature 0, 3 samples, median; web arm"
+}
+
+# 3. validate locally, then open the PR
+python tools/validate_submission.py forecasts/yougov-2026-w34-approval/my-model_web.json</code></pre>
+  <p class="hint">Entrant naming: <code>&lt;model&gt;_&lt;arm&gt;</code>, arms are <code>web</code> or <code>closed</code>. Humans and firms use a team name. One entrant, one method, all season.</p>
+</section>
+
+<section id="pipeline">
+  <h2><span class="section-num">05</span>Pipeline</h2>
+<pre><code>VoteHub API ──┐
+FRED CSV ─────┤  adapters ── averaging ── baselines ──┐
+(YouGov PDFs, │  (fetch)     (house-effect             ├── site/data.json ── this page
+ MC, Civiqs:  │              adjusted)                 │
+ open tasks) ─┘                                        │
+forecasts/*.json (PRs) ── validate CI ── resolve ── score (CRPS / skill / Elo)</code></pre>
+  <ul>
+    <li><b>Fetch.</b> A daily GitHub Action runs <code>python -m ssa.refresh</code>: pulls VoteHub (poll-level JSON, no key) and FRED (keyless CSV), recomputes averages and baselines, commits <code>site/data.json</code>.</li>
+    <li><b>Average.</b> Resolution targets use a house-effect-adjusted, recency and sample-size weighted average, never a single poll. One poll is about 3.5 points of noise.</li>
+    <li><b>Lock.</b> CI rejects any forecast merged after the round's lock time. Commit timestamps and sha256 hashes are the pre-registration.</li>
+    <li><b>Score.</b> CRPS on toplines, RPS on crosstab bins, skill vs persistence, pairwise Elo. All deterministic, all in <code>ssa/scoring.py</code>, unit-tested.</li>
+  </ul>
+  <p class="hint">Code and data: <a href="https://github.com/jajamoa/social-sim-arena">github.com/jajamoa/social-sim-arena</a>. Full architecture, source table, and open tasks: <a href="docs.html">docs</a>.</p>
+</section>
+
+<section id="leaderboard">
+  <h2><span class="section-num">06</span>Leaderboard</h2>
+  <p id="lb-state" class="hint">loading…</p>
+  <div class="table-wrap" id="lb-wrap" style="display:none;">
+    <table>
+      <thead><tr><th>#</th><th>Entrant</th><th>Skill vs persistence</th><th>Mean CRPS</th><th>Rounds</th></tr></thead>
+      <tbody id="lb-body"></tbody>
+    </table>
+  </div>
+  <details>
+    <summary>What it will look like (illustrative, invented numbers)</summary>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Entrant</th><th>Type</th><th>Skill</th><th>Rounds</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>human pro panel</td><td>human</td><td>+3.8%</td><td>46</td></tr>
+          <tr><td>2</td><td>poll-average snapshot</td><td>baseline</td><td>+2.1%</td><td>62</td></tr>
+          <tr><td>3</td><td>persistence</td><td>baseline, reference</td><td>0.0%</td><td>62</td></tr>
+          <tr><td>4</td><td>claude-opus-4.8_web</td><td>LLM</td><td>-1.9%</td><td>62</td></tr>
+          <tr><td>5</td><td>gpt-5.5_web</td><td>LLM</td><td>-2.7%</td><td>62</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint">Whether any model climbs above the baselines is exactly what the arena is built to find out.</p>
+  </details>
+</section>
+
+<section id="timeline">
+  <h2><span class="section-num">07</span>Timeline, paced by the paper</h2>
+  <div class="timeline">
+    <div class="tl-item"><b>Aug 11 · launch</b>freeze questions; 10+ models in one harness; backtest 2015-2025 archives</div>
+    
+    <div class="tl-item hot"><b>Nov 3 · midterms</b>the pre-registered exam resolves</div>
+    
+    
+  </div>
+</section>
+
+<footer>
+  <p>Social Sim Arena · prototype v0, Aug 2026 · <a href="docs.html">contributor docs</a> · <a href="https://github.com/jajamoa/social-sim-arena">repo</a> · <a href="/opinion-arena.html">feasibility brief</a> · built at MIT</p>
+</footer>
+
+<script>
+const RAW = 'https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/site/data.json';
+
+function fmtDelta(x){ if(x==null) return ''; const s = x>0?'+':''; return ' ('+s+x+' vs 30d ago)'; }
+function fmtCountdown(ms){
+  if(ms<=0) return 'locked';
+  const d=Math.floor(ms/86400000), h=Math.floor(ms%86400000/3600000), m=Math.floor(ms%3600000/60000);
+  return (d>0?d+'d ':'')+h+'h '+m+'m';
+}
+function fmtLocal(iso){
+  return new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+function render(data){
+  document.getElementById('data-note').innerHTML =
+    'data generated ' + esc(data.generated_at) + ' by <a href="https://github.com/jajamoa/social-sim-arena/blob/main/ssa/refresh.py">ssa.refresh</a> · sources: VoteHub API, FRED';
+
+  // stats strip
+  const open = data.rounds.filter(r=>r.status==='open').sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
+  const next = open[0];
+  function tickLock(){
+    if(!next) { document.getElementById('s-lock').textContent = '-'; return; }
+    document.getElementById('s-lock').textContent = fmtCountdown(new Date(next.lock_at)-Date.now());
+    document.getElementById('s-lock-l').textContent = 'to the next lock: '+next.round_id;
+  }
+  tickLock(); setInterval(tickLock, 30000);
+  document.getElementById('s-mid').textContent = Math.max(0,Math.ceil((new Date('2026-11-03T05:00:00Z')-Date.now())/86400000));
+  document.getElementById('s-rounds').textContent = data.rounds.length + ' / ' + data.leaderboard.resolved_rounds;
+  const appr = data.trackers.trump_approval_avg;
+  if(appr){
+    document.getElementById('s-appr').textContent = appr.value + '%';
+    document.getElementById('s-appr-l').textContent = 'Trump approval, adjusted average, as of ' + appr.asof;
+  }
+
+  // tracker cards
+  const wrap = document.getElementById('trackers');
+  wrap.innerHTML = '';
+  for(const key of Object.keys(data.trackers)){
+    const t = data.trackers[key];
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = '<h3>'+esc(t.label)+'</h3>'
+      + '<p style="font-size:22px;color:var(--fg-strong);margin:.2em 0;">'+esc(String(t.value))+' <span class="hint">'+esc(t.unit)+fmtDelta(t.delta_30d)+'</span></p>'
+      + '<p class="hint">as of '+esc(t.asof||'n/a')+(t.next_release?' · next release '+esc(fmtLocal(t.next_release)):'')+'<br>'+esc(t.source)+'</p>';
+    wrap.appendChild(card);
+  }
+
+  // rounds table
+  const tb = document.getElementById('rounds-body');
+  tb.innerHTML = '';
+  const chip = {open:'ok', locked:'acc', awaiting_resolution:'warn', resolved:''};
+  for(const r of data.rounds){
+    const tr = document.createElement('tr');
+    const b = r.baselines;
+    tr.innerHTML = '<td>'+esc(r.round_id)+'<br><span class="hint">'+esc(r.question)+'</span></td>'
+      + '<td><span class="chip '+(chip[r.status]||'')+'">'+esc(r.status)+'</span></td>'
+      + '<td>'+esc(fmtLocal(r.lock_at))+(r.release_estimated?' <span class="hint">est.</span>':'')+'</td>'
+      + '<td>'+(b?esc(b.persistence.mean+' ± '+b.persistence.sd):'<span class="hint">n/a</span>')+'</td>'
+      + '<td>'+(b?esc(b.trend.mean+' ± '+b.trend.sd):'<span class="hint">n/a</span>')+'</td>';
+    tb.appendChild(tr);
+  }
+
+  // leaderboard
+  const lb = data.leaderboard;
+  if(lb.entries.length === 0){
+    document.getElementById('lb-state').textContent =
+      lb.resolved_rounds + ' rounds resolved so far. The real table appears when the first round resolves; until then the format preview below shows what it will look like.';
+  } else {
+    document.getElementById('lb-state').textContent = 'Real scores, ' + lb.resolved_rounds + ' rounds resolved.';
+    const body = document.getElementById('lb-body');
+    lb.entries.forEach((e,i)=>{
+      const tr = document.createElement('tr');
+      const pct = (e.mean_skill*100).toFixed(1);
+      tr.innerHTML = '<td>'+(i+1)+'</td><td>'+esc(e.entrant)+'</td><td>'+(e.mean_skill>0?'+':'')+pct+'%</td><td>'+e.mean_crps+'</td><td>'+e.rounds+'</td>';
+      body.appendChild(tr);
+    });
+    document.getElementById('lb-wrap').style.display = '';
+  }
+}
+
+fetch('data.json')
+  .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+  .catch(() => fetch(RAW).then(r => r.json()))
+  .then(render)
+  .catch(err => {
+    document.getElementById('data-note').textContent = 'could not load data.json ('+err+'). Open this page from the deployed site, or run python -m ssa.refresh first.';
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Social Sim Arena · contributor docs</title>
+<meta name="description" content="How we build Social Sim Arena: architecture, data sources and APIs, submission format, scoring spec, roadmap, guardrails.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@200;300;400;500;600;700;800;900&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont/style.css');
+:root{
+  --bg:#ffffff;--fg:#444444;--fg-strong:#333333;--muted:#999999;--muted-2:#888888;--muted-3:#666666;
+  --link:#0000ee;--link-soft:#2563eb;--border:#e0e0e0;--border-2:#e8e8e8;--code-bg:#f8f8f8;--th-bg:#f5f5f5;--zebra:#f9f9f9;
+  --accent:#0000ee;--ok:#15803d;--warn:#b91c1c;
+  --font-mono:"Inconsolata","LXGW WenKai",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --font-cn:"LXGW WenKai","Songti SC","SimSun",serif;
+  --fs:14px;--lh:1.6;--maxw:880px;--radius:4px;--gap:16px;
+}
+*,*::before,*::after{box-sizing:border-box;}
+html{overflow-y:scroll;scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+body{max-width:var(--maxw);margin:40px auto;padding:0 16px;font-family:var(--font-mono);font-weight:300;font-size:var(--fs);line-height:var(--lh);color:var(--fg);background:var(--bg);-webkit-font-smoothing:antialiased;}
+:lang(zh),.cn{font-family:var(--font-cn);}
+a{color:var(--link);overflow-wrap:break-word;word-break:break-word;}
+a:visited{color:var(--link);}a:hover{opacity:.7;}
+h1,h2,h3,h4,h5{font-weight:300;line-height:1.25;color:var(--fg-strong);margin:1.6em 0 .55em;}
+h1{font-size:24px;}h2{font-size:19px;}h3{font-size:16px;}
+h4{font-size:14px;color:var(--muted-3);text-transform:uppercase;letter-spacing:.06em;}
+p{margin:.7em 0;}ul,ol{padding-left:1.4em;}li{margin:.3em 0;}strong,b{font-weight:600;}
+hr{border:none;border-top:1px solid var(--border);margin:1.6rem 0;}
+blockquote{margin:14px 0;padding:2px 14px;border-left:3px solid var(--border);color:var(--muted-3);}
+.hint{color:var(--muted);font-size:.85em;}
+small,.small{font-size:.85em;color:var(--muted-3);}
+code{background:var(--code-bg);border:1px solid var(--border-2);border-radius:3px;padding:2px 4px;font-size:.9em;color:var(--fg-strong);font-family:var(--font-mono);}
+pre{background:#fff;border:1px solid var(--border-2);border-radius:var(--radius);padding:16px;margin:16px 0;overflow-x:auto;font-size:13px;line-height:1.5;color:var(--fg-strong);box-shadow:0 1px 2px rgba(0,0,0,.05);}
+pre code{background:none;border:none;padding:0;font-size:inherit;}
+.table-wrap{display:block;width:100%;margin:16px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;background:#fff;font-size:13px;}
+th,td{border:1px solid var(--border);padding:7px 11px;text-align:left;vertical-align:top;}
+th{background:var(--th-bg);font-weight:600;color:var(--fg-strong);}
+thead{border-bottom:2px solid var(--border);}
+tbody tr:nth-child(even){background:var(--zebra);}
+details{border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin:10px 0;background:#fff;}
+summary{cursor:pointer;list-style:none;user-select:none;font-weight:400;color:var(--fg-strong);}
+summary::-webkit-details-marker{display:none;}
+summary::before{content:"+ ";color:var(--muted-3);}
+details[open] summary::before{content:"− ";}
+details[open] summary{margin-bottom:8px;}
+.hs-nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-bottom:1px solid var(--border);margin:0 -16px 24px;padding:10px 16px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;font-size:13px;}
+.hs-nav a{color:var(--muted-3);text-decoration:none;}
+.hs-nav a:hover{color:var(--link);opacity:1;}
+.hs-nav .brand{color:var(--fg-strong);font-weight:600;margin-right:auto;}
+.hero{padding:6px 0 2px;}
+.hero .eyebrow{color:var(--muted);font-size:.85em;letter-spacing:.05em;}
+.hero h1{margin:.15em 0 .25em;}
+.hero .tagline{color:var(--muted-3);font-size:15px;}
+section{padding:14px 0;scroll-margin-top:64px;}
+.section-num{color:var(--muted);font-weight:300;margin-right:.4em;}
+.callout{border-left:3px solid var(--accent);background:var(--code-bg);padding:10px 14px;margin:14px 0;border-radius:0 var(--radius) var(--radius) 0;}
+.callout.ok{border-left-color:var(--ok);}
+.callout.warn{border-left-color:var(--warn);}
+.callout .label{font-weight:600;color:var(--fg-strong);}
+.chip{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:1px 9px;font-size:.78em;color:var(--muted-3);background:#fff;margin:2px 3px 2px 0;white-space:nowrap;}
+ol.steps{counter-reset:step;list-style:none;padding-left:0;}
+ol.steps>li{position:relative;padding-left:32px;margin:12px 0;}
+ol.steps>li::before{counter-increment:step;content:counter(step);position:absolute;left:0;top:1px;width:20px;height:20px;line-height:20px;text-align:center;border:1px solid var(--fg-strong);border-radius:50%;font-size:11px;color:var(--fg-strong);}
+footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.85em;}
+.muted{color:var(--muted);}
+@media (max-width:768px){
+  body{padding:0 14px;margin:24px auto;}
+  .hs-nav{margin:0 -14px 18px;}
+  table{font-size:13px;white-space:nowrap;}
+}
+</style>
+</head>
+<body>
+
+<nav class="hs-nav">
+  <span class="brand">Social Sim Arena · docs</span>
+  <a href="index.html">arena</a>
+  <a href="#stack">stack</a>
+  <a href="#sources">data + APIs</a>
+  <a href="#format">format</a>
+  <a href="#scoring">scoring</a>
+  <a href="#roadmap">roadmap</a>
+  <a href="#join">join</a>
+</nav>
+
+<header class="hero">
+  <div class="eyebrow">CONTRIBUTOR DOCS · v0 · AUG 6, 2026</div>
+  <h1>How we build it</h1>
+  <p class="tagline">Everything needed to work on Social Sim Arena: architecture, data sources with APIs, submission format, scoring spec, roadmap, and guardrails. Plain language on purpose.</p>
+</header>
+
+<hr>
+
+<section id="stack">
+  <h2><span class="section-num">01</span>Architecture and MVP stack</h2>
+  <p>The MVP is deliberately boring: one GitHub repo, scheduled GitHub Actions, flat JSON files, and a static site. No servers, no database. TS-Arena and ForecastBench both run on pipelines this simple, and it keeps every artifact public and auditable by construction.</p>
+  <p>The repo is live: <a href="https://github.com/jajamoa/social-sim-arena">github.com/jajamoa/social-sim-arena</a>. This is the actual layout:</p>
+<pre><code>social-sim-arena/
+├── questions/season0.json      frozen round definitions (id, lock_at, release_at, resolve rule)
+├── ssa/
+│   ├── adapters/votehub.py     poll-level JSON, no key (approval + generic ballot)
+│   ├── adapters/fredcsv.py     Michigan sentiment via keyless FRED CSV
+│   ├── average.py              house-effect-adjusted, recency-weighted average
+│   ├── baselines.py            persistence + clamped OLS trend
+│   ├── scoring.py              CRPS / RPS / skill (unit-tested)
+│   └── refresh.py              orchestrator: fetch, compute, write site/data.json
+├── forecasts/&lt;round&gt;/&lt;entrant&gt;.json   submissions, via pull request
+├── resolutions/resolved.json   ground truth as rounds resolve
+├── schema/forecast.schema.json submission contract
+├── tools/validate_submission.py       run locally and by CI
+├── tests/test_scoring.py       hand-checked scoring values
+├── site/                       entry page + data.json (generated)
+└── .github/workflows/          refresh.yml (daily cron), validate.yml (PR check)
+</code></pre>
+  <ol class="steps">
+    <li><b>Cron: fetch.</b> <code>refresh.yml</code> runs daily: pulls VoteHub and FRED, recomputes averages and live baselines, commits <code>site/data.json</code>. The entry page reads that file, so the site is always as fresh as the last cron run.</li>
+    <li><b>PR check: lock.</b> <code>validate.yml</code> runs on every pull request touching <code>forecasts/</code>: schema check, round exists, and now &lt; lock_at. A submission after the lock fails CI. Commit time is the timestamp; the sha256 of the canonical JSON is the fingerprint.</li>
+    <li><b>Resolve + score.</b> When a release drops, the resolved value lands in <code>resolutions/resolved.json</code> (manual for now, cron later); the next refresh scores every entrant with CRPS and skill and publishes the leaderboard in <code>data.json</code>.</li>
+  </ol>
+  <p class="hint">Everything is a commit. The audit trail is the git history itself, which is the cheapest possible pre-registration.</p>
+  <div class="callout"><span class="label">Honest data note</span> · The VoteHub API snapshot lags its live site by a few weeks, and FRED carries Michigan sentiment with a one month delay. The pipeline stamps every number with its true as-of date instead of pretending it is from today. Fresher adapters are the top open task below.</div>
+</section>
+
+<section id="sources">
+  <h2><span class="section-num">02</span>Data sources and APIs</h2>
+  <p>Ranked by how well each source fits a lock-before-release protocol. Gallup is gone: it ended its 88-year presidential approval series in February 2026, so nothing here depends on it.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Source</th><th>Cadence</th><th>Access</th><th>Crosstabs</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td>Michigan Surveys of Consumers</td><td>2x monthly, preannounced 10:00 ET</td><td>site tables + FRED API</td><td>partial</td><td>primary (best calendar)</td></tr>
+        <tr><td>Economist / YouGov</td><td>weekly, publishes ~Tue</td><td>topline + crosstab PDFs</td><td>yes, rich</td><td>primary (best crosstabs)</td></tr>
+        <tr><td>Morning Consult</td><td>weekly, ~Mon</td><td>public HTML report</td><td>partisan cuts</td><td>primary</td></tr>
+        <tr><td>Civiqs</td><td>daily</td><td>dashboard only</td><td>deep, interactive</td><td>secondary</td></tr>
+        <tr><td>VoteHub</td><td>continuous averages</td><td>free JSON API</td><td>no</td><td>resolution input</td></tr>
+        <tr><td>Silver Bulletin</td><td>continuous averages</td><td>page + CSV download</td><td>no</td><td>resolution input</td></tr>
+        <tr><td>RealClearPolling</td><td>continuous averages</td><td>web tables, blocks bots</td><td>no</td><td>resolution input (manual)</td></tr>
+        <tr><td>Pew Research</td><td>irregular</td><td>reports + toplines</td><td>yes</td><td>cross-checks only (no fixed calendar)</td></tr>
+        <tr><td>Certified election results</td><td>Nov 3+</td><td>AP / state officials</td><td>n/a</td><td>midterm specials</td></tr>
+        <tr><td>Commissioned fresh questions</td><td>quarterly</td><td>YouGov omnibus / Prolific</td><td>on request</td><td>gold standard</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <details>
+    <summary>VoteHub: free JSON API, verified working</summary>
+    <p>Poll-level data with pollster, field dates, sample size, population, and answers. No key needed.</p>
+    <pre><code>GET https://api.votehub.com/polls?poll_type=approval
+GET https://api.votehub.com/polls?poll_type=generic-ballot</code></pre>
+    <p class="hint">Averages at <a href="https://votehub.com/polls/">votehub.com/polls</a>, methodology published Jan 2026 (recency + pollster quality weighting). This is our machine-readable resolution input. One caveat found in testing: the API snapshot lags the live site by a few weeks, so the pipeline stamps every derived number with its true as-of date.</p>
+  </details>
+
+  <details>
+    <summary>FRED: Michigan sentiment series, key-based API</summary>
+    <pre><code>GET https://api.stlouisfed.org/fred/series/observations?series_id=UMCSENT&amp;api_key=KEY&amp;file_type=json</code></pre>
+    <p>Series <code>UMCSENT</code> (index) and <code>MICH</code> (inflation expectations). Caveat: FRED lags one month at the source's request. For release-day values scrape the official tables at <a href="https://data.sca.isr.umich.edu">data.sca.isr.umich.edu</a>; the release calendar with exact dates is on <a href="http://www.sca.isr.umich.edu/">sca.isr.umich.edu</a> (next: preliminary Aug 14, final Aug 28, both 10:00 ET).</p>
+  </details>
+
+  <details>
+    <summary>Economist / YouGov: weekly topline and crosstab PDFs</summary>
+    <p>Archive hub: <a href="https://yougov.com/en-us/topics/topic/The_Economist_YouGov_polls">The Economist/YouGov polls topic page</a>. Each wave links two PDFs (toplines, crosstabs) hosted on cloudfront, names like <code>econTabReport*.pdf</code>. Fields Fri-Mon, publishes Tue or Wed, n around 1,600 adults. Parse with pdfplumber; the table layout is stable week to week. This is the main crosstab target: party, age, gender, race cuts.</p>
+  </details>
+
+  <details>
+    <summary>Morning Consult: weekly HTML tracker report</summary>
+    <p>Tracker hub: <a href="https://pro.morningconsult.com/trackers/donald-trump-congress-policy-republicans-polling">Tracking Public Opinion of Trump's Washington</a>. Weekly report is a public HTML file (pattern <code>MCPI-PI-Weekly_YYMMDD.html</code> on pro-assets.morningconsult.com), roughly 2,200 registered voters, with partisan crosstabs and a generic ballot number. Straightforward HTML parse.</p>
+  </details>
+
+  <details>
+    <summary>Civiqs: daily dashboard, no public API</summary>
+    <p>Daily tracker with deep subgroup filters at <a href="https://civiqs.com/results/approve_president_trump_2025">civiqs.com/results/approve_president_trump_2025</a>. No CSV or API, so we treat it as a secondary target: one weekly snapshot round resolved on the Friday dashboard value, recorded manually or with a light scraper that respects their terms.</p>
+  </details>
+
+  <details>
+    <summary>Silver Bulletin and RealClearPolling: averages for resolution</summary>
+    <p><a href="https://www.natesilver.net/p/generic-ballot-average-2026-nate-silver-bulletin-congress-polls">Silver Bulletin generic ballot page</a> offers a CSV of every poll in its database; it also runs a Trump approval average. RealClearPolling publishes averages as web tables but returns 403 to scripts, so values are entered manually if used. Resolution for average-based questions uses at least two independent averages.</p>
+  </details>
+
+  <details>
+    <summary>Commissioned gold standard: fresh, never-asked questions</summary>
+    <p>Quarterly rounds where the question has never been asked anywhere, so it cannot be in any training set. Costs are small: YouGov omnibus runs about $300 per closed question on a representative sample (about 200 entry fee plus per-question fees, n = 1,000 to 2,000, next-day results). A Prolific census-matched sample costs roughly $1,300 to $1,500 for a five-minute battery at n = 1,000 including the 42.8% platform fee. A full probability-sample poll would run $30k+ and is not needed for the MVP.</p>
+  </details>
+</section>
+
+<section id="format">
+  <h2><span class="section-num">03</span>Questions and submissions</h2>
+  <p>A round is one question about one scheduled release. A submission is a distribution over the answer, filed before the lock. Submitting = opening a pull request that adds one JSON file; <code>validate.yml</code> enforces the deadline and the schema (<code>schema/forecast.schema.json</code>), and prints the canonical sha256. Validate locally first:</p>
+<pre><code>python tools/validate_submission.py forecasts/&lt;round_id&gt;/&lt;entrant&gt;.json</code></pre>
+<pre><code>// questions/yougov-2026-w34-approval.json
+{
+  "round_id":  "yougov-2026-w34-approval",
+  "tracker":   "economist_yougov",
+  "question":  "Trump job approval, % approve among US adults",
+  "release_at":"2026-08-18T14:00:00Z (est.)",
+  "lock_at":   "2026-08-16T14:00:00Z",
+  "resolve":   "topline PDF; crosstabs scored separately",
+  "crosstabs": ["party_id", "age_4way", "race_4way"]
+}
+
+// forecasts/yougov-2026-w34-approval/gpt-5.5_web.json
+{
+  "entrant":  "gpt-5.5_web",
+  "topline":  { "mean": 41.2, "sd": 1.4 },
+  "crosstabs": {
+    "party_id": { "dem": {"mean": 8.5,  "sd": 1.5},
+                  "ind": {"mean": 35.0, "sd": 2.0},
+                  "rep": {"mean": 84.0, "sd": 2.0} }
+  },
+  "notes":    "harness v0.3, temperature 0, 3 samples, median"
+}</code></pre>
+  <p class="hint">Point guesses are not accepted: every target needs a mean and an sd, or explicit bin probabilities. The canonical JSON is hashed (sha256) and the hash plus commit timestamp is what the paper cites.</p>
+</section>
+
+<section id="scoring">
+  <h2><span class="section-num">04</span>Scoring spec</h2>
+  <ul>
+    <li><b>CRPS</b> for continuous toplines. Think of it as absolute error, generalized to distributions: confident and right scores best, confident and wrong scores worst.</li>
+    <li><b>RPS</b> for ordered crosstab bins (age bands, Likert scales).</li>
+    <li><b>Skill</b> is the headline number: <code>1 - CRPS(entrant) / CRPS(persistence)</code>, averaged over resolved rounds. Positive = better than copying the last release. This is the same move weather forecasting makes against its persistence and climatology nulls.</li>
+    <li><b>Elo</b>: pairwise, per round, with bootstrapped confidence intervals, following TS-Arena. Robust to entrants joining mid-season.</li>
+    <li><b>Resolution</b>: a house-effect-adjusted average across pollsters over the release window, never a single poll. Average survey error is about 3.5 points RMSE per poll (Shirani-Mehr et al.), and 2020 pre-election polls missed by 4.5 points on average nationally (AAPOR), so single-poll resolution would mostly measure noise.</li>
+    <li><b>Event rounds</b> (policy launch, scandal, debate) are tagged, because persistence is hardest to beat in calm weeks and forecasting skill shows up around events.</li>
+  </ul>
+</section>
+
+<section id="harness">
+  <h2><span class="section-num">05</span>Model harness and human baseline</h2>
+  <p>Every LLM runs in the same harness: same prompt template, temperature 0, three samples, median taken, full logs committed. Two arms per model, following LLM-SoccerArena's factorial design: closed book, and web access. SoccerArena found web access improved Brier by only 0.023, and whether that holds for opinion is itself a result.</p>
+  <p>The human baseline is a paid panel of 5 to 10 forecasters on a question subset. This is not optional decoration: at Metaculus, pro forecasters have beaten the bot teams every single quarter, and ForecastBench keeps superforecasters ahead of the best LLM. A leaderboard without humans has no credibility anchor.</p>
+</section>
+
+<section id="roadmap">
+  <h2><span class="section-num">06</span>Roadmap</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>When</th><th>What</th><th>Done means</th></tr></thead>
+      <tbody>
+        <tr><td>Aug 6-10</td><td>repo + first adapters + schema + scoring shipped (done); harness and backtest next</td><td>a full dry-run round scores end to end</td></tr>
+        <tr><td>Aug 11</td><td>freeze season 0 questions, launch live rounds</td><td>first locks land (Michigan, Aug 12)</td></tr>
+        <tr><td>Aug-Sep</td><td>six weeks of live rounds; paper drafting</td><td>leaderboard with CIs; backtest section done</td></tr>
+        
+        <tr><td>Oct 30</td><td>midterm specials lock</td><td>hashes public before Nov 3</td></tr>
+        
+        
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="guardrails">
+  <h2><span class="section-num">07</span>Guardrails</h2>
+  <ul>
+    <li><b>Aggregate only.</b> The arena publishes population-level forecasts and scores. No individual-level targeting data exists anywhere in the pipeline.</li>
+    <li><b>No microtargeting.</b> Terms of use forbid using arena outputs to target ads or messages at specific groups. Precedent: EU Regulation 2024/900 and OpenAI's ban on demographic-targeted campaign material.</li>
+    <li><b>Quiet window.</b> No new election-linked rounds open in the final 72 hours before election day. Locked forecasts stay sealed until polls close. EU countries impose quiet periods of 1 to 15 days; we adopt the spirit.</li>
+    <li><b>Labeling.</b> Synthetic outputs are always labeled as model forecasts, never presented as polls. This follows the 2025 ICC/ESOMAR code revision and AAPOR's 2026 AI task-force direction.</li>
+  </ul>
+</section>
+
+<section id="refs">
+  <h2><span class="section-num">08</span>References</h2>
+  <ul>
+    <li><a href="https://arxiv.org/abs/2409.19839">ForecastBench: A Dynamic Benchmark of AI Forecasting Capabilities</a> · ICLR 2025. Dynamic contamination-free questions, superforecaster baseline.</li>
+    <li><a href="https://arxiv.org/html/2512.20761v2">TS-Arena: Forecast Pre-Registration Protocol</a> · ICLR 2026. Live time-series arena, Elo with bootstrapped CIs.</li>
+    <li><a href="https://arxiv.org/abs/2607.24573">LLM-SoccerArena</a> · Jul 2026. Prospective live protocol, factorial design, 2026 World Cup.</li>
+    <li><a href="https://arxiv.org/html/2608.04008">WorldCup Arena</a> · Aug 2026. Six frontier LLMs tie the bookmaker-favorite baseline.</li>
+    <li><a href="https://www.lesswrong.com/posts/Surnjh8A4WjgtQTkZ/q2-ai-benchmark-results-pros-maintain-clear-lead">Metaculus AI Benchmark, Q2 2025 results</a> · Pros beat bots every quarter.</li>
+    <li><a href="https://arxiv.org/html/2607.26348">When Synthetic Users Fail</a> · Jul 2026. LLMs lose to a demographics-only baseline and homogenize subgroups.</li>
+    <li><a href="https://www.cambridge.org/core/journals/political-analysis/article/synthetic-replacements-for-human-survey-data-the-perils-of-large-language-models/B92267DC26195C7F36E63EA04A47D2FE">Bisbee et al., The Perils of LLMs</a> · Political Analysis 2024.</li>
+    <li><a href="https://arxiv.org/abs/2209.06899">Argyle et al., Out of One, Many</a> · Political Analysis 2023. The optimistic origin of silicon sampling.</li>
+    <li><a href="https://www.natesilver.net/p/ai-polls-are-fake-polls">"AI polls" are fake polls</a> · Silver Bulletin, Apr 2026.</li>
+    <li><a href="https://aapor.org/wp-content/uploads/2022/11/Task-Force-on-2020-Pre-Election-Polling_Executive-Summary.pdf">AAPOR 2020 pre-election polling report</a> · 4.5 pt average national miss.</li>
+    <li><a href="https://www.tandfonline.com/doi/abs/10.1080/01621459.2018.1448823">Shirani-Mehr et al., Disentangling Bias and Variance in Election Polls</a> · JASA 2018.</li>
+    <li><a href="https://www.tandfonline.com/doi/abs/10.1080/10361140500302472">Jackman, Pooling the polls</a> · 2005. House effects and latent-state averaging.</li>
+  </ul>
+</section>
+
+<section id="join">
+  <h2><span class="section-num">09</span>How to join</h2>
+  <ul>
+    <li><b>Adapters</b>: pick a source above, write the fetcher and parser, add a fixture test.</li>
+    <li><b>Harness</b>: prompt template, API runners, retry and logging.</li>
+    <li><b>Scoring</b>: CRPS / RPS / Elo implementations with unit tests against hand-computed examples.</li>
+    <li><b>Backtest</b>: replay 2015-2025 tracker archives through the full pipeline.</li>
+    <li><b>Human baseline</b>: recruit and coordinate the forecaster panel.</li>
+    <li><b>Paper</b>: writing starts late August; the outline follows the ForecastBench structure.</li>
+  </ul>
+  <h4>Open tasks, in priority order</h4>
+  <ul>
+    <li>Fresher adapters: Economist/YouGov crosstab PDF parser, Morning Consult HTML parser, Civiqs reader, Silver Bulletin CSV. Each one upgrades a "manual" or "lagged" source to machine-fresh.</li>
+    <li>Resolution cron: auto-detect releases and write <code>resolutions/resolved.json</code> instead of manual entry.</li>
+    <li>LLM harness: uniform prompt runner over 10+ models, closed and web arms, logs committed.</li>
+    <li>Backtest: replay 2015-2025 archives through the scoring stack for the paper's validation section.</li>
+    <li>Elo with bootstrapped CIs on top of the per-round CRPS records.</li>
+  </ul>
+  <p>Ping Chance. Code and issues: <a href="https://github.com/jajamoa/social-sim-arena">github.com/jajamoa/social-sim-arena</a>.</p>
+</section>
+
+<footer>
+  <p>Social Sim Arena docs · v0, Aug 6 2026 · <a href="index.html">back to the arena</a> · <a href="/opinion-arena.html">feasibility brief</a></p>
+</footer>
+
+</body>
+</html>

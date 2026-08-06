@@ -1,0 +1,511 @@
+{
+ "generated_at": "2026-08-06T04:36:42Z",
+ "season": 0,
+ "trackers": {
+  "trump_approval_avg": {
+   "label": "Trump approval, adjusted average",
+   "unit": "% approve",
+   "value": 40.1,
+   "asof": "2026-06-27",
+   "delta_30d": 1.1,
+   "n_polls_window": 36,
+   "source": "VoteHub API, house-effect adjusted, 21-day window (API snapshot lags the live site)"
+  },
+  "generic_ballot_avg": {
+   "label": "2026 generic ballot, adjusted average",
+   "unit": "margin, Dem minus Rep",
+   "value": 5.1,
+   "asof": "2026-06-28",
+   "delta_30d": -0.4,
+   "n_polls_window": 22,
+   "source": "VoteHub API, house-effect adjusted, 21-day window (API snapshot lags the live site)"
+  },
+  "yougov_approval": {
+   "label": "Economist/YouGov, latest wave",
+   "unit": "% approve",
+   "value": 40.0,
+   "asof": "2026-06-27",
+   "source": "VoteHub API (poll-level)"
+  },
+  "mc_approval": {
+   "label": "Morning Consult, latest wave",
+   "unit": "% approve",
+   "value": 43.1,
+   "asof": "2026-06-20",
+   "source": "VoteHub API (poll-level)"
+  },
+  "umich_sentiment": {
+   "label": "Michigan consumer sentiment",
+   "unit": "index",
+   "value": 49.5,
+   "asof": "2026-06-01",
+   "next_release": "2026-08-14T14:00:00Z",
+   "source": "FRED (UMCSENT, lags one month); release-day values from sca.isr.umich.edu"
+  }
+ },
+ "rounds": [
+  {
+   "round_id": "umich-2026-08-prelim",
+   "tracker": "umich_sentiment",
+   "series": "umich_sentiment",
+   "question": "University of Michigan consumer sentiment index, August 2026 preliminary",
+   "unit": "index points",
+   "release_at": "2026-08-14T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-08-12T14:00:00Z",
+   "resolve": "official value published at sca.isr.umich.edu, 10:00 ET",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 49.5,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 48.1,
+     "sd": 9.83,
+     "method": "trend_ols"
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-2026-w33-approval",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval",
+   "question": "Civiqs daily tracker, Trump net approval among registered voters, Friday Aug 14 dashboard value",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-08-14T22:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-08-12T22:00:00Z",
+   "resolve": "civiqs.com/results/approve_president_trump_2025 value on Friday, recorded manually with a screenshot",
+   "status": "open",
+   "baselines": null,
+   "baseline_note": "no machine-readable series yet for this tracker"
+  },
+  {
+   "round_id": "mc-2026-w34-approval",
+   "tracker": "morning_consult",
+   "series": "mc_approval",
+   "question": "Morning Consult weekly tracker, Trump % approve among registered voters, week of Aug 17",
+   "unit": "% approve",
+   "release_at": "2026-08-17T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-08-15T14:00:00Z",
+   "resolve": "weekly report on pro-assets.morningconsult.com",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 43.1,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 42.44,
+     "sd": 2.25,
+     "method": "trend_ols"
+    }
+   }
+  },
+  {
+   "round_id": "yougov-2026-w34-approval",
+   "tracker": "economist_yougov",
+   "series": "yougov_approval",
+   "question": "Economist/YouGov wave publishing ~Aug 18, Trump % approve among US adult citizens",
+   "unit": "% approve",
+   "release_at": "2026-08-18T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-08-16T14:00:00Z",
+   "resolve": "topline PDF of the wave",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 40.0,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 39.47,
+     "sd": 4.67,
+     "method": "trend_ols"
+    }
+   }
+  },
+  {
+   "round_id": "yougov-2026-w34-generic",
+   "tracker": "economist_yougov",
+   "series": "yougov_generic_margin",
+   "question": "Economist/YouGov wave publishing ~Aug 18, generic ballot margin (Dem minus Rep) among registered voters",
+   "unit": "margin, points",
+   "release_at": "2026-08-18T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-08-16T14:00:00Z",
+   "resolve": "topline PDF of the wave",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 3.0,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 2.47,
+     "sd": 3.23,
+     "method": "trend_ols"
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-2026-w34-approval",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval",
+   "question": "Civiqs daily tracker, Trump net approval among registered voters, Friday Aug 21 dashboard value",
+   "unit": "net points",
+   "release_at": "2026-08-21T22:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-08-19T22:00:00Z",
+   "resolve": "civiqs.com dashboard value on Friday, recorded manually",
+   "status": "open",
+   "baselines": null,
+   "baseline_note": "no machine-readable series yet for this tracker"
+  },
+  {
+   "round_id": "mc-2026-w35-approval",
+   "tracker": "morning_consult",
+   "series": "mc_approval",
+   "question": "Morning Consult weekly tracker, Trump % approve among registered voters, week of Aug 24",
+   "unit": "% approve",
+   "release_at": "2026-08-24T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-08-22T14:00:00Z",
+   "resolve": "weekly report on pro-assets.morningconsult.com",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 43.1,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 42.44,
+     "sd": 2.33,
+     "method": "trend_ols"
+    }
+   }
+  },
+  {
+   "round_id": "yougov-2026-w35-approval",
+   "tracker": "economist_yougov",
+   "series": "yougov_approval",
+   "question": "Economist/YouGov wave publishing ~Aug 25, Trump % approve among US adult citizens",
+   "unit": "% approve",
+   "release_at": "2026-08-25T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-08-23T14:00:00Z",
+   "resolve": "topline PDF of the wave",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 40.0,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 39.47,
+     "sd": 4.86,
+     "method": "trend_ols"
+    }
+   }
+  },
+  {
+   "round_id": "yougov-2026-w35-generic",
+   "tracker": "economist_yougov",
+   "series": "yougov_generic_margin",
+   "question": "Economist/YouGov wave publishing ~Aug 25, generic ballot margin (Dem minus Rep) among registered voters",
+   "unit": "margin, points",
+   "release_at": "2026-08-25T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-08-23T14:00:00Z",
+   "resolve": "topline PDF of the wave",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 3.0,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 2.47,
+     "sd": 3.36,
+     "method": "trend_ols"
+    }
+   }
+  },
+  {
+   "round_id": "umich-2026-08-final",
+   "tracker": "umich_sentiment",
+   "series": "umich_sentiment",
+   "question": "University of Michigan consumer sentiment index, August 2026 final",
+   "unit": "index points",
+   "release_at": "2026-08-28T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-08-26T14:00:00Z",
+   "resolve": "official value published at sca.isr.umich.edu, 10:00 ET",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 49.5,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 48.1,
+     "sd": 10.47,
+     "method": "trend_ols"
+    }
+   }
+  },
+  {
+   "round_id": "umich-2026-09-prelim",
+   "tracker": "umich_sentiment",
+   "series": "umich_sentiment",
+   "question": "University of Michigan consumer sentiment index, September 2026 preliminary",
+   "unit": "index points",
+   "release_at": "2026-09-11T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-09T14:00:00Z",
+   "resolve": "official value at sca.isr.umich.edu; date confirmed when the calendar posts",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 49.5,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 48.1,
+     "sd": 11.08,
+     "method": "trend_ols"
+    }
+   }
+  },
+  {
+   "round_id": "midterm-2026-house-margin",
+   "tracker": "midterm_special",
+   "series": "generic_ballot_margin",
+   "question": "2026 US House national popular vote margin, Dem minus Rep",
+   "unit": "margin, points",
+   "release_at": "2026-12-01T00:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-10-30T22:00:00Z",
+   "resolve": "provisional score Dec 1 from AP tallies; final on certified results",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 5.05,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 4.61,
+     "sd": 2.49,
+     "method": "trend_ols"
+    }
+   }
+  },
+  {
+   "round_id": "midterm-2026-house-seats",
+   "tracker": "midterm_special",
+   "series": "house_seats",
+   "question": "Seats won by Democrats in the 2026 US House (all 435 decided)",
+   "unit": "seats",
+   "release_at": "2026-12-01T00:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-10-30T22:00:00Z",
+   "resolve": "provisional score Dec 1 from AP calls; final on certified results",
+   "status": "open",
+   "baselines": null,
+   "baseline_note": "no machine-readable series yet for this tracker"
+  }
+ ],
+ "leaderboard": {
+  "resolved_rounds": 0,
+  "entries": []
+ },
+ "series_tail": {
+  "yougov_approval": [
+   {
+    "date": "2026-05-10",
+    "value": 36.0
+   },
+   {
+    "date": "2026-05-16",
+    "value": 37.0
+   },
+   {
+    "date": "2026-05-24",
+    "value": 34.0
+   },
+   {
+    "date": "2026-05-30",
+    "value": 35.0
+   },
+   {
+    "date": "2026-06-06",
+    "value": 35.0
+   },
+   {
+    "date": "2026-06-14",
+    "value": 39.0
+   },
+   {
+    "date": "2026-06-20",
+    "value": 36.0
+   },
+   {
+    "date": "2026-06-27",
+    "value": 40.0
+   }
+  ],
+  "yougov_generic_margin": [
+   {
+    "date": "2026-05-10",
+    "value": 3.0
+   },
+   {
+    "date": "2026-05-16",
+    "value": 5.0
+   },
+   {
+    "date": "2026-05-24",
+    "value": 6.0
+   },
+   {
+    "date": "2026-05-30",
+    "value": 6.0
+   },
+   {
+    "date": "2026-06-06",
+    "value": 4.0
+   },
+   {
+    "date": "2026-06-14",
+    "value": 3.0
+   },
+   {
+    "date": "2026-06-20",
+    "value": 3.0
+   },
+   {
+    "date": "2026-06-27",
+    "value": 3.0
+   }
+  ],
+  "mc_approval": [
+   {
+    "date": "2026-04-25",
+    "value": 45.0
+   },
+   {
+    "date": "2026-05-01",
+    "value": 44.0
+   },
+   {
+    "date": "2026-05-16",
+    "value": 42.0
+   },
+   {
+    "date": "2026-05-23",
+    "value": 43.0
+   },
+   {
+    "date": "2026-05-30",
+    "value": 43.0
+   },
+   {
+    "date": "2026-06-07",
+    "value": 44.0
+   },
+   {
+    "date": "2026-06-13",
+    "value": 43.1
+   },
+   {
+    "date": "2026-06-20",
+    "value": 43.1
+   }
+  ],
+  "umich_sentiment": [
+   {
+    "date": "2025-11-01",
+    "value": 51.0
+   },
+   {
+    "date": "2025-12-01",
+    "value": 52.9
+   },
+   {
+    "date": "2026-01-01",
+    "value": 56.4
+   },
+   {
+    "date": "2026-02-01",
+    "value": 56.6
+   },
+   {
+    "date": "2026-03-01",
+    "value": 53.3
+   },
+   {
+    "date": "2026-04-01",
+    "value": 49.8
+   },
+   {
+    "date": "2026-05-01",
+    "value": 44.8
+   },
+   {
+    "date": "2026-06-01",
+    "value": 49.5
+   }
+  ],
+  "generic_ballot_margin": [
+   {
+    "date": "2026-05-10",
+    "value": 5.48
+   },
+   {
+    "date": "2026-05-17",
+    "value": 5.6
+   },
+   {
+    "date": "2026-05-24",
+    "value": 5.56
+   },
+   {
+    "date": "2026-05-31",
+    "value": 5.12
+   },
+   {
+    "date": "2026-06-07",
+    "value": 5.05
+   },
+   {
+    "date": "2026-06-14",
+    "value": 5.13
+   },
+   {
+    "date": "2026-06-21",
+    "value": 4.86
+   },
+   {
+    "date": "2026-06-28",
+    "value": 5.05
+   }
+  ]
+ },
+ "sources": {
+  "votehub": "https://api.votehub.com/polls",
+  "fred": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=UMCSENT",
+  "repo": "https://github.com/jajamoa/social-sim-arena"
+ }
+}
