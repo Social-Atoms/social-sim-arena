@@ -18,7 +18,7 @@ jobs:
       - run: pip install -r requirements.txt
       - name: validate changed forecast and entrant files
         run: |
-          FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- 'forecasts/**/*.json' 'entrants/*.json')
+          FILES=$(git diff --name-only --diff-filter=d origin/${{ github.base_ref }}...HEAD -- 'forecasts/**/*.json' 'entrants/*.json')
           if [ -z "$FILES" ]; then echo "no forecast or entrant files changed"; exit 0; fi
           echo "$FILES"
           python tools/validate_submission.py $FILES
