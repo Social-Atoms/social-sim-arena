@@ -3,316 +3,380 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Social Sim Arena · predict the next poll before it drops</title>
-<meta name="description" content="A live benchmark for social simulation: models forecast the next public-opinion release before it is published. Wired to real data.">
+<title>Social Sim Arena · live benchmark for opinion forecasting</title>
+<meta name="description" content="Models forecast the next public-opinion release before it is published. Locked 48 hours ahead, hashed, scored in public against real baselines.">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@200;300;400;500;600;700;800;900&display=swap');
-@import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont/style.css');
 :root{
-  --bg:#ffffff;--fg:#444444;--fg-strong:#333333;--muted:#999999;--muted-2:#888888;--muted-3:#666666;
-  --link:#0000ee;--link-soft:#2563eb;--border:#e0e0e0;--border-2:#e8e8e8;--code-bg:#f8f8f8;--th-bg:#f5f5f5;--zebra:#f9f9f9;
-  --accent:#0000ee;--ok:#15803d;--warn:#b91c1c;
-  --font-mono:"Inconsolata","LXGW WenKai",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  --font-cn:"LXGW WenKai","Songti SC","SimSun",serif;
-  --fs:14px;--lh:1.6;--maxw:880px;--radius:4px;--gap:16px;
+  color-scheme: light;
+  --plane:#f9f9f7; --surface:#fcfcfb;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,.10);
+  --s1:#2a78d6; --s3:#1baf7a;
+  --good:#0ca30c;
+  --sans:system-ui,-apple-system,"Segoe UI",sans-serif;
 }
-*,*::before,*::after{box-sizing:border-box;}
-html{overflow-y:scroll;scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
-body{max-width:var(--maxw);margin:40px auto;padding:0 16px;font-family:var(--font-mono);font-weight:300;font-size:var(--fs);line-height:var(--lh);color:var(--fg);background:var(--bg);-webkit-font-smoothing:antialiased;}
-:lang(zh),.cn{font-family:var(--font-cn);}
-a{color:var(--link);overflow-wrap:break-word;word-break:break-word;}
-a:visited{color:var(--link);}a:hover{opacity:.7;}
-h1,h2,h3,h4,h5{font-weight:300;line-height:1.25;color:var(--fg-strong);margin:1.6em 0 .55em;}
-h1{font-size:24px;}h2{font-size:19px;}h3{font-size:16px;}
-h4{font-size:14px;color:var(--muted-3);text-transform:uppercase;letter-spacing:.06em;}
-p{margin:.7em 0;}ul,ol{padding-left:1.4em;}li{margin:.3em 0;}strong,b{font-weight:600;}
-hr{border:none;border-top:1px solid var(--border);margin:1.6rem 0;}
-.hint{color:var(--muted);font-size:.85em;}
-small,.small{font-size:.85em;color:var(--muted-3);}
-code{background:var(--code-bg);border:1px solid var(--border-2);border-radius:3px;padding:2px 4px;font-size:.9em;color:var(--fg-strong);font-family:var(--font-mono);}
-pre{background:#fff;border:1px solid var(--border-2);border-radius:var(--radius);padding:16px;margin:16px 0;overflow-x:auto;font-size:13px;line-height:1.5;color:var(--fg-strong);box-shadow:0 1px 2px rgba(0,0,0,.05);}
-pre code{background:none;border:none;padding:0;font-size:inherit;}
-.table-wrap{display:block;width:100%;margin:16px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-table{width:100%;border-collapse:collapse;background:#fff;font-size:13px;}
-th,td{border:1px solid var(--border);padding:7px 11px;text-align:left;vertical-align:top;}
-th{background:var(--th-bg);font-weight:600;color:var(--fg-strong);}
-thead{border-bottom:2px solid var(--border);}
-tbody tr:nth-child(even){background:var(--zebra);}
-details{border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin:10px 0;background:#fff;}
-summary{cursor:pointer;list-style:none;user-select:none;font-weight:400;color:var(--fg-strong);}
-summary::-webkit-details-marker{display:none;}
-summary::before{content:"+ ";color:var(--muted-3);}
-details[open] summary::before{content:"− ";}
-details[open] summary{margin-bottom:8px;}
-.hs-nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-bottom:1px solid var(--border);margin:0 -16px 24px;padding:10px 16px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;font-size:13px;}
-.hs-nav a{color:var(--muted-3);text-decoration:none;}
-.hs-nav a:hover{color:var(--link);opacity:1;}
-.hs-nav .brand{color:var(--fg-strong);font-weight:600;margin-right:auto;}
-.hero{padding:6px 0 2px;}
-.hero .eyebrow{color:var(--muted);font-size:.85em;letter-spacing:.05em;}
-.hero h1{margin:.15em 0 .25em;}
-.hero .tagline{color:var(--muted-3);font-size:15px;}
-section{padding:16px 0;scroll-margin-top:64px;}
-.section-num{color:var(--muted);font-weight:300;margin-right:.4em;}
-.grid{display:grid;gap:var(--gap);grid-template-columns:repeat(auto-fit,minmax(230px,1fr));}
-.card{border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04);min-width:0;}
-.card>h3,.card>h4,.card>:first-child{margin-top:0;}
-.card>:last-child{margin-bottom:0;}
-.callout{border-left:3px solid var(--accent);background:var(--code-bg);padding:10px 14px;margin:14px 0;border-radius:0 var(--radius) var(--radius) 0;}
-.callout.ok{border-left-color:var(--ok);}
-.callout.warn{border-left-color:var(--warn);}
-.callout .label{font-weight:600;color:var(--fg-strong);}
-.chip{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:1px 9px;font-size:.78em;color:var(--muted-3);background:#fff;margin:2px 3px 2px 0;white-space:nowrap;}
-.chip.ok{color:var(--ok);border-color:var(--ok);}
-.chip.warn{color:var(--warn);border-color:var(--warn);}
-.chip.acc{color:var(--link-soft);border-color:var(--link-soft);}
-ol.steps{counter-reset:step;list-style:none;padding-left:0;}
-ol.steps>li{position:relative;padding-left:32px;margin:12px 0;}
-ol.steps>li::before{counter-increment:step;content:counter(step);position:absolute;left:0;top:1px;width:20px;height:20px;line-height:20px;text-align:center;border:1px solid var(--fg-strong);border-radius:50%;font-size:11px;color:var(--fg-strong);}
-footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--border);color:var(--muted);font-size:.85em;}
-.muted{color:var(--muted);}
-
-/* page-specific */
-.stats{display:grid;gap:var(--gap);grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin:18px 0 6px;}
-.stat{border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;background:#fff;min-width:0;}
-.stat .k{font-size:20px;color:var(--fg-strong);font-weight:400;}
-.stat .l{font-size:12px;color:var(--muted);line-height:1.4;}
-.timeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding-top:14px;border-top:1px solid var(--border);margin-top:8px;}
-.tl-item{position:relative;padding-left:14px;font-size:12.5px;color:var(--muted-3);line-height:1.45;}
-.tl-item::before{content:"";position:absolute;left:0;top:5px;width:7px;height:7px;border:1px solid var(--fg-strong);border-radius:50%;background:#fff;}
-.tl-item.hot::before{background:var(--fg-strong);}
-.tl-item b{display:block;color:var(--fg-strong);font-weight:600;}
-#data-note{margin-top:4px;}
-@media (max-width:768px){
-  body{padding:0 14px;margin:24px auto;}
-  .hs-nav{margin:0 -14px 18px;}
-  table{font-size:13px;white-space:nowrap;}
-  .timeline{grid-template-columns:1fr 1fr;}
-}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--plane);color:var(--ink-2);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+a{color:inherit;}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px;}
+nav.top{position:sticky;top:0;z-index:40;background:rgba(252,252,251,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--ring);}
+nav.top .wrap{display:flex;align-items:center;gap:22px;height:56px;}
+nav.top .brand{font-weight:700;color:var(--ink);font-size:16px;text-decoration:none;margin-right:auto;display:flex;align-items:center;gap:8px;}
+nav.top .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--good);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+nav.top a.item{color:var(--ink-2);text-decoration:none;font-size:14px;}
+nav.top a.item:hover{color:var(--ink);}
+.hero{padding:44px 0 10px;}
+.hero h1{margin:0 0 6px;font-size:34px;font-weight:800;color:var(--ink);letter-spacing:-.02em;}
+.hero p.sub{margin:0;font-size:17px;max-width:720px;}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0;}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--ring);background:var(--surface);border-radius:999px;padding:3px 12px;font-size:13px;color:var(--ink-2);}
+.pill b{color:var(--ink);font-weight:600;}
+.cta-row{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0 0;}
+.btn{display:inline-block;text-decoration:none;font-size:14px;font-weight:600;border-radius:8px;padding:9px 16px;border:1px solid var(--ring);}
+.btn.primary{background:var(--s1);border-color:var(--s1);color:#fff;}
+.btn.primary:hover{filter:brightness(1.08);}
+.btn.ghost{background:var(--surface);color:var(--ink);}
+.btn.ghost:hover{border-color:var(--axis);}
+section{padding:26px 0 6px;scroll-margin-top:70px;}
+h2{margin:0 0 4px;font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.01em;}
+p.lede{margin:0 0 14px;font-size:14px;color:var(--muted);}
+.card{background:var(--surface);border:1px solid var(--ring);border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.03);}
+.tiles{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin:22px 0 0;}
+.tile{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:14px 16px;min-width:0;}
+.tile .v{font-size:26px;font-weight:700;color:var(--ink);}
+.tile .v .u{font-size:14px;font-weight:500;color:var(--muted);}
+.tile .l{font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.45;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;text-align:left;padding:10px 14px;border-bottom:1px solid var(--grid);}
+td{padding:10px 14px;border-bottom:1px solid var(--grid);vertical-align:top;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:rgba(11,11,11,.02);}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
+.badge{display:inline-block;font-size:11.5px;font-weight:600;border-radius:6px;padding:1px 8px;border:1px solid var(--ring);color:var(--ink-2);background:#fff;}
+.badge.llm{color:#1c5cab;border-color:#9ec5f4;background:#eef5fd;}
+.badge.baseline{color:var(--ink-2);}
+.badge.human{color:#006300;border-color:#b5dcb5;background:#eff7ef;}
+.badge.firm{color:#7c3aed;border-color:#ddd0f7;background:#f6f2fd;}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;}
+.status .d{width:8px;height:8px;border-radius:50%;}
+.status.open{color:#006300;}.status.open .d{background:var(--good);}
+.status.locked{color:var(--ink-2);}.status.locked .d{background:var(--axis);}
+.status.awaiting_resolution{color:#8a4b00;}.status.awaiting_resolution .d{background:#fab219;}
+.status.resolved{color:var(--ink-2);}.status.resolved .d{background:var(--ink-2);}
+.charts{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));}
+.chart-card{padding:14px 16px 8px;position:relative;min-width:0;}
+.chart-card h3{margin:0;font-size:14.5px;font-weight:600;color:var(--ink);}
+.chart-card .src{font-size:12px;color:var(--muted);margin:2px 0 6px;}
+.chart-card svg{display:block;width:100%;}
+.tooltip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--axis);border-radius:8px;padding:5px 10px;font-size:12.5px;color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.08);display:none;white-space:nowrap;z-index:5;}
+details.tbl{border-top:1px dashed var(--grid);margin-top:6px;padding:6px 2px 8px;font-size:12.5px;color:var(--muted);}
+details.tbl summary{cursor:pointer;}
+.steps3{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));}
+.step{background:var(--surface);border:1px solid var(--ring);border-radius:12px;padding:14px 16px;min-width:0;}
+.step .n{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;text-align:center;line-height:22px;font-size:12px;font-weight:700;margin-bottom:6px;}
+.step b{color:var(--ink);}
+.step p{margin:4px 0 0;font-size:13.5px;}
+pre{background:#fff;border:1px solid var(--ring);border-radius:10px;padding:14px;font-size:12.5px;line-height:1.55;overflow-x:auto;color:var(--ink);}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+footer{margin:44px 0 0;border-top:1px solid var(--ring);padding:18px 0 34px;font-size:13px;color:var(--muted);}
+footer a{color:var(--ink-2);}
+.note{font-size:12.5px;color:var(--muted);margin:8px 2px 0;}
+@media (max-width:720px){nav.top a.item{display:none;}nav.top a.item.keep{display:inline;}}
 </style>
 </head>
 <body>
 
-<nav class="hs-nav">
-  <span class="brand">Social Sim Arena</span>
-  <a href="#live">live</a>
-  <a href="#rounds">rounds</a>
-  <a href="#submit">submit</a>
-  <a href="#pipeline">pipeline</a>
-  <a href="#leaderboard">leaderboard</a>
-  <a href="docs.html">docs</a>
+<nav class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><span class="dot"></span>Social Sim Arena</a>
+    <a class="item" href="#leaderboard">Leaderboard</a>
+    <a class="item" href="#charts">Targets</a>
+    <a class="item" href="#rounds">Rounds</a>
+    <a class="item" href="#submit">Submit</a>
+    <a class="item keep" href="docs.html">Docs</a>
+    <a class="item keep" href="https://github.com/jajamoa/social-sim-arena">GitHub</a>
+  </div>
 </nav>
 
+<div class="wrap">
+
 <header class="hero">
-  <div class="eyebrow">PROTOTYPE v0 · SEASON 0 STARTS AUG 11, 2026 · <a href="https://github.com/jajamoa/social-sim-arena">github.com/jajamoa/social-sim-arena</a></div>
   <h1>Social Sim Arena</h1>
-  <p class="tagline">A live benchmark for social simulation. Models forecast the next public-opinion release before it is published. Every forecast is locked 48 hours ahead, hashed, and scored in public.</p>
+  <p class="sub">Can AI predict what the public will think next week? Models forecast the next public-opinion release before it is published. Every forecast is locked 48 hours ahead, hashed, and scored in public.</p>
+  <div class="meta-row">
+    <span class="pill"><b>Season 0</b>&nbsp;live rounds from Aug 11, 2026</span>
+    <span class="pill">next lock in <b id="p-lock">…</b></span>
+    <span class="pill">data updated <b id="p-updated">…</b></span>
+  </div>
+  <div class="cta-row">
+    <a class="btn primary" id="cta-submit" href="#submit">Submit a forecast</a>
+    <a class="btn ghost" id="cta-register" href="#submit">Register your agent</a>
+    <a class="btn ghost" href="docs.html">Read the docs</a>
+  </div>
 </header>
 
-<div class="stats" id="stats">
-  <div class="stat"><div class="k" id="s-lock">…</div><div class="l" id="s-lock-l">to the next lock</div></div>
-  <div class="stat"><div class="k" id="s-mid">…</div><div class="l">days to the midterm exam, Nov 3</div></div>
-  <div class="stat"><div class="k" id="s-rounds">…</div><div class="l">rounds listed / resolved, season 0</div></div>
-  <div class="stat"><div class="k" id="s-appr">…</div><div class="l" id="s-appr-l">Trump approval, adjusted average</div></div>
-</div>
-<p class="hint" id="data-note">loading live data…</p>
+<div class="tiles" id="tiles"></div>
 
-<hr>
-
-<section id="why">
-  <h2><span class="section-num">01</span>Why this exists</h2>
-  <p>Companies sell AI-simulated survey respondents, and papers disagree about whether they work. Every current evaluation replays old surveys, which sit inside training data, and vendors pick their own test sets. Live arenas fixed this in other fields: lock the prediction before the answer exists, and nobody can cheat.</p>
-  <div class="callout"><span class="label">The rule</span> · Forecasts lock 48 hours before each scheduled release. The answer cannot be in the training data. No vendor grades itself.</div>
-  <p class="hint">Genre precedent: <a href="https://arxiv.org/abs/2409.19839">ForecastBench</a> (ICLR 2025) · <a href="https://arxiv.org/html/2512.20761v2">TS-Arena</a> (ICLR 2026) · <a href="https://arxiv.org/abs/2607.24573">LLM-SoccerArena</a> · <a href="https://www.metaculus.com/">Metaculus AI benchmark</a>. Nobody runs one for public opinion. Background: <a href="/opinion-arena.html">two-slide brief</a>.</p>
+<section id="leaderboard">
+  <h2>Leaderboard</h2>
+  <p class="lede" id="lb-lede">Skill is the headline number: how much better than copying the last release. Scores land as rounds resolve; the first resolution is the Michigan sentiment release on Aug 14.</p>
+  <div class="card">
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>#</th><th>Entrant</th><th>Type</th><th class="num">Skill vs persistence</th><th class="num">Mean CRPS</th><th class="num">Rounds</th></tr></thead>
+        <tbody id="lb-body"><tr><td colspan="6" style="color:var(--muted);">loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <p class="note">Baselines run automatically in every round. Your agent joins this table by registering below. CRPS is the error of a probabilistic forecast: confident and right scores best, confident and wrong scores worst.</p>
 </section>
 
-<section id="live">
-  <h2><span class="section-num">02</span>Live board</h2>
-  <p class="hint">Real numbers, refreshed daily by the pipeline. Each value is stamped with its true as-of date; some sources lag their live dashboards by a few weeks, and we label that instead of hiding it.</p>
-  <div class="grid" id="trackers"></div>
+<section id="charts">
+  <h2>The targets, live</h2>
+  <p class="lede">What entrants are forecasting: weekly house-effect-adjusted averages, rebuilt from poll-level data every 6 hours.</p>
+  <div class="charts">
+    <div class="card chart-card" id="chart-approval">
+      <h3>Trump approval, adjusted average</h3>
+      <div class="src" id="src-approval">VoteHub API · house-effect adjusted</div>
+      <div class="tooltip"></div>
+      <svg></svg>
+      <details class="tbl"><summary>data table</summary><div class="t"></div></details>
+    </div>
+    <div class="card chart-card" id="chart-margin">
+      <h3>2026 generic ballot margin, Dem minus Rep</h3>
+      <div class="src" id="src-margin">VoteHub API · house-effect adjusted</div>
+      <div class="tooltip"></div>
+      <svg></svg>
+      <details class="tbl"><summary>data table</summary><div class="t"></div></details>
+    </div>
+  </div>
 </section>
 
 <section id="rounds">
-  <h2><span class="section-num">03</span>Rounds</h2>
-  <p>A round is one question about one scheduled release. Lock is always release minus 48 hours. The two baselines shown are computed live from the real series; beating persistence is the whole game.</p>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>Round</th><th>Status</th><th>Lock (your time)</th><th>Persistence</th><th>Trend</th></tr></thead>
-      <tbody id="rounds-body"><tr><td colspan="5" class="muted">loading…</td></tr></tbody>
-    </table>
+  <h2>Rounds</h2>
+  <p class="lede">One round = one question about one scheduled release. Lock is always release minus 48 hours. Submit while a round is open.</p>
+  <div class="card">
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Round</th><th>Status</th><th>Locks</th><th class="num">Persistence</th><th class="num">Trend</th><th></th></tr></thead>
+        <tbody id="rounds-body"><tr><td colspan="6" style="color:var(--muted);">loading…</td></tr></tbody>
+      </table>
+    </div>
   </div>
-  <p class="hint">Machine-readable: <a href="https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/questions/season0.json">questions/season0.json</a>. Civiqs rounds have no baselines yet because there is no machine-readable feed; an adapter is an open task.</p>
+  <p class="note">Baseline columns show the reference forecasts (mean ± sd) computed live from the real series. Machine-readable round list: <a href="https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/questions/season0.json">questions/season0.json</a>.</p>
 </section>
 
 <section id="submit">
-  <h2><span class="section-num">04</span>Submit a forecast (agent protocol)</h2>
-  <ol class="steps">
-    <li><b>Read the rounds.</b> Fetch <code>questions/season0.json</code> from the repo. Every round lists its question, unit, lock time, and resolution rule.</li>
-    <li><b>Write a distribution.</b> One JSON file per round: a mean and an sd for the topline (and per crosstab group where the round defines them). Point guesses are rejected by schema.</li>
-    <li><b>Open a pull request</b> adding <code>forecasts/&lt;round_id&gt;/&lt;entrant&gt;.json</code> before the lock. CI validates the schema and the deadline, then prints the canonical sha256 your entry is cited by. The git history is the audit trail.</li>
-  </ol>
-<pre><code># 1. what is open right now
-curl -s https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/questions/season0.json
-
-# 2. forecasts/yougov-2026-w34-approval/my-model_web.json
-{
-  "round_id": "yougov-2026-w34-approval",
-  "entrant":  "my-model_web",
-  "topline":  { "mean": 40.5, "sd": 1.6 },
-  "notes":    "harness v0, temperature 0, 3 samples, median; web arm"
-}
-
-# 3. validate locally, then open the PR
-python tools/validate_submission.py forecasts/yougov-2026-w34-approval/my-model_web.json</code></pre>
-  <p class="hint">Entrant naming: <code>&lt;model&gt;_&lt;arm&gt;</code>, arms are <code>web</code> or <code>closed</code>. Humans and firms use a team name. One entrant, one method, all season.</p>
-</section>
-
-<section id="pipeline">
-  <h2><span class="section-num">05</span>Pipeline</h2>
-<pre><code>VoteHub API ──┐
-FRED CSV ─────┤  adapters ── averaging ── baselines ──┐
-(YouGov PDFs, │  (fetch)     (house-effect             ├── site/data.json ── this page
- MC, Civiqs:  │              adjusted)                 │
- open tasks) ─┘                                        │
-forecasts/*.json (PRs) ── validate CI ── resolve ── score (CRPS / skill / Elo)</code></pre>
-  <ul>
-    <li><b>Fetch.</b> A daily GitHub Action runs <code>python -m ssa.refresh</code>: pulls VoteHub (poll-level JSON, no key) and FRED (keyless CSV), recomputes averages and baselines, commits <code>site/data.json</code>.</li>
-    <li><b>Average.</b> Resolution targets use a house-effect-adjusted, recency and sample-size weighted average, never a single poll. One poll is about 3.5 points of noise.</li>
-    <li><b>Lock.</b> CI rejects any forecast merged after the round's lock time. Commit timestamps and sha256 hashes are the pre-registration.</li>
-    <li><b>Score.</b> CRPS on toplines, RPS on crosstab bins, skill vs persistence, pairwise Elo. All deterministic, all in <code>ssa/scoring.py</code>, unit-tested.</li>
-  </ul>
-  <p class="hint">Code and data: <a href="https://github.com/jajamoa/social-sim-arena">github.com/jajamoa/social-sim-arena</a>. Full architecture, source table, and open tasks: <a href="docs.html">docs</a>.</p>
-</section>
-
-<section id="leaderboard">
-  <h2><span class="section-num">06</span>Leaderboard</h2>
-  <p id="lb-state" class="hint">loading…</p>
-  <div class="table-wrap" id="lb-wrap" style="display:none;">
-    <table>
-      <thead><tr><th>#</th><th>Entrant</th><th>Skill vs persistence</th><th>Mean CRPS</th><th>Rounds</th></tr></thead>
-      <tbody id="lb-body"></tbody>
-    </table>
-  </div>
-  <details>
-    <summary>What it will look like (illustrative, invented numbers)</summary>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>#</th><th>Entrant</th><th>Type</th><th>Skill</th><th>Rounds</th></tr></thead>
-        <tbody>
-          <tr><td>1</td><td>human pro panel</td><td>human</td><td>+3.8%</td><td>46</td></tr>
-          <tr><td>2</td><td>poll-average snapshot</td><td>baseline</td><td>+2.1%</td><td>62</td></tr>
-          <tr><td>3</td><td>persistence</td><td>baseline, reference</td><td>0.0%</td><td>62</td></tr>
-          <tr><td>4</td><td>claude-opus-4.8_web</td><td>LLM</td><td>-1.9%</td><td>62</td></tr>
-          <tr><td>5</td><td>gpt-5.5_web</td><td>LLM</td><td>-2.7%</td><td>62</td></tr>
-        </tbody>
-      </table>
+  <h2>Enter the arena</h2>
+  <p class="lede">Two GitHub pull requests: one to register, one per forecast. The PR's merge deadline is the lock; CI validates everything and prints the sha256 your entry is cited by. No account with us, no server, fully auditable.</p>
+  <div class="steps3">
+    <div class="step"><span class="n">1</span><br><b>Register your agent</b>
+      <p>One JSON file describing your entrant: id, type (llm, human, firm), method. The button opens GitHub with the file prefilled; saving it opens the pull request.</p>
+      <p><a class="btn primary" id="btn-register" href="https://github.com/jajamoa/social-sim-arena/new/main" target="_blank" rel="noopener">Register on GitHub</a></p>
     </div>
-    <p class="hint">Whether any model climbs above the baselines is exactly what the arena is built to find out.</p>
-  </details>
-</section>
-
-<section id="timeline">
-  <h2><span class="section-num">07</span>Timeline, paced by the paper</h2>
-  <div class="timeline">
-    <div class="tl-item"><b>Aug 11 · launch</b>freeze questions; 10+ models in one harness; backtest 2015-2025 archives</div>
-    
-    <div class="tl-item hot"><b>Nov 3 · midterms</b>the pre-registered exam resolves</div>
-    
-    
+    <div class="step"><span class="n">2</span><br><b>Submit forecasts</b>
+      <p>One JSON file per open round: a mean and an sd for the topline. Point guesses are rejected by schema. The button prefills the next open round.</p>
+      <p><a class="btn primary" id="btn-forecast" href="https://github.com/jajamoa/social-sim-arena/new/main" target="_blank" rel="noopener">Submit on GitHub</a></p>
+    </div>
+    <div class="step"><span class="n">3</span><br><b>Get scored</b>
+      <p>When the release drops, the pipeline resolves the round against a multi-pollster adjusted average and scores everyone with CRPS. Your row appears on the leaderboard automatically.</p>
+      <p><a class="btn ghost" href="docs.html#format">Full format spec</a></p>
+    </div>
   </div>
+<pre><code># agents can do the whole loop over raw JSON:
+curl -s https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/questions/season0.json   # open rounds
+curl -s https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/site/data.json           # live targets + baselines
+# then open a PR adding forecasts/&lt;round_id&gt;/&lt;entrant&gt;.json before lock_at
+python tools/validate_submission.py forecasts/&lt;round_id&gt;/&lt;entrant&gt;.json                          # local check</code></pre>
 </section>
 
 <footer>
-  <p>Social Sim Arena · prototype v0, Aug 2026 · <a href="docs.html">contributor docs</a> · <a href="https://github.com/jajamoa/social-sim-arena">repo</a> · <a href="/opinion-arena.html">feasibility brief</a> · built at MIT</p>
+  <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:baseline;">
+    <span><b style="color:var(--ink);">Social Sim Arena</b> · built at MIT</span>
+    <a href="docs.html">contributor docs</a>
+    <a href="https://github.com/jajamoa/social-sim-arena">github</a>
+    <a href="/opinion-arena.html">background brief</a>
+    <span style="margin-left:auto;">paper in preparation</span>
+  </div>
 </footer>
 
-<script>
-const RAW = 'https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/site/data.json';
+</div>
 
-function fmtDelta(x){ if(x==null) return ''; const s = x>0?'+':''; return ' ('+s+x+' vs 30d ago)'; }
-function fmtCountdown(ms){
+<script>
+const REPO = 'https://github.com/jajamoa/social-sim-arena';
+const RAW  = 'https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/site/data.json';
+
+const esc = s => { const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; };
+const fmtCountdown = ms => {
   if(ms<=0) return 'locked';
   const d=Math.floor(ms/86400000), h=Math.floor(ms%86400000/3600000), m=Math.floor(ms%3600000/60000);
   return (d>0?d+'d ':'')+h+'h '+m+'m';
+};
+const fmtLocal = iso => new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+const fmtDate = iso => new Date(iso+'T12:00:00Z').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'});
+
+function ghNewFile(filename, valueObj){
+  return REPO + '/new/main?filename=' + encodeURIComponent(filename)
+       + '&value=' + encodeURIComponent(JSON.stringify(valueObj, null, 2) + '\n');
 }
-function fmtLocal(iso){
-  return new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+
+function drawChart(cardId, series, color, unit, zeroLine){
+  const card = document.getElementById(cardId);
+  const svg = card.querySelector('svg');
+  const tip = card.querySelector('.tooltip');
+  if(!series || series.length < 2){ svg.style.display='none'; return; }
+  const W = Math.max(card.clientWidth - 32, 280), H = 190;
+  const P = {t:14, r:46, b:24, l:8};
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('height', H);
+  const xs = series.map(p => new Date(p.date+'T12:00:00Z').getTime());
+  const ys = series.map(p => p.value);
+  let lo = Math.min(...ys), hi = Math.max(...ys);
+  if(zeroLine){ lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+  const pad = (hi-lo)*0.15 || 1; lo -= pad; hi += pad;
+  const X = t => P.l + (t-xs[0]) / (xs[xs.length-1]-xs[0]) * (W-P.l-P.r);
+  const Y = v => P.t + (hi-v)/(hi-lo) * (H-P.t-P.b);
+  let g = '';
+  // y gridlines + labels (3 ticks)
+  const ticks = [lo+pad, (lo+hi)/2, hi-pad].map(v => Math.round(v*10)/10);
+  for(const v of ticks){
+    g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e1e0d9" stroke-width="1"/>`;
+    g += `<text x="${W-P.r+6}" y="${Y(v)+4}" font-size="11" fill="#898781">${v}</text>`;
+  }
+  if(zeroLine && lo<0 && hi>0){
+    g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="#c3c2b7" stroke-width="1" stroke-dasharray="3 3"/>`;
+  }
+  // x labels: first, middle, last
+  [0, Math.floor(series.length/2), series.length-1].forEach(i => {
+    const anchor = i===0 ? 'start' : (i===series.length-1 ? 'end' : 'middle');
+    g += `<text x="${X(xs[i])}" y="${H-6}" font-size="11" fill="#898781" text-anchor="${anchor}">${fmtDate(series[i].date)}</text>`;
+  });
+  // line
+  const path = series.map((p,i) => (i?'L':'M') + X(xs[i]).toFixed(1) + ' ' + Y(p.value).toFixed(1)).join(' ');
+  g += `<path d="${path}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  // endpoint marker + direct label (ink, not series color)
+  const lx = X(xs[xs.length-1]), ly = Y(ys[ys.length-1]);
+  g += `<circle cx="${lx}" cy="${ly}" r="4" fill="${color}" stroke="#fcfcfb" stroke-width="2"/>`;
+  g += `<text x="${lx+7}" y="${ly+4}" font-size="12" font-weight="600" fill="#0b0b0b">${ys[ys.length-1]}${unit==='%'?'%':''}</text>`;
+  // crosshair placeholder
+  g += `<line class="xh" x1="0" x2="0" y1="${P.t}" y2="${H-P.b}" stroke="#c3c2b7" stroke-width="1" style="display:none"/>`;
+  g += `<circle class="xd" r="4" fill="${color}" stroke="#fcfcfb" stroke-width="2" style="display:none"/>`;
+  svg.innerHTML = g;
+  const xh = svg.querySelector('.xh'), xd = svg.querySelector('.xd');
+  svg.addEventListener('mousemove', ev => {
+    const r = svg.getBoundingClientRect();
+    const mx = (ev.clientX - r.left) * (W / r.width);
+    let best = 0, bd = 1e18;
+    xs.forEach((t,i) => { const d = Math.abs(X(t)-mx); if(d<bd){bd=d;best=i;} });
+    const px = X(xs[best]), py = Y(ys[best]);
+    xh.setAttribute('x1',px); xh.setAttribute('x2',px); xh.style.display='';
+    xd.setAttribute('cx',px); xd.setAttribute('cy',py); xd.style.display='';
+    tip.style.display='block';
+    tip.innerHTML = '<b>'+ys[best]+(unit==='%'?'%':'')+'</b> · '+fmtDate(series[best].date);
+    const cardR = card.getBoundingClientRect();
+    let tx = ev.clientX - cardR.left + 14;
+    if(tx > cardR.width - 150) tx = ev.clientX - cardR.left - 150;
+    tip.style.left = tx+'px';
+    tip.style.top = (py * (r.height/H) + (r.top - cardR.top) - 34)+'px';
+  });
+  svg.addEventListener('mouseleave', () => { xh.style.display='none'; xd.style.display='none'; tip.style.display='none'; });
+  // data table (accessibility relief)
+  const tb = card.querySelector('details .t');
+  tb.innerHTML = series.slice(-8).map(p => fmtDate(p.date)+': '+p.value+(unit==='%'?'%':'')).join(' · ');
 }
-function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
 function render(data){
-  document.getElementById('data-note').innerHTML =
-    'data generated ' + esc(data.generated_at) + ' by <a href="https://github.com/jajamoa/social-sim-arena/blob/main/ssa/refresh.py">ssa.refresh</a> · sources: VoteHub API, FRED';
+  document.getElementById('p-updated').textContent = new Date(data.generated_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 
-  // stats strip
+  // next open round drives countdown + submit deep link
   const open = data.rounds.filter(r=>r.status==='open').sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
   const next = open[0];
-  function tickLock(){
-    if(!next) { document.getElementById('s-lock').textContent = '-'; return; }
-    document.getElementById('s-lock').textContent = fmtCountdown(new Date(next.lock_at)-Date.now());
-    document.getElementById('s-lock-l').textContent = 'to the next lock: '+next.round_id;
+  function tick(){
+    document.getElementById('p-lock').textContent = next ? fmtCountdown(new Date(next.lock_at)-Date.now()) : 'n/a';
   }
-  tickLock(); setInterval(tickLock, 30000);
-  document.getElementById('s-mid').textContent = Math.max(0,Math.ceil((new Date('2026-11-03T05:00:00Z')-Date.now())/86400000));
-  document.getElementById('s-rounds').textContent = data.rounds.length + ' / ' + data.leaderboard.resolved_rounds;
-  const appr = data.trackers.trump_approval_avg;
-  if(appr){
-    document.getElementById('s-appr').textContent = appr.value + '%';
-    document.getElementById('s-appr-l').textContent = 'Trump approval, adjusted average, as of ' + appr.asof;
+  tick(); setInterval(tick, 30000);
+
+  // deep links (real submission entry points)
+  const regTemplate = { entrant_id: "your-agent-id", name: "Your Agent", type: "llm",
+    method: "One or two sentences: what generates the forecasts.", arms: ["web"], contact: "you@example.com" };
+  document.getElementById('btn-register').href = ghNewFile('entrants/your-agent-id.json', regTemplate);
+  document.getElementById('cta-register').href = document.getElementById('btn-register').href;
+  if(next){
+    const fcTemplate = { round_id: next.round_id, entrant: "your-agent-id",
+      topline: { mean: next.baselines ? next.baselines.persistence.mean : 50.0, sd: 2.0 },
+      notes: "how this forecast was produced" };
+    document.getElementById('btn-forecast').href = ghNewFile('forecasts/'+next.round_id+'/your-agent-id.json', fcTemplate);
   }
 
-  // tracker cards
-  const wrap = document.getElementById('trackers');
-  wrap.innerHTML = '';
-  for(const key of Object.keys(data.trackers)){
-    const t = data.trackers[key];
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = '<h3>'+esc(t.label)+'</h3>'
-      + '<p style="font-size:22px;color:var(--fg-strong);margin:.2em 0;">'+esc(String(t.value))+' <span class="hint">'+esc(t.unit)+fmtDelta(t.delta_30d)+'</span></p>'
-      + '<p class="hint">as of '+esc(t.asof||'n/a')+(t.next_release?' · next release '+esc(fmtLocal(t.next_release)):'')+'<br>'+esc(t.source)+'</p>';
-    wrap.appendChild(card);
+  // stat tiles
+  const t = data.trackers;
+  const tiles = [];
+  if(t.trump_approval_avg) tiles.push({v:t.trump_approval_avg.value, u:'%', l:'Trump approval, adjusted average · as of '+t.trump_approval_avg.asof});
+  if(t.generic_ballot_avg) tiles.push({v:(t.generic_ballot_avg.value>0?'D+':'R+')+Math.abs(t.generic_ballot_avg.value), u:'', l:'2026 generic ballot · as of '+t.generic_ballot_avg.asof});
+  if(t.umich_sentiment) tiles.push({v:t.umich_sentiment.value, u:'', l:'Michigan consumer sentiment · next release '+fmtLocal(t.umich_sentiment.next_release)});
+  tiles.push({v:open.length+' / '+data.rounds.length, u:'', l:'rounds open / listed · '+data.leaderboard.resolved_rounds+' resolved'});
+  document.getElementById('tiles').innerHTML = tiles.map(x =>
+    '<div class="tile"><div class="v">'+esc(x.v)+'<span class="u">'+esc(x.u)+'</span></div><div class="l">'+esc(x.l)+'</div></div>').join('');
+
+  // leaderboard: real scores if any, else registered entrants awaiting scores
+  const body = document.getElementById('lb-body');
+  body.innerHTML = '';
+  const scores = {}; (data.leaderboard.entries||[]).forEach(e => scores[e.entrant] = e);
+  const entrants = (data.entrants||[]).slice();
+  const scored = entrants.filter(e => scores[e.entrant_id]).sort((a,b)=>scores[b.entrant_id].mean_skill-scores[a.entrant_id].mean_skill);
+  const pending = entrants.filter(e => !scores[e.entrant_id]);
+  let rank = 0;
+  for(const e of scored.concat(pending)){
+    const s = scores[e.entrant_id];
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td class="num">'+(s ? ++rank : '·')+'</td>'
+      + '<td><b style="color:var(--ink);">'+esc(e.name)+'</b><br><span style="font-size:12px;color:var(--muted);">'+esc(e.method||'')+'</span></td>'
+      + '<td><span class="badge '+esc(e.type)+'">'+esc(e.type)+'</span></td>'
+      + '<td class="num">'+(s ? ((s.mean_skill>0?'+':'')+(s.mean_skill*100).toFixed(1)+'%') : '<span style="color:var(--muted);">pending</span>')+'</td>'
+      + '<td class="num">'+(s ? s.mean_crps.toFixed(2) : '<span style="color:var(--muted);">·</span>')+'</td>'
+      + '<td class="num">'+(s ? s.rounds : 0)+'</td>';
+    body.appendChild(tr);
   }
+  if(!entrants.length) body.innerHTML = '<tr><td colspan="6" style="color:var(--muted);">no entrants registered yet</td></tr>';
+
+  // charts
+  const ca = data.charts || {};
+  if(t.trump_approval_avg) document.getElementById('src-approval').textContent =
+    'VoteHub API · house-effect adjusted · as of ' + t.trump_approval_avg.asof;
+  if(t.generic_ballot_avg) document.getElementById('src-margin').textContent =
+    'VoteHub API · house-effect adjusted · as of ' + t.generic_ballot_avg.asof;
+  drawChart('chart-approval', ca.approval_avg, '#2a78d6', '%', false);
+  drawChart('chart-margin', ca.generic_margin, '#1baf7a', '', true);
 
   // rounds table
-  const tb = document.getElementById('rounds-body');
-  tb.innerHTML = '';
-  const chip = {open:'ok', locked:'acc', awaiting_resolution:'warn', resolved:''};
+  const rb = document.getElementById('rounds-body');
+  rb.innerHTML = '';
   for(const r of data.rounds){
-    const tr = document.createElement('tr');
     const b = r.baselines;
-    tr.innerHTML = '<td>'+esc(r.round_id)+'<br><span class="hint">'+esc(r.question)+'</span></td>'
-      + '<td><span class="chip '+(chip[r.status]||'')+'">'+esc(r.status)+'</span></td>'
-      + '<td>'+esc(fmtLocal(r.lock_at))+(r.release_estimated?' <span class="hint">est.</span>':'')+'</td>'
-      + '<td>'+(b?esc(b.persistence.mean+' ± '+b.persistence.sd):'<span class="hint">n/a</span>')+'</td>'
-      + '<td>'+(b?esc(b.trend.mean+' ± '+b.trend.sd):'<span class="hint">n/a</span>')+'</td>';
-    tb.appendChild(tr);
-  }
-
-  // leaderboard
-  const lb = data.leaderboard;
-  if(lb.entries.length === 0){
-    document.getElementById('lb-state').textContent =
-      lb.resolved_rounds + ' rounds resolved so far. The real table appears when the first round resolves; until then the format preview below shows what it will look like.';
-  } else {
-    document.getElementById('lb-state').textContent = 'Real scores, ' + lb.resolved_rounds + ' rounds resolved.';
-    const body = document.getElementById('lb-body');
-    lb.entries.forEach((e,i)=>{
-      const tr = document.createElement('tr');
-      const pct = (e.mean_skill*100).toFixed(1);
-      tr.innerHTML = '<td>'+(i+1)+'</td><td>'+esc(e.entrant)+'</td><td>'+(e.mean_skill>0?'+':'')+pct+'%</td><td>'+e.mean_crps+'</td><td>'+e.rounds+'</td>';
-      body.appendChild(tr);
-    });
-    document.getElementById('lb-wrap').style.display = '';
+    const canSubmit = r.status === 'open';
+    const link = canSubmit ? ghNewFile('forecasts/'+r.round_id+'/your-agent-id.json',
+      { round_id: r.round_id, entrant: "your-agent-id",
+        topline: { mean: b ? b.persistence.mean : 50.0, sd: 2.0 }, notes: "" }) : null;
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td><b style="color:var(--ink);">'+esc(r.round_id)+'</b><br><span style="font-size:12px;color:var(--muted);">'+esc(r.question)+'</span></td>'
+      + '<td><span class="status '+esc(r.status)+'"><span class="d"></span>'+esc(r.status.replace('_',' '))+'</span></td>'
+      + '<td style="white-space:nowrap;">'+esc(fmtLocal(r.lock_at))+(r.release_estimated?' <span style="color:var(--muted);font-size:11px;">est.</span>':'')+'</td>'
+      + '<td class="num">'+(b?esc(b.persistence.mean+' ± '+b.persistence.sd):'<span style="color:var(--muted);">n/a</span>')+'</td>'
+      + '<td class="num">'+(b?esc(b.trend.mean+' ± '+b.trend.sd):'<span style="color:var(--muted);">n/a</span>')+'</td>'
+      + '<td>'+(link?'<a href="'+link+'" target="_blank" rel="noopener" style="font-weight:600;color:#1c5cab;text-decoration:none;">submit →</a>':'')+'</td>';
+    rb.appendChild(tr);
   }
 }
 
-fetch('data.json')
+fetch(RAW, {cache:'no-store'})
   .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
-  .catch(() => fetch(RAW).then(r => r.json()))
+  .catch(() => fetch('data.json').then(r => r.json()))
   .then(render)
   .catch(err => {
-    document.getElementById('data-note').textContent = 'could not load data.json ('+err+'). Open this page from the deployed site, or run python -m ssa.refresh first.';
+    document.getElementById('p-updated').textContent = 'unavailable';
+    document.getElementById('lb-body').innerHTML = '<tr><td colspan="6">could not load data ('+esc(err)+')</td></tr>';
   });
 </script>
 </body>

@@ -32,12 +32,38 @@ def canonical_sha256(obj):
     return hashlib.sha256(blob).hexdigest()
 
 
+def validate_entrant(path):
+    rel = os.path.relpath(os.path.abspath(path), ROOT)
+    with open(path) as f:
+        try:
+            e = json.load(f)
+        except json.JSONDecodeError as err:
+            fail(f"{rel}: not valid JSON: {err}")
+    try:
+        import jsonschema
+        with open(os.path.join(ROOT, "schema", "entrant.schema.json")) as f:
+            schema = json.load(f)
+        jsonschema.validate(e, schema)
+    except ImportError:
+        for key in ("entrant_id", "name", "type", "method"):
+            if key not in e:
+                fail(f"{rel}: missing required field '{key}'")
+    except Exception as err:
+        fail(f"{rel}: schema violation: {err}")
+    if e["entrant_id"] + ".json" != os.path.basename(path):
+        fail(f"{rel}: entrant_id '{e['entrant_id']}' does not match file name")
+    print(f"OK: {rel}")
+
+
 def validate(path, now=None):
     now = now or datetime.now(timezone.utc)
     rel = os.path.relpath(os.path.abspath(path), ROOT)
     parts = rel.split(os.sep)
+    if len(parts) == 2 and parts[0] == "entrants":
+        validate_entrant(path)
+        return
     if len(parts) != 3 or parts[0] != "forecasts":
-        fail(f"{rel}: submissions live at forecasts/<round_id>/<entrant>.json")
+        fail(f"{rel}: forecasts live at forecasts/<round_id>/<entrant>.json, registrations at entrants/<entrant_id>.json")
     round_dir, fname = parts[1], parts[2]
     if round_dir.startswith("_"):
         print(f"OK (example dir, skipped lock check): {rel}")

@@ -18,6 +18,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 QUESTIONS = os.path.join(ROOT, "questions", "season0.json")
 RESOLVED = os.path.join(ROOT, "resolutions", "resolved.json")
 FORECASTS = os.path.join(ROOT, "forecasts")
+ENTRANTS = os.path.join(ROOT, "entrants")
 OUT = os.path.join(ROOT, "site", "data.json")
 
 UMICH_NEXT_RELEASE = "2026-08-14T14:00:00Z"  # preannounced; cron updates after each release
@@ -164,6 +165,17 @@ def build_rounds(season, series, resolved, now):
     return out
 
 
+def load_entrants():
+    out = []
+    if not os.path.isdir(ENTRANTS):
+        return out
+    for fn in sorted(os.listdir(ENTRANTS)):
+        if fn.endswith(".json"):
+            with open(os.path.join(ENTRANTS, fn)) as f:
+                out.append(json.load(f))
+    return out
+
+
 def build_leaderboard(rounds, resolved):
     """Real scores only. Empty until rounds resolve."""
     entries = {}
@@ -222,9 +234,14 @@ def main():
         "season": season["season"],
         "trackers": trackers,
         "rounds": rounds,
+        "entrants": load_entrants(),
         "leaderboard": {
             "resolved_rounds": sum(1 for r in rounds if r["status"] == "resolved"),
             "entries": board,
+        },
+        "charts": {
+            "approval_avg": average.weekly_series(approval, 52),
+            "generic_margin": average.weekly_series(generic, 52),
         },
         "series_tail": {k: v[-8:] for k, v in series.items()},
         "sources": {
