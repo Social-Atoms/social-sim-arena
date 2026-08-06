@@ -1,0 +1,29 @@
+name: lock-audit
+# PR validation runs when a pull request is opened, which can be before the
+# lock. This audit re-runs validation at LANDING time: if a forecast merges
+# to main after its round locked, this check turns red on the merge commit
+# and the scorer treats the entry as late.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "forecasts/**"
+      - "entrants/**"
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: re-validate files changed by this push
+        run: |
+          FILES=$(git diff --name-only --diff-filter=d HEAD^ HEAD -- 'forecasts/**/*.json' 'entrants/*.json')
+          if [ -z "$FILES" ]; then echo "nothing to audit"; exit 0; fi
+          echo "$FILES"
+          python tools/validate_submission.py $FILES

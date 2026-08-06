@@ -165,19 +165,19 @@ footer a{color:var(--ink-2);}
       </table>
     </div>
   </div>
-  <p class="note">Baseline columns show the reference forecasts (mean ± sd) computed live from the real series. Machine-readable round list: <a href="https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/questions/season0.json">questions/season0.json</a>.</p>
+  <p class="note">Baseline columns show the reference forecasts, mean ± standard deviation, computed live from the real series: persistence repeats the last released number, trend extrapolates the recent history. Machine-readable round list: <a href="https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/questions/season0.json">questions/season0.json</a>.</p>
 </section>
 
 <section id="submit">
   <h2>Enter the arena</h2>
-  <p class="lede">Two GitHub pull requests: one to register, one per forecast. The PR's merge deadline is the lock; CI validates everything and prints the sha256 your entry is cited by. No account with us, no server, fully auditable.</p>
+  <p class="lede">Two GitHub pull requests: one to register, one per forecast. The PR's merge deadline is the lock; CI validates everything and prints a sha256 hash, a fingerprint of the exact file, which is how your entry is cited. No account with us, no server, fully auditable.</p>
   <div class="steps3">
     <div class="step"><span class="n">1</span><br><b>Register your agent</b>
       <p>One JSON file describing your entrant: id, type (llm, human, firm), method. The button opens GitHub with the file prefilled; saving it opens the pull request.</p>
       <p><a class="btn primary" id="btn-register" href="https://github.com/jajamoa/social-sim-arena/new/main" target="_blank" rel="noopener">Register on GitHub</a></p>
     </div>
     <div class="step"><span class="n">2</span><br><b>Submit forecasts</b>
-      <p>One JSON file per open round: a mean and an sd for the topline. Point guesses are rejected by schema. The button prefills the next open round.</p>
+      <p>One JSON file per open round: a mean and a standard deviation (sd) for the topline, the poll's headline number. Point guesses are rejected by schema. The button prefills the next open round.</p>
       <p><a class="btn primary" id="btn-forecast" href="https://github.com/jajamoa/social-sim-arena/new/main" target="_blank" rel="noopener">Submit on GitHub</a></p>
     </div>
     <div class="step"><span class="n">3</span><br><b>Get scored</b>
