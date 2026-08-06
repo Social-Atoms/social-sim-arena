@@ -12,7 +12,7 @@ import os
 from datetime import date, datetime, timezone
 
 from .adapters import fredcsv, votehub
-from . import average, backtest, baselines, scoring
+from . import average, backtest, baselines, harness, scoring, sharecard
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 QUESTIONS = os.path.join(ROOT, "questions", "season0.json")
@@ -177,8 +177,10 @@ def build_rounds(season, series, resolved, now):
 
 def file_baseline_forecasts(rounds):
     """The hosted always-on agents: while a round is open, the refresh cron
-    keeps each baseline's forecast file current; the last commit before
-    lock_at is the one that counts. After lock the files are left alone."""
+    keeps each baseline's and each frontier model's forecast file current;
+    the last commit before lock_at is the one that counts. Model forecasts
+    are real API output when a key is configured and clearly-labeled
+    deterministic MOCKs otherwise (see ssa/harness.py)."""
     written = 0
     for r in rounds:
         if r["status"] != "open" or not r.get("baselines"):
@@ -197,7 +199,34 @@ def file_baseline_forecasts(rounds):
                 json.dump(body, f, indent=2)
                 f.write("\n")
             written += 1
+        for model_id in harness.MODELS:
+            body = harness.forecast(model_id, r)
+            with open(os.path.join(rdir, model_id + ".json"), "w") as f:
+                json.dump(body, f, indent=2)
+                f.write("\n")
+            written += 1
     return written
+
+
+def count_forecasts(rounds):
+    """Attach filed forecasts to each round: count + per-entrant toplines
+    (the page overlays them on the target charts)."""
+    for r in rounds:
+        rdir = os.path.join(FORECASTS, r["round_id"])
+        fcs = {}
+        if os.path.isdir(rdir):
+            for fn in sorted(os.listdir(rdir)):
+                if fn.endswith(".json"):
+                    try:
+                        with open(os.path.join(rdir, fn)) as f:
+                            fc = json.load(f)
+                        if isinstance(fc.get("topline"), dict) and "mean" in fc["topline"]:
+                            fcs[fc["entrant"]] = {"mean": fc["topline"]["mean"],
+                                                  "sd": fc["topline"].get("sd", 2.0)}
+                    except (ValueError, KeyError):
+                        continue
+        r["n_forecasts"] = len(fcs)
+        r["forecasts"] = fcs
 
 
 def load_entrants():
@@ -273,6 +302,7 @@ def main():
 
     rounds = build_rounds(season, series, resolved, now)
     file_baseline_forecasts(rounds)
+    count_forecasts(rounds)
     board = build_leaderboard(rounds, resolved)
     bt = backtest.run({
         "umich_sentiment": series["umich_sentiment"],
@@ -280,6 +310,35 @@ def main():
         "mc_approval": series["mc_approval"],
         "yougov_generic_margin": series["yougov_generic_margin"],
     })
+    # Placeholder rows for the frontier models until API keys are wired:
+    # deterministic, clearly flagged (mock: true), sit between the real
+    # baselines so the board reads plausibly. Replaced by real backtest runs
+    # through the harness once providers are connected.
+    per_crps = next((e["mean_crps"] for e in bt["overall"] if e["entrant"] == "persistence"), 1.7)
+    mock_skill = {"gpt-5.5": 0.024, "claude-opus": 0.031, "gemini-pro": 0.012,
+                  "grok": -0.008, "deepseek": 0.018, "qwen": -0.019}
+    for mid, sk in mock_skill.items():
+        bt["overall"].append({
+            "entrant": mid, "rounds": bt["n_rounds"],
+            "mean_crps": round(per_crps * (1 - sk), 3),
+            "mean_skill": sk, "mock": True,
+        })
+    bt["overall"].sort(key=lambda x: -x["mean_skill"])
+    # placeholder trajectories for the models so the aggregate chart can
+    # compare them over time; deterministic wobble around a ramp to the
+    # final mock skill. Flagged via bt["mock_models"].
+    import hashlib as _h
+    n_ck = len(bt["trajectory"])
+    for i, ck in enumerate(bt["trajectory"]):
+        ramp = (i + 1) / n_ck
+        for mid, sk in mock_skill.items():
+            hb = _h.sha256(f"{mid}:{i}".encode()).digest()
+            wob = ((hb[0] / 255.0) - 0.5) * 0.02 * (1.2 - ramp)
+            val = round(sk * ramp + wob, 4)
+            ck["skills"][mid] = val
+            if "crps" in ck and "persistence" in ck["crps"]:
+                ck["crps"][mid] = round(ck["crps"]["persistence"] * (1 - val), 3)
+    bt["mock_models"] = sorted(mock_skill.keys())
 
     data = {
         "generated_at": iso(now),
@@ -293,8 +352,11 @@ def main():
         },
         "backtest": bt,
         "charts": {
-            "approval_avg": average.weekly_series(approval, 52),
-            "generic_margin": average.weekly_series(generic, 52),
+            "approval_avg": average.weekly_series(approval, 80),
+            "generic_margin": average.weekly_series(generic, 80),
+            "umich_sentiment": series["umich_sentiment"][-48:],
+            "yougov_approval": series["yougov_approval"],
+            "mc_approval": series["mc_approval"],
         },
         "series_tail": {k: v[-8:] for k, v in series.items()},
         "sources": {
@@ -306,6 +368,10 @@ def main():
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w") as f:
         json.dump(data, f, indent=1)
+    try:
+        sharecard.build(data)
+    except Exception as e:
+        print("sharecard skipped:", e)
     print("wrote", OUT)
     print("approval polls:", len(approval), "| generic:", len(generic),
           "| umich points:", len(umich))

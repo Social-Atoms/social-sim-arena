@@ -84,7 +84,7 @@ def summarize(records):
     return out
 
 
-def rank_trajectory(records, checkpoints=12):
+def rank_trajectory(records, checkpoints=30):
     """Cumulative ranking of models at evenly spaced checkpoints, for the
     rank-over-time (bump) chart."""
     if len(records) < checkpoints:
@@ -96,6 +96,7 @@ def rank_trajectory(records, checkpoints=12):
         board = summarize(upto)
         ranks = {e["entrant"]: i + 1 for i, e in enumerate(board)}
         skills = {e["entrant"]: e["mean_skill"] for e in board}
+        crpss = {e["entrant"]: e["mean_crps"] for e in board}
         traj.append({"date": upto[-1]["date"], "n": len(upto),
-                     "ranks": ranks, "skills": skills})
+                     "ranks": ranks, "skills": skills, "crps": crpss})
     return traj
