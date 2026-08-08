@@ -1,46 +1,46 @@
 {
- "generated_at": "2026-08-06T06:33:31Z",
+ "generated_at": "2026-08-08T17:40:16Z",
  "season": 0,
  "trackers": {
   "trump_approval_avg": {
    "label": "Trump approval, adjusted average",
    "unit": "% approve",
-   "value": 40.1,
-   "asof": "2026-06-27",
-   "delta_30d": 1.1,
-   "n_polls_window": 36,
-   "source": "VoteHub API, house-effect adjusted, 21-day window (API snapshot lags the live site)"
+   "value": 40.2,
+   "asof": "2026-08-03",
+   "delta_30d": -0.2,
+   "n_polls_window": 42,
+   "source": "Silver Bulletin poll database, house-effect adjusted here, 21-day window"
   },
   "generic_ballot_avg": {
    "label": "2026 generic ballot, adjusted average",
    "unit": "margin, Dem minus Rep",
-   "value": 5.1,
-   "asof": "2026-06-28",
-   "delta_30d": -0.4,
-   "n_polls_window": 22,
-   "source": "VoteHub API, house-effect adjusted, 21-day window (API snapshot lags the live site)"
+   "value": 5.7,
+   "asof": "2026-08-03",
+   "delta_30d": 0.7,
+   "n_polls_window": 24,
+   "source": "Silver Bulletin poll database, house-effect adjusted here, 21-day window"
   },
   "yougov_approval": {
    "label": "Economist/YouGov, latest wave",
    "unit": "% approve",
-   "value": 40.0,
-   "asof": "2026-06-27",
-   "source": "VoteHub API (poll-level)"
+   "value": 36.0,
+   "asof": "2026-08-01",
+   "source": "Silver Bulletin poll database (poll-level)"
   },
   "mc_approval": {
    "label": "Morning Consult, latest wave",
    "unit": "% approve",
-   "value": 43.1,
-   "asof": "2026-06-20",
-   "source": "VoteHub API (poll-level)"
+   "value": 42.8,
+   "asof": "2026-08-01",
+   "source": "Silver Bulletin poll database (poll-level)"
   },
   "umich_sentiment": {
    "label": "Michigan consumer sentiment",
    "unit": "index",
-   "value": 49.5,
-   "asof": "2026-06-01",
+   "value": 55.2,
+   "asof": "2026-07-01",
    "next_release": "2026-08-14T14:00:00Z",
-   "source": "FRED (UMCSENT, lags one month); release-day values from sca.isr.umich.edu"
+   "source": "Surveys of Consumers, University of Michigan (sca.isr.umich.edu), the survey's own monthly table"
   }
  },
  "rounds": [
@@ -57,67 +57,159 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 49.5,
+     "mean": 55.2,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 48.1,
-     "sd": 9.83,
+     "mean": 49.48,
+     "sd": 9.44,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 49.51,
-     "sd": 2.82,
+     "mean": 51.79,
+     "sd": 3.21,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 59.25,
-     "sd": 8.46,
+     "mean": 58.79,
+     "sd": 8.35,
      "method": "climatology"
     }
    },
-   "n_forecasts": 10,
+   "n_forecasts": 33,
    "forecasts": {
+    "claude-fable-zeroshot": {
+     "mean": 61.5,
+     "sd": 8.5
+    },
+    "claude-fable": {
+     "mean": 56.0,
+     "sd": 4.0
+    },
+    "claude-opus-5-zeroshot": {
+     "mean": 59.0,
+     "sd": 7.5
+    },
+    "claude-opus-5": {
+     "mean": 56.4,
+     "sd": 4.0
+    },
+    "claude-opus-zeroshot": {
+     "mean": 67.0,
+     "sd": 11.0
+    },
     "claude-opus": {
-     "mean": 48.54,
-     "sd": 1.75
+     "mean": 54.5,
+     "sd": 3.8
+    },
+    "claude-sonnet-zeroshot": {
+     "mean": 62.0,
+     "sd": 10.0
     },
     "climatology": {
-     "mean": 59.25,
-     "sd": 8.46
+     "mean": 58.79,
+     "sd": 8.35
     },
-    "deepseek": {
-     "mean": 49.76,
-     "sd": 2.47
+    "deepseek-flash-zeroshot": {
+     "mean": 84.0,
+     "sd": 13.0
+    },
+    "deepseek-flash": {
+     "mean": 54.0,
+     "sd": 4.5
+    },
+    "deepseek-pro-zeroshot": {
+     "mean": 85.0,
+     "sd": 20.0
+    },
+    "deepseek-pro": {
+     "mean": 53.7,
+     "sd": 4.0
     },
     "ewma": {
-     "mean": 49.51,
-     "sd": 2.82
+     "mean": 51.79,
+     "sd": 3.21
+    },
+    "gemini-flash-zeroshot": {
+     "mean": 76.0,
+     "sd": 10.0
+    },
+    "gemini-flash": {
+     "mean": 56.5,
+     "sd": 3.5
+    },
+    "gemini-pro-zeroshot": {
+     "mean": 77.0,
+     "sd": 10.0
     },
     "gemini-pro": {
-     "mean": 49.14,
-     "sd": 2.3
+     "mean": 55.2,
+     "sd": 4.0
     },
-    "gpt-5.5": {
-     "mean": 50.66,
-     "sd": 1.93
+    "glm-zeroshot": {
+     "mean": 73.0,
+     "sd": 15.0
+    },
+    "glm": {
+     "mean": 54.0,
+     "sd": 4.0
+    },
+    "gpt-5.6-luna-zeroshot": {
+     "mean": 62.0,
+     "sd": 6.5
+    },
+    "gpt-5.6-luna": {
+     "mean": 55.5,
+     "sd": 3.5
+    },
+    "gpt-5.6-sol-zeroshot": {
+     "mean": 62.0,
+     "sd": 5.5
+    },
+    "gpt-5.6-sol": {
+     "mean": 54.8,
+     "sd": 3.8
+    },
+    "gpt-5.6-terra-zeroshot": {
+     "mean": 59.0,
+     "sd": 5.0
+    },
+    "gpt-5.6-terra": {
+     "mean": 56.1,
+     "sd": 4.6
+    },
+    "grok-zeroshot": {
+     "mean": 75.0,
+     "sd": 8.0
     },
     "grok": {
-     "mean": 50.6,
-     "sd": 1.59
+     "mean": 54.8,
+     "sd": 3.7
     },
     "persistence": {
-     "mean": 49.5,
+     "mean": 55.2,
      "sd": 1.5
     },
-    "qwen": {
-     "mean": 48.16,
-     "sd": 2.68
+    "qwen-3.7-zeroshot": {
+     "mean": 72.0,
+     "sd": 10.0
+    },
+    "qwen-3.7": {
+     "mean": 53.5,
+     "sd": 4.0
+    },
+    "qwen-3.8-zeroshot": {
+     "mean": 68.0,
+     "sd": 9.0
+    },
+    "qwen-3.8": {
+     "mean": 54.3,
+     "sd": 3.8
     },
     "trend": {
-     "mean": 48.1,
-     "sd": 9.83
+     "mean": 49.48,
+     "sd": 9.44
     }
    }
   },
@@ -150,67 +242,159 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 43.1,
+     "mean": 42.8,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 42.44,
-     "sd": 2.25,
+     "mean": 44.67,
+     "sd": 1.86,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 43.22,
-     "sd": 1.66,
+     "mean": 43.86,
+     "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 43.09,
-     "sd": 1.77,
+     "mean": 43.71,
+     "sd": 1.0,
      "method": "climatology"
     }
    },
-   "n_forecasts": 10,
+   "n_forecasts": 33,
    "forecasts": {
+    "claude-fable-zeroshot": {
+     "mean": 44.0,
+     "sd": 3.5
+    },
+    "claude-fable": {
+     "mean": 43.7,
+     "sd": 1.3
+    },
+    "claude-opus-5-zeroshot": {
+     "mean": 43.0,
+     "sd": 3.0
+    },
+    "claude-opus-5": {
+     "mean": 43.5,
+     "sd": 1.1
+    },
+    "claude-opus-zeroshot": {
+     "mean": 44.0,
+     "sd": 4.5
+    },
     "claude-opus": {
-     "mean": 41.91,
-     "sd": 2.59
+     "mean": 43.5,
+     "sd": 1.3
+    },
+    "claude-sonnet-zeroshot": {
+     "mean": 43.0,
+     "sd": 5.0
+    },
+    "claude-sonnet": {
+     "mean": 43.9,
+     "sd": 1.1
     },
     "climatology": {
-     "mean": 43.09,
-     "sd": 1.77
+     "mean": 43.71,
+     "sd": 1.0
     },
-    "deepseek": {
-     "mean": 43.21,
-     "sd": 2.53
+    "deepseek-flash-zeroshot": {
+     "mean": 46.0,
+     "sd": 4.0
+    },
+    "deepseek-flash": {
+     "mean": 43.9,
+     "sd": 1.4
+    },
+    "deepseek-pro-zeroshot": {
+     "mean": 44.0,
+     "sd": 8.0
+    },
+    "deepseek-pro": {
+     "mean": 43.8,
+     "sd": 1.0
     },
     "ewma": {
-     "mean": 43.22,
-     "sd": 1.66
+     "mean": 43.86,
+     "sd": 1.0
+    },
+    "gemini-flash-zeroshot": {
+     "mean": 43.0,
+     "sd": 4.0
+    },
+    "gemini-flash": {
+     "mean": 43.6,
+     "sd": 1.0
+    },
+    "gemini-pro-zeroshot": {
+     "mean": 43.0,
+     "sd": 4.0
     },
     "gemini-pro": {
-     "mean": 42.51,
-     "sd": 1.67
+     "mean": 43.5,
+     "sd": 1.1
     },
-    "gpt-5.5": {
-     "mean": 44.36,
-     "sd": 1.74
+    "glm-zeroshot": {
+     "mean": 42.5,
+     "sd": 4.5
+    },
+    "gpt-5.6-luna-zeroshot": {
+     "mean": 43.5,
+     "sd": 2.7
+    },
+    "gpt-5.6-luna": {
+     "mean": 43.7,
+     "sd": 1.1
+    },
+    "gpt-5.6-sol-zeroshot": {
+     "mean": 44.0,
+     "sd": 1.6
+    },
+    "gpt-5.6-sol": {
+     "mean": 43.6,
+     "sd": 1.1
+    },
+    "gpt-5.6-terra-zeroshot": {
+     "mean": 44.0,
+     "sd": 2.8
+    },
+    "gpt-5.6-terra": {
+     "mean": 43.5,
+     "sd": 1.0
+    },
+    "grok-zeroshot": {
+     "mean": 43.5,
+     "sd": 3.5
     },
     "grok": {
-     "mean": 41.66,
-     "sd": 2.34
+     "mean": 43.4,
+     "sd": 1.4
     },
     "persistence": {
-     "mean": 43.1,
+     "mean": 42.8,
      "sd": 1.5
     },
-    "qwen": {
-     "mean": 42.69,
-     "sd": 1.87
+    "qwen-3.7-zeroshot": {
+     "mean": 43.0,
+     "sd": 3.5
+    },
+    "qwen-3.7": {
+     "mean": 43.5,
+     "sd": 1.3
+    },
+    "qwen-3.8-zeroshot": {
+     "mean": 44.5,
+     "sd": 4.0
+    },
+    "qwen-3.8": {
+     "mean": 43.8,
+     "sd": 1.6
     },
     "trend": {
-     "mean": 42.44,
-     "sd": 2.25
+     "mean": 44.67,
+     "sd": 1.86
     }
    }
   },
@@ -227,67 +411,163 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 40.0,
+     "mean": 36.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 39.47,
-     "sd": 4.67,
+     "mean": 36.73,
+     "sd": 3.63,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 37.86,
-     "sd": 1.5,
+     "mean": 36.01,
+     "sd": 2.5,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 37.5,
-     "sd": 1.79,
+     "mean": 36.62,
+     "sd": 1.64,
      "method": "climatology"
     }
    },
-   "n_forecasts": 10,
+   "n_forecasts": 34,
    "forecasts": {
+    "claude-fable-zeroshot": {
+     "mean": 40.5,
+     "sd": 3.5
+    },
+    "claude-fable": {
+     "mean": 36.3,
+     "sd": 2.2
+    },
+    "claude-opus-5-zeroshot": {
+     "mean": 40.2,
+     "sd": 3.3
+    },
+    "claude-opus-5": {
+     "mean": 36.4,
+     "sd": 2.1
+    },
+    "claude-opus-zeroshot": {
+     "mean": 42.0,
+     "sd": 4.0
+    },
     "claude-opus": {
-     "mean": 38.85,
-     "sd": 2.38
+     "mean": 36.5,
+     "sd": 2.0
+    },
+    "claude-sonnet-zeroshot": {
+     "mean": 41.0,
+     "sd": 3.0
+    },
+    "claude-sonnet": {
+     "mean": 36.5,
+     "sd": 2.1
     },
     "climatology": {
-     "mean": 37.5,
-     "sd": 1.79
+     "mean": 36.62,
+     "sd": 1.64
     },
-    "deepseek": {
-     "mean": 40.3,
-     "sd": 1.98
+    "deepseek-flash-zeroshot": {
+     "mean": 43.5,
+     "sd": 6.5
+    },
+    "deepseek-flash": {
+     "mean": 36.5,
+     "sd": 2.0
+    },
+    "deepseek-pro-zeroshot": {
+     "mean": 45.0,
+     "sd": 5.0
+    },
+    "deepseek-pro": {
+     "mean": 36.6,
+     "sd": 2.0
     },
     "ewma": {
-     "mean": 37.86,
-     "sd": 1.5
+     "mean": 36.01,
+     "sd": 2.5
+    },
+    "gemini-flash-zeroshot": {
+     "mean": 42.5,
+     "sd": 4.0
+    },
+    "gemini-flash": {
+     "mean": 36.4,
+     "sd": 1.8
+    },
+    "gemini-pro-zeroshot": {
+     "mean": 42.5,
+     "sd": 2.5
     },
     "gemini-pro": {
-     "mean": 41.41,
-     "sd": 1.63
+     "mean": 36.5,
+     "sd": 2.1
     },
-    "gpt-5.5": {
-     "mean": 38.89,
-     "sd": 1.74
+    "glm-zeroshot": {
+     "mean": 43.0,
+     "sd": 4.5
+    },
+    "glm": {
+     "mean": 36.5,
+     "sd": 2.2
+    },
+    "gpt-5.6-luna-zeroshot": {
+     "mean": 40.5,
+     "sd": 3.5
+    },
+    "gpt-5.6-luna": {
+     "mean": 36.5,
+     "sd": 2.5
+    },
+    "gpt-5.6-sol-zeroshot": {
+     "mean": 43.0,
+     "sd": 2.5
+    },
+    "gpt-5.6-sol": {
+     "mean": 36.2,
+     "sd": 2.0
+    },
+    "gpt-5.6-terra-zeroshot": {
+     "mean": 40.0,
+     "sd": 2.8
+    },
+    "gpt-5.6-terra": {
+     "mean": 36.4,
+     "sd": 2.3
+    },
+    "grok-zeroshot": {
+     "mean": 44.0,
+     "sd": 3.0
     },
     "grok": {
-     "mean": 39.75,
-     "sd": 2.12
+     "mean": 36.3,
+     "sd": 2.4
     },
     "persistence": {
-     "mean": 40.0,
+     "mean": 36.0,
      "sd": 1.5
     },
-    "qwen": {
-     "mean": 40.02,
-     "sd": 2.57
+    "qwen-3.7-zeroshot": {
+     "mean": 43.0,
+     "sd": 5.0
+    },
+    "qwen-3.7": {
+     "mean": 36.5,
+     "sd": 2.0
+    },
+    "qwen-3.8-zeroshot": {
+     "mean": 44.0,
+     "sd": 4.5
+    },
+    "qwen-3.8": {
+     "mean": 36.5,
+     "sd": 2.2
     },
     "trend": {
-     "mean": 39.47,
-     "sd": 4.67
+     "mean": 36.73,
+     "sd": 3.63
     }
    }
   },
@@ -304,67 +584,163 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 3.0,
+     "mean": 4.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 2.47,
-     "sd": 3.23,
+     "mean": 6.53,
+     "sd": 2.25,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 3.4,
-     "sd": 1.08,
+     "mean": 4.43,
+     "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 4.54,
-     "sd": 1.61,
+     "mean": 3.83,
+     "sd": 1.27,
      "method": "climatology"
     }
    },
-   "n_forecasts": 10,
+   "n_forecasts": 34,
    "forecasts": {
+    "claude-fable-zeroshot": {
+     "mean": 4.0,
+     "sd": 3.0
+    },
+    "claude-fable": {
+     "mean": 4.2,
+     "sd": 1.8
+    },
+    "claude-opus-5-zeroshot": {
+     "mean": 5.0,
+     "sd": 3.2
+    },
+    "claude-opus-5": {
+     "mean": 4.1,
+     "sd": 2.0
+    },
+    "claude-opus-zeroshot": {
+     "mean": 4.0,
+     "sd": 3.0
+    },
     "claude-opus": {
-     "mean": 2.24,
-     "sd": 2.55
+     "mean": 4.0,
+     "sd": 2.3
+    },
+    "claude-sonnet-zeroshot": {
+     "mean": 4.0,
+     "sd": 3.0
+    },
+    "claude-sonnet": {
+     "mean": 4.0,
+     "sd": 1.9
     },
     "climatology": {
-     "mean": 4.54,
-     "sd": 1.61
+     "mean": 3.83,
+     "sd": 1.27
     },
-    "deepseek": {
-     "mean": 4.41,
-     "sd": 1.55
+    "deepseek-flash-zeroshot": {
+     "mean": 4.5,
+     "sd": 6.5
+    },
+    "deepseek-flash": {
+     "mean": 4.0,
+     "sd": 2.0
+    },
+    "deepseek-pro-zeroshot": {
+     "mean": 1.0,
+     "sd": 5.0
+    },
+    "deepseek-pro": {
+     "mean": 4.0,
+     "sd": 2.2
     },
     "ewma": {
-     "mean": 3.4,
-     "sd": 1.08
+     "mean": 4.43,
+     "sd": 1.0
+    },
+    "gemini-flash-zeroshot": {
+     "mean": 1.0,
+     "sd": 3.5
+    },
+    "gemini-flash": {
+     "mean": 4.0,
+     "sd": 1.6
+    },
+    "gemini-pro-zeroshot": {
+     "mean": 1.5,
+     "sd": 2.5
     },
     "gemini-pro": {
-     "mean": 1.88,
-     "sd": 1.62
+     "mean": 4.1,
+     "sd": 1.4
     },
-    "gpt-5.5": {
-     "mean": 3.99,
-     "sd": 2.47
-    },
-    "grok": {
-     "mean": 4.28,
-     "sd": 1.75
-    },
-    "persistence": {
+    "glm-zeroshot": {
      "mean": 3.0,
+     "sd": 5.0
+    },
+    "glm": {
+     "mean": 4.0,
      "sd": 1.5
     },
-    "qwen": {
-     "mean": 2.18,
-     "sd": 2.28
+    "gpt-5.6-luna-zeroshot": {
+     "mean": 5.0,
+     "sd": 4.0
+    },
+    "gpt-5.6-luna": {
+     "mean": 4.1,
+     "sd": 2.2
+    },
+    "gpt-5.6-sol-zeroshot": {
+     "mean": 5.5,
+     "sd": 2.7
+    },
+    "gpt-5.6-sol": {
+     "mean": 4.2,
+     "sd": 1.8
+    },
+    "gpt-5.6-terra-zeroshot": {
+     "mean": 4.0,
+     "sd": 2.2
+    },
+    "gpt-5.6-terra": {
+     "mean": 4.1,
+     "sd": 2.0
+    },
+    "grok-zeroshot": {
+     "mean": 1.8,
+     "sd": 3.7
+    },
+    "grok": {
+     "mean": 4.0,
+     "sd": 2.0
+    },
+    "persistence": {
+     "mean": 4.0,
+     "sd": 1.5
+    },
+    "qwen-3.7-zeroshot": {
+     "mean": 3.0,
+     "sd": 4.0
+    },
+    "qwen-3.7": {
+     "mean": 4.0,
+     "sd": 1.5
+    },
+    "qwen-3.8-zeroshot": {
+     "mean": 1.0,
+     "sd": 4.0
+    },
+    "qwen-3.8": {
+     "mean": 4.0,
+     "sd": 2.5
     },
     "trend": {
-     "mean": 2.47,
-     "sd": 3.23
+     "mean": 6.53,
+     "sd": 2.25
     }
    }
   },
@@ -397,67 +773,155 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 43.1,
+     "mean": 42.8,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 42.44,
-     "sd": 2.33,
+     "mean": 44.77,
+     "sd": 2.0,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 43.22,
-     "sd": 1.66,
+     "mean": 43.86,
+     "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 43.09,
-     "sd": 1.77,
+     "mean": 43.71,
+     "sd": 1.0,
      "method": "climatology"
     }
    },
-   "n_forecasts": 10,
+   "n_forecasts": 32,
    "forecasts": {
+    "claude-fable-zeroshot": {
+     "mean": 44.5,
+     "sd": 3.0
+    },
+    "claude-fable": {
+     "mean": 43.5,
+     "sd": 1.4
+    },
+    "claude-opus-5-zeroshot": {
+     "mean": 42.5,
+     "sd": 3.2
+    },
+    "claude-opus-5": {
+     "mean": 43.4,
+     "sd": 1.3
+    },
+    "claude-opus-zeroshot": {
+     "mean": 44.0,
+     "sd": 3.5
+    },
     "claude-opus": {
-     "mean": 43.85,
-     "sd": 2.66
+     "mean": 43.7,
+     "sd": 1.4
+    },
+    "claude-sonnet-zeroshot": {
+     "mean": 43.5,
+     "sd": 4.5
     },
     "climatology": {
-     "mean": 43.09,
-     "sd": 1.77
+     "mean": 43.71,
+     "sd": 1.0
     },
-    "deepseek": {
-     "mean": 42.98,
-     "sd": 2.47
+    "deepseek-flash-zeroshot": {
+     "mean": 44.0,
+     "sd": 6.0
     },
-    "ewma": {
-     "mean": 43.22,
-     "sd": 1.66
-    },
-    "gemini-pro": {
-     "mean": 44.49,
-     "sd": 1.53
-    },
-    "gpt-5.5": {
-     "mean": 44.45,
-     "sd": 2.2
-    },
-    "grok": {
-     "mean": 43.48,
-     "sd": 1.82
-    },
-    "persistence": {
-     "mean": 43.1,
+    "deepseek-flash": {
+     "mean": 43.8,
      "sd": 1.5
     },
-    "qwen": {
-     "mean": 42.85,
-     "sd": 2.23
+    "deepseek-pro-zeroshot": {
+     "mean": 46.0,
+     "sd": 4.0
+    },
+    "deepseek-pro": {
+     "mean": 43.5,
+     "sd": 2.0
+    },
+    "ewma": {
+     "mean": 43.86,
+     "sd": 1.0
+    },
+    "gemini-flash-zeroshot": {
+     "mean": 43.0,
+     "sd": 4.5
+    },
+    "gemini-flash": {
+     "mean": 43.7,
+     "sd": 1.15
+    },
+    "gemini-pro-zeroshot": {
+     "mean": 43.5,
+     "sd": 1.5
+    },
+    "gemini-pro": {
+     "mean": 43.7,
+     "sd": 1.2
+    },
+    "glm-zeroshot": {
+     "mean": 43.0,
+     "sd": 5.0
+    },
+    "gpt-5.6-luna-zeroshot": {
+     "mean": 44.0,
+     "sd": 2.5
+    },
+    "gpt-5.6-luna": {
+     "mean": 43.9,
+     "sd": 1.0
+    },
+    "gpt-5.6-sol-zeroshot": {
+     "mean": 44.0,
+     "sd": 2.0
+    },
+    "gpt-5.6-sol": {
+     "mean": 43.7,
+     "sd": 1.3
+    },
+    "gpt-5.6-terra-zeroshot": {
+     "mean": 45.0,
+     "sd": 3.0
+    },
+    "gpt-5.6-terra": {
+     "mean": 43.6,
+     "sd": 1.5
+    },
+    "grok-zeroshot": {
+     "mean": 43.0,
+     "sd": 3.5
+    },
+    "grok": {
+     "mean": 43.4,
+     "sd": 1.5
+    },
+    "persistence": {
+     "mean": 42.8,
+     "sd": 1.5
+    },
+    "qwen-3.7-zeroshot": {
+     "mean": 43.0,
+     "sd": 5.0
+    },
+    "qwen-3.7": {
+     "mean": 43.3,
+     "sd": 1.5
+    },
+    "qwen-3.8-zeroshot": {
+     "mean": 42.0,
+     "sd": 3.5
+    },
+    "qwen-3.8": {
+     "mean": 43.8,
+     "sd": 1.8
     },
     "trend": {
-     "mean": 42.44,
-     "sd": 2.33
+     "mean": 44.77,
+     "sd": 2.0
     }
    }
   },
@@ -474,67 +938,163 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 40.0,
+     "mean": 36.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 39.47,
-     "sd": 4.86,
+     "mean": 36.8,
+     "sd": 3.89,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 37.86,
-     "sd": 1.5,
+     "mean": 36.01,
+     "sd": 2.5,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 37.5,
-     "sd": 1.79,
+     "mean": 36.62,
+     "sd": 1.64,
      "method": "climatology"
     }
    },
-   "n_forecasts": 10,
+   "n_forecasts": 34,
    "forecasts": {
+    "claude-fable-zeroshot": {
+     "mean": 41.0,
+     "sd": 3.0
+    },
+    "claude-fable": {
+     "mean": 36.3,
+     "sd": 2.1
+    },
+    "claude-opus-5-zeroshot": {
+     "mean": 39.5,
+     "sd": 3.2
+    },
+    "claude-opus-5": {
+     "mean": 36.3,
+     "sd": 2.2
+    },
+    "claude-opus-zeroshot": {
+     "mean": 43.0,
+     "sd": 4.5
+    },
     "claude-opus": {
-     "mean": 39.92,
-     "sd": 1.65
+     "mean": 36.4,
+     "sd": 2.0
+    },
+    "claude-sonnet-zeroshot": {
+     "mean": 41.0,
+     "sd": 3.5
+    },
+    "claude-sonnet": {
+     "mean": 36.5,
+     "sd": 2.0
     },
     "climatology": {
-     "mean": 37.5,
-     "sd": 1.79
+     "mean": 36.62,
+     "sd": 1.64
     },
-    "deepseek": {
-     "mean": 40.7,
-     "sd": 1.98
+    "deepseek-flash-zeroshot": {
+     "mean": 44.0,
+     "sd": 5.0
+    },
+    "deepseek-flash": {
+     "mean": 36.6,
+     "sd": 2.0
+    },
+    "deepseek-pro-zeroshot": {
+     "mean": 43.5,
+     "sd": 5.0
+    },
+    "deepseek-pro": {
+     "mean": 36.6,
+     "sd": 2.0
     },
     "ewma": {
-     "mean": 37.86,
-     "sd": 1.5
+     "mean": 36.01,
+     "sd": 2.5
+    },
+    "gemini-flash-zeroshot": {
+     "mean": 42.5,
+     "sd": 3.0
+    },
+    "gemini-flash": {
+     "mean": 36.5,
+     "sd": 2.0
+    },
+    "gemini-pro-zeroshot": {
+     "mean": 44.0,
+     "sd": 2.5
     },
     "gemini-pro": {
-     "mean": 40.66,
+     "mean": 36.5,
+     "sd": 2.0
+    },
+    "glm-zeroshot": {
+     "mean": 43.0,
+     "sd": 5.5
+    },
+    "glm": {
+     "mean": 36.5,
+     "sd": 2.5
+    },
+    "gpt-5.6-luna-zeroshot": {
+     "mean": 40.5,
+     "sd": 3.5
+    },
+    "gpt-5.6-luna": {
+     "mean": 36.0,
+     "sd": 2.4
+    },
+    "gpt-5.6-sol-zeroshot": {
+     "mean": 42.5,
+     "sd": 2.6
+    },
+    "gpt-5.6-sol": {
+     "mean": 36.2,
+     "sd": 2.1
+    },
+    "gpt-5.6-terra-zeroshot": {
+     "mean": 41.0,
+     "sd": 3.2
+    },
+    "gpt-5.6-terra": {
+     "mean": 36.5,
      "sd": 2.7
     },
-    "gpt-5.5": {
-     "mean": 40.88,
-     "sd": 1.87
+    "grok-zeroshot": {
+     "mean": 42.5,
+     "sd": 3.5
     },
     "grok": {
-     "mean": 39.79,
-     "sd": 1.65
+     "mean": 36.5,
+     "sd": 2.2
     },
     "persistence": {
-     "mean": 40.0,
+     "mean": 36.0,
      "sd": 1.5
     },
-    "qwen": {
-     "mean": 38.57,
-     "sd": 2.55
+    "qwen-3.7-zeroshot": {
+     "mean": 41.0,
+     "sd": 6.0
+    },
+    "qwen-3.7": {
+     "mean": 36.5,
+     "sd": 2.2
+    },
+    "qwen-3.8-zeroshot": {
+     "mean": 45.0,
+     "sd": 4.5
+    },
+    "qwen-3.8": {
+     "mean": 36.0,
+     "sd": 1.8
     },
     "trend": {
-     "mean": 39.47,
-     "sd": 4.86
+     "mean": 36.8,
+     "sd": 3.89
     }
    }
   },
@@ -551,67 +1111,159 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 3.0,
+     "mean": 4.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 2.47,
-     "sd": 3.36,
+     "mean": 6.81,
+     "sd": 2.41,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 3.4,
-     "sd": 1.08,
+     "mean": 4.43,
+     "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 4.54,
-     "sd": 1.61,
+     "mean": 3.83,
+     "sd": 1.27,
      "method": "climatology"
     }
    },
-   "n_forecasts": 10,
+   "n_forecasts": 33,
    "forecasts": {
+    "claude-fable-zeroshot": {
+     "mean": 4.5,
+     "sd": 3.5
+    },
+    "claude-fable": {
+     "mean": 4.3,
+     "sd": 2.0
+    },
+    "claude-opus-5-zeroshot": {
+     "mean": 5.0,
+     "sd": 3.2
+    },
+    "claude-opus-5": {
+     "mean": 4.3,
+     "sd": 2.2
+    },
+    "claude-opus-zeroshot": {
+     "mean": 3.5,
+     "sd": 4.0
+    },
     "claude-opus": {
-     "mean": 2.15,
-     "sd": 2.09
+     "mean": 3.9,
+     "sd": 2.3
+    },
+    "claude-sonnet-zeroshot": {
+     "mean": 3.0,
+     "sd": 3.2
+    },
+    "claude-sonnet": {
+     "mean": 4.0,
+     "sd": 1.8
     },
     "climatology": {
-     "mean": 4.54,
-     "sd": 1.61
+     "mean": 3.83,
+     "sd": 1.27
     },
-    "deepseek": {
-     "mean": 3.69,
-     "sd": 1.79
+    "deepseek-flash-zeroshot": {
+     "mean": 5.0,
+     "sd": 6.0
+    },
+    "deepseek-flash": {
+     "mean": 4.0,
+     "sd": 2.0
+    },
+    "deepseek-pro-zeroshot": {
+     "mean": 3.0,
+     "sd": 6.0
+    },
+    "deepseek-pro": {
+     "mean": 4.0,
+     "sd": 2.5
     },
     "ewma": {
-     "mean": 3.4,
-     "sd": 1.08
+     "mean": 4.43,
+     "sd": 1.0
+    },
+    "gemini-flash-zeroshot": {
+     "mean": 3.0,
+     "sd": 3.5
+    },
+    "gemini-flash": {
+     "mean": 3.8,
+     "sd": 1.8
+    },
+    "gemini-pro-zeroshot": {
+     "mean": 1.0,
+     "sd": 3.5
     },
     "gemini-pro": {
-     "mean": 4.34,
-     "sd": 2.66
+     "mean": 4.0,
+     "sd": 1.8
     },
-    "gpt-5.5": {
-     "mean": 3.15,
-     "sd": 2.39
+    "glm-zeroshot": {
+     "mean": 2.5,
+     "sd": 4.0
+    },
+    "gpt-5.6-luna-zeroshot": {
+     "mean": 2.5,
+     "sd": 4.2
+    },
+    "gpt-5.6-luna": {
+     "mean": 4.2,
+     "sd": 1.8
+    },
+    "gpt-5.6-sol-zeroshot": {
+     "mean": 4.5,
+     "sd": 3.0
+    },
+    "gpt-5.6-sol": {
+     "mean": 4.2,
+     "sd": 2.1
+    },
+    "gpt-5.6-terra-zeroshot": {
+     "mean": 3.0,
+     "sd": 3.0
+    },
+    "gpt-5.6-terra": {
+     "mean": 4.1,
+     "sd": 2.1
+    },
+    "grok-zeroshot": {
+     "mean": 0.0,
+     "sd": 5.0
     },
     "grok": {
-     "mean": 3.97,
-     "sd": 2.05
+     "mean": 4.0,
+     "sd": 2.5
     },
     "persistence": {
-     "mean": 3.0,
+     "mean": 4.0,
      "sd": 1.5
     },
-    "qwen": {
-     "mean": 2.1,
-     "sd": 1.57
+    "qwen-3.7-zeroshot": {
+     "mean": 2.0,
+     "sd": 5.0
+    },
+    "qwen-3.7": {
+     "mean": 4.0,
+     "sd": 1.8
+    },
+    "qwen-3.8-zeroshot": {
+     "mean": 1.0,
+     "sd": 4.0
+    },
+    "qwen-3.8": {
+     "mean": 4.0,
+     "sd": 2.0
     },
     "trend": {
-     "mean": 2.47,
-     "sd": 3.36
+     "mean": 6.81,
+     "sd": 2.41
     }
    }
   },
@@ -628,67 +1280,151 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 49.5,
+     "mean": 55.2,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 48.1,
-     "sd": 10.47,
+     "mean": 49.48,
+     "sd": 10.29,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 49.51,
-     "sd": 2.82,
+     "mean": 51.79,
+     "sd": 3.21,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 59.25,
-     "sd": 8.46,
+     "mean": 58.79,
+     "sd": 8.35,
      "method": "climatology"
     }
    },
-   "n_forecasts": 10,
+   "n_forecasts": 31,
    "forecasts": {
+    "claude-fable-zeroshot": {
+     "mean": 63.0,
+     "sd": 9.0
+    },
+    "claude-fable": {
+     "mean": 55.5,
+     "sd": 3.5
+    },
+    "claude-opus-5-zeroshot": {
+     "mean": 61.5,
+     "sd": 8.5
+    },
+    "claude-opus-5": {
+     "mean": 55.6,
+     "sd": 3.8
+    },
+    "claude-opus-zeroshot": {
+     "mean": 66.0,
+     "sd": 12.0
+    },
     "claude-opus": {
-     "mean": 48.42,
-     "sd": 1.6
+     "mean": 55.0,
+     "sd": 4.0
+    },
+    "claude-sonnet-zeroshot": {
+     "mean": 64.0,
+     "sd": 9.5
     },
     "climatology": {
-     "mean": 59.25,
-     "sd": 8.46
+     "mean": 58.79,
+     "sd": 8.35
     },
-    "deepseek": {
-     "mean": 48.95,
-     "sd": 1.58
+    "deepseek-flash-zeroshot": {
+     "mean": 75.0,
+     "sd": 15.0
+    },
+    "deepseek-flash": {
+     "mean": 54.0,
+     "sd": 4.0
+    },
+    "deepseek-pro-zeroshot": {
+     "mean": 86.0,
+     "sd": 13.0
+    },
+    "deepseek-pro": {
+     "mean": 54.5,
+     "sd": 4.2
     },
     "ewma": {
-     "mean": 49.51,
-     "sd": 2.82
+     "mean": 51.79,
+     "sd": 3.21
+    },
+    "gemini-flash-zeroshot": {
+     "mean": 76.5,
+     "sd": 12.0
+    },
+    "gemini-flash": {
+     "mean": 56.0,
+     "sd": 3.5
+    },
+    "gemini-pro-zeroshot": {
+     "mean": 78.0,
+     "sd": 12.0
     },
     "gemini-pro": {
-     "mean": 48.45,
-     "sd": 2.34
+     "mean": 55.8,
+     "sd": 4.1
     },
-    "gpt-5.5": {
-     "mean": 48.44,
-     "sd": 2.35
+    "glm-zeroshot": {
+     "mean": 80.0,
+     "sd": 12.0
+    },
+    "glm": {
+     "mean": 54.0,
+     "sd": 4.5
+    },
+    "gpt-5.6-luna-zeroshot": {
+     "mean": 60.0,
+     "sd": 4.5
+    },
+    "gpt-5.6-sol-zeroshot": {
+     "mean": 60.8,
+     "sd": 5.2
+    },
+    "gpt-5.6-sol": {
+     "mean": 55.8,
+     "sd": 3.6
+    },
+    "gpt-5.6-terra-zeroshot": {
+     "mean": 58.0,
+     "sd": 5.5
+    },
+    "gpt-5.6-terra": {
+     "mean": 55.5,
+     "sd": 4.3
+    },
+    "grok-zeroshot": {
+     "mean": 82.0,
+     "sd": 12.0
     },
     "grok": {
-     "mean": 49.69,
-     "sd": 1.5
+     "mean": 55.8,
+     "sd": 3.8
     },
     "persistence": {
-     "mean": 49.5,
+     "mean": 55.2,
      "sd": 1.5
     },
-    "qwen": {
-     "mean": 50.16,
-     "sd": 1.79
+    "qwen-3.7-zeroshot": {
+     "mean": 72.0,
+     "sd": 10.0
+    },
+    "qwen-3.7": {
+     "mean": 53.5,
+     "sd": 3.5
+    },
+    "qwen-3.8-zeroshot": {
+     "mean": 72.0,
+     "sd": 8.0
     },
     "trend": {
-     "mean": 48.1,
-     "sd": 10.47
+     "mean": 49.48,
+     "sd": 10.29
     }
    }
   },
@@ -705,66 +1441,158 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 49.5,
+     "mean": 55.2,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 48.1,
+     "mean": 49.48,
      "sd": 11.08,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 49.51,
-     "sd": 2.82,
+     "mean": 51.79,
+     "sd": 3.21,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 59.25,
-     "sd": 8.46,
+     "mean": 58.79,
+     "sd": 8.35,
      "method": "climatology"
     }
    },
-   "n_forecasts": 10,
+   "n_forecasts": 33,
    "forecasts": {
+    "claude-fable-zeroshot": {
+     "mean": 61.5,
+     "sd": 9.0
+    },
+    "claude-fable": {
+     "mean": 55.0,
+     "sd": 5.0
+    },
+    "claude-opus-5-zeroshot": {
+     "mean": 60.0,
+     "sd": 9.0
+    },
+    "claude-opus-5": {
+     "mean": 56.0,
+     "sd": 5.0
+    },
+    "claude-opus-zeroshot": {
+     "mean": 64.0,
+     "sd": 10.0
+    },
     "claude-opus": {
-     "mean": 50.27,
-     "sd": 1.91
+     "mean": 55.5,
+     "sd": 4.5
+    },
+    "claude-sonnet-zeroshot": {
+     "mean": 60.0,
+     "sd": 9.0
     },
     "climatology": {
-     "mean": 59.25,
-     "sd": 8.46
+     "mean": 58.79,
+     "sd": 8.35
     },
-    "deepseek": {
-     "mean": 49.19,
-     "sd": 2.48
+    "deepseek-flash-zeroshot": {
+     "mean": 75.0,
+     "sd": 15.0
+    },
+    "deepseek-flash": {
+     "mean": 55.6,
+     "sd": 6.0
+    },
+    "deepseek-pro-zeroshot": {
+     "mean": 86.0,
+     "sd": 14.0
+    },
+    "deepseek-pro": {
+     "mean": 54.0,
+     "sd": 5.5
     },
     "ewma": {
-     "mean": 49.51,
-     "sd": 2.82
+     "mean": 51.79,
+     "sd": 3.21
+    },
+    "gemini-flash-zeroshot": {
+     "mean": 76.0,
+     "sd": 10.0
+    },
+    "gemini-flash": {
+     "mean": 57.5,
+     "sd": 4.5
+    },
+    "gemini-pro-zeroshot": {
+     "mean": 78.0,
+     "sd": 12.0
     },
     "gemini-pro": {
-     "mean": 48.01,
-     "sd": 2.24
+     "mean": 54.5,
+     "sd": 5.2
     },
-    "gpt-5.5": {
-     "mean": 50.93,
-     "sd": 2.29
+    "glm-zeroshot": {
+     "mean": 85.0,
+     "sd": 12.0
+    },
+    "glm": {
+     "mean": 55.0,
+     "sd": 4.5
+    },
+    "gpt-5.6-luna-zeroshot": {
+     "mean": 60.0,
+     "sd": 5.5
+    },
+    "gpt-5.6-luna": {
+     "mean": 57.0,
+     "sd": 4.5
+    },
+    "gpt-5.6-sol-zeroshot": {
+     "mean": 63.0,
+     "sd": 6.5
+    },
+    "gpt-5.6-sol": {
+     "mean": 53.1,
+     "sd": 4.2
+    },
+    "gpt-5.6-terra-zeroshot": {
+     "mean": 56.5,
+     "sd": 7.5
+    },
+    "gpt-5.6-terra": {
+     "mean": 55.5,
+     "sd": 6.0
+    },
+    "grok-zeroshot": {
+     "mean": 82.0,
+     "sd": 12.0
     },
     "grok": {
-     "mean": 50.82,
-     "sd": 1.75
+     "mean": 56.8,
+     "sd": 4.2
     },
     "persistence": {
-     "mean": 49.5,
+     "mean": 55.2,
      "sd": 1.5
     },
-    "qwen": {
-     "mean": 48.99,
-     "sd": 1.99
+    "qwen-3.7-zeroshot": {
+     "mean": 72.0,
+     "sd": 9.0
+    },
+    "qwen-3.7": {
+     "mean": 53.5,
+     "sd": 5.5
+    },
+    "qwen-3.8-zeroshot": {
+     "mean": 75.0,
+     "sd": 12.0
+    },
+    "qwen-3.8": {
+     "mean": 53.8,
+     "sd": 4.5
     },
     "trend": {
-     "mean": 48.1,
+     "mean": 49.48,
      "sd": 11.08
     }
    }
@@ -782,67 +1610,147 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 5.05,
+     "mean": 5.72,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 4.61,
-     "sd": 2.49,
+     "mean": 5.91,
+     "sd": 2.24,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 5.05,
+     "mean": 5.48,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 5.12,
+     "mean": 5.32,
      "sd": 1.0,
      "method": "climatology"
     }
    },
-   "n_forecasts": 10,
+   "n_forecasts": 30,
    "forecasts": {
-    "claude-opus": {
-     "mean": 5.97,
-     "sd": 2.63
+    "claude-fable-zeroshot": {
+     "mean": 5.0,
+     "sd": 3.5
     },
-    "climatology": {
-     "mean": 5.12,
-     "sd": 1.0
-    },
-    "deepseek": {
-     "mean": 4.84,
-     "sd": 1.9
-    },
-    "ewma": {
-     "mean": 5.05,
-     "sd": 1.0
-    },
-    "gemini-pro": {
-     "mean": 3.73,
-     "sd": 2.02
-    },
-    "gpt-5.5": {
-     "mean": 4.16,
+    "claude-fable": {
+     "mean": 5.2,
      "sd": 2.5
     },
-    "grok": {
-     "mean": 5.64,
-     "sd": 1.83
+    "claude-opus-5-zeroshot": {
+     "mean": 6.8,
+     "sd": 3.4
     },
-    "persistence": {
-     "mean": 5.05,
+    "claude-opus-5": {
+     "mean": 5.95,
+     "sd": 1.9
+    },
+    "claude-opus-zeroshot": {
+     "mean": 6.0,
+     "sd": 4.0
+    },
+    "claude-opus": {
+     "mean": 5.4,
+     "sd": 1.3
+    },
+    "claude-sonnet-zeroshot": {
+     "mean": 6.0,
+     "sd": 4.5
+    },
+    "climatology": {
+     "mean": 5.32,
+     "sd": 1.0
+    },
+    "deepseek-flash-zeroshot": {
+     "mean": 5.0,
+     "sd": 5.0
+    },
+    "deepseek-flash": {
+     "mean": 5.72,
+     "sd": 1.45
+    },
+    "deepseek-pro-zeroshot": {
+     "mean": 3.6,
+     "sd": 7.1
+    },
+    "deepseek-pro": {
+     "mean": 5.6,
+     "sd": 1.8
+    },
+    "ewma": {
+     "mean": 5.48,
+     "sd": 1.0
+    },
+    "gemini-flash-zeroshot": {
+     "mean": 4.5,
+     "sd": 4.5
+    },
+    "gemini-flash": {
+     "mean": 5.9,
+     "sd": 1.4
+    },
+    "gemini-pro-zeroshot": {
+     "mean": 4.5,
+     "sd": 3.5
+    },
+    "gemini-pro": {
+     "mean": 5.5,
+     "sd": 1.8
+    },
+    "glm": {
+     "mean": 5.5,
      "sd": 1.5
     },
-    "qwen": {
-     "mean": 4.69,
-     "sd": 1.57
+    "gpt-5.6-luna-zeroshot": {
+     "mean": 5.0,
+     "sd": 4.5
+    },
+    "gpt-5.6-luna": {
+     "mean": 6.4,
+     "sd": 0.95
+    },
+    "gpt-5.6-sol-zeroshot": {
+     "mean": 5.0,
+     "sd": 2.8
+    },
+    "gpt-5.6-sol": {
+     "mean": 5.7,
+     "sd": 1.5
+    },
+    "gpt-5.6-terra-zeroshot": {
+     "mean": 4.0,
+     "sd": 4.5
+    },
+    "gpt-5.6-terra": {
+     "mean": 5.4,
+     "sd": 1.4
+    },
+    "grok-zeroshot": {
+     "mean": 0.0,
+     "sd": 6.0
+    },
+    "grok": {
+     "mean": 5.4,
+     "sd": 1.3
+    },
+    "persistence": {
+     "mean": 5.72,
+     "sd": 1.5
+    },
+    "qwen-3.7-zeroshot": {
+     "mean": 1.0,
+     "sd": 5.0
+    },
+    "qwen-3.7": {
+     "mean": 5.3,
+     "sd": 0.5
     },
     "trend": {
-     "mean": 4.61,
-     "sd": 2.49
+     "mean": 5.91,
+     "sd": 2.24
     }
    }
   },
@@ -865,433 +1773,521 @@
  ],
  "entrants": [
   {
-   "entrant_id": "claude-opus",
-   "name": "Claude Opus",
+   "entrant_id": "claude-fable-zeroshot",
+   "name": "Claude Fable 5 (zero-shot)",
    "type": "llm",
-   "method": "Anthropic frontier model in the uniform harness. MOCK forecasts until an API key is connected.",
+   "method": "Claude Fable 5 (claude-fable-5) in the uniform harness, reasoning effort max. Zero-shot condition: given the question, the unit, how the tracker is measured and the release date, and no history of the series at all. Training cutoff 2026-01-01 [declared].",
    "arms": [
     "closed"
    ],
-   "homepage": "https://github.com/jajamoa/social-sim-arena"
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "claude-fable",
+   "name": "Claude Fable 5",
+   "type": "llm",
+   "method": "Claude Fable 5 (claude-fable-5) in the uniform harness, reasoning effort max. Shown the last ten published values of the series, the same history the statistical nulls read. Training cutoff 2026-01-01 [declared].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "claude-opus-5-zeroshot",
+   "name": "Claude Opus 5 (zero-shot)",
+   "type": "llm",
+   "method": "Claude Opus 5 (claude-opus-5) in the uniform harness, reasoning effort max. Zero-shot condition: given the question, the unit, how the tracker is measured and the release date, and no history of the series at all. Training cutoff 2026-05-01 [declared].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "claude-opus-5",
+   "name": "Claude Opus 5",
+   "type": "llm",
+   "method": "Claude Opus 5 (claude-opus-5) in the uniform harness, reasoning effort max. Shown the last ten published values of the series, the same history the statistical nulls read. Training cutoff 2026-05-01 [declared].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "claude-opus-zeroshot",
+   "name": "Claude Opus 4.8 (zero-shot)",
+   "type": "llm",
+   "method": "Claude Opus 4.8 (claude-opus-4-8) in the uniform harness, reasoning effort max. Zero-shot condition: given the question, the unit, how the tracker is measured and the release date, and no history of the series at all. Training cutoff 2026-01-01 [declared].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "claude-opus",
+   "name": "Claude Opus 4.8",
+   "type": "llm",
+   "method": "Claude Opus 4.8 (claude-opus-4-8) in the uniform harness, reasoning effort max. Shown the last ten published values of the series, the same history the statistical nulls read. Training cutoff 2026-01-01 [declared].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "claude-sonnet-zeroshot",
+   "name": "Claude Sonnet 5 (zero-shot)",
+   "type": "llm",
+   "method": "Claude Sonnet 5 (claude-sonnet-5) in the uniform harness, reasoning effort max. Zero-shot condition: given the question, the unit, how the tracker is measured and the release date, and no history of the series at all. Training cutoff 2026-01-01 [declared].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "claude-sonnet",
+   "name": "Claude Sonnet 5",
+   "type": "llm",
+   "method": "Claude Sonnet 5 (claude-sonnet-5) in the uniform harness, reasoning effort max. Shown the last ten published values of the series, the same history the statistical nulls read. Training cutoff 2026-01-01 [declared].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
   },
   {
    "entrant_id": "climatology",
    "name": "Climatology (long-run average)",
    "type": "baseline",
    "method": "Mean and spread of the last two years of the target series. The 'seasonal average' null borrowed from weather forecasting.",
-   "homepage": "https://github.com/jajamoa/social-sim-arena"
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
   },
   {
    "entrant_id": "crowd",
    "name": "Crowd (pool of all submissions)",
    "type": "baseline",
    "method": "Equal-weight mixture of every forecast submitted in the round, scored as one distribution. The community aggregate that individual entrants have to beat.",
-   "homepage": "https://github.com/jajamoa/social-sim-arena"
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
   },
   {
-   "entrant_id": "deepseek",
-   "name": "DeepSeek",
+   "entrant_id": "deepseek-flash-zeroshot",
+   "name": "DeepSeek V4 Flash (zero-shot)",
    "type": "llm",
-   "method": "DeepSeek frontier model in the uniform harness. MOCK forecasts until an API key is connected.",
+   "method": "DeepSeek V4 Flash (deepseek-v4-flash) in the uniform harness. Zero-shot condition: given the question, the unit, how the tracker is measured and the release date, and no history of the series at all. Training cutoff 2026-07-31 [reported].",
    "arms": [
     "closed"
    ],
-   "homepage": "https://github.com/jajamoa/social-sim-arena"
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "deepseek-flash",
+   "name": "DeepSeek V4 Flash",
+   "type": "llm",
+   "method": "DeepSeek V4 Flash (deepseek-v4-flash) in the uniform harness. Shown the last ten published values of the series, the same history the statistical nulls read. Training cutoff 2026-07-31 [reported].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "deepseek-pro-zeroshot",
+   "name": "DeepSeek V4 Pro (zero-shot)",
+   "type": "llm",
+   "method": "DeepSeek V4 Pro (deepseek-v4-pro) in the uniform harness. Zero-shot condition: given the question, the unit, how the tracker is measured and the release date, and no history of the series at all. Training cutoff 2025-05-01 [reported].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "deepseek-pro",
+   "name": "DeepSeek V4 Pro",
+   "type": "llm",
+   "method": "DeepSeek V4 Pro (deepseek-v4-pro) in the uniform harness. Shown the last ten published values of the series, the same history the statistical nulls read. Training cutoff 2025-05-01 [reported].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
   },
   {
    "entrant_id": "ewma",
    "name": "EWMA (smoothed recent average)",
    "type": "baseline",
    "method": "Exponentially weighted moving average of the target series: recent values count more, old values fade out.",
-   "homepage": "https://github.com/jajamoa/social-sim-arena"
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "gemini-flash-zeroshot",
+   "name": "Gemini 3.6 Flash (zero-shot)",
+   "type": "llm",
+   "method": "Gemini 3.6 Flash (gemini-3.6-flash) in the uniform harness. Zero-shot condition: given the question, the unit, how the tracker is measured and the release date, and no history of the series at all. Training cutoff 2026-07-21 [reported].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "gemini-flash",
+   "name": "Gemini 3.6 Flash",
+   "type": "llm",
+   "method": "Gemini 3.6 Flash (gemini-3.6-flash) in the uniform harness. Shown the last ten published values of the series, the same history the statistical nulls read. Training cutoff 2026-07-21 [reported].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "gemini-pro-zeroshot",
+   "name": "Gemini 3.1 Pro (zero-shot)",
+   "type": "llm",
+   "method": "Gemini 3.1 Pro (gemini-3.1-pro-preview) in the uniform harness. Zero-shot condition: given the question, the unit, how the tracker is measured and the release date, and no history of the series at all. Training cutoff 2026-02-13 [reported].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
   },
   {
    "entrant_id": "gemini-pro",
-   "name": "Gemini Pro",
+   "name": "Gemini 3.1 Pro",
    "type": "llm",
-   "method": "Google frontier model in the uniform harness. MOCK forecasts until an API key is connected.",
+   "method": "Gemini 3.1 Pro (gemini-3.1-pro-preview) in the uniform harness. Shown the last ten published values of the series, the same history the statistical nulls read. Training cutoff 2026-02-13 [reported].",
    "arms": [
     "closed"
    ],
-   "homepage": "https://github.com/jajamoa/social-sim-arena"
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
   },
   {
-   "entrant_id": "gpt-5.5",
-   "name": "GPT-5.5",
+   "entrant_id": "glm-zeroshot",
+   "name": "GLM-5.2 (zero-shot)",
    "type": "llm",
-   "method": "OpenAI frontier model in the uniform harness: same prompt, temperature 0. MOCK forecasts until an API key is connected.",
+   "method": "GLM-5.2 (glm-5.2) in the uniform harness. Zero-shot condition: given the question, the unit, how the tracker is measured and the release date, and no history of the series at all. Training cutoff 2026-03-01 [reported].",
    "arms": [
     "closed"
    ],
-   "homepage": "https://github.com/jajamoa/social-sim-arena"
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "glm",
+   "name": "GLM-5.2",
+   "type": "llm",
+   "method": "GLM-5.2 (glm-5.2) in the uniform harness. Shown the last ten published values of the series, the same history the statistical nulls read. Training cutoff 2026-03-01 [reported].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "gpt-5.6-luna-zeroshot",
+   "name": "GPT-5.6 Luna (zero-shot)",
+   "type": "llm",
+   "method": "GPT-5.6 Luna (gpt-5.6-luna) in the uniform harness, reasoning effort xhigh. Zero-shot condition: given the question, the unit, how the tracker is measured and the release date, and no history of the series at all. Training cutoff 2026-02-16 [declared].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "gpt-5.6-luna",
+   "name": "GPT-5.6 Luna",
+   "type": "llm",
+   "method": "GPT-5.6 Luna (gpt-5.6-luna) in the uniform harness, reasoning effort xhigh. Shown the last ten published values of the series, the same history the statistical nulls read. Training cutoff 2026-02-16 [declared].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "gpt-5.6-sol-zeroshot",
+   "name": "GPT-5.6 Sol (zero-shot)",
+   "type": "llm",
+   "method": "GPT-5.6 Sol (gpt-5.6-sol) in the uniform harness, reasoning effort xhigh. Zero-shot condition: given the question, the unit, how the tracker is measured and the release date, and no history of the series at all. Training cutoff 2026-02-16 [declared].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "gpt-5.6-sol",
+   "name": "GPT-5.6 Sol",
+   "type": "llm",
+   "method": "GPT-5.6 Sol (gpt-5.6-sol) in the uniform harness, reasoning effort xhigh. Shown the last ten published values of the series, the same history the statistical nulls read. Training cutoff 2026-02-16 [declared].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "gpt-5.6-terra-zeroshot",
+   "name": "GPT-5.6 Terra (zero-shot)",
+   "type": "llm",
+   "method": "GPT-5.6 Terra (gpt-5.6-terra) in the uniform harness, reasoning effort xhigh. Zero-shot condition: given the question, the unit, how the tracker is measured and the release date, and no history of the series at all. Training cutoff 2026-02-16 [declared].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "gpt-5.6-terra",
+   "name": "GPT-5.6 Terra",
+   "type": "llm",
+   "method": "GPT-5.6 Terra (gpt-5.6-terra) in the uniform harness, reasoning effort xhigh. Shown the last ten published values of the series, the same history the statistical nulls read. Training cutoff 2026-02-16 [declared].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "grok-zeroshot",
+   "name": "Grok 4.5 (zero-shot)",
+   "type": "llm",
+   "method": "Grok 4.5 (grok-4.5) in the uniform harness, reasoning effort high. Zero-shot condition: given the question, the unit, how the tracker is measured and the release date, and no history of the series at all. Training cutoff 2026-02-01 [declared].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
   },
   {
    "entrant_id": "grok",
-   "name": "Grok",
+   "name": "Grok 4.5",
    "type": "llm",
-   "method": "xAI frontier model in the uniform harness. MOCK forecasts until an API key is connected.",
+   "method": "Grok 4.5 (grok-4.5) in the uniform harness, reasoning effort high. Shown the last ten published values of the series, the same history the statistical nulls read. Training cutoff 2026-02-01 [declared].",
    "arms": [
     "closed"
    ],
-   "homepage": "https://github.com/jajamoa/social-sim-arena"
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
   },
   {
    "entrant_id": "human-crowd",
    "name": "Human crowd",
    "type": "human",
    "method": "Pooled guesses from anyone who wants to play: one GitHub issue per guess, aggregated into a single distribution per round.",
-   "homepage": "https://github.com/jajamoa/social-sim-arena/issues"
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena/issues"
   },
   {
    "entrant_id": "persistence",
    "name": "Persistence (copy last release)",
    "type": "baseline",
    "method": "Copies the most recent published value of the target series. The reference null: opinion is close to a random walk.",
-   "homepage": "https://github.com/jajamoa/social-sim-arena"
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
   },
   {
-   "entrant_id": "qwen",
-   "name": "Qwen",
+   "entrant_id": "qwen-3.7-zeroshot",
+   "name": "Qwen3.7 Max (zero-shot)",
    "type": "llm",
-   "method": "Alibaba frontier model in the uniform harness. MOCK forecasts until an API key is connected.",
+   "method": "Qwen3.7 Max (qwen3.7-max-2026-05-20) in the uniform harness. Zero-shot condition: given the question, the unit, how the tracker is measured and the release date, and no history of the series at all. Training cutoff 2026-05-20 [reported].",
    "arms": [
     "closed"
    ],
-   "homepage": "https://github.com/jajamoa/social-sim-arena"
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "qwen-3.7",
+   "name": "Qwen3.7 Max",
+   "type": "llm",
+   "method": "Qwen3.7 Max (qwen3.7-max-2026-05-20) in the uniform harness. Shown the last ten published values of the series, the same history the statistical nulls read. Training cutoff 2026-05-20 [reported].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "qwen-3.8-zeroshot",
+   "name": "Qwen3.8 Max (zero-shot)",
+   "type": "llm",
+   "method": "Qwen3.8 Max (qwen3.8-max) in the uniform harness. Zero-shot condition: given the question, the unit, how the tracker is measured and the release date, and no history of the series at all. Training cutoff 2026-06-01 [unknown].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
+  },
+  {
+   "entrant_id": "qwen-3.8",
+   "name": "Qwen3.8 Max",
+   "type": "llm",
+   "method": "Qwen3.8 Max (qwen3.8-max) in the uniform harness. Shown the last ten published values of the series, the same history the statistical nulls read. Training cutoff 2026-06-01 [unknown].",
+   "arms": [
+    "closed"
+   ],
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
   },
   {
    "entrant_id": "trend",
    "name": "Linear trend (OLS)",
    "type": "baseline",
    "method": "Ordinary least squares straight-line fit over the recent history, extrapolated at most 21 days past the last observation. The classic linear-model baseline.",
-   "homepage": "https://github.com/jajamoa/social-sim-arena"
+   "homepage": "https://github.com/Social-Atoms/social-sim-arena"
   }
  ],
  "leaderboard": {
   "resolved_rounds": 0,
-  "entries": [
-   {
-    "entrant": "climatology",
-    "rounds": 2,
-    "mean_crps": 1.353,
-    "mean_skill": 0.229
-   },
-   {
-    "entrant": "trend",
-    "rounds": 2,
-    "mean_crps": 1.402,
-    "mean_skill": 0.201
-   },
-   {
-    "entrant": "crowd",
-    "rounds": 2,
-    "mean_crps": 1.474,
-    "mean_skill": 0.16
-   },
-   {
-    "entrant": "ewma",
-    "rounds": 2,
-    "mean_crps": 1.608,
-    "mean_skill": 0.083
-   },
-   {
-    "entrant": "claude-opus",
-    "rounds": 2,
-    "mean_crps": 1.638,
-    "mean_skill": 0.066,
-    "mock": true
-   },
-   {
-    "entrant": "deepseek",
-    "rounds": 2,
-    "mean_crps": 1.666,
-    "mean_skill": 0.05,
-    "mock": true
-   },
-   {
-    "entrant": "gpt-5.5",
-    "rounds": 2,
-    "mean_crps": 1.67,
-    "mean_skill": 0.048,
-    "mock": true
-   },
-   {
-    "entrant": "persistence",
-    "rounds": 2,
-    "mean_crps": 1.754,
-    "mean_skill": 0.0
-   },
-   {
-    "entrant": "qwen",
-    "rounds": 2,
-    "mean_crps": 1.766,
-    "mean_skill": -0.007,
-    "mock": true
-   },
-   {
-    "entrant": "gemini-pro",
-    "rounds": 2,
-    "mean_crps": 1.768,
-    "mean_skill": -0.008,
-    "mock": true
-   },
-   {
-    "entrant": "grok",
-    "rounds": 2,
-    "mean_crps": 1.84,
-    "mean_skill": -0.049,
-    "mock": true
-   }
-  ]
+  "entries": []
  },
  "backtest": {
   "note": "walk-forward replay on real historical series; each forecast uses only data before its release",
-  "n_rounds": 323,
+  "n_rounds": 385,
   "overall": [
    {
     "entrant": "crowd",
-    "rounds": 323,
-    "mean_crps": 1.643,
-    "mean_skill": 0.046
+    "rounds": 385,
+    "mean_crps": 1.496,
+    "mean_skill": 0.067
    },
    {
     "entrant": "ewma",
-    "rounds": 323,
-    "mean_crps": 1.659,
-    "mean_skill": 0.036
-   },
-   {
-    "entrant": "gpt-5.5",
-    "rounds": 323,
-    "mean_crps": 1.669,
-    "mean_skill": 0.031,
-    "mock": true
-   },
-   {
-    "entrant": "claude-opus",
-    "rounds": 323,
-    "mean_crps": 1.682,
-    "mean_skill": 0.023,
-    "mock": true
-   },
-   {
-    "entrant": "deepseek",
-    "rounds": 323,
-    "mean_crps": 1.698,
-    "mean_skill": 0.014,
-    "mock": true
-   },
-   {
-    "entrant": "gemini-pro",
-    "rounds": 323,
-    "mean_crps": 1.707,
-    "mean_skill": 0.009,
-    "mock": true
+    "rounds": 385,
+    "mean_crps": 1.521,
+    "mean_skill": 0.051
    },
    {
     "entrant": "persistence",
-    "rounds": 323,
-    "mean_crps": 1.722,
+    "rounds": 385,
+    "mean_crps": 1.603,
     "mean_skill": 0.0
    },
    {
-    "entrant": "grok",
-    "rounds": 323,
-    "mean_crps": 1.725,
-    "mean_skill": -0.002,
-    "mock": true
-   },
-   {
-    "entrant": "qwen",
-    "rounds": 323,
-    "mean_crps": 1.756,
-    "mean_skill": -0.02,
-    "mock": true
-   },
-   {
     "entrant": "trend",
-    "rounds": 323,
-    "mean_crps": 1.954,
-    "mean_skill": -0.135
+    "rounds": 385,
+    "mean_crps": 1.772,
+    "mean_skill": -0.105
    },
    {
     "entrant": "climatology",
-    "rounds": 323,
-    "mean_crps": 2.884,
-    "mean_skill": -0.675
+    "rounds": 385,
+    "mean_crps": 2.503,
+    "mean_skill": -0.562
    }
   ],
   "per_series": {
    "umich_sentiment": [
     {
      "entrant": "crowd",
-     "rounds": 138,
-     "mean_crps": 2.637,
-     "mean_skill": 0.006
+     "rounds": 139,
+     "mean_crps": 2.64,
+     "mean_skill": 0.011
     },
     {
      "entrant": "persistence",
-     "rounds": 138,
-     "mean_crps": 2.654,
+     "rounds": 139,
+     "mean_crps": 2.669,
      "mean_skill": 0.0
     },
     {
      "entrant": "ewma",
-     "rounds": 138,
-     "mean_crps": 2.693,
-     "mean_skill": -0.015
+     "rounds": 139,
+     "mean_crps": 2.703,
+     "mean_skill": -0.013
     },
     {
      "entrant": "trend",
-     "rounds": 138,
-     "mean_crps": 3.215,
-     "mean_skill": -0.211
+     "rounds": 139,
+     "mean_crps": 3.222,
+     "mean_skill": -0.207
     },
     {
      "entrant": "climatology",
-     "rounds": 138,
-     "mean_crps": 5.177,
-     "mean_skill": -0.951
+     "rounds": 139,
+     "mean_crps": 5.16,
+     "mean_skill": -0.933
     }
    ],
    "yougov_approval": [
     {
-     "entrant": "ewma",
-     "rounds": 66,
-     "mean_crps": 0.864,
-     "mean_skill": 0.096
-    },
-    {
      "entrant": "crowd",
-     "rounds": 66,
-     "mean_crps": 0.899,
-     "mean_skill": 0.058
+     "rounds": 108,
+     "mean_crps": 1.026,
+     "mean_skill": 0.162
     },
     {
-     "entrant": "persistence",
-     "rounds": 66,
-     "mean_crps": 0.955,
-     "mean_skill": 0.0
+     "entrant": "ewma",
+     "rounds": 108,
+     "mean_crps": 1.03,
+     "mean_skill": 0.159
     },
     {
      "entrant": "trend",
-     "rounds": 66,
-     "mean_crps": 0.988,
-     "mean_skill": -0.035
+     "rounds": 108,
+     "mean_crps": 1.127,
+     "mean_skill": 0.08
+    },
+    {
+     "entrant": "persistence",
+     "rounds": 108,
+     "mean_crps": 1.225,
+     "mean_skill": 0.0
     },
     {
      "entrant": "climatology",
-     "rounds": 66,
-     "mean_crps": 1.445,
-     "mean_skill": -0.513
+     "rounds": 108,
+     "mean_crps": 1.228,
+     "mean_skill": -0.003
     }
    ],
    "mc_approval": [
     {
      "entrant": "ewma",
-     "rounds": 77,
-     "mean_crps": 0.881,
-     "mean_skill": 0.17
+     "rounds": 73,
+     "mean_crps": 0.632,
+     "mean_skill": 0.117
     },
     {
      "entrant": "crowd",
-     "rounds": 77,
-     "mean_crps": 0.883,
-     "mean_skill": 0.168
+     "rounds": 73,
+     "mean_crps": 0.633,
+     "mean_skill": 0.116
     },
     {
      "entrant": "trend",
-     "rounds": 77,
-     "mean_crps": 0.993,
-     "mean_skill": 0.064
-    },
-    {
-     "entrant": "climatology",
-     "rounds": 77,
-     "mean_crps": 1.046,
-     "mean_skill": 0.014
+     "rounds": 73,
+     "mean_crps": 0.702,
+     "mean_skill": 0.019
     },
     {
      "entrant": "persistence",
-     "rounds": 77,
-     "mean_crps": 1.061,
+     "rounds": 73,
+     "mean_crps": 0.716,
      "mean_skill": 0.0
+    },
+    {
+     "entrant": "climatology",
+     "rounds": 73,
+     "mean_crps": 0.819,
+     "mean_skill": -0.145
     }
    ],
    "yougov_generic_margin": [
     {
      "entrant": "crowd",
-     "rounds": 42,
-     "mean_crps": 0.936,
-     "mean_skill": 0.13
+     "rounds": 65,
+     "mean_crps": 0.8,
+     "mean_skill": 0.154
     },
     {
      "entrant": "ewma",
-     "rounds": 42,
-     "mean_crps": 0.941,
-     "mean_skill": 0.126
+     "rounds": 65,
+     "mean_crps": 0.807,
+     "mean_skill": 0.146
     },
     {
      "entrant": "climatology",
-     "rounds": 42,
-     "mean_crps": 0.977,
-     "mean_skill": 0.092
-    },
-    {
-     "entrant": "persistence",
-     "rounds": 42,
-     "mean_crps": 1.076,
-     "mean_skill": 0.0
+     "rounds": 65,
+     "mean_crps": 0.831,
+     "mean_skill": 0.12
     },
     {
      "entrant": "trend",
-     "rounds": 42,
-     "mean_crps": 1.091,
-     "mean_skill": -0.014
+     "rounds": 65,
+     "mean_crps": 0.942,
+     "mean_skill": 0.003
+    },
+    {
+     "entrant": "persistence",
+     "rounds": 65,
+     "mean_crps": 0.945,
+     "mean_skill": 0.0
     }
    ]
   },
   "trajectory": [
    {
-    "date": "2015-11-01",
-    "n": 11,
-    "ranks": {
-     "ewma": 1,
-     "crowd": 2,
-     "trend": 3,
-     "persistence": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "ewma": 0.134,
-     "crowd": 0.127,
-     "trend": 0.018,
-     "persistence": 0.0,
-     "climatology": -1.31,
-     "gpt-5.5": 0.0089,
-     "claude-opus": -0.0073,
-     "gemini-pro": 0.0007,
-     "grok": 0.0066,
-     "deepseek": 0.0092,
-     "qwen": -0.0052
-    },
-    "crps": {
-     "ewma": 2.178,
-     "crowd": 2.197,
-     "trend": 2.471,
-     "persistence": 2.516,
-     "climatology": 5.812,
-     "gpt-5.5": 2.494,
-     "claude-opus": 2.534,
-     "gemini-pro": 2.514,
-     "grok": 2.499,
-     "deepseek": 2.493,
-     "qwen": 2.529
-    }
-   },
-   {
-    "date": "2016-10-01",
-    "n": 22,
+    "date": "2016-01-01",
+    "n": 13,
     "ranks": {
      "ewma": 1,
      "crowd": 2,
@@ -1300,35 +2296,98 @@
      "climatology": 5
     },
     "skills": {
-     "ewma": 0.114,
+     "ewma": 0.104,
+     "crowd": 0.08,
+     "persistence": 0.0,
+     "trend": -0.071,
+     "climatology": -1.379
+    },
+    "crps": {
+     "ewma": 1.992,
+     "crowd": 2.045,
+     "persistence": 2.223,
+     "trend": 2.381,
+     "climatology": 5.289
+    }
+   },
+   {
+    "date": "2017-02-01",
+    "n": 26,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.091,
+     "ewma": 0.061,
+     "persistence": 0.0,
+     "trend": -0.041,
+     "climatology": -0.764
+    },
+    "crps": {
+     "crowd": 1.915,
+     "ewma": 1.976,
+     "persistence": 2.106,
+     "trend": 2.192,
+     "climatology": 3.714
+    }
+   },
+   {
+    "date": "2018-02-01",
+    "n": 38,
+    "ranks": {
+     "ewma": 1,
+     "crowd": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "ewma": 0.09,
+     "crowd": 0.087,
+     "persistence": 0.0,
+     "trend": -0.085,
+     "climatology": -0.706
+    },
+    "crps": {
+     "ewma": 1.758,
+     "crowd": 1.763,
+     "persistence": 1.931,
+     "trend": 2.095,
+     "climatology": 3.293
+    }
+   },
+   {
+    "date": "2019-03-01",
+    "n": 51,
+    "ranks": {
+     "ewma": 1,
+     "crowd": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "ewma": 0.101,
      "crowd": 0.1,
      "persistence": 0.0,
-     "trend": -0.019,
-     "climatology": -0.926,
-     "gpt-5.5": -0.0056,
-     "claude-opus": 0.0119,
-     "gemini-pro": -0.0066,
-     "grok": -0.0055,
-     "deepseek": -0.0044,
-     "qwen": 0.0078
+     "trend": -0.066,
+     "climatology": -0.567
     },
     "crps": {
-     "ewma": 1.757,
-     "crowd": 1.785,
-     "persistence": 1.983,
-     "trend": 2.02,
-     "climatology": 3.819,
-     "gpt-5.5": 1.994,
-     "claude-opus": 1.959,
-     "gemini-pro": 1.996,
-     "grok": 1.994,
-     "deepseek": 1.992,
-     "qwen": 1.968
+     "ewma": 1.684,
+     "crowd": 1.686,
+     "persistence": 1.872,
+     "trend": 1.996,
+     "climatology": 2.933
     }
    },
    {
-    "date": "2017-08-01",
-    "n": 32,
+    "date": "2020-04-01",
+    "n": 64,
     "ranks": {
      "crowd": 1,
      "ewma": 2,
@@ -1337,146 +2396,23 @@
      "climatology": 5
     },
     "skills": {
-     "crowd": 0.07,
-     "ewma": 0.058,
+     "crowd": 0.065,
+     "ewma": 0.044,
      "persistence": 0.0,
-     "trend": -0.13,
-     "climatology": -0.804,
-     "gpt-5.5": 0.0097,
-     "claude-opus": 0.0092,
-     "gemini-pro": -0.0051,
-     "grok": -0.0024,
-     "deepseek": -0.0024,
-     "qwen": 0.0004
+     "trend": -0.127,
+     "climatology": -0.399
     },
     "crps": {
-     "crowd": 1.766,
-     "ewma": 1.79,
-     "persistence": 1.9,
-     "trend": 2.147,
-     "climatology": 3.429,
-     "gpt-5.5": 1.882,
-     "claude-opus": 1.883,
-     "gemini-pro": 1.91,
-     "grok": 1.905,
-     "deepseek": 1.905,
-     "qwen": 1.899
+     "crowd": 2.084,
+     "ewma": 2.131,
+     "persistence": 2.229,
+     "trend": 2.512,
+     "climatology": 3.119
     }
    },
    {
-    "date": "2018-07-01",
-    "n": 43,
-    "ranks": {
-     "ewma": 1,
-     "crowd": 2,
-     "persistence": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "ewma": 0.074,
-     "crowd": 0.07,
-     "persistence": 0.0,
-     "trend": -0.113,
-     "climatology": -0.757,
-     "gpt-5.5": 0.0087,
-     "claude-opus": -0.0024,
-     "gemini-pro": 0.0108,
-     "grok": 0.0048,
-     "deepseek": -0.0079,
-     "qwen": -0.0055
-    },
-    "crps": {
-     "ewma": 1.668,
-     "crowd": 1.675,
-     "persistence": 1.802,
-     "trend": 2.005,
-     "climatology": 3.166,
-     "gpt-5.5": 1.786,
-     "claude-opus": 1.806,
-     "gemini-pro": 1.783,
-     "grok": 1.793,
-     "deepseek": 1.816,
-     "qwen": 1.812
-    }
-   },
-   {
-    "date": "2019-06-01",
-    "n": 54,
-    "ranks": {
-     "ewma": 1,
-     "crowd": 2,
-     "persistence": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "ewma": 0.1,
-     "crowd": 0.099,
-     "persistence": 0.0,
-     "trend": -0.09,
-     "climatology": -0.536,
-     "gpt-5.5": 0.0001,
-     "claude-opus": 0.0016,
-     "gemini-pro": 0.0002,
-     "grok": 0.0007,
-     "deepseek": 0.0006,
-     "qwen": 0.0059
-    },
-    "crps": {
-     "ewma": 1.656,
-     "crowd": 1.657,
-     "persistence": 1.839,
-     "trend": 2.005,
-     "climatology": 2.825,
-     "gpt-5.5": 1.839,
-     "claude-opus": 1.836,
-     "gemini-pro": 1.839,
-     "grok": 1.838,
-     "deepseek": 1.838,
-     "qwen": 1.828
-    }
-   },
-   {
-    "date": "2020-05-01",
-    "n": 65,
-    "ranks": {
-     "crowd": 1,
-     "persistence": 2,
-     "ewma": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.02,
-     "persistence": 0.0,
-     "ewma": -0.03,
-     "trend": -0.177,
-     "climatology": -0.536,
-     "gpt-5.5": 0.0145,
-     "claude-opus": -0.0036,
-     "gemini-pro": 0.0033,
-     "grok": -0.0009,
-     "deepseek": -0.0003,
-     "qwen": 0.0015
-    },
-    "crps": {
-     "crowd": 2.157,
-     "persistence": 2.201,
-     "ewma": 2.268,
-     "trend": 2.591,
-     "climatology": 3.38,
-     "gpt-5.5": 2.169,
-     "claude-opus": 2.209,
-     "gemini-pro": 2.194,
-     "grok": 2.203,
-     "deepseek": 2.202,
-     "qwen": 2.198
-    }
-   },
-   {
-    "date": "2021-03-01",
-    "n": 75,
+    "date": "2021-05-01",
+    "n": 77,
     "ranks": {
      "crowd": 1,
      "ewma": 2,
@@ -1485,775 +2421,23 @@
      "climatology": 5
     },
     "skills": {
-     "crowd": 0.046,
-     "ewma": 0.033,
+     "crowd": 0.055,
+     "ewma": 0.039,
      "persistence": 0.0,
-     "trend": -0.194,
-     "climatology": -0.721,
-     "gpt-5.5": 0.015,
-     "claude-opus": 0.0043,
-     "gemini-pro": -0.001,
-     "grok": -0.0098,
-     "deepseek": 0.004,
-     "qwen": -0.0108
+     "trend": -0.179,
+     "climatology": -0.684
     },
     "crps": {
-     "crowd": 2.249,
-     "ewma": 2.278,
-     "persistence": 2.357,
-     "trend": 2.813,
-     "climatology": 4.057,
-     "gpt-5.5": 2.322,
-     "claude-opus": 2.347,
-     "gemini-pro": 2.359,
-     "grok": 2.38,
-     "deepseek": 2.348,
-     "qwen": 2.382
+     "crowd": 2.257,
+     "ewma": 2.296,
+     "persistence": 2.388,
+     "trend": 2.815,
+     "climatology": 4.023
     }
    },
    {
-    "date": "2022-02-01",
-    "n": 86,
-    "ranks": {
-     "crowd": 1,
-     "ewma": 2,
-     "persistence": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.039,
-     "ewma": 0.022,
-     "persistence": 0.0,
-     "trend": -0.168,
-     "climatology": -0.75,
-     "gpt-5.5": 0.0048,
-     "claude-opus": 0.0121,
-     "gemini-pro": 0.0057,
-     "grok": 0.0002,
-     "deepseek": 0.0053,
-     "qwen": -0.0092
-    },
-    "crps": {
-     "crowd": 2.386,
-     "ewma": 2.428,
-     "persistence": 2.483,
-     "trend": 2.9,
-     "climatology": 4.344,
-     "gpt-5.5": 2.471,
-     "claude-opus": 2.453,
-     "gemini-pro": 2.469,
-     "grok": 2.483,
-     "deepseek": 2.47,
-     "qwen": 2.506
-    }
-   },
-   {
-    "date": "2023-01-01",
-    "n": 97,
-    "ranks": {
-     "crowd": 1,
-     "ewma": 2,
-     "persistence": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.039,
-     "ewma": 0.029,
-     "persistence": 0.0,
-     "trend": -0.135,
-     "climatology": -0.923,
-     "gpt-5.5": 0.0146,
-     "claude-opus": 0.0169,
-     "gemini-pro": 0.0004,
-     "grok": -0.0077,
-     "deepseek": 0.004,
-     "qwen": -0.0067
-    },
-    "crps": {
-     "crowd": 2.49,
-     "ewma": 2.516,
-     "persistence": 2.592,
-     "trend": 2.942,
-     "climatology": 4.984,
-     "gpt-5.5": 2.554,
-     "claude-opus": 2.548,
-     "gemini-pro": 2.591,
-     "grok": 2.612,
-     "deepseek": 2.582,
-     "qwen": 2.609
-    }
-   },
-   {
-    "date": "2023-12-01",
-    "n": 108,
-    "ranks": {
-     "crowd": 1,
-     "ewma": 2,
-     "persistence": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.063,
-     "ewma": 0.049,
-     "persistence": 0.0,
-     "trend": -0.101,
-     "climatology": -0.802,
-     "gpt-5.5": 0.0126,
-     "claude-opus": 0.0156,
-     "gemini-pro": -0.0036,
-     "grok": -0.0067,
-     "deepseek": 0.0061,
-     "qwen": -0.0149
-    },
-    "crps": {
-     "crowd": 2.492,
-     "ewma": 2.528,
-     "persistence": 2.659,
-     "trend": 2.929,
-     "climatology": 4.791,
-     "gpt-5.5": 2.625,
-     "claude-opus": 2.618,
-     "gemini-pro": 2.669,
-     "grok": 2.677,
-     "deepseek": 2.643,
-     "qwen": 2.699
-    }
-   },
-   {
-    "date": "2024-10-01",
-    "n": 118,
-    "ranks": {
-     "crowd": 1,
-     "ewma": 2,
-     "persistence": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.039,
-     "ewma": 0.018,
-     "persistence": 0.0,
-     "trend": -0.163,
-     "climatology": -0.848,
-     "gpt-5.5": 0.0048,
-     "claude-opus": 0.0058,
-     "gemini-pro": 0.0009,
-     "grok": -0.0034,
-     "deepseek": 0.0121,
-     "qwen": -0.0012
-    },
-    "crps": {
-     "crowd": 2.541,
-     "ewma": 2.594,
-     "persistence": 2.643,
-     "trend": 3.073,
-     "climatology": 4.884,
-     "gpt-5.5": 2.63,
-     "claude-opus": 2.628,
-     "gemini-pro": 2.641,
-     "grok": 2.652,
-     "deepseek": 2.611,
-     "qwen": 2.646
-    }
-   },
-   {
-    "date": "2025-03-31",
-    "n": 129,
-    "ranks": {
-     "crowd": 1,
-     "ewma": 2,
-     "persistence": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.033,
-     "ewma": 0.01,
-     "persistence": 0.0,
-     "trend": -0.172,
-     "climatology": -0.805,
-     "gpt-5.5": 0.0155,
-     "claude-opus": 0.0062,
-     "gemini-pro": 0.0043,
-     "grok": -0.0103,
-     "deepseek": 0.0091,
-     "qwen": -0.0151
-    },
-    "crps": {
-     "crowd": 2.505,
-     "ewma": 2.565,
-     "persistence": 2.589,
-     "trend": 3.034,
-     "climatology": 4.674,
-     "gpt-5.5": 2.549,
-     "claude-opus": 2.573,
-     "gemini-pro": 2.578,
-     "grok": 2.616,
-     "deepseek": 2.565,
-     "qwen": 2.628
-    }
-   },
-   {
-    "date": "2025-05-03",
-    "n": 140,
-    "ranks": {
-     "crowd": 1,
-     "persistence": 2,
-     "ewma": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.005,
-     "persistence": 0.0,
-     "ewma": -0.033,
-     "trend": -0.182,
-     "climatology": -0.888,
-     "gpt-5.5": 0.0176,
-     "claude-opus": 0.0084,
-     "gemini-pro": 0.0049,
-     "grok": 0.0009,
-     "deepseek": 0.0021,
-     "qwen": -0.0131
-    },
-    "crps": {
-     "crowd": 2.461,
-     "persistence": 2.474,
-     "ewma": 2.556,
-     "trend": 2.926,
-     "climatology": 4.672,
-     "gpt-5.5": 2.43,
-     "claude-opus": 2.453,
-     "gemini-pro": 2.462,
-     "grok": 2.472,
-     "deepseek": 2.469,
-     "qwen": 2.506
-    }
-   },
-   {
-    "date": "2025-06-01",
-    "n": 151,
-    "ranks": {
-     "crowd": 1,
-     "persistence": 2,
-     "ewma": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.016,
-     "persistence": 0.0,
-     "ewma": -0.019,
-     "trend": -0.188,
-     "climatology": -0.857,
-     "gpt-5.5": 0.0157,
-     "claude-opus": 0.0087,
-     "gemini-pro": 0.012,
-     "grok": -0.0022,
-     "deepseek": 0.0114,
-     "qwen": -0.0151
-    },
-    "crps": {
-     "crowd": 2.348,
-     "persistence": 2.387,
-     "ewma": 2.432,
-     "trend": 2.837,
-     "climatology": 4.434,
-     "gpt-5.5": 2.35,
-     "claude-opus": 2.366,
-     "gemini-pro": 2.358,
-     "grok": 2.392,
-     "deepseek": 2.36,
-     "qwen": 2.423
-    }
-   },
-   {
-    "date": "2025-07-04",
-    "n": 162,
-    "ranks": {
-     "crowd": 1,
-     "persistence": 2,
-     "ewma": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.012,
-     "persistence": 0.0,
-     "ewma": -0.02,
-     "trend": -0.206,
-     "climatology": -0.86,
-     "gpt-5.5": 0.0117,
-     "claude-opus": 0.0225,
-     "gemini-pro": 0.012,
-     "grok": -0.0069,
-     "deepseek": 0.0155,
-     "qwen": -0.0089
-    },
-    "crps": {
-     "crowd": 2.258,
-     "persistence": 2.285,
-     "ewma": 2.331,
-     "trend": 2.755,
-     "climatology": 4.251,
-     "gpt-5.5": 2.258,
-     "claude-opus": 2.234,
-     "gemini-pro": 2.258,
-     "grok": 2.301,
-     "deepseek": 2.25,
-     "qwen": 2.305
-    }
-   },
-   {
-    "date": "2025-08-02",
-    "n": 172,
-    "ranks": {
-     "crowd": 1,
-     "persistence": 2,
-     "ewma": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.013,
-     "persistence": 0.0,
-     "ewma": -0.013,
-     "trend": -0.206,
-     "climatology": -0.87,
-     "gpt-5.5": 0.0106,
-     "claude-opus": 0.0195,
-     "gemini-pro": 0.0078,
-     "grok": -0.0086,
-     "deepseek": 0.0111,
-     "qwen": -0.0083
-    },
-    "crps": {
-     "crowd": 2.176,
-     "persistence": 2.204,
-     "ewma": 2.233,
-     "trend": 2.657,
-     "climatology": 4.121,
-     "gpt-5.5": 2.181,
-     "claude-opus": 2.161,
-     "gemini-pro": 2.187,
-     "grok": 2.223,
-     "deepseek": 2.18,
-     "qwen": 2.222
-    }
-   },
-   {
-    "date": "2025-09-05",
-    "n": 183,
-    "ranks": {
-     "crowd": 1,
-     "persistence": 2,
-     "ewma": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.012,
-     "persistence": 0.0,
-     "ewma": -0.012,
-     "trend": -0.204,
-     "climatology": -0.869,
-     "gpt-5.5": 0.0145,
-     "claude-opus": 0.0164,
-     "gemini-pro": 0.0031,
-     "grok": -0.0098,
-     "deepseek": 0.0163,
-     "qwen": -0.0117
-    },
-    "crps": {
-     "crowd": 2.096,
-     "persistence": 2.122,
-     "ewma": 2.147,
-     "trend": 2.554,
-     "climatology": 3.966,
-     "gpt-5.5": 2.091,
-     "claude-opus": 2.087,
-     "gemini-pro": 2.115,
-     "grok": 2.143,
-     "deepseek": 2.087,
-     "qwen": 2.147
-    }
-   },
-   {
-    "date": "2025-09-27",
-    "n": 194,
-    "ranks": {
-     "crowd": 1,
-     "persistence": 2,
-     "ewma": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.012,
-     "persistence": 0.0,
-     "ewma": -0.011,
-     "trend": -0.203,
-     "climatology": -0.863,
-     "gpt-5.5": 0.01,
-     "claude-opus": 0.0136,
-     "gemini-pro": 0.0028,
-     "grok": -0.0021,
-     "deepseek": 0.0096,
-     "qwen": -0.0165
-    },
-    "crps": {
-     "crowd": 2.008,
-     "persistence": 2.033,
-     "ewma": 2.055,
-     "trend": 2.444,
-     "climatology": 3.787,
-     "gpt-5.5": 2.013,
-     "claude-opus": 2.005,
-     "gemini-pro": 2.027,
-     "grok": 2.037,
-     "deepseek": 2.013,
-     "qwen": 2.067
-    }
-   },
-   {
-    "date": "2025-10-18",
-    "n": 205,
-    "ranks": {
-     "crowd": 1,
-     "persistence": 2,
-     "ewma": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.009,
-     "persistence": 0.0,
-     "ewma": -0.011,
-     "trend": -0.199,
-     "climatology": -0.872,
-     "gpt-5.5": 0.0142,
-     "claude-opus": 0.0185,
-     "gemini-pro": 0.0034,
-     "grok": -0.0017,
-     "deepseek": 0.0117,
-     "qwen": -0.0105
-    },
-    "crps": {
-     "crowd": 1.951,
-     "persistence": 1.969,
-     "ewma": 1.992,
-     "trend": 2.361,
-     "climatology": 3.687,
-     "gpt-5.5": 1.941,
-     "claude-opus": 1.933,
-     "gemini-pro": 1.962,
-     "grok": 1.972,
-     "deepseek": 1.946,
-     "qwen": 1.99
-    }
-   },
-   {
-    "date": "2025-11-08",
-    "n": 215,
-    "ranks": {
-     "crowd": 1,
-     "persistence": 2,
-     "ewma": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.006,
-     "persistence": 0.0,
-     "ewma": -0.012,
-     "trend": -0.199,
-     "climatology": -0.88,
-     "gpt-5.5": 0.0125,
-     "claude-opus": 0.0183,
-     "gemini-pro": 0.0083,
-     "grok": -0.0046,
-     "deepseek": 0.0173,
-     "qwen": -0.0078
-    },
-    "crps": {
-     "crowd": 1.904,
-     "persistence": 1.916,
-     "ewma": 1.939,
-     "trend": 2.297,
-     "climatology": 3.603,
-     "gpt-5.5": 1.892,
-     "claude-opus": 1.881,
-     "gemini-pro": 1.9,
-     "grok": 1.925,
-     "deepseek": 1.883,
-     "qwen": 1.931
-    }
-   },
-   {
-    "date": "2025-11-29",
-    "n": 226,
-    "ranks": {
-     "crowd": 1,
-     "persistence": 2,
-     "ewma": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.013,
-     "persistence": 0.0,
-     "ewma": -0.005,
-     "trend": -0.188,
-     "climatology": -0.845,
-     "gpt-5.5": 0.0138,
-     "claude-opus": 0.0217,
-     "gemini-pro": 0.0084,
-     "grok": -0.0044,
-     "deepseek": 0.0156,
-     "qwen": -0.0159
-    },
-    "crps": {
-     "crowd": 1.865,
-     "persistence": 1.889,
-     "ewma": 1.899,
-     "trend": 2.244,
-     "climatology": 3.486,
-     "gpt-5.5": 1.863,
-     "claude-opus": 1.848,
-     "gemini-pro": 1.873,
-     "grok": 1.897,
-     "deepseek": 1.86,
-     "qwen": 1.919
-    }
-   },
-   {
-    "date": "2025-12-21",
-    "n": 237,
-    "ranks": {
-     "crowd": 1,
-     "persistence": 2,
-     "ewma": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.015,
-     "persistence": 0.0,
-     "ewma": -0.003,
-     "trend": -0.188,
-     "climatology": -0.833,
-     "gpt-5.5": 0.017,
-     "claude-opus": 0.0193,
-     "gemini-pro": 0.0128,
-     "grok": -0.0091,
-     "deepseek": 0.0098,
-     "qwen": -0.0111
-    },
-    "crps": {
-     "crowd": 1.822,
-     "persistence": 1.849,
-     "ewma": 1.854,
-     "trend": 2.196,
-     "climatology": 3.388,
-     "gpt-5.5": 1.818,
-     "claude-opus": 1.813,
-     "gemini-pro": 1.825,
-     "grok": 1.866,
-     "deepseek": 1.831,
-     "qwen": 1.87
-    }
-   },
-   {
-    "date": "2026-01-17",
-    "n": 248,
-    "ranks": {
-     "crowd": 1,
-     "ewma": 2,
-     "persistence": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.018,
-     "ewma": 0.003,
-     "persistence": 0.0,
-     "trend": -0.183,
-     "climatology": -0.813,
-     "gpt-5.5": 0.0159,
-     "claude-opus": 0.0259,
-     "gemini-pro": 0.0075,
-     "grok": -0.0054,
-     "deepseek": 0.011,
-     "qwen": -0.0163
-    },
-    "crps": {
-     "crowd": 1.785,
-     "ewma": 1.813,
-     "persistence": 1.818,
-     "trend": 2.152,
-     "climatology": 3.296,
-     "gpt-5.5": 1.789,
-     "claude-opus": 1.771,
-     "gemini-pro": 1.804,
-     "grok": 1.828,
-     "deepseek": 1.798,
-     "qwen": 1.848
-    }
-   },
-   {
-    "date": "2026-02-05",
-    "n": 258,
-    "ranks": {
-     "crowd": 1,
-     "persistence": 2,
-     "ewma": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.015,
-     "persistence": 0.0,
-     "ewma": -0.001,
-     "trend": -0.191,
-     "climatology": -0.804,
-     "gpt-5.5": 0.0223,
-     "claude-opus": 0.0257,
-     "gemini-pro": 0.0067,
-     "grok": -0.0075,
-     "deepseek": 0.0144,
-     "qwen": -0.0173
-    },
-    "crps": {
-     "crowd": 1.761,
-     "persistence": 1.788,
-     "ewma": 1.791,
-     "trend": 2.13,
-     "climatology": 3.225,
-     "gpt-5.5": 1.748,
-     "claude-opus": 1.742,
-     "gemini-pro": 1.776,
-     "grok": 1.801,
-     "deepseek": 1.762,
-     "qwen": 1.819
-    }
-   },
-   {
-    "date": "2026-02-28",
-    "n": 269,
-    "ranks": {
-     "crowd": 1,
-     "ewma": 2,
-     "persistence": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.028,
-     "ewma": 0.014,
-     "persistence": 0.0,
-     "trend": -0.172,
-     "climatology": -0.758,
-     "gpt-5.5": 0.0229,
-     "claude-opus": 0.0233,
-     "gemini-pro": 0.0077,
-     "grok": -0.0084,
-     "deepseek": 0.0122,
-     "qwen": -0.0122
-    },
-    "crps": {
-     "crowd": 1.731,
-     "ewma": 1.757,
-     "persistence": 1.781,
-     "trend": 2.088,
-     "climatology": 3.132,
-     "gpt-5.5": 1.74,
-     "claude-opus": 1.74,
-     "gemini-pro": 1.767,
-     "grok": 1.796,
-     "deepseek": 1.759,
-     "qwen": 1.803
-    }
-   },
-   {
-    "date": "2026-03-28",
-    "n": 280,
-    "ranks": {
-     "crowd": 1,
-     "ewma": 2,
-     "persistence": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.036,
-     "ewma": 0.024,
-     "persistence": 0.0,
-     "trend": -0.156,
-     "climatology": -0.726,
-     "gpt-5.5": 0.0218,
-     "claude-opus": 0.0255,
-     "gemini-pro": 0.0109,
-     "grok": -0.0091,
-     "deepseek": 0.0137,
-     "qwen": -0.0149
-    },
-    "crps": {
-     "crowd": 1.72,
-     "ewma": 1.742,
-     "persistence": 1.785,
-     "trend": 2.064,
-     "climatology": 3.081,
-     "gpt-5.5": 1.746,
-     "claude-opus": 1.739,
-     "gemini-pro": 1.766,
-     "grok": 1.801,
-     "deepseek": 1.761,
-     "qwen": 1.812
-    }
-   },
-   {
-    "date": "2026-04-18",
-    "n": 291,
-    "ranks": {
-     "crowd": 1,
-     "ewma": 2,
-     "persistence": 3,
-     "trend": 4,
-     "climatology": 5
-    },
-    "skills": {
-     "crowd": 0.044,
-     "ewma": 0.033,
-     "persistence": 0.0,
-     "trend": -0.142,
-     "climatology": -0.7,
-     "gpt-5.5": 0.0189,
-     "claude-opus": 0.0301,
-     "gemini-pro": 0.0121,
-     "grok": -0.0052,
-     "deepseek": 0.014,
-     "qwen": -0.017
-    },
-    "crps": {
-     "crowd": 1.706,
-     "ewma": 1.725,
-     "persistence": 1.784,
-     "trend": 2.038,
-     "climatology": 3.033,
-     "gpt-5.5": 1.75,
-     "claude-opus": 1.73,
-     "gemini-pro": 1.762,
-     "grok": 1.793,
-     "deepseek": 1.759,
-     "qwen": 1.814
-    }
-   },
-   {
-    "date": "2026-05-10",
-    "n": 301,
+    "date": "2022-06-01",
+    "n": 90,
     "ranks": {
      "crowd": 1,
      "ewma": 2,
@@ -2263,34 +2447,47 @@
     },
     "skills": {
      "crowd": 0.04,
-     "ewma": 0.029,
+     "ewma": 0.026,
      "persistence": 0.0,
-     "trend": -0.144,
-     "climatology": -0.701,
-     "gpt-5.5": 0.0211,
-     "claude-opus": 0.0313,
-     "gemini-pro": 0.0132,
-     "grok": -0.005,
-     "deepseek": 0.015,
-     "qwen": -0.0157
+     "trend": -0.113,
+     "climatology": -0.816
     },
     "crps": {
-     "crowd": 1.694,
-     "ewma": 1.713,
-     "persistence": 1.764,
-     "trend": 2.018,
-     "climatology": 2.999,
-     "gpt-5.5": 1.727,
-     "claude-opus": 1.709,
-     "gemini-pro": 1.741,
-     "grok": 1.773,
-     "deepseek": 1.738,
-     "qwen": 1.792
+     "crowd": 2.501,
+     "ewma": 2.539,
+     "persistence": 2.606,
+     "trend": 2.901,
+     "climatology": 4.733
     }
    },
    {
-    "date": "2026-06-01",
-    "n": 312,
+    "date": "2023-07-01",
+    "n": 103,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.054,
+     "ewma": 0.041,
+     "persistence": 0.0,
+     "trend": -0.107,
+     "climatology": -0.846
+    },
+    "crps": {
+     "crowd": 2.503,
+     "ewma": 2.536,
+     "persistence": 2.645,
+     "trend": 2.928,
+     "climatology": 4.884
+    }
+   },
+   {
+    "date": "2024-08-01",
+    "n": 116,
     "ranks": {
      "crowd": 1,
      "ewma": 2,
@@ -2300,34 +2497,222 @@
     },
     "skills": {
      "crowd": 0.043,
-     "ewma": 0.034,
+     "ewma": 0.019,
      "persistence": 0.0,
-     "trend": -0.138,
-     "climatology": -0.695,
-     "gpt-5.5": 0.0234,
-     "claude-opus": 0.03,
-     "gemini-pro": 0.0133,
-     "grok": -0.0071,
-     "deepseek": 0.0175,
-     "qwen": -0.0184
+     "trend": -0.148,
+     "climatology": -0.845
     },
     "crps": {
-     "crowd": 1.666,
-     "ewma": 1.682,
-     "persistence": 1.741,
-     "trend": 1.982,
-     "climatology": 2.951,
-     "gpt-5.5": 1.7,
-     "claude-opus": 1.689,
-     "gemini-pro": 1.718,
-     "grok": 1.753,
-     "deepseek": 1.711,
-     "qwen": 1.773
+     "crowd": 2.558,
+     "ewma": 2.621,
+     "persistence": 2.673,
+     "trend": 3.068,
+     "climatology": 4.931
     }
    },
    {
-    "date": "2026-06-27",
-    "n": 323,
+    "date": "2025-03-10",
+    "n": 128,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.032,
+     "ewma": 0.008,
+     "persistence": 0.0,
+     "trend": -0.182,
+     "climatology": -0.794
+    },
+    "crps": {
+     "crowd": 2.533,
+     "ewma": 2.594,
+     "persistence": 2.616,
+     "trend": 3.093,
+     "climatology": 4.691
+    }
+   },
+   {
+    "date": "2025-04-12",
+    "n": 141,
+    "ranks": {
+     "crowd": 1,
+     "persistence": 2,
+     "ewma": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.024,
+     "persistence": 0.0,
+     "ewma": -0.013,
+     "trend": -0.169,
+     "climatology": -0.78
+    },
+    "crps": {
+     "crowd": 2.485,
+     "persistence": 2.546,
+     "ewma": 2.58,
+     "trend": 2.977,
+     "climatology": 4.533
+    }
+   },
+   {
+    "date": "2025-05-07",
+    "n": 154,
+    "ranks": {
+     "crowd": 1,
+     "persistence": 2,
+     "ewma": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.018,
+     "persistence": 0.0,
+     "ewma": -0.018,
+     "trend": -0.17,
+     "climatology": -0.822
+    },
+    "crps": {
+     "crowd": 2.382,
+     "persistence": 2.426,
+     "ewma": 2.47,
+     "trend": 2.838,
+     "climatology": 4.421
+    }
+   },
+   {
+    "date": "2025-06-07",
+    "n": 167,
+    "ranks": {
+     "crowd": 1,
+     "persistence": 2,
+     "ewma": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.033,
+     "persistence": 0.0,
+     "ewma": -0.002,
+     "trend": -0.158,
+     "climatology": -0.773
+    },
+    "crps": {
+     "crowd": 2.276,
+     "persistence": 2.353,
+     "ewma": 2.359,
+     "trend": 2.726,
+     "climatology": 4.172
+    }
+   },
+   {
+    "date": "2025-07-12",
+    "n": 180,
+    "ranks": {
+     "crowd": 1,
+     "persistence": 2,
+     "ewma": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.03,
+     "persistence": 0.0,
+     "ewma": -0.004,
+     "trend": -0.171,
+     "climatology": -0.767
+    },
+    "crps": {
+     "crowd": 2.184,
+     "persistence": 2.252,
+     "ewma": 2.261,
+     "trend": 2.637,
+     "climatology": 3.979
+    }
+   },
+   {
+    "date": "2025-08-02",
+    "n": 192,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.035,
+     "ewma": 0.006,
+     "persistence": 0.0,
+     "trend": -0.169,
+     "climatology": -0.751
+    },
+    "crps": {
+     "crowd": 2.097,
+     "ewma": 2.16,
+     "persistence": 2.174,
+     "trend": 2.541,
+     "climatology": 3.807
+    }
+   },
+   {
+    "date": "2025-08-31",
+    "n": 205,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.045,
+     "ewma": 0.018,
+     "persistence": 0.0,
+     "trend": -0.151,
+     "climatology": -0.711
+    },
+    "crps": {
+     "crowd": 2.017,
+     "ewma": 2.074,
+     "persistence": 2.112,
+     "trend": 2.43,
+     "climatology": 3.614
+    }
+   },
+   {
+    "date": "2025-09-27",
+    "n": 218,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.047,
+     "ewma": 0.022,
+     "persistence": 0.0,
+     "trend": -0.146,
+     "climatology": -0.694
+    },
+    "crps": {
+     "crowd": 1.957,
+     "ewma": 2.009,
+     "persistence": 2.054,
+     "trend": 2.354,
+     "climatology": 3.479
+    }
+   },
+   {
+    "date": "2025-10-18",
+    "n": 231,
     "ranks": {
      "crowd": 1,
      "ewma": 2,
@@ -2337,29 +2722,317 @@
     },
     "skills": {
      "crowd": 0.046,
-     "ewma": 0.036,
+     "ewma": 0.022,
      "persistence": 0.0,
-     "trend": -0.135,
-     "climatology": -0.675,
-     "gpt-5.5": 0.0255,
-     "claude-opus": 0.0328,
-     "gemini-pro": 0.013,
-     "grok": -0.0065,
-     "deepseek": 0.0175,
-     "qwen": -0.0187
+     "trend": -0.144,
+     "climatology": -0.693
     },
     "crps": {
-     "crowd": 1.643,
-     "ewma": 1.659,
-     "persistence": 1.722,
-     "trend": 1.954,
-     "climatology": 2.884,
-     "gpt-5.5": 1.678,
-     "claude-opus": 1.666,
-     "gemini-pro": 1.7,
-     "grok": 1.733,
-     "deepseek": 1.692,
-     "qwen": 1.754
+     "crowd": 1.891,
+     "ewma": 1.939,
+     "persistence": 1.982,
+     "trend": 2.268,
+     "climatology": 3.356
+    }
+   },
+   {
+    "date": "2025-11-15",
+    "n": 244,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.043,
+     "ewma": 0.021,
+     "persistence": 0.0,
+     "trend": -0.143,
+     "climatology": -0.694
+    },
+    "crps": {
+     "crowd": 1.842,
+     "ewma": 1.885,
+     "persistence": 1.925,
+     "trend": 2.2,
+     "climatology": 3.262
+    }
+   },
+   {
+    "date": "2025-12-06",
+    "n": 257,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.042,
+     "ewma": 0.023,
+     "persistence": 0.0,
+     "trend": -0.144,
+     "climatology": -0.698
+    },
+    "crps": {
+     "crowd": 1.782,
+     "ewma": 1.819,
+     "persistence": 1.861,
+     "trend": 2.129,
+     "climatology": 3.161
+    }
+   },
+   {
+    "date": "2026-01-03",
+    "n": 270,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.043,
+     "ewma": 0.023,
+     "persistence": 0.0,
+     "trend": -0.146,
+     "climatology": -0.687
+    },
+    "crps": {
+     "crowd": 1.733,
+     "ewma": 1.77,
+     "persistence": 1.812,
+     "trend": 2.076,
+     "climatology": 3.056
+    }
+   },
+   {
+    "date": "2026-01-24",
+    "n": 282,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.047,
+     "ewma": 0.028,
+     "persistence": 0.0,
+     "trend": -0.14,
+     "climatology": -0.668
+    },
+    "crps": {
+     "crowd": 1.688,
+     "ewma": 1.723,
+     "persistence": 1.772,
+     "trend": 2.019,
+     "climatology": 2.956
+    }
+   },
+   {
+    "date": "2026-02-14",
+    "n": 295,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.05,
+     "ewma": 0.031,
+     "persistence": 0.0,
+     "trend": -0.135,
+     "climatology": -0.654
+    },
+    "crps": {
+     "crowd": 1.658,
+     "ewma": 1.691,
+     "persistence": 1.745,
+     "trend": 1.98,
+     "climatology": 2.886
+    }
+   },
+   {
+    "date": "2026-03-07",
+    "n": 308,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.052,
+     "ewma": 0.034,
+     "persistence": 0.0,
+     "trend": -0.133,
+     "climatology": -0.641
+    },
+    "crps": {
+     "crowd": 1.626,
+     "ewma": 1.657,
+     "persistence": 1.715,
+     "trend": 1.943,
+     "climatology": 2.814
+    }
+   },
+   {
+    "date": "2026-04-04",
+    "n": 321,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.052,
+     "ewma": 0.037,
+     "persistence": 0.0,
+     "trend": -0.127,
+     "climatology": -0.636
+    },
+    "crps": {
+     "crowd": 1.604,
+     "ewma": 1.63,
+     "persistence": 1.692,
+     "trend": 1.907,
+     "climatology": 2.769
+    }
+   },
+   {
+    "date": "2026-04-25",
+    "n": 334,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.054,
+     "ewma": 0.037,
+     "persistence": 0.0,
+     "trend": -0.126,
+     "climatology": -0.62
+    },
+    "crps": {
+     "crowd": 1.569,
+     "ewma": 1.597,
+     "persistence": 1.659,
+     "trend": 1.868,
+     "climatology": 2.688
+    }
+   },
+   {
+    "date": "2026-05-16",
+    "n": 346,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.05,
+     "ewma": 0.034,
+     "persistence": 0.0,
+     "trend": -0.128,
+     "climatology": -0.623
+    },
+    "crps": {
+     "crowd": 1.555,
+     "ewma": 1.582,
+     "persistence": 1.637,
+     "trend": 1.846,
+     "climatology": 2.658
+    }
+   },
+   {
+    "date": "2026-06-14",
+    "n": 359,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.055,
+     "ewma": 0.041,
+     "persistence": 0.0,
+     "trend": -0.121,
+     "climatology": -0.615
+    },
+    "crps": {
+     "crowd": 1.529,
+     "ewma": 1.552,
+     "persistence": 1.618,
+     "trend": 1.813,
+     "climatology": 2.613
+    }
+   },
+   {
+    "date": "2026-07-11",
+    "n": 372,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.063,
+     "ewma": 0.047,
+     "persistence": 0.0,
+     "trend": -0.11,
+     "climatology": -0.585
+    },
+    "crps": {
+     "crowd": 1.513,
+     "ewma": 1.538,
+     "persistence": 1.614,
+     "trend": 1.792,
+     "climatology": 2.559
+    }
+   },
+   {
+    "date": "2026-08-01",
+    "n": 385,
+    "ranks": {
+     "crowd": 1,
+     "ewma": 2,
+     "persistence": 3,
+     "trend": 4,
+     "climatology": 5
+    },
+    "skills": {
+     "crowd": 0.067,
+     "ewma": 0.051,
+     "persistence": 0.0,
+     "trend": -0.105,
+     "climatology": -0.562
+    },
+    "crps": {
+     "crowd": 1.496,
+     "ewma": 1.521,
+     "persistence": 1.603,
+     "trend": 1.772,
+     "climatology": 2.503
     }
    }
   ],
@@ -2367,935 +3040,1068 @@
    "all": [
     {
      "entrant": "crowd",
-     "rounds": 323,
-     "mean_crps": 1.643,
-     "mean_skill": 0.046
+     "rounds": 385,
+     "mean_crps": 1.496,
+     "mean_skill": 0.067
     },
     {
      "entrant": "ewma",
-     "rounds": 323,
-     "mean_crps": 1.659,
-     "mean_skill": 0.036
-    },
-    {
-     "entrant": "gpt-5.5",
-     "rounds": 323,
-     "mean_crps": 1.669,
-     "mean_skill": 0.031,
-     "mock": true
-    },
-    {
-     "entrant": "claude-opus",
-     "rounds": 323,
-     "mean_crps": 1.682,
-     "mean_skill": 0.023,
-     "mock": true
-    },
-    {
-     "entrant": "deepseek",
-     "rounds": 323,
-     "mean_crps": 1.698,
-     "mean_skill": 0.014,
-     "mock": true
-    },
-    {
-     "entrant": "gemini-pro",
-     "rounds": 323,
-     "mean_crps": 1.707,
-     "mean_skill": 0.009,
-     "mock": true
+     "rounds": 385,
+     "mean_crps": 1.521,
+     "mean_skill": 0.051
     },
     {
      "entrant": "persistence",
-     "rounds": 323,
-     "mean_crps": 1.722,
+     "rounds": 385,
+     "mean_crps": 1.603,
      "mean_skill": 0.0
     },
     {
-     "entrant": "grok",
-     "rounds": 323,
-     "mean_crps": 1.725,
-     "mean_skill": -0.002,
-     "mock": true
-    },
-    {
-     "entrant": "qwen",
-     "rounds": 323,
-     "mean_crps": 1.756,
-     "mean_skill": -0.02,
-     "mock": true
-    },
-    {
      "entrant": "trend",
-     "rounds": 323,
-     "mean_crps": 1.954,
-     "mean_skill": -0.135
+     "rounds": 385,
+     "mean_crps": 1.772,
+     "mean_skill": -0.105
     },
     {
      "entrant": "climatology",
-     "rounds": 323,
-     "mean_crps": 2.884,
-     "mean_skill": -0.675
+     "rounds": 385,
+     "mean_crps": 2.503,
+     "mean_skill": -0.562
     }
    ],
    "m6": [
     {
      "entrant": "ewma",
-     "rounds": 86,
-     "mean_crps": 1.123,
-     "mean_skill": 0.181
+     "rounds": 103,
+     "mean_crps": 0.967,
+     "mean_skill": 0.151
     },
     {
      "entrant": "crowd",
-     "rounds": 86,
-     "mean_crps": 1.149,
-     "mean_skill": 0.162
+     "rounds": 103,
+     "mean_crps": 0.97,
+     "mean_skill": 0.149
     },
     {
      "entrant": "trend",
-     "rounds": 86,
-     "mean_crps": 1.287,
-     "mean_skill": 0.061
-    },
-    {
-     "entrant": "claude-opus",
-     "rounds": 86,
-     "mean_crps": 1.328,
-     "mean_skill": 0.031,
-     "mock": true
-    },
-    {
-     "entrant": "gpt-5.5",
-     "rounds": 86,
-     "mean_crps": 1.342,
-     "mean_skill": 0.021,
-     "mock": true
-    },
-    {
-     "entrant": "deepseek",
-     "rounds": 86,
-     "mean_crps": 1.344,
-     "mean_skill": 0.02,
-     "mock": true
-    },
-    {
-     "entrant": "gemini-pro",
-     "rounds": 86,
-     "mean_crps": 1.356,
-     "mean_skill": 0.011,
-     "mock": true
+     "rounds": 103,
+     "mean_crps": 1.095,
+     "mean_skill": 0.04
     },
     {
      "entrant": "persistence",
-     "rounds": 86,
-     "mean_crps": 1.371,
+     "rounds": 103,
+     "mean_crps": 1.14,
      "mean_skill": 0.0
     },
     {
-     "entrant": "grok",
-     "rounds": 86,
-     "mean_crps": 1.376,
-     "mean_skill": -0.004,
-     "mock": true
-    },
-    {
-     "entrant": "qwen",
-     "rounds": 86,
-     "mean_crps": 1.401,
-     "mean_skill": -0.022,
-     "mock": true
-    },
-    {
      "entrant": "climatology",
-     "rounds": 86,
-     "mean_crps": 1.492,
-     "mean_skill": -0.088
+     "rounds": 103,
+     "mean_crps": 1.263,
+     "mean_skill": -0.108
     }
    ],
    "d30": [
     {
+     "entrant": "climatology",
+     "rounds": 17,
+     "mean_crps": 0.881,
+     "mean_skill": 0.301
+    },
+    {
      "entrant": "ewma",
-     "rounds": 15,
-     "mean_crps": 0.907,
-     "mean_skill": 0.249
+     "rounds": 17,
+     "mean_crps": 0.965,
+     "mean_skill": 0.235
     },
     {
      "entrant": "crowd",
-     "rounds": 15,
-     "mean_crps": 0.937,
-     "mean_skill": 0.224
+     "rounds": 17,
+     "mean_crps": 0.973,
+     "mean_skill": 0.228
     },
     {
      "entrant": "trend",
-     "rounds": 15,
-     "mean_crps": 1.082,
-     "mean_skill": 0.104
-    },
-    {
-     "entrant": "claude-opus",
-     "rounds": 15,
-     "mean_crps": 1.149,
-     "mean_skill": 0.049,
-     "mock": true
-    },
-    {
-     "entrant": "deepseek",
-     "rounds": 15,
-     "mean_crps": 1.187,
-     "mean_skill": 0.017,
-     "mock": true
-    },
-    {
-     "entrant": "gpt-5.5",
-     "rounds": 15,
-     "mean_crps": 1.196,
-     "mean_skill": 0.01,
-     "mock": true
+     "rounds": 17,
+     "mean_crps": 1.137,
+     "mean_skill": 0.098
     },
     {
      "entrant": "persistence",
-     "rounds": 15,
-     "mean_crps": 1.208,
+     "rounds": 17,
+     "mean_crps": 1.26,
      "mean_skill": 0.0
-    },
-    {
-     "entrant": "gemini-pro",
-     "rounds": 15,
-     "mean_crps": 1.208,
-     "mean_skill": 0.0,
-     "mock": true
-    },
-    {
-     "entrant": "grok",
-     "rounds": 15,
-     "mean_crps": 1.212,
-     "mean_skill": -0.003,
-     "mock": true
-    },
-    {
-     "entrant": "qwen",
-     "rounds": 15,
-     "mean_crps": 1.248,
-     "mean_skill": -0.033,
-     "mock": true
-    },
-    {
-     "entrant": "climatology",
-     "rounds": 15,
-     "mean_crps": 1.373,
-     "mean_skill": -0.137
     }
    ],
    "last": [
     {
      "entrant": "climatology",
-     "rounds": 2,
-     "mean_crps": 1.353,
-     "mean_skill": 0.229
-    },
-    {
-     "entrant": "trend",
-     "rounds": 2,
-     "mean_crps": 1.402,
-     "mean_skill": 0.201
+     "rounds": 3,
+     "mean_crps": 0.462,
+     "mean_skill": 0.574
     },
     {
      "entrant": "crowd",
-     "rounds": 2,
-     "mean_crps": 1.474,
-     "mean_skill": 0.16
+     "rounds": 3,
+     "mean_crps": 0.749,
+     "mean_skill": 0.31
     },
     {
      "entrant": "ewma",
-     "rounds": 2,
-     "mean_crps": 1.608,
-     "mean_skill": 0.083
-    },
-    {
-     "entrant": "claude-opus",
-     "rounds": 2,
-     "mean_crps": 1.638,
-     "mean_skill": 0.066,
-     "mock": true
-    },
-    {
-     "entrant": "deepseek",
-     "rounds": 2,
-     "mean_crps": 1.666,
-     "mean_skill": 0.05,
-     "mock": true
-    },
-    {
-     "entrant": "gpt-5.5",
-     "rounds": 2,
-     "mean_crps": 1.67,
-     "mean_skill": 0.048,
-     "mock": true
+     "rounds": 3,
+     "mean_crps": 0.759,
+     "mean_skill": 0.301
     },
     {
      "entrant": "persistence",
-     "rounds": 2,
-     "mean_crps": 1.754,
+     "rounds": 3,
+     "mean_crps": 1.085,
      "mean_skill": 0.0
     },
     {
-     "entrant": "qwen",
-     "rounds": 2,
-     "mean_crps": 1.766,
-     "mean_skill": -0.007,
-     "mock": true
-    },
-    {
-     "entrant": "gemini-pro",
-     "rounds": 2,
-     "mean_crps": 1.768,
-     "mean_skill": -0.008,
-     "mock": true
-    },
-    {
-     "entrant": "grok",
-     "rounds": 2,
-     "mean_crps": 1.84,
-     "mean_skill": -0.049,
-     "mock": true
+     "entrant": "trend",
+     "rounds": 3,
+     "mean_crps": 1.243,
+     "mean_skill": -0.146
     }
    ]
   },
-  "mock_models": [
-   "claude-opus",
-   "deepseek",
-   "gemini-pro",
-   "gpt-5.5",
-   "grok",
-   "qwen"
-  ]
+  "models": {
+   "window": {
+    "first": "2025-05-31",
+    "last": "2026-07-23"
+   },
+   "start": {
+    "claude-fable": "2026-01-31",
+    "claude-fable-zeroshot": "2026-01-31",
+    "claude-opus": "2026-01-31",
+    "claude-opus-5": "2026-05-31",
+    "claude-opus-5-zeroshot": "2026-05-31",
+    "claude-opus-zeroshot": "2026-01-31",
+    "claude-sonnet": "2026-01-31",
+    "claude-sonnet-zeroshot": "2026-01-31",
+    "deepseek-flash": "2026-08-30",
+    "deepseek-flash-zeroshot": "2026-08-30",
+    "deepseek-pro": "2025-05-31",
+    "deepseek-pro-zeroshot": "2025-05-31",
+    "gemini-flash": "2026-08-20",
+    "gemini-flash-zeroshot": "2026-08-20",
+    "gemini-pro": "2026-03-15",
+    "gemini-pro-zeroshot": "2026-03-15",
+    "glm": "2026-03-31",
+    "glm-zeroshot": "2026-03-31",
+    "gpt-5.6-luna": "2026-03-18",
+    "gpt-5.6-luna-zeroshot": "2026-03-18",
+    "gpt-5.6-sol": "2026-03-18",
+    "gpt-5.6-sol-zeroshot": "2026-03-18",
+    "gpt-5.6-terra": "2026-03-18",
+    "gpt-5.6-terra-zeroshot": "2026-03-18",
+    "grok": "2026-03-03",
+    "grok-zeroshot": "2026-03-03",
+    "qwen-3.7": "2026-06-19",
+    "qwen-3.7-zeroshot": "2026-06-19",
+    "qwen-3.8": "2026-07-01",
+    "qwen-3.8-zeroshot": "2026-07-01"
+   },
+   "releases": 22,
+   "entrants": [
+    "gpt-5.6-luna",
+    "gpt-5.6-sol",
+    "gpt-5.6-terra",
+    "claude-opus",
+    "claude-opus-5",
+    "claude-sonnet",
+    "claude-fable",
+    "gemini-pro",
+    "gemini-flash",
+    "grok",
+    "qwen-3.7",
+    "qwen-3.8",
+    "deepseek-pro",
+    "deepseek-flash",
+    "glm",
+    "gpt-5.6-luna-zeroshot",
+    "gpt-5.6-sol-zeroshot",
+    "gpt-5.6-terra-zeroshot",
+    "claude-opus-zeroshot",
+    "claude-opus-5-zeroshot",
+    "claude-sonnet-zeroshot",
+    "claude-fable-zeroshot",
+    "gemini-pro-zeroshot",
+    "gemini-flash-zeroshot",
+    "grok-zeroshot",
+    "qwen-3.7-zeroshot",
+    "qwen-3.8-zeroshot",
+    "deepseek-pro-zeroshot",
+    "deepseek-flash-zeroshot",
+    "glm-zeroshot"
+   ],
+   "board": [
+    {
+     "entrant": "claude-opus-5",
+     "mean_crps": 1.144,
+     "mean_skill": 0.306,
+     "rounds": 22
+    },
+    {
+     "baseline": true,
+     "entrant": "ewma",
+     "mean_crps": 1.148,
+     "mean_skill": 0.304,
+     "rounds": 22
+    },
+    {
+     "entrant": "gpt-5.6-terra",
+     "mean_crps": 1.179,
+     "mean_skill": 0.285,
+     "rounds": 22
+    },
+    {
+     "entrant": "claude-opus",
+     "mean_crps": 1.182,
+     "mean_skill": 0.283,
+     "rounds": 22
+    },
+    {
+     "entrant": "grok",
+     "mean_crps": 1.183,
+     "mean_skill": 0.282,
+     "rounds": 22
+    },
+    {
+     "entrant": "glm",
+     "mean_crps": 1.195,
+     "mean_skill": 0.275,
+     "rounds": 22
+    },
+    {
+     "entrant": "gpt-5.6-sol",
+     "mean_crps": 1.208,
+     "mean_skill": 0.267,
+     "rounds": 22
+    },
+    {
+     "entrant": "claude-fable",
+     "mean_crps": 1.21,
+     "mean_skill": 0.266,
+     "rounds": 22
+    },
+    {
+     "baseline": true,
+     "entrant": "climatology",
+     "mean_crps": 1.212,
+     "mean_skill": 0.265,
+     "rounds": 22
+    },
+    {
+     "entrant": "gemini-pro",
+     "mean_crps": 1.217,
+     "mean_skill": 0.262,
+     "rounds": 22
+    },
+    {
+     "entrant": "gpt-5.6-luna",
+     "mean_crps": 1.243,
+     "mean_skill": 0.246,
+     "rounds": 22
+    },
+    {
+     "entrant": "qwen-3.8",
+     "mean_crps": 1.248,
+     "mean_skill": 0.243,
+     "rounds": 22
+    },
+    {
+     "baseline": true,
+     "entrant": "trend",
+     "mean_crps": 1.257,
+     "mean_skill": 0.237,
+     "rounds": 22
+    },
+    {
+     "entrant": "claude-sonnet",
+     "mean_crps": 1.267,
+     "mean_skill": 0.231,
+     "rounds": 22
+    },
+    {
+     "entrant": "qwen-3.7",
+     "mean_crps": 1.274,
+     "mean_skill": 0.227,
+     "rounds": 22
+    },
+    {
+     "entrant": "deepseek-pro",
+     "mean_crps": 1.348,
+     "mean_skill": 0.183,
+     "rounds": 22
+    },
+    {
+     "baseline": true,
+     "entrant": "persistence",
+     "mean_crps": 1.649,
+     "mean_skill": 0.0,
+     "rounds": 22
+    },
+    {
+     "entrant": "claude-opus-5-zeroshot",
+     "mean_crps": 1.655,
+     "mean_skill": -0.004,
+     "rounds": 22
+    },
+    {
+     "entrant": "claude-fable-zeroshot",
+     "mean_crps": 2.041,
+     "mean_skill": -0.238,
+     "rounds": 22
+    },
+    {
+     "entrant": "claude-sonnet-zeroshot",
+     "mean_crps": 2.153,
+     "mean_skill": -0.306,
+     "rounds": 22
+    },
+    {
+     "entrant": "gpt-5.6-terra-zeroshot",
+     "mean_crps": 2.384,
+     "mean_skill": -0.446,
+     "rounds": 22
+    },
+    {
+     "entrant": "claude-opus-zeroshot",
+     "mean_crps": 2.414,
+     "mean_skill": -0.465,
+     "rounds": 22
+    },
+    {
+     "entrant": "gpt-5.6-sol-zeroshot",
+     "mean_crps": 2.484,
+     "mean_skill": -0.507,
+     "rounds": 22
+    },
+    {
+     "entrant": "gpt-5.6-luna-zeroshot",
+     "mean_crps": 2.576,
+     "mean_skill": -0.562,
+     "rounds": 22
+    },
+    {
+     "entrant": "qwen-3.7-zeroshot",
+     "mean_crps": 3.307,
+     "mean_skill": -1.006,
+     "rounds": 22
+    },
+    {
+     "entrant": "grok-zeroshot",
+     "mean_crps": 3.452,
+     "mean_skill": -1.094,
+     "rounds": 22
+    },
+    {
+     "entrant": "qwen-3.8-zeroshot",
+     "mean_crps": 3.484,
+     "mean_skill": -1.113,
+     "rounds": 22
+    },
+    {
+     "entrant": "deepseek-pro-zeroshot",
+     "mean_crps": 3.807,
+     "mean_skill": -1.309,
+     "rounds": 22
+    },
+    {
+     "entrant": "gemini-pro-zeroshot",
+     "mean_crps": 4.164,
+     "mean_skill": -1.526,
+     "rounds": 22
+    },
+    {
+     "entrant": "glm-zeroshot",
+     "mean_crps": 4.286,
+     "mean_skill": -1.6,
+     "rounds": 22
+    }
+   ],
+   "failures": {
+    "claude-sonnet": 3
+   },
+   "cutoffs": {
+    "claude-fable": "claude-fable: cutoff 2026-01-01 [declared] -> usable from 2026-01-31 (Anthropic: trained on data up until January 2026)",
+    "claude-fable-zeroshot": "claude-fable-zeroshot: cutoff unknown (no source)",
+    "claude-opus": "claude-opus: cutoff 2026-01-01 [declared] -> usable from 2026-01-31 (Anthropic: Claude Opus 4.8 trained on data up until January 2026 (Opus 5's May 2026 cutoff is why 4.8 is entered instead))",
+    "claude-opus-5": "claude-opus-5: cutoff 2026-05-01 [declared] -> usable from 2026-05-31 (Anthropic: Claude Opus 5 trained on data up until May 2026)",
+    "claude-opus-5-zeroshot": "claude-opus-5-zeroshot: cutoff unknown (no source)",
+    "claude-opus-zeroshot": "claude-opus-zeroshot: cutoff unknown (no source)",
+    "claude-sonnet": "claude-sonnet: cutoff 2026-01-01 [declared] -> usable from 2026-01-31 (Anthropic: trained on data up until January 2026)",
+    "claude-sonnet-zeroshot": "claude-sonnet-zeroshot: cutoff unknown (no source)",
+    "deepseek-pro": "deepseek-pro: cutoff 2025-05-01 [reported] -> usable from 2025-05-31 (DeepSeek V4 Pro (preview), May 2025; DeepSeek publishes no official cutoffs)",
+    "deepseek-pro-zeroshot": "deepseek-pro-zeroshot: cutoff unknown (no source)",
+    "gemini-pro": "gemini-pro: cutoff 2026-02-13 [reported] -> usable from 2026-03-15 (Gemini 3.1 Pro, February 13 2026)",
+    "gemini-pro-zeroshot": "gemini-pro-zeroshot: cutoff unknown (no source)",
+    "glm": "glm: cutoff 2026-03-01 [reported] -> usable from 2026-03-31 (GLM-5.2, March 2026; Zhipu publishes no exact day)",
+    "glm-zeroshot": "glm-zeroshot: cutoff unknown (no source)",
+    "gpt-5.6-luna": "gpt-5.6-luna: cutoff 2026-02-16 [declared] -> usable from 2026-03-18 (OpenAI model page: GPT-5.6 family cutoff February 16 2026)",
+    "gpt-5.6-luna-zeroshot": "gpt-5.6-luna-zeroshot: cutoff unknown (no source)",
+    "gpt-5.6-sol": "gpt-5.6-sol: cutoff 2026-02-16 [declared] -> usable from 2026-03-18 (OpenAI model page: GPT-5.6 family cutoff February 16 2026)",
+    "gpt-5.6-sol-zeroshot": "gpt-5.6-sol-zeroshot: cutoff unknown (no source)",
+    "gpt-5.6-terra": "gpt-5.6-terra: cutoff 2026-02-16 [declared] -> usable from 2026-03-18 (OpenAI model page: GPT-5.6 family cutoff February 16 2026)",
+    "gpt-5.6-terra-zeroshot": "gpt-5.6-terra-zeroshot: cutoff unknown (no source)",
+    "grok": "grok: cutoff 2026-02-01 [declared] -> usable from 2026-03-03 (xAI: Grok 4.5 cutoff 2026-02-01 without search tools)",
+    "grok-zeroshot": "grok-zeroshot: cutoff unknown (no source)",
+    "qwen-3.7": "qwen-3.7: cutoff 2026-05-20 [reported] -> usable from 2026-06-19 (Qwen3.7-Max, 2026-05-20)",
+    "qwen-3.7-zeroshot": "qwen-3.7-zeroshot: cutoff unknown (no source)",
+    "qwen-3.8": "qwen-3.8: cutoff 2026-06-01 [unknown] -> usable from 2026-07-01 (Qwen3.8-Max shipped 2026-08-03 and Alibaba publishes no cutoff; 2026-06-01 is a maintainer estimate, so treat its backtest rows as indicative only)",
+    "qwen-3.8-zeroshot": "qwen-3.8-zeroshot: cutoff unknown (no source)"
+   }
+  },
+  "mock_models": []
  },
  "charts": {
   "approval_avg": [
    {
-    "date": "2025-01-25",
-    "value": 50.1
+    "date": "2025-01-27",
+    "value": 50.36
    },
    {
-    "date": "2025-02-01",
-    "value": 49.36
+    "date": "2025-02-03",
+    "value": 49.5
    },
    {
-    "date": "2025-02-08",
-    "value": 49.41
+    "date": "2025-02-10",
+    "value": 49.77
    },
    {
-    "date": "2025-02-15",
-    "value": 48.92
+    "date": "2025-02-17",
+    "value": 49.64
    },
    {
-    "date": "2025-02-22",
-    "value": 48.82
+    "date": "2025-02-24",
+    "value": 49.32
    },
    {
-    "date": "2025-03-01",
-    "value": 48.6
+    "date": "2025-03-03",
+    "value": 48.98
    },
    {
-    "date": "2025-03-08",
-    "value": 47.93
+    "date": "2025-03-10",
+    "value": 48.28
    },
    {
-    "date": "2025-03-15",
-    "value": 47.39
+    "date": "2025-03-17",
+    "value": 48.06
    },
    {
-    "date": "2025-03-22",
-    "value": 47.25
+    "date": "2025-03-24",
+    "value": 48.02
    },
    {
-    "date": "2025-03-29",
-    "value": 47.17
+    "date": "2025-03-31",
+    "value": 47.8
    },
    {
-    "date": "2025-04-05",
-    "value": 46.59
+    "date": "2025-04-07",
+    "value": 46.61
    },
    {
-    "date": "2025-04-12",
+    "date": "2025-04-14",
+    "value": 46.04
+   },
+   {
+    "date": "2025-04-21",
+    "value": 45.67
+   },
+   {
+    "date": "2025-04-28",
     "value": 45.51
    },
    {
-    "date": "2025-04-19",
-    "value": 45.03
+    "date": "2025-05-05",
+    "value": 45.53
    },
    {
-    "date": "2025-04-26",
-    "value": 44.56
+    "date": "2025-05-12",
+    "value": 46.0
    },
    {
-    "date": "2025-05-03",
-    "value": 44.37
+    "date": "2025-05-19",
+    "value": 46.42
    },
    {
-    "date": "2025-05-10",
-    "value": 44.64
+    "date": "2025-05-26",
+    "value": 47.0
    },
    {
-    "date": "2025-05-17",
-    "value": 45.31
+    "date": "2025-06-02",
+    "value": 47.58
    },
    {
-    "date": "2025-05-24",
-    "value": 45.52
+    "date": "2025-06-09",
+    "value": 47.13
    },
    {
-    "date": "2025-05-31",
-    "value": 46.15
+    "date": "2025-06-16",
+    "value": 46.94
    },
    {
-    "date": "2025-06-07",
-    "value": 45.44
+    "date": "2025-06-23",
+    "value": 46.69
    },
    {
-    "date": "2025-06-14",
-    "value": 44.83
+    "date": "2025-06-30",
+    "value": 46.44
    },
    {
-    "date": "2025-06-21",
-    "value": 44.85
+    "date": "2025-07-07",
+    "value": 45.94
    },
    {
-    "date": "2025-06-28",
-    "value": 44.7
+    "date": "2025-07-14",
+    "value": 45.26
    },
    {
-    "date": "2025-07-05",
-    "value": 44.25
+    "date": "2025-07-21",
+    "value": 45.08
    },
    {
-    "date": "2025-07-12",
-    "value": 44.15
+    "date": "2025-07-28",
+    "value": 44.91
    },
    {
-    "date": "2025-07-19",
-    "value": 43.84
+    "date": "2025-08-04",
+    "value": 45.04
    },
    {
-    "date": "2025-07-26",
-    "value": 43.8
+    "date": "2025-08-11",
+    "value": 44.62
    },
    {
-    "date": "2025-08-02",
-    "value": 43.88
+    "date": "2025-08-18",
+    "value": 45.14
    },
    {
-    "date": "2025-08-09",
-    "value": 43.47
+    "date": "2025-08-25",
+    "value": 45.19
    },
    {
-    "date": "2025-08-16",
-    "value": 43.9
+    "date": "2025-09-01",
+    "value": 45.14
    },
    {
-    "date": "2025-08-23",
-    "value": 43.84
+    "date": "2025-09-08",
+    "value": 45.19
    },
    {
-    "date": "2025-08-30",
-    "value": 44.3
+    "date": "2025-09-15",
+    "value": 45.51
    },
    {
-    "date": "2025-09-06",
-    "value": 43.92
+    "date": "2025-09-22",
+    "value": 45.38
    },
    {
-    "date": "2025-09-13",
-    "value": 44.2
+    "date": "2025-09-29",
+    "value": 44.99
    },
    {
-    "date": "2025-09-20",
-    "value": 43.99
+    "date": "2025-10-06",
+    "value": 45.0
    },
    {
-    "date": "2025-09-27",
-    "value": 43.76
+    "date": "2025-10-13",
+    "value": 45.14
    },
    {
-    "date": "2025-10-04",
-    "value": 43.86
+    "date": "2025-10-20",
+    "value": 44.98
    },
    {
-    "date": "2025-10-11",
-    "value": 43.42
+    "date": "2025-10-27",
+    "value": 44.26
    },
    {
-    "date": "2025-10-18",
-    "value": 43.88
+    "date": "2025-11-03",
+    "value": 43.49
    },
    {
-    "date": "2025-10-25",
-    "value": 43.36
+    "date": "2025-11-10",
+    "value": 42.68
    },
    {
-    "date": "2025-11-01",
-    "value": 42.8
+    "date": "2025-11-17",
+    "value": 42.46
    },
    {
-    "date": "2025-11-08",
-    "value": 42.33
-   },
-   {
-    "date": "2025-11-15",
-    "value": 41.38
-   },
-   {
-    "date": "2025-11-22",
-    "value": 41.68
-   },
-   {
-    "date": "2025-11-29",
-    "value": 41.88
-   },
-   {
-    "date": "2025-12-06",
-    "value": 42.54
-   },
-   {
-    "date": "2025-12-13",
-    "value": 42.74
-   },
-   {
-    "date": "2025-12-20",
-    "value": 42.79
-   },
-   {
-    "date": "2025-12-27",
-    "value": 43.0
-   },
-   {
-    "date": "2026-01-03",
-    "value": 42.44
-   },
-   {
-    "date": "2026-01-10",
+    "date": "2025-11-24",
     "value": 42.6
    },
    {
-    "date": "2026-01-17",
-    "value": 42.25
+    "date": "2025-12-01",
+    "value": 42.52
    },
    {
-    "date": "2026-01-24",
+    "date": "2025-12-08",
+    "value": 43.22
+   },
+   {
+    "date": "2025-12-15",
+    "value": 43.54
+   },
+   {
+    "date": "2025-12-22",
+    "value": 43.28
+   },
+   {
+    "date": "2025-12-29",
+    "value": 43.07
+   },
+   {
+    "date": "2026-01-05",
+    "value": 42.6
+   },
+   {
+    "date": "2026-01-12",
+    "value": 43.03
+   },
+   {
+    "date": "2026-01-19",
+    "value": 43.01
+   },
+   {
+    "date": "2026-01-26",
+    "value": 42.97
+   },
+   {
+    "date": "2026-02-02",
+    "value": 42.33
+   },
+   {
+    "date": "2026-02-09",
     "value": 42.09
    },
    {
-    "date": "2026-01-31",
-    "value": 41.99
+    "date": "2026-02-16",
+    "value": 42.34
    },
    {
-    "date": "2026-02-07",
+    "date": "2026-02-23",
+    "value": 42.64
+   },
+   {
+    "date": "2026-03-02",
+    "value": 43.11
+   },
+   {
+    "date": "2026-03-09",
+    "value": 42.52
+   },
+   {
+    "date": "2026-03-16",
+    "value": 41.89
+   },
+   {
+    "date": "2026-03-23",
     "value": 41.43
    },
    {
-    "date": "2026-02-14",
-    "value": 41.34
+    "date": "2026-03-30",
+    "value": 41.0
    },
    {
-    "date": "2026-02-21",
-    "value": 41.47
+    "date": "2026-04-06",
+    "value": 41.24
    },
    {
-    "date": "2026-02-28",
-    "value": 41.86
+    "date": "2026-04-13",
+    "value": 40.99
    },
    {
-    "date": "2026-03-07",
-    "value": 41.73
+    "date": "2026-04-20",
+    "value": 40.7
    },
    {
-    "date": "2026-03-14",
-    "value": 41.26
+    "date": "2026-04-27",
+    "value": 40.56
    },
    {
-    "date": "2026-03-21",
-    "value": 40.84
+    "date": "2026-05-04",
+    "value": 40.07
    },
    {
-    "date": "2026-03-28",
-    "value": 40.26
+    "date": "2026-05-11",
+    "value": 39.98
    },
    {
-    "date": "2026-04-04",
+    "date": "2026-05-18",
+    "value": 39.43
+   },
+   {
+    "date": "2026-05-25",
     "value": 39.78
    },
    {
-    "date": "2026-04-11",
-    "value": 40.02
+    "date": "2026-06-01",
+    "value": 39.75
    },
    {
-    "date": "2026-04-18",
-    "value": 39.38
+    "date": "2026-06-08",
+    "value": 39.63
    },
    {
-    "date": "2026-04-25",
-    "value": 39.5
+    "date": "2026-06-15",
+    "value": 39.91
    },
    {
-    "date": "2026-05-02",
-    "value": 39.41
+    "date": "2026-06-22",
+    "value": 40.32
    },
    {
-    "date": "2026-05-09",
-    "value": 39.49
+    "date": "2026-06-29",
+    "value": 40.37
    },
    {
-    "date": "2026-05-16",
-    "value": 39.42
+    "date": "2026-07-06",
+    "value": 40.6
    },
    {
-    "date": "2026-05-23",
-    "value": 39.28
+    "date": "2026-07-13",
+    "value": 40.62
    },
    {
-    "date": "2026-05-30",
-    "value": 39.3
+    "date": "2026-07-20",
+    "value": 40.58
    },
    {
-    "date": "2026-06-06",
-    "value": 39.27
+    "date": "2026-07-27",
+    "value": 40.3
    },
    {
-    "date": "2026-06-13",
-    "value": 39.37
-   },
-   {
-    "date": "2026-06-20",
-    "value": 39.67
-   },
-   {
-    "date": "2026-06-27",
-    "value": 40.08
+    "date": "2026-08-03",
+    "value": 40.18
    }
   ],
   "generic_margin": [
    {
-    "date": "2024-12-22",
-    "value": -3.89
+    "date": "2025-01-27",
+    "value": -3.24
    },
    {
-    "date": "2024-12-29",
-    "value": -3.89
+    "date": "2025-02-03",
+    "value": -1.08
    },
    {
-    "date": "2025-01-12",
-    "value": -2.14
+    "date": "2025-02-10",
+    "value": -1.07
    },
    {
-    "date": "2025-01-19",
-    "value": -4.08
+    "date": "2025-02-17",
+    "value": -1.52
    },
    {
-    "date": "2025-01-26",
-    "value": -4.93
+    "date": "2025-02-24",
+    "value": -1.57
    },
    {
-    "date": "2025-02-02",
-    "value": -2.71
+    "date": "2025-03-03",
+    "value": -1.24
    },
    {
-    "date": "2025-02-09",
-    "value": -1.21
+    "date": "2025-03-10",
+    "value": -0.23
    },
    {
-    "date": "2025-02-16",
-    "value": -2.43
+    "date": "2025-03-17",
+    "value": -0.37
    },
    {
-    "date": "2025-02-23",
-    "value": -1.64
+    "date": "2025-03-24",
+    "value": -0.12
    },
    {
-    "date": "2025-03-02",
-    "value": -1.3
+    "date": "2025-03-31",
+    "value": 0.18
    },
    {
-    "date": "2025-03-09",
-    "value": 0.16
+    "date": "2025-04-07",
+    "value": 1.05
    },
    {
-    "date": "2025-03-16",
-    "value": 0.04
+    "date": "2025-04-14",
+    "value": 0.66
    },
    {
-    "date": "2025-03-23",
-    "value": 0.2
+    "date": "2025-04-21",
+    "value": 2.02
    },
    {
-    "date": "2025-03-30",
-    "value": -0.04
+    "date": "2025-04-28",
+    "value": 2.15
    },
    {
-    "date": "2025-04-06",
-    "value": 1.53
+    "date": "2025-05-05",
+    "value": 2.74
    },
    {
-    "date": "2025-04-13",
-    "value": 0.9
+    "date": "2025-05-12",
+    "value": 1.36
    },
    {
-    "date": "2025-04-20",
+    "date": "2025-05-19",
+    "value": 1.09
+   },
+   {
+    "date": "2025-05-26",
+    "value": 1.65
+   },
+   {
+    "date": "2025-06-02",
+    "value": 1.74
+   },
+   {
+    "date": "2025-06-09",
+    "value": 2.34
+   },
+   {
+    "date": "2025-06-16",
+    "value": 1.4
+   },
+   {
+    "date": "2025-06-23",
+    "value": 1.34
+   },
+   {
+    "date": "2025-06-30",
+    "value": 1.72
+   },
+   {
+    "date": "2025-07-07",
     "value": 2.22
    },
    {
-    "date": "2025-04-27",
-    "value": 2.77
+    "date": "2025-07-14",
+    "value": 1.72
    },
    {
-    "date": "2025-05-04",
-    "value": 0.96
+    "date": "2025-07-21",
+    "value": 2.12
    },
    {
-    "date": "2025-05-11",
-    "value": 0.26
+    "date": "2025-07-28",
+    "value": 3.27
    },
    {
-    "date": "2025-05-18",
-    "value": -0.18
+    "date": "2025-08-04",
+    "value": 3.72
    },
    {
-    "date": "2025-05-25",
-    "value": 1.9
+    "date": "2025-08-11",
+    "value": 3.15
    },
    {
-    "date": "2025-06-01",
-    "value": 2.97
+    "date": "2025-08-18",
+    "value": 3.07
    },
    {
-    "date": "2025-06-08",
+    "date": "2025-08-25",
+    "value": 1.86
+   },
+   {
+    "date": "2025-09-01",
+    "value": 3.03
+   },
+   {
+    "date": "2025-09-08",
+    "value": 2.96
+   },
+   {
+    "date": "2025-09-15",
+    "value": 3.0
+   },
+   {
+    "date": "2025-09-22",
+    "value": 2.34
+   },
+   {
+    "date": "2025-09-29",
+    "value": 2.17
+   },
+   {
+    "date": "2025-10-06",
+    "value": 2.88
+   },
+   {
+    "date": "2025-10-13",
+    "value": 2.61
+   },
+   {
+    "date": "2025-10-20",
     "value": 3.02
    },
    {
-    "date": "2025-06-15",
-    "value": 1.08
-   },
-   {
-    "date": "2025-06-22",
-    "value": -0.02
-   },
-   {
-    "date": "2025-06-29",
-    "value": 0.22
-   },
-   {
-    "date": "2025-07-06",
-    "value": 0.49
-   },
-   {
-    "date": "2025-07-13",
-    "value": -0.33
-   },
-   {
-    "date": "2025-07-20",
-    "value": 0.87
-   },
-   {
-    "date": "2025-07-27",
-    "value": 2.91
-   },
-   {
-    "date": "2025-08-03",
-    "value": 3.74
-   },
-   {
-    "date": "2025-08-10",
-    "value": 3.49
-   },
-   {
-    "date": "2025-08-17",
-    "value": 2.14
-   },
-   {
-    "date": "2025-08-24",
-    "value": 2.5
-   },
-   {
-    "date": "2025-08-31",
-    "value": 3.29
-   },
-   {
-    "date": "2025-09-07",
-    "value": 3.67
-   },
-   {
-    "date": "2025-09-14",
-    "value": 3.79
-   },
-   {
-    "date": "2025-09-21",
-    "value": 2.79
-   },
-   {
-    "date": "2025-09-28",
-    "value": 2.97
-   },
-   {
-    "date": "2025-10-05",
-    "value": 3.51
-   },
-   {
-    "date": "2025-10-12",
-    "value": 3.18
-   },
-   {
-    "date": "2025-10-19",
-    "value": 3.37
-   },
-   {
-    "date": "2025-10-26",
-    "value": 3.56
-   },
-   {
-    "date": "2025-11-02",
-    "value": 2.66
-   },
-   {
-    "date": "2025-11-09",
-    "value": 3.81
-   },
-   {
-    "date": "2025-11-16",
-    "value": 4.39
-   },
-   {
-    "date": "2025-11-23",
-    "value": 4.62
-   },
-   {
-    "date": "2025-11-30",
-    "value": 3.92
-   },
-   {
-    "date": "2025-12-07",
+    "date": "2025-10-27",
     "value": 3.45
    },
    {
-    "date": "2025-12-14",
-    "value": 2.89
+    "date": "2025-11-03",
+    "value": 2.92
    },
    {
-    "date": "2025-12-21",
-    "value": 3.86
+    "date": "2025-11-10",
+    "value": 3.9
    },
    {
-    "date": "2025-12-28",
-    "value": 3.78
+    "date": "2025-11-17",
+    "value": 4.13
    },
    {
-    "date": "2026-01-04",
-    "value": 5.23
+    "date": "2025-11-24",
+    "value": 4.03
    },
    {
-    "date": "2026-01-11",
-    "value": 4.44
+    "date": "2025-12-01",
+    "value": 4.11
    },
    {
-    "date": "2026-01-18",
-    "value": 4.73
+    "date": "2025-12-08",
+    "value": 3.01
    },
    {
-    "date": "2026-01-25",
-    "value": 4.25
+    "date": "2025-12-15",
+    "value": 2.75
    },
    {
-    "date": "2026-02-01",
-    "value": 4.26
+    "date": "2025-12-22",
+    "value": 3.87
    },
    {
-    "date": "2026-02-08",
-    "value": 4.72
+    "date": "2025-12-29",
+    "value": 4.31
    },
    {
-    "date": "2026-02-15",
-    "value": 4.68
+    "date": "2026-01-05",
+    "value": 5.37
    },
    {
-    "date": "2026-02-22",
-    "value": 4.76
+    "date": "2026-01-12",
+    "value": 4.18
    },
    {
-    "date": "2026-03-01",
-    "value": 4.66
+    "date": "2026-01-19",
+    "value": 4.75
    },
    {
-    "date": "2026-03-08",
-    "value": 4.52
+    "date": "2026-01-26",
+    "value": 4.36
    },
    {
-    "date": "2026-03-15",
-    "value": 4.94
+    "date": "2026-02-02",
+    "value": 4.54
    },
    {
-    "date": "2026-03-22",
-    "value": 4.97
+    "date": "2026-02-09",
+    "value": 4.62
    },
    {
-    "date": "2026-03-29",
-    "value": 5.13
-   },
-   {
-    "date": "2026-04-05",
-    "value": 4.6
-   },
-   {
-    "date": "2026-04-12",
-    "value": 5.03
-   },
-   {
-    "date": "2026-04-19",
-    "value": 5.06
-   },
-   {
-    "date": "2026-04-26",
-    "value": 5.29
-   },
-   {
-    "date": "2026-05-03",
-    "value": 5.11
-   },
-   {
-    "date": "2026-05-10",
-    "value": 5.67
-   },
-   {
-    "date": "2026-05-17",
-    "value": 5.68
-   },
-   {
-    "date": "2026-05-24",
-    "value": 5.62
-   },
-   {
-    "date": "2026-05-31",
-    "value": 5.08
-   },
-   {
-    "date": "2026-06-07",
-    "value": 5.04
-   },
-   {
-    "date": "2026-06-14",
-    "value": 5.14
-   },
-   {
-    "date": "2026-06-21",
+    "date": "2026-02-16",
     "value": 4.87
    },
    {
-    "date": "2026-06-28",
-    "value": 5.05
+    "date": "2026-02-23",
+    "value": 4.88
+   },
+   {
+    "date": "2026-03-02",
+    "value": 4.48
+   },
+   {
+    "date": "2026-03-09",
+    "value": 4.05
+   },
+   {
+    "date": "2026-03-16",
+    "value": 4.74
+   },
+   {
+    "date": "2026-03-23",
+    "value": 4.69
+   },
+   {
+    "date": "2026-03-30",
+    "value": 4.99
+   },
+   {
+    "date": "2026-04-06",
+    "value": 4.51
+   },
+   {
+    "date": "2026-04-13",
+    "value": 5.39
+   },
+   {
+    "date": "2026-04-20",
+    "value": 5.07
+   },
+   {
+    "date": "2026-04-27",
+    "value": 4.86
+   },
+   {
+    "date": "2026-05-04",
+    "value": 4.87
+   },
+   {
+    "date": "2026-05-11",
+    "value": 5.88
+   },
+   {
+    "date": "2026-05-18",
+    "value": 6.05
+   },
+   {
+    "date": "2026-05-25",
+    "value": 6.0
+   },
+   {
+    "date": "2026-06-01",
+    "value": 5.11
+   },
+   {
+    "date": "2026-06-08",
+    "value": 5.15
+   },
+   {
+    "date": "2026-06-15",
+    "value": 5.0
+   },
+   {
+    "date": "2026-06-22",
+    "value": 4.88
+   },
+   {
+    "date": "2026-06-29",
+    "value": 5.22
+   },
+   {
+    "date": "2026-07-06",
+    "value": 5.0
+   },
+   {
+    "date": "2026-07-13",
+    "value": 4.66
+   },
+   {
+    "date": "2026-07-20",
+    "value": 5.49
+   },
+   {
+    "date": "2026-07-27",
+    "value": 5.58
+   },
+   {
+    "date": "2026-08-03",
+    "value": 5.72
    }
   ],
   "umich_sentiment": [
-   {
-    "date": "2022-07-01",
-    "value": 51.5
-   },
    {
     "date": "2022-08-01",
     "value": 58.2
@@ -3483,6 +4289,10 @@
    {
     "date": "2026-06-01",
     "value": 49.5
+   },
+   {
+    "date": "2026-07-01",
+    "value": 55.2
    }
   ],
   "yougov_approval": [
@@ -3495,7 +4305,19 @@
     "value": 46.0
    },
    {
+    "date": "2025-02-06",
+    "value": 53.0
+   },
+   {
+    "date": "2025-02-08",
+    "value": 45.0
+   },
+   {
     "date": "2025-02-10",
+    "value": 46.0
+   },
+   {
+    "date": "2025-02-16",
     "value": 46.0
    },
    {
@@ -3503,8 +4325,20 @@
     "value": 50.0
    },
    {
+    "date": "2025-02-19",
+    "value": 48.0
+   },
+   {
+    "date": "2025-02-21",
+    "value": 47.0
+   },
+   {
     "date": "2025-02-24",
     "value": 48.0
+   },
+   {
+    "date": "2025-02-27",
+    "value": 51.0
    },
    {
     "date": "2025-03-02",
@@ -3519,8 +4353,16 @@
     "value": 45.0
    },
    {
+    "date": "2025-03-22",
+    "value": 44.0
+   },
+   {
     "date": "2025-03-23",
     "value": 48.0
+   },
+   {
+    "date": "2025-03-27",
+    "value": 50.0
    },
    {
     "date": "2025-03-31",
@@ -3531,6 +4373,18 @@
     "value": 43.0
    },
    {
+    "date": "2025-04-08",
+    "value": 41.0
+   },
+   {
+    "date": "2025-04-09",
+    "value": 47.0
+   },
+   {
+    "date": "2025-04-13",
+    "value": 41.0
+   },
+   {
     "date": "2025-04-14",
     "value": 42.0
    },
@@ -3539,7 +4393,19 @@
     "value": 41.0
    },
    {
+    "date": "2025-04-22",
+    "value": 42.0
+   },
+   {
+    "date": "2025-04-24",
+    "value": 45.0
+   },
+   {
     "date": "2025-04-26",
+    "value": 42.0
+   },
+   {
+    "date": "2025-04-28",
     "value": 42.0
    },
    {
@@ -3547,8 +4413,16 @@
     "value": 42.0
    },
    {
+    "date": "2025-05-07",
+    "value": 42.0
+   },
+   {
     "date": "2025-05-10",
     "value": 43.0
+   },
+   {
+    "date": "2025-05-15",
+    "value": 44.0
    },
    {
     "date": "2025-05-17",
@@ -3556,10 +4430,14 @@
    },
    {
     "date": "2025-05-24",
-    "value": 44.0
+    "value": 41.0
    },
    {
     "date": "2025-05-31",
+    "value": 45.0
+   },
+   {
+    "date": "2025-06-05",
     "value": 45.0
    },
    {
@@ -3583,8 +4461,16 @@
     "value": 42.0
    },
    {
+    "date": "2025-07-11",
+    "value": 39.0
+   },
+   {
     "date": "2025-07-12",
     "value": 41.0
+   },
+   {
+    "date": "2025-07-17",
+    "value": 42.0
    },
    {
     "date": "2025-07-19",
@@ -3603,7 +4489,7 @@
     "value": 42.0
    },
    {
-    "date": "2025-08-17",
+    "date": "2025-08-16",
     "value": 40.0
    },
    {
@@ -3615,8 +4501,16 @@
     "value": 41.0
    },
    {
+    "date": "2025-09-04",
+    "value": 44.0
+   },
+   {
     "date": "2025-09-06",
     "value": 41.0
+   },
+   {
+    "date": "2025-09-07",
+    "value": 42.0
    },
    {
     "date": "2025-09-13",
@@ -3628,7 +4522,11 @@
    },
    {
     "date": "2025-09-27",
-    "value": 40.0
+    "value": 41.0
+   },
+   {
+    "date": "2025-10-02",
+    "value": 42.0
    },
    {
     "date": "2025-10-05",
@@ -3644,7 +4542,11 @@
    },
    {
     "date": "2025-10-25",
-    "value": 39.0
+    "value": 40.0
+   },
+   {
+    "date": "2025-10-30",
+    "value": 41.0
    },
    {
     "date": "2025-11-01",
@@ -3659,8 +4561,12 @@
     "value": 40.0
    },
    {
+    "date": "2025-11-20",
+    "value": 40.0
+   },
+   {
     "date": "2025-11-22",
-    "value": 38.0
+    "value": 40.0
    },
    {
     "date": "2025-11-29",
@@ -3675,6 +4581,10 @@
     "value": 42.0
    },
    {
+    "date": "2025-12-18",
+    "value": 41.0
+   },
+   {
     "date": "2025-12-21",
     "value": 39.0
    },
@@ -3687,12 +4597,24 @@
     "value": 39.0
    },
    {
+    "date": "2026-01-06",
+    "value": 41.0
+   },
+   {
     "date": "2026-01-10",
     "value": 40.0
    },
    {
+    "date": "2026-01-15",
+    "value": 41.0
+   },
+   {
     "date": "2026-01-17",
     "value": 37.0
+   },
+   {
+    "date": "2026-01-19",
+    "value": 38.0
    },
    {
     "date": "2026-01-24",
@@ -3707,12 +4629,20 @@
     "value": 37.0
    },
    {
+    "date": "2026-02-10",
+    "value": 38.0
+   },
+   {
     "date": "2026-02-14",
     "value": 39.0
    },
    {
     "date": "2026-02-21",
     "value": 39.0
+   },
+   {
+    "date": "2026-02-26",
+    "value": 41.0
    },
    {
     "date": "2026-02-28",
@@ -3724,7 +4654,15 @@
    },
    {
     "date": "2026-03-14",
-    "value": 37.0
+    "value": 38.0
+   },
+   {
+    "date": "2026-03-18",
+    "value": 40.0
+   },
+   {
+    "date": "2026-03-21",
+    "value": 38.0
    },
    {
     "date": "2026-03-28",
@@ -3735,7 +4673,15 @@
     "value": 38.0
    },
    {
+    "date": "2026-04-09",
+    "value": 39.0
+   },
+   {
     "date": "2026-04-11",
+    "value": 38.0
+   },
+   {
+    "date": "2026-04-16",
     "value": 38.0
    },
    {
@@ -3753,6 +4699,10 @@
    {
     "date": "2026-05-10",
     "value": 36.0
+   },
+   {
+    "date": "2026-05-14",
+    "value": 37.0
    },
    {
     "date": "2026-05-16",
@@ -3775,19 +4725,43 @@
     "value": 39.0
    },
    {
+    "date": "2026-06-18",
+    "value": 38.0
+   },
+   {
     "date": "2026-06-20",
-    "value": 36.0
+    "value": 34.0
    },
    {
     "date": "2026-06-27",
-    "value": 40.0
+    "value": 38.0
+   },
+   {
+    "date": "2026-07-04",
+    "value": 35.0
+   },
+   {
+    "date": "2026-07-11",
+    "value": 37.0
+   },
+   {
+    "date": "2026-07-18",
+    "value": 36.0
+   },
+   {
+    "date": "2026-07-23",
+    "value": 39.0
+   },
+   {
+    "date": "2026-07-26",
+    "value": 34.0
+   },
+   {
+    "date": "2026-08-01",
+    "value": 36.0
    }
   ],
   "mc_approval": [
-   {
-    "date": "2025-01-24",
-    "value": 52.35
-   },
    {
     "date": "2025-01-25",
     "value": 52.0
@@ -3813,10 +4787,6 @@
     "value": 49.0
    },
    {
-    "date": "2025-03-02",
-    "value": 48.7
-   },
-   {
     "date": "2025-03-08",
     "value": 49.0
    },
@@ -3833,8 +4803,8 @@
     "value": 47.0
    },
    {
-    "date": "2025-04-04",
-    "value": 47.8
+    "date": "2025-04-05",
+    "value": 46.0
    },
    {
     "date": "2025-04-12",
@@ -3853,10 +4823,6 @@
     "value": 46.0
    },
    {
-    "date": "2025-05-05",
-    "value": 46.2
-   },
-   {
     "date": "2025-05-10",
     "value": 46.0
    },
@@ -3871,10 +4837,6 @@
    {
     "date": "2025-05-31",
     "value": 46.0
-   },
-   {
-    "date": "2025-06-06",
-    "value": 46.2
    },
    {
     "date": "2025-06-07",
@@ -3897,8 +4859,8 @@
     "value": 45.0
    },
    {
-    "date": "2025-07-07",
-    "value": 44.0
+    "date": "2025-07-12",
+    "value": 47.0
    },
    {
     "date": "2025-07-19",
@@ -3913,12 +4875,8 @@
     "value": 45.0
    },
    {
-    "date": "2025-08-06",
-    "value": 44.9
-   },
-   {
     "date": "2025-08-09",
-    "value": 45.0
+    "value": 46.0
    },
    {
     "date": "2025-08-16",
@@ -3931,10 +4889,6 @@
    {
     "date": "2025-08-30",
     "value": 46.0
-   },
-   {
-    "date": "2025-09-05",
-    "value": 44.2
    },
    {
     "date": "2025-09-07",
@@ -3954,7 +4908,7 @@
    },
    {
     "date": "2025-10-04",
-    "value": 43.0
+    "value": 46.0
    },
    {
     "date": "2025-10-11",
@@ -3977,10 +4931,6 @@
     "value": 44.0
    },
    {
-    "date": "2025-11-09",
-    "value": 41.0
-   },
-   {
     "date": "2025-11-10",
     "value": 43.0
    },
@@ -4001,20 +4951,12 @@
     "value": 45.0
    },
    {
-    "date": "2025-12-11",
-    "value": 43.0
-   },
-   {
     "date": "2025-12-13",
     "value": 46.0
    },
    {
     "date": "2025-12-20",
     "value": 45.0
-   },
-   {
-    "date": "2026-01-01",
-    "value": 43.0
    },
    {
     "date": "2026-01-03",
@@ -4030,15 +4972,11 @@
    },
    {
     "date": "2026-01-24",
-    "value": 46.0
+    "value": 45.0
    },
    {
     "date": "2026-01-31",
     "value": 45.0
-   },
-   {
-    "date": "2026-02-05",
-    "value": 40.0
    },
    {
     "date": "2026-02-07",
@@ -4050,7 +4988,7 @@
    },
    {
     "date": "2026-02-14",
-    "value": 43.0
+    "value": 44.0
    },
    {
     "date": "2026-02-21",
@@ -4061,10 +4999,6 @@
     "value": 44.0
    },
    {
-    "date": "2026-03-05",
-    "value": 39.0
-   },
-   {
     "date": "2026-03-07",
     "value": 44.0
    },
@@ -4073,12 +5007,16 @@
     "value": 43.0
    },
    {
+    "date": "2026-03-21",
+    "value": 43.1
+   },
+   {
     "date": "2026-03-28",
     "value": 43.0
    },
    {
     "date": "2026-04-04",
-    "value": 39.0
+    "value": 45.0
    },
    {
     "date": "2026-04-07",
@@ -4113,7 +5051,7 @@
     "value": 43.0
    },
    {
-    "date": "2026-06-07",
+    "date": "2026-06-06",
     "value": 44.0
    },
    {
@@ -4123,117 +5061,35 @@
    {
     "date": "2026-06-20",
     "value": 43.1
+   },
+   {
+    "date": "2026-06-27",
+    "value": 43.0
+   },
+   {
+    "date": "2026-07-04",
+    "value": 44.7
+   },
+   {
+    "date": "2026-07-11",
+    "value": 45.0
+   },
+   {
+    "date": "2026-07-18",
+    "value": 44.0
+   },
+   {
+    "date": "2026-07-25",
+    "value": 45.2
+   },
+   {
+    "date": "2026-08-01",
+    "value": 42.8
    }
   ]
  },
  "series_tail": {
-  "yougov_approval": [
-   {
-    "date": "2026-05-10",
-    "value": 36.0
-   },
-   {
-    "date": "2026-05-16",
-    "value": 37.0
-   },
-   {
-    "date": "2026-05-24",
-    "value": 34.0
-   },
-   {
-    "date": "2026-05-30",
-    "value": 35.0
-   },
-   {
-    "date": "2026-06-06",
-    "value": 35.0
-   },
-   {
-    "date": "2026-06-14",
-    "value": 39.0
-   },
-   {
-    "date": "2026-06-20",
-    "value": 36.0
-   },
-   {
-    "date": "2026-06-27",
-    "value": 40.0
-   }
-  ],
-  "yougov_generic_margin": [
-   {
-    "date": "2026-05-10",
-    "value": 3.0
-   },
-   {
-    "date": "2026-05-16",
-    "value": 5.0
-   },
-   {
-    "date": "2026-05-24",
-    "value": 6.0
-   },
-   {
-    "date": "2026-05-30",
-    "value": 6.0
-   },
-   {
-    "date": "2026-06-06",
-    "value": 4.0
-   },
-   {
-    "date": "2026-06-14",
-    "value": 3.0
-   },
-   {
-    "date": "2026-06-20",
-    "value": 3.0
-   },
-   {
-    "date": "2026-06-27",
-    "value": 3.0
-   }
-  ],
-  "mc_approval": [
-   {
-    "date": "2026-04-25",
-    "value": 45.0
-   },
-   {
-    "date": "2026-05-01",
-    "value": 44.0
-   },
-   {
-    "date": "2026-05-16",
-    "value": 42.0
-   },
-   {
-    "date": "2026-05-23",
-    "value": 43.0
-   },
-   {
-    "date": "2026-05-30",
-    "value": 43.0
-   },
-   {
-    "date": "2026-06-07",
-    "value": 44.0
-   },
-   {
-    "date": "2026-06-13",
-    "value": 43.1
-   },
-   {
-    "date": "2026-06-20",
-    "value": 43.1
-   }
-  ],
   "umich_sentiment": [
-   {
-    "date": "2025-11-01",
-    "value": 51.0
-   },
    {
     "date": "2025-12-01",
     "value": 52.9
@@ -4261,46 +5117,221 @@
    {
     "date": "2026-06-01",
     "value": 49.5
+   },
+   {
+    "date": "2026-07-01",
+    "value": 55.2
+   }
+  ],
+  "yougov_approval": [
+   {
+    "date": "2026-06-20",
+    "value": 34.0
+   },
+   {
+    "date": "2026-06-27",
+    "value": 38.0
+   },
+   {
+    "date": "2026-07-04",
+    "value": 35.0
+   },
+   {
+    "date": "2026-07-11",
+    "value": 37.0
+   },
+   {
+    "date": "2026-07-18",
+    "value": 36.0
+   },
+   {
+    "date": "2026-07-23",
+    "value": 39.0
+   },
+   {
+    "date": "2026-07-26",
+    "value": 34.0
+   },
+   {
+    "date": "2026-08-01",
+    "value": 36.0
+   }
+  ],
+  "mc_approval": [
+   {
+    "date": "2026-06-13",
+    "value": 43.1
+   },
+   {
+    "date": "2026-06-20",
+    "value": 43.1
+   },
+   {
+    "date": "2026-06-27",
+    "value": 43.0
+   },
+   {
+    "date": "2026-07-04",
+    "value": 44.7
+   },
+   {
+    "date": "2026-07-11",
+    "value": 45.0
+   },
+   {
+    "date": "2026-07-18",
+    "value": 44.0
+   },
+   {
+    "date": "2026-07-25",
+    "value": 45.2
+   },
+   {
+    "date": "2026-08-01",
+    "value": 42.8
+   }
+  ],
+  "yougov_generic_margin": [
+   {
+    "date": "2026-06-20",
+    "value": 2.0
+   },
+   {
+    "date": "2026-06-27",
+    "value": 3.0
+   },
+   {
+    "date": "2026-07-04",
+    "value": 3.0
+   },
+   {
+    "date": "2026-07-11",
+    "value": 4.0
+   },
+   {
+    "date": "2026-07-18",
+    "value": 5.0
+   },
+   {
+    "date": "2026-07-23",
+    "value": 7.0
+   },
+   {
+    "date": "2026-07-26",
+    "value": 4.0
+   },
+   {
+    "date": "2026-08-01",
+    "value": 4.0
+   }
+  ],
+  "yougov_econ_approval": [
+   {
+    "date": "2026-05-02",
+    "value": 34.0
+   },
+   {
+    "date": "2026-05-14",
+    "value": 33.0
+   },
+   {
+    "date": "2026-06-06",
+    "value": 29.0
+   },
+   {
+    "date": "2026-06-18",
+    "value": 34.0
+   },
+   {
+    "date": "2026-06-20",
+    "value": 35.0
+   },
+   {
+    "date": "2026-07-04",
+    "value": 32.0
+   },
+   {
+    "date": "2026-07-23",
+    "value": 35.0
+   },
+   {
+    "date": "2026-08-01",
+    "value": 30.0
+   }
+  ],
+  "yougov_immig_approval": [
+   {
+    "date": "2026-04-11",
+    "value": 43.0
+   },
+   {
+    "date": "2026-05-10",
+    "value": 41.0
+   },
+   {
+    "date": "2026-05-14",
+    "value": 43.0
+   },
+   {
+    "date": "2026-06-14",
+    "value": 44.0
+   },
+   {
+    "date": "2026-06-18",
+    "value": 43.0
+   },
+   {
+    "date": "2026-06-20",
+    "value": 44.0
+   },
+   {
+    "date": "2026-07-18",
+    "value": 39.0
+   },
+   {
+    "date": "2026-07-23",
+    "value": 42.0
    }
   ],
   "generic_ballot_margin": [
    {
-    "date": "2026-05-10",
+    "date": "2026-06-15",
+    "value": 4.99
+   },
+   {
+    "date": "2026-06-22",
+    "value": 4.81
+   },
+   {
+    "date": "2026-06-29",
+    "value": 5.19
+   },
+   {
+    "date": "2026-07-06",
+    "value": 5.01
+   },
+   {
+    "date": "2026-07-13",
+    "value": 4.68
+   },
+   {
+    "date": "2026-07-20",
     "value": 5.48
    },
    {
-    "date": "2026-05-17",
-    "value": 5.6
+    "date": "2026-07-27",
+    "value": 5.57
    },
    {
-    "date": "2026-05-24",
-    "value": 5.56
-   },
-   {
-    "date": "2026-05-31",
-    "value": 5.12
-   },
-   {
-    "date": "2026-06-07",
-    "value": 5.05
-   },
-   {
-    "date": "2026-06-14",
-    "value": 5.13
-   },
-   {
-    "date": "2026-06-21",
-    "value": 4.86
-   },
-   {
-    "date": "2026-06-28",
-    "value": 5.05
+    "date": "2026-08-03",
+    "value": 5.72
    }
   ]
  },
  "sources": {
-  "votehub": "https://api.votehub.com/polls",
+  "silver_bulletin_approval": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
+  "silver_bulletin_generic": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
   "fred": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=UMCSENT",
-  "repo": "https://github.com/jajamoa/social-sim-arena"
+  "repo": "https://github.com/Social-Atoms/social-sim-arena"
  }
 }
