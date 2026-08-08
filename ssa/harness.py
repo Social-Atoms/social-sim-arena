@@ -33,44 +33,99 @@ import re
 
 import requests
 
+# Reasoning depth is set as high as each provider allows, and the parameter is
+# not portable -- getting it wrong is a 400, not a silent downgrade:
+#   OpenAI     reasoning_effort, ladder none/low/medium/high/xhigh/max
+#   Anthropic  thinking {type: adaptive} + output_config {effort}. The older
+#              {type: "enabled", budget_tokens: N} is REJECTED on Opus 5,
+#              Sonnet 5 and Fable 5.
+#   xAI        reasoning_effort, only low/medium/high; defaults to high and
+#              cannot be disabled, so "high" is already the ceiling.
+#   gateway    Kimi, GLM, MiniMax and Qwen ride one OpenAI-compatible gateway
+#              whose effort support is undocumented, so nothing is sent.
+OPENAI_MAX_EFFORT = {"reasoning_effort": "max"}
+ANTHROPIC_MAX_EFFORT = {"thinking": {"type": "adaptive"},
+                        "output_config": {"effort": "xhigh"}}
+XAI_MAX_EFFORT = {"reasoning_effort": "high"}
+
+# Temperature is deliberately never set. Current frontier models on OpenAI and
+# Anthropic reject it outright, and elsewhere the provider default (~1.0) is
+# what we want: a rerun is not meant to reproduce, the committed record of raw
+# replies is.
+GATEWAY = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+
 MODELS = {
-    "gpt-5.5": {
-        "env": "OPENAI_API_KEY", "name": "GPT-5.5", "api": "openai",
-        "base": "https://api.openai.com/v1", "model": "gpt-5.5",
+    # --- OpenAI: all three GPT-5.6 variants -------------------------------
+    "gpt-5.6-luna": {
+        "env": "OPENAI_API_KEY", "name": "GPT-5.6 Luna", "api": "openai",
+        "base": "https://api.openai.com/v1", "model": "gpt-5.6-luna",
+        "params": OPENAI_MAX_EFFORT,
     },
+    "gpt-5.6-sol": {
+        "env": "OPENAI_API_KEY", "name": "GPT-5.6 Sol", "api": "openai",
+        "base": "https://api.openai.com/v1", "model": "gpt-5.6-sol",
+        "params": OPENAI_MAX_EFFORT,
+    },
+    "gpt-5.6-terra": {
+        "env": "OPENAI_API_KEY", "name": "GPT-5.6 Terra", "api": "openai",
+        "base": "https://api.openai.com/v1", "model": "gpt-5.6-terra",
+        "params": OPENAI_MAX_EFFORT,
+    },
+    # --- Anthropic --------------------------------------------------------
     "claude-opus": {
-        "env": "ANTHROPIC_API_KEY", "name": "Claude Opus", "api": "anthropic",
+        "env": "ANTHROPIC_API_KEY", "name": "Claude Opus 5", "api": "anthropic",
         "base": "https://api.anthropic.com/v1", "model": "claude-opus-5",
+        "params": ANTHROPIC_MAX_EFFORT,
     },
+    "claude-sonnet": {
+        "env": "ANTHROPIC_API_KEY", "name": "Claude Sonnet 5", "api": "anthropic",
+        "base": "https://api.anthropic.com/v1", "model": "claude-sonnet-5",
+        "params": ANTHROPIC_MAX_EFFORT,
+    },
+    "claude-fable": {
+        "env": "ANTHROPIC_API_KEY", "name": "Claude Fable 5", "api": "anthropic",
+        "base": "https://api.anthropic.com/v1", "model": "claude-fable-5",
+        "params": ANTHROPIC_MAX_EFFORT,
+    },
+    # --- Google -----------------------------------------------------------
+    # Pinned, never the `-latest` aliases: an alias that rolls forward
+    # mid-season silently swaps the entrant, and scores from before and after
+    # the swap are not comparable. (gemini-2.5-pro now 404s as "no longer
+    # available to new users".)
     "gemini-pro": {
-        "env": "GOOGLE_API_KEY", "name": "Gemini Pro", "api": "gemini",
+        "env": "GOOGLE_API_KEY", "name": "Gemini 3.1 Pro", "api": "gemini",
         "base": "https://generativelanguage.googleapis.com/v1beta",
-        # Pinned, not the `gemini-pro-latest` alias: an alias that rolls forward
-        # mid-season silently swaps the entrant, and scores from before and after
-        # the swap are not comparable. Every id here should name one version.
-        # (gemini-2.5-pro returns 404 "no longer available to new users".)
-        "model": "gemini-3.1-pro-preview", "params": {"temperature": 0},
+        "model": "gemini-3.1-pro-preview",
     },
+    "gemini-flash": {
+        "env": "GOOGLE_API_KEY", "name": "Gemini 3.6 Flash", "api": "gemini",
+        "base": "https://generativelanguage.googleapis.com/v1beta",
+        "model": "gemini-3.6-flash",
+    },
+    # --- xAI --------------------------------------------------------------
     "grok": {
-        "env": "XAI_API_KEY", "name": "Grok", "api": "openai",
-        "base": "https://api.x.ai/v1", "model": "grok-4",
-        "params": {"temperature": 0},
+        "env": "XAI_API_KEY", "name": "Grok 4.5", "api": "openai",
+        "base": "https://api.x.ai/v1", "model": "grok-4.5",
+        "params": XAI_MAX_EFFORT,
     },
-    "deepseek": {
-        "env": "DEEPSEEK_API_KEY", "name": "DeepSeek", "api": "openai",
-        "base": "https://api.deepseek.com", "model": "deepseek-chat",
-        "params": {"temperature": 0},
-    },
+    # --- Gateway-hosted (one OpenAI-compatible endpoint, one key) ----------
     "qwen": {
-        "env": "DASHSCOPE_API_KEY", "name": "Qwen", "api": "openai",
-        "base": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "model": "qwen-max", "params": {"temperature": 0},
+        "env": "DASHSCOPE_API_KEY", "name": "Qwen3.7 Max", "api": "openai",
+        "base": GATEWAY, "model": "qwen3.7-max",
+    },
+    "kimi": {
+        "env": "DASHSCOPE_API_KEY", "name": "Kimi K3", "api": "openai",
+        "base": GATEWAY, "model": "kimi/kimi-k3",
+    },
+    "glm": {
+        "env": "DASHSCOPE_API_KEY", "name": "GLM-5.2", "api": "openai",
+        "base": GATEWAY, "model": "glm-5.2",
+    },
+    "minimax": {
+        "env": "DASHSCOPE_API_KEY", "name": "MiniMax M3", "api": "openai",
+        "base": GATEWAY, "model": "MiniMax/MiniMax-M3",
     },
 }
-
-# Temperature is deliberately absent for the OpenAI and Anthropic entries:
-# their current frontier models reject the parameter (400). Determinism there
-# comes from the fixed prompt and a single sample, not from a sampling knob.
 
 MAX_TOKENS = 4096  # generous: on thinking models this budget covers reasoning too
 TIMEOUT = 120

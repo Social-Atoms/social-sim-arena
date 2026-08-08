@@ -46,14 +46,22 @@ CACHE_DIR = os.path.join(ROOT, "cache", "model_backtest")
 WARMUP = 8
 
 # Rough list prices, USD per 1M tokens, for the dry-run estimate only. These
-# drift; they are here to answer "is this $2 or $200" before a run, nothing more.
+# drift, and at max reasoning effort the output side dominates by far -- the
+# estimate answers "is this $2 or $200" before a run, nothing more.
 PRICING = {
-    "gpt-5.5": (1.25, 10.00),
+    "gpt-5.6-luna": (1.25, 10.00),
+    "gpt-5.6-sol": (1.25, 10.00),
+    "gpt-5.6-terra": (1.25, 10.00),
     "claude-opus": (5.00, 25.00),
+    "claude-sonnet": (3.00, 15.00),
+    "claude-fable": (10.00, 50.00),
     "gemini-pro": (1.25, 10.00),
+    "gemini-flash": (0.30, 2.50),
     "grok": (3.00, 15.00),
-    "deepseek": (0.28, 0.42),
     "qwen": (1.60, 6.40),
+    "kimi": (1.00, 5.00),
+    "glm": (0.60, 2.20),
+    "minimax": (0.40, 2.00),
 }
 
 MAX_RETRIES = 3
