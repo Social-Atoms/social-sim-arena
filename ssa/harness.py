@@ -2,52 +2,353 @@
 
 Every frontier-model entrant runs through this module each refresh. Two modes:
 
-1. REAL: when an API key for the provider is present in the environment,
-   the model is asked for a forecast (uniform prompt, temperature 0).
-   Keys are read from env so they can live in GitHub Actions secrets
-   (Settings > Secrets > Actions) or any other deploy platform's secret
-   store; nothing is ever committed.
+1. REAL: when an API key for the provider is present in the environment, the
+   model is asked for a forecast through a uniform prompt and the reply is
+   parsed into {"mean", "sd"}. Keys are read from env so they can live in
+   GitHub Actions secrets (Settings > Secrets > Actions) or any other deploy
+   platform's secret store; nothing is ever committed.
 
-2. MOCK: when no key is configured, a deterministic placeholder forecast is
-   filed instead: persistence plus a small model-specific offset, clearly
-   labeled MOCK in the notes. This keeps the entrant slots, pages, and
-   scoring pipeline fully exercised until keys are added.
+2. MOCK: when no key is configured (or the call fails), a deterministic
+   placeholder forecast is filed instead: persistence plus a small
+   model-specific offset, clearly labeled MOCK in the notes. This keeps the
+   entrant slots, pages, and scoring pipeline fully exercised.
 
-Adding a real provider = fill in `call_provider` for it and set the env var.
+Three wire protocols cover all six providers, so no vendor SDKs are needed:
+  openai    - /chat/completions (OpenAI, xAI, DeepSeek, Qwen/DashScope)
+  anthropic - /v1/messages
+  gemini    - /models/{m}:generateContent
+
+Model ids are overridable per entrant without touching code, e.g.
+  SSA_MODEL_GPT_5_5=gpt-5.6  SSA_MODEL_CLAUDE_OPUS=claude-opus-5
+
+Cost control: a forecast is only re-requested when its inputs changed. Every
+filed forecast carries in=<hash of the prompt> in its notes; if the hash still
+matches, the existing file is kept and no API call is made. So a round costs
+one call per model per new observation, not one per refresh.
 """
 import hashlib
+import json
 import os
+import re
+
+import requests
 
 MODELS = {
-    "gpt-5.5":        {"env": "OPENAI_API_KEY",    "name": "GPT-5.5"},
-    "claude-opus":    {"env": "ANTHROPIC_API_KEY", "name": "Claude Opus"},
-    "gemini-pro":     {"env": "GOOGLE_API_KEY",    "name": "Gemini Pro"},
-    "grok":           {"env": "XAI_API_KEY",       "name": "Grok"},
-    "deepseek":       {"env": "DEEPSEEK_API_KEY",  "name": "DeepSeek"},
-    "qwen":           {"env": "DASHSCOPE_API_KEY", "name": "Qwen"},
+    "gpt-5.5": {
+        "env": "OPENAI_API_KEY", "name": "GPT-5.5", "api": "openai",
+        "base": "https://api.openai.com/v1", "model": "gpt-5.5",
+    },
+    "claude-opus": {
+        "env": "ANTHROPIC_API_KEY", "name": "Claude Opus", "api": "anthropic",
+        "base": "https://api.anthropic.com/v1", "model": "claude-opus-5",
+    },
+    "gemini-pro": {
+        "env": "GOOGLE_API_KEY", "name": "Gemini Pro", "api": "gemini",
+        "base": "https://generativelanguage.googleapis.com/v1beta",
+        # Pinned, not the `gemini-pro-latest` alias: an alias that rolls forward
+        # mid-season silently swaps the entrant, and scores from before and after
+        # the swap are not comparable. Every id here should name one version.
+        # (gemini-2.5-pro returns 404 "no longer available to new users".)
+        "model": "gemini-3.1-pro-preview", "params": {"temperature": 0},
+    },
+    "grok": {
+        "env": "XAI_API_KEY", "name": "Grok", "api": "openai",
+        "base": "https://api.x.ai/v1", "model": "grok-4",
+        "params": {"temperature": 0},
+    },
+    "deepseek": {
+        "env": "DEEPSEEK_API_KEY", "name": "DeepSeek", "api": "openai",
+        "base": "https://api.deepseek.com", "model": "deepseek-chat",
+        "params": {"temperature": 0},
+    },
+    "qwen": {
+        "env": "DASHSCOPE_API_KEY", "name": "Qwen", "api": "openai",
+        "base": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "model": "qwen-max", "params": {"temperature": 0},
+    },
 }
 
-PROMPT = (
-    "You are forecasting a public-opinion release. Question: {question} "
-    "Recent history: {history}. Reply with JSON {{\"mean\": <number>, \"sd\": <number>}} "
-    "for your predictive distribution of the released value. No other text."
+# Temperature is deliberately absent for the OpenAI and Anthropic entries:
+# their current frontier models reject the parameter (400). Determinism there
+# comes from the fixed prompt and a single sample, not from a sampling knob.
+
+MAX_TOKENS = 4096  # generous: on thinking models this budget covers reasoning too
+TIMEOUT = 120
+
+# Two prompt variants, differing only in how much of the series the model sees.
+# Everything that defines *what number is being asked for* -- the pollster, the
+# population, the question wording, the release schedule -- appears in both,
+# because the resolver uses all of it. A detail the grader relies on and the
+# prompt omits is not a hard question, it is an unfair one: no amount of
+# reasoning recovers whether "approval" here means adults or registered voters,
+# and those differ by several points.
+HEADER = (
+    "You are forecasting the next scheduled release of a public opinion tracker.\n"
+    "Question: {question}\n"
+    "Unit: {unit}\n"
+    "How the tracker is measured: {methodology}\n"
+    "Release schedule: {cadence}\n"
+    "Scheduled release date: {release}\n"
+)
+
+# `none` is the default baseline condition: the question and nothing else, so
+# the forecast comes entirely from what the model already believes about the
+# series. It doubles as a contamination probe -- accuracy on a post-cutoff
+# release with no history to reason from is not forecasting.
+NO_HISTORY = "No history of this series is provided.\n"
+
+WITH_HISTORY = (
+    "Recent published values of this series (oldest first, one point per release):\n"
+    "{history}\n"
+)
+
+# Not passed through .format(), so the braces are literal single braces here.
+FOOTER = (
+    "Give your predictive distribution over the value that will be released. "
+    "Reply with exactly one JSON object and no other text:\n"
+    '{"mean": <number>, "sd": <number>}\n'
+    "sd is your standard deviation in the same unit and must be greater than 0."
+)
+
+VARIANTS = {"none": 0, "recent10": 10}
+
+# Season 0 runs one condition, once per release. `recent10` is that condition:
+# the baselines all read the same history, so scoring a model that was shown
+# none of it against a persistence null that was shown all of it would compare
+# two different tasks. `none` stays implemented and tested as the ablation --
+# and as a contamination probe, since accuracy on a post-cutoff release with no
+# history to reason from is not forecasting -- but nothing runs it by default.
+# Repeated sampling is deliberately absent: at the providers' default
+# temperature a rerun does not reproduce, so the committed cache of raw replies
+# is the reproducibility mechanism, not a re-run.
+DEFAULT_VARIANT = "recent10"
+
+
+def _env_suffix(entrant):
+    return re.sub(r"[^A-Z0-9]", "_", entrant.upper())
+
+
+def model_id(entrant):
+    """Provider-side model name, overridable via SSA_MODEL_<ENTRANT>."""
+    return (os.environ.get("SSA_MODEL_" + _env_suffix(entrant))
+            or MODELS[entrant]["model"])
+
+
+def base_url(entrant):
+    """API base, overridable via SSA_BASE_<ENTRANT>.
+
+    Needed for self-hosted gateways and regional endpoints: a DashScope or
+    Azure deployment speaks the same OpenAI-compatible protocol on a different
+    host, so only the base differs. Point an entrant at any endpoint that
+    speaks its `api` protocol without touching code.
+    """
+    return (os.environ.get("SSA_BASE_" + _env_suffix(entrant))
+            or MODELS[entrant]["base"]).rstrip("/")
+
+
+def has_key(entrant):
+    return bool(os.environ.get(MODELS[entrant]["env"]))
+
+
+def build_prompt(r, history, variant=DEFAULT_VARIANT):
+    """The exact text an entrant sees.
+
+    `history` is the strictly pre-lock series the round's baselines were built
+    from, so entrants and nulls read the same data. `variant` selects how much
+    of it is shown; see VARIANTS.
+
+    Methodology and cadence come from the round when present and fall back to
+    the series registry, so a round definition never has to restate them.
+    """
+    if variant not in VARIANTS:
+        raise ValueError(f"unknown prompt variant {variant!r}; "
+                         f"known: {sorted(VARIANTS)}")
+    meta = {}
+    if r.get("series"):
+        try:
+            from . import series as series_registry
+            meta = series_registry.describe(r["series"])
+        except (ImportError, KeyError):
+            meta = {}
+
+    head = HEADER.format(
+        question=r.get("question") or meta.get("question", ""),
+        unit=r.get("unit") or meta.get("unit", ""),
+        methodology=r.get("methodology") or meta.get("methodology", "not stated"),
+        cadence=r.get("cadence") or meta.get("cadence", "not stated"),
+        release=r["release_at"][:10])
+
+    n = VARIANTS[variant]
+    if n == 0:
+        body = NO_HISTORY
+    else:
+        pts = (history or [])[-n:]
+        lines = "\n".join(f"  {p['date']}: {p['value']}" for p in pts) or "  (none)"
+        body = WITH_HISTORY.format(history=lines)
+    return head + body + FOOTER
+
+
+def call_identity(entrant):
+    """What actually determines a reply: the model *and* the endpoint serving it.
+
+    Both cache keys are built on this. Two gateways can serve different weights
+    under the same model name, so a cache keyed on the name alone would reuse a
+    forecast the current endpoint never produced.
+    """
+    return f"{model_id(entrant)} @ {base_url(entrant)}"
+
+
+def prompt_hash(entrant, prompt):
+    return hashlib.sha256(
+        (call_identity(entrant) + "\n" + prompt).encode()).hexdigest()[:12]
+
+
+# --- provider calls --------------------------------------------------------
+
+def call_provider(entrant, prompt):
+    """One completion. Returns the model's raw reply text."""
+    cfg = MODELS[entrant]
+    key = os.environ[cfg["env"]]
+    mid = model_id(entrant)
+    base = base_url(entrant)
+    api = cfg["api"]
+    if api == "openai":
+        return _call_openai(cfg, base, key, mid, prompt)
+    if api == "anthropic":
+        return _call_anthropic(cfg, base, key, mid, prompt)
+    if api == "gemini":
+        return _call_gemini(cfg, base, key, mid, prompt)
+    raise ValueError("unknown api: " + api)
+
+
+def _check(r, what):
+    """Fail with the provider's own explanation attached.
+
+    `raise_for_status` discards the response body, which is exactly where the
+    reason lives -- an unsupported parameter, a model name this endpoint does
+    not serve, a quota. Without it every misconfiguration looks like a bare 400.
+    """
+    if r.status_code >= 400:
+        detail = " ".join((r.text or "").split())[:400]
+        raise RuntimeError(f"{what} HTTP {r.status_code}: {detail}")
+    try:
+        return r.json()
+    except ValueError:
+        raise RuntimeError(f"{what} returned non-JSON: "
+                           f"{' '.join((r.text or '').split())[:200]}")
+
+
+def _pluck(data, path, what):
+    """Walk a response path, reporting the actual payload when it is not there."""
+    cur = data
+    for step in path:
+        try:
+            cur = cur[step]
+        except (KeyError, IndexError, TypeError):
+            raise RuntimeError(
+                f"{what}: no {'.'.join(map(str, path))} in reply; got "
+                f"{json.dumps(data)[:300]}")
+    return cur
+
+
+# Where "the text" lives, across endpoints that all claim OpenAI compatibility.
+# Self-hosted and regional gateways are routinely compatible on the request side
+# and not on the response side -- an Aliyun MaaS deployment answers a correct
+# /chat/completions call with a flat {"finish_reason", "text"}. Reading a few
+# known shapes beats making the caller run a different protocol per host.
+_TEXT_PATHS = (
+    ("choices", 0, "message", "content"),   # OpenAI chat completions
+    ("choices", 0, "text"),                 # legacy completions
+    ("output", "choices", 0, "message", "content"),  # DashScope, result_format=message
+    ("output", "text"),                     # DashScope native default
+    ("text",),                              # Aliyun MaaS compatible-mode
 )
 
 
-def has_key(model_id):
-    return bool(os.environ.get(MODELS[model_id]["env"]))
+def _extract_text(data, what):
+    for path in _TEXT_PATHS:
+        cur = data
+        for step in path:
+            try:
+                cur = cur[step]
+            except (KeyError, IndexError, TypeError):
+                cur = None
+                break
+        if isinstance(cur, str) and cur.strip():
+            return cur
+    raise RuntimeError(f"{what}: no text found in reply; got "
+                       f"{json.dumps(data)[:300]}")
 
 
-def call_provider(model_id, question, history):
-    """Real API call. Implemented per provider as keys come online."""
-    raise NotImplementedError(
-        f"{model_id}: key present but provider call not wired yet")
+def _call_openai(cfg, base, key, mid, prompt):
+    body = {"model": mid, "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": MAX_TOKENS}
+    body.update(cfg.get("params") or {})
+    url = base + "/chat/completions"
+    r = requests.post(url, headers={"Authorization": "Bearer " + key},
+                      json=body, timeout=TIMEOUT)
+    # Newer OpenAI models replaced max_tokens with max_completion_tokens and
+    # reject the old name outright. Retry once on the rename rather than make
+    # every caller know which vintage its model is.
+    if r.status_code == 400 and "max_completion_tokens" in (r.text or ""):
+        body["max_completion_tokens"] = body.pop("max_tokens")
+        r = requests.post(url, headers={"Authorization": "Bearer " + key},
+                          json=body, timeout=TIMEOUT)
+    data = _check(r, f"{mid} @ {base}")
+    return _extract_text(data, mid)
 
 
-def mock_forecast(model_id, round_id, persistence_mean, persistence_sd):
+def _call_anthropic(cfg, base, key, mid, prompt):
+    body = {"model": mid, "max_tokens": MAX_TOKENS,
+            "messages": [{"role": "user", "content": prompt}]}
+    body.update(cfg.get("params") or {})
+    r = requests.post(base + "/messages",
+                      headers={"x-api-key": key, "anthropic-version": "2023-06-01"},
+                      json=body, timeout=TIMEOUT)
+    data = _check(r, f"{mid} @ {base}")
+    if data.get("stop_reason") == "refusal":
+        raise RuntimeError("model declined the request")
+    # content is a list of blocks; thinking blocks come first and carry no text
+    return "".join(b.get("text", "") for b in data.get("content", [])
+                   if b.get("type") == "text")
+
+
+def _call_gemini(cfg, base, key, mid, prompt):
+    body = {"contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": dict({"maxOutputTokens": MAX_TOKENS},
+                                     **(cfg.get("params") or {}))}
+    url = f"{base}/models/{mid}:generateContent"
+    r = requests.post(url, headers={"x-goog-api-key": key}, json=body, timeout=TIMEOUT)
+    data = _check(r, f"{mid} @ {base}")
+    parts = _pluck(data, ("candidates", 0, "content", "parts"), mid)
+    return "".join(p.get("text", "") for p in parts)
+
+
+# --- parsing ---------------------------------------------------------------
+
+def parse_forecast(text):
+    """Pull {"mean": .., "sd": ..} out of a model reply. Raises on anything
+    that would not survive the submission schema."""
+    m = re.search(r"\{[^{}]*\}", text or "", re.S)
+    if not m:
+        raise ValueError("no JSON object in reply")
+    obj = json.loads(m.group(0))
+    mean, sd = float(obj["mean"]), float(obj["sd"])
+    if not (mean == mean and sd == sd):  # NaN
+        raise ValueError("non-finite forecast")
+    if not (0 < sd <= 50):
+        raise ValueError(f"sd out of schema range: {sd}")
+    if abs(mean) > 1000:
+        raise ValueError(f"implausible mean: {mean}")
+    return {"mean": round(mean, 2), "sd": round(sd, 2)}
+
+
+# --- mock ------------------------------------------------------------------
+
+def mock_forecast(entrant, round_id, persistence_mean, persistence_sd):
     """Deterministic placeholder: persistence + a stable per-(model, round)
     offset in [-1.5, +1.5] points, slightly wider uncertainty."""
-    h = hashlib.sha256(f"{model_id}:{round_id}".encode()).digest()
+    h = hashlib.sha256(f"{entrant}:{round_id}".encode()).digest()
     offset = (h[0] / 255.0) * 3.0 - 1.5
     widen = 1.0 + (h[1] / 255.0) * 0.8
     return {
@@ -56,22 +357,38 @@ def mock_forecast(model_id, round_id, persistence_mean, persistence_sd):
     }
 
 
-def forecast(model_id, r):
-    """One forecast dict for a round definition with baselines attached."""
+# --- entry point -----------------------------------------------------------
+
+def forecast(entrant, r, history=None, previous=None, variant=DEFAULT_VARIANT):
+    """One forecast dict for a round definition with baselines attached.
+
+    `previous` is the forecast already on disk for this (round, entrant), if
+    any. When its recorded input hash matches the prompt we would send now,
+    it is returned unchanged and no API call is made. The variant is part of
+    the prompt, so changing it correctly misses the cache.
+    """
     per = r["baselines"]["persistence"]
-    if has_key(model_id):
+    prompt = build_prompt(r, history, variant)
+    ih = prompt_hash(entrant, prompt)
+
+    if previous and f"in={ih}" in (previous.get("notes") or "") \
+            and not (previous.get("notes") or "").startswith("MOCK"):
+        return previous
+
+    if has_key(entrant):
         try:
-            top = call_provider(model_id, r["question"], None)
-            note = "live model output, harness v0"
-        except NotImplementedError:
-            top = mock_forecast(model_id, r["round_id"], per["mean"], per["sd"])
-            note = "MOCK: key present but provider not wired; deterministic placeholder"
+            top = parse_forecast(call_provider(entrant, prompt))
+            note = f"{model_id(entrant)}, harness v1, 1 sample; in={ih}"
+        except Exception as e:
+            top = mock_forecast(entrant, r["round_id"], per["mean"], per["sd"])
+            note = f"MOCK: {model_id(entrant)} call failed ({type(e).__name__}); in={ih}"
     else:
-        top = mock_forecast(model_id, r["round_id"], per["mean"], per["sd"])
-        note = "MOCK: no API key configured; deterministic placeholder, replaced by real output once keys are added"
+        top = mock_forecast(entrant, r["round_id"], per["mean"], per["sd"])
+        note = ("MOCK: no API key configured; deterministic placeholder, "
+                f"replaced by real output once keys are added; in={ih}")
     return {
         "round_id": r["round_id"],
-        "entrant": model_id,
+        "entrant": entrant,
         "topline": top,
-        "notes": note,
+        "notes": note[:500],
     }
