@@ -17,3 +17,8 @@ tests/test_harness.py
 tests/test_model_backtest.py
 tools/check_provider.py
 .vercel
+
+# Per-call working cache for the LLM backtest: one file per call, which is
+# right for resuming an interrupted run and wrong for a repository. The
+# committed evidence is backtest/runs/*.jsonl, the same content consolidated.
+cache/

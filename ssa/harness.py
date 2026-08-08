@@ -32,6 +32,7 @@ import hashlib
 import json
 import os
 import re
+import threading
 
 import requests
 
@@ -360,21 +361,69 @@ def prompt_hash(entrant, prompt):
 
 # --- provider calls --------------------------------------------------------
 
-def call_provider(entrant, prompt):
-    """One completion. Returns the model's raw reply text."""
+# Concurrency is capped per provider, not just globally. A single pool lets one
+# slow vendor hold every slot while fast ones idle, and it aims the whole burst
+# at whichever provider happens to have the most entrants -- five of the fifteen
+# models sit behind one gateway. Per-provider limits let the global worker count
+# rise without any one vendor seeing a spike.
+PROVIDER_LIMIT = int(os.environ.get("SSA_PROVIDER_LIMIT", "12"))
+_provider_locks = {}
+_locks_guard = threading.Lock()
+
+
+def _provider_key(entrant):
+    """What counts as one provider for rate-limiting: the endpoint host, so the
+    four gateway-hosted models share a budget rather than getting one each."""
+    model, _ = resolve(entrant)
+    base = base_url(entrant)
+    host = base.split("//", 1)[-1].split("/", 1)[0]
+    return f"{MODELS[model]['env']}@{host}"
+
+
+def _provider_slot(entrant):
+    key = _provider_key(entrant)
+    with _locks_guard:
+        sem = _provider_locks.get(key)
+        if sem is None:
+            sem = _provider_locks[key] = threading.BoundedSemaphore(PROVIDER_LIMIT)
+    return sem
+
+
+def call_provider(entrant, prompt, with_usage=False):
+    """One completion.
+
+    Returns the reply text, or (text, usage) when with_usage is set. `usage` is
+    the provider's own token report normalised to {input_tokens, output_tokens,
+    thinking_tokens}, so a run's cost is measured rather than estimated. It is
+    None for providers that report nothing.
+    """
     model, _ = resolve(entrant)
     cfg = MODELS[model]
     key = os.environ[cfg["env"]]
     mid = model_id(entrant)
     base = base_url(entrant)
     api = cfg["api"]
-    if api == "openai":
-        return _call_openai(cfg, base, key, mid, prompt)
-    if api == "anthropic":
-        return _call_anthropic(cfg, base, key, mid, prompt)
-    if api == "gemini":
-        return _call_gemini(cfg, base, key, mid, prompt)
-    raise ValueError("unknown api: " + api)
+    fn = {"openai": _call_openai, "anthropic": _call_anthropic,
+          "gemini": _call_gemini}.get(api)
+    if fn is None:
+        raise ValueError("unknown api: " + api)
+    with _provider_slot(entrant):
+        text, usage = fn(cfg, base, key, mid, prompt)
+    return (text, usage) if with_usage else text
+
+
+def _usage(data):
+    """Provider token reports, normalised. Each vendor names these its own way."""
+    u = data.get("usage") or data.get("usageMetadata") or {}
+    ino = u.get("input_tokens") or u.get("prompt_tokens") or u.get("promptTokenCount")
+    out = (u.get("output_tokens") or u.get("completion_tokens")
+           or u.get("candidatesTokenCount"))
+    think = ((u.get("output_tokens_details") or {}).get("thinking_tokens")
+             or (u.get("completion_tokens_details") or {}).get("reasoning_tokens")
+             or u.get("thoughtsTokenCount"))
+    if ino is None and out is None:
+        return None
+    return {"input_tokens": ino, "output_tokens": out, "thinking_tokens": think}
 
 
 def _check(r, what):
@@ -453,7 +502,7 @@ def _call_openai(cfg, base, key, mid, prompt):
         r = requests.post(url, headers={"Authorization": "Bearer " + key},
                           json=body, timeout=TIMEOUT)
     data = _check(r, f"{mid} @ {base}")
-    return _extract_text(data, mid)
+    return _extract_text(data, mid), _usage(data)
 
 
 def _call_anthropic(cfg, base, key, mid, prompt):
@@ -467,8 +516,9 @@ def _call_anthropic(cfg, base, key, mid, prompt):
     if data.get("stop_reason") == "refusal":
         raise RuntimeError("model declined the request")
     # content is a list of blocks; thinking blocks come first and carry no text
-    return "".join(b.get("text", "") for b in data.get("content", [])
+    text = "".join(b.get("text", "") for b in data.get("content", [])
                    if b.get("type") == "text")
+    return text, _usage(data)
 
 
 def _call_gemini(cfg, base, key, mid, prompt):
@@ -480,7 +530,7 @@ def _call_gemini(cfg, base, key, mid, prompt):
     r = requests.post(url, headers={"x-goog-api-key": key}, json=body, timeout=TIMEOUT)
     data = _check(r, f"{mid} @ {base}")
     parts = _pluck(data, ("candidates", 0, "content", "parts"), mid)
-    return "".join(p.get("text", "") for p in parts)
+    return "".join(p.get("text", "") for p in parts), _usage(data)
 
 
 # --- parsing ---------------------------------------------------------------
