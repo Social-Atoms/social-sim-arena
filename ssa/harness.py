@@ -111,17 +111,44 @@ FOOTER = (
 )
 
 VARIANTS = {"none": 0, "recent10": 10}
-
-# Season 0 runs one condition, once per release. `recent10` is that condition:
-# the baselines all read the same history, so scoring a model that was shown
-# none of it against a persistence null that was shown all of it would compare
-# two different tasks. `none` stays implemented and tested as the ablation --
-# and as a contamination probe, since accuracy on a post-cutoff release with no
-# history to reason from is not forecasting -- but nothing runs it by default.
-# Repeated sampling is deliberately absent: at the providers' default
-# temperature a rerun does not reproduce, so the committed cache of raw replies
-# is the reproducibility mechanism, not a re-run.
 DEFAULT_VARIANT = "recent10"
+
+# Season 0 runs both conditions, once per release, and scores them as separate
+# entrants -- which is what they are. `recent10` shows the last ten releases,
+# the same history the nulls read, so it is the like-for-like comparison
+# against persistence. `none` shows the question and nothing else, which makes
+# it two things at once: the ablation that isolates how much the series history
+# is worth, and a contamination probe, because accuracy on a post-cutoff
+# release with no history to reason from is not forecasting.
+#
+# Repeated sampling is deliberately absent. At the providers' default
+# temperature a rerun does not reproduce, so the committed record of raw
+# replies is the reproducibility mechanism, not a re-run.
+SEASON_VARIANTS = ("recent10", "none")
+
+# Entrant id suffix per condition. The default condition keeps the bare model
+# name so existing forecasts, entrant records and leaderboard rows stay valid.
+VARIANT_SUFFIX = {"recent10": "", "none": "-zeroshot"}
+
+
+def season_entrants():
+    """(entrant_id, model_key, variant) for every condition the arena runs."""
+    return [(m + VARIANT_SUFFIX[v], m, v)
+            for v in SEASON_VARIANTS for m in MODELS]
+
+
+def resolve(entrant_id):
+    """Entrant id -> (model_key, variant). Raises on an unknown id."""
+    for suffix, variant in sorted(
+            ((s, v) for v, s in VARIANT_SUFFIX.items()),
+            key=lambda x: -len(x[0])):          # longest suffix first
+        if suffix and entrant_id.endswith(suffix):
+            model = entrant_id[:-len(suffix)]
+            if model in MODELS:
+                return model, variant
+    if entrant_id in MODELS:
+        return entrant_id, DEFAULT_VARIANT
+    raise KeyError(f"unknown entrant id: {entrant_id!r}")
 
 
 def _env_suffix(entrant):
@@ -129,9 +156,14 @@ def _env_suffix(entrant):
 
 
 def model_id(entrant):
-    """Provider-side model name, overridable via SSA_MODEL_<ENTRANT>."""
-    return (os.environ.get("SSA_MODEL_" + _env_suffix(entrant))
-            or MODELS[entrant]["model"])
+    """Provider-side model name, overridable via SSA_MODEL_<MODEL>.
+
+    Accepts either a model key or a full entrant id; the condition suffix does
+    not change which model answers, so both resolve to the same name.
+    """
+    model, _ = resolve(entrant)
+    return (os.environ.get("SSA_MODEL_" + _env_suffix(model))
+            or MODELS[model]["model"])
 
 
 def base_url(entrant):
@@ -142,12 +174,14 @@ def base_url(entrant):
     host, so only the base differs. Point an entrant at any endpoint that
     speaks its `api` protocol without touching code.
     """
-    return (os.environ.get("SSA_BASE_" + _env_suffix(entrant))
-            or MODELS[entrant]["base"]).rstrip("/")
+    model, _ = resolve(entrant)
+    return (os.environ.get("SSA_BASE_" + _env_suffix(model))
+            or MODELS[model]["base"]).rstrip("/")
 
 
 def has_key(entrant):
-    return bool(os.environ.get(MODELS[entrant]["env"]))
+    model, _ = resolve(entrant)
+    return bool(os.environ.get(MODELS[model]["env"]))
 
 
 def build_prompt(r, history, variant=DEFAULT_VARIANT):
@@ -207,7 +241,8 @@ def prompt_hash(entrant, prompt):
 
 def call_provider(entrant, prompt):
     """One completion. Returns the model's raw reply text."""
-    cfg = MODELS[entrant]
+    model, _ = resolve(entrant)
+    cfg = MODELS[model]
     key = os.environ[cfg["env"]]
     mid = model_id(entrant)
     base = base_url(entrant)
@@ -359,7 +394,7 @@ def mock_forecast(entrant, round_id, persistence_mean, persistence_sd):
 
 # --- entry point -----------------------------------------------------------
 
-def forecast(entrant, r, history=None, previous=None, variant=DEFAULT_VARIANT):
+def forecast(entrant, r, history=None, previous=None, variant=None):
     """One forecast dict for a round definition with baselines attached.
 
     `previous` is the forecast already on disk for this (round, entrant), if
@@ -368,6 +403,9 @@ def forecast(entrant, r, history=None, previous=None, variant=DEFAULT_VARIANT):
     the prompt, so changing it correctly misses the cache.
     """
     per = r["baselines"]["persistence"]
+    # The condition is carried by the entrant id, so a caller cannot file a
+    # forecast under one entrant while prompting for another.
+    variant = variant or resolve(entrant)[1]
     prompt = build_prompt(r, history, variant)
     ih = prompt_hash(entrant, prompt)
 
@@ -378,7 +416,8 @@ def forecast(entrant, r, history=None, previous=None, variant=DEFAULT_VARIANT):
     if has_key(entrant):
         try:
             top = parse_forecast(call_provider(entrant, prompt))
-            note = f"{model_id(entrant)}, harness v1, 1 sample; in={ih}"
+            note = (f"{model_id(entrant)}, harness v1, variant={variant}, "
+                    f"1 sample; in={ih}")
         except Exception as e:
             top = mock_forecast(entrant, r["round_id"], per["mean"], per["sd"])
             note = f"MOCK: {model_id(entrant)} call failed ({type(e).__name__}); in={ih}"
