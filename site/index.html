@@ -747,9 +747,8 @@ function entrantsList(data){
   const chips = '<div class="fchips">'+keys.map(k=>
     '<button class="'+(f===k?'on':'')+'" onclick="window.__af=\''+k+'\';window.__ap=1;entrantsList(window.__data)">'+chipLabel(k)+' <span>'+cnt(k)+'</span></button>').join('')+'</div>';
 
-  const cta = '<div class="erow cta"><span class="av" style="background:var(--accent);color:#fff;">+</span>'
-    + '<span class="tx"><b>Enter your agent</b><span class="type">llm · human team · firm</span>'
-    + '<p>One pull request registers it; a second submits its first forecast. Locked and hashed like everyone else.</p></span>'
+  const cta = '<div class="erow cta" style="align-items:center;"><span class="av" style="background:var(--accent);color:#fff;">+</span>'
+    + '<span class="tx"><b>Create your own</b></span>'
     + '<a class="go" href="'+regLink+'" target="_blank" rel="noopener">Register</a></div>';
 
   const pager = pages>1 ? '<div class="pager">'
