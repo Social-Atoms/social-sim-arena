@@ -4,15 +4,17 @@ Run:  python -m ssa.refresh
 Cron: .github/workflows/refresh.yml runs this daily and commits the result.
 
 Everything the entry page shows comes from this file: live tracker values
-(VoteHub API, FRED), round status computed against the clock, and baseline
+(Silver Bulletin poll CSVs, Michigan's own table with FRED as fallback,
+VoteHub for the Congress and Supreme Court trackers), round status computed against the clock, and baseline
 forecasts (persistence, trend) computed from the real series.
 """
 import json
 import os
 from datetime import date, datetime, timezone
 
-from .adapters import fredcsv, votehub
-from . import average, backtest, baselines, harness, scoring, sharecard
+from .adapters import fredcsv, silverbulletin, umich
+from . import average, backtest, baselines, envfile, harness, scoring, sharecard
+from . import series as series_registry
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 QUESTIONS = os.path.join(ROOT, "questions", "season0.json")
@@ -47,11 +49,15 @@ def poll_history(polls, key="value"):
     return [{"date": d, "value": by_date[d]} for d in sorted(by_date)]
 
 
-def build_series(approval, generic, umich):
-    """All target series used by rounds, as [{date, value}] oldest first."""
-    yg_app = votehub.from_pollster(approval, "YouGov", "Economist")
-    yg_gen = votehub.from_pollster(generic, "YouGov", "Economist")
-    mc_app = votehub.from_pollster(approval, "Morning Consult")
+def build_series(approval, generic, umich, sources=None):
+    """All target series used by rounds, as [{date, value}] oldest first.
+
+    The registered trackers come from ssa/series.py, which is the single place
+    a series and its filters are declared. `generic_ballot_margin` is derived
+    here instead: it is not a published tracker but this pipeline's own weekly
+    adjusted average, which the midterm special resolves against.
+    """
+    out = dict(series_registry.build_all(sources))
     anchor = generic[-1]["date"] if generic else date.today()
     # weekly adjusted-average history for the midterm margin special
     margin_hist = []
@@ -60,21 +66,16 @@ def build_series(approval, generic, umich):
         val, _ = average.adjusted_average(generic, asof)
         if val is not None:
             margin_hist.append({"date": asof.isoformat(), "value": round(val, 2)})
-    return {
-        "yougov_approval": poll_history(yg_app, "approve"),
-        "yougov_generic_margin": poll_history(yg_gen, "margin"),
-        "mc_approval": poll_history(mc_app, "approve"),
-        "umich_sentiment": umich,
-        "generic_ballot_margin": margin_hist,
-    }
+    out["generic_ballot_margin"] = margin_hist
+    return out
 
 
 def build_trackers(approval, generic, series, next_umich_release=None):
     if not approval or not generic:
-        raise RuntimeError("VoteHub returned no polls; refusing to build trackers from empty data")
+        raise RuntimeError("upstream returned no polls; refusing to build trackers from empty data")
     # Anchor each average at its source's real freshness, not the wall clock.
-    # The VoteHub API snapshot lags the live site by a few weeks; we label the
-    # as-of date instead of pretending the number is from today.
+    # Even a same-day source is behind the field dates it reports, so every
+    # number is labelled with the date it is actually as of.
     asof_app = approval[-1]["date"]
     asof_gen = generic[-1]["date"]
     app_avg, app_n = average.adjusted_average(approval, asof_app)
@@ -93,7 +94,7 @@ def build_trackers(approval, generic, series, next_umich_release=None):
         "asof": asof_app.isoformat(),
         "delta_30d": round(app_avg - app_prev, 1) if app_prev is not None else None,
         "n_polls_window": app_n,
-        "source": "VoteHub API, house-effect adjusted, 21-day window (API snapshot lags the live site)",
+        "source": "Silver Bulletin poll database, house-effect adjusted here, 21-day window",
     }
     t["generic_ballot_avg"] = {
         "label": "2026 generic ballot, adjusted average",
@@ -102,7 +103,7 @@ def build_trackers(approval, generic, series, next_umich_release=None):
         "asof": asof_gen.isoformat(),
         "delta_30d": round(gen_avg - gen_prev, 1) if gen_prev is not None else None,
         "n_polls_window": gen_n,
-        "source": "VoteHub API, house-effect adjusted, 21-day window (API snapshot lags the live site)",
+        "source": "Silver Bulletin poll database, house-effect adjusted here, 21-day window",
     }
     yg = latest(series["yougov_approval"])
     if yg:
@@ -111,7 +112,7 @@ def build_trackers(approval, generic, series, next_umich_release=None):
             "unit": "% approve",
             "value": yg["value"],
             "asof": yg["date"],
-            "source": "VoteHub API (poll-level)",
+            "source": "Silver Bulletin poll database (poll-level)",
         }
     mc = latest(series["mc_approval"])
     if mc:
@@ -120,7 +121,7 @@ def build_trackers(approval, generic, series, next_umich_release=None):
             "unit": "% approve",
             "value": mc["value"],
             "asof": mc["date"],
-            "source": "VoteHub API (poll-level)",
+            "source": "Silver Bulletin poll database (poll-level)",
         }
     um = latest(series["umich_sentiment"])
     if um:
@@ -130,7 +131,7 @@ def build_trackers(approval, generic, series, next_umich_release=None):
             "value": um["value"],
             "asof": um["date"],
             "next_release": next_umich_release or UMICH_NEXT_RELEASE,
-            "source": "FRED (UMCSENT, lags one month); release-day values from sca.isr.umich.edu",
+            "source": series_registry.MICHIGAN_SOURCE,
         }
     return t
 
@@ -153,7 +154,11 @@ def round_status(r, resolved, now):
 
 
 def build_rounds(season, series, resolved, now):
+    """Returns (rounds, history_by_round). The history is the strictly pre-lock
+    slice each round's baselines were computed from; the model harness
+    conditions on exactly the same data, so entrants and nulls see one series."""
     out = []
+    hist_by_round = {}
     for r in season["rounds"]:
         row = {k: r[k] for k in ("round_id", "tracker", "series", "question", "unit",
                                   "release_at", "release_estimated", "lock_at", "resolve")}
@@ -163,6 +168,7 @@ def build_rounds(season, series, resolved, now):
         # persistence null would contain the outcome it is scored against.
         lock_date = r["lock_at"][:10]
         hist = [p for p in (series.get(r["series"]) or []) if p["date"] < lock_date]
+        hist_by_round[r["round_id"]] = hist
         if len(hist) >= 3:
             target = r["release_at"][:10]
             row["baselines"] = baselines.all_baselines(hist, target)
@@ -172,10 +178,27 @@ def build_rounds(season, series, resolved, now):
         if r["round_id"] in resolved:
             row["resolution"] = resolved[r["round_id"]]
         out.append(row)
-    return out
+    return out, hist_by_round
 
 
-def file_baseline_forecasts(rounds):
+# Stop re-filing this long before lock_at. A refresh writes to the working
+# tree, but the commit only lands minutes later; without the margin a run that
+# starts just before lock could push a file that the merge-time lock audit
+# then (correctly) rejects as late.
+LOCK_MARGIN_SECONDS = 30 * 60
+
+
+def read_forecast(path):
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except ValueError:
+        return None
+
+
+def file_baseline_forecasts(rounds, hist_by_round, now):
     """The hosted always-on agents: while a round is open, the refresh cron
     keeps each baseline's and each frontier model's forecast file current;
     the last commit before lock_at is the one that counts. Model forecasts
@@ -184,6 +207,8 @@ def file_baseline_forecasts(rounds):
     written = 0
     for r in rounds:
         if r["status"] != "open" or not r.get("baselines"):
+            continue
+        if (parse_iso(r["lock_at"]) - now).total_seconds() < LOCK_MARGIN_SECONDS:
             continue
         rdir = os.path.join(FORECASTS, r["round_id"])
         os.makedirs(rdir, exist_ok=True)
@@ -199,9 +224,12 @@ def file_baseline_forecasts(rounds):
                 json.dump(body, f, indent=2)
                 f.write("\n")
             written += 1
-        for model_id in harness.MODELS:
-            body = harness.forecast(model_id, r)
-            with open(os.path.join(rdir, model_id + ".json"), "w") as f:
+        for entrant in harness.MODELS:
+            path = os.path.join(rdir, entrant + ".json")
+            body = harness.forecast(entrant, r,
+                                    history=hist_by_round.get(r["round_id"]),
+                                    previous=read_forecast(path))
+            with open(path, "w") as f:
                 json.dump(body, f, indent=2)
                 f.write("\n")
             written += 1
@@ -283,46 +311,65 @@ def build_leaderboard(rounds, resolved):
     return board
 
 
-def main():
-    now = now_utc()
-    approval = votehub.approval_polls()
-    generic = votehub.generic_ballot_polls()
-    umich = fredcsv.umich_sentiment()
+def fetch_umich():
+    """Michigan sentiment, preferring the survey's own table over FRED.
 
-    with open(QUESTIONS) as f:
-        season = json.load(f)
+    FRED republishes this series a month late, which costs every entrant the
+    most recent observation -- the one that matters most. The two agree exactly
+    on all 674 overlapping months, so this is strictly more data, not different
+    data. FRED remains the fallback because the official file is a plain CSV on
+    a university web server and the arena should not go dark if it moves.
+    """
+    try:
+        return umich.umich_sentiment()
+    except Exception as e:                         # noqa: BLE001 - reported
+        print(f"official Michigan table unavailable ({type(e).__name__}: {e}); "
+              "falling back to FRED, which lags one month")
+        return fredcsv.umich_sentiment()
 
-    series = build_series(approval, generic, umich)
-    trackers = build_trackers(approval, generic, series,
-                              next_release_for(season, "umich_sentiment", now))
-    resolved = {}
-    if os.path.exists(RESOLVED):
-        with open(RESOLVED) as f:
-            resolved = json.load(f)
 
-    rounds = build_rounds(season, series, resolved, now)
-    file_baseline_forecasts(rounds)
-    count_forecasts(rounds)
-    board = build_leaderboard(rounds, resolved)
-    bt = backtest.run({
-        "umich_sentiment": series["umich_sentiment"],
-        "yougov_approval": series["yougov_approval"],
-        "mc_approval": series["mc_approval"],
-        "yougov_generic_margin": series["yougov_generic_margin"],
-    })
-    # Placeholder rows for the frontier models until API keys are wired:
-    # deterministic, clearly flagged (mock: true), sit between the real
-    # baselines so the board reads plausibly. Replaced by real backtest runs
-    # through the harness once providers are connected.
-    per_crps = next((e["mean_crps"] for e in bt["overall"] if e["entrant"] == "persistence"), 1.7)
+def load_model_backtest():
+    """Real LLM backtest results, when a run has been committed.
+
+    Written by tools/run_model_backtest.py. Absent until someone with API keys
+    runs it, which is why the placeholder path below still exists.
+    """
+    path = os.path.join(ROOT, "backtest", "model_backtest.json")
+    if not os.path.exists(path):
+        return None
+    with open(path) as f:
+        mb = json.load(f)
+    return {
+        "window": mb.get("window"),
+        "start": mb.get("start"),
+        "releases": mb.get("matched_releases"),
+        "entrants": mb.get("entrants"),
+        "board": mb.get("matched"),
+        "failures": mb.get("failures"),
+        "cutoffs": mb.get("cutoffs"),
+    }
+
+
+def attach_mock_models(bt):
+    """Placeholder frontier-model rows, used only until a real backtest exists.
+
+    Deterministic and flagged (mock: true / bt["mock_models"]) so the site can
+    label them, but they are invented numbers: delete this function and its
+    call the moment backtest/model_backtest.json is committed, and never let a
+    figure derived from it reach the paper.
+    """
+    import hashlib as _h
+
+    per_crps = next((e["mean_crps"] for e in bt["overall"]
+                     if e["entrant"] == "persistence"), 1.7)
     mock_skill = {"gpt-5.5": 0.024, "claude-opus": 0.031, "gemini-pro": 0.012,
                   "grok": -0.008, "deepseek": 0.018, "qwen": -0.019}
-    import hashlib as _hh
     for key, board in bt["spans"].items():
-        base_crps = next((e["mean_crps"] for e in board if e["entrant"] == "persistence"), per_crps)
+        base_crps = next((e["mean_crps"] for e in board
+                          if e["entrant"] == "persistence"), per_crps)
         n_rounds = board[0]["rounds"] if board else 0
         for mid, sk in mock_skill.items():
-            hb = _hh.sha256(f"{mid}:{key}".encode()).digest()
+            hb = _h.sha256(f"{mid}:{key}".encode()).digest()
             spread = 0.05 if key == "last" else (0.02 if key == "d30" else 0.008)
             sk_i = round(sk + ((hb[0] / 255.0) - 0.5) * 2 * spread, 3)
             board.append({
@@ -332,10 +379,7 @@ def main():
             })
         board.sort(key=lambda x: -x["mean_skill"])
     bt["overall"] = bt["spans"]["all"]
-    # placeholder trajectories for the models so the aggregate chart can
-    # compare them over time; deterministic wobble around a ramp to the
-    # final mock skill. Flagged via bt["mock_models"].
-    import hashlib as _h
+
     n_ck = len(bt["trajectory"])
     for i, ck in enumerate(bt["trajectory"]):
         ramp = (i + 1) / n_ck
@@ -347,6 +391,58 @@ def main():
             if "crps" in ck and "persistence" in ck["crps"]:
                 ck["crps"][mid] = round(ck["crps"]["persistence"] * (1 - val), 3)
     bt["mock_models"] = sorted(mock_skill.keys())
+
+
+def main():
+    # Local runs read keys from .env; in CI they arrive as Actions secrets
+    # and no .env exists, so already-set variables always win.
+    envfile.load()
+    now = now_utc()
+    # One fetch per upstream file, shared by the series registry and by the
+    # averages below, so the site's headline numbers and its series can never
+    # be built from different snapshots of the same source.
+    sources = {
+        "sb_approval": silverbulletin.fetch(silverbulletin.APPROVAL_URL),
+        "sb_generic": silverbulletin.fetch(silverbulletin.GENERIC_URL),
+        "umich": series_registry.michigan_history(),
+    }
+    # Every series now comes from a source that is days behind rather than
+    # weeks. VoteHub is gone: it was 41 days stale at the source and the only
+    # two trackers it still supplied, Congress and the Supreme Court, backed no
+    # round -- 16 backtest points is not worth a second, staler provenance.
+    approval = silverbulletin.approval_polls(rows=sources["sb_approval"])
+    generic = silverbulletin.generic_ballot_polls(rows=sources["sb_generic"])
+    umich = sources["umich"]
+
+    with open(QUESTIONS) as f:
+        season = json.load(f)
+
+    series = build_series(approval, generic, umich, sources)
+    trackers = build_trackers(approval, generic, series,
+                              next_release_for(season, "umich_sentiment", now))
+    resolved = {}
+    if os.path.exists(RESOLVED):
+        with open(RESOLVED) as f:
+            resolved = json.load(f)
+
+    rounds, hist_by_round = build_rounds(season, series, resolved, now)
+    filed = file_baseline_forecasts(rounds, hist_by_round, now)
+    count_forecasts(rounds)
+    board = build_leaderboard(rounds, resolved)
+    bt = backtest.run({
+        "umich_sentiment": series["umich_sentiment"],
+        "yougov_approval": series["yougov_approval"],
+        "mc_approval": series["mc_approval"],
+        "yougov_generic_margin": series["yougov_generic_margin"],
+    })
+    real_mb = load_model_backtest()
+    if real_mb:
+        # A real run exists, so the placeholders below are skipped entirely and
+        # the site shows measured numbers with the window they were measured on.
+        bt["models"] = real_mb
+        bt["mock_models"] = []
+    else:
+        attach_mock_models(bt)
 
     data = {
         "generated_at": iso(now),
@@ -368,9 +464,10 @@ def main():
         },
         "series_tail": {k: v[-8:] for k, v in series.items()},
         "sources": {
-            "votehub": "https://api.votehub.com/polls",
+            "silver_bulletin_approval": silverbulletin.APPROVAL_URL,
+            "silver_bulletin_generic": silverbulletin.GENERIC_URL,
             "fred": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=UMCSENT",
-            "repo": "https://github.com/jajamoa/social-sim-arena",
+            "repo": "https://github.com/Social-Atoms/social-sim-arena",
         },
     }
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
@@ -381,6 +478,8 @@ def main():
     except Exception as e:
         print("sharecard skipped:", e)
     print("wrote", OUT)
+    print("forecast files filed:", filed,
+          "| live models:", sorted(m for m in harness.MODELS if harness.has_key(m)) or "none (all MOCK)")
     print("approval polls:", len(approval), "| generic:", len(generic),
           "| umich points:", len(umich))
     print("approval avg:", trackers["trump_approval_avg"]["value"],
