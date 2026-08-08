@@ -1,0 +1,479 @@
+{
+  "calls": {
+    "made": 5,
+    "total": 2868
+  },
+  "cutoffs": {
+    "claude-fable": "claude-fable: cutoff 2026-01-01 [declared] -> usable from 2026-01-31 (Anthropic: trained on data up until January 2026)",
+    "claude-fable-zeroshot": "claude-fable-zeroshot: cutoff unknown (no source)",
+    "claude-opus": "claude-opus: cutoff 2026-01-01 [declared] -> usable from 2026-01-31 (Anthropic: Claude Opus 4.8 trained on data up until January 2026 (Opus 5's May 2026 cutoff is why 4.8 is entered instead))",
+    "claude-opus-5": "claude-opus-5: cutoff 2026-05-01 [declared] -> usable from 2026-05-31 (Anthropic: Claude Opus 5 trained on data up until May 2026)",
+    "claude-opus-5-zeroshot": "claude-opus-5-zeroshot: cutoff unknown (no source)",
+    "claude-opus-zeroshot": "claude-opus-zeroshot: cutoff unknown (no source)",
+    "claude-sonnet": "claude-sonnet: cutoff 2026-01-01 [declared] -> usable from 2026-01-31 (Anthropic: trained on data up until January 2026)",
+    "claude-sonnet-zeroshot": "claude-sonnet-zeroshot: cutoff unknown (no source)",
+    "deepseek-pro": "deepseek-pro: cutoff 2025-05-01 [reported] -> usable from 2025-05-31 (DeepSeek V4 Pro (preview), May 2025; DeepSeek publishes no official cutoffs)",
+    "deepseek-pro-zeroshot": "deepseek-pro-zeroshot: cutoff unknown (no source)",
+    "gemini-pro": "gemini-pro: cutoff 2026-02-13 [reported] -> usable from 2026-03-15 (Gemini 3.1 Pro, February 13 2026)",
+    "gemini-pro-zeroshot": "gemini-pro-zeroshot: cutoff unknown (no source)",
+    "glm": "glm: cutoff 2026-03-01 [reported] -> usable from 2026-03-31 (GLM-5.2, March 2026; Zhipu publishes no exact day)",
+    "glm-zeroshot": "glm-zeroshot: cutoff unknown (no source)",
+    "gpt-5.6-luna": "gpt-5.6-luna: cutoff 2026-02-16 [declared] -> usable from 2026-03-18 (OpenAI model page: GPT-5.6 family cutoff February 16 2026)",
+    "gpt-5.6-luna-zeroshot": "gpt-5.6-luna-zeroshot: cutoff unknown (no source)",
+    "gpt-5.6-sol": "gpt-5.6-sol: cutoff 2026-02-16 [declared] -> usable from 2026-03-18 (OpenAI model page: GPT-5.6 family cutoff February 16 2026)",
+    "gpt-5.6-sol-zeroshot": "gpt-5.6-sol-zeroshot: cutoff unknown (no source)",
+    "gpt-5.6-terra": "gpt-5.6-terra: cutoff 2026-02-16 [declared] -> usable from 2026-03-18 (OpenAI model page: GPT-5.6 family cutoff February 16 2026)",
+    "gpt-5.6-terra-zeroshot": "gpt-5.6-terra-zeroshot: cutoff unknown (no source)",
+    "grok": "grok: cutoff 2026-02-01 [declared] -> usable from 2026-03-03 (xAI: Grok 4.5 cutoff 2026-02-01 without search tools)",
+    "grok-zeroshot": "grok-zeroshot: cutoff unknown (no source)",
+    "qwen-3.7": "qwen-3.7: cutoff 2026-05-20 [reported] -> usable from 2026-06-19 (Qwen3.7-Max, 2026-05-20)",
+    "qwen-3.7-zeroshot": "qwen-3.7-zeroshot: cutoff unknown (no source)",
+    "qwen-3.8": "qwen-3.8: cutoff 2026-06-01 [unknown] -> usable from 2026-07-01 (Qwen3.8-Max shipped 2026-08-03 and Alibaba publishes no cutoff; 2026-06-01 is a maintainer estimate, so treat its backtest rows as indicative only)",
+    "qwen-3.8-zeroshot": "qwen-3.8-zeroshot: cutoff unknown (no source)"
+  },
+  "entrants": [
+    "gpt-5.6-luna",
+    "gpt-5.6-sol",
+    "gpt-5.6-terra",
+    "claude-opus",
+    "claude-opus-5",
+    "claude-sonnet",
+    "claude-fable",
+    "gemini-pro",
+    "gemini-flash",
+    "grok",
+    "qwen-3.7",
+    "qwen-3.8",
+    "deepseek-pro",
+    "deepseek-flash",
+    "glm",
+    "gpt-5.6-luna-zeroshot",
+    "gpt-5.6-sol-zeroshot",
+    "gpt-5.6-terra-zeroshot",
+    "claude-opus-zeroshot",
+    "claude-opus-5-zeroshot",
+    "claude-sonnet-zeroshot",
+    "claude-fable-zeroshot",
+    "gemini-pro-zeroshot",
+    "gemini-flash-zeroshot",
+    "grok-zeroshot",
+    "qwen-3.7-zeroshot",
+    "qwen-3.8-zeroshot",
+    "deepseek-pro-zeroshot",
+    "deepseek-flash-zeroshot",
+    "glm-zeroshot"
+  ],
+  "failures": {
+    "claude-sonnet": 3
+  },
+  "matched": [
+    {
+      "entrant": "claude-opus-5",
+      "mean_crps": 1.144,
+      "mean_skill": 0.306,
+      "rounds": 22
+    },
+    {
+      "baseline": true,
+      "entrant": "ewma",
+      "mean_crps": 1.148,
+      "mean_skill": 0.304,
+      "rounds": 22
+    },
+    {
+      "entrant": "gpt-5.6-terra",
+      "mean_crps": 1.179,
+      "mean_skill": 0.285,
+      "rounds": 22
+    },
+    {
+      "entrant": "claude-opus",
+      "mean_crps": 1.182,
+      "mean_skill": 0.283,
+      "rounds": 22
+    },
+    {
+      "entrant": "grok",
+      "mean_crps": 1.183,
+      "mean_skill": 0.282,
+      "rounds": 22
+    },
+    {
+      "entrant": "glm",
+      "mean_crps": 1.195,
+      "mean_skill": 0.275,
+      "rounds": 22
+    },
+    {
+      "entrant": "gpt-5.6-sol",
+      "mean_crps": 1.208,
+      "mean_skill": 0.267,
+      "rounds": 22
+    },
+    {
+      "entrant": "claude-fable",
+      "mean_crps": 1.21,
+      "mean_skill": 0.266,
+      "rounds": 22
+    },
+    {
+      "baseline": true,
+      "entrant": "climatology",
+      "mean_crps": 1.212,
+      "mean_skill": 0.265,
+      "rounds": 22
+    },
+    {
+      "entrant": "gemini-pro",
+      "mean_crps": 1.217,
+      "mean_skill": 0.262,
+      "rounds": 22
+    },
+    {
+      "entrant": "gpt-5.6-luna",
+      "mean_crps": 1.243,
+      "mean_skill": 0.246,
+      "rounds": 22
+    },
+    {
+      "entrant": "qwen-3.8",
+      "mean_crps": 1.248,
+      "mean_skill": 0.243,
+      "rounds": 22
+    },
+    {
+      "baseline": true,
+      "entrant": "trend",
+      "mean_crps": 1.257,
+      "mean_skill": 0.237,
+      "rounds": 22
+    },
+    {
+      "entrant": "claude-sonnet",
+      "mean_crps": 1.267,
+      "mean_skill": 0.231,
+      "rounds": 22
+    },
+    {
+      "entrant": "qwen-3.7",
+      "mean_crps": 1.274,
+      "mean_skill": 0.227,
+      "rounds": 22
+    },
+    {
+      "entrant": "deepseek-pro",
+      "mean_crps": 1.348,
+      "mean_skill": 0.183,
+      "rounds": 22
+    },
+    {
+      "baseline": true,
+      "entrant": "persistence",
+      "mean_crps": 1.649,
+      "mean_skill": 0.0,
+      "rounds": 22
+    },
+    {
+      "entrant": "claude-opus-5-zeroshot",
+      "mean_crps": 1.655,
+      "mean_skill": -0.004,
+      "rounds": 22
+    },
+    {
+      "entrant": "claude-fable-zeroshot",
+      "mean_crps": 2.041,
+      "mean_skill": -0.238,
+      "rounds": 22
+    },
+    {
+      "entrant": "claude-sonnet-zeroshot",
+      "mean_crps": 2.153,
+      "mean_skill": -0.306,
+      "rounds": 22
+    },
+    {
+      "entrant": "gpt-5.6-terra-zeroshot",
+      "mean_crps": 2.384,
+      "mean_skill": -0.446,
+      "rounds": 22
+    },
+    {
+      "entrant": "claude-opus-zeroshot",
+      "mean_crps": 2.414,
+      "mean_skill": -0.465,
+      "rounds": 22
+    },
+    {
+      "entrant": "gpt-5.6-sol-zeroshot",
+      "mean_crps": 2.484,
+      "mean_skill": -0.507,
+      "rounds": 22
+    },
+    {
+      "entrant": "gpt-5.6-luna-zeroshot",
+      "mean_crps": 2.576,
+      "mean_skill": -0.562,
+      "rounds": 22
+    },
+    {
+      "entrant": "qwen-3.7-zeroshot",
+      "mean_crps": 3.307,
+      "mean_skill": -1.006,
+      "rounds": 22
+    },
+    {
+      "entrant": "grok-zeroshot",
+      "mean_crps": 3.452,
+      "mean_skill": -1.094,
+      "rounds": 22
+    },
+    {
+      "entrant": "qwen-3.8-zeroshot",
+      "mean_crps": 3.484,
+      "mean_skill": -1.113,
+      "rounds": 22
+    },
+    {
+      "entrant": "deepseek-pro-zeroshot",
+      "mean_crps": 3.807,
+      "mean_skill": -1.309,
+      "rounds": 22
+    },
+    {
+      "entrant": "gemini-pro-zeroshot",
+      "mean_crps": 4.164,
+      "mean_skill": -1.526,
+      "rounds": 22
+    },
+    {
+      "entrant": "glm-zeroshot",
+      "mean_crps": 4.286,
+      "mean_skill": -1.6,
+      "rounds": 22
+    }
+  ],
+  "matched_releases": 22,
+  "per_entrant": [
+    {
+      "entrant": "claude-opus-5",
+      "mean_crps": 1.235,
+      "mean_skill": 0.237,
+      "rounds": 43
+    },
+    {
+      "entrant": "qwen-3.8",
+      "mean_crps": 1.382,
+      "mean_skill": 0.227,
+      "rounds": 23
+    },
+    {
+      "entrant": "qwen-3.7",
+      "mean_crps": 1.264,
+      "mean_skill": 0.221,
+      "rounds": 31
+    },
+    {
+      "entrant": "gpt-5.6-terra",
+      "mean_crps": 1.017,
+      "mean_skill": 0.209,
+      "rounds": 95
+    },
+    {
+      "entrant": "grok",
+      "mean_crps": 1.013,
+      "mean_skill": 0.206,
+      "rounds": 107
+    },
+    {
+      "entrant": "gemini-pro",
+      "mean_crps": 1.038,
+      "mean_skill": 0.193,
+      "rounds": 95
+    },
+    {
+      "entrant": "gpt-5.6-sol",
+      "mean_crps": 1.058,
+      "mean_skill": 0.177,
+      "rounds": 95
+    },
+    {
+      "entrant": "gpt-5.6-luna",
+      "mean_crps": 1.064,
+      "mean_skill": 0.173,
+      "rounds": 95
+    },
+    {
+      "baseline": true,
+      "entrant": "ewma",
+      "mean_crps": 0.924,
+      "mean_skill": 0.171,
+      "rounds": 339
+    },
+    {
+      "entrant": "claude-fable",
+      "mean_crps": 1.044,
+      "mean_skill": 0.167,
+      "rounds": 142
+    },
+    {
+      "entrant": "claude-opus",
+      "mean_crps": 1.048,
+      "mean_skill": 0.164,
+      "rounds": 142
+    },
+    {
+      "entrant": "glm",
+      "mean_crps": 1.126,
+      "mean_skill": 0.136,
+      "rounds": 85
+    },
+    {
+      "entrant": "claude-sonnet",
+      "mean_crps": 1.057,
+      "mean_skill": 0.121,
+      "rounds": 139
+    },
+    {
+      "entrant": "deepseek-pro",
+      "mean_crps": 1.009,
+      "mean_skill": 0.095,
+      "rounds": 339
+    },
+    {
+      "baseline": true,
+      "entrant": "trend",
+      "mean_crps": 1.094,
+      "mean_skill": 0.019,
+      "rounds": 339
+    },
+    {
+      "baseline": true,
+      "entrant": "persistence",
+      "mean_crps": 1.115,
+      "mean_skill": 0.0,
+      "rounds": 339
+    },
+    {
+      "baseline": true,
+      "entrant": "climatology",
+      "mean_crps": 1.263,
+      "mean_skill": -0.133,
+      "rounds": 339
+    },
+    {
+      "entrant": "claude-opus-5-zeroshot",
+      "mean_crps": 1.964,
+      "mean_skill": -0.214,
+      "rounds": 43
+    },
+    {
+      "entrant": "claude-fable-zeroshot",
+      "mean_crps": 1.63,
+      "mean_skill": -0.301,
+      "rounds": 142
+    },
+    {
+      "entrant": "claude-sonnet-zeroshot",
+      "mean_crps": 2.0,
+      "mean_skill": -0.596,
+      "rounds": 142
+    },
+    {
+      "entrant": "gpt-5.6-terra-zeroshot",
+      "mean_crps": 2.105,
+      "mean_skill": -0.636,
+      "rounds": 95
+    },
+    {
+      "entrant": "claude-opus-zeroshot",
+      "mean_crps": 2.103,
+      "mean_skill": -0.679,
+      "rounds": 142
+    },
+    {
+      "entrant": "gpt-5.6-luna-zeroshot",
+      "mean_crps": 2.268,
+      "mean_skill": -0.762,
+      "rounds": 95
+    },
+    {
+      "entrant": "gpt-5.6-sol-zeroshot",
+      "mean_crps": 2.283,
+      "mean_skill": -0.774,
+      "rounds": 95
+    },
+    {
+      "entrant": "qwen-3.7-zeroshot",
+      "mean_crps": 3.363,
+      "mean_skill": -1.072,
+      "rounds": 31
+    },
+    {
+      "entrant": "qwen-3.8-zeroshot",
+      "mean_crps": 3.914,
+      "mean_skill": -1.189,
+      "rounds": 23
+    },
+    {
+      "entrant": "deepseek-pro-zeroshot",
+      "mean_crps": 3.352,
+      "mean_skill": -2.006,
+      "rounds": 339
+    },
+    {
+      "entrant": "grok-zeroshot",
+      "mean_crps": 3.973,
+      "mean_skill": -2.113,
+      "rounds": 107
+    },
+    {
+      "entrant": "gemini-pro-zeroshot",
+      "mean_crps": 4.385,
+      "mean_skill": -2.408,
+      "rounds": 95
+    },
+    {
+      "entrant": "glm-zeroshot",
+      "mean_crps": 4.575,
+      "mean_skill": -2.51,
+      "rounds": 85
+    }
+  ],
+  "releases": 339,
+  "start": {
+    "claude-fable": "2026-01-31",
+    "claude-fable-zeroshot": "2026-01-31",
+    "claude-opus": "2026-01-31",
+    "claude-opus-5": "2026-05-31",
+    "claude-opus-5-zeroshot": "2026-05-31",
+    "claude-opus-zeroshot": "2026-01-31",
+    "claude-sonnet": "2026-01-31",
+    "claude-sonnet-zeroshot": "2026-01-31",
+    "deepseek-flash": "2026-08-30",
+    "deepseek-flash-zeroshot": "2026-08-30",
+    "deepseek-pro": "2025-05-31",
+    "deepseek-pro-zeroshot": "2025-05-31",
+    "gemini-flash": "2026-08-20",
+    "gemini-flash-zeroshot": "2026-08-20",
+    "gemini-pro": "2026-03-15",
+    "gemini-pro-zeroshot": "2026-03-15",
+    "glm": "2026-03-31",
+    "glm-zeroshot": "2026-03-31",
+    "gpt-5.6-luna": "2026-03-18",
+    "gpt-5.6-luna-zeroshot": "2026-03-18",
+    "gpt-5.6-sol": "2026-03-18",
+    "gpt-5.6-sol-zeroshot": "2026-03-18",
+    "gpt-5.6-terra": "2026-03-18",
+    "gpt-5.6-terra-zeroshot": "2026-03-18",
+    "grok": "2026-03-03",
+    "grok-zeroshot": "2026-03-03",
+    "qwen-3.7": "2026-06-19",
+    "qwen-3.7-zeroshot": "2026-06-19",
+    "qwen-3.8": "2026-07-01",
+    "qwen-3.8-zeroshot": "2026-07-01"
+  },
+  "window": {
+    "first": "2025-05-31",
+    "last": "2026-07-23"
+  }
+}
