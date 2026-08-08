@@ -28,7 +28,6 @@ jobs:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
-      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
       DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
       # Optional per-entrant endpoint and model overrides, for self-hosted
       # gateways and regional deployments that speak the same protocol on a
@@ -36,13 +35,11 @@ jobs:
       # *secret* (when the hostname itself is internal); unset leaves the
       # default in ssa/harness.py. The base is part of both cache keys, so
       # switching gateways correctly re-runs instead of reusing stale replies.
+      # Qwen, Kimi, GLM and MiniMax are one deployment behind one gateway, so
+      # they share one variable rather than four that can drift apart. The
+      # existing SSA_BASE_QWEN secret is accepted as a fallback.
+      SSA_BASE_GATEWAY: ${{ vars.SSA_BASE_GATEWAY || secrets.SSA_BASE_GATEWAY || secrets.SSA_BASE_QWEN }}
       SSA_BASE_QWEN: ${{ vars.SSA_BASE_QWEN || secrets.SSA_BASE_QWEN }}
-      SSA_BASE_DEEPSEEK: ${{ vars.SSA_BASE_DEEPSEEK || secrets.SSA_BASE_DEEPSEEK }}
-      SSA_BASE_GPT_5_5: ${{ vars.SSA_BASE_GPT_5_5 || secrets.SSA_BASE_GPT_5_5 }}
-      SSA_BASE_CLAUDE_OPUS: ${{ vars.SSA_BASE_CLAUDE_OPUS || secrets.SSA_BASE_CLAUDE_OPUS }}
-      SSA_BASE_GEMINI_PRO: ${{ vars.SSA_BASE_GEMINI_PRO || secrets.SSA_BASE_GEMINI_PRO }}
-      SSA_BASE_GROK: ${{ vars.SSA_BASE_GROK || secrets.SSA_BASE_GROK }}
-      SSA_MODEL_QWEN: ${{ vars.SSA_MODEL_QWEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -51,7 +48,12 @@ jobs:
       - run: pip install -r requirements.txt
       - run: python -m tests.test_scoring
       - run: python -m ssa.refresh
+      # always(): ssa.refresh exits non-zero when any entrant's provider call
+      # fails, but the forecasts that did succeed are already written and a
+      # round locks on a hard deadline. Commit what landed, and let the job
+      # still report failure so the cause gets fixed.
       - name: commit if changed
+        if: always()
         run: |
           git config user.name "ssa-bot"
           git config user.email "actions@github.com"

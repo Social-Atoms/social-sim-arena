@@ -199,12 +199,18 @@ def read_forecast(path):
 
 
 def file_baseline_forecasts(rounds, hist_by_round, now):
+    """Write every entrant's forecast for each open round.
+
+    Returns (files_written, failures). Failures are messages, never mocks: a
+    placeholder filed on error is a green workflow hiding a wrong model name.
+    """
     """The hosted always-on agents: while a round is open, the refresh cron
     keeps each baseline's and each frontier model's forecast file current;
     the last commit before lock_at is the one that counts. Model forecasts
     are real API output when a key is configured and clearly-labeled
     deterministic MOCKs otherwise (see ssa/harness.py)."""
     written = 0
+    failures = []
     for r in rounds:
         if r["status"] != "open" or not r.get("baselines"):
             continue
@@ -229,14 +235,24 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
         # different questions and belong on different leaderboard rows.
         for entrant, _model, _variant in harness.season_entrants():
             path = os.path.join(rdir, entrant + ".json")
-            body = harness.forecast(entrant, r,
-                                    history=hist_by_round.get(r["round_id"]),
-                                    previous=read_forecast(path))
+            try:
+                body = harness.forecast(entrant, r,
+                                        history=hist_by_round.get(r["round_id"]),
+                                        previous=read_forecast(path))
+            except Exception as e:                 # noqa: BLE001 - collected
+                # Collected rather than raised here on purpose. Failing at the
+                # first bad provider would strand every other entrant's
+                # forecast unwritten, and rounds lock on a hard deadline. The
+                # successes land; main() reports every failure and exits
+                # non-zero, so a run is loudly broken without being silently
+                # incomplete.
+                failures.append(f"{r['round_id']}/{entrant}: {e}")
+                continue
             with open(path, "w") as f:
                 json.dump(body, f, indent=2)
                 f.write("\n")
             written += 1
-    return written
+    return written, failures
 
 
 def count_forecasts(rounds):
@@ -429,7 +445,7 @@ def main():
             resolved = json.load(f)
 
     rounds, hist_by_round = build_rounds(season, series, resolved, now)
-    filed = file_baseline_forecasts(rounds, hist_by_round, now)
+    filed, filing_failures = file_baseline_forecasts(rounds, hist_by_round, now)
     count_forecasts(rounds)
     board = build_leaderboard(rounds, resolved)
     bt = backtest.run({
@@ -481,12 +497,26 @@ def main():
     except Exception as e:
         print("sharecard skipped:", e)
     print("wrote", OUT)
+    keyed = sorted(m for m in harness.MODELS if harness.has_key(m))
     print("forecast files filed:", filed,
-          "| live models:", sorted(m for m in harness.MODELS if harness.has_key(m)) or "none (all MOCK)")
+          "| models with a key:", keyed or "none")
     print("approval polls:", len(approval), "| generic:", len(generic),
           "| umich points:", len(umich))
     print("approval avg:", trackers["trump_approval_avg"]["value"],
           "| generic margin:", trackers["generic_ballot_avg"]["value"])
+
+    if filing_failures:
+        # site/data.json and every successful forecast are already on disk, so
+        # the workflow's commit step (which runs with if: always()) still lands
+        # them and a round does not miss its lock over one bad provider. The
+        # non-zero exit is what makes the failure impossible to ignore.
+        print(f"\n{len(filing_failures)} forecast(s) failed and were NOT filed:")
+        for f in filing_failures:
+            print("  -", f)
+        raise SystemExit(
+            f"{len(filing_failures)} entrant forecast(s) failed. Nothing was "
+            "mocked; fix the cause and re-run. Set SSA_ALLOW_MOCK=1 only for "
+            "local work without keys.")
 
 
 if __name__ == "__main__":
