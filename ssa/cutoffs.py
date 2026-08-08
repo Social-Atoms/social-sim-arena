@@ -2,34 +2,26 @@
 
 A backtest is only contamination-free over releases the model could not have
 memorized, so the boundary that matters is the training-data cutoff. It is also
-the weakest link in the whole design, because no vendor publishes a verifiable
-one. What the public record actually supports, as of 2026-08:
+the weakest link in the design, because no vendor publishes a verifiable one and
+several publish nothing at all. Every row carries `confidence`; anything below
+"declared" is an upper bound on what we know, not a fact, and the paper has to
+say so.
 
-  claude-opus-5   2026-05  consistent between Anthropic's model overview and
-                           third-party trackers
-  gpt-5.5         2025-12  reported; users have also seen the model self-report
-                           2024-06, so the true boundary is disputed
-  gemini-2.5-pro  2025-01  trackers disagree (2025-01 vs 2025-06)
-  grok-4          2024-12  third-party only
-  deepseek-chat   2024-07  never published; extracted from a system prompt
-  qwen-max        unknown  Qwen maintainers state self-reported dates are
-                           unreliable, since models are not trained to identify
-                           themselves
+`MARGIN_DAYS` pushes the usable window past the stated date. Cutoffs leak in one
+direction: a document crawled two months late can still describe the month
+before the cutoff, so the final weeks of a stated range are the least
+trustworthy part of it. Starting exactly at the cutoff would be the one choice
+guaranteed to be wrong.
 
-So this table is evidence, not ground truth. Two consequences are encoded here:
+Three entrants cannot be backtested at all right now, and that is arithmetic
+rather than a configuration choice: their cutoffs fall at or after the right
+edge of the data (2026-08-05). They run live only, which is precisely the case
+the live arena exists to cover -- there is no other way to evaluate a
+July-2026-cutoff model without contamination.
 
-1. Every row carries `confidence`. Anything below "declared" is an upper bound
-   on what we know, not a fact, and the paper has to say so.
-2. `MARGIN_DAYS` pushes the usable window past the stated date. Cutoffs leak in
-   one direction: a document crawled two months late can still describe the
-   month before the cutoff, so the final weeks of a stated range are the least
-   trustworthy part of it. Starting exactly at the cutoff would be the one
-   choice guaranteed to be wrong.
-
-Every entry here needs re-checking whenever an entrant's model id changes: the
-table is keyed by *entrant*, not by model, so upgrading `grok` from 4 to 4.5
-silently keeps the older model's cutoff and would date the backtest window from
-a boundary that no longer applies.
+This table is keyed by *entrant*, not by model id. Changing an entrant's model
+without revisiting its row silently dates the window from the previous model's
+boundary, so upgrading a model and updating its cutoff are one change.
 """
 import datetime
 
@@ -42,29 +34,59 @@ MARGIN_DAYS = 30
 # confidence: "declared" (vendor documentation) > "reported" (consistent
 #             third-party) > "disputed" (sources disagree) > "unknown".
 CUTOFFS = {
-    "gpt-5.5": {
-        "date": "2025-12-01", "confidence": "disputed",
-        "source": "third-party trackers; model has also self-reported 2024-06",
+    "claude-sonnet": {
+        "date": "2026-01-01", "confidence": "declared",
+        "source": "Anthropic: trained on data up until January 2026",
     },
-    "claude-opus": {
-        "date": "2026-05-01", "confidence": "reported",
-        "source": "Anthropic model overview; consistent across trackers",
-    },
-    "gemini-pro": {
-        "date": "2025-01-31", "confidence": "disputed",
-        "source": "trackers split between 2025-01 and 2025-06",
+    "claude-fable": {
+        "date": "2026-01-01", "confidence": "declared",
+        "source": "Anthropic: trained on data up until January 2026",
     },
     "grok": {
-        "date": "2024-12-01", "confidence": "reported",
-        "source": "third-party model spec pages",
+        "date": "2026-02-01", "confidence": "declared",
+        "source": "xAI: Grok 4.5 cutoff 2026-02-01 without search tools",
     },
-    "deepseek": {
-        "date": "2024-07-01", "confidence": "disputed",
-        "source": "extracted from system prompts; DeepSeek publishes nothing",
+    "gemini-pro": {
+        "date": "2026-02-13", "confidence": "reported",
+        "source": "Gemini 3.1 Pro, February 13 2026",
+    },
+    "gpt-5.6-luna": {
+        "date": "2026-02-16", "confidence": "declared",
+        "source": "OpenAI model page: GPT-5.6 family cutoff February 16 2026",
+    },
+    "gpt-5.6-sol": {
+        "date": "2026-02-16", "confidence": "declared",
+        "source": "OpenAI model page: GPT-5.6 family cutoff February 16 2026",
+    },
+    "gpt-5.6-terra": {
+        "date": "2026-02-16", "confidence": "declared",
+        "source": "OpenAI model page: GPT-5.6 family cutoff February 16 2026",
+    },
+    "glm": {
+        "date": "2026-03-01", "confidence": "reported",
+        "source": "GLM-5.2, March 2026; Zhipu publishes no exact day",
+    },
+    "claude-opus": {
+        "date": "2026-05-01", "confidence": "declared",
+        "source": "Anthropic: trained on data up until May 2026",
     },
     "qwen": {
-        "date": None, "confidence": "unknown",
-        "source": "unpublished; maintainers call self-reported dates unreliable",
+        "date": "2026-05-20", "confidence": "reported",
+        "source": "Qwen3.7-Max, 2026-05-20",
+    },
+    # --- cutoffs at or past the right edge of the data: live only ----------
+    "minimax": {
+        "date": "2026-06-01", "confidence": "unknown",
+        "source": "MiniMax publishes no cutoff; 2026-06-01 assumed by the "
+                  "maintainers and treated as live-only rather than backtested",
+    },
+    "kimi": {
+        "date": "2026-07-13", "confidence": "reported",
+        "source": "Kimi K3, 2026-07-13; the technical report states none",
+    },
+    "gemini-flash": {
+        "date": "2026-07-21", "confidence": "reported",
+        "source": "Gemini 3.6 Flash, July 21 2026",
     },
 }
 
@@ -94,7 +116,7 @@ def partition(entrants, margin_days=MARGIN_DAYS):
     """Split into (scorable, unknown). An entrant with no credible cutoff is
     not scorable at all: there is no window we can argue it did not memorize,
     so excluding it from the *window* but leaving it in the *table* would be
-    the worst of both -- a contaminated row sitting under a clean start date.
+    the worst of both -- a contaminated row under a clean start date.
     """
     known = [e for e in entrants if usable_start(e, margin_days)]
     return known, [e for e in entrants if e not in known]
