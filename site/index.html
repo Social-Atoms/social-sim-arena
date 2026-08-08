@@ -324,8 +324,11 @@ const VENDORS = [
 ];
 const vendorOf = id => { for(const [re,key] of VENDORS) if(re.test(id)) return key; return null; };
 const vendorName = key => { for(const [,k,n] of VENDORS) if(k===key) return n; return key; };
+const VCOLOR = {claude:'#D97757', openai:'#0FA47F', gemini:'#4285F4', grok:'#111110', deepseek:'#4D6BFE', qwen:'#615CED', zhipu:'#2F6BFF'};
+const avColor = id => { const v = vendorOf(id); if(v) return VCOLOR[v];
+  if(id==='human-crowd') return 'var(--accent)'; return '#a8a69e'; };
 const avatar = id => { const v = vendorOf(id);
-  return '<span class="av" style="background:'+colorOf(id)+'">'+(v?'<img class="lg" src="logos/'+v+'.svg" onerror="this.remove()" alt="">':'')+initOf(id)+'</span>'; };
+  return '<span class="av" style="background:'+avColor(id)+'">'+(v?'<img class="lg" src="logos/'+v+'.svg" onerror="this.remove()" alt="">':'')+initOf(id)+'</span>'; };
 const colorOf = id => ENTITY[id] || MCOLORS[id] || '#b3b1aa';
 const INITIALS = { crowd:'CR', ewma:'EW', trend:'TR', climatology:'CL', persistence:'PS' };
 const initOf = id => INITIALS[id] || String(id).slice(0,2).toUpperCase();
