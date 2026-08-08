@@ -13,13 +13,15 @@ Every frontier-model entrant runs through this module each refresh. Two modes:
    model-specific offset, clearly labeled MOCK in the notes. This keeps the
    entrant slots, pages, and scoring pipeline fully exercised.
 
-Three wire protocols cover all six providers, so no vendor SDKs are needed:
-  openai    - /chat/completions (OpenAI, xAI, DeepSeek, Qwen/DashScope)
+Three wire protocols cover all thirteen entered models, so no vendor SDKs are
+needed:
+  openai    - /chat/completions (OpenAI, xAI, and the Qwen/Kimi/GLM/MiniMax
+              gateway, which all speak it)
   anthropic - /v1/messages
   gemini    - /models/{m}:generateContent
 
-Model ids are overridable per entrant without touching code, e.g.
-  SSA_MODEL_GPT_5_5=gpt-5.6  SSA_MODEL_CLAUDE_OPUS=claude-opus-5
+Model id and endpoint are both overridable per entrant without touching code:
+  SSA_MODEL_GROK=grok-4.3   SSA_BASE_QWEN=https://my-gateway/compatible-mode/v1
 
 Cost control: a forecast is only re-requested when its inputs changed. Every
 filed forecast carries in=<hash of the prompt> in its notes; if the hash still
@@ -36,16 +38,16 @@ import requests
 # Reasoning depth is set as high as each provider allows, and the parameter is
 # not portable -- getting it wrong is a 400, not a silent downgrade:
 #   OpenAI     reasoning_effort, ladder none/low/medium/high/xhigh/max
-#   Anthropic  thinking {type: adaptive} + output_config {effort}. The older
-#              {type: "enabled", budget_tokens: N} is REJECTED on Opus 5,
-#              Sonnet 5 and Fable 5.
+#   Anthropic  thinking {type: adaptive} + output_config {effort: "max"}. The
+#              older {type: "enabled", budget_tokens: N} is REJECTED on Opus 5,
+#              Opus 4.8, Sonnet 5 and Fable 5.
 #   xAI        reasoning_effort, only low/medium/high; defaults to high and
 #              cannot be disabled, so "high" is already the ceiling.
 #   gateway    Kimi, GLM, MiniMax and Qwen ride one OpenAI-compatible gateway
 #              whose effort support is undocumented, so nothing is sent.
 OPENAI_MAX_EFFORT = {"reasoning_effort": "max"}
 ANTHROPIC_MAX_EFFORT = {"thinking": {"type": "adaptive"},
-                        "output_config": {"effort": "xhigh"}}
+                        "output_config": {"effort": "max"}}
 XAI_MAX_EFFORT = {"reasoning_effort": "high"}
 
 # Temperature is deliberately never set. Current frontier models on OpenAI and
@@ -72,9 +74,13 @@ MODELS = {
         "params": OPENAI_MAX_EFFORT,
     },
     # --- Anthropic --------------------------------------------------------
+    # Opus 4.8 rather than Opus 5: Opus 5's May 2026 cutoff sits so close to
+    # the right edge of the data that entering it collapses the common backtest
+    # window for every other model. 4.8 is a January 2026 cutoff, which costs
+    # little capability and buys the whole window back.
     "claude-opus": {
-        "env": "ANTHROPIC_API_KEY", "name": "Claude Opus 5", "api": "anthropic",
-        "base": "https://api.anthropic.com/v1", "model": "claude-opus-5",
+        "env": "ANTHROPIC_API_KEY", "name": "Claude Opus 4.8", "api": "anthropic",
+        "base": "https://api.anthropic.com/v1", "model": "claude-opus-4-8",
         "params": ANTHROPIC_MAX_EFFORT,
     },
     "claude-sonnet": {
@@ -127,7 +133,17 @@ MODELS = {
     },
 }
 
-MAX_TOKENS = 4096  # generous: on thinking models this budget covers reasoning too
+# No output ceiling is imposed. Thinking tokens count against any cap, so at
+# max reasoning effort a small one truncates the reply before the model reaches
+# its JSON; that fails to parse and falls back to a labelled MOCK -- a silent
+# downgrade under a green workflow. OpenAI and Gemini are simply not sent a
+# limit, which leaves the model's own maximum in force.
+#
+# Anthropic is the exception: max_tokens is a *required* field on the Messages
+# API, so the model's advertised maximum is sent instead. It is a cap, not a
+# spend; only tokens actually produced are billed.
+ANTHROPIC_MAX_TOKENS = 128000   # max_tokens reported by /v1/models for Opus 4.8,
+                                # Sonnet 5 and Fable 5 (1M input, 128k output)
 TIMEOUT = 120
 
 # Two prompt variants, differing only in how much of the series the model sees.
@@ -371,8 +387,9 @@ def _extract_text(data, what):
 
 
 def _call_openai(cfg, base, key, mid, prompt):
-    body = {"model": mid, "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": MAX_TOKENS}
+    # No max_tokens: the model's own ceiling applies. A caller can still set one
+    # through cfg["params"], and the rename retry below covers that case.
+    body = {"model": mid, "messages": [{"role": "user", "content": prompt}]}
     body.update(cfg.get("params") or {})
     url = base + "/chat/completions"
     r = requests.post(url, headers={"Authorization": "Bearer " + key},
@@ -380,7 +397,8 @@ def _call_openai(cfg, base, key, mid, prompt):
     # Newer OpenAI models replaced max_tokens with max_completion_tokens and
     # reject the old name outright. Retry once on the rename rather than make
     # every caller know which vintage its model is.
-    if r.status_code == 400 and "max_completion_tokens" in (r.text or ""):
+    if (r.status_code == 400 and "max_completion_tokens" in (r.text or "")
+            and "max_tokens" in body):
         body["max_completion_tokens"] = body.pop("max_tokens")
         r = requests.post(url, headers={"Authorization": "Bearer " + key},
                           json=body, timeout=TIMEOUT)
@@ -389,7 +407,7 @@ def _call_openai(cfg, base, key, mid, prompt):
 
 
 def _call_anthropic(cfg, base, key, mid, prompt):
-    body = {"model": mid, "max_tokens": MAX_TOKENS,
+    body = {"model": mid, "max_tokens": ANTHROPIC_MAX_TOKENS,
             "messages": [{"role": "user", "content": prompt}]}
     body.update(cfg.get("params") or {})
     r = requests.post(base + "/messages",
@@ -404,9 +422,10 @@ def _call_anthropic(cfg, base, key, mid, prompt):
 
 
 def _call_gemini(cfg, base, key, mid, prompt):
-    body = {"contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": dict({"maxOutputTokens": MAX_TOKENS},
-                                     **(cfg.get("params") or {}))}
+    # No maxOutputTokens: leave the model's own ceiling in force.
+    body = {"contents": [{"parts": [{"text": prompt}]}]}
+    if cfg.get("params"):
+        body["generationConfig"] = dict(cfg["params"])
     url = f"{base}/models/{mid}:generateContent"
     r = requests.post(url, headers={"x-goog-api-key": key}, json=body, timeout=TIMEOUT)
     data = _check(r, f"{mid} @ {base}")
