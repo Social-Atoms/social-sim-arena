@@ -174,7 +174,8 @@ def plan(series_map, entrants, start, warmup=WARMUP, end=None):
                     "entrant": entrant, "series": series,
                     "date": target["date"], "outcome": target["value"],
                     "round": r, "history": past, "prompt": prompt,
-                    "cached": cache_read(entrant, prompt) is not None,
+                    "cached": (cache_read(entrant, prompt) or {}).get("topline")
+                              is not None,
                 })
     return tasks
 
@@ -185,9 +186,19 @@ def plan(series_map, entrants, start, warmup=WARMUP, end=None):
 # no-reasoning figure understated a full run by more than an order of
 # magnitude, which is the wrong direction for an estimate whose only job is to
 # stop a surprise.
-OUT_TOKENS_PLAIN = 120
-OUT_TOKENS_REASONING = 6000
-IN_TOKENS = 700
+# Measured, not assumed. One live call to claude-fable-5 at effort=max on a
+# real round prompt used 378 input and 454 output tokens, 435 of them thinking:
+# the task is small enough that maximum effort still means a few hundred
+# tokens of reasoning, not a few thousand. Guessing 6,000 overstated a full run
+# by a factor of twelve, after an earlier guess of 120 understated it by
+# twenty-four. Both errors came from estimating a quantity the API reports.
+#
+# cache_write records the real usage per call, so `python tools/run_model_backtest.py`
+# reports what a completed run actually cost rather than what it was predicted
+# to cost. These constants only price calls not yet made.
+OUT_TOKENS_PLAIN = 150
+OUT_TOKENS_REASONING = 500
+IN_TOKENS = 400
 
 
 def estimate_cost(tasks):
@@ -215,7 +226,12 @@ def run_task(t, use_cache=True):
     """One forecast. Returns a record; never raises for provider errors."""
     if use_cache:
         hit = cache_read(t["entrant"], t["prompt"])
-        if hit is not None:
+        # A cached *failure* is not a result. Timeouts and proxy errors are
+        # transient, so serving them from cache would freeze a bad afternoon
+        # into the record permanently and no re-run could ever repair it. The
+        # record stays on disk for the audit trail; it just does not count as
+        # an answer.
+        if hit is not None and hit.get("topline") is not None:
             hit["from_cache"] = True
             return hit
 
@@ -223,15 +239,17 @@ def run_task(t, use_cache=True):
         "entrant": t["entrant"], "model": harness.model_id(t["entrant"]),
         "series": t["series"], "date": t["date"], "outcome": t["outcome"],
         "prompt_sha256": cache_key(t["entrant"], t["prompt"]),
-        "topline": None, "error": None, "raw": None,
+        "topline": None, "error": None, "raw": None, "usage": None,
         "harness": "v1", "from_cache": False,
     }
 
     last = None
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            raw = harness.call_provider(t["entrant"], t["prompt"])
+            raw, usage = harness.call_provider(t["entrant"], t["prompt"],
+                                               with_usage=True)
             record["raw"] = (raw or "")[:2000]
+            record["usage"] = usage
             record["topline"] = harness.parse_forecast(raw)
             record["error"] = None
             break
@@ -362,3 +380,63 @@ def score(records, series_map, warmup=WARMUP):
         "failures": failures,
         "cutoffs": {e: cutoffs.describe(e) for e in entrants},
     }
+
+
+def actual_cost(records):
+    """What a finished run really cost, from the usage each provider reported.
+
+    Returns (total_usd, per_entrant, tokens_missing). Providers that report no
+    usage are counted in `tokens_missing` rather than silently priced at zero.
+    """
+    per, total, missing = {}, 0.0, 0
+    for r in records:
+        u = r.get("usage") or {}
+        ino, out = u.get("input_tokens"), u.get("output_tokens")
+        if ino is None or out is None:
+            missing += 1
+            continue
+        model, _ = harness.resolve(r["entrant"])
+        cin, cout = PRICING.get(model, (2.0, 10.0))
+        usd = ino / 1e6 * cin + out / 1e6 * cout
+        per[r["entrant"]] = per.get(r["entrant"], 0.0) + usd
+        total += usd
+    return total, per, missing
+
+
+RUNS_DIR = os.path.join(ROOT, "backtest", "runs")
+
+
+def export_run(stamp, records=None):
+    """Consolidate the per-call cache into one committable JSONL.
+
+    The working cache is one file per call, which is right for resumability and
+    wrong for a repository: 2,868 files make a clone slow and a diff useless.
+    This writes the same content as one sorted, line-per-call file, which is
+    what belongs in git.
+
+    That file is the reproducibility mechanism, not a convenience. The models
+    run at their providers' default temperature, so re-running does not
+    reproduce; the only way a reader regenerates the published table is from
+    the replies as they were actually returned.
+    """
+    if records is None:
+        records = []
+        for entrant in sorted(os.listdir(CACHE_DIR)):
+            d = os.path.join(CACHE_DIR, entrant)
+            if not os.path.isdir(d):
+                continue
+            for name in sorted(os.listdir(d)):
+                if not name.endswith(".json"):
+                    continue
+                with open(os.path.join(d, name)) as f:
+                    records.append(json.load(f))
+    records.sort(key=lambda r: (r.get("entrant", ""), r.get("series", ""),
+                                r.get("date", "")))
+    os.makedirs(RUNS_DIR, exist_ok=True)
+    path = os.path.join(RUNS_DIR, f"{stamp}.jsonl")
+    with open(path, "w") as f:
+        for r in records:
+            r = dict(r)
+            r.pop("from_cache", None)
+            f.write(json.dumps(r, sort_keys=True) + "\n")
+    return path, len(records)
