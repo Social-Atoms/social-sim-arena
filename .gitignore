@@ -2,3 +2,17 @@ __pycache__/
 *.pyc
 .DS_Store
 paper/
+
+# Provider credentials. Keys live here for local runs and in GitHub Actions
+# secrets for CI -- never in the tree. The glob covers .env.local, .env.bak and
+# the rest, since one stray `git add -A` is all it takes.
+.env
+.env.*
+!.env.example
+
+# Kept local at the maintainer's request, not pushed. These exercise the
+# provider harness and are useful while wiring keys; remove these three lines
+# to start publishing them.
+tests/test_harness.py
+tests/test_model_backtest.py
+tools/check_provider.py
