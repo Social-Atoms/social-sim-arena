@@ -8,6 +8,7 @@ Everything the entry page shows comes from this file: live tracker values
 VoteHub for the Congress and Supreme Court trackers), round status computed against the clock, and baseline
 forecasts (persistence, trend) computed from the real series.
 """
+import concurrent.futures
 import json
 import os
 from datetime import date, datetime, timezone
@@ -187,6 +188,11 @@ def build_rounds(season, series, resolved, now):
 # then (correctly) rejects as late.
 LOCK_MARGIN_SECONDS = 30 * 60
 
+# Concurrent provider calls when filing forecasts. Each job is one call to one
+# provider, and the eleven entered models spread across five providers, so this
+# is a handful of concurrent requests per vendor rather than a burst at one.
+FILING_WORKERS = int(os.environ.get("SSA_FILING_WORKERS", "20"))
+
 
 def read_forecast(path):
     if not os.path.exists(path):
@@ -211,6 +217,7 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
     deterministic MOCKs otherwise (see ssa/harness.py)."""
     written = 0
     failures = []
+    jobs = []
     for r in rounds:
         if r["status"] != "open" or not r.get("baselines"):
             continue
@@ -234,24 +241,35 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
         # entrants: same weights, different information, so their scores answer
         # different questions and belong on different leaderboard rows.
         for entrant, _model, _variant in harness.season_entrants():
-            path = os.path.join(rdir, entrant + ".json")
-            try:
-                body = harness.forecast(entrant, r,
-                                        history=hist_by_round.get(r["round_id"]),
-                                        previous=read_forecast(path))
-            except Exception as e:                 # noqa: BLE001 - collected
-                # Collected rather than raised here on purpose. Failing at the
-                # first bad provider would strand every other entrant's
-                # forecast unwritten, and rounds lock on a hard deadline. The
-                # successes land; main() reports every failure and exits
-                # non-zero, so a run is loudly broken without being silently
-                # incomplete.
-                failures.append(f"{r['round_id']}/{entrant}: {e}")
-                continue
-            with open(path, "w") as f:
-                json.dump(body, f, indent=2)
-                f.write("\n")
-            written += 1
+            jobs.append((r, entrant, os.path.join(rdir, entrant + ".json")))
+
+    # One provider call per job, and at max reasoning effort a single call can
+    # take a minute. Sequentially that is hours for a full season; the calls are
+    # independent, so they run concurrently. Results are written by the worker
+    # that produced them, and `failures` is appended under the GIL, which is
+    # sufficient for list.append.
+    def run_job(job):
+        r, entrant, path = job
+        try:
+            body = harness.forecast(entrant, r,
+                                    history=hist_by_round.get(r["round_id"]),
+                                    previous=read_forecast(path))
+        except Exception as e:                     # noqa: BLE001 - collected
+            # Collected rather than raised. Failing at the first bad provider
+            # would strand every other entrant's forecast unwritten, and rounds
+            # lock on a hard deadline. The successes land; main() reports every
+            # failure and exits non-zero, so a run is loudly broken without
+            # being silently incomplete.
+            failures.append(f"{r['round_id']}/{entrant}: {e}")
+            return 0
+        with open(path, "w") as f:
+            json.dump(body, f, indent=2)
+            f.write("\n")
+        return 1
+
+    if jobs:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=FILING_WORKERS) as ex:
+            written = sum(ex.map(run_job, jobs))
     return written, failures
 
 

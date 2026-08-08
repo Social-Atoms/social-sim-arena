@@ -49,6 +49,11 @@ WARMUP = 8
 # drift, and at max reasoning effort the output side dominates by far -- the
 # estimate answers "is this $2 or $200" before a run, nothing more.
 PRICING = {
+    "qwen-3.7": (1.60, 6.40),
+    "qwen-3.8": (1.60, 6.40),
+    "deepseek-pro": (0.55, 2.19),
+    "deepseek-flash": (0.28, 0.42),
+    "claude-opus-5": (5.00, 25.00),
     "gpt-5.6-luna": (1.25, 10.00),
     "gpt-5.6-sol": (1.25, 10.00),
     "gpt-5.6-terra": (1.25, 10.00),
@@ -58,7 +63,6 @@ PRICING = {
     "gemini-pro": (1.25, 10.00),
     "gemini-flash": (0.30, 2.50),
     "grok": (3.00, 15.00),
-    "qwen": (1.60, 6.40),
     "kimi": (1.00, 5.00),
     "glm": (0.60, 2.20),
     "minimax": (0.40, 2.00),
@@ -130,22 +134,42 @@ def cache_write(entrant, prompt, record):
 def plan(series_map, entrants, start, warmup=WARMUP, end=None):
     """Every (entrant, series, release) call the backtest needs.
 
-    `start` is the first release date to score, normally cutoffs.common_start.
+    `start` is the first release date to score. Pass a single ISO day to put
+    every entrant on one window, or a {entrant: day} mapping to give each its
+    own -- the mapping is what lets a recently trained model be scored at all,
+    on the shorter stretch of history it could not have memorized, instead of
+    dragging every other entrant's window down to meet it.
+
+    Cross-entrant comparison then rests on skill against persistence computed
+    on each entrant's own points, which travels across different release sets
+    far better than a raw mean CRPS does. score() still reports the matched
+    table for the strict comparison.
+
     Returns a list of task dicts; each carries the pre-target history slice so
     the prompt is built from exactly what the baselines will see.
     """
+    starts = start if isinstance(start, dict) else {e: start for e in entrants}
+    missing = [e for e in entrants if e not in starts]
+    if missing:
+        raise ValueError(f"no start date for: {', '.join(missing)}")
     tasks = []
     for series, history in sorted(series_map.items()):
         for i in range(warmup, len(history)):
             target = history[i]
-            if target["date"] < start:
+            if target["date"] < min(starts.values()):
                 continue
             if end and target["date"] > end:
                 continue
             past = history[:i]
             r = pseudo_round(series, target["date"])
             for entrant in entrants:
-                prompt = harness.build_prompt(r, past)
+                if target["date"] < starts[entrant]:
+                    continue          # inside this model's training window
+                # The condition is carried by the entrant id, exactly as in the
+                # live arena, so the backtest scores both information
+                # conditions rather than silently replaying only the default.
+                _, variant = harness.resolve(entrant)
+                prompt = harness.build_prompt(r, past, variant)
                 tasks.append({
                     "entrant": entrant, "series": series,
                     "date": target["date"], "outcome": target["value"],
@@ -155,15 +179,31 @@ def plan(series_map, entrants, start, warmup=WARMUP, end=None):
     return tasks
 
 
+# Assumed output tokens per call. The visible answer is one small JSON object,
+# so the number is almost entirely reasoning: a model at max effort can think
+# for thousands of tokens before writing twenty. Costing every entrant at the
+# no-reasoning figure understated a full run by more than an order of
+# magnitude, which is the wrong direction for an estimate whose only job is to
+# stop a surprise.
+OUT_TOKENS_PLAIN = 120
+OUT_TOKENS_REASONING = 6000
+IN_TOKENS = 700
+
+
 def estimate_cost(tasks):
-    """Rough USD for the uncached calls. Assumes ~700 in / ~120 out tokens,
-    measured off the live prompts; thinking models will exceed the output side."""
+    """Rough USD for the uncached calls, split by entrant. Reasoning-heavy
+    entrants are costed at a much larger output budget; see the constants."""
     per_entrant, total = {}, 0.0
     for t in tasks:
         if t["cached"]:
             continue
-        cin, cout = PRICING.get(t["entrant"], (2.0, 10.0))
-        usd = (700 / 1e6) * cin + (120 / 1e6) * cout
+        model, _ = harness.resolve(t["entrant"])
+        cin, cout = PRICING.get(model, (2.0, 10.0))
+        params = harness.MODELS[model].get("params") or {}
+        reasoning = ("reasoning_effort" in params
+                     or "output_config" in params or "thinking" in params)
+        out = OUT_TOKENS_REASONING if reasoning else OUT_TOKENS_PLAIN
+        usd = (IN_TOKENS / 1e6) * cin + (out / 1e6) * cout
         per_entrant[t["entrant"]] = per_entrant.get(t["entrant"], 0.0) + usd
         total += usd
     return total, per_entrant
