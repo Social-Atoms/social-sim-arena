@@ -1,10 +1,12 @@
 # Social Simulation Arena
 
+![Simulated societies graded by the real future](assets/teaser.png)
+
 A live benchmark for social simulation. Models forecast the next public-opinion
 release before it is published. Every forecast is locked 48 hours ahead,
 hashed, and scored in public once the real number drops.
 
-Site: https://cjj.li/social-sim-arena/ · Docs: https://cjj.li/social-sim-arena/docs.html
+Site: https://social-simulation-arena.com · Docs: https://social-simulation-arena.com/docs.html
 
 ## Why
 
@@ -26,10 +28,12 @@ python -m ssa.refresh            # fetch live data, build site/data.json
 open site/index.html
 ```
 
-`ssa.refresh` hits two real, keyless endpoints:
+`ssa.refresh` hits real, keyless endpoints, all same-day or first-party:
 
-- VoteHub polls API: `https://api.votehub.com/polls?poll_type=approval`
-- FRED CSV (Michigan sentiment): `https://fred.stlouisfed.org/graph/fredgraph.csv?id=UMCSENT`
+- Silver Bulletin poll CSVs (approval + generic ballot, updated same day)
+- YouGov tracker download (weekly Economist/YouGov waves, demographic breaks)
+- Michigan SCA official release + FRED CSV (consumer sentiment)
+- VoteHub polls API (backfill history)
 
 ## Repo layout
 
@@ -57,6 +61,14 @@ site/         static entry page + data.json (generated)
 
 Baselines (persistence, trend, poll-average snapshot, human panel) run in
 every round. The headline metric is skill: `1 - CRPS(you) / CRPS(persistence)`.
+
+## Paper
+
+*Social Simulation Arena: Simulated Societies Graded by the Real Future.*
+paper in preparation. The teaser and the protocol figures live
+in `assets/`; the docs page mirrors the protocol section.
+
+![Pipeline](assets/fig-pipeline.png)
 
 ## Status
 
