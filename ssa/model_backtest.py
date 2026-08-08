@@ -49,6 +49,11 @@ WARMUP = 8
 # drift, and at max reasoning effort the output side dominates by far -- the
 # estimate answers "is this $2 or $200" before a run, nothing more.
 PRICING = {
+    "qwen-3.7": (1.60, 6.40),
+    "qwen-3.8": (1.60, 6.40),
+    "deepseek-pro": (0.55, 2.19),
+    "deepseek-flash": (0.28, 0.42),
+    "claude-opus-5": (5.00, 25.00),
     "gpt-5.6-luna": (1.25, 10.00),
     "gpt-5.6-sol": (1.25, 10.00),
     "gpt-5.6-terra": (1.25, 10.00),
@@ -58,7 +63,6 @@ PRICING = {
     "gemini-pro": (1.25, 10.00),
     "gemini-flash": (0.30, 2.50),
     "grok": (3.00, 15.00),
-    "qwen": (1.60, 6.40),
     "kimi": (1.00, 5.00),
     "glm": (0.60, 2.20),
     "minimax": (0.40, 2.00),
@@ -130,40 +134,87 @@ def cache_write(entrant, prompt, record):
 def plan(series_map, entrants, start, warmup=WARMUP, end=None):
     """Every (entrant, series, release) call the backtest needs.
 
-    `start` is the first release date to score, normally cutoffs.common_start.
+    `start` is the first release date to score. Pass a single ISO day to put
+    every entrant on one window, or a {entrant: day} mapping to give each its
+    own -- the mapping is what lets a recently trained model be scored at all,
+    on the shorter stretch of history it could not have memorized, instead of
+    dragging every other entrant's window down to meet it.
+
+    Cross-entrant comparison then rests on skill against persistence computed
+    on each entrant's own points, which travels across different release sets
+    far better than a raw mean CRPS does. score() still reports the matched
+    table for the strict comparison.
+
     Returns a list of task dicts; each carries the pre-target history slice so
     the prompt is built from exactly what the baselines will see.
     """
+    starts = start if isinstance(start, dict) else {e: start for e in entrants}
+    missing = [e for e in entrants if e not in starts]
+    if missing:
+        raise ValueError(f"no start date for: {', '.join(missing)}")
     tasks = []
     for series, history in sorted(series_map.items()):
         for i in range(warmup, len(history)):
             target = history[i]
-            if target["date"] < start:
+            if target["date"] < min(starts.values()):
                 continue
             if end and target["date"] > end:
                 continue
             past = history[:i]
             r = pseudo_round(series, target["date"])
             for entrant in entrants:
-                prompt = harness.build_prompt(r, past)
+                if target["date"] < starts[entrant]:
+                    continue          # inside this model's training window
+                # The condition is carried by the entrant id, exactly as in the
+                # live arena, so the backtest scores both information
+                # conditions rather than silently replaying only the default.
+                _, variant = harness.resolve(entrant)
+                prompt = harness.build_prompt(r, past, variant)
                 tasks.append({
                     "entrant": entrant, "series": series,
                     "date": target["date"], "outcome": target["value"],
                     "round": r, "history": past, "prompt": prompt,
-                    "cached": cache_read(entrant, prompt) is not None,
+                    "cached": (cache_read(entrant, prompt) or {}).get("topline")
+                              is not None,
                 })
     return tasks
 
 
+# Assumed output tokens per call. The visible answer is one small JSON object,
+# so the number is almost entirely reasoning: a model at max effort can think
+# for thousands of tokens before writing twenty. Costing every entrant at the
+# no-reasoning figure understated a full run by more than an order of
+# magnitude, which is the wrong direction for an estimate whose only job is to
+# stop a surprise.
+# Measured, not assumed. One live call to claude-fable-5 at effort=max on a
+# real round prompt used 378 input and 454 output tokens, 435 of them thinking:
+# the task is small enough that maximum effort still means a few hundred
+# tokens of reasoning, not a few thousand. Guessing 6,000 overstated a full run
+# by a factor of twelve, after an earlier guess of 120 understated it by
+# twenty-four. Both errors came from estimating a quantity the API reports.
+#
+# cache_write records the real usage per call, so `python tools/run_model_backtest.py`
+# reports what a completed run actually cost rather than what it was predicted
+# to cost. These constants only price calls not yet made.
+OUT_TOKENS_PLAIN = 150
+OUT_TOKENS_REASONING = 500
+IN_TOKENS = 400
+
+
 def estimate_cost(tasks):
-    """Rough USD for the uncached calls. Assumes ~700 in / ~120 out tokens,
-    measured off the live prompts; thinking models will exceed the output side."""
+    """Rough USD for the uncached calls, split by entrant. Reasoning-heavy
+    entrants are costed at a much larger output budget; see the constants."""
     per_entrant, total = {}, 0.0
     for t in tasks:
         if t["cached"]:
             continue
-        cin, cout = PRICING.get(t["entrant"], (2.0, 10.0))
-        usd = (700 / 1e6) * cin + (120 / 1e6) * cout
+        model, _ = harness.resolve(t["entrant"])
+        cin, cout = PRICING.get(model, (2.0, 10.0))
+        params = harness.MODELS[model].get("params") or {}
+        reasoning = ("reasoning_effort" in params
+                     or "output_config" in params or "thinking" in params)
+        out = OUT_TOKENS_REASONING if reasoning else OUT_TOKENS_PLAIN
+        usd = (IN_TOKENS / 1e6) * cin + (out / 1e6) * cout
         per_entrant[t["entrant"]] = per_entrant.get(t["entrant"], 0.0) + usd
         total += usd
     return total, per_entrant
@@ -175,7 +226,12 @@ def run_task(t, use_cache=True):
     """One forecast. Returns a record; never raises for provider errors."""
     if use_cache:
         hit = cache_read(t["entrant"], t["prompt"])
-        if hit is not None:
+        # A cached *failure* is not a result. Timeouts and proxy errors are
+        # transient, so serving them from cache would freeze a bad afternoon
+        # into the record permanently and no re-run could ever repair it. The
+        # record stays on disk for the audit trail; it just does not count as
+        # an answer.
+        if hit is not None and hit.get("topline") is not None:
             hit["from_cache"] = True
             return hit
 
@@ -183,15 +239,17 @@ def run_task(t, use_cache=True):
         "entrant": t["entrant"], "model": harness.model_id(t["entrant"]),
         "series": t["series"], "date": t["date"], "outcome": t["outcome"],
         "prompt_sha256": cache_key(t["entrant"], t["prompt"]),
-        "topline": None, "error": None, "raw": None,
+        "topline": None, "error": None, "raw": None, "usage": None,
         "harness": "v1", "from_cache": False,
     }
 
     last = None
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            raw = harness.call_provider(t["entrant"], t["prompt"])
+            raw, usage = harness.call_provider(t["entrant"], t["prompt"],
+                                               with_usage=True)
             record["raw"] = (raw or "")[:2000]
+            record["usage"] = usage
             record["topline"] = harness.parse_forecast(raw)
             record["error"] = None
             break
@@ -322,3 +380,63 @@ def score(records, series_map, warmup=WARMUP):
         "failures": failures,
         "cutoffs": {e: cutoffs.describe(e) for e in entrants},
     }
+
+
+def actual_cost(records):
+    """What a finished run really cost, from the usage each provider reported.
+
+    Returns (total_usd, per_entrant, tokens_missing). Providers that report no
+    usage are counted in `tokens_missing` rather than silently priced at zero.
+    """
+    per, total, missing = {}, 0.0, 0
+    for r in records:
+        u = r.get("usage") or {}
+        ino, out = u.get("input_tokens"), u.get("output_tokens")
+        if ino is None or out is None:
+            missing += 1
+            continue
+        model, _ = harness.resolve(r["entrant"])
+        cin, cout = PRICING.get(model, (2.0, 10.0))
+        usd = ino / 1e6 * cin + out / 1e6 * cout
+        per[r["entrant"]] = per.get(r["entrant"], 0.0) + usd
+        total += usd
+    return total, per, missing
+
+
+RUNS_DIR = os.path.join(ROOT, "backtest", "runs")
+
+
+def export_run(stamp, records=None):
+    """Consolidate the per-call cache into one committable JSONL.
+
+    The working cache is one file per call, which is right for resumability and
+    wrong for a repository: 2,868 files make a clone slow and a diff useless.
+    This writes the same content as one sorted, line-per-call file, which is
+    what belongs in git.
+
+    That file is the reproducibility mechanism, not a convenience. The models
+    run at their providers' default temperature, so re-running does not
+    reproduce; the only way a reader regenerates the published table is from
+    the replies as they were actually returned.
+    """
+    if records is None:
+        records = []
+        for entrant in sorted(os.listdir(CACHE_DIR)):
+            d = os.path.join(CACHE_DIR, entrant)
+            if not os.path.isdir(d):
+                continue
+            for name in sorted(os.listdir(d)):
+                if not name.endswith(".json"):
+                    continue
+                with open(os.path.join(d, name)) as f:
+                    records.append(json.load(f))
+    records.sort(key=lambda r: (r.get("entrant", ""), r.get("series", ""),
+                                r.get("date", "")))
+    os.makedirs(RUNS_DIR, exist_ok=True)
+    path = os.path.join(RUNS_DIR, f"{stamp}.jsonl")
+    with open(path, "w") as f:
+        for r in records:
+            r = dict(r)
+            r.pop("from_cache", None)
+            f.write(json.dumps(r, sort_keys=True) + "\n")
+    return path, len(records)

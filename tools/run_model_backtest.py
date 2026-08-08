@@ -25,24 +25,28 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ssa import cutoffs, envfile, harness, model_backtest, refresh          # noqa: E402
-from ssa.adapters import fredcsv, votehub                          # noqa: E402
+from ssa import cutoffs, envfile, harness, model_backtest, refresh
+from ssa import series as series_registry          # noqa: E402
 
 envfile.load()   # local .env; CI passes secrets in the environment
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "backtest", "model_backtest.json")
 
-# Series with a question template and enough history to warm up on.
-SERIES = ["umich_sentiment", "yougov_approval", "mc_approval", "yougov_generic_margin"]
+# Every registered series. Taken from the registry rather than listed here, so
+# adding a tracker to ssa/series.py puts it in the backtest automatically
+# instead of leaving a second list to fall out of date.
+SERIES = list(series_registry.SERIES)
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--execute", action="store_true",
                     help="actually call the providers (default: plan only)")
-    ap.add_argument("--entrants", default=",".join(harness.MODELS),
-                    help="comma-separated entrant ids")
+    ap.add_argument("--entrants",
+                    default=",".join(e for e, _, _ in harness.season_entrants()),
+                    help="comma-separated entrant ids; defaults to every model "
+                         "in both information conditions")
     ap.add_argument("--start", help="override the first release date (ISO day)")
     ap.add_argument("--end", help="last release date (ISO day)")
     ap.add_argument("--margin-days", type=int, default=cutoffs.MARGIN_DAYS)
@@ -50,36 +54,54 @@ def main():
                     help="'raise', 'exclude', or an ISO day to assume")
     ap.add_argument("--limit", type=int,
                     help="cap releases per entrant (smoke test)")
-    ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--common-window", action="store_true",
+                    help="score every entrant on one shared window instead of "
+                         "each on its own post-cutoff stretch")
+    ap.add_argument("--workers", type=int, default=20)
     ap.add_argument("--out", default=OUT)
     args = ap.parse_args()
 
     entrants = [e.strip() for e in args.entrants.split(",") if e.strip()]
-    unknown = [e for e in entrants if e not in harness.MODELS]
-    if unknown:
-        sys.exit(f"unknown entrant(s): {', '.join(unknown)}")
+    try:
+        models = {e: harness.resolve(e)[0] for e in entrants}
+    except KeyError as e:
+        sys.exit(f"unknown entrant: {e}")
 
-    print("cutoffs")
-    for e in entrants:
-        print("  " + cutoffs.describe(e))
+    print("cutoffs (per model; both conditions share one)")
+    for m in sorted(set(models.values())):
+        print("  " + cutoffs.describe(m))
 
     if args.on_unknown == "exclude":
-        entrants, dropped = cutoffs.partition(entrants, args.margin_days)
+        keep, dropped = cutoffs.partition(sorted(set(models.values())),
+                                          args.margin_days)
+        entrants = [e for e in entrants if models[e] in keep]
         if dropped:
             print(f"\ndropped (no credible cutoff, so no defensible window): "
                   f"{', '.join(dropped)}")
         if not entrants:
             sys.exit("every entrant was dropped")
 
-    start = args.start or cutoffs.common_start(
-        entrants, args.margin_days, on_unknown=args.on_unknown)
-    print(f"\nscoring window starts {start}"
-          + (" (overridden)" if args.start else " = latest cutoff + margin"))
+    if args.start:
+        start = args.start
+    elif args.common_window:
+        start = cutoffs.common_start(sorted(set(models.values())),
+                                     args.margin_days,
+                                     on_unknown=args.on_unknown)
+    else:
+        # Each entrant on its own post-cutoff window by default. A shared
+        # window is bounded by the most recently trained model and throws away
+        # most of the history the older ones could legitimately be scored on.
+        # Keyed by entrant id, but the cutoff belongs to the model: both
+        # conditions of one model share its training boundary.
+        start = {e: cutoffs.usable_start(models[e], args.margin_days)
+                 for e in entrants}
+    if isinstance(start, dict):
+        print("\nscoring window: each entrant from its own cutoff + margin")
+    else:
+        print(f"\nscoring window starts {start}"
+              + (" (overridden)" if args.start else " = latest cutoff + margin"))
 
-    approval = votehub.approval_polls()
-    generic = votehub.generic_ballot_polls()
-    umich = fredcsv.umich_sentiment()
-    series = refresh.build_series(approval, generic, umich)
+    series = series_registry.build_all()
     series_map = {k: series[k] for k in SERIES if k in series}
 
     tasks = model_backtest.plan(series_map, entrants, start, end=args.end)
@@ -119,7 +141,7 @@ def main():
         print("\ndry run -- nothing called. Add --execute to run.")
         return
 
-    missing = [e for e in entrants if not harness.has_key(e)]
+    missing = sorted({m for m in models.values() if not harness.has_key(m)})
     if missing:
         sys.exit(f"\nno API key for: {', '.join(missing)}. "
                  "The backtest never files mock forecasts, so it stops here "
