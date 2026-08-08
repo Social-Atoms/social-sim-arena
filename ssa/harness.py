@@ -37,7 +37,8 @@ import requests
 
 # Reasoning depth is set as high as each provider allows, and the parameter is
 # not portable -- getting it wrong is a 400, not a silent downgrade:
-#   OpenAI     reasoning_effort, ladder none/low/medium/high/xhigh/max
+#   OpenAI     reasoning_effort; GPT-5.6 takes none/low/medium/high/xhigh
+#              and rejects "max", so xhigh is the ceiling there
 #   Anthropic  thinking {type: adaptive} + output_config {effort: "max"}. The
 #              older {type: "enabled", budget_tokens: N} is REJECTED on Opus 5,
 #              Opus 4.8, Sonnet 5 and Fable 5.
@@ -45,7 +46,10 @@ import requests
 #              cannot be disabled, so "high" is already the ceiling.
 #   gateway    Kimi, GLM, MiniMax and Qwen ride one OpenAI-compatible gateway
 #              whose effort support is undocumented, so nothing is sent.
-OPENAI_MAX_EFFORT = {"reasoning_effort": "max"}
+# "max" is rejected by the GPT-5.6 models with an explicit list of what they do
+# take: none/low/medium/high/xhigh. xhigh is their ceiling, so that is maximum
+# effort here despite the value differing from Anthropic's.
+OPENAI_MAX_EFFORT = {"reasoning_effort": "xhigh"}
 ANTHROPIC_MAX_EFFORT = {"thinking": {"type": "adaptive"},
                         "output_config": {"effort": "max"}}
 XAI_MAX_EFFORT = {"reasoning_effort": "high"}
