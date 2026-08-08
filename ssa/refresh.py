@@ -224,7 +224,10 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
                 json.dump(body, f, indent=2)
                 f.write("\n")
             written += 1
-        for entrant in harness.MODELS:
+        # Every model runs both conditions and they are filed as separate
+        # entrants: same weights, different information, so their scores answer
+        # different questions and belong on different leaderboard rows.
+        for entrant, _model, _variant in harness.season_entrants():
             path = os.path.join(rdir, entrant + ".json")
             body = harness.forecast(entrant, r,
                                     history=hist_by_round.get(r["round_id"]),

@@ -33,6 +33,7 @@ default is how a series ends up answering a different question than its round.
 import csv
 import datetime
 import io
+import time
 
 import requests
 
@@ -65,13 +66,38 @@ def _float(s):
         return None
 
 
-def fetch(url, timeout=TIMEOUT):
-    r = requests.get(url, timeout=timeout)
-    r.raise_for_status()
-    rows = list(csv.DictReader(io.StringIO(r.text)))
-    if not rows:
-        raise RuntimeError(f"Silver Bulletin sheet returned no rows: {url}")
-    return rows
+RETRIES = 4
+BACKOFF = 3.0  # seconds, multiplied by attempt number
+
+
+def fetch(url, timeout=TIMEOUT, retries=RETRIES):
+    """Fetch and parse one sheet, retrying transient network failures.
+
+    Google's endpoint drops connections intermittently -- two SSLEOFError
+    handshake failures in one afternoon here -- and the refresh runs unattended
+    every six hours with a hard deadline at each round's lock. One flake must
+    not cost a run, so transport errors are retried with a linear backoff.
+    An HTTP error or an empty body is not retried: those mean the sheet moved
+    or was unpublished, and repeating the request will not change it.
+    """
+    last = None
+    for attempt in range(1, retries + 1):
+        try:
+            r = requests.get(url, timeout=timeout)
+        except requests.RequestException as e:
+            last = e
+            if attempt < retries:
+                time.sleep(BACKOFF * attempt)
+                continue
+            raise RuntimeError(
+                f"Silver Bulletin sheet unreachable after {retries} attempts "
+                f"({type(e).__name__}: {e}): {url}") from e
+        r.raise_for_status()
+        rows = list(csv.DictReader(io.StringIO(r.text)))
+        if not rows:
+            raise RuntimeError(f"Silver Bulletin sheet returned no rows: {url}")
+        return rows
+    raise RuntimeError(f"Silver Bulletin sheet unreachable: {url} ({last})")
 
 
 def _records(rows, value_cols, subgroup=None, pollster=None, population=None):
