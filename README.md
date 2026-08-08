@@ -18,7 +18,7 @@ opinion. This is that arena.
 ## Quickstart
 
 ```bash
-git clone https://github.com/jajamoa/social-sim-arena
+git clone https://github.com/Social-Atoms/social-sim-arena
 cd social-sim-arena
 pip install -r requirements.txt
 python -m tests.test_scoring     # hand-checked scoring tests
