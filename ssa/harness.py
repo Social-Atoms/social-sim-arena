@@ -54,7 +54,13 @@ XAI_MAX_EFFORT = {"reasoning_effort": "high"}
 # Anthropic reject it outright, and elsewhere the provider default (~1.0) is
 # what we want: a rerun is not meant to reproduce, the committed record of raw
 # replies is.
+# Kimi, GLM, MiniMax and Qwen are served by one OpenAI-compatible gateway.
+# The public DashScope endpoint below carries only the Qwen family, so a
+# deployment that enters the other three must point SSA_BASE_GATEWAY (or the
+# per-entrant SSA_BASE_<ENTRANT>) at a gateway that serves them. Nothing here
+# hardcodes a private host.
 GATEWAY = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+GATEWAY_ENTRANTS = ("qwen", "kimi", "glm", "minimax")
 
 MODELS = {
     # --- OpenAI: all three GPT-5.6 variants -------------------------------
@@ -117,7 +123,7 @@ MODELS = {
     # --- Gateway-hosted (one OpenAI-compatible endpoint, one key) ----------
     "qwen": {
         "env": "DASHSCOPE_API_KEY", "name": "Qwen3.7 Max", "api": "openai",
-        "base": GATEWAY, "model": "qwen3.7-max",
+        "base": GATEWAY, "model": "qwen3.7-max-2026-05-20",
     },
     "kimi": {
         "env": "DASHSCOPE_API_KEY", "name": "Kimi K3", "api": "openai",
@@ -242,12 +248,18 @@ def base_url(entrant):
 
     Needed for self-hosted gateways and regional endpoints: a DashScope or
     Azure deployment speaks the same OpenAI-compatible protocol on a different
-    host, so only the base differs. Point an entrant at any endpoint that
-    speaks its `api` protocol without touching code.
+    host, so only the base differs.
+
+    Resolution order is per-entrant override, then SSA_BASE_GATEWAY for the
+    four models that share one gateway, then the built-in default. The shared
+    variable exists because those four are one deployment: setting four
+    identical secrets invites three of them to drift.
     """
     model, _ = resolve(entrant)
+    shared = (os.environ.get("SSA_BASE_GATEWAY")
+              if model in GATEWAY_ENTRANTS else None)
     return (os.environ.get("SSA_BASE_" + _env_suffix(model))
-            or MODELS[model]["base"]).rstrip("/")
+            or shared or MODELS[model]["base"]).rstrip("/")
 
 
 def has_key(entrant):
@@ -452,6 +464,14 @@ def parse_forecast(text):
     return {"mean": round(mean, 2), "sd": round(sd, 2)}
 
 
+# A failed provider call used to become a labelled placeholder, which kept the
+# pages populated at the cost of hiding the failure: a wrong model name or a
+# rejected parameter produced a green workflow and an arena quietly full of
+# fabricated forecasts. Failures now raise. Set SSA_ALLOW_MOCK=1 to restore the
+# old behaviour for local pipeline work where no keys are configured.
+ALLOW_MOCK = os.environ.get("SSA_ALLOW_MOCK") == "1"
+
+
 # --- mock ------------------------------------------------------------------
 
 def mock_forecast(entrant, round_id, persistence_mean, persistence_sd):
@@ -487,18 +507,27 @@ def forecast(entrant, r, history=None, previous=None, variant=None):
             and not (previous.get("notes") or "").startswith("MOCK"):
         return previous
 
-    if has_key(entrant):
+    if not has_key(entrant):
+        if not ALLOW_MOCK:
+            raise RuntimeError(
+                f"{entrant}: no {MODELS[resolve(entrant)[0]]['env']} in the "
+                "environment. Set the key, or set SSA_ALLOW_MOCK=1 to file a "
+                "labelled placeholder instead.")
+        top = mock_forecast(entrant, r["round_id"], per["mean"], per["sd"])
+        note = ("MOCK: no API key configured; deterministic placeholder, "
+                f"replaced by real output once keys are added; in={ih}")
+    else:
         try:
             top = parse_forecast(call_provider(entrant, prompt))
             note = (f"{model_id(entrant)}, harness v1, variant={variant}, "
                     f"1 sample; in={ih}")
         except Exception as e:
+            if not ALLOW_MOCK:
+                raise RuntimeError(
+                    f"{entrant} ({model_id(entrant)}) failed on "
+                    f"{r['round_id']}: {type(e).__name__}: {e}") from e
             top = mock_forecast(entrant, r["round_id"], per["mean"], per["sd"])
             note = f"MOCK: {model_id(entrant)} call failed ({type(e).__name__}); in={ih}"
-    else:
-        top = mock_forecast(entrant, r["round_id"], per["mean"], per["sd"])
-        note = ("MOCK: no API key configured; deterministic placeholder, "
-                f"replaced by real output once keys are added; in={ih}")
     return {
         "round_id": r["round_id"],
         "entrant": entrant,
