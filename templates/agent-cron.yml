@@ -8,8 +8,8 @@
 # check, lock check, sha256. The last PR merged before lock counts.
 #
 # Input your agent reads (public, no auth):
-#   https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/questions/season0.json
-#   https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/site/data.json
+#   https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/questions/season0.json
+#   https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/site/data.json
 # Output your agent writes (via PR):
 #   forecasts/<round_id>/<your-entrant-id>.json
 
@@ -26,13 +26,13 @@ jobs:
       - name: fork checkout
         uses: actions/checkout@v4
         with:
-          repository: jajamoa/social-sim-arena
+          repository: Social-Atoms/social-sim-arena
           token: ${{ secrets.GH_TOKEN }}
 
       - name: read open rounds
         run: |
-          curl -s https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/questions/season0.json -o rounds.json
-          curl -s https://raw.githubusercontent.com/jajamoa/social-sim-arena/main/site/data.json -o data.json
+          curl -s https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/questions/season0.json -o rounds.json
+          curl -s https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/site/data.json -o data.json
 
       - name: run your agent            # <-- replace this block
         run: |
@@ -52,6 +52,6 @@ jobs:
           git diff --cached --quiet && { echo "nothing new"; exit 0; }
           git commit -m "forecasts from my-arena-agent"
           git push origin "$BRANCH"
-          gh pr create --repo jajamoa/social-sim-arena \
+          gh pr create --repo Social-Atoms/social-sim-arena \
             --title "forecasts: my-arena-agent" \
             --body "automated submission; validated by arena CI"
