@@ -64,7 +64,7 @@ XAI_MAX_EFFORT = {"reasoning_effort": "high"}
 # per-entrant SSA_BASE_<ENTRANT>) at a gateway that serves them. Nothing here
 # hardcodes a private host.
 GATEWAY = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-GATEWAY_ENTRANTS = ("qwen", "kimi", "glm", "minimax")
+GATEWAY_ENTRANTS = ("qwen-3.7", "qwen-3.8", "kimi", "glm", "minimax")
 
 MODELS = {
     # --- OpenAI: all three GPT-5.6 variants -------------------------------
@@ -91,6 +91,14 @@ MODELS = {
     "claude-opus": {
         "env": "ANTHROPIC_API_KEY", "name": "Claude Opus 4.8", "api": "anthropic",
         "base": "https://api.anthropic.com/v1", "model": "claude-opus-4-8",
+        "params": ANTHROPIC_MAX_EFFORT,
+    },
+    # Opus 5 runs alongside 4.8 rather than instead of it. Its May 2026 cutoff
+    # leaves it a much shorter backtest window than the rest, which is a reason
+    # to score it on its own window, not a reason to leave it out.
+    "claude-opus-5": {
+        "env": "ANTHROPIC_API_KEY", "name": "Claude Opus 5", "api": "anthropic",
+        "base": "https://api.anthropic.com/v1", "model": "claude-opus-5",
         "params": ANTHROPIC_MAX_EFFORT,
     },
     "claude-sonnet": {
@@ -125,9 +133,24 @@ MODELS = {
         "params": XAI_MAX_EFFORT,
     },
     # --- Gateway-hosted (one OpenAI-compatible endpoint, one key) ----------
-    "qwen": {
+    "qwen-3.7": {
         "env": "DASHSCOPE_API_KEY", "name": "Qwen3.7 Max", "api": "openai",
+        # The dated snapshot matching the recorded cutoff, not the floating
+        # qwen3.7-max alias.
         "base": GATEWAY, "model": "qwen3.7-max-2026-05-20",
+    },
+    "qwen-3.8": {
+        "env": "DASHSCOPE_API_KEY", "name": "Qwen3.8 Max", "api": "openai",
+        "base": GATEWAY, "model": "qwen3.8-max",
+    },
+    # --- DeepSeek ---------------------------------------------------------
+    "deepseek-pro": {
+        "env": "DEEPSEEK_API_KEY", "name": "DeepSeek V4 Pro", "api": "openai",
+        "base": "https://api.deepseek.com", "model": "deepseek-v4-pro",
+    },
+    "deepseek-flash": {
+        "env": "DEEPSEEK_API_KEY", "name": "DeepSeek V4 Flash", "api": "openai",
+        "base": "https://api.deepseek.com", "model": "deepseek-v4-flash",
     },
     "kimi": {
         "env": "DASHSCOPE_API_KEY", "name": "Kimi K3", "api": "openai",
@@ -212,10 +235,21 @@ SEASON_VARIANTS = ("recent10", "none")
 VARIANT_SUFFIX = {"recent10": "", "none": "-zeroshot"}
 
 
+# Entered in MODELS but not run: the gateway rejects the prefixed namespace
+# these two live in ("The product is not activated"), and K3 and M3 exist only
+# there -- the activated bare names top out at kimi-k2.6 and MiniMax-M2.5.
+# Their config and cutoff rows are kept so re-enabling is deleting a line here.
+PENDING_ACTIVATION = ("kimi", "minimax")
+
+
+def active_models():
+    return [m for m in MODELS if m not in PENDING_ACTIVATION]
+
+
 def season_entrants():
     """(entrant_id, model_key, variant) for every condition the arena runs."""
     return [(m + VARIANT_SUFFIX[v], m, v)
-            for v in SEASON_VARIANTS for m in MODELS]
+            for v in SEASON_VARIANTS for m in active_models()]
 
 
 def resolve(entrant_id):

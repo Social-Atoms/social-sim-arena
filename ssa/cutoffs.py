@@ -72,9 +72,28 @@ CUTOFFS = {
                   "January 2026 (Opus 5's May 2026 cutoff is why 4.8 is "
                   "entered instead)",
     },
-    "qwen": {
+    "qwen-3.7": {
         "date": "2026-05-20", "confidence": "reported",
         "source": "Qwen3.7-Max, 2026-05-20",
+    },
+    "qwen-3.8": {
+        "date": "2026-06-01", "confidence": "unknown",
+        "source": "Qwen3.8-Max shipped 2026-08-03 and Alibaba publishes no "
+                  "cutoff; 2026-06-01 is a maintainer estimate, so treat its "
+                  "backtest rows as indicative only",
+    },
+    "deepseek-pro": {
+        "date": "2025-05-01", "confidence": "reported",
+        "source": "DeepSeek V4 Pro (preview), May 2025; DeepSeek publishes no "
+                  "official cutoffs",
+    },
+    "deepseek-flash": {
+        "date": "2026-07-31", "confidence": "reported",
+        "source": "DeepSeek V4 Flash (general availability), 2026-07-31",
+    },
+    "claude-opus-5": {
+        "date": "2026-05-01", "confidence": "declared",
+        "source": "Anthropic: Claude Opus 5 trained on data up until May 2026",
     },
     # --- cutoffs at or past the right edge of the data: live only ----------
     "minimax": {
