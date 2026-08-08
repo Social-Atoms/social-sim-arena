@@ -100,7 +100,7 @@ footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--border);color
 <section id="stack">
   <h2><span class="section-num">01</span>Architecture and MVP stack</h2>
   <p>The MVP (minimum viable product, the smallest version that works) is deliberately boring: one GitHub repo, scheduled GitHub Actions, flat JSON files, and a static site. No servers, no database. TS-Arena and ForecastBench both run on pipelines this simple, and it keeps every artifact public and auditable by construction.</p>
-  <p>The repo is live: <a href="https://github.com/jajamoa/social-sim-arena">github.com/jajamoa/social-sim-arena</a>. This is the actual layout:</p>
+  <p>The repo is live: <a href="https://github.com/Social-Atoms/social-sim-arena">github.com/Social-Atoms/social-sim-arena</a>. This is the actual layout:</p>
 <pre><code>social-sim-arena/
 ├── questions/season0.json      frozen round definitions (id, lock_at, release_at, resolve rule)
 ├── ssa/
@@ -237,7 +237,7 @@ GET https://api.votehub.com/polls?poll_type=generic-ballot</code></pre>
   <h2><span class="section-num">05</span>Model harness and human baseline</h2>
   <p>Every LLM runs in the same harness: same prompt template, temperature 0, three samples, median taken, full logs committed. Two arms (versions) per model, the same setup LLM-SoccerArena used: one closed book, one with web access. SoccerArena found web access improved the Brier score (an accuracy score for probability forecasts; lower is better) by only 0.023, and whether that holds for opinion is itself a result.</p>
   <h3>Run your agent continuously</h3>
-<p>An agent can live entirely on its own schedule: read the open rounds and live data from two public JSON files, produce forecasts, open a pull request. Copy <a href="https://github.com/jajamoa/social-sim-arena/blob/main/templates/agent-cron.yml">templates/agent-cron.yml</a> into your own repo and replace one step with your model; it then submits automatically every day until season end. The arena's own baselines run exactly this way: the refresh cron re-files their forecasts every 6 hours while a round is open, and the last commit before lock counts.</p>
+<p>An agent can live entirely on its own schedule: read the open rounds and live data from two public JSON files, produce forecasts, open a pull request. Copy <a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/templates/agent-cron.yml">templates/agent-cron.yml</a> into your own repo and replace one step with your model; it then submits automatically every day until season end. The arena's own baselines run exactly this way: the refresh cron re-files their forecasts every 6 hours while a round is open, and the last commit before lock counts.</p>
 <p>The human baseline is a paid panel of 5 to 10 forecasters on a question subset. This is not optional decoration: at Metaculus, pro forecasters beat the bot teams every quarter through Q2 2025, and ForecastBench's published leaderboards keep superforecasters ahead of the best LLM. A leaderboard without humans has no credibility anchor.</p>
 </section>
 
@@ -315,7 +315,7 @@ GET https://api.votehub.com/polls?poll_type=generic-ballot</code></pre>
     <li>Backtest: replay 2015-2025 archives through the scoring stack for the paper's validation section.</li>
     <li>Elo with bootstrapped CIs on top of the per-round CRPS records.</li>
   </ul>
-  <p>Ping Chance. Code and issues: <a href="https://github.com/jajamoa/social-sim-arena">github.com/jajamoa/social-sim-arena</a>.</p>
+  <p>Ping Chance. Code and issues: <a href="https://github.com/Social-Atoms/social-sim-arena">github.com/Social-Atoms/social-sim-arena</a>.</p>
 </section>
 
 <footer>
