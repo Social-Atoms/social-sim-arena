@@ -16,7 +16,9 @@ quantile-level samples).
 from . import baselines, scoring
 
 WARMUP = 8
-MODELS = ["persistence", "trend", "ewma", "climatology", "crowd"]
+# The default null set plus the equal-weight pool of it. Kept in sync with
+# baselines.DEFAULT so trimming the nulls in one place trims them everywhere.
+MODELS = list(baselines.DEFAULT) + ["crowd"]
 
 
 def run_series(history, since=None):
