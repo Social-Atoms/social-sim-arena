@@ -639,6 +639,7 @@ const TABDEFS = {
 };
 
 function setTab(key){
+  window.__tab = key; if(typeof syncHash==='function') syncHash();
   window.__tab = key;
   document.querySelectorAll('#chart-tabs button').forEach(b=>b.classList.toggle('on', b.dataset.tab===key));
   const data = window.__data; if(!data) return;
@@ -668,7 +669,7 @@ function setTab(key){
 const SPANLABEL = {all:'all 323 backtest releases (2015 to 2026)', m6:'the last six months of releases', d30:'the last 30 days of releases', last:'the most recent release only'};
 function renderBoard(mode){
   const data = window.__data; if(!data) return;
-  window.__board = mode;
+  window.__board = mode; if(typeof syncHash==='function') syncHash();
   document.querySelectorAll('#span-seg button').forEach(b=>b.classList.toggle('on', b.dataset.span===mode));
   const lb = data.leaderboard || {};
   const nameOf = {}, typeOf = {};
@@ -764,6 +765,7 @@ function entrantsList(data){
       + '<span class="tx"><b>'+esc(e.name.split(' (')[0])+'</b><span class="type">'+esc(e.type)+(v?' · '+esc(vendorName(v)):'')+cond+'</span>'
       + '<p>'+esc(e.method||'')+'</p></span></div>';
   }).join('') + pager;
+  if(typeof syncHash==='function') syncHash();
 }
 
 function render(data){
@@ -801,7 +803,7 @@ function render(data){
   document.getElementById('foot-updated').textContent = 'data updated '+new Date(data.generated_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+' · refreshed every 6 hours';
 
   requestAnimationFrame(()=>setTab(window.__tab || 'agg'));
-  const h=(location.hash||'').slice(1); if(['live','rounds','submit','agents'].includes(h)) showPage(h);
+  applyHash();
   renderBoard(window.__board || 'all');
   roundsList(data);
   entrantsList(data);
@@ -838,7 +840,38 @@ function showPage(k){
   window.__page = k;
   if(k==='live' && window.__data) requestAnimationFrame(()=>setTab(window.__tab||'agg'));
   if(k==='rounds') demoReplay();
+  if(typeof syncHash==='function') syncHash();
 }
+
+const CHART_KEYS = ['agg','approval_avg','umich_sentiment','yougov_approval','mc_approval','generic_margin'];
+const SPAN_KEYS = ['all','m6','d30','last'];
+function syncHash(){
+  const pg = window.__page || 'live';
+  let h = pg;
+  if(pg === 'live'){
+    const tab = window.__tab || 'agg', span = window.__board || 'all';
+    if(tab !== 'agg' || span !== 'all') h = 'live/' + tab + '/' + span;
+  } else if(pg === 'agents'){
+    const f = window.__af || 'all';
+    if(f !== 'all') h = 'agents/' + f;
+  }
+  history.replaceState(null, '', '#' + h);
+}
+function applyHash(){
+  const parts = (location.hash || '').slice(1).split('/');
+  const pg = ['live','rounds','submit','agents','exam'].includes(parts[0]) ? parts[0] : null;
+  if(!pg) return;
+  if(pg === 'live'){
+    if(CHART_KEYS.includes(parts[1])) window.__tab = parts[1];
+    if(SPAN_KEYS.includes(parts[2])) window.__board = parts[2];
+  }
+  if(pg === 'agents' && parts[1]) { window.__af = parts[1]; window.__ap = 1; }
+  showPage(pg);
+  if(pg === 'live' && window.__data){ setTab(window.__tab || 'agg'); renderBoard(window.__board || 'all'); }
+  if(pg === 'agents' && window.__data) entrantsList(window.__data);
+}
+window.addEventListener('hashchange', applyHash);
+
 document.querySelectorAll('.ptab').forEach(b=> b.onclick = ()=> showPage(b.dataset.page));
 document.getElementById('exam-chip').onclick = ()=> showPage('exam');
 document.getElementById('nav-submit').onclick = e=>{ e.preventDefault(); showPage('submit'); };
