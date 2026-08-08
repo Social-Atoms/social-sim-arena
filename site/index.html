@@ -682,6 +682,7 @@ function renderBoard(mode){
     return '<tr><td class="rank">'+(rank||'·')+'</td>'
       + '<td><span class="who">'+avatar(id)
       + '<span><b>'+esc((nameOf[id]||id).split(' (')[0])+'</b>'
+      + (/\(zero-shot\)/.test(nameOf[id]||'')?' <span class="type">· zero-shot</span>':'')
       + (id==='persistence'?' <span class="type">· reference</span>':'')
       + '<br><span class="type">'+esc(typeOf[id]||'baseline')+mockTag+'</span></span></span></td>'
       + '<td class="num skill'+(pos?' pos':'')+'">'+skillTxt+refLine+'</td>'
@@ -758,8 +759,9 @@ function entrantsList(data){
 
   el.innerHTML = cta + chips + slice.map(e=>{
     const v = vendorOf(e.entrant_id);
+    const cond = /\(zero-shot\)/.test(e.name) ? ' · zero-shot' : (e.type==='llm' ? ' · with history' : '');
     return '<div class="erow">'+avatar(e.entrant_id)
-      + '<span class="tx"><b>'+esc(e.name.split(' (')[0])+'</b><span class="type">'+esc(e.type)+(v?' · '+esc(vendorName(v)):'')+'</span>'
+      + '<span class="tx"><b>'+esc(e.name.split(' (')[0])+'</b><span class="type">'+esc(e.type)+(v?' · '+esc(vendorName(v)):'')+cond+'</span>'
       + '<p>'+esc(e.method||'')+'</p></span></div>';
   }).join('') + pager;
 }
