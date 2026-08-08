@@ -461,7 +461,7 @@ function aggChart(traj, nameOf, unit){
   }
   labelOrder.forEach((s, i)=>{
     const last = val(lastCk,s)??0, ly = slots[i];
-    let nm = (nameOf[s]||s).split(' (')[0];
+    let nm = (nameOf[s]||s).split(' (')[0] + (/\(zero-shot\)/.test(nameOf[s]||'')?' zs':'');
     if(nm.length > maxCh) nm = nm.slice(0, maxCh-1)+'…';
     const heavy = s==='crowd';
     g += `<line x1="${X(traj.length-1)}" x2="${X(traj.length-1)+8}" y1="${Y(last)}" y2="${ly}" stroke="${colorOf(s)}" stroke-width="1" opacity=".5"/>`;
@@ -489,7 +489,7 @@ function aggChart(traj, nameOf, unit){
       return unit==='crps' ? va-vb : vb-va;
     });
     tipShow(tip, ev, '<b>'+fmtDate(ck.date)+'</b> · '+ck.n+' rounds<br>'
-      + lineup.map((s,i)=>(i+1)+'. '+(nameOf[s]||s).split(' (')[0]+' '+fmtV(val(ck,s)??0)).join('<br>'));
+      + lineup.map((s,i)=>(i+1)+'. '+(nameOf[s]||s).split(' (')[0]+(/\(zero-shot\)/.test(nameOf[s]||'')?' zs':'')+' '+fmtV(val(ck,s)??0)).join('<br>'));
   };
   svg.onmouseleave = ()=>{ xh.style.display='none'; tip.style.display='none'; };
 }
@@ -595,7 +595,7 @@ function seriesChart(key, data){
   if(allIds.size){
     strip.style.display='';
     strip.innerHTML = [...allIds].sort().map(id =>
-      '<span class="lchip'+(hidden.has(id)?' off':'')+'" data-ent="'+esc(id)+'"><span class="sw" style="background:'+colorOf(id)+'"></span>'+esc((nameOf[id]||id).split(' (')[0])+'</span>').join('')
+      '<span class="lchip'+(hidden.has(id)?' off':'')+'" data-ent="'+esc(id)+'"><span class="sw" style="background:'+colorOf(id)+'"></span>'+esc((nameOf[id]||id).split(' (')[0])+(/\(zero-shot\)/.test(nameOf[id]||'')?' <span style="opacity:.5;">zs</span>':'')+'</span>').join('')
       + '<span style="font-size:11.5px;color:var(--mut);margin-left:4px;">forecasts for the next releases · click to toggle</span>';
     strip.querySelectorAll('.lchip').forEach(ch => ch.onclick = ()=>{
       const id = ch.dataset.ent;
