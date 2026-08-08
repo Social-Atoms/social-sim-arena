@@ -67,8 +67,10 @@ CUTOFFS = {
         "source": "GLM-5.2, March 2026; Zhipu publishes no exact day",
     },
     "claude-opus": {
-        "date": "2026-05-01", "confidence": "declared",
-        "source": "Anthropic: trained on data up until May 2026",
+        "date": "2026-01-01", "confidence": "declared",
+        "source": "Anthropic: Claude Opus 4.8 trained on data up until "
+                  "January 2026 (Opus 5's May 2026 cutoff is why 4.8 is "
+                  "entered instead)",
     },
     "qwen": {
         "date": "2026-05-20", "confidence": "reported",
