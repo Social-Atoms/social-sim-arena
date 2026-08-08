@@ -72,13 +72,28 @@ def climatology(history, lookback=24, min_sd=1.0):
     return {"mean": round(m, 2), "sd": round(max(var ** 0.5, min_sd), 2), "method": "climatology"}
 
 
-def all_baselines(history, target_date):
-    return {
-        "persistence": persistence(history),
-        "trend": trend(history, target_date),
-        "ewma": ewma(history),
-        "climatology": climatology(history),
+# All four nulls stay in the default set. `persistence` is required -- it is the
+# denominator of the skill score, so every reported number is defined against
+# it. The other three are kept because they are informative in different
+# directions: `ewma` is the hardest statistical null to beat, while `trend` and
+# `climatology` scoring far *worse* than doing nothing is itself the finding
+# that these series are near random walks on this horizon. `names` lets a caller
+# score against a subset without changing what the arena publishes.
+DEFAULT = ("persistence", "trend", "ewma", "climatology")
+ALL = DEFAULT
+
+
+def all_baselines(history, target_date, names=DEFAULT):
+    fns = {
+        "persistence": lambda: persistence(history),
+        "trend": lambda: trend(history, target_date),
+        "ewma": lambda: ewma(history),
+        "climatology": lambda: climatology(history),
     }
+    unknown = [n for n in names if n not in fns]
+    if unknown:
+        raise ValueError(f"unknown baseline(s): {', '.join(unknown)}")
+    return {n: fns[n]() for n in names}
 
 
 def _ordinal(d):
