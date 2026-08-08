@@ -62,13 +62,11 @@ site/         static entry page + data.json (generated)
 Baselines (persistence, trend, poll-average snapshot, human panel) run in
 every round. The headline metric is skill: `1 - CRPS(you) / CRPS(persistence)`.
 
-## Paper
-
-*Social Simulation Arena: Simulated Societies Graded by the Real Future.*
-ICLR 2027 submission, in preparation. The teaser and the protocol figures live
-in `assets/`; the docs page mirrors the protocol section.
+## How the pipeline fits together
 
 ![Pipeline](assets/fig-pipeline.png)
+
+Full protocol figures and the teaser live in `assets/`.
 
 ## Status
 
