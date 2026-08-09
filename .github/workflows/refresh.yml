@@ -58,14 +58,20 @@ jobs:
         run: |
           git config user.name "ssa-bot"
           git config user.email "actions@github.com"
-          git add -A forecasts site/data.json
+          # `site`, not `site/data.json`: ssa.refresh also rewrites
+          # site/card.png, and leaving a tracked file modified but unstaged
+          # makes `git pull --rebase` refuse to run. Every scheduled run since
+          # the merge committed its forecasts locally and then died there,
+          # throwing the work away while the API calls had already been paid
+          # for. autoStash is the belt to that braces.
+          git add -A forecasts site
           # ignore the generated_at stamp so no-op runs do not commit
           if git diff --cached --quiet -I '"generated_at"'; then
             echo "no substantive change"
             git reset --quiet
-            git checkout -- site/data.json forecasts
+            git checkout -- site forecasts
           else
             git commit -m "data refresh $(date -u +%Y-%m-%dT%H:%MZ)"
-            git pull --rebase origin main
+            git -c rebase.autoStash=true pull --rebase origin main
             git push
           fi
