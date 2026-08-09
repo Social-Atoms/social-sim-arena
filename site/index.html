@@ -217,7 +217,7 @@ footer .upd{margin-left:auto;}
       <div class="legend-strip" id="legend-strip" style="display:none;"></div>
       <div class="chartpane" id="chartpane">
         <div class="chartctl">
-          <div class="seg mini" id="unit-seg"><button data-unit="skill" class="on">Skill %</button><button data-unit="crps">Error pts</button></div>
+          <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker</button><button data-unit="skill" class="on">Skill %</button><button data-unit="crps">Error pts</button></div>
           <div class="seg mini" id="range-seg"><button data-range="3">3M</button><button data-range="6">6M</button><button data-range="12">1Y</button><button data-range="0" class="on">All</button></div>
         </div>
         <div class="tooltip"></div>
@@ -409,6 +409,26 @@ function condTag(nm){
   return '';
 }
 function condSuffix(nm, pre){ const c = condTag(nm); return c ? (pre||' ')+c : ''; }
+// One legend for every chart. Toggling redraws the current tab rather than one
+// named chart, so the visible set stays the same as you move between the
+// aggregate view and a tracker -- a per-chart legend would silently reset it.
+function renderLegend(ids, nameOf, note){
+  const strip = document.getElementById('legend-strip');
+  if(!ids || !ids.length){ strip.style.display='none'; strip.innerHTML=''; return; }
+  const hidden = window.__hidden || (window.__hidden = defaultHidden(window.__data));
+  strip.style.display='';
+  strip.innerHTML = ids.map(id =>
+    '<span class="lchip'+(hidden.has(id)?' off':'')+'" data-ent="'+esc(id)+'"><span class="sw" style="background:'+colorOf(id)+'"></span>'
+    + esc((nameOf[id]||id).split(' (')[0])
+    + (condTag(nameOf[id])?' <span style="opacity:.5;">'+condTag(nameOf[id])+'</span>':'')
+    + '</span>').join('')
+    + '<span style="font-size:11.5px;color:var(--mut);margin-left:4px;">'+esc(note||'click to toggle')+'</span>';
+  strip.querySelectorAll('.lchip').forEach(ch => ch.onclick = ()=>{
+    const id = ch.dataset.ent;
+    if(hidden.has(id)) hidden.delete(id); else hidden.add(id);
+    setTab(window.__tab || 'agg');
+  });
+}
 function aggChart(traj, nameOf, unit){
   const svg = clearChart(), tip = pane().querySelector('.tooltip');
   if(!traj || traj.length<2){ svg.style.display='none'; return; }
@@ -418,7 +438,15 @@ function aggChart(traj, nameOf, unit){
   // model_entrants names the measured entrants; mock_models is the older key
   // the placeholder path used, kept as a fallback for archived data.json files.
   const mocks = bt0.model_entrants || bt0.mock_models || [];
-  const series = ['climatology','trend','ewma'].concat(mocks).concat(['crowd']);
+  // Same visibility set the tracker tabs use. Without this the chart drew all
+  // thirty entrants -- thirty lines in one panel and a thirty-high stack of
+  // end labels down the right margin -- while the caption underneath claimed
+  // five were shown. The filter existed; only this chart never applied it.
+  if(!window.__hidden){ window.__hidden = defaultHidden(window.__data); }
+  const hiddenA = window.__hidden;
+  const universe = ['climatology','trend','ewma'].concat(mocks).concat(['crowd']);
+  const series = universe.filter(s => !hiddenA.has(s));
+  if(!series.length){ svg.style.display='none'; return; }
   const val = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null) : t.skills[s];
   if(unit==='crps' && !traj[traj.length-1].crps){ unit='skill'; }
   const monthsA = window.__range || 0;
@@ -620,21 +648,9 @@ function seriesChart(key, data){
     tipShow(tip, ev, '<b>'+ys[best]+(d.unit==='%'?'%':'')+'</b> · '+fmtDate(series[best].date));
   };
   svg.onmouseleave = ()=>{ tip.style.display='none'; };
-  // legend chips with visibility toggles
   const allIds = new Set();
   upcoming.forEach(r => Object.keys(r.forecasts).forEach(id=>allIds.add(id)));
-  const strip = document.getElementById('legend-strip');
-  if(allIds.size){
-    strip.style.display='';
-    strip.innerHTML = [...allIds].sort().map(id =>
-      '<span class="lchip'+(hidden.has(id)?' off':'')+'" data-ent="'+esc(id)+'"><span class="sw" style="background:'+colorOf(id)+'"></span>'+esc((nameOf[id]||id).split(' (')[0])+(condTag(nameOf[id])?' <span style="opacity:.5;">'+condTag(nameOf[id])+'</span>':'')+'</span>').join('')
-      + '<span style="font-size:11.5px;color:var(--mut);margin-left:4px;">forecasts for the next releases · click to toggle</span>';
-    strip.querySelectorAll('.lchip').forEach(ch => ch.onclick = ()=>{
-      const id = ch.dataset.ent;
-      if(hidden.has(id)) hidden.delete(id); else hidden.add(id);
-      seriesChart(key, data);
-    });
-  } else { strip.style.display='none'; strip.innerHTML=''; }
+  renderLegend([...allIds].sort(), nameOf, 'forecasts for the next releases · click to toggle');
 }
 
 function demoReplay(){
@@ -677,25 +693,49 @@ function setTab(key){
   const data = window.__data; if(!data) return;
   const nameOf = {}; (data.entrants||[]).forEach(e => nameOf[e.entrant_id]=e.name);
   const unitSeg = document.getElementById('unit-seg');
+  const bt = data.backtest || {};
+  const legendIds = ['climatology','trend','ewma']
+    .concat(bt.model_entrants || bt.mock_models || []).concat(['crowd']);
+  // The aggregate has no tracker level to plot; the trackers do, and it is
+  // their default. Two separate memories, so switching tabs does not silently
+  // change what the other tab was showing.
+  const unit = key==='agg' ? (window.__unitAgg || 'skill') : (window.__unitSer || 'level');
+  unitSeg.style.display='';
+  unitSeg.querySelector('[data-unit="level"]').style.display = key==='agg' ? 'none' : '';
+  unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.unit===unit));
+
   if(key==='agg'){
-    unitSeg.style.display='';
-    document.getElementById('legend-strip').style.display='none';
-    const unit = window.__unit || 'skill';
     document.getElementById('caption').textContent = unit==='crps'
       ? 'Average forecast error (CRPS, in points), lower is better. Measured on the releases every entrant answered, each model scored only after its own training cutoff. Five leading models shown; click the legend for the rest.'
       : 'Cumulative skill vs the persistence baseline, higher is better. Measured on the releases every entrant answered, each model scored only after its own training cutoff. r10 saw the last ten values, zs saw none. Five leading models shown; click the legend for the rest.';
-    aggChart((data.backtest||{}).trajectory, nameOf, unit);
-  } else {
-    unitSeg.style.display='none';
-    const d = TABDEFS[key];
-    const tr = (data.trackers||{})[d.tracker]||{};
-    const per = ((data.backtest||{}).per_series||{})[d.per];
-    const top = per && per[0] ? ' · best model here: '+(nameOf[per[0].entrant]||per[0].entrant).split(' (')[0]+' '+(per[0].mean_skill>0?'+':'')+(per[0].mean_skill*100).toFixed(1)+'%' : '';
-    document.getElementById('caption').innerHTML =
-      esc(d.label)+' · latest '+esc(tr.value!=null?tr.value:'n/a')+esc(d.unit||'')+', as of '+esc(tr.asof||'n/a')+esc(top)
-      +' · dots: forecasts for the next releases · data source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener" style="color:var(--link);text-decoration:none;font-weight:600;">'+esc(d.srcName)+'</a>';
-    seriesChart(key, data);
+    aggChart(bt.trajectory, nameOf, unit);
+    renderLegend(legendIds, nameOf, 'click to toggle');
+    return;
   }
+
+  const d = TABDEFS[key];
+  const tr = (data.trackers||{})[d.tracker]||{};
+  const per = (bt.per_series||{})[d.per];
+  const top = per && per[0] ? ' · best model here: '+(nameOf[per[0].entrant]||per[0].entrant).split(' (')[0]+' '+(per[0].mean_skill>0?'+':'')+(per[0].mean_skill*100).toFixed(1)+'%' : '';
+  // Per-tracker model curves. The tracker's own line answers "what is this
+  // number doing"; this answers "who forecast it well", which until now was
+  // visible only as one name in the caption even though the backtest measures
+  // it per series.
+  const psTraj = (bt.per_series_trajectory||{})[d.per];
+  if(unit!=='level' && psTraj && psTraj.length>1){
+    document.getElementById('caption').innerHTML =
+      esc(d.label)+' · '+(unit==='crps' ? 'average forecast error on this tracker alone (CRPS, in points), lower is better'
+                                        : 'cumulative skill on this tracker alone vs persistence, higher is better')
+      +' · '+psTraj[psTraj.length-1].n+' releases, each model over the part of them that falls after its own training cutoff'
+      +' · data source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener" style="color:var(--link);text-decoration:none;font-weight:600;">'+esc(d.srcName)+'</a>';
+    aggChart(psTraj, nameOf, unit);
+    renderLegend(legendIds, nameOf, 'click to toggle');
+    return;
+  }
+  document.getElementById('caption').innerHTML =
+    esc(d.label)+' · latest '+esc(tr.value!=null?tr.value:'n/a')+esc(d.unit||'')+', as of '+esc(tr.asof||'n/a')+esc(top)
+    +' · dots: forecasts for the next releases · data source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener" style="color:var(--link);text-decoration:none;font-weight:600;">'+esc(d.srcName)+'</a>';
+  seriesChart(key, data);
 }
 
 const SPANLABEL = {all:'the releases every entrant answered', m6:'the releases every entrant answered', d30:'the releases every entrant answered', last:'the releases every entrant answered'};
@@ -914,9 +954,9 @@ document.querySelectorAll('#range-seg button').forEach(b=> b.onclick = ()=>{
   if(window.__data) setTab(window.__tab||'agg');
 });
 document.querySelectorAll('#unit-seg button').forEach(b=> b.onclick = ()=>{
-  window.__unit = b.dataset.unit;
-  document.querySelectorAll('#unit-seg button').forEach(x=>x.classList.toggle('on', x===b));
-  if(window.__data) setTab('agg');
+  const tab = window.__tab || 'agg';
+  if(tab==='agg') window.__unitAgg = b.dataset.unit; else window.__unitSer = b.dataset.unit;
+  if(window.__data) setTab(tab);
 });
 document.querySelectorAll('#span-seg button').forEach(b=> b.onclick = ()=>{
   renderBoard(b.dataset.span);

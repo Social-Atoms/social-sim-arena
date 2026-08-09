@@ -268,6 +268,31 @@ def run_task(t, use_cache=True):
     return record
 
 
+def replay(tasks):
+    """(records, missing) from the cache alone -- no provider, ever.
+
+    The cache is the audit trail, so any change to how a reply is *scored*
+    should regenerate the published table from the repo rather than re-billing
+    the run that produced it. This is the code path that makes that true: it
+    reads and never writes, and cannot call out even if a key is present.
+
+    Tasks with no cached reply are counted, not invented. A count above zero
+    means the plan and the cache disagree -- usually a changed prompt, since
+    the cache is keyed on it -- and the resulting table covers fewer releases
+    than the run did.
+    """
+    records, missing = [], 0
+    for t in tasks:
+        hit = cache_read(t["entrant"], t["prompt"])
+        if hit is None:
+            missing += 1
+            continue
+        hit = dict(hit)
+        hit["from_cache"] = True
+        records.append(hit)
+    return records, missing
+
+
 def execute(tasks, workers=4, use_cache=True, progress=None):
     """Run every task, cached ones for free. Results come back sorted, so the
     output does not depend on completion order."""
@@ -377,6 +402,17 @@ def score(records, series_map, warmup=WARMUP):
     # not just a new key.
     trajectory = _trajectory(crps, base_crps, answered_all)
     per_series = _per_series(crps, base_crps)
+    # The same curve restricted to one tracker, so each tab can show how the
+    # models did on *that* series rather than only the overall average. Built
+    # over every release of the series rather than the matched intersection:
+    # intersecting first leaves three or four points per tracker, which is a
+    # table, not a curve. Entrants therefore cover different spans within a
+    # tab -- the same relaxation `_per_series` already makes, and the reason
+    # both are labelled per-series rather than matched.
+    per_series_trajectory = {
+        s: _trajectory(crps, base_crps, [k for k in base_crps if k[0] == s])
+        for s in sorted({k[0] for k in base_crps})
+    }
 
     return {
         "window": {"first": keys[0][1] if keys else None,
@@ -387,6 +423,7 @@ def score(records, series_map, warmup=WARMUP):
         "matched": matched,
         "trajectory": trajectory,
         "per_series": per_series,
+        "per_series_trajectory": per_series_trajectory,
         "entrants": sorted(crps),
         "failures": failures,
         "cutoffs": {e: cutoffs.describe(e) for e in entrants},

@@ -43,6 +43,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--execute", action="store_true",
                     help="actually call the providers (default: plan only)")
+    ap.add_argument("--rescore", action="store_true",
+                    help="rebuild the table from the committed cache; makes no "
+                         "provider calls and bills nothing")
     ap.add_argument("--entrants",
                     default=",".join(e for e, _, _ in harness.season_entrants()),
                     help="comma-separated entrant ids; defaults to every model "
@@ -137,23 +140,47 @@ def main():
     for e in sorted(per_entrant, key=lambda k: -per_entrant[k]):
         print(f"  {e:14s} ${per_entrant[e]:6.2f}")
 
-    if not args.execute:
-        print("\ndry run -- nothing called. Add --execute to run.")
+    if args.rescore:
+        # Scoring changed, the replies did not. Rebuilding from the cache keeps
+        # the published table a function of the committed run rather than of a
+        # second, differently-sampled one -- the models run at their providers'
+        # default temperature, so re-calling would not reproduce it anyway.
+        records, uncached = model_backtest.replay(tasks)
+        if not records:
+            sys.exit("\nnothing cached for this plan -- the prompt or the "
+                     "entrant set has changed, so there is nothing to rescore.")
+        print(f"\nrescoring {len(records)} cached calls, no provider contacted"
+              + (f" ({uncached} planned calls were never made)" if uncached else ""))
+        made = 0
+    elif not args.execute:
+        print("\ndry run -- nothing called. Add --execute to run, "
+              "or --rescore to rebuild the table from the cache for free.")
         return
+    else:
+        missing = sorted({m for m in models.values() if not harness.has_key(m)})
+        if missing:
+            sys.exit(f"\nno API key for: {', '.join(missing)}. "
+                     "The backtest never files mock forecasts, so it stops here "
+                     "rather than write placeholders into a paper table.")
 
-    missing = sorted({m for m in models.values() if not harness.has_key(m)})
-    if missing:
-        sys.exit(f"\nno API key for: {', '.join(missing)}. "
-                 "The backtest never files mock forecasts, so it stops here "
-                 "rather than write placeholders into a paper table.")
+        print(f"\nrunning with {args.workers} workers...")
+        records = model_backtest.execute(tasks, workers=args.workers,
+                                         progress=max(10, len(tasks) // 20))
+        made = todo
 
-    print(f"\nrunning with {args.workers} workers...")
-    records = model_backtest.execute(tasks, workers=args.workers,
-                                     progress=max(10, len(tasks) // 20))
     result = model_backtest.score(records, series_map)
     result["start"] = start
     result["entrants"] = entrants
-    result["calls"] = {"total": len(tasks), "made": todo}
+    result["calls"] = {"total": len(tasks), "made": made}
+    if args.rescore:
+        # A rescore made no calls; overwriting the count with 0 would erase the
+        # record of what the run actually cost. Keep the original.
+        prev = {}
+        if os.path.exists(args.out):
+            with open(args.out) as f:
+                prev = json.load(f)
+        result["calls"] = prev.get("calls", {"total": len(tasks)})
+        result["rescored_from_cache"] = True
 
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     with open(args.out, "w") as f:
