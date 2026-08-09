@@ -385,7 +385,10 @@ function aggChart(traj, nameOf, unit){
   if(!traj || traj.length<2){ svg.style.display='none'; return; }
   const pw = pane().clientWidth, ph = (innerWidth<880?386:pane().clientHeight);
   if(pw < 80 || ph < 80){ svg.style.display='none'; return; }
-  const mocks = (window.__data && window.__data.backtest && window.__data.backtest.mock_models) || [];
+  const bt0 = (window.__data && window.__data.backtest) || {};
+  // model_entrants names the measured entrants; mock_models is the older key
+  // the placeholder path used, kept as a fallback for archived data.json files.
+  const mocks = bt0.model_entrants || bt0.mock_models || [];
   const series = ['climatology','trend','ewma'].concat(mocks).concat(['crowd']);
   const val = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null) : t.skills[s];
   if(unit==='crps' && !traj[traj.length-1].crps){ unit='skill'; }
