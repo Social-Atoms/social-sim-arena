@@ -380,6 +380,15 @@ function tipShow(tip, ev, html){
   tip.style.left = tx+'px'; tip.style.top = '14px';
 }
 
+// Both information conditions carry a marker, not just one. A bare model name
+// beside a `zs` one reads as "the model" versus "a variant of it"; they are two
+// entrants that differ only in what they were shown, and the chart should say so.
+function condTag(nm){
+  if(/\(zero-shot\)/.test(nm||'')) return 'zs';
+  if(/\(recent-10\)/.test(nm||'')) return 'r10';
+  return '';
+}
+function condSuffix(nm, pre){ const c = condTag(nm); return c ? (pre||' ')+c : ''; }
 function aggChart(traj, nameOf, unit){
   const svg = clearChart(), tip = pane().querySelector('.tooltip');
   if(!traj || traj.length<2){ svg.style.display='none'; return; }
@@ -464,7 +473,7 @@ function aggChart(traj, nameOf, unit){
   }
   labelOrder.forEach((s, i)=>{
     const last = val(lastCk,s)??0, ly = slots[i];
-    let nm = (nameOf[s]||s).split(' (')[0] + (/\(zero-shot\)/.test(nameOf[s]||'')?' zs':'');
+    let nm = (nameOf[s]||s).split(' (')[0] + condSuffix(nameOf[s]);
     if(nm.length > maxCh) nm = nm.slice(0, maxCh-1)+'…';
     const heavy = s==='crowd';
     g += `<line x1="${X(traj.length-1)}" x2="${X(traj.length-1)+8}" y1="${Y(last)}" y2="${ly}" stroke="${colorOf(s)}" stroke-width="1" opacity=".5"/>`;
@@ -492,7 +501,7 @@ function aggChart(traj, nameOf, unit){
       return unit==='crps' ? va-vb : vb-va;
     });
     tipShow(tip, ev, '<b>'+fmtDate(ck.date)+'</b> · '+ck.n+' rounds<br>'
-      + lineup.map((s,i)=>(i+1)+'. '+(nameOf[s]||s).split(' (')[0]+(/\(zero-shot\)/.test(nameOf[s]||'')?' zs':'')+' '+fmtV(val(ck,s)??0)).join('<br>'));
+      + lineup.map((s,i)=>(i+1)+'. '+(nameOf[s]||s).split(' (')[0]+condSuffix(nameOf[s])+' '+fmtV(val(ck,s)??0)).join('<br>'));
   };
   svg.onmouseleave = ()=>{ xh.style.display='none'; tip.style.display='none'; };
 }
@@ -598,7 +607,7 @@ function seriesChart(key, data){
   if(allIds.size){
     strip.style.display='';
     strip.innerHTML = [...allIds].sort().map(id =>
-      '<span class="lchip'+(hidden.has(id)?' off':'')+'" data-ent="'+esc(id)+'"><span class="sw" style="background:'+colorOf(id)+'"></span>'+esc((nameOf[id]||id).split(' (')[0])+(/\(zero-shot\)/.test(nameOf[id]||'')?' <span style="opacity:.5;">zs</span>':'')+'</span>').join('')
+      '<span class="lchip'+(hidden.has(id)?' off':'')+'" data-ent="'+esc(id)+'"><span class="sw" style="background:'+colorOf(id)+'"></span>'+esc((nameOf[id]||id).split(' (')[0])+(condTag(nameOf[id])?' <span style="opacity:.5;">'+condTag(nameOf[id])+'</span>':'')+'</span>').join('')
       + '<span style="font-size:11.5px;color:var(--mut);margin-left:4px;">forecasts for the next releases · click to toggle</span>';
     strip.querySelectorAll('.lchip').forEach(ch => ch.onclick = ()=>{
       const id = ch.dataset.ent;
@@ -686,7 +695,7 @@ function renderBoard(mode){
     return '<tr><td class="rank">'+(rank||'·')+'</td>'
       + '<td><span class="who">'+avatar(id)
       + '<span><b>'+esc((nameOf[id]||id).split(' (')[0])+'</b>'
-      + (/\(zero-shot\)/.test(nameOf[id]||'')?' <span class="type">· zero-shot</span>':'')
+      + (condTag(nameOf[id])?' <span class="type">· '+(condTag(nameOf[id])==='zs'?'zero-shot':'recent-10')+'</span>':'')
       + (id==='persistence'?' <span class="type">· reference</span>':'')
       + '<br><span class="type">'+esc(typeOf[id]||'baseline')+mockTag+'</span></span></span></td>'
       + '<td class="num skill'+(pos?' pos':'')+'">'+skillTxt+refLine+'</td>'
@@ -763,7 +772,7 @@ function entrantsList(data){
 
   el.innerHTML = cta + chips + slice.map(e=>{
     const v = vendorOf(e.entrant_id);
-    const cond = /\(zero-shot\)/.test(e.name) ? ' · zero-shot' : (e.type==='llm' ? ' · with history' : '');
+    const cond = condTag(e.name)==='zs' ? ' · zero-shot' : (condTag(e.name)==='r10' ? ' · recent-10' : '');
     return '<div class="erow">'+avatar(e.entrant_id)
       + '<span class="tx"><b>'+esc(e.name.split(' (')[0])+'</b><span class="type">'+esc(e.type)+(v?' · '+esc(vendorName(v)):'')+cond+'</span>'
       + '<p>'+esc(e.method||'')+'</p></span></div>';
