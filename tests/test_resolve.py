@@ -85,6 +85,40 @@ def test_refuses_when_there_was_no_pre_lock_history():
     assert res is None and "no frozen history" in why, why
 
 
+def test_preliminary_and_final_resolve_to_their_own_values():
+    """Michigan revises one monthly row: the preliminary lands mid-month and
+    the final at month end. Keyed on date alone the final would never resolve;
+    keyed on (date, value) each round gets the value it asked about."""
+    import ssa.refresh as refresh
+    real = refresh.read_lock_snapshot
+    prelim_round = _round("umich-prelim", lock="2026-08-12T14:00:00Z",
+                          release="2026-08-14T14:00:00Z")
+    final_round = _round("umich-final", lock="2026-08-26T14:00:00Z",
+                         release="2026-08-28T14:00:00Z")
+    snaps = {
+        # locked before August existed
+        "umich-prelim": {"history": [{"date": "2026-07-01", "value": 55.2}]},
+        # locked after the preliminary landed, so it holds the preliminary
+        "umich-final": {"history": [{"date": "2026-07-01", "value": 55.2},
+                                    {"date": "2026-08-01", "value": 58.0}]},
+    }
+    refresh.read_lock_snapshot = lambda rid: snaps.get(rid)
+    try:
+        # on the 15th the row carries the preliminary
+        s = _series([("2026-07-01", 55.2), ("2026-08-01", 58.0)])
+        res, why = resolve.resolve_round(prelim_round, s, T("2026-08-15T00:00:00Z"))
+        assert why is None and res["value"] == 58.0, (res, why)
+
+        # by the 29th it has been revised to the final
+        s2 = _series([("2026-07-01", 55.2), ("2026-08-01", 59.4)])
+        res2, why2 = resolve.resolve_round(final_round, s2, T("2026-08-29T00:00:00Z"))
+        assert why2 is None, why2
+        assert res2["value"] == 59.4, res2
+        assert res2["observed_date"] == "2026-08-01"
+    finally:
+        refresh.read_lock_snapshot = real
+
+
 def test_two_rounds_cannot_share_one_observation():
     """Michigan's preliminary and final both ask about one month while the
     series carries one point for it. Answering two questions with one number

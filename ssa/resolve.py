@@ -29,13 +29,14 @@ check below is a refusal, not a repair:
 
 Anything that fails is reported with its reason and left for a human.
 
-**Known ambiguity, deliberately refused.** Michigan publishes a preliminary
-mid-month and a final at month end, and both rounds ask about the same month
-while `umich_sentiment` carries one point per month. Resolving both against
-that single point would score two different questions against one answer, so
-rounds that would consume a point another round already claimed are refused
-and named. Fixing it properly means a series that distinguishes the two
-releases, which is a data-source change, not a scoring one.
+**Revisions count as releases.** Michigan publishes a preliminary mid-month
+and a final at month end, and both revise the same monthly row. Comparing by
+date alone, the final round would see nothing new and never resolve. Comparing
+by (date, value), the preliminary round resolves against the value published on
+the 14th, and the final round -- whose own snapshot already holds that
+preliminary -- resolves against the revision. One row, two questions, two
+answers. Two rounds still cannot claim the *same* (date, value), so a round
+that would duplicate another's answer is refused by name.
 
 Usage:
     python -m ssa.resolve              # report what would resolve, write nothing
@@ -88,19 +89,34 @@ def candidate(r, series):
     """
     points = series.get(r["series"])
     if not points:
-        return None, f"no series '{r['series']}' in the pipeline"
+        # Civiqs publishes only a JS dashboard, and Silver Bulletin has carried
+        # three of its polls since May 2025 -- not a series. The House seat
+        # count has no tracker at all; it resolves from certified results. Both
+        # say so in their own `resolve` field, so a hand-written entry in
+        # resolved.json is the intended path and this refusal is not a failure.
+        return None, (f"no series '{r['series']}' in the pipeline; this round "
+                      "resolves by hand, see its `resolve` field")
     hist = pre_lock_history(r, series)
     if not hist:
         return None, (f"no frozen history for '{r['series']}': the round locked "
                       "before snapshots existed and its answer cannot be "
                       "identified from dates alone")
-    # The answer is the first observation that was not in the frozen history.
-    # Anchoring on dates instead would resolve Michigan's August round against
-    # September, because the August value is dated 2026-08-01 and so sorts
-    # before a 2026-08-12 lock despite not existing until the 14th.
-    seen = {p["date"] for p in hist}
-    after = [p for p in points if p["date"] not in seen
-             and p["date"] >= hist[-1]["date"]]
+    # The answer is the first observation the frozen history did not contain,
+    # compared by (date, value) rather than date alone.
+    #
+    # A revision is a release. Michigan publishes a preliminary mid-month and a
+    # final at month end, and both revise the same monthly row: 2026-08-01
+    # carries the preliminary on the 14th and the final on the 28th. Keyed on
+    # date, the final round would see nothing new and never resolve; keyed on
+    # the pair, the preliminary round resolves against the value published on
+    # the 14th and the final round -- whose own snapshot already holds that
+    # preliminary -- resolves against the revision. Two questions, two answers,
+    # from one row.
+    seen = {(p["date"], p["value"]) for p in hist}
+    first_frozen_date = hist[-1]["date"]
+    after = [p for p in points
+             if (p["date"], p["value"]) not in seen
+             and p["date"] >= first_frozen_date]
     if not after:
         return None, "no release has landed in the series since the lock yet"
     return after[0], None
@@ -142,15 +158,19 @@ def resolve_all(season, series, resolved, now):
         if res is None:
             skipped.append((rid, why))
             continue
-        key = (rd["series"], res["observed_date"])
+        # Keyed on (series, date, value): a revision to the same row is a
+        # different observation, which is exactly how Michigan's preliminary
+        # and final stay distinct while sharing a date.
+        key = (rd["series"], res["observed_date"], res["value"])
         owner = claimed.get(key) or next(
             (o for o, v in resolved.items()
              if v.get("series") == rd["series"]
-             and v.get("observed_date") == res["observed_date"]), None)
+             and v.get("observed_date") == res["observed_date"]
+             and v.get("value") == res["value"]), None)
         if owner:
-            skipped.append((rid, f"observation {res['observed_date']} is already "
-                                 f"the resolution for {owner}; two rounds cannot "
-                                 "share one answer"))
+            skipped.append((rid, f"observation {res['observed_date']}={res['value']} "
+                                 f"is already the resolution for {owner}; two "
+                                 "rounds cannot share one answer"))
             continue
         claimed[key] = rid
         new[rid] = res

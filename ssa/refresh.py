@@ -236,9 +236,21 @@ def build_rounds(season, series, resolved, now):
         if len(hist) >= 3:
             target = r["release_at"][:10]
             row["baselines"] = baselines.all_baselines(hist, target)
+            row["scoreable"] = True
         else:
             row["baselines"] = None
-            row["baseline_note"] = "no machine-readable series yet for this tracker"
+            # Named rather than merely empty. Skill is defined as a ratio
+            # against persistence, so a round with no series has no denominator
+            # and can never produce the benchmark's headline number -- however
+            # many forecasts it collects, and even if a human resolves it by
+            # hand. Saying so in the payload keeps the pages from advertising a
+            # question the arena cannot grade, and keeps the count of scoreable
+            # rounds honest in the paper.
+            row["scoreable"] = False
+            row["baseline_note"] = (
+                "no machine-readable series for this tracker: forecasts are "
+                "collected and hashed, but cannot be scored, because skill is "
+                "measured against a persistence baseline this round has none of")
         if r["round_id"] in resolved:
             row["resolution"] = resolved[r["round_id"]]
         out.append(row)
