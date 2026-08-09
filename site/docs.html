@@ -152,9 +152,10 @@ footer{margin-top:48px;padding-top:16px;border-top:1px solid var(--border);color
   <details>
     <summary>VoteHub: free JSON API, verified working</summary>
     <p>Poll-level data with pollster, field dates, sample size, population, and answers. No key needed.</p>
-    <pre><code>GET https://api.votehub.com/polls?poll_type=approval
-GET https://api.votehub.com/polls?poll_type=generic-ballot</code></pre>
-    <p class="hint">Averages at <a href="https://votehub.com/polls/">votehub.com/polls</a>, methodology page describes recency and pollster-quality weighting. This is our machine-readable resolution input. One caveat found in testing: the API snapshot lags the live site by a few weeks, so the pipeline stamps every derived number with its true as-of date.</p>
+    <pre><code>Trump approval  https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv
+Generic ballot  https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv
+Michigan ICS    http://www.sca.isr.umich.edu/files/tbmics.csv  (FRED as fallback)</code></pre>
+    <p class="hint">Poll-level records behind the <a href="https://www.natesilver.net/p/trump-approval-ratings-nate-silver-bulletin">Silver Bulletin</a> averages, free and keyless, three days behind the field dates they report. We read the raw marginals and never the adjusted ones: house-effect adjustment is this pipeline's own step, and taking theirs would move our resolution values whenever they retune their model. Two fields decide which number you get and both are stated in every question: <code>subgroup</code> separates overall approval from issue-specific approval, and <code>population</code> separates adults from registered voters &mdash; the same Morning Consult wave read 49.8 among adults and 46.2 among registered voters. Michigan comes from the survey's own monthly table, which carries the current month; FRED republishes it a month late and is the fallback. This replaced an aggregation API that was 41 days stale, which is why forecasts made in August were anchored on June.</p>
   </details>
 
   <details>

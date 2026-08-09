@@ -383,6 +383,26 @@ function tipShow(tip, ev, html){
 // Both information conditions carry a marker, not just one. A bare model name
 // beside a `zs` one reads as "the model" versus "a variant of it"; they are two
 // entrants that differ only in what they were shown, and the chart should say so.
+// Thirty entrants drawn at once is thirty lines in one panel and thirty dots on
+// one release date -- unreadable, and it hides the comparison the chart exists
+// to make. The default shows the reference baseline, the baseline hardest to
+// beat, and the leading few models; everything else stays one legend click
+// away. Chosen from the data rather than hardcoded, so the shortlist follows
+// the standings instead of going stale.
+const DEFAULT_VISIBLE_MODELS = 5;
+function defaultHidden(data){
+  const board = ((data||{}).backtest||{}).overall || [];
+  const keep = new Set(['persistence','ewma']);
+  let n = 0;
+  for(const row of board){
+    if(row.baseline || keep.has(row.entrant)) continue;
+    keep.add(row.entrant);
+    if(++n >= DEFAULT_VISIBLE_MODELS) break;
+  }
+  const all = new Set(board.map(r=>r.entrant));
+  ((data||{}).entrants||[]).forEach(e=>all.add(e.entrant_id));
+  return new Set([...all].filter(id=>!keep.has(id)));
+}
 function condTag(nm){
   if(/\(zero-shot\)/.test(nm||'')) return 'zs';
   if(/\(recent-10\)/.test(nm||'')) return 'r10';
@@ -513,7 +533,7 @@ function seriesChart(key, data){
   if(!series || series.length<2){ svg.style.display='none'; return; }
   const pw = pane().clientWidth, ph = pane().clientHeight;
   if(pw < 80 || ph < 80){ svg.style.display='none'; return; }
-  if(!window.__hidden){ window.__hidden = new Set(['persistence','trend','ewma','climatology']); }
+  if(!window.__hidden){ window.__hidden = defaultHidden(window.__data); }
   const hidden = window.__hidden;
   const upcoming = (data.rounds||[]).filter(r =>
     r.series === d.rseries && r.forecasts && Object.keys(r.forecasts).length &&
@@ -647,7 +667,7 @@ const TABDEFS = {
   umich_sentiment: { chart:'umich_sentiment', unit:'', label:'Michigan consumer sentiment', tracker:'umich_sentiment', per:'umich_sentiment', rseries:'umich_sentiment', srcName:'sca.isr.umich.edu', srcUrl:'https://www.sca.isr.umich.edu/' },
   yougov_approval: { chart:'yougov_approval', unit:'%', label:'Economist/YouGov Trump approval', tracker:'yougov_approval', per:'yougov_approval', rseries:'yougov_approval', srcName:'yougov.com', srcUrl:'https://yougov.com/en-us/topics/topic/The_Economist_YouGov_polls' },
   mc_approval: { chart:'mc_approval', unit:'%', label:'Morning Consult Trump approval', tracker:'mc_approval', per:'mc_approval', rseries:'mc_approval', srcName:'morningconsult.com', srcUrl:'https://pro.morningconsult.com/trackers/donald-trump-congress-policy-republicans-polling' },
-  generic_margin: { chart:'generic_margin', unit:'', zero:true, label:'2026 generic ballot margin, Dem minus Rep', tracker:'generic_ballot_avg', per:'yougov_generic_margin', rseries:'yougov_generic_margin', srcName:'votehub.com', srcUrl:'https://votehub.com/polls/' },
+  generic_margin: { chart:'generic_margin', unit:'', zero:true, label:'2026 generic ballot margin, Dem minus Rep', tracker:'generic_ballot_avg', per:'yougov_generic_margin', rseries:'yougov_generic_margin', srcName:'Silver Bulletin', srcUrl:'https://www.natesilver.net/p/generic-ballot-average-2026-nate-silver-bulletin-congress-polls' },
 };
 
 function setTab(key){
@@ -662,8 +682,8 @@ function setTab(key){
     document.getElementById('legend-strip').style.display='none';
     const unit = window.__unit || 'skill';
     document.getElementById('caption').textContent = unit==='crps'
-      ? 'Average forecast error (CRPS, in points) across all backtest rounds, lower is better. Model lines are placeholders until API keys connect. Live season joins Aug 14.'
-      : 'Cumulative skill vs the persistence baseline, higher is better. Model lines are placeholders until API keys connect. Live season joins Aug 14.';
+      ? 'Average forecast error (CRPS, in points), lower is better. Measured on the releases every entrant answered, each model scored only after its own training cutoff. Five leading models shown; click the legend for the rest.'
+      : 'Cumulative skill vs the persistence baseline, higher is better. Measured on the releases every entrant answered, each model scored only after its own training cutoff. r10 saw the last ten values, zs saw none. Five leading models shown; click the legend for the rest.';
     aggChart((data.backtest||{}).trajectory, nameOf, unit);
   } else {
     unitSeg.style.display='none';
@@ -678,7 +698,7 @@ function setTab(key){
   }
 }
 
-const SPANLABEL = {all:'all 323 backtest releases (2015 to 2026)', m6:'the last six months of releases', d30:'the last 30 days of releases', last:'the most recent release only'};
+const SPANLABEL = {all:'the releases every entrant answered', m6:'the releases every entrant answered', d30:'the releases every entrant answered', last:'the releases every entrant answered'};
 function renderBoard(mode){
   const data = window.__data; if(!data) return;
   window.__board = mode; if(typeof syncHash==='function') syncHash();
