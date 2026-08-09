@@ -445,7 +445,14 @@ function aggChart(traj, nameOf, unit){
   if(!window.__hidden){ window.__hidden = defaultHidden(window.__data); }
   const hiddenA = window.__hidden;
   const universe = ['climatology','trend','ewma'].concat(mocks).concat(['crowd']);
-  const series = universe.filter(s => !hiddenA.has(s));
+  const val0 = (t,s) => (unit==='crps' ? (t.crps ? t.crps[s] : null) : t.skills[s]);
+  // Only entrants the data actually scores. Falling back to 0 for a missing
+  // value drew two lies: `crowd` is not computed in the model backtest at all
+  // and got a full line at exactly 0% skill, and every model was drawn flat at
+  // 0 for the checkpoints before its own training cutoff -- which reads as "no
+  // skill" when it means "not yet eligible to be scored".
+  const scored = universe.filter(s => traj.some(t => val0(t,s) != null));
+  const series = scored.filter(s => !hiddenA.has(s));
   if(!series.length){ svg.style.display='none'; return; }
   const val = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null) : t.skills[s];
   if(unit==='crps' && !traj[traj.length-1].crps){ unit='skill'; }
@@ -485,9 +492,13 @@ function aggChart(traj, nameOf, unit){
     g += `<line x1="${X(i)}" x2="${X(i)}" y1="${H-P.b}" y2="${H-P.b+4}" stroke="#c9c7c0"/>`;
     g += `<text x="${X(i)}" y="${H-8}" font-size="11" fill="#96948d" text-anchor="${anchor}">${fmtDate(traj[i].date)}</text>`;
   }
-  if(unit!=='crps'){
-    const pts = traj.map((tt,i)=>[X(i), Y(val(tt,'crowd')??0)]);
-    g += `<g clip-path="url(#clip-agg)"><path d="${smoothPath(pts)} L ${X(traj.length-1).toFixed(1)} ${(H-P.b).toFixed(1)} L ${P.l} ${(H-P.b).toFixed(1)} Z" fill="url(#lead)" stroke="none"/></g>`;
+  // The shaded lead is the crowd's, so it is drawn only where a crowd exists.
+  if(unit!=='crps' && series.indexOf('crowd') >= 0){
+    const pts = traj.map((tt,i)=>[X(i), val(tt,'crowd')]).filter(p=>p[1]!=null)
+                    .map(p=>[p[0], Y(p[1])]);
+    if(pts.length > 1){
+      g += `<g clip-path="url(#clip-agg)"><path d="${smoothPath(pts)} L ${pts[pts.length-1][0].toFixed(1)} ${(H-P.b).toFixed(1)} L ${pts[0][0].toFixed(1)} ${(H-P.b).toFixed(1)} Z" fill="url(#lead)" stroke="none"/></g>`;
+    }
   }
   const lastCk = traj[traj.length-1];
   const yTop = P.t+9, yBot = H-P.b-9;
@@ -495,32 +506,40 @@ function aggChart(traj, nameOf, unit){
   for(const s of series){
     const heavy = s==='crowd';
     const isModel = mocks.indexOf(s) >= 0;
-    const pts = traj.map((tt,i)=>[X(i), Y(val(tt,s)??0)]);
+    // A line starts where its entrant starts being scored, not at the left
+    // edge: on a per-tracker curve most models only become eligible partway
+    // along, and plotting the gap as 0 invented a flat run of no-skill.
+    const pts = traj.map((tt,i)=>[X(i), val(tt,s)]).filter(p=>p[1]!=null)
+                    .map(p=>[p[0], Y(p[1])]);
+    if(pts.length < 2) continue;
     g += `<path d="${smoothPath(pts)}" fill="none" stroke="${colorOf(s)}" stroke-width="${heavy?2.8:(isModel?1.6:1.9)}" ${isModel?'opacity=".9"':''} stroke-linecap="round" stroke-linejoin="round"/>`;
   }
   g += '</g>';
   const avail = P.r - 33, maxCh = Math.max(4, Math.floor(avail/7.2) - 7);
   // strict ranking layout: best at the top, monotonic downward, no shuffling
-  const labelOrder = series.slice().sort((a,b)=>{
-    const va = val(lastCk,a)??-9, vb = val(lastCk,b)??-9;
+  // Only entrants with a value at the final checkpoint get a label -- an
+  // absent one has no endpoint to point at, and ranking it as 0 would place it
+  // mid-table among entrants that were actually measured.
+  const labelOrder = series.filter(s => val(lastCk,s) != null).sort((a,b)=>{
+    const va = val(lastCk,a), vb = val(lastCk,b);
     return unit==='crps' ? va-vb : vb-va;
   });
   const LH = 17;
   const slots = [];
   let prevY = yTop - LH;
   for(const s of labelOrder){
-    let y = Math.max(Y(val(lastCk,s)??0), prevY + LH);
+    let y = Math.max(Y(val(lastCk,s)), prevY + LH);
     slots.push(y); prevY = y;
   }
   // if the stack ran past the bottom, shift the whole tail back up
-  const over = slots[slots.length-1] - yBot;
+  const over = slots.length ? slots[slots.length-1] - yBot : 0;
   if(over > 0){
     for(let i=slots.length-1;i>=0;i--){
       slots[i] = Math.min(slots[i], yBot - (slots.length-1-i)*LH);
     }
   }
   labelOrder.forEach((s, i)=>{
-    const last = val(lastCk,s)??0, ly = slots[i];
+    const last = val(lastCk,s), ly = slots[i];
     let nm = (nameOf[s]||s).split(' (')[0] + condSuffix(nameOf[s]);
     if(nm.length > maxCh) nm = nm.slice(0, maxCh-1)+'…';
     const heavy = s==='crowd';
@@ -544,12 +563,14 @@ function aggChart(traj, nameOf, unit){
     traj.forEach((t,i)=>{const d=Math.abs(X(i)-mx); if(d<bd){bd=d;best=i;}});
     xh.setAttribute('x1',X(best)); xh.setAttribute('x2',X(best)); xh.style.display='';
     const ck = traj[best];
-    const lineup = series.slice().sort((a,b)=>{
-      const va = val(ck,a)??-9, vb = val(ck,b)??-9;
+    // Ranked among the entrants scored at *this* checkpoint. One not yet past
+    // its cutoff is absent from the standings rather than listed at zero.
+    const lineup = series.filter(s => val(ck,s) != null).sort((a,b)=>{
+      const va = val(ck,a), vb = val(ck,b);
       return unit==='crps' ? va-vb : vb-va;
     });
     tipShow(tip, ev, '<b>'+fmtDate(ck.date)+'</b> · '+ck.n+' rounds<br>'
-      + lineup.map((s,i)=>(i+1)+'. '+(nameOf[s]||s).split(' (')[0]+condSuffix(nameOf[s])+' '+fmtV(val(ck,s)??0)).join('<br>'));
+      + lineup.map((s,i)=>(i+1)+'. '+(nameOf[s]||s).split(' (')[0]+condSuffix(nameOf[s])+' '+fmtV(val(ck,s))).join('<br>'));
   };
   svg.onmouseleave = ()=>{ xh.style.display='none'; tip.style.display='none'; };
 }
@@ -694,8 +715,14 @@ function setTab(key){
   const nameOf = {}; (data.entrants||[]).forEach(e => nameOf[e.entrant_id]=e.name);
   const unitSeg = document.getElementById('unit-seg');
   const bt = data.backtest || {};
-  const legendIds = ['climatology','trend','ewma']
+  // The legend lists what the chart in front of you can draw, taken from the
+  // trajectory it is drawing. Listing the full roster instead offers chips
+  // that toggle nothing -- `crowd`, for one, is not scored in the model
+  // backtest at all.
+  const roster = ['climatology','trend','ewma']
     .concat(bt.model_entrants || bt.mock_models || []).concat(['crowd']);
+  const legendFor = traj => !traj || !traj.length ? [] : roster.filter(s =>
+    traj.some(t => (t.skills && t.skills[s] != null) || (t.crps && t.crps[s] != null)));
   // The aggregate has no tracker level to plot; the trackers do, and it is
   // their default. Two separate memories, so switching tabs does not silently
   // change what the other tab was showing.
@@ -709,7 +736,7 @@ function setTab(key){
       ? 'Average forecast error (CRPS, in points), lower is better. Measured on the releases every entrant answered, each model scored only after its own training cutoff. Five leading models shown; click the legend for the rest.'
       : 'Cumulative skill vs the persistence baseline, higher is better. Measured on the releases every entrant answered, each model scored only after its own training cutoff. r10 saw the last ten values, zs saw none. Five leading models shown; click the legend for the rest.';
     aggChart(bt.trajectory, nameOf, unit);
-    renderLegend(legendIds, nameOf, 'click to toggle');
+    renderLegend(legendFor(bt.trajectory), nameOf, 'click to toggle');
     return;
   }
 
@@ -729,7 +756,7 @@ function setTab(key){
       +' · '+psTraj[psTraj.length-1].n+' releases, each model over the part of them that falls after its own training cutoff'
       +' · data source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener" style="color:var(--link);text-decoration:none;font-weight:600;">'+esc(d.srcName)+'</a>';
     aggChart(psTraj, nameOf, unit);
-    renderLegend(legendIds, nameOf, 'click to toggle');
+    renderLegend(legendFor(psTraj), nameOf, 'click to toggle');
     return;
   }
   document.getElementById('caption').innerHTML =
