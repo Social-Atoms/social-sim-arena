@@ -178,7 +178,14 @@ MODELS = {
 # spend; only tokens actually produced are billed.
 ANTHROPIC_MAX_TOKENS = 128000   # max_tokens reported by /v1/models for Opus 4.8,
                                 # Sonnet 5 and Fable 5 (1M input, 128k output)
-TIMEOUT = 120
+# (connect, read). Every entrant runs at its provider's maximum reasoning
+# effort, so a reply can be minutes of thinking before the first byte -- a
+# 120s read timeout was simply shorter than the work being asked for, and it
+# failed the same three Anthropic rounds on every refresh while the other
+# seven succeeded. Nothing here is interactive, so the read budget is generous;
+# the connect budget stays short so an unreachable host still fails fast
+# instead of holding a worker for ten minutes.
+TIMEOUT = (15, 600)
 
 # Two prompt variants, differing only in how much of the series the model sees.
 # Everything that defines *what number is being asked for* -- the pollster, the
