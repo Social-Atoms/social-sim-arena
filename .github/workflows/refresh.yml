@@ -53,7 +53,17 @@ jobs:
       # same run just fetched. It only ever adds, never overwrites, and
       # refuses anything ambiguous with a reason in the log -- so a bad
       # afternoon leaves rounds unresolved rather than mis-scored.
+      #
+      # always(), for the same reason the steps below carry it: ssa.refresh
+      # exits non-zero when any one entrant's provider call fails, and without
+      # this a single timed-out forecast skips resolution for the whole run.
+      # Harmless while every round is still open, and not harmless from the
+      # first release onward -- that is precisely the day a run is most likely
+      # to be busy enough to time out, and the leaderboard would stay empty
+      # with nothing in the log saying why. Resolution does not depend on the
+      # forecasts anyway: it reads the series and the frozen lock snapshots.
       - run: python -m ssa.resolve --write
+        if: always()
       # data.json is rebuilt so the leaderboard reflects anything just
       # resolved, instead of waiting six hours for the next run.
       - run: python -m ssa.refresh
