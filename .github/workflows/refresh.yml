@@ -49,6 +49,15 @@ jobs:
       - run: pip install -r requirements.txt
       - run: python -m tests.test_scoring
       - run: python -m ssa.refresh
+      # Resolution runs after the refresh so it scores against the series the
+      # same run just fetched. It only ever adds, never overwrites, and
+      # refuses anything ambiguous with a reason in the log -- so a bad
+      # afternoon leaves rounds unresolved rather than mis-scored.
+      - run: python -m ssa.resolve --write
+      # data.json is rebuilt so the leaderboard reflects anything just
+      # resolved, instead of waiting six hours for the next run.
+      - run: python -m ssa.refresh
+        if: always()
       # always(): ssa.refresh exits non-zero when any entrant's provider call
       # fails, but the forecasts that did succeed are already written and a
       # round locks on a hard deadline. Commit what landed, and let the job
@@ -64,12 +73,12 @@ jobs:
           # the merge committed its forecasts locally and then died there,
           # throwing the work away while the API calls had already been paid
           # for. autoStash is the belt to that braces.
-          git add -A forecasts site
+          git add -A forecasts site resolutions locks
           # ignore the generated_at stamp so no-op runs do not commit
           if git diff --cached --quiet -I '"generated_at"'; then
             echo "no substantive change"
             git reset --quiet
-            git checkout -- site forecasts
+            git checkout -- site forecasts resolutions locks
           else
             git commit -m "data refresh $(date -u +%Y-%m-%dT%H:%MZ)"
             git -c rebase.autoStash=true pull --rebase origin main

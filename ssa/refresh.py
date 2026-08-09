@@ -23,6 +23,12 @@ RESOLVED = os.path.join(ROOT, "resolutions", "resolved.json")
 FORECASTS = os.path.join(ROOT, "forecasts")
 ENTRANTS = os.path.join(ROOT, "entrants")
 OUT = os.path.join(ROOT, "site", "data.json")
+LOCKS = os.path.join(ROOT, "locks")
+
+# How much history a lock snapshot keeps. The nulls need persistence (1 point),
+# trend (8), climatology (24) and ewma (all, but at alpha 0.4 a point 60 back
+# contributes ~1e-13). Sixty is bounded and lossless in practice.
+LOCK_SNAPSHOT_POINTS = 60
 
 UMICH_NEXT_RELEASE = "2026-08-14T14:00:00Z"  # preannounced; cron updates after each release
 
@@ -154,6 +160,52 @@ def round_status(r, resolved, now):
     return "awaiting_resolution"
 
 
+def lock_snapshot_path(round_id):
+    return os.path.join(LOCKS, round_id + ".json")
+
+
+def read_lock_snapshot(round_id):
+    path = lock_snapshot_path(round_id)
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def update_lock_snapshot(r, hist, now):
+    """Record the history a round would freeze, while it is still open.
+
+    Filtering by `date < lock_at` does not actually freeze anything for a
+    monthly series, because the point's date is its month label, not its
+    publication day: Michigan's August value is dated 2026-08-01 and published
+    on the 14th, so a round locking on the 12th would absorb the very answer it
+    is scored against the moment it appeared. The dates cannot distinguish
+    "existed at lock" from "labelled before lock"; only observation time can.
+
+    So while a round is open every refresh overwrites its snapshot, and after
+    `lock_at` nothing touches it again. The last write before the lock is the
+    freeze, and it is a committed artifact rather than something recomputed
+    from data that has since changed underneath it.
+    """
+    if now >= parse_iso(r["lock_at"]):
+        return False                      # frozen; never rewritten
+    os.makedirs(LOCKS, exist_ok=True)
+    body = {
+        "round_id": r["round_id"],
+        "series": r["series"],
+        "lock_at": r["lock_at"],
+        "observed_at": iso(now),
+        "history": hist[-LOCK_SNAPSHOT_POINTS:],
+    }
+    with open(lock_snapshot_path(r["round_id"]), "w") as f:
+        json.dump(body, f, indent=2)
+        f.write("\n")
+    return True
+
+
 def build_rounds(season, series, resolved, now):
     """Returns (rounds, history_by_round). The history is the strictly pre-lock
     slice each round's baselines were computed from; the model harness
@@ -168,7 +220,18 @@ def build_rounds(season, series, resolved, now):
         # lock date counts. Otherwise, once a release lands in the series, the
         # persistence null would contain the outcome it is scored against.
         lock_date = r["lock_at"][:10]
-        hist = [p for p in (series.get(r["series"]) or []) if p["date"] < lock_date]
+        live = [p for p in (series.get(r["series"]) or []) if p["date"] < lock_date]
+        if now < parse_iso(r["lock_at"]):
+            # Still open: use live history and keep the snapshot current.
+            hist = live
+            update_lock_snapshot(r, live, now)
+        else:
+            # Locked: the frozen snapshot is the truth. Falling back to the
+            # date filter is only for rounds that locked before snapshots
+            # existed, and it carries the flaw described in update_lock_snapshot.
+            snap = read_lock_snapshot(r["round_id"])
+            hist = snap["history"] if snap else live
+            row["history_source"] = "lock snapshot" if snap else "date filter (pre-snapshot round)"
         hist_by_round[r["round_id"]] = hist
         if len(hist) >= 3:
             target = r["release_at"][:10]
