@@ -474,10 +474,37 @@ def main():
     })
     real_mb = load_model_backtest()
     if real_mb:
-        # A real run exists, so the placeholders below are skipped entirely and
-        # the site shows measured numbers with the window they were measured on.
+        # A real run exists, so the placeholders below are skipped entirely.
+        #
+        # The measured board goes into `overall` and `spans` as well as under
+        # `models`, because those are the keys the site renders. Putting real
+        # numbers only under a new key is how the pages ended up showing no
+        # model rows at all: the placeholder path used to populate `overall`,
+        # so removing it silently emptied every model table.
+        #
+        # The board is the matched table -- models and baselines scored on the
+        # identical set of releases -- so the rows in it are comparable to each
+        # other. That is not true of the long baseline replay in `spans`, which
+        # covers all 339 releases including stretches no model was scored on,
+        # so the two are not mixed: the measured board replaces them rather
+        # than being appended to them.
         bt["models"] = real_mb
         bt["mock_models"] = []
+        board = real_mb.get("board") or []
+        if board:
+            bt["baseline_replay"] = {"overall": bt["overall"],
+                                     "spans": bt["spans"],
+                                     "n_rounds": bt.get("n_rounds")}
+            bt["overall"] = board
+            bt["spans"] = {k: board for k in bt["spans"]}
+            bt["n_rounds"] = real_mb.get("releases") or bt.get("n_rounds")
+            bt["note"] = (
+                f"{real_mb.get('releases')} releases every entrant answered, "
+                f"{real_mb.get('window', {}).get('first')} to "
+                f"{real_mb.get('window', {}).get('last')}. Each model is scored "
+                "only on releases after its own training cutoff; this table is "
+                "the intersection, so every row is measured on the same points. "
+                "Rows ending -zeroshot saw the question and no series history.")
     else:
         attach_mock_models(bt)
 
