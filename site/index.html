@@ -723,10 +723,14 @@ function setTab(key){
     .concat(bt.model_entrants || bt.mock_models || []).concat(['crowd']);
   const legendFor = traj => !traj || !traj.length ? [] : roster.filter(s =>
     traj.some(t => (t.skills && t.skills[s] != null) || (t.crps && t.crps[s] != null)));
-  // The aggregate has no tracker level to plot; the trackers do, and it is
-  // their default. Two separate memories, so switching tabs does not silently
-  // change what the other tab was showing.
-  const unit = key==='agg' ? (window.__unitAgg || 'skill') : (window.__unitSer || 'level');
+  // Every tab opens on skill, so a tracker tab answers the same question the
+  // aggregate does -- who forecast this well -- for one tracker. Opening on
+  // the tracker's own level instead put the model curves behind a control you
+  // had to find first, which reads as "this tab has no model data" when it
+  // has six months of it. The level view, with the forecast dots for the next
+  // release, is one click away. Two separate memories, so moving between tabs
+  // does not silently change what the other was showing.
+  const unit = key==='agg' ? (window.__unitAgg || 'skill') : (window.__unitSer || 'skill');
   unitSeg.style.display='';
   unitSeg.querySelector('[data-unit="level"]').style.display = key==='agg' ? 'none' : '';
   unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.unit===unit));
@@ -753,7 +757,8 @@ function setTab(key){
     document.getElementById('caption').innerHTML =
       esc(d.label)+' · '+(unit==='crps' ? 'average forecast error on this tracker alone (CRPS, in points), lower is better'
                                         : 'cumulative skill on this tracker alone vs persistence, higher is better')
-      +' · '+psTraj[psTraj.length-1].n+' releases, each model over the part of them that falls after its own training cutoff'
+      +' · '+psTraj[psTraj.length-1].n+' releases, each model over the part of them that falls after its own training cutoff, so a line begins where its model becomes eligible'
+      +' · latest '+esc(tr.value!=null?tr.value:'n/a')+esc(d.unit||'')+' as of '+esc(tr.asof||'n/a')+', the tracker itself is under <b>Tracker</b>'
       +' · data source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener" style="color:var(--link);text-decoration:none;font-weight:600;">'+esc(d.srcName)+'</a>';
     aggChart(psTraj, nameOf, unit);
     renderLegend(legendFor(psTraj), nameOf, 'click to toggle');
