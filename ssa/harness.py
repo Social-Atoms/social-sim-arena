@@ -289,13 +289,22 @@ def base_url(entrant):
     Azure deployment speaks the same OpenAI-compatible protocol on a different
     host, so only the base differs.
 
-    Resolution order is per-entrant override, then SSA_BASE_GATEWAY for the
-    four models that share one gateway, then the built-in default. The shared
-    variable exists because those four are one deployment: setting four
-    identical secrets invites three of them to drift.
+    Resolution order is per-entrant override, then the shared gateway variable
+    for the models that share one deployment, then the built-in default. The
+    shared variable exists because those models are one host: setting several
+    identical secrets invites all but one of them to drift.
+
+    `SSA_BASE_QWEN` is accepted as that shared variable alongside the clearer
+    `SSA_BASE_GATEWAY`. It is the name the secret was actually provisioned
+    under, and renaming the lookup without renaming the secret is not a no-op:
+    it drops the override, and every gateway model silently falls back to the
+    public default host. That happened -- it routed three entrants away from
+    the configured gateway and invalidated their whole backtest cache, since
+    `call_identity` (and therefore the cache key) contains the base URL.
     """
     model, _ = resolve(entrant)
-    shared = (os.environ.get("SSA_BASE_GATEWAY")
+    shared = ((os.environ.get("SSA_BASE_GATEWAY")
+               or os.environ.get("SSA_BASE_QWEN"))
               if model in GATEWAY_ENTRANTS else None)
     return (os.environ.get("SSA_BASE_" + _env_suffix(model))
             or shared or MODELS[model]["base"]).rstrip("/")

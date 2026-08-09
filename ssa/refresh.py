@@ -189,9 +189,18 @@ def update_lock_snapshot(r, hist, now):
     `lock_at` nothing touches it again. The last write before the lock is the
     freeze, and it is a committed artifact rather than something recomputed
     from data that has since changed underneath it.
+
+    Empty history is never written over a snapshot that has some. A series
+    missing from the map produces `hist == []`, which is a caller with an
+    incomplete map -- not a tracker whose history disappeared -- and writing it
+    destroys the one record of what the round's nulls saw. It has happened:
+    a build that omitted `generic_ballot_margin` blanked that round's snapshot
+    in one pass.
     """
     if now >= parse_iso(r["lock_at"]):
         return False                      # frozen; never rewritten
+    if not hist and (read_lock_snapshot(r["round_id"]) or {}).get("history"):
+        return False                      # never trade a real freeze for nothing
     os.makedirs(LOCKS, exist_ok=True)
     body = {
         "round_id": r["round_id"],
@@ -459,6 +468,7 @@ def load_model_backtest():
         "board": mb.get("matched"),
         "trajectory": mb.get("trajectory"),
         "per_series": mb.get("per_series"),
+        "per_series_trajectory": mb.get("per_series_trajectory"),
         "failures": mb.get("failures"),
         "cutoffs": mb.get("cutoffs"),
     }
@@ -587,6 +597,13 @@ def main():
             if real_mb.get("per_series"):
                 bt["baseline_replay"]["per_series"] = bt["per_series"]
                 bt["per_series"] = real_mb["per_series"]
+            # Per-tracker curves. Without these the tracker tabs can only draw
+            # the tracker's own line plus a dot per open round, so a model that
+            # is good at Michigan and bad at the generic ballot looks identical
+            # on both -- the per-series difference exists in the data and had
+            # nowhere to be shown.
+            if real_mb.get("per_series_trajectory"):
+                bt["per_series_trajectory"] = real_mb["per_series_trajectory"]
             bt["note"] = (
                 f"{real_mb.get('releases')} releases every entrant answered, "
                 f"{real_mb.get('window', {}).get('first')} to "

@@ -179,6 +179,36 @@ def test_pre_lock_history_prefers_the_frozen_snapshot():
         refresh.read_lock_snapshot = real
 
 
+def test_an_empty_history_never_overwrites_a_real_snapshot():
+    """A missing series gives hist == [], which is a broken caller, not a
+    tracker whose history vanished. Writing it would erase the only record of
+    what the round's nulls saw, and the round could never be resolved."""
+    import json as _json
+    import tempfile
+    import ssa.refresh as refresh
+
+    real_locks = refresh.LOCKS
+    tmp = tempfile.mkdtemp()
+    refresh.LOCKS = tmp
+    try:
+        r = _round("r-empty", lock="2099-01-01T00:00:00Z")
+        now = T("2026-08-09T00:00:00Z")
+        assert refresh.update_lock_snapshot(r, [{"date": "2026-08-01", "value": 5.0}], now)
+        assert not refresh.update_lock_snapshot(r, [], now), "empty must be refused"
+        with open(refresh.lock_snapshot_path("r-empty")) as f:
+            assert _json.load(f)["history"] == [{"date": "2026-08-01", "value": 5.0}]
+
+        # with nothing to lose, an empty first write is still allowed
+        r2 = _round("r-fresh", lock="2099-01-01T00:00:00Z")
+        assert refresh.update_lock_snapshot(r2, [], now)
+
+        # and the lock itself still wins over everything
+        r3 = _round("r-locked", lock="2020-01-01T00:00:00Z")
+        assert not refresh.update_lock_snapshot(r3, [{"date": "2026-08-01", "value": 5.0}], now)
+    finally:
+        refresh.LOCKS = real_locks
+
+
 if __name__ == "__main__":
     for name, fn in sorted(list(globals().items())):
         if name.startswith("test_") and callable(fn):
