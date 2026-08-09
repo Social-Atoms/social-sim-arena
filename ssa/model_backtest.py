@@ -370,6 +370,14 @@ def score(records, series_map, warmup=WARMUP):
         if not r.get("topline"):
             failures[r["entrant"]] = failures.get(r["entrant"], 0) + 1
 
+    # Cumulative skill over time, and a board per series. The site draws both,
+    # and until now drew them only for the baselines: the placeholder path used
+    # to inject model curves and per-series rows, so removing it left the
+    # charts silently baseline-only. Real numbers have to fill the same shapes,
+    # not just a new key.
+    trajectory = _trajectory(crps, base_crps, answered_all)
+    per_series = _per_series(crps, base_crps)
+
     return {
         "window": {"first": keys[0][1] if keys else None,
                    "last": keys[-1][1] if keys else None},
@@ -377,9 +385,75 @@ def score(records, series_map, warmup=WARMUP):
         "matched_releases": len(answered_all),
         "per_entrant": per_entrant,
         "matched": matched,
+        "trajectory": trajectory,
+        "per_series": per_series,
+        "entrants": sorted(crps),
         "failures": failures,
         "cutoffs": {e: cutoffs.describe(e) for e in entrants},
     }
+
+
+def _trajectory(crps, base_crps, points, checkpoints=30):
+    """Cumulative mean skill per entrant at evenly spaced checkpoints.
+
+    Computed on the matched points only, so every curve is over the same
+    releases and the lines are comparable to each other at every x.
+    """
+    pts = sorted(points, key=lambda k: k[1])
+    if len(pts) < 2:
+        return []
+    step = max(len(pts) / checkpoints, 1)
+    out = []
+    for c in range(1, min(checkpoints, len(pts)) + 1):
+        upto = pts[: max(int(round(c * step)), 1)]
+        skills, crpss = {}, {}
+        denom = sum(base_crps[k]["persistence"] for k in upto) / len(upto)
+        for e, per_point in crps.items():
+            have = [k for k in upto if k in per_point]
+            if not have:
+                continue
+            mc = sum(per_point[k] for k in have) / len(have)
+            crpss[e] = round(mc, 3)
+            skills[e] = round(scoring.skill(mc, denom), 4)
+        for name in baselines.DEFAULT:
+            mc = sum(base_crps[k][name] for k in upto) / len(upto)
+            crpss[name] = round(mc, 3)
+            skills[name] = round(scoring.skill(mc, denom), 4)
+        ranks = {e: i + 1 for i, e in enumerate(
+            sorted(skills, key=lambda x: -skills[x]))}
+        out.append({"date": upto[-1][1], "n": len(upto),
+                    "ranks": ranks, "skills": skills, "crps": crpss})
+    return out
+
+
+def _per_series(crps, base_crps):
+    """One board per series, so a tracker that is easy or hard shows up as
+    itself rather than being averaged away in the overall table."""
+    series_names = sorted({k[0] for k in base_crps})
+    out = {}
+    for s in series_names:
+        pts = [k for k in base_crps if k[0] == s]
+        if not pts:
+            continue
+        denom = sum(base_crps[k]["persistence"] for k in pts) / len(pts)
+        rows = []
+        for e, per_point in sorted(crps.items()):
+            have = [k for k in pts if k in per_point]
+            if not have:
+                continue
+            mc = sum(per_point[k] for k in have) / len(have)
+            rows.append({"entrant": e, "rounds": len(have),
+                         "mean_crps": round(mc, 3),
+                         "mean_skill": round(scoring.skill(mc, denom), 3)})
+        for name in baselines.DEFAULT:
+            mc = sum(base_crps[k][name] for k in pts) / len(pts)
+            rows.append({"entrant": name, "rounds": len(pts),
+                         "mean_crps": round(mc, 3),
+                         "mean_skill": round(scoring.skill(mc, denom), 3),
+                         "baseline": True})
+        rows.sort(key=lambda x: -x["mean_skill"])
+        out[s] = rows
+    return out
 
 
 def actual_cost(records):

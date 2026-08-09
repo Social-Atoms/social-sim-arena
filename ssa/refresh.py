@@ -382,6 +382,8 @@ def load_model_backtest():
         "releases": mb.get("matched_releases"),
         "entrants": mb.get("entrants"),
         "board": mb.get("matched"),
+        "trajectory": mb.get("trajectory"),
+        "per_series": mb.get("per_series"),
         "failures": mb.get("failures"),
         "cutoffs": mb.get("cutoffs"),
     }
@@ -498,6 +500,18 @@ def main():
             bt["overall"] = board
             bt["spans"] = {k: board for k in bt["spans"]}
             bt["n_rounds"] = real_mb.get("releases") or bt.get("n_rounds")
+            # The charts draw whichever entrants this list names, and read
+            # their values out of trajectory[].skills. Both were populated by
+            # the placeholder path; leaving them empty is why every model curve
+            # vanished while the numbers themselves were correct.
+            bt["model_entrants"] = [e for e in (real_mb.get("entrants") or [])
+                                    if e not in baselines.DEFAULT]
+            if real_mb.get("trajectory"):
+                bt["baseline_replay"]["trajectory"] = bt["trajectory"]
+                bt["trajectory"] = real_mb["trajectory"]
+            if real_mb.get("per_series"):
+                bt["baseline_replay"]["per_series"] = bt["per_series"]
+                bt["per_series"] = real_mb["per_series"]
             bt["note"] = (
                 f"{real_mb.get('releases')} releases every entrant answered, "
                 f"{real_mb.get('window', {}).get('first')} to "
