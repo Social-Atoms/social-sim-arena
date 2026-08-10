@@ -446,10 +446,15 @@ function aggChart(traj, nameOf, unit, oracleCrps){
   if(!window.__hidden){ window.__hidden = defaultHidden(window.__data); }
   const hiddenA = window.__hidden;
   const universe = ['climatology','trend','ewma'].concat(mocks).concat(['crowd']);
-  // Under a handful of rounds the ceiling is one noisy CRPS difference and
-  // the ratio explodes; the score is season-level by construction, so a curve
-  // starts once its aggregate rests on at least five scored releases.
-  const arenaAt = (t,s) => (t.crps && t.crps[s]!=null && t.crps.persistence!=null && !(t.n < 5))
+  // The scale only speaks where it can resolve. Two silences: under five
+  // aggregated rounds the numbers are one noisy difference, and when the
+  // persistence aggregate sits within 30% of the oracle floor the denominator
+  // is degenerate (a calm stretch: copying last week was near-perfect, so the
+  // ruler has no length). A score persistently above 100 at season scale
+  // would mean the noise model is wrong for that series (rounding, panel
+  // overlap), not that anyone beat the oracle; treat it as a red flag.
+  const arenaAt = (t,s) => (t.crps && t.crps[s]!=null && t.crps.persistence!=null
+      && !(t.n < 5) && t.crps.persistence >= 1.3*oracleCrps)
       ? arenaOf(t.crps[s], t.crps.persistence, oracleCrps) : null;
   const val0 = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null)
       : unit==='arena' ? arenaAt(t,s) : t.skills[s];
@@ -801,7 +806,9 @@ function renderBoard(mode){
   const btMap = {}; ((data.backtest&&data.backtest.overall)||[]).forEach(e=>btMap[e.entrant]=e);
   function row(id, s, rank, ref){
     const perRow = window.__perRow;
-    const arena = (s && perRow && perRow.mean_crps!=null) ? arenaOf(s.mean_crps, perRow.mean_crps) : null;
+    const healthy = perRow && perRow.mean_crps!=null && window.__oracleCrps!=null
+      && perRow.mean_crps >= 1.3*window.__oracleCrps;
+    const arena = (s && healthy) ? arenaOf(s.mean_crps, perRow.mean_crps) : null;
     const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0))
       : s ? ((s.mean_skill>0?'+':'')+(s.mean_skill*100).toFixed(1)+'%') : '<span class="pend">···</span>';
     const subSkill = (arena!=null && s) ? '<br><span class="type">skill '+((s.mean_skill>0?'+':'')+(s.mean_skill*100).toFixed(1))+'%</span>' : '';
