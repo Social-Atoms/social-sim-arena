@@ -217,7 +217,7 @@ footer .upd{margin-left:auto;}
       <div class="legend-strip" id="legend-strip" style="display:none;"></div>
       <div class="chartpane" id="chartpane">
         <div class="chartctl">
-          <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker</button><button data-unit="arena" class="on">Score</button><button data-unit="skill">Skill %</button><button data-unit="crps">Error pts</button></div>
+          <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker</button><button data-unit="arena" class="on">Score</button><button data-unit="crps">Error pts</button></div>
           <div class="seg mini" id="range-seg"><button data-range="3">3M</button><button data-range="6">6M</button><button data-range="12">1Y</button><button data-range="0" class="on">All</button></div>
         </div>
         <div class="tooltip"></div>
@@ -429,7 +429,8 @@ function renderLegend(ids, nameOf, note){
     setTab(window.__tab || 'agg');
   });
 }
-function aggChart(traj, nameOf, unit){
+function aggChart(traj, nameOf, unit, oracleCrps){
+  if(oracleCrps===undefined) oracleCrps = window.__oracleCrps;
   const svg = clearChart(), tip = pane().querySelector('.tooltip');
   if(!traj || traj.length<2){ svg.style.display='none'; return; }
   const pw = pane().clientWidth, ph = (innerWidth<880?386:pane().clientHeight);
@@ -445,8 +446,11 @@ function aggChart(traj, nameOf, unit){
   if(!window.__hidden){ window.__hidden = defaultHidden(window.__data); }
   const hiddenA = window.__hidden;
   const universe = ['climatology','trend','ewma'].concat(mocks).concat(['crowd']);
-  const arenaAt = (t,s) => (t.crps && t.crps[s]!=null && t.crps.persistence!=null)
-      ? arenaOf(t.crps[s], t.crps.persistence) : null;
+  // Under a handful of rounds the ceiling is one noisy CRPS difference and
+  // the ratio explodes; the score is season-level by construction, so a curve
+  // starts once its aggregate rests on at least five scored releases.
+  const arenaAt = (t,s) => (t.crps && t.crps[s]!=null && t.crps.persistence!=null && !(t.n < 5))
+      ? arenaOf(t.crps[s], t.crps.persistence, oracleCrps) : null;
   const val0 = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null)
       : unit==='arena' ? arenaAt(t,s) : t.skills[s];
   // Only entrants the data actually scores. Falling back to 0 for a missing
@@ -458,7 +462,7 @@ function aggChart(traj, nameOf, unit){
   const series = scored.filter(s => !hiddenA.has(s));
   if(!series.length){ svg.style.display='none'; return; }
   if((unit==='crps' || unit==='arena') && !traj[traj.length-1].crps){ unit='skill'; }
-  if(unit==='arena' && window.__oracleCrps==null){ unit='skill'; }
+  if(unit==='arena' && oracleCrps==null){ unit='crps'; }
   const val = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null)
       : unit==='arena' ? arenaAt(t,s) : t.skills[s];
   const monthsA = window.__range || 0;
@@ -472,7 +476,7 @@ function aggChart(traj, nameOf, unit){
   let lo=Infinity, hi=-Infinity;
   traj.forEach(t => series.forEach(s => { const v=val(t,s); if(v!=null){ lo=Math.min(lo,v); hi=Math.max(hi,v);} }));
   if(unit==='skill'){ lo=Math.min(lo,0); hi=Math.max(hi,0); lo=Math.max(lo,-0.30); }
-  if(unit==='arena'){ lo=Math.min(lo,0); hi=Math.max(hi,100); lo=Math.max(lo,-30); }
+  if(unit==='arena'){ lo=Math.min(lo,0); hi=Math.max(hi,100); lo=Math.max(lo,-30); hi=Math.min(hi,115); }
   const pad=(hi-lo)*0.08||0.05; lo-=pad; hi+=pad;
   const X = i => P.l + i/(traj.length-1)*(W-P.l-P.r);
   const Y = v => P.t + (hi-v)/(hi-lo)*(H-P.t-P.b);
@@ -491,7 +495,7 @@ function aggChart(traj, nameOf, unit){
   if(unit!=='crps') g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="#96948d" stroke-dasharray="2 5"/>`;
   if(unit==='arena'){
     g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(100)}" y2="${Y(100)}" stroke="#15803d" stroke-width="1.4" stroke-dasharray="5 4"/>`;
-    g += `<text x="${W-P.r-6}" y="${Y(100)-6}" font-size="10.5" font-weight="700" fill="#0a6a30" text-anchor="end">oracle 100 &#183; the survey's own noise</text>`;
+    g += `<text x="${W-P.r-6}" y="${Y(100)-6}" font-size="10.5" font-weight="700" fill="#0a6a30" text-anchor="end">oracle 100</text>`;
     g += `<text x="${W-P.r-6}" y="${Y(0)-6}" font-size="10.5" font-weight="600" fill="#96948d" text-anchor="end">persistence 0</text>`;
   }
   const nx = small?3:5, seen = new Set();
@@ -741,17 +745,17 @@ function setTab(key){
   // has six months of it. The level view, with the forecast dots for the next
   // release, is one click away. Two separate memories, so moving between tabs
   // does not silently change what the other was showing.
-  const unit = key==='agg' ? (window.__unitAgg || 'arena') : (window.__unitSer || 'skill');
+  let unit = key==='agg' ? (window.__unitAgg || 'arena') : (window.__unitSer || 'arena');
+  if(unit==='skill') unit = 'arena';
   unitSeg.style.display='';
   unitSeg.querySelector('[data-unit="level"]').style.display = key==='agg' ? 'none' : '';
-  unitSeg.querySelector('[data-unit="arena"]').style.display = key==='agg' ? '' : 'none';
   unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.unit===unit));
 
   if(key==='agg'){
     document.getElementById('caption').textContent = unit==='crps'
       ? 'Average forecast error (CRPS, in points), lower is better. Measured on the releases every entrant answered, each model scored only after its own training cutoff. Five leading models shown; click the legend for the rest.'
       : unit==='arena'
-      ? 'Arena score: 0 is copying the last release, 100 is knowing what the public actually thinks, bounded only by the survey\'s own sampling noise. Cumulative over the releases every entrant answered. r10 saw the last ten values, zs saw none.'
+      ? 'Arena score: 0 is copying the last release, 100 is a perfect oracle. Cumulative over the releases every entrant answered. r10 saw the last ten values, zs saw none. Five leading models shown; click the legend for the rest.'
       : 'Cumulative skill vs the persistence baseline, higher is better. Measured on the releases every entrant answered, each model scored only after its own training cutoff. r10 saw the last ten values, zs saw none. Five leading models shown; click the legend for the rest.';
     aggChart(bt.trajectory, nameOf, unit);
     renderLegend(legendFor(bt.trajectory), nameOf, 'click to toggle');
@@ -770,11 +774,13 @@ function setTab(key){
   if(unit!=='level' && psTraj && psTraj.length>1){
     document.getElementById('caption').innerHTML =
       esc(d.label)+' · '+(unit==='crps' ? 'average forecast error on this tracker alone (CRPS, in points), lower is better'
+                                        : unit==='arena' ? 'arena score on this tracker alone: 0 is copying the last release, 100 is a perfect oracle'
                                         : 'cumulative skill on this tracker alone vs persistence, higher is better')
       +' · '+psTraj[psTraj.length-1].n+' releases, each model over the part of them that falls after its own training cutoff, so a line begins where its model becomes eligible'
       +' · latest '+esc(tr.value!=null?tr.value:'n/a')+esc(d.unit||'')+' as of '+esc(tr.asof||'n/a')+', the tracker itself is under <b>Tracker</b>'
       +' · data source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener" style="color:var(--link);text-decoration:none;font-weight:600;">'+esc(d.srcName)+'</a>';
-    aggChart(psTraj, nameOf, unit);
+    const segOracle = (window.__noise && window.__noise[d.chart]!=null) ? window.__noise[d.chart]/SQRT_PI : null;
+    aggChart(psTraj, nameOf, unit, segOracle);
     renderLegend(legendFor(psTraj), nameOf, 'click to toggle');
     return;
   }
@@ -824,7 +830,7 @@ function renderBoard(mode){
     + rest.map(e=>row(e.entrant_id, null, null)).join('')) || '<tr><td colspan="5">…</td></tr>';
   const n = entries.length ? entries[0].rounds : 0;
   document.getElementById('lb-note').textContent =
-    'Arena score over '+(SPANLABEL[mode]||mode)+' · '+n+' scored release'+(n===1?'':'s')+' per entrant. 0 is copying the last release; 100 is knowing what the public actually thinks, bounded only by the survey\'s own sampling noise. Live rounds join the window as they resolve, starting Aug 14; the Nov 3 midterm exam is the finale. Pending entrants show after their first scored release.';
+    'Arena score over '+(SPANLABEL[mode]||mode)+' · '+n+' scored release'+(n===1?'':'s')+' per entrant. 0 is copying the last release; 100 is a perfect oracle. Live rounds join the window as they resolve, starting Aug 14; the Nov 3 midterm exam is the finale. Pending entrants show after their first scored release.';
 }
 
 function roundsList(data){
@@ -924,10 +930,9 @@ function computeNoise(data){
   window.__noise = noise;
   window.__oracleCrps = wsum>0 ? (msum/wsum)/SQRT_PI : null;
 }
-function arenaOf(crpsE, crpsPer){
-  // 0 = persistence, 100 = knowing the true level, bounded by the survey's
-  // own sampling noise. Season-level inputs only: both are aggregates.
-  const oc = window.__oracleCrps;
+function arenaOf(crpsE, crpsPer, oracle){
+  // 0 = persistence, 100 = the oracle. Season-level inputs only.
+  const oc = oracle===undefined ? window.__oracleCrps : oracle;
   if(oc==null || crpsE==null || crpsPer==null) return null;
   const ceil = crpsPer - oc;
   if(ceil <= 0) return null;
