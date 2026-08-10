@@ -454,7 +454,7 @@ function aggChart(traj, nameOf, unit, oracleCrps){
   // would mean the noise model is wrong for that series (rounding, panel
   // overlap), not that anyone beat the oracle; treat it as a red flag.
   const arenaAt = (t,s) => (t.crps && t.crps[s]!=null && t.crps.persistence!=null
-      && !(t.n < 5) && t.crps.persistence >= 1.3*oracleCrps)
+      && !(t.n < 5) && t.crps.persistence >= 1.15*oracleCrps)
       ? arenaOf(t.crps[s], t.crps.persistence, oracleCrps) : null;
   const val0 = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null)
       : unit==='arena' ? arenaAt(t,s) : t.skills[s];
@@ -464,6 +464,12 @@ function aggChart(traj, nameOf, unit, oracleCrps){
   // 0 for the checkpoints before its own training cutoff -- which reads as "no
   // skill" when it means "not yet eligible to be scored".
   const scored = universe.filter(s => traj.some(t => val0(t,s) != null));
+  if(unit==='arena' && !scored.length){
+    svg.style.display='none';
+    document.getElementById('caption').textContent =
+      'No score to draw here: on this tracker, copying the last release already sits near the oracle floor, so the scale has almost no room to measure anyone. Error pts shows the raw comparison.';
+    return;
+  }
   const series = scored.filter(s => !hiddenA.has(s));
   if(!series.length){ svg.style.display='none'; return; }
   if((unit==='crps' || unit==='arena') && !traj[traj.length-1].crps){ unit='skill'; }
@@ -807,7 +813,7 @@ function renderBoard(mode){
   function row(id, s, rank, ref){
     const perRow = window.__perRow;
     const healthy = perRow && perRow.mean_crps!=null && window.__oracleCrps!=null
-      && perRow.mean_crps >= 1.3*window.__oracleCrps;
+      && perRow.mean_crps >= 1.15*window.__oracleCrps;
     const arena = (s && healthy) ? arenaOf(s.mean_crps, perRow.mean_crps) : null;
     const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0))
       : s ? ((s.mean_skill>0?'+':'')+(s.mean_skill*100).toFixed(1)+'%') : '<span class="pend">···</span>';
@@ -919,6 +925,10 @@ function noiseFloorJS(vals){
 }
 const SQRT_PI = Math.sqrt(Math.PI);
 function computeNoise(data){
+  // Stopgap: the floor should be computed in the refresh pipeline from the
+  // exact series each round resolves against, and shipped in data.json.
+  // The chart series can mix populations and overstate m (measured: 1.55 on
+  // the mixed yougov chart vs 0.78 on the tracker's own RV series).
   // Per-series noise from the published histories, blended with the same
   // rounds-per-series weights the backtest scores on, so the oracle on the
   // aggregate chart is the oracle of the same mix of targets as the curves.
