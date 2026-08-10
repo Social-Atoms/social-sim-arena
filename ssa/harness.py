@@ -522,19 +522,70 @@ def _call_openai(cfg, base, key, mid, prompt):
 
 
 def _call_anthropic(cfg, base, key, mid, prompt):
+    """Streamed, because at maximum effort these replies outlast one request.
+
+    Raising the read timeout to 600s fixed two of the three rounds that were
+    failing every refresh; the third then began coming back as
+    `RemoteDisconnected` and, once, as a genuine 600s timeout. A single
+    buffered request that takes ten minutes to produce its first byte is
+    exactly what Anthropic asks callers to stream instead: the connection has
+    nothing on it for the whole thinking phase, and something between here and
+    there closes it.
+
+    Streaming keeps bytes moving, so the read timeout applies between events
+    rather than to the whole reply, and a long think no longer looks like a
+    dead connection. Nothing about the request the model sees changes, so the
+    backtest cache -- keyed on (call identity, prompt) -- stays valid.
+    """
     body = {"model": mid, "max_tokens": ANTHROPIC_MAX_TOKENS,
-            "messages": [{"role": "user", "content": prompt}]}
+            "messages": [{"role": "user", "content": prompt}],
+            "stream": True}
     body.update(cfg.get("params") or {})
+    what = f"{mid} @ {base}"
     r = requests.post(base + "/messages",
                       headers={"x-api-key": key, "anthropic-version": "2023-06-01"},
-                      json=body, timeout=TIMEOUT)
-    data = _check(r, f"{mid} @ {base}")
-    if data.get("stop_reason") == "refusal":
+                      json=body, timeout=TIMEOUT, stream=True)
+    if r.status_code >= 400:
+        # The body still carries the provider's explanation; read it before
+        # raising, since a streamed error response is otherwise discarded.
+        raise RuntimeError(f"{what} HTTP {r.status_code}: "
+                           f"{' '.join((r.text or '').split())[:400]}")
+
+    text, usage, stop = [], {}, None
+    for raw in r.iter_lines(decode_unicode=True):
+        if not raw or not raw.startswith("data:"):
+            continue                      # blank separators and `event:` lines
+        payload = raw[5:].strip()
+        if not payload:
+            continue
+        try:
+            ev = json.loads(payload)
+        except ValueError:
+            continue
+        kind = ev.get("type")
+        if kind == "error":
+            err = ev.get("error") or {}
+            raise RuntimeError(f"{what} stream error: "
+                               f"{err.get('type')}: {err.get('message')}")
+        if kind == "message_start":
+            msg = ev.get("message") or {}
+            usage.update(msg.get("usage") or {})
+        elif kind == "content_block_delta":
+            d = ev.get("delta") or {}
+            # thinking_delta carries the reasoning, which is not the answer
+            if d.get("type") == "text_delta":
+                text.append(d.get("text") or "")
+        elif kind == "message_delta":
+            usage.update(ev.get("usage") or {})
+            stop = (ev.get("delta") or {}).get("stop_reason", stop)
+
+    if stop == "refusal":
         raise RuntimeError("model declined the request")
-    # content is a list of blocks; thinking blocks come first and carry no text
-    text = "".join(b.get("text", "") for b in data.get("content", [])
-                   if b.get("type") == "text")
-    return text, _usage(data)
+    out = "".join(text)
+    if not out.strip():
+        raise RuntimeError(f"{what}: stream ended with no text "
+                           f"(stop_reason={stop})")
+    return out, _usage({"usage": usage})
 
 
 def _call_gemini(cfg, base, key, mid, prompt):
