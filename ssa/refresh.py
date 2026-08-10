@@ -474,48 +474,6 @@ def load_model_backtest():
     }
 
 
-def attach_mock_models(bt):
-    """Placeholder frontier-model rows, used only until a real backtest exists.
-
-    Deterministic and flagged (mock: true / bt["mock_models"]) so the site can
-    label them, but they are invented numbers: delete this function and its
-    call the moment backtest/model_backtest.json is committed, and never let a
-    figure derived from it reach the paper.
-    """
-    import hashlib as _h
-
-    per_crps = next((e["mean_crps"] for e in bt["overall"]
-                     if e["entrant"] == "persistence"), 1.7)
-    mock_skill = {"gpt-5.5": 0.024, "claude-opus": 0.031, "gemini-pro": 0.012,
-                  "grok": -0.008, "deepseek": 0.018, "qwen": -0.019}
-    for key, board in bt["spans"].items():
-        base_crps = next((e["mean_crps"] for e in board
-                          if e["entrant"] == "persistence"), per_crps)
-        n_rounds = board[0]["rounds"] if board else 0
-        for mid, sk in mock_skill.items():
-            hb = _h.sha256(f"{mid}:{key}".encode()).digest()
-            spread = 0.05 if key == "last" else (0.02 if key == "d30" else 0.008)
-            sk_i = round(sk + ((hb[0] / 255.0) - 0.5) * 2 * spread, 3)
-            board.append({
-                "entrant": mid, "rounds": n_rounds,
-                "mean_crps": round(base_crps * (1 - sk_i), 3),
-                "mean_skill": sk_i, "mock": True,
-            })
-        board.sort(key=lambda x: -x["mean_skill"])
-    bt["overall"] = bt["spans"]["all"]
-
-    n_ck = len(bt["trajectory"])
-    for i, ck in enumerate(bt["trajectory"]):
-        ramp = (i + 1) / n_ck
-        for mid, sk in mock_skill.items():
-            hb = _h.sha256(f"{mid}:{i}".encode()).digest()
-            wob = ((hb[0] / 255.0) - 0.5) * 0.02 * (1.2 - ramp)
-            val = round(sk * ramp + wob, 4)
-            ck["skills"][mid] = val
-            if "crps" in ck and "persistence" in ck["crps"]:
-                ck["crps"][mid] = round(ck["crps"]["persistence"] * (1 - val), 3)
-    bt["mock_models"] = sorted(mock_skill.keys())
-
 
 def main():
     # Local runs read keys from .env; in CI they arrive as Actions secrets
@@ -612,7 +570,6 @@ def main():
                 "the intersection, so every row is measured on the same points. "
                 "Rows ending -zeroshot saw the question and no series history.")
     else:
-        attach_mock_models(bt)
 
     data = {
         "generated_at": iso(now),
