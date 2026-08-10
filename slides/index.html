@@ -32,7 +32,12 @@ a:hover{text-decoration:underline}
 .cover .foot{position:absolute;bottom:52px;left:64px;right:64px;display:flex;justify-content:space-between;font-size:13px;color:var(--mut)}
 .cols{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:20px;flex:1;min-height:0}
 .block{border:1px solid var(--line);border-radius:4px;padding:16px 18px;overflow:hidden}
-.block li{margin:0 0 8px 0;list-style:none}
+.block li{margin:0 0 8px 0;list-style:none;position:relative;padding-left:15px}
+.block li:before{content:"\25B8";position:absolute;left:0;top:1px;color:var(--accent-ink);font-size:11px}
+.block li.q{padding-left:10px}
+.block li.q:before{content:none}
+.spec li{padding-left:0}
+.spec li:before{content:none}
 .block li b{color:var(--ink)}
 .q{border-left:3px solid var(--accent);padding-left:10px;color:var(--ink);font-weight:600}
 table{border-collapse:collapse;width:100%;font-size:12.5px}
@@ -107,17 +112,31 @@ pre{background:#fafaf8;border:1px solid var(--line);border-radius:4px;padding:10
       <li>The <b>Nov 3 midterm</b> is the natural finale: every forecast sealed before a single vote is counted.</li>
     </div>
     <div class="block">
-      <h3>Adjacent live benchmarks</h3>
-      <table>
-        <tr><th></th><th>Live</th><th>Social</th><th>Subgroups</th><th>Noisy GT</th><th>Humans+firms</th></tr>
-        <tr><td><a href="https://arxiv.org/abs/2409.19839" target="_blank">ForecastBench</a><span class="v">ICLR 2025</span></td><td class="y">Y</td><td class="n">-</td><td class="n">-</td><td class="n">-</td><td class="y">Y</td></tr>
-        <tr><td><a href="https://arxiv.org/abs/2512.20761" target="_blank">TS-Arena</a><span class="v">ICLR 2026 TSALM WS</span></td><td class="y">Y</td><td class="n">-</td><td class="n">-</td><td class="n">-</td><td class="n">-</td></tr>
-        <tr><td><a href="https://arxiv.org/abs/2510.17638" target="_blank">Prophet Arena</a><span class="v">ICLR 2026</span></td><td class="y">Y</td><td class="n">-</td><td class="n">-</td><td class="n">-</td><td class="n">-</td></tr>
-        <tr><td><a href="https://arxiv.org/abs/2508.11987" target="_blank">FutureX</a><span class="v">arXiv 2025</span></td><td class="y">Y</td><td class="n">-</td><td class="n">-</td><td class="n">-</td><td class="n">-</td></tr>
-        <tr class="us"><td>Social Simulation Arena <span class="v">ours</span></td><td class="y">Y</td><td class="y">Y</td><td class="y">Y</td><td class="y">Y</td><td class="y">Y</td></tr>
+      <h3>Three ways to test a simulated public</h3>
+      <table style="font-size:12px">
+        <tr><th style="text-align:left">Paradigm</th><th style="text-align:left">Ground truth</th><th style="text-align:left">Work</th></tr>
+        <tr>
+          <td>Retrospective,<br>original identities</td>
+          <td>published surveys, may sit in training data</td>
+          <td><a href="https://arxiv.org/abs/2303.17548" target="_blank">OpinionQA</a> <span class="v">ICML 2023</span>
+              <a href="https://arxiv.org/abs/2510.17516" target="_blank">SimBench</a> <span class="v">ICLR 2026</span>
+              ANES/GSS replications</td>
+        </tr>
+        <tr>
+          <td>Retrospective,<br>counterfactual identities</td>
+          <td>resolved timelines, replayed from past cutoffs</td>
+          <td><a href="https://arxiv.org/abs/2608.04009" target="_blank">SocietyBench</a> <span class="v">arXiv 2026</span></td>
+        </tr>
+        <tr class="us">
+          <td>Prospective,<br>future ground truth</td>
+          <td><b>answers that do not exist yet</b></td>
+          <td>Social Simulation Arena <span class="v">ours</span></td>
+        </tr>
       </table>
-      <p style="margin-top:8px;font-size:11px;color:var(--mut)">Subgroups: scored to demographic cross-tabulations.
-      Noisy GT: resolution for ground truth that is itself a survey estimate.</p>
+      <p style="margin-top:8px;font-size:11px;color:var(--mut)">Live protocols exist for generic events
+      (<a href="https://arxiv.org/abs/2409.19839" target="_blank">ForecastBench</a>,
+      <a href="https://arxiv.org/abs/2510.17638" target="_blank">Prophet Arena</a>);
+      none targets social quantities or demographic structure.</p>
     </div>
   </div>
 </section>
