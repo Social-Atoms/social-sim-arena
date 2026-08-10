@@ -48,7 +48,7 @@ td:first-child,th:first-child{text-align:left}
 .y{color:var(--accent-ink);font-weight:800}
 .n{color:#c9c7c0}
 .us td{font-weight:800;background:#f4faf6}
-.how{display:grid;grid-template-columns:1.25fr 1fr;gap:24px;flex:1;min-height:0}
+.how{display:grid;grid-template-columns:1.55fr 1fr;gap:24px;flex:1;min-height:0}
 pre{background:#fafaf8;border:1px solid var(--line);border-radius:4px;padding:10px 12px;font-size:11.5px;line-height:1.5;overflow:hidden}
 .spec li{margin-bottom:7px}
 .spec b{color:var(--ink)}
@@ -77,100 +77,89 @@ pre{background:#fafaf8;border:1px solid var(--line);border-radius:4px;padding:10
 
 <section class="slide" id="s2">
   <div class="tag">The problem</div>
-  <h2>Nobody can prove a simulated public works</h2>
+  <h2>Social simulation has a trust problem</h2>
   <div class="cols" style="grid-template-columns:1fr 1fr">
     <div class="block">
       <h3>The state of play</h3>
       <li class="q" style="font-size:15px">"AI polls are fake polls." Silver Bulletin, banning them from its averages, Apr 2026.</li>
-      <li><b>Simile ($2B) and Aaru ($1B)</b> sell population simulations to EY, Accenture and live campaigns; <b>even Gallup now works with Simile</b>.</li>
-      <li>Their only validation: <b>self-reported wins on test sets they pick themselves</b>.</li>
+      <li><b>Simile ($2B) and Aaru ($1B)</b> sell simulated populations to EY, Accenture and live campaigns (even Gallup partners with Simile), validated only by <b>wins they grade themselves</b>.</li>
+      <li>Scholars call the samples <b>caricatures</b> of the groups they claim to speak for
+      (<a href="https://arxiv.org/abs/2310.11501" target="_blank">CoMPosT</a> <span style="color:var(--mut)">EMNLP 2023</span>);
+      AAPOR and ESOMAR are drafting rules for AI respondents.</li>
     </div>
     <div class="block">
-      <h3>Two years of research, no verdict</h3>
-      <li>The papers <b>contradict each other</b>: striking fidelity in one study, flattened subgroups in the next.</li>
-      <li>Every evaluation is <b>retrospective</b>, graded against old surveys (ANES, GSS) that may already sit in training data.</li>
-      <li>A retrospective test cannot tell understanding apart from <b>memorization</b>.</li>
+      <h3>The papers disagree</h3>
+      <li><a href="https://arxiv.org/abs/2411.10109" target="_blank">Generative Agent Simulations of 1,000 People</a>
+      <span style="color:var(--mut)">2024</span>: agents built from two-hour interviews hit 85% of people&#8217;s
+      own answer consistency on the GSS.</li>
+      <li><a href="https://doi.org/10.1017/pan.2024.5" target="_blank">Synthetic Replacements for Human Survey Data?</a>
+      <span style="color:var(--mut)">Political Analysis 2024</span>: synthetic respondents come out too uniform to
+      stand in for people. <a href="https://arxiv.org/abs/2402.01908" target="_blank">Nature Machine Intelligence 2025</a>
+      sees the same <b>flattening</b> across identity groups.</li>
+      <li><a href="https://arxiv.org/abs/2401.08572" target="_blank">The Illusion of Artificial Inclusion</a>
+      <span style="color:var(--mut)">CHI 2024</span>: replacing human participants defeats the reason research
+      asks humans at all.</li>
+      <li>And all of it grades <b>the past</b>. ANES and GSS sit in training data, so <b>memory can pass
+      for understanding</b>.</li>
     </div>
   </div>
   <div class="block" style="margin-top:18px;background:#f4faf6;border-color:var(--accent)">
-    <p style="font-size:15.5px;color:var(--ink)">So we asked: for a social simulation people could actually trust,
-    what would the ideal, uncheatable, third-party referee look like?
-    <b style="color:var(--accent-ink)">A live benchmark against the real future.</b></p>
+    <p style="font-size:15.5px;color:var(--ink)">So we asked: what would an uncheatable, third-party referee look like?
+    <b style="color:var(--accent-ink)">A live benchmark against the real future.</b>
+    Forecast the next release before it is published: locked, hashed, scored in public.
+    <b>No one picks the test set, because the test set does not exist yet.</b></p>
+    <p style="margin-top:8px;font-size:11.5px;color:var(--mut)">Every earlier test grades the past
+    (<a href="https://arxiv.org/abs/2303.17548" target="_blank">OpinionQA</a>,
+    <a href="https://arxiv.org/abs/2510.17516" target="_blank">SimBench</a>,
+    <a href="https://arxiv.org/abs/2608.04009" target="_blank">SocietyBench</a>, ANES/GSS replays);
+    this one is graded by answers that do not exist yet.</p>
   </div>
 </section>
 
 <section class="slide" id="s3">
-  <div class="tag">The fix</div>
-  <h2>A referee no one can cheat</h2>
-  <div class="cols">
-    <div class="block" style="background:#f4faf6;border-color:var(--accent)">
-      <h3>We built one</h3>
-      <li>A <b>live benchmark</b> for social simulation: models forecast the next public-opinion release <b>before it is published</b>.</li>
-      <li><b>Locked, hashed, scored in public.</b> No human discretion between submission and score.</li>
-      <li class="q" style="font-size:14.5px"><b>No one picks the test set, because the test set does not exist yet.</b></li>
-    </div>
-    <div class="block">
-      <h3>Why this works now</h3>
-      <li>Established trackers publish on <b>fixed calendars</b>: every scheduled release is a free, contamination-proof exam.</li>
-      <li><b>Gallup ended</b> its 88-year approval series in Feb 2026; the reference instruments are retreating.</li>
-      <li>The <b>Nov 3 midterm</b> is the natural finale: every forecast sealed before a single vote is counted.</li>
-    </div>
-    <div class="block">
-      <h3>Three ways to test a simulated public</h3>
-      <table style="font-size:12px">
-        <tr><th style="text-align:left">Paradigm</th><th style="text-align:left">Ground truth</th><th style="text-align:left">Work</th></tr>
-        <tr>
-          <td>Retrospective,<br>original identities</td>
-          <td>published surveys, may sit in training data</td>
-          <td><a href="https://arxiv.org/abs/2303.17548" target="_blank">OpinionQA</a> <span class="v">ICML 2023</span>
-              <a href="https://arxiv.org/abs/2510.17516" target="_blank">SimBench</a> <span class="v">ICLR 2026</span>
-              ANES/GSS replications</td>
-        </tr>
-        <tr>
-          <td>Retrospective,<br>counterfactual identities</td>
-          <td>resolved timelines, replayed from past cutoffs</td>
-          <td><a href="https://arxiv.org/abs/2608.04009" target="_blank">SocietyBench</a> <span class="v">arXiv 2026</span></td>
-        </tr>
-        <tr class="us">
-          <td>Prospective,<br>future ground truth</td>
-          <td><b>answers that do not exist yet</b></td>
-          <td>Social Simulation Arena <span class="v">ours</span></td>
-        </tr>
-      </table>
-      <p style="margin-top:8px;font-size:11px;color:var(--mut)">Live protocols exist for generic events
-      (<a href="https://arxiv.org/abs/2409.19839" target="_blank">ForecastBench</a>,
-      <a href="https://arxiv.org/abs/2510.17638" target="_blank">Prophet Arena</a>);
-      none targets social quantities or demographic structure.</p>
-    </div>
-  </div>
-</section>
-
-<section class="slide" id="s4">
   <div class="tag">How</div>
-  <h2>Four trackers in, one submission, every board</h2>
+  <h2>A live bench built on four recurring data sources</h2>
+  <p style="margin:-12px 0 14px;font-size:13.5px;color:var(--ink2)">Each round: forecast the tracker&#8217;s next release.
+  Entries lock 48 hours before the number comes out; the release itself grades everyone; then the next round starts.</p>
   <div class="how">
     <svg viewBox="0 0 640 470" style="width:100%;height:100%">
       <defs><marker id="a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#9b998f"/></marker></defs>
       <text x="8" y="18" font-size="10" letter-spacing="1.5" fill="#96948d" font-weight="700">SOURCES</text>
+      <defs>
+        <clipPath id="cc1"><rect x="9" y="31" width="198" height="40" rx="2"/></clipPath>
+        <clipPath id="cc2"><rect x="9" y="117" width="198" height="40" rx="2"/></clipPath>
+        <clipPath id="cc3"><rect x="9" y="203" width="198" height="40" rx="2"/></clipPath>
+        <clipPath id="cc4"><rect x="9" y="289" width="198" height="40" rx="2"/></clipPath>
+      </defs>
       <g fill="none" stroke="#111110" stroke-width="1.2">
-        <rect x="8" y="30" width="196" height="46" rx="3" fill="#fff"/>
-        <rect x="8" y="86" width="196" height="46" rx="3" fill="#fff"/>
-        <rect x="8" y="142" width="196" height="46" rx="3" fill="#fff"/>
-        <rect x="8" y="198" width="196" height="46" rx="3" fill="#fff"/>
+        <rect x="8" y="30" width="200" height="76" rx="3" fill="#fff"/>
+        <rect x="8" y="116" width="200" height="76" rx="3" fill="#fff"/>
+        <rect x="8" y="202" width="200" height="76" rx="3" fill="#fff"/>
+        <rect x="8" y="288" width="200" height="76" rx="3" fill="#fff"/>
       </g>
-      <text x="20" y="49" font-size="12.5" font-weight="800" fill="#111110">U. Michigan</text>
-      <text x="20" y="66" font-size="10.5" fill="#4f4e49">how America feels about the economy</text>
-      <text x="20" y="105" font-size="12.5" font-weight="800" fill="#111110">Economist/YouGov</text>
-      <text x="20" y="122" font-size="10.5" fill="#4f4e49">Trump approval, % + 16 demo cells</text>
-      <text x="20" y="161" font-size="12.5" font-weight="800" fill="#111110">Morning Consult</text>
-      <text x="20" y="178" font-size="10.5" fill="#4f4e49">Trump approval, registered voters %</text>
-      <text x="20" y="217" font-size="12.5" font-weight="800" fill="#111110">Generic ballot</text>
-      <text x="20" y="234" font-size="10.5" fill="#4f4e49">which party wins the House, in points</text>
+      <image href="shots/card-umich.png" x="9" y="31" width="198" height="40" preserveAspectRatio="xMidYMin slice" clip-path="url(#cc1)"/>
+      <image href="shots/card-yg.png" x="9" y="117" width="198" height="40" preserveAspectRatio="xMidYMin slice" clip-path="url(#cc2)"/>
+      <image href="shots/card-mc.png" x="9" y="203" width="198" height="40" preserveAspectRatio="xMidYMid slice" clip-path="url(#cc3)"/>
+      <image href="shots/card-sb.png" x="9" y="289" width="198" height="40" preserveAspectRatio="xMidYMid slice" clip-path="url(#cc4)"/>
+      <g stroke="#e0e0e0" stroke-width="1">
+        <line x1="9" y1="71.5" x2="207" y2="71.5"/>
+        <line x1="9" y1="157.5" x2="207" y2="157.5"/>
+        <line x1="9" y1="243.5" x2="207" y2="243.5"/>
+        <line x1="9" y1="329.5" x2="207" y2="329.5"/>
+      </g>
+      <text x="16" y="88" font-size="12" font-weight="800" fill="#111110">U. Michigan</text>
+      <text x="16" y="101" font-size="10" fill="#4f4e49">how America feels about the economy</text>
+      <text x="16" y="174" font-size="12" font-weight="800" fill="#111110">Economist/YouGov</text>
+      <text x="16" y="187" font-size="10" fill="#4f4e49">Trump approval, % + 16 demo cells</text>
+      <text x="16" y="260" font-size="12" font-weight="800" fill="#111110">Morning Consult</text>
+      <text x="16" y="273" font-size="10" fill="#4f4e49">Trump approval, registered voters %</text>
+      <text x="16" y="346" font-size="12" font-weight="800" fill="#111110">Generic ballot</text>
+      <text x="16" y="359" font-size="10" fill="#4f4e49">which party wins the House, in points</text>
       <g stroke="#9b998f" stroke-width="1">
-        <line x1="204" y1="53" x2="248" y2="110" marker-end="url(#a)"/>
-        <line x1="204" y1="109" x2="248" y2="126" marker-end="url(#a)"/>
-        <line x1="204" y1="165" x2="248" y2="146" marker-end="url(#a)"/>
-        <line x1="204" y1="221" x2="248" y2="163" marker-end="url(#a)"/>
+        <line x1="208" y1="68" x2="248" y2="110" marker-end="url(#a)"/>
+        <line x1="208" y1="154" x2="248" y2="128" marker-end="url(#a)"/>
+        <line x1="208" y1="240" x2="248" y2="148" marker-end="url(#a)"/>
+        <line x1="208" y1="326" x2="248" y2="166" marker-end="url(#a)"/>
       </g>
       <rect x="250" y="96" width="160" height="88" rx="3" fill="#eef7f1" stroke="#15803d" stroke-width="1.6"/>
       <text x="262" y="118" font-size="11" letter-spacing="1.2" fill="#0a6a30" font-weight="800">ROUND</text>
@@ -212,21 +201,11 @@ pre{background:#fafaf8;border:1px solid var(--line);border-radius:4px;padding:10
     </svg>
     <div class="block spec" style="overflow:auto">
       <h3>Entering a round</h3>
-      <li><b>1 · What you predict.</b><br>
-      Michigan: the sentiment index level <span style="color:var(--mut)">(July: 55.2)</span><br>
-      YouGov: % approving of Trump, RV <span style="color:var(--mut)">(latest: 36%)</span><br>
-      Morning Consult: Trump approval %, RV<br>
-      Generic ballot: Dem&#8722;Rep margin <span style="color:var(--mut)">(Aug: D+6.4)</span><br>
-      Cells: the same % inside each demographic group.</li>
-      <li><b>2 · Where truth comes from.</b><br>
-      Michigan: official release, 10:00 ET<br>
-      YouGov: the wave's topline + crosstabs<br>
-      Morning Consult: its weekly report<br>
-      Generic ballot: pre-registered pooled estimate</li>
-      <li><b>3 · How to submit.</b> One JSON file per round, by pull request or the site's
+      <li><b>How to submit.</b> One JSON file per round, by pull request or the site&#8217;s
       one-click template, any time before lock (release &#8722; 48 h). CI validates the schema and
       the deadline and prints your sha256. Late means void, enforced in code.</li>
-      <li><b>4 · The format.</b></li>
+      <li><b>The format.</b> A distribution, not a point: mean and sd per value, or quantiles.
+      Confidence is scored, so bluffing costs. One file covers the topline and all 16 cells.</li>
       <pre>forecasts/&lt;round&gt;/&lt;you&gt;.json
 { "topline": { "mean": 39.0, "sd": 2.0 },
   "cells": {
@@ -235,44 +214,63 @@ pre{background:#fafaf8;border:1px solid var(--line);border-radius:4px;padding:10
     "Under 30":   { "mean": 34, "sd": 3.0 },
     ...16 cells: party, age, race,
        gender, education } }</pre>
-      <li style="margin-top:6px">A distribution, not a point: mean and sd per value, or quantiles.
-      Confidence is scored, so bluffing costs.</li>
     </div>
   </div>
 </section>
 
 
-<section class="slide" id="s5">
-  <div class="tag">Entrants &#183; the invitation list</div>
+<section class="slide" id="s4">
+  <div class="tag">Entrants</div>
   <h2>Built for the people who claim to simulate society</h2>
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;flex:1;min-height:0">
-    <div class="block"><img src="logos/simile.png" style="height:26px;margin-bottom:8px"><h3>Simile</h3>
-      <p style="font-size:11.5px"><a href="https://arxiv.org/abs/2411.10109" target="_blank">Generative Agent Simulations of 1,000 People</a></p>
-      <p style="font-size:11.5px;margin-top:6px">A $2B valuation resting on exactly the claim the arena scores. A public win is marketing money cannot buy.</p></div>
-    <div class="block"><img src="logos/aaru.png" style="height:26px;margin-bottom:8px"><h3>Aaru</h3>
-      <p style="font-size:11.5px">Population simulation platform; simulated 2M voters in the NYC primary</p>
-      <p style="font-size:11.5px;margin-top:6px">Clients now ask for third-party validation. The sealed track lets it compete without leaking product.</p></div>
-    <div class="block"><img src="logos/stanford-hci.svg" style="height:26px;margin-bottom:8px"><h3>Stanford HCI</h3>
-      <p style="font-size:11.5px"><a href="https://dl.acm.org/doi/10.1145/3586183.3606763" target="_blank">Generative Agents</a> &#183; UIST 2023</p>
-      <p style="font-size:11.5px;margin-top:6px">The lineage that started generative social simulation; the arena is the evaluation that line has never had.</p></div>
-    <div class="block"><img src="logos/tsinghua-fib.svg" style="height:26px;margin-bottom:8px"><h3>Tsinghua FIB</h3>
-      <p style="font-size:11.5px"><a href="https://arxiv.org/abs/2502.08691" target="_blank">AgentSociety</a> &#183; 10k+ agents</p>
-      <p style="font-size:11.5px;margin-top:6px">City-scale simulated societies, so far tested only against the past. Every week here is a fresh exam.</p></div>
-    <div class="block"><img src="logos/deepmind.png" style="height:26px;margin-bottom:8px"><h3>DeepMind</h3>
-      <p style="font-size:11.5px"><a href="https://arxiv.org/abs/2312.03664" target="_blank">Concordia</a> &#183; generative ABM</p>
-      <p style="font-size:11.5px;margin-top:6px">Builds the agent substrate; the arena supplies the ground truth its simulations have lacked.</p></div>
-    <div class="block"><img src="logos/ucsd.svg" style="height:26px;margin-bottom:8px"><h3>UC San Diego</h3>
-      <p style="font-size:11.5px"><a href="https://arxiv.org/abs/2509.13588" target="_blank">CoBRA</a> &#183; CHI 2026</p>
-      <p style="font-size:11.5px;margin-top:6px">Programs cognitive bias into social agents; subgroup boards are precisely where that shows.</p></div>
-    <div class="block"><img src="logos/camel.png" style="height:26px;margin-bottom:8px"><h3>CAMEL-AI</h3>
-      <p style="font-size:11.5px"><a href="https://arxiv.org/abs/2411.11581" target="_blank">OASIS</a> &#183; 1M-agent networks</p>
-      <p style="font-size:11.5px;margin-top:6px">Open-source and agentic: one cron job away from a standing entry on every board.</p></div>
-    <div class="block"><img src="logos/societies.png" style="height:26px;margin-bottom:8px"><h3>Artificial Societies</h3>
-      <p style="font-size:11.5px">YC-backed audience simulation</p>
-      <p style="font-size:11.5px;margin-top:6px">Sells simulated audiences to startups; a leaderboard row is its cheapest credibility.</p></div>
+  <p style="margin:-12px 0 14px;font-size:13.5px;color:var(--ink2)">Season 0 already grades the mainstream
+  models under every harness on the left. The right is who the sealed track was built for.</p>
+  <div class="cols" style="grid-template-columns:1fr 1.2fr">
+    <div class="block">
+      <h3>Same models, different harnesses</h3>
+      <p style="font-size:11.5px;letter-spacing:.06em;color:var(--mut);margin-bottom:6px">AXIS 1 &#183; INFORMATION: WHAT THE MODEL SEES</p>
+      <li style="font-size:12.5px"><b>zero-shot</b>: training memory alone</li>
+      <li style="font-size:12.5px"><b>with-history</b>: the last 10 releases of the series</li>
+      <li style="font-size:12.5px"><b>curated digest</b>: one fixed news corpus, identical for every model, auditable</li>
+      <li style="font-size:12.5px"><b>open web</b>: agentic search, same tool and same budget for all</li>
+      <p style="font-size:11.5px;letter-spacing:.06em;color:var(--mut);margin:10px 0 6px">AXIS 2 &#183; ELICITATION: HOW IT IS ASKED</p>
+      <li style="font-size:12.5px"><b>direct ask</b>: one distribution, straight out</li>
+      <li style="font-size:12.5px"><b>persona sampling</b>: answer as N census-framed personas, then aggregate. The method the industry actually sells.</li>
+      <li style="font-size:12.5px"><b>superforecaster protocol</b>: base rates, decomposition, premortem</li>
+      <p style="margin-top:10px;font-size:12px;color:var(--accent-ink);font-weight:700">Persona sampling vs a direct ask,
+      same model, same round: the head-to-head only a third party can run. It puts the industry&#8217;s premise on the record.</p>
+    </div>
+    <div class="block" style="display:flex;flex-direction:column">
+      <h3>The invitation list</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px 14px;flex:1">
+        <div><img src="logos/simile.png" style="height:15px;vertical-align:-3px"> <b style="font-size:12.5px">Simile</b><br>
+          <span style="font-size:11px"><a href="https://arxiv.org/abs/2411.10109" target="_blank">Generative Agent Simulations of 1,000 People</a><br>
+          <span style="color:var(--mut)">a $2B valuation resting on exactly this claim</span></span></div>
+        <div><img src="logos/aaru.png" style="height:15px;vertical-align:-3px"> <b style="font-size:12.5px">Aaru</b><br>
+          <span style="font-size:11px">simulated 2M voters in the NYC primary<br>
+          <span style="color:var(--mut)">clients now ask for third-party validation</span></span></div>
+        <div><img src="logos/stanford-hci.svg" style="height:15px;vertical-align:-3px"> <b style="font-size:12.5px">Stanford HCI</b><br>
+          <span style="font-size:11px"><a href="https://dl.acm.org/doi/10.1145/3586183.3606763" target="_blank">Generative Agents</a> &#183; UIST 2023<br>
+          <span style="color:var(--mut)">the founding lineage, never evaluated live</span></span></div>
+        <div><img src="logos/tsinghua-fib.svg" style="height:15px;vertical-align:-3px"> <b style="font-size:12.5px">Tsinghua FIB</b><br>
+          <span style="font-size:11px"><a href="https://arxiv.org/abs/2502.08691" target="_blank">AgentSociety</a> &#183; 10k+ agents<br>
+          <span style="color:var(--mut)">city-scale societies, tested only on the past</span></span></div>
+        <div><img src="logos/deepmind.png" style="height:15px;vertical-align:-3px"> <b style="font-size:12.5px">DeepMind</b><br>
+          <span style="font-size:11px"><a href="https://arxiv.org/abs/2312.03664" target="_blank">Concordia</a> &#183; generative ABM<br>
+          <span style="color:var(--mut)">the substrate, minus the ground truth</span></span></div>
+        <div><img src="logos/ucsd.svg" style="height:15px;vertical-align:-3px"> <b style="font-size:12.5px">UC San Diego</b><br>
+          <span style="font-size:11px"><a href="https://arxiv.org/abs/2509.13588" target="_blank">CoBRA</a> &#183; CHI 2026<br>
+          <span style="color:var(--mut)">programmed bias shows on subgroup boards</span></span></div>
+        <div><img src="logos/camel.png" style="height:15px;vertical-align:-3px"> <b style="font-size:12.5px">CAMEL-AI</b><br>
+          <span style="font-size:11px"><a href="https://arxiv.org/abs/2411.11581" target="_blank">OASIS</a> &#183; 1M-agent networks<br>
+          <span style="color:var(--mut)">one cron job from a standing entry</span></span></div>
+        <div><img src="logos/societies.png" style="height:15px;vertical-align:-3px"> <b style="font-size:12.5px">Artificial Societies</b><br>
+          <span style="font-size:11px">YC-backed audience simulation<br>
+          <span style="color:var(--mut)">a leaderboard row is its cheapest credibility</span></span></div>
+      </div>
+      <p style="margin-top:8px;font-size:10.5px;color:var(--mut)">None has entered yet: season 0 is the invitation.
+      Companies enter through a sealed track, hash before lock, reveal after release, so competing never leaks the product.</p>
+    </div>
   </div>
-  <p style="margin-top:12px;font-size:11.5px;color:var(--mut)">None has entered yet: season 0 is the invitation.
-  Companies enter through a sealed track, hash before lock, reveal after release, so competing never leaks the product.</p>
 </section>
 </div>
 
@@ -281,7 +279,7 @@ pre{background:#fafaf8;border:1px solid var(--line);border-radius:4px;padding:10
 <div class="dots" id="dots"></div>
 
 <script>
-const N=5; let cur=1;
+const N=4; let cur=1;
 const stage=document.getElementById('stage');
 function fit(){
   const s=Math.min(innerWidth/1320, innerHeight/770);
