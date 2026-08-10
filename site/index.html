@@ -429,8 +429,7 @@ function renderLegend(ids, nameOf, note){
     setTab(window.__tab || 'agg');
   });
 }
-function aggChart(traj, nameOf, unit, oracleCrps){
-  if(oracleCrps===undefined) oracleCrps = window.__oracleCrps;
+function aggChart(traj, nameOf, unit){
   const svg = clearChart(), tip = pane().querySelector('.tooltip');
   if(!traj || traj.length<2){ svg.style.display='none'; return; }
   const pw = pane().clientWidth, ph = (innerWidth<880?386:pane().clientHeight);
@@ -446,16 +445,8 @@ function aggChart(traj, nameOf, unit, oracleCrps){
   if(!window.__hidden){ window.__hidden = defaultHidden(window.__data); }
   const hiddenA = window.__hidden;
   const universe = ['climatology','trend','ewma'].concat(mocks).concat(['crowd']);
-  // The scale only speaks where it can resolve. Two silences: under five
-  // aggregated rounds the numbers are one noisy difference, and when the
-  // persistence aggregate sits within 30% of the oracle floor the denominator
-  // is degenerate (a calm stretch: copying last week was near-perfect, so the
-  // ruler has no length). A score persistently above 100 at season scale
-  // would mean the noise model is wrong for that series (rounding, panel
-  // overlap), not that anyone beat the oracle; treat it as a red flag.
-  const arenaAt = (t,s) => (t.crps && t.crps[s]!=null && t.crps.persistence!=null
-      && !(t.n < 5) && t.crps.persistence >= 1.15*oracleCrps)
-      ? arenaOf(t.crps[s], t.crps.persistence, oracleCrps) : null;
+  const arenaAt = (t,s) => (t.crps && t.crps[s]!=null && t.crps.persistence!=null)
+      ? arenaOf(t.crps[s], t.crps.persistence) : null;
   const val0 = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null)
       : unit==='arena' ? arenaAt(t,s) : t.skills[s];
   // Only entrants the data actually scores. Falling back to 0 for a missing
@@ -464,16 +455,9 @@ function aggChart(traj, nameOf, unit, oracleCrps){
   // 0 for the checkpoints before its own training cutoff -- which reads as "no
   // skill" when it means "not yet eligible to be scored".
   const scored = universe.filter(s => traj.some(t => val0(t,s) != null));
-  if(unit==='arena' && !scored.length){
-    svg.style.display='none';
-    document.getElementById('caption').textContent =
-      'No score to draw here: on this tracker, copying the last release already sits near the oracle floor, so the scale has almost no room to measure anyone. Error pts shows the raw comparison.';
-    return;
-  }
   const series = scored.filter(s => !hiddenA.has(s));
   if(!series.length){ svg.style.display='none'; return; }
   if((unit==='crps' || unit==='arena') && !traj[traj.length-1].crps){ unit='skill'; }
-  if(unit==='arena' && oracleCrps==null){ unit='crps'; }
   const val = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null)
       : unit==='arena' ? arenaAt(t,s) : t.skills[s];
   const monthsA = window.__range || 0;
@@ -790,8 +774,7 @@ function setTab(key){
       +' · '+psTraj[psTraj.length-1].n+' releases, each model over the part of them that falls after its own training cutoff, so a line begins where its model becomes eligible'
       +' · latest '+esc(tr.value!=null?tr.value:'n/a')+esc(d.unit||'')+' as of '+esc(tr.asof||'n/a')+', the tracker itself is under <b>Tracker</b>'
       +' · data source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener" style="color:var(--link);text-decoration:none;font-weight:600;">'+esc(d.srcName)+'</a>';
-    const segOracle = (window.__noise && window.__noise[d.chart]!=null) ? window.__noise[d.chart]/SQRT_PI : null;
-    aggChart(psTraj, nameOf, unit, segOracle);
+    aggChart(psTraj, nameOf, unit);
     renderLegend(legendFor(psTraj), nameOf, 'click to toggle');
     return;
   }
@@ -811,14 +794,10 @@ function renderBoard(mode){
   (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; });
   const btMap = {}; ((data.backtest&&data.backtest.overall)||[]).forEach(e=>btMap[e.entrant]=e);
   function row(id, s, rank, ref){
-    const perRow = window.__perRow;
-    const healthy = perRow && perRow.mean_crps!=null && window.__oracleCrps!=null
-      && perRow.mean_crps >= 1.15*window.__oracleCrps;
-    const arena = (s && healthy) ? arenaOf(s.mean_crps, perRow.mean_crps) : null;
-    const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0))
-      : s ? ((s.mean_skill>0?'+':'')+(s.mean_skill*100).toFixed(1)+'%') : '<span class="pend">···</span>';
-    const subSkill = (arena!=null && s) ? '<br><span class="type">skill '+((s.mean_skill>0?'+':'')+(s.mean_skill*100).toFixed(1))+'%</span>' : '';
-    const pos = arena!=null ? arena>0 : (s && s.mean_skill>0);
+    const arena = s ? 100*s.mean_skill : null;
+    const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0)) : '<span class="pend">···</span>';
+    const subSkill = '';
+    const pos = arena!=null && arena>0;
     const mockTag = s && s.mock ? ' · <span style="color:#96948d;">placeholder</span>' : '';
     const refLine = ref && btMap[id] ? '<br><span class="type">last season '+((btMap[id].mean_skill>0?'+':'')+(btMap[id].mean_skill*100).toFixed(1))+'%</span>' : '';
     return '<tr><td class="rank">'+(rank||'·')+'</td>'
@@ -947,13 +926,12 @@ function computeNoise(data){
   window.__noise = noise;
   window.__oracleCrps = wsum>0 ? (msum/wsum)/SQRT_PI : null;
 }
-function arenaOf(crpsE, crpsPer, oracle){
-  // 0 = persistence, 100 = the oracle. Season-level inputs only.
-  const oc = oracle===undefined ? window.__oracleCrps : oracle;
-  if(oc==null || crpsE==null || crpsPer==null) return null;
-  const ceil = crpsPer - oc;
-  if(ceil <= 0) return null;
-  return 100*(crpsPer - crpsE)/ceil;
+function arenaOf(crpsE, crpsPer){
+  // 0 = copying the last release, 100 = the oracle: a perfect forecast of
+  // the number that gets published. CRPS is nonnegative, so 100 is a true
+  // ceiling; no entrant can cross it, by arithmetic rather than by policy.
+  if(crpsE==null || crpsPer==null || !(crpsPer > 0)) return null;
+  return 100*(1 - crpsE/crpsPer);
 }
 
 function render(data){
