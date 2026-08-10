@@ -35,18 +35,21 @@ open site/index.html
 - Michigan SCA official release + FRED CSV (consumer sentiment)
 - VoteHub polls API (backfill history)
 
-## Repo layout
+## Repo map
 
 ```
-questions/    season round definitions (round_id, lock_at, release_at, resolve rule)
-ssa/          pipeline: adapters, averaging, baselines, scoring, refresh
-forecasts/    submissions: forecasts/<round_id>/<entrant>.json
-resolutions/  resolved ground truth per round
-schema/       forecast submission JSON schema
-tools/        submission validator (also run by CI)
-tests/        hand-checked scoring tests
-site/         static entry page + data.json (generated)
-.github/      daily data refresh cron + PR validation
+questions/    the season: every round, its lock and release time, frozen up front
+forecasts/    one file per entrant per round; the PR that adds it is the submission
+locks/        sha256 manifests written at lock time; the pre-registration record
+resolutions/  the published numbers rounds resolved against, with sources
+entrants/     who is competing: one registration file per entrant
+ssa/          the pipeline: adapters -> series -> baselines -> harness -> scoring -> refresh
+schema/       JSON schemas the CI validator enforces
+tools/        validate_submission.py and operator tools
+tests/        hand-checked unit tests (python -m tests.test_scoring)
+site/         the static site; data.json is the pipeline's only output artifact
+backtest/     committed evidence of the model backtest (runs/*.jsonl)
+.github/      refresh cron + submission validation + lock audit
 ```
 
 ## Submitting a forecast
