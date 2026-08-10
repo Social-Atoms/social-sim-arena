@@ -71,22 +71,40 @@ pre{background:#fafaf8;border:1px solid var(--line);border-radius:4px;padding:10
 </section>
 
 <section class="slide" id="s2">
-  <div class="tag">Why · why now</div>
-  <h2>Simulated publics face a trust crisis</h2>
-  <div class="cols">
+  <div class="tag">The problem</div>
+  <h2>Nobody can prove a simulated public works</h2>
+  <div class="cols" style="grid-template-columns:1fr 1fr">
     <div class="block">
-      <h3>The state of play</h3>
-      <li><b>Simile ($2B) and Aaru ($1B)</b> sell simulated publics to EY, Accenture and live campaigns.</li>
-      <li>Their validation: <b>self-graded, retrospective</b> tests on data that can sit inside training corpora.</li>
-      <li>The literature splits on the same question: striking fidelity in one study, flattened subgroups in the next.</li>
-      <li class="q">"AI polls are fake polls." Silver Bulletin now excludes them from its averages, Apr 2026.</li>
+      <h3>Academia: two years, no verdict</h3>
+      <li>Two years of LLM-simulated survey respondents, and <b>the papers contradict each other</b>: striking fidelity in one study, flattened subgroups in the next.</li>
+      <li>Every evaluation is <b>retrospective</b>, graded against old surveys (ANES, GSS) that may already sit in training data.</li>
+      <li>A retrospective test cannot tell social understanding apart from <b>memorization</b>, no matter how carefully it is run.</li>
     </div>
     <div class="block">
-      <h3>Why now</h3>
-      <li><b>Trust has no instrument</b>: no test exists that a vendor cannot pass by memorizing.</li>
-      <li><b>Gallup ended</b> its 88-year approval series, Feb 2026.</li>
-      <li>Trackers publish on <b>fixed calendars</b>: each release is a free, contamination-proof exam.</li>
-      <li>The <b>Nov 3 midterm</b>: forecasts sealed before a single vote is counted.</li>
+      <h3>Industry: moved faster anyway</h3>
+      <li><b>Simile raised $200M at $2B. Aaru, $88M at $1B.</b></li>
+      <li>Population simulations sold to EY, Accenture and live campaigns; <b>even Gallup now works with Simile</b>.</li>
+      <li>Their only validation: <b>self-reported wins on test sets they pick themselves</b>.</li>
+    </div>
+  </div>
+  <div class="q" style="margin-top:18px;font-size:17px">"AI polls are fake polls." &nbsp;Nate Silver's site, this spring, banning them from its averages.</div>
+</section>
+
+<section class="slide" id="s3">
+  <div class="tag">The fix</div>
+  <h2>A referee no one can cheat</h2>
+  <div class="cols">
+    <div class="block" style="background:#f4faf6;border-color:var(--accent)">
+      <h3>We built one</h3>
+      <li>A <b>live benchmark</b> for social simulation: models forecast the next public-opinion release <b>before it is published</b>.</li>
+      <li><b>Locked, hashed, scored in public.</b> No human discretion between submission and score.</li>
+      <li class="q" style="font-size:14.5px"><b>No one picks the test set, because the test set does not exist yet.</b></li>
+    </div>
+    <div class="block">
+      <h3>Why this works now</h3>
+      <li>Established trackers publish on <b>fixed calendars</b>: every scheduled release is a free, contamination-proof exam.</li>
+      <li><b>Gallup ended</b> its 88-year approval series in Feb 2026; the reference instruments are retreating.</li>
+      <li>The <b>Nov 3 midterm</b> is the natural finale: every forecast sealed before a single vote is counted.</li>
     </div>
     <div class="block">
       <h3>Adjacent live benchmarks</h3>
@@ -99,12 +117,12 @@ pre{background:#fafaf8;border:1px solid var(--line);border-radius:4px;padding:10
         <tr class="us"><td>Social Simulation Arena <span class="v">ours</span></td><td class="y">Y</td><td class="y">Y</td><td class="y">Y</td><td class="y">Y</td><td class="y">Y</td></tr>
       </table>
       <p style="margin-top:8px;font-size:11px;color:var(--mut)">Subgroups: scored to demographic cross-tabulations.
-      Noisy GT: a resolution protocol for ground truth that is itself a survey estimate.</p>
+      Noisy GT: resolution for ground truth that is itself a survey estimate.</p>
     </div>
   </div>
 </section>
 
-<section class="slide" id="s3">
+<section class="slide" id="s4">
   <div class="tag">How</div>
   <h2>Four trackers in, one submission, every board</h2>
   <div class="how">
@@ -202,7 +220,7 @@ pre{background:#fafaf8;border:1px solid var(--line);border-radius:4px;padding:10
 <div class="dots" id="dots"></div>
 
 <script>
-const N=3; let cur=1;
+const N=4; let cur=1;
 const stage=document.getElementById('stage');
 function fit(){
   const s=Math.min(innerWidth/1320, innerHeight/770);
