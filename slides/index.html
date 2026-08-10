@@ -212,12 +212,17 @@ pre{background:#fafaf8;border:1px solid var(--line);border-radius:4px;padding:10
     </svg>
     <div class="block spec" style="overflow:auto">
       <h3>Entering a round</h3>
-      <li><b>1 · What the numbers mean.</b> Each value is the number the tracker will publish:
-      the Michigan index level, the % approving among YouGov's or Morning Consult's respondents,
-      the pooled generic-ballot margin. Cell values are the published crosstab cells for that wave.</li>
-      <li><b>2 · Where truth comes from.</b> Michigan resolves on the official 10:00 ET release;
-      YouGov on the wave's topline and crosstab workbook; Morning Consult on its weekly report;
-      the generic ballot on a pre-registered multi-pollster pooled estimate.</li>
+      <li><b>1 · What you predict.</b><br>
+      Michigan: the sentiment index level <span style="color:var(--mut)">(July: 55.2)</span><br>
+      YouGov: % approving of Trump, RV <span style="color:var(--mut)">(latest: 36%)</span><br>
+      Morning Consult: Trump approval %, RV<br>
+      Generic ballot: Dem&#8722;Rep margin <span style="color:var(--mut)">(Aug: D+6.4)</span><br>
+      Cells: the same % inside each demographic group.</li>
+      <li><b>2 · Where truth comes from.</b><br>
+      Michigan: official release, 10:00 ET<br>
+      YouGov: the wave's topline + crosstabs<br>
+      Morning Consult: its weekly report<br>
+      Generic ballot: pre-registered pooled estimate</li>
       <li><b>3 · How to submit.</b> One JSON file per round, by pull request or the site's
       one-click template, any time before lock (release &#8722; 48 h). CI validates the schema and
       the deadline and prints your sha256. Late means void, enforced in code.</li>
