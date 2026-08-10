@@ -9,66 +9,59 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;500;600;700;800&display=swap');
 *{box-sizing:border-box;margin:0}
-:root{--ink:#111110;--ink2:#4f4e49;--mut:#96948d;--line:#e0e0e0;--accent:#15803d;--accent-ink:#0a6a30;}
-html,body{height:100%}
-body{font-family:"Inconsolata",ui-monospace,monospace;background:#fff;color:var(--ink);overflow:hidden}
-.slide{position:absolute;inset:0;padding:6vh 7vw;display:none;flex-direction:column}
+:root{--ink:#111110;--ink2:#4f4e49;--mut:#96948d;--line:#e0e0e0;--accent:#15803d;--accent-ink:#0a6a30}
+html,body{height:100%;background:#fff}
+body{font-family:"Inconsolata",ui-monospace,monospace;color:var(--ink);overflow:hidden}
+#stage{width:1280px;height:720px;position:absolute;left:50%;top:50%}
+.slide{position:absolute;inset:0;padding:56px 64px;display:none;flex-direction:column}
 .slide.on{display:flex}
-.tag{font-size:12px;letter-spacing:.14em;color:var(--mut);text-transform:uppercase;margin-bottom:10px}
-h1{font-size:clamp(34px,5.2vw,64px);font-weight:800;letter-spacing:-.01em}
-h2{font-size:clamp(22px,3vw,34px);font-weight:800;margin-bottom:26px}
-h3{font-size:15px;font-weight:800;margin-bottom:10px}
-p,li{font-size:14.5px;line-height:1.7;color:var(--ink2)}
+.tag{font-size:12px;letter-spacing:.14em;color:var(--mut);text-transform:uppercase;margin-bottom:8px}
+h1{font-size:58px;font-weight:800;letter-spacing:-.01em}
+h2{font-size:30px;font-weight:800;margin-bottom:20px}
+h3{font-size:14.5px;font-weight:800;margin-bottom:9px}
+p,li{font-size:13.5px;line-height:1.62;color:var(--ink2)}
+a{color:#0000ee;text-decoration:none}
+a:hover{text-decoration:underline}
 .live{display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff;font-weight:800;font-size:13px;padding:4px 12px;border-radius:4px}
-.ld{width:7px;height:7px;border-radius:50%;background:#fff;animation:p 1.6s infinite}
-@keyframes p{50%{opacity:.35}}
-.cover{justify-content:center;align-items:flex-start}
-.cover img{width:84px;margin-bottom:26px}
-.cover .sub{font-size:clamp(16px,2vw,22px);font-weight:600;color:var(--ink);margin:14px 0 20px}
-.cover .desc{max-width:640px;margin-bottom:26px}
-.cover .foot{position:absolute;bottom:6vh;left:7vw;right:7vw;display:flex;justify-content:space-between;font-size:13px;color:var(--mut)}
-.cols{display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:26px;flex:1;min-height:0}
-.block{border:1px solid var(--line);border-radius:4px;padding:18px 20px;overflow:auto}
-.block li{margin-bottom:9px;list-style:none}
-.block b{color:var(--ink)}
+.ld{width:7px;height:7px;border-radius:50%;background:#fff;animation:pl 1.6s infinite}
+@keyframes pl{50%{opacity:.35}}
+.cover{justify-content:center}
+.cover img{width:76px;margin-bottom:22px}
+.cover .sub{font-size:21px;font-weight:600;margin:12px 0 16px}
+.cover .desc{max-width:640px;margin-bottom:0}
+.cover .foot{position:absolute;bottom:52px;left:64px;right:64px;display:flex;justify-content:space-between;font-size:13px;color:var(--mut)}
+.cols{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:20px;flex:1;min-height:0}
+.block{border:1px solid var(--line);border-radius:4px;padding:16px 18px;overflow:hidden}
+.block li{margin:0 0 8px 0;list-style:none}
+.block li b{color:var(--ink)}
 .q{border-left:3px solid var(--accent);padding-left:10px;color:var(--ink);font-weight:600}
-table{border-collapse:collapse;width:100%;font-size:13px}
-th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:center}
-th{font-size:11px;letter-spacing:.05em;color:var(--mut);font-weight:700}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{border-bottom:1px solid var(--line);padding:6.5px 5px;text-align:center}
+th{font-size:10.5px;letter-spacing:.05em;color:var(--mut);font-weight:700}
 td:first-child,th:first-child{text-align:left}
+.v{display:block;font-size:10.5px;color:var(--mut);font-weight:500}
 .y{color:var(--accent-ink);font-weight:800}
 .n{color:#c9c7c0}
 .us td{font-weight:800;background:#f4faf6}
-.proto{display:flex;align-items:center;gap:0;margin:6px 0 22px;flex-wrap:wrap}
-.step{border:1px solid var(--line);border-radius:4px;padding:10px 16px;font-weight:700;font-size:13.5px;white-space:nowrap}
-.step small{display:block;font-weight:500;color:var(--mut);font-size:11px;margin-top:3px}
-.arrow{margin:0 10px;color:var(--mut);font-weight:800}
-.step.lock{border-color:var(--accent);color:var(--accent-ink)}
-.how{display:grid;grid-template-columns:1.15fr 1fr;gap:30px;flex:1;min-height:0}
-.team{display:grid;grid-template-columns:repeat(5,1fr);gap:14px 10px;align-content:start}
-.m{text-align:center}
-.m .ph{width:64px;height:64px;border-radius:50%;border:1px solid var(--line);background:#fafaf8;color:var(--mut);
-  display:flex;align-items:center;justify-content:center;font-weight:800;margin:0 auto 6px;overflow:hidden}
-.m .ph img{width:100%;height:100%;object-fit:cover}
-.m span{font-size:11px;color:var(--mut);display:block;line-height:1.35}
-.dots{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:5}
+.how{display:grid;grid-template-columns:1.25fr 1fr;gap:24px;flex:1;min-height:0}
+pre{background:#fafaf8;border:1px solid var(--line);border-radius:4px;padding:10px 12px;font-size:11.5px;line-height:1.5;overflow:hidden}
+.spec li{margin-bottom:7px}
+.spec b{color:var(--ink)}
+.navbtn{position:fixed;top:50%;transform:translateY(-50%);width:40px;height:56px;border:1px solid var(--line);
+  border-radius:4px;background:#fff;color:var(--ink2);font-size:20px;font-weight:800;cursor:pointer;z-index:9}
+.navbtn:hover{border-color:var(--ink)}
+#prev{left:12px}#next{right:12px}
+.dots{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:9}
 .dots i{width:8px;height:8px;border-radius:50%;background:#dddbd4;cursor:pointer}
 .dots i.on{background:var(--accent)}
-.hint{position:fixed;bottom:14px;right:18px;font-size:11px;color:var(--mut)}
-@media(max-width:860px){
-  body{overflow:auto}
-  .slide{position:relative;display:flex;padding:40px 22px;min-height:100vh}
-  .cols,.how{grid-template-columns:1fr}
-  .cover .foot{position:static;margin-top:26px;flex-direction:column;gap:4px}
-  .dots,.hint{display:none}
-}
 </style>
 </head>
 <body>
+<div id="stage">
 
 <section class="slide cover on" id="s1">
   <img src="logo.svg" alt="">
-  <span class="live"><span class="ld"></span>LIVE</span>
+  <span class="live" style="align-self:flex-start"><span class="ld"></span>LIVE</span>
   <h1>Social Simulation Arena</h1>
   <div class="sub">Social Simulation vs. The Real Future</div>
   <p class="desc">A live benchmark for social simulation: models forecast the next
@@ -79,79 +72,143 @@ td:first-child,th:first-child{text-align:left}
 
 <section class="slide" id="s2">
   <div class="tag">Why · why now</div>
-  <h2>Simulated publics are being sold faster than they are being tested</h2>
+  <h2>Simulated publics face a trust crisis</h2>
   <div class="cols">
     <div class="block">
       <h3>The state of play</h3>
-      <li><b>Simile at $2B, Aaru at $1B</b> sell population simulations to EY, Accenture and live campaigns.</li>
-      <li>The research record contradicts itself: striking fidelity in one study, flattened subgroups in the next.</li>
-      <li>Every evaluation is <b>retrospective</b>, graded on surveys that may sit in training data, on test sets the vendors pick.</li>
-      <li class="q">"AI polls are fake polls." · Silver Bulletin, Apr 2026</li>
+      <li><b>Simile ($2B) and Aaru ($1B)</b> sell simulated publics to EY, Accenture and live campaigns.</li>
+      <li>Their validation: <b>self-graded, retrospective</b> tests on data that can sit inside training corpora.</li>
+      <li>The literature splits on the same question: striking fidelity in one study, flattened subgroups in the next.</li>
+      <li class="q">"AI polls are fake polls." Silver Bulletin now excludes them from its averages, Apr 2026.</li>
     </div>
     <div class="block">
       <h3>Why now</h3>
-      <li>Gallup ended its <b>88-year</b> approval series in Feb 2026; the institutions being replaced are retreating.</li>
-      <li>Established trackers publish on <b>fixed calendars</b>: every scheduled release is a contamination-proof exam, free.</li>
-      <li>The <b>Nov 3 midterm</b> is the natural finale: every forecast sealed before a single vote is counted.</li>
+      <li><b>Trust has no instrument</b>: no test exists that a vendor cannot pass by memorizing.</li>
+      <li><b>Gallup ended</b> its 88-year approval series, Feb 2026.</li>
+      <li>Trackers publish on <b>fixed calendars</b>: each release is a free, contamination-proof exam.</li>
+      <li>The <b>Nov 3 midterm</b>: forecasts sealed before a single vote is counted.</li>
     </div>
     <div class="block">
-      <h3>No one runs this exam</h3>
+      <h3>Adjacent live benchmarks</h3>
       <table>
         <tr><th></th><th>Live</th><th>Social</th><th>Subgroups</th><th>Noisy GT</th><th>Humans+firms</th></tr>
-        <tr><td>ForecastBench '25</td><td class="y">Y</td><td class="n">-</td><td class="n">-</td><td class="n">-</td><td class="y">Y</td></tr>
-        <tr><td>TS-Arena '26</td><td class="y">Y</td><td class="n">-</td><td class="n">-</td><td class="n">-</td><td class="n">-</td></tr>
-        <tr><td>Prophet Arena '26</td><td class="y">Y</td><td class="n">-</td><td class="n">-</td><td class="n">-</td><td class="n">-</td></tr>
-        <tr><td>FutureX</td><td class="y">Y</td><td class="n">-</td><td class="n">-</td><td class="n">-</td><td class="n">-</td></tr>
-        <tr class="us"><td>Social Simulation Arena</td><td class="y">Y</td><td class="y">Y</td><td class="y">Y</td><td class="y">Y</td><td class="y">Y</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2409.19839" target="_blank">ForecastBench</a><span class="v">ICLR 2025</span></td><td class="y">Y</td><td class="n">-</td><td class="n">-</td><td class="n">-</td><td class="y">Y</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2512.20761" target="_blank">TS-Arena</a><span class="v">ICLR 2026 TSALM WS</span></td><td class="y">Y</td><td class="n">-</td><td class="n">-</td><td class="n">-</td><td class="n">-</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2510.17638" target="_blank">Prophet Arena</a><span class="v">ICLR 2026</span></td><td class="y">Y</td><td class="n">-</td><td class="n">-</td><td class="n">-</td><td class="n">-</td></tr>
+        <tr><td><a href="https://arxiv.org/abs/2508.11987" target="_blank">FutureX</a><span class="v">arXiv 2025</span></td><td class="y">Y</td><td class="n">-</td><td class="n">-</td><td class="n">-</td><td class="n">-</td></tr>
+        <tr class="us"><td>Social Simulation Arena <span class="v">ours</span></td><td class="y">Y</td><td class="y">Y</td><td class="y">Y</td><td class="y">Y</td><td class="y">Y</td></tr>
       </table>
-      <p style="margin-top:10px;font-size:12px;color:var(--mut)">Subgroups: forecasts scored down to demographic
-      cross-tabulations. Noisy GT: resolution methodology for ground truth that is itself an estimate.</p>
+      <p style="margin-top:8px;font-size:11px;color:var(--mut)">Subgroups: scored to demographic cross-tabulations.
+      Noisy GT: a resolution protocol for ground truth that is itself a survey estimate.</p>
     </div>
   </div>
 </section>
 
 <section class="slide" id="s3">
   <div class="tag">How</div>
-  <h2>A referee no one can cheat</h2>
-  <div class="proto">
-    <span class="step lock">LOCK · t &#8722; 48 h<small>forecast hash-committed, sha256 public</small></span>
-    <span class="arrow">&#8594;</span>
-    <span class="step">RELEASE<small>the tracker publishes the number</small></span>
-    <span class="arrow">&#8594;</span>
-    <span class="step">RESOLVE<small>no human discretion</small></span>
-    <span class="arrow">&#8594;</span>
-    <span class="step">SCORE<small>0 = copying last week &#183; 100 = the oracle</small></span>
-  </div>
+  <h2>Four trackers in, one submission, every board</h2>
   <div class="how">
-    <div class="block">
-      <h3>Running today</h3>
-      <li>Five trackers on fixed schedules: Michigan sentiment, Economist/YouGov, Morning Consult, Civiqs, the generic ballot; demographic profiles scored jointly.</li>
-      <li>Protocol validated on a walk-forward replay of <b>323 real releases, 2015 to 2026</b>; skill ceilings measured per target.</li>
-      <li>Season 0: <b>14 frontier models &#215; two information conditions</b>, statistical baselines, a human crowd; any agent enters with one pull request.</li>
-      <li>Every state transition is a public git commit; the paper's numbers regenerate from the repository with one command.</li>
-    </div>
-    <div class="block">
-      <h3>The team</h3>
-      <div class="team" id="team"></div>
-      <p style="margin-top:12px;font-size:12px;color:var(--mut)">Cognitive science &#183; social science &#183; HCI &#183;
-      including the team behind this year's CHI Best Paper.</p>
+    <svg viewBox="0 0 640 470" style="width:100%;height:100%">
+      <defs><marker id="a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#9b998f"/></marker></defs>
+      <text x="8" y="18" font-size="10" letter-spacing="1.5" fill="#96948d" font-weight="700">SOURCES</text>
+      <g fill="none" stroke="#111110" stroke-width="1.2">
+        <rect x="8" y="30" width="196" height="46" rx="3" fill="#fff"/>
+        <rect x="8" y="86" width="196" height="46" rx="3" fill="#fff"/>
+        <rect x="8" y="142" width="196" height="46" rx="3" fill="#fff"/>
+        <rect x="8" y="198" width="196" height="46" rx="3" fill="#fff"/>
+      </g>
+      <text x="20" y="49" font-size="12.5" font-weight="800" fill="#111110">U. Michigan</text>
+      <text x="20" y="66" font-size="10.5" fill="#4f4e49">sentiment index · sca.isr.umich.edu</text>
+      <text x="20" y="105" font-size="12.5" font-weight="800" fill="#111110">Economist/YouGov</text>
+      <text x="20" y="122" font-size="10.5" fill="#4f4e49">% approve + 16-cell crosstab workbook</text>
+      <text x="20" y="161" font-size="12.5" font-weight="800" fill="#111110">Morning Consult</text>
+      <text x="20" y="178" font-size="10.5" fill="#4f4e49">% approve, registered voters</text>
+      <text x="20" y="217" font-size="12.5" font-weight="800" fill="#111110">Generic ballot</text>
+      <text x="20" y="234" font-size="10.5" fill="#4f4e49">pooled margin, house-effect adjusted</text>
+      <g stroke="#9b998f" stroke-width="1">
+        <line x1="204" y1="53" x2="248" y2="110" marker-end="url(#a)"/>
+        <line x1="204" y1="109" x2="248" y2="126" marker-end="url(#a)"/>
+        <line x1="204" y1="165" x2="248" y2="146" marker-end="url(#a)"/>
+        <line x1="204" y1="221" x2="248" y2="163" marker-end="url(#a)"/>
+      </g>
+      <rect x="250" y="96" width="160" height="88" rx="3" fill="#eef7f1" stroke="#15803d" stroke-width="1.6"/>
+      <text x="262" y="118" font-size="11" letter-spacing="1.2" fill="#0a6a30" font-weight="800">ROUND</text>
+      <text x="262" y="137" font-size="11.5" fill="#111110" font-weight="700">the next release</text>
+      <text x="262" y="154" font-size="11" fill="#4f4e49">locks release &#8722; 48 h</text>
+      <text x="262" y="171" font-size="11" fill="#4f4e49">sha256 printed in public</text>
+      <line x1="330" y1="184" x2="330" y2="216" stroke="#15803d" stroke-width="1.4" marker-end="url(#a)"/>
+      <rect x="228" y="218" width="204" height="120" rx="3" fill="#fff" stroke="#111110" stroke-width="1.2"/>
+      <text x="240" y="238" font-size="10" letter-spacing="1.2" fill="#96948d" font-weight="700">ONE SUBMISSION</text>
+      <text x="240" y="257" font-size="11" font-family="Inconsolata" fill="#111110">topline: mean 39.0 sd 2.0</text>
+      <text x="240" y="274" font-size="11" fill="#111110">cells:</text>
+      <text x="252" y="290" font-size="11" fill="#4f4e49">Democrat 5 · Republican 87 &#8230;</text>
+      <text x="252" y="306" font-size="11" fill="#4f4e49">16 cells: party age race</text>
+      <text x="252" y="322" font-size="11" fill="#4f4e49">gender education</text>
+      <line x1="432" y1="278" x2="472" y2="278" stroke="#9b998f" stroke-width="1" marker-end="url(#a)"/>
+      <path d="M446 96 L452 108 L440 108 z" fill="#111110"/>
+      <text x="462" y="106" font-size="11.5" font-weight="800" fill="#111110">RELEASE</text>
+      <text x="462" y="121" font-size="10.5" fill="#4f4e49">the tracker publishes; the round resolves</text>
+      <text x="474" y="158" font-size="10" letter-spacing="1.5" fill="#96948d" font-weight="700">BOARDS</text>
+      <g>
+        <rect x="474" y="168" width="152" height="30" rx="3" fill="#111110"/>
+        <text x="486" y="187" font-size="11.5" fill="#fff" font-weight="800">Overall</text>
+        <rect x="474" y="204" width="152" height="26" rx="3" fill="#fff" stroke="#e0e0e0"/>
+        <text x="486" y="221" font-size="11" fill="#4f4e49">Party</text>
+        <rect x="474" y="236" width="152" height="26" rx="3" fill="#fff" stroke="#e0e0e0"/>
+        <text x="486" y="253" font-size="11" fill="#4f4e49">Age</text>
+        <rect x="474" y="268" width="152" height="26" rx="3" fill="#fff" stroke="#e0e0e0"/>
+        <text x="486" y="285" font-size="11" fill="#4f4e49">Race</text>
+        <rect x="474" y="300" width="152" height="26" rx="3" fill="#fff" stroke="#e0e0e0"/>
+        <text x="486" y="317" font-size="11" fill="#4f4e49">Gender · Education</text>
+        <rect x="474" y="332" width="152" height="26" rx="3" fill="#eef7f1" stroke="#15803d"/>
+        <text x="486" y="349" font-size="11" fill="#0a6a30" font-weight="700">Structure (joint)</text>
+      </g>
+      <text x="8" y="380" font-size="11" fill="#4f4e49">Score: 0 = copying the last release &#183; 100 = the oracle, a perfect</text>
+      <text x="8" y="396" font-size="11" fill="#4f4e49">forecast of the published number. Validated on a walk-forward</text>
+      <text x="8" y="412" font-size="11" fill="#4f4e49">replay of 323 real releases, 2015&#8211;2026.</text>
+      <text x="8" y="444" font-size="11" fill="#0a6a30" font-weight="700">One file scores on every board; subgroup boards are views of the</text>
+      <text x="8" y="460" font-size="11" fill="#0a6a30" font-weight="700">same locked submission, so no one can enter only the easy cells.</text>
+    </svg>
+    <div class="block spec" style="overflow:auto">
+      <h3>Entering a round</h3>
+      <li><b>1 · What the numbers mean.</b> Each value is the number the tracker will publish:
+      the Michigan index level, the % approving among YouGov's or Morning Consult's respondents,
+      the pooled generic-ballot margin. Cell values are the published crosstab cells for that wave.</li>
+      <li><b>2 · Where truth comes from.</b> Michigan resolves on the official 10:00 ET release;
+      YouGov on the wave's topline and crosstab workbook; Morning Consult on its weekly report;
+      the generic ballot on a pre-registered multi-pollster pooled estimate.</li>
+      <li><b>3 · How to submit.</b> One JSON file per round, by pull request or the site's
+      one-click template, any time before lock (release &#8722; 48 h). CI validates the schema and
+      the deadline and prints your sha256. Late means void, enforced in code.</li>
+      <li><b>4 · The format.</b></li>
+      <pre>forecasts/&lt;round&gt;/&lt;you&gt;.json
+{ "topline": { "mean": 39.0, "sd": 2.0 },
+  "cells": {
+    "Democrat":   { "mean": 5,  "sd": 1.5 },
+    "Republican": { "mean": 87, "sd": 2.0 },
+    "Under 30":   { "mean": 34, "sd": 3.0 },
+    ...16 cells: party, age, race,
+       gender, education } }</pre>
+      <li style="margin-top:6px">A distribution, not a point: mean and sd per value, or quantiles.
+      Confidence is scored, so bluffing costs.</li>
     </div>
   </div>
 </section>
 
+</div>
+
+<button class="navbtn" id="prev">&#8249;</button>
+<button class="navbtn" id="next">&#8250;</button>
 <div class="dots" id="dots"></div>
-<div class="hint">&#8592; &#8594; or click to flip</div>
 
 <script>
 const N=3; let cur=1;
-const team=document.getElementById('team');
-for(let i=1;i<=10;i++){
-  const d=document.createElement('div'); d.className='m';
-  const idx=String(i).padStart(2,'0');
-  d.innerHTML='<div class="ph"><img src="team/'+idx+'.png" onerror="this.remove()">'+
-              '<b style="position:absolute">'+idx+'</b></div><span>Name<br>Role</span>';
-  team.appendChild(d);
+const stage=document.getElementById('stage');
+function fit(){
+  const s=Math.min(innerWidth/1320, innerHeight/770);
+  stage.style.transform='translate(-50%,-50%) scale('+s+')';
 }
+addEventListener('resize',fit); fit();
 const dots=document.getElementById('dots');
 for(let i=1;i<=N;i++){const b=document.createElement('i'); b.onclick=()=>go(i); dots.appendChild(b);}
 function go(n){
@@ -160,8 +217,9 @@ function go(n){
   [...dots.children].forEach((d,i)=>d.classList.toggle('on', i+1===cur));
   history.replaceState(null,'','#'+cur);
 }
-addEventListener('keydown',e=>{ if(e.key==='ArrowRight'||e.key===' ') go(cur+1); if(e.key==='ArrowLeft') go(cur-1); });
-addEventListener('click',e=>{ if(e.target.closest('.dots')||innerWidth<860) return; go(e.clientX>innerWidth/2?cur+1:cur-1); });
+document.getElementById('prev').onclick=()=>go(cur-1);
+document.getElementById('next').onclick=()=>go(cur+1);
+addEventListener('keydown',e=>{ if(e.key==='ArrowRight') go(cur+1); if(e.key==='ArrowLeft') go(cur-1); });
 go(parseInt(location.hash.slice(1))||1);
 </script>
 </body>
