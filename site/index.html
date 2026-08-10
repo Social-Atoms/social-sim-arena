@@ -217,7 +217,7 @@ footer .upd{margin-left:auto;}
       <div class="legend-strip" id="legend-strip" style="display:none;"></div>
       <div class="chartpane" id="chartpane">
         <div class="chartctl">
-          <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker</button><button data-unit="skill" class="on">Skill %</button><button data-unit="crps">Error pts</button></div>
+          <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker</button><button data-unit="arena" class="on">Score</button><button data-unit="skill">Skill %</button><button data-unit="crps">Error pts</button></div>
           <div class="seg mini" id="range-seg"><button data-range="3">3M</button><button data-range="6">6M</button><button data-range="12">1Y</button><button data-range="0" class="on">All</button></div>
         </div>
         <div class="tooltip"></div>
@@ -231,7 +231,7 @@ footer .upd{margin-left:auto;}
       </div>
       <div class="scroll">
         <table class="lb">
-          <thead><tr><th></th><th>Entrant</th><th class="num">Skill</th><th class="num">CRPS</th><th class="num">Rounds</th></tr></thead>
+          <thead><tr><th></th><th>Entrant</th><th class="num">Score</th><th class="num">CRPS</th><th class="num">Rounds</th></tr></thead>
           <tbody id="lb-body"><tr><td colspan="5" style="color:var(--mut);">loading…</td></tr></tbody>
         </table>
       </div>
@@ -445,7 +445,10 @@ function aggChart(traj, nameOf, unit){
   if(!window.__hidden){ window.__hidden = defaultHidden(window.__data); }
   const hiddenA = window.__hidden;
   const universe = ['climatology','trend','ewma'].concat(mocks).concat(['crowd']);
-  const val0 = (t,s) => (unit==='crps' ? (t.crps ? t.crps[s] : null) : t.skills[s]);
+  const arenaAt = (t,s) => (t.crps && t.crps[s]!=null && t.crps.persistence!=null)
+      ? arenaOf(t.crps[s], t.crps.persistence) : null;
+  const val0 = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null)
+      : unit==='arena' ? arenaAt(t,s) : t.skills[s];
   // Only entrants the data actually scores. Falling back to 0 for a missing
   // value drew two lies: `crowd` is not computed in the model backtest at all
   // and got a full line at exactly 0% skill, and every model was drawn flat at
@@ -454,8 +457,10 @@ function aggChart(traj, nameOf, unit){
   const scored = universe.filter(s => traj.some(t => val0(t,s) != null));
   const series = scored.filter(s => !hiddenA.has(s));
   if(!series.length){ svg.style.display='none'; return; }
-  const val = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null) : t.skills[s];
-  if(unit==='crps' && !traj[traj.length-1].crps){ unit='skill'; }
+  if((unit==='crps' || unit==='arena') && !traj[traj.length-1].crps){ unit='skill'; }
+  if(unit==='arena' && window.__oracleCrps==null){ unit='skill'; }
+  const val = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null)
+      : unit==='arena' ? arenaAt(t,s) : t.skills[s];
   const monthsA = window.__range || 0;
   if(monthsA > 0){
     const cutoff = dnum(traj[traj.length-1].date) - monthsA*30.44*86400000;
@@ -466,12 +471,13 @@ function aggChart(traj, nameOf, unit){
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
   let lo=Infinity, hi=-Infinity;
   traj.forEach(t => series.forEach(s => { const v=val(t,s); if(v!=null){ lo=Math.min(lo,v); hi=Math.max(hi,v);} }));
-  if(unit!=='crps'){ lo=Math.min(lo,0); hi=Math.max(hi,0); lo=Math.max(lo,-0.30); }
+  if(unit==='skill'){ lo=Math.min(lo,0); hi=Math.max(hi,0); lo=Math.max(lo,-0.30); }
+  if(unit==='arena'){ lo=Math.min(lo,0); hi=Math.max(hi,100); lo=Math.max(lo,-30); }
   const pad=(hi-lo)*0.08||0.05; lo-=pad; hi+=pad;
   const X = i => P.l + i/(traj.length-1)*(W-P.l-P.r);
   const Y = v => P.t + (hi-v)/(hi-lo)*(H-P.t-P.b);
-  const fmtV = v => unit==='crps' ? v.toFixed(2) : (v>0?'+':'')+(v*100).toFixed(1)+'%';
-  const fmtT = v => unit==='crps' ? v.toFixed(1) : (v>0?'+':'')+(v*100).toFixed(0)+'%';
+  const fmtV = v => unit==='crps' ? v.toFixed(2) : unit==='arena' ? v.toFixed(0) : (v>0?'+':'')+(v*100).toFixed(1)+'%';
+  const fmtT = v => unit==='crps' ? v.toFixed(1) : unit==='arena' ? v.toFixed(0) : (v>0?'+':'')+(v*100).toFixed(0)+'%';
   let g = `<defs><linearGradient id="lead" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="#15803d" stop-opacity=".10"/>
     <stop offset="1" stop-color="#15803d" stop-opacity="0"/></linearGradient>
@@ -483,6 +489,11 @@ function aggChart(traj, nameOf, unit){
     g += `<text x="${P.l-9}" y="${(Y(v)+3.5).toFixed(1)}" font-size="11" fill="#96948d" text-anchor="end">${fmtT(v)}</text>`;
   }
   if(unit!=='crps') g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="#96948d" stroke-dasharray="2 5"/>`;
+  if(unit==='arena'){
+    g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(100)}" y2="${Y(100)}" stroke="#15803d" stroke-width="1.4" stroke-dasharray="5 4"/>`;
+    g += `<text x="${W-P.r-6}" y="${Y(100)-6}" font-size="10.5" font-weight="700" fill="#0a6a30" text-anchor="end">oracle 100 &#183; the survey's own noise</text>`;
+    g += `<text x="${W-P.r-6}" y="${Y(0)-6}" font-size="10.5" font-weight="600" fill="#96948d" text-anchor="end">persistence 0</text>`;
+  }
   const nx = small?3:5, seen = new Set();
   for(let k=0;k<nx;k++){
     const i = Math.round(k*(traj.length-1)/(nx-1));
@@ -730,14 +741,17 @@ function setTab(key){
   // has six months of it. The level view, with the forecast dots for the next
   // release, is one click away. Two separate memories, so moving between tabs
   // does not silently change what the other was showing.
-  const unit = key==='agg' ? (window.__unitAgg || 'skill') : (window.__unitSer || 'skill');
+  const unit = key==='agg' ? (window.__unitAgg || 'arena') : (window.__unitSer || 'skill');
   unitSeg.style.display='';
   unitSeg.querySelector('[data-unit="level"]').style.display = key==='agg' ? 'none' : '';
+  unitSeg.querySelector('[data-unit="arena"]').style.display = key==='agg' ? '' : 'none';
   unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.unit===unit));
 
   if(key==='agg'){
     document.getElementById('caption').textContent = unit==='crps'
       ? 'Average forecast error (CRPS, in points), lower is better. Measured on the releases every entrant answered, each model scored only after its own training cutoff. Five leading models shown; click the legend for the rest.'
+      : unit==='arena'
+      ? 'Arena score: 0 is copying the last release, 100 is knowing what the public actually thinks, bounded only by the survey\'s own sampling noise. Cumulative over the releases every entrant answered. r10 saw the last ten values, zs saw none.'
       : 'Cumulative skill vs the persistence baseline, higher is better. Measured on the releases every entrant answered, each model scored only after its own training cutoff. r10 saw the last ten values, zs saw none. Five leading models shown; click the legend for the rest.';
     aggChart(bt.trajectory, nameOf, unit);
     renderLegend(legendFor(bt.trajectory), nameOf, 'click to toggle');
@@ -780,8 +794,12 @@ function renderBoard(mode){
   (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; });
   const btMap = {}; ((data.backtest&&data.backtest.overall)||[]).forEach(e=>btMap[e.entrant]=e);
   function row(id, s, rank, ref){
-    const skillTxt = s ? ((s.mean_skill>0?'+':'')+(s.mean_skill*100).toFixed(1)+'%') : '<span class="pend">···</span>';
-    const pos = s && s.mean_skill>0;
+    const perRow = window.__perRow;
+    const arena = (s && perRow && perRow.mean_crps!=null) ? arenaOf(s.mean_crps, perRow.mean_crps) : null;
+    const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0))
+      : s ? ((s.mean_skill>0?'+':'')+(s.mean_skill*100).toFixed(1)+'%') : '<span class="pend">···</span>';
+    const subSkill = (arena!=null && s) ? '<br><span class="type">skill '+((s.mean_skill>0?'+':'')+(s.mean_skill*100).toFixed(1))+'%</span>' : '';
+    const pos = arena!=null ? arena>0 : (s && s.mean_skill>0);
     const mockTag = s && s.mock ? ' · <span style="color:#96948d;">placeholder</span>' : '';
     const refLine = ref && btMap[id] ? '<br><span class="type">last season '+((btMap[id].mean_skill>0?'+':'')+(btMap[id].mean_skill*100).toFixed(1))+'%</span>' : '';
     return '<tr><td class="rank">'+(rank||'·')+'</td>'
@@ -790,13 +808,14 @@ function renderBoard(mode){
       + (condTag(nameOf[id])?' <span class="type">· '+(condTag(nameOf[id])==='zs'?'zero-shot':'recent-10')+'</span>':'')
       + (id==='persistence'?' <span class="type">· reference</span>':'')
       + '<br><span class="type">'+esc(typeOf[id]||'baseline')+mockTag+'</span></span></span></td>'
-      + '<td class="num skill'+(pos?' pos':'')+'">'+skillTxt+refLine+'</td>'
+      + '<td class="num skill'+(pos?' pos':'')+'">'+skillTxt+subSkill+refLine+'</td>'
       + '<td class="num">'+(s ? s.mean_crps.toFixed(2) : '·')+'</td>'
       + '<td class="num">'+(s ? s.rounds : 0)+'</td></tr>';
   }
   const body = document.getElementById('lb-body');
   const spans = (data.backtest && data.backtest.spans) || {};
   const entries = spans[mode] || (data.backtest&&data.backtest.overall) || [];
+  window.__perRow = entries.find(e=>e.entrant==='persistence') || null;
   const seen = new Set(entries.map(e=>e.entrant));
   const orderT = {llm:0, human:1, baseline:2};
   const rest = (data.entrants||[]).filter(e=>!seen.has(e.entrant_id))
@@ -805,7 +824,7 @@ function renderBoard(mode){
     + rest.map(e=>row(e.entrant_id, null, null)).join('')) || '<tr><td colspan="5">…</td></tr>';
   const n = entries.length ? entries[0].rounds : 0;
   document.getElementById('lb-note').textContent =
-    'Skill over '+(SPANLABEL[mode]||mode)+' · '+n+' scored release'+(n===1?'':'s')+' per entrant. Live rounds join the window as they resolve, starting Aug 14; the Nov 3 midterm exam is the finale. Entrants without a score yet show as pending until their first scored release.';
+    'Arena score over '+(SPANLABEL[mode]||mode)+' · '+n+' scored release'+(n===1?'':'s')+' per entrant. 0 is copying the last release; 100 is knowing what the public actually thinks, bounded only by the survey\'s own sampling noise. Live rounds join the window as they resolve, starting Aug 14; the Nov 3 midterm exam is the finale. Pending entrants show after their first scored release.';
 }
 
 function roundsList(data){
@@ -872,8 +891,52 @@ function entrantsList(data){
   if(typeof syncHash==='function') syncHash();
 }
 
+function noiseFloorJS(vals){
+  // Measurement noise per release from the series' own history: for a level
+  // plus independent noise, cov(diff_t, diff_t+1) = -m^2. Capped at the edge
+  // of the admissible space (var/2). Same estimator as ssa/scoring.noise_floor.
+  const d = []; for(let i=1;i<vals.length;i++) d.push(vals[i]-vals[i-1]);
+  if(d.length < 3) return null;
+  const mean = d.reduce((a,b)=>a+b,0)/d.length;
+  let v=0, c=0;
+  for(let i=0;i<d.length;i++){ v += (d[i]-mean)*(d[i]-mean); }
+  for(let i=0;i<d.length-1;i++){ c += (d[i]-mean)*(d[i+1]-mean); }
+  v/=d.length; c/=d.length;
+  return Math.sqrt(Math.min(Math.max(-c,0), v/2));
+}
+const SQRT_PI = Math.sqrt(Math.PI);
+function computeNoise(data){
+  // Per-series noise from the published histories, blended with the same
+  // rounds-per-series weights the backtest scores on, so the oracle on the
+  // aggregate chart is the oracle of the same mix of targets as the curves.
+  const noise = {};
+  for(const [k, series] of Object.entries(data.charts||{})){
+    const m = noiseFloorJS(series.map(pt=>pt.value));
+    if(m!=null) noise[k]=m;
+  }
+  let wsum=0, msum=0;
+  const per = (data.backtest && data.backtest.per_series) || {};
+  for(const [k, rows] of Object.entries(per)){
+    if(noise[k]==null) continue;
+    const r = Math.max(...rows.map(x=>x.rounds||0), 0);
+    if(r>0){ wsum += r; msum += noise[k]*r; }
+  }
+  window.__noise = noise;
+  window.__oracleCrps = wsum>0 ? (msum/wsum)/SQRT_PI : null;
+}
+function arenaOf(crpsE, crpsPer){
+  // 0 = persistence, 100 = knowing the true level, bounded by the survey's
+  // own sampling noise. Season-level inputs only: both are aggregates.
+  const oc = window.__oracleCrps;
+  if(oc==null || crpsE==null || crpsPer==null) return null;
+  const ceil = crpsPer - oc;
+  if(ceil <= 0) return null;
+  return 100*(crpsPer - crpsE)/ceil;
+}
+
 function render(data){
   window.__data = data;
+  computeNoise(data);
   const lb = data.leaderboard || {};
 
   function meta(){
