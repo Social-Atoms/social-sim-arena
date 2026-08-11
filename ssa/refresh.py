@@ -569,7 +569,15 @@ def main():
                 "only on releases after its own training cutoff; this table is "
                 "the intersection, so every row is measured on the same points. "
                 "Rows ending -zeroshot saw the question and no series history.")
-    else:
+    # No `else`. Deleting the placeholder path was right -- it invented model
+    # rows -- but it left a bare `else:` behind, and a bare `else:` is not a
+    # no-op in Python, it is an IndentationError. That made the whole module
+    # unimportable, so `ssa.refresh` and `ssa.resolve` both died at startup and
+    # the pipeline stopped, three days before the first release resolves.
+    #
+    # When no measured backtest exists the baseline replay already in `bt` is
+    # the honest answer, and publishing it unaccompanied is the intended
+    # behaviour rather than something to fill in.
 
     data = {
         "generated_at": iso(now),
