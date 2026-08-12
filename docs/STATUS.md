@@ -30,10 +30,10 @@ round asks for a single national number.
 | 1 | Silver Bulletin approval DB | Google Sheet CSV | 4 | 4 | working |
 | 2 | Silver Bulletin generic ballot | Google Sheet CSV | 1 (+1 derived) | 3 | working |
 | 3 | U. Michigan Surveys of Consumers | `tbmics.csv`, FRED fallback | 1 | 3 | working, flaky host |
-| 4 | Civiqs daily approval | — nothing machine-readable | 0 | 2 | **dead** |
+| 4 | Civiqs daily trackers | HTML-embedded JSON + `civiqs/` archive | 2 | 2 | working, see §9 |
 | 5 | **YouGov crosstab workbook** (new, PR #3) | keyless XLSX | 0 | 0 | **extractor works, not wired** |
 
-### 1.3 Series registered (6)
+### 1.3 Series registered (6, plus 2 Civiqs — see §9)
 
 | series | source | rounds | has survey instrument |
 |---|---|---|---|
@@ -43,20 +43,23 @@ round asks for a single national number.
 | `yougov_generic_margin` | sb_generic | 2 | yes |
 | `yougov_econ_approval` | sb_approval | **0** | yes |
 | `yougov_immig_approval` | sb_approval | **0** | yes |
+| `civiqs_net_approval` | civiqs | 2 | yes |
+| `civiqs_net_approval_rep` | civiqs | **0** | no (§9) |
 | `generic_ballot_margin` | derived in `refresh` | 1 | no |
 
-Two registered series carry no rounds. They widen the backtest only.
+Three registered series carry no rounds. They widen the backtest only — and
+note that widening the backtest is not free once a model runs it (§9).
 
 ### 1.4 The 13 rounds, all currently `open`
 
 | lock (UTC) | release | round | series | scoreable |
 |---|---|---|---|---|
 | **08-12** | 08-14 | `umich-2026-08-prelim` | umich_sentiment | ✅ |
-| 08-12 | 08-14 | `civiqs-2026-w33-approval` | civiqs_net_approval | ❌ |
+| 08-12 | 08-14 | `civiqs-2026-w33-approval` | civiqs_net_approval | ✅ (§9) |
 | 08-15 | 08-17 | `mc-2026-w34-approval` | mc_approval | ✅ |
 | 08-16 | 08-18 | `yougov-2026-w34-approval` | yougov_approval | ✅ |
 | 08-16 | 08-18 | `yougov-2026-w34-generic` | yougov_generic_margin | ✅ |
-| 08-19 | 08-21 | `civiqs-2026-w34-approval` | civiqs_net_approval | ❌ |
+| 08-19 | 08-21 | `civiqs-2026-w34-approval` | civiqs_net_approval | ✅ (§9) |
 | 08-22 | 08-24 | `mc-2026-w35-approval` | mc_approval | ✅ |
 | 08-23 | 08-25 | `yougov-2026-w35-approval` | yougov_approval | ✅ |
 | 08-23 | 08-25 | `yougov-2026-w35-generic` | yougov_generic_margin | ✅ |
@@ -65,7 +68,7 @@ Two registered series carry no rounds. They widen the backtest only.
 | 10-30 | 12-01 | `midterm-2026-house-margin` | generic_ballot_margin | ✅ |
 | 10-30 | 12-01 | `midterm-2026-house-seats` | house_seats | ❌ |
 
-**10 of 13 scoreable. 0 resolved so far** (nothing has released yet).
+**12 of 13 scoreable** (10 before the Civiqs adapter landed; see §9). **0 resolved so far** (nothing has released yet).
 
 ### 1.5 Subtasks — available but not in production
 
@@ -308,3 +311,145 @@ M  ssa/series.py         survey instruments for 5 series
 
 Five test suites pass. Nothing has been run against a provider from this work,
 so **nothing has been billed**.
+
+---
+
+## 9. Civiqs — wired up, and why it needed an archive first
+
+Added 2026-08-12. Supersedes the "dead" row in §1.2 and the two ❌ in §1.4.
+
+### What Civiqs is
+
+Civiqs publishes ~24 national trackers of **registered voters** — Trump
+approval and favourability, the economy, inflation, abortion, guns, right
+track/wrong track, the ACA, four separate AI-attitude questions — each as a
+daily series back to 2025-01-20, filterable by age, education, gender, party,
+race and home state. There is no API. The numbers are the Remix loader payload
+embedded in the page HTML, under the route key `routes/_app.results_.$question`;
+`ssa/adapters/civiqs.py` brace-scans it out and parses it. Subgroup filters are
+query parameters keyed on the demographic's **label** (`?party=Republican`),
+not its predictor id (`?party_3=Republican`, silently ignored — it returns the
+national series under a subgroup's name, so a filtered fetch is verified rather
+than trusted).
+
+### Raw waves vs a modeled tracker — the distinction that shaped the design
+
+Every other source in this repository publishes **survey waves**. YouGov and
+Morning Consult field a sample, weight it once, publish a number, and that
+number is true forever. Michigan does the same monthly. A wave carries real
+publication noise: `scoring.noise_floor` measures 0.78 points on the YouGov
+topline, which is the floor no forecaster can beat because the respondents have
+not been interviewed yet when the round locks.
+
+Civiqs is a **modeled tracker**: MRP over a rolling panel (123k cumulative
+interviews), emitting a smoothed daily estimate. Two consequences, and both are
+load-bearing:
+
+1. **It revises its entire published history every night.** The number printed
+   against 2025-06-06 today is not the number that was printed against
+   2025-06-06 in June 2025. A round scored against the live page would find
+   every point of its frozen history moved by resolution time, and
+   `ssa.resolve` — which answers a round with the first `(date, value)` pair the
+   freeze did not contain — would hand back a **revised old point** as this
+   week's release. `tests/test_civiqs.py` demonstrates exactly that failure.
+2. **There is almost no noise to beat.** Mean day-to-day change is 0.069
+   points; `noise_floor` on the daily series returns m = 0.000. On the Friday
+   series it is m = 0.10 against 0.78 for YouGov. Persistence is a very strong
+   baseline here. That is a true fact about a smoothed target, not something to
+   compensate for, and nothing in the pipeline tries to.
+
+### The archive — `civiqs/`, committed
+
+The paper already claims these rounds "resolve against the value displayed at
+resolution time, preserved in our own archived snapshot". That archive did not
+exist. It does now: one immutable JSON file per `(tracker, filters, fetch
+date)` under `civiqs/`, carrying Civiqs's own provenance (`run_id`,
+`job_finish_time`, `end_date`, `sample_size`) plus the series it saw. The first
+snapshot of a key is written in full (29 KB, 569 days) and is the backfill base;
+later ones keep a 60-day tail, which leaves sixty overlapping vintages of every
+day and makes the nightly revisions measurable from the repository.
+
+**A point dated `d` is the freshest reading available on `d`, according to the
+earliest snapshot taken on or after `d`.** For a day we archived that is
+literally the number on the dashboard when we looked; for a day before the
+archive began it is that day's estimate as recorded in our first snapshot, which
+is the only record that exists. Once written a point never changes, because
+snapshots are only ever added forward in time.
+
+The archive doubles as the fetch cache. Each page is ~2 MB and the host
+rate-limits (bursts return `SSLError(SSLZeroReturnError)`), so requests are
+serialized at 0.6 s spacing with backoff, and once a day's snapshot exists that
+day costs no further requests. The six-hourly cron therefore fetches each
+tracker **once a day**, not four times.
+
+### Sampled on Fridays, deliberately
+
+Both Civiqs rounds ask for a **Friday** dashboard value against a **Wednesday**
+lock. `ssa.resolve` answers a round with the first observation after the freeze,
+so on a *daily* series that is Thursday's number — a wrong resolution, which
+`resolve.py`'s own docstring rates worse than a missing one. The registered
+series are sampled on Fridays so the resolver's "next release" is the release
+the round names. It also puts the persistence null a week back rather than a day
+back, which is the only honest null for a week-ahead question. A round asking
+about another weekday needs its own series id. **`ssa/resolve.py` was not
+touched.**
+
+### Series registered: 2
+
+| series | filter | Friday points | rounds | survey instrument |
+|---|---|---|---|---|
+| `civiqs_net_approval` | — (national) | 81 | 2 | yes (`net_approve_share`) |
+| `civiqs_net_approval_rep` | `party=Republican` | 81 | 0 | no — panel cannot be cut by party |
+
+Both run 2025-01-24 → 2026-08-07 and are net points (approve − disapprove).
+`civiqs-2026-w33-approval` and `civiqs-2026-w34-approval` now build baselines
+(persistence −23.9 ± 1.5) and are **scoreable**, taking the season from 10/13 to
+12/13.
+
+Six candidate cells were measured on their Friday net series over 81 weeks
+before any were registered — `mad` is mean absolute week-over-week change,
+`corr` is the correlation of weekly changes with the national series:
+
+| cell | m (noise floor) | mad | range | corr(national) | registered |
+|---|---|---|---|---|---|
+| national | 0.102 | 0.578 | 18.6 | 1.000 | ✅ |
+| `party=Republican` | 0.000 | 0.490 | 20.2 | **0.752** | ✅ |
+| `party=Democrat` | 0.019 | **0.092** | 3.3 | 0.810 | ❌ floor-bound |
+| `party=Independent` | 0.367 | 1.359 | 33.7 | **0.968** | ❌ echoes national |
+| `age=18-34` | 0.104 | 0.604 | 26.3 | **0.978** | ❌ echoes national |
+| `age=65+` | 0.189 | 0.517 | 9.6 | 0.877 | ❌ second cut, weak case |
+
+Every cell clears its own noise floor trivially — `m` is near zero everywhere,
+because this is a smoother's output — so "signal above noise" does not
+discriminate here the way it does on real waves. Two other tests do. Democrats
+sit at 1.5% approve with 3.3 points of range in nineteen months and 0.09 points
+of weekly movement: a perfect forecast beats persistence by under a tenth of a
+point, so there is no question there. Independents and under-35s move with the
+national number at 0.97+, so registering them scores one quantity twice and
+doubles its weight in every average — the same reason `Adults` is absent from
+the YouGov cells. Republicans are the exception: real amplitude and the *lowest*
+correlation with the national line of the six, which makes them the one cut that
+tests whether a model has the coalition rather than just the level.
+
+`civiqs_approval` (percent approve) was also considered and **rejected**: its
+weekly changes correlate with net at 0.992 and it regresses onto net as
+`net ≈ 1.81 × approve + c` with a 0.20-point residual sd. It is the same
+question in different units.
+
+### Consequences the maintainer has to decide on
+
+- **The LLM backtest bills more now.** `tools/run_model_backtest.py` takes its
+  target list straight from `series_registry.SERIES`, so these two series enter
+  the billed backtest automatically and there is no `--series` flag to exclude
+  them. Roughly ~30–40 post-cutoff Fridays × 2 series × entrants of additional
+  calls. **Decide before the next `--execute`.**
+- **`civiqs/` must be committed**, and the archive only starts 2026-08-12.
+  Everything before that is backfilled from the first snapshot and therefore
+  carries whatever revisions Civiqs had already applied by then. That boundary
+  is knowable from the directory listing and from `civiqs.archive_start()`.
+- **`ssa/personas.py` gained one aggregator**, `net_approve_share`, because a
+  net is a difference rather than a share and the persona arm had no way to
+  express one. Without it the Civiqs rounds could not run that arm at all.
+- **A refresh has to run before 22:00 UTC today** for
+  `civiqs-2026-w33-approval` to get a lock snapshot; the 12:17 and 18:17 crons
+  both qualify.

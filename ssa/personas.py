@@ -185,6 +185,24 @@ def approve_share(answers, weights, item="approval", positive="approve"):
     return 100.0 * got.get(positive, 0.0) / total
 
 
+def net_approve_share(answers, weights, item="approval",
+                      positive="approve", negative="disapprove"):
+    """Approve minus disapprove, in points, over everyone asked.
+
+    The Civiqs trackers publish a net rather than a share, and a net is not a
+    share of anything -- it is a difference of two, so it has to be aggregated
+    as one quantity rather than by scoring `approve_share` twice and
+    subtracting. Both terms use the same denominator, which is why the third
+    option ("neither approve nor disapprove") has to be offered to the
+    respondent even though it never appears in the answer: leave it out and its
+    five percent redistributes across the other two and widens the net.
+    """
+    got, total = _tally(answers, weights, item)
+    if total <= 0:
+        raise ValueError("no usable answers to aggregate")
+    return 100.0 * (got.get(positive, 0.0) - got.get(negative, 0.0)) / total
+
+
 def party_margin(answers, weights, item="vote", left="Democrat", right="Republican"):
     """Democratic minus Republican, in points, over everyone asked."""
     got, total = _tally(answers, weights, item)
@@ -249,6 +267,7 @@ AGGREGATORS = {
     "approve_share_4pt": approve_share_4pt,
     "strong_share": strong_share,
     "weak_share": weak_share,
+    "net_approve_share": net_approve_share,
     "party_margin": party_margin,
     "umich_ics": umich_ics,
 }

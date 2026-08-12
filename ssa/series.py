@@ -18,6 +18,7 @@ filters were implicit in adapter code, which had two consequences worth naming:
 
 Adding a tracker means adding a row here, and nothing else.
 """
+from .adapters import civiqs as civiqs_adapter
 from .adapters import fredcsv
 from .adapters import silverbulletin as sb
 from .adapters import umich as umich_adapter
@@ -449,6 +450,156 @@ SERIES["mc_generic_margin"] = {
 }
 
 
+# --- Civiqs -----------------------------------------------------------------
+#
+# The first *modeled* tracker in the registry, and it does not behave like the
+# others. Everything above is a survey wave: a fresh sample, weighted once,
+# published once, true forever. Civiqs runs an MRP model over a rolling panel
+# and republishes its whole daily history every night, so the number printed
+# against a past date is not the number that was printed against it at the time.
+# Three registration decisions follow from that, and none of them are cosmetic.
+#
+# **Read from the archive, never from the live page.** `civiqs.as_displayed`
+# builds each point from `civiqs/`, the dated snapshots the adapter writes on
+# every fetch. Taken live, every point of a round's frozen history would have
+# changed by resolution time, and `ssa.resolve` -- which answers a round with
+# the first (date, value) pair the freeze did not contain -- would hand back a
+# revised *old* point as this week's release.
+#
+# **Sampled on Fridays, not daily.** Both season rounds ask for a Friday
+# dashboard value against a Wednesday lock. On a daily series the first
+# observation after the freeze is Thursday's, so the resolver would answer a
+# Friday question with Thursday's number -- a wrong resolution, which the
+# resolver's own docstring rates worse than a missing one. Sampling at the
+# cadence the question asks about also puts the persistence null a week back
+# rather than a day back, which is the only honest null for a week-ahead
+# question. A round asking about some other weekday needs its own series id.
+#
+# **Persistence is nearly unbeatable here and that is a true fact about the
+# target, not something to correct.** Measured on the Friday net series:
+# `scoring.noise_floor` returns m = 0.10 points against 0.78 on the YouGov
+# topline, because a smoother's output carries no publication noise. Mean
+# week-over-week change is 0.58 points. Entrants will find it hard to beat
+# "last Friday's number", and the arena's claim is that its null is honest.
+_CIVIQS_APPROVAL = "approve_president_trump_2025"
+
+SERIES["civiqs_net_approval"] = {
+    "label": "Civiqs Trump net approval",
+    "tracker": "civiqs",
+    "source": "civiqs",
+    "civiqs": {"name": _CIVIQS_APPROVAL, "net": True, "weekday": 4},
+    "value": "value",
+    "unit": "net points (approve minus disapprove)",
+    "cadence": ("daily model output, read and archived every day; the series "
+                "scored here is the Friday reading"),
+    "question": ("Civiqs daily tracker: Donald Trump's net job approval "
+                 "(percent approve minus percent disapprove) among US "
+                 "registered voters, as the dashboard shows it on Friday"),
+    "methodology": (
+        "Civiqs is a modeled tracker, not a survey wave: an MRP model over a "
+        "rolling online panel of registered voters (roughly 123,000 cumulative "
+        "interviews), publishing a smoothed daily estimate. Two things follow. "
+        "The published history is revised nightly, so the arena scores against "
+        "its own dated snapshot of what the dashboard displayed, not against "
+        "whatever Civiqs says later. And the series barely wobbles -- mean "
+        "day-to-day change is 0.07 points and mean week-to-week change 0.58 -- "
+        "so almost all of a week's movement is real signal rather than sampling "
+        "noise, and last Friday's number is a very strong guess. The dashboard "
+        "runs about a day behind: the value shown on Friday is the model's "
+        "estimate for Thursday. Approve and disapprove do not sum to 100; "
+        "roughly five percent say neither."),
+    "survey": {
+        "population": "RV",
+        "items": [{
+            "key": "approval",
+            # Civiqs's own `question_body`, verbatim, including the third
+            # option. Its "neither" share is small (5.3) but it moves, and a
+            # two-option instrument would push those respondents into approve
+            # or disapprove and bias the net by several points.
+            "text": ("Do you approve or disapprove of the way Donald Trump is "
+                     "handling his job as president?"),
+            "options": ["approve", "disapprove",
+                        "neither approve nor disapprove"],
+        }],
+        "aggregate": "net_approve_share",
+    },
+}
+
+# --- which Civiqs subgroups are worth a series ------------------------------
+#
+# A subgroup is a separate ~2 MB page fetch every day, forever, from a free
+# site that rate-limits -- so unlike the Silver Bulletin cuts, which are free
+# once the file is on disk, each one here has a standing cost and has to earn
+# it. Six candidates were measured on their Friday net series over 81 weeks
+# before any of them were registered (mad = mean absolute week-over-week
+# change; corr = correlation of weekly changes with the national series):
+#
+#     cell             m      mad    range    corr(national)
+#     national       0.102   0.578    18.6      1.000
+#     party=Rep      0.000   0.490    20.2      0.752
+#     party=Dem      0.019   0.092     3.3      0.810
+#     party=Ind      0.367   1.359    33.7      0.968
+#     age=18-34      0.104   0.604    26.3      0.978
+#     age=65+        0.189   0.517     9.6      0.877
+#
+# Every cell clears its own noise floor easily -- m is near zero everywhere,
+# because this is a smoother's output rather than a sample -- so "signal above
+# noise" does not discriminate here the way it does on real waves. Two other
+# tests do, and between them they reject four of the five:
+#
+# - **Democrats are floor-bound.** 1.5 percent approve, 3.3 points of total
+#   range in nineteen months, 0.09 points of weekly movement. A perfect
+#   forecast beats persistence by less than a tenth of a point. There is no
+#   question there to ask.
+# - **Independents and under-35s are the national series in a wig.** Their
+#   weekly changes correlate with the national number at 0.968 and 0.978.
+#   Independents swing the national figure, so registering them scores one
+#   quantity twice and doubles its weight in every average -- the same reason
+#   `Adults` is absent from the YouGov cells above. 65+ at 0.877 is a milder
+#   case of it, and is a second cut of the same model besides.
+#
+# Republicans are the exception and the only cell registered: real amplitude
+# (20.2 points of range, 0.49 a week) and the *lowest* correlation with the
+# national series of the six, 0.752 -- it is the one cut that moves on its own
+# rather than tracking the topline. That is the structural test worth paying a
+# daily fetch for: a model that has learned the level but not the coalition
+# gets the national number right and this one wrong.
+#
+# Note also what is *not* here: the other 23 Civiqs trackers (the economy,
+# abortion, guns, four AI questions). They are one fetch each and genuinely
+# independent constructs, so they are the better place to spend the next fetch
+# budget -- but no round asks for them yet, and a series nobody forecasts is
+# archive churn.
+SERIES["civiqs_net_approval_rep"] = {
+    "label": "Civiqs Trump net approval, Republicans",
+    "tracker": "civiqs",
+    "source": "civiqs",
+    "civiqs": {"name": _CIVIQS_APPROVAL, "filters": {"party": "Republican"},
+               "net": True, "weekday": 4},
+    "value": "value",
+    "unit": "net points (approve minus disapprove)",
+    "cadence": "daily model output, read and archived every day; scored Fridays",
+    "question": ("Civiqs daily tracker: Donald Trump's net job approval "
+                 "(percent approve minus percent disapprove) among US "
+                 "registered voters who identify as Republicans, as the "
+                 "dashboard shows it on Friday"),
+    "methodology": (
+        "the same modeled tracker as the national Civiqs series, filtered to "
+        "self-identified Republicans. It is the one demographic cut here that "
+        "does not simply echo the national line: its weekly changes correlate "
+        "with the national series at 0.75, against 0.97 for independents. It "
+        "sits far higher in level (net +70 against -24 nationally) and it can "
+        "fall while the national number holds, because the national number is "
+        "moved mostly by independents."),
+    # No `survey` instrument, deliberately. `personas.weights_for` reweights the
+    # panel by population (adults, registered, likely voters) and has no way to
+    # express "Republicans only", so a persona run on this series would put the
+    # question to a national panel and report the answer as a party subgroup.
+    # `series.survey()` returning None makes the persona arm refuse the series
+    # by name, which is the honest outcome until the panel can be cut by party.
+}
+
+
 def describe(series_id):
     """The question and methodology text an entrant is entitled to see."""
     s = SERIES[series_id]
@@ -480,6 +631,16 @@ def build_all(sources=None):
         src["sb_generic"] = sb.fetch(sb.GENERIC_URL)
     if "umich" in need and "umich" not in src:
         src["umich"] = michigan_history()
+    # Civiqs is the one source with no single file to prefetch: every tracker
+    # and every subgroup is its own ~2 MB page. So `src["civiqs"]` is not a
+    # payload but a per-series override map -- `{series_id: [{date, value}]}` --
+    # which is what tests inject to stay off the network. Anything not in it is
+    # built by the adapter, which serves the day's archive when one exists and
+    # fetches at most once per key per day when it does not. Registering more
+    # Civiqs series therefore costs at most one request each per day, not one
+    # per series per refresh.
+    if "civiqs" in need and "civiqs" not in src:
+        src["civiqs"] = {}
 
     out = {}
     for sid, spec in SERIES.items():
@@ -492,6 +653,14 @@ def build_all(sources=None):
         elif spec["source"] == "sb_generic":
             recs = sb.generic_ballot_polls(rows=src["sb_generic"], **f)
             out[sid] = sb.to_series(recs, spec["value"])
+        elif spec["source"] == "civiqs":
+            cfg = spec["civiqs"]
+            given = src["civiqs"].get(sid)
+            out[sid] = list(given) if given is not None else \
+                civiqs_adapter.as_displayed(
+                    cfg["name"], cfg.get("filters"),
+                    choice=cfg.get("choice"), net=cfg.get("net", False),
+                    weekday=cfg.get("weekday"))
         else:
             raise ValueError(f"{sid}: unknown source {spec['source']}")
         if not out[sid]:
