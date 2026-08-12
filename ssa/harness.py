@@ -329,19 +329,40 @@ VARIANT_SUFFIX = {"recent10": "", "none": "-zeroshot",
                   "persona": "-persona", "superfc": "-superfc",
                   "news": "-news", "web": "-web"}
 
-# Which models run the elicitation conditions, and it is deliberately not all
-# of them. `persona` costs one call per respondent per round -- twenty-four
-# times a normal entrant -- so switching every model on multiplies a refresh by
-# an order of magnitude. This list is the cost dial; tools/estimate_arms.py
-# prints what any given setting comes to before anything is spent.
-ELICITATION_MODELS = ("claude-opus", "gpt-5.6-terra", "gemini-pro")
+# Which models run the elicitation conditions. Every active model, because the
+# whole matrix costs about $43 for a full season and a three-model subset would
+# leave the axis unable to say whether an effect is real or one vendor's quirk.
+#
+# The reason to narrow it is cost, not correctness: `persona` is one call per
+# simulated respondent per round, roughly two hundred times a normal entrant,
+# so it dominates the bill. Narrow this tuple to trade coverage for money, and
+# run tools/estimate_arms.py first -- it calls nothing and prints the total.
+#
+# The web condition self-restricts to WEB_CAPABLE regardless of what is listed
+# here, so six models simply have no web arm.
+# Defined as a function rather than a constant because PENDING_ACTIVATION is
+# declared further down; a constant here read it before it existed.
+def elicitation_models():
+    return tuple(active_models())
 
 
-def elicitation_entrants(variants=ELICITATION_VARIANTS,
-                         models=ELICITATION_MODELS):
-    """(entrant_id, model_key, variant) for the how-it-is-asked conditions."""
-    return [(m + VARIANT_SUFFIX[v], m, v)
-            for v in variants for m in models if m in MODELS]
+def elicitation_entrants(variants=ELICITATION_VARIANTS, models=None):
+    """(entrant_id, model_key, variant) for the how-it-is-asked conditions.
+
+    The web condition is emitted only for models whose vendor hosts a search
+    tool, so a roster never contains an entrant that is guaranteed to fail.
+    Everything else runs anywhere.
+    """
+    models = elicitation_models() if models is None else models
+    out = []
+    for v in variants:
+        for m in models:
+            if m not in MODELS:
+                continue
+            if v in WEB_VARIANTS and m not in WEB_CAPABLE:
+                continue
+            out.append((m + VARIANT_SUFFIX[v], m, v))
+    return out
 
 
 # Entered in MODELS but not run: the gateway rejects the prefixed namespace
@@ -585,6 +606,23 @@ WEB_TOOLS = {
     "gemini": {"tools": [{"google_search": {}}]},
 }
 
+# Hosted search is a *vendor* feature, not a property of the wire protocol, and
+# conflating the two is a trap this nearly fell into: Grok, both Qwens, both
+# DeepSeeks and GLM all speak OpenAI-compatible chat completions, so dispatching
+# on `api` alone would have sent OpenAI's hosted web_search tool to five hosts
+# that do not serve it. The good outcome there is a 400. The bad one is a host
+# that accepts unknown fields and ignores them, which yields a "web" entrant
+# whose prompt and answer are identical to its closed-book twin -- a published
+# comparison between two arms that were never different.
+#
+# So the capability is declared per model, and a model without it is refused by
+# name rather than attempted.
+WEB_CAPABLE = frozenset({
+    "gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6-terra",       # OpenAI hosted tool
+    "claude-opus", "claude-opus-5", "claude-sonnet", "claude-fable",
+    "gemini-pro", "gemini-flash",                          # google_search
+})
+
 
 def call_provider(entrant, prompt, with_usage=False, variant=None):
     """One completion.
@@ -609,10 +647,14 @@ def call_provider(entrant, prompt, with_usage=False, variant=None):
     if fn is None:
         raise ValueError("unknown api: " + api)
     if variant in WEB_VARIANTS:
-        extra = WEB_TOOLS.get(api)
+        extra = WEB_TOOLS.get(api) if model in WEB_CAPABLE else None
         if extra is None:
-            raise ValueError(f"{api} has no configured search tool, so "
-                             f"{entrant} cannot run the web condition")
+            raise ValueError(
+                f"{entrant} ({model}) has no vendor-hosted search, so it "
+                "cannot run the web condition. Speaking the OpenAI protocol is "
+                "not the same as serving OpenAI's tools; add the model to "
+                "WEB_CAPABLE only once its own endpoint is confirmed to run "
+                "the search server-side.")
         cfg = dict(cfg)
         cfg["params"] = dict(cfg.get("params") or {}, **extra)
     with _provider_slot(entrant):

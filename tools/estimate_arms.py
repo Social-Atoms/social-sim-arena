@@ -65,7 +65,7 @@ def open_rounds():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--replicates", type=int, default=personas.REPLICATES)
-    ap.add_argument("--models", default=",".join(harness.ELICITATION_MODELS))
+    ap.add_argument("--models", default=",".join(harness.elicitation_models()))
     args = ap.parse_args()
     models = [m.strip() for m in args.models.split(",") if m.strip()]
     unknown = [m for m in models if m not in harness.MODELS]
@@ -92,6 +92,8 @@ def main():
     total = 0.0
     for m in models:
         for cond in ("superfc", "news", "web"):
+            if cond == "web" and m not in harness.WEB_CAPABLE:
+                continue          # no vendor-hosted search; no such entrant
             n = n_rounds
             usd = price(m, NEWS_TOKENS if cond == "news" else FORECAST_TOKENS, n)
             total += usd

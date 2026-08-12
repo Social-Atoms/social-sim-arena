@@ -145,6 +145,33 @@ def test_web_search_is_refused_wherever_the_answer_is_already_published():
         assert "already published" in str(e), e
 
 
+def test_web_is_refused_for_models_whose_vendor_hosts_no_search():
+    """Speaking the OpenAI protocol is not the same as serving OpenAI's tools.
+    Five hosts here are OpenAI-compatible and have no hosted search; sending
+    them the tool would 400, or worse, be ignored -- which would publish a
+    'web' arm identical to its closed-book twin."""
+    for m in ("grok", "qwen-3.7", "deepseek-pro", "glm"):
+        assert m not in harness.WEB_CAPABLE, m
+        assert harness.MODELS[m]["api"] == "openai", "the trap is protocol vs vendor"
+    for m in ("gpt-5.6-terra", "claude-opus", "gemini-pro"):
+        assert m in harness.WEB_CAPABLE, m
+
+    # such a model never appears in a roster ...
+    ids = [e for e, _, v in harness.elicitation_entrants(
+        variants=("web",), models=harness.active_models())]
+    assert "grok-web" not in ids and "glm-web" not in ids
+    assert "claude-opus-web" in ids
+
+    # ... and is refused by name if asked for directly
+    import os
+    os.environ.setdefault("DEEPSEEK_API_KEY", "x")
+    try:
+        harness.call_provider("deepseek-pro", "p", variant="web")
+        assert False, "must refuse"
+    except ValueError as e:
+        assert "vendor-hosted search" in str(e), e
+
+
 def test_gemini_puts_tools_at_the_body_root():
     """Nested under generationConfig they are accepted and ignored, which would
     produce a 'web' condition that never searched."""
