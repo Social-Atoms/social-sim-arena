@@ -362,7 +362,10 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
         with news_lock:
             if rid not in news_cache:
                 from .adapters import newsdigest
-                news_cache[rid] = newsdigest.digest(r["lock_at"])
+                # for_round reads the committed archive when it is there, so a
+                # CI run uses the corpus prepared and reviewed locally rather
+                # than re-fetching and hoping the pages still read the same.
+                news_cache[rid] = newsdigest.for_round(rid, r["lock_at"])
             return news_cache[rid]
 
     def run_job(job):

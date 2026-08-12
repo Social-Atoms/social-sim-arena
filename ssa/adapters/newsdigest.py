@@ -39,7 +39,7 @@ import os
 import re
 import threading
 import time
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import requests
 
@@ -194,12 +194,27 @@ def parse_items(text, categories=CATEGORIES):
 
 # --- archive ----------------------------------------------------------------
 
-def archive_path(d):
-    return os.path.join(ARCHIVE, f"{d.isoformat()}.json")
+# The cache is keyed by (page date, asof), not by page date alone. The same
+# day's page has a different revision at each lock, so a date-only key would
+# let one round's corpus overwrite another's and the archive would stop being
+# a record of what was actually sent. Cheap to store; impossible to reconstruct
+# afterwards if it is wrong.
+PAGES = os.path.join(ARCHIVE, "pages")
+ROUNDS = os.path.join(ARCHIVE, "rounds")
 
 
-def load_archived(d):
-    p = archive_path(d)
+def _window_closed(asof, now=None):
+    """True once `asof` is in the past, i.e. the corpus for it is final."""
+    return (now or datetime.now(timezone.utc)) >= datetime.strptime(
+        asof, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+
+
+def archive_path(d, asof):
+    return os.path.join(PAGES, f"{d.isoformat()}.asof-{asof[:10]}.json")
+
+
+def load_archived(d, asof):
+    p = archive_path(d, asof)
     if not os.path.exists(p):
         return None
     try:
@@ -209,9 +224,9 @@ def load_archived(d):
         return None
 
 
-def save_archived(d, body):
-    os.makedirs(ARCHIVE, exist_ok=True)
-    with open(archive_path(d), "w") as f:
+def save_archived(d, asof, body):
+    os.makedirs(PAGES, exist_ok=True)
+    with open(archive_path(d, asof), "w") as f:
         json.dump(body, f, indent=2, sort_keys=True, ensure_ascii=False)
         f.write("\n")
 
@@ -225,7 +240,7 @@ def day(d, asof, categories=CATEGORIES, use_archive=True):
     auditable rather than merely asserted.
     """
     if use_archive:
-        got = load_archived(d)
+        got = load_archived(d, asof)
         if got and got.get("asof") == asof:
             return got
     rev = revision_as_of(page_title(d), asof)
@@ -238,8 +253,12 @@ def day(d, asof, categories=CATEGORIES, use_archive=True):
         body = {"date": d.isoformat(), "asof": asof, "revid": rev["revid"],
                 "revision_timestamp": rev["timestamp"],
                 "items": [{"category": c, "text": t} for c, t in items]}
-    if use_archive:
-        save_archived(d, body)
+    # Same rule as for_round: only persist once the asof is in the past. A
+    # page fetched now for a lock ten days out records today's revision, not
+    # the one that will exist at the lock, and caching it would freeze the
+    # wrong answer into the archive for good.
+    if use_archive and _window_closed(asof):
+        save_archived(d, asof, body)
     return body
 
 
@@ -275,3 +294,50 @@ def digest(asof, days=DEFAULT_WINDOW_DAYS, max_items=DEFAULT_MAX_ITEMS,
             out.append("\n".join(lines))
     return {"text": "\n".join(out), "days": days, "asof": asof,
             "days_missing": missing}
+
+
+def for_round(round_id, asof, days=DEFAULT_WINDOW_DAYS, now=None, **kw):
+    """The digest for one round, archived as the record of what was sent.
+
+    The per-day files are a fetch cache; this is the audit record. One file per
+    round holding the exact text every entrant in that round saw, plus the
+    revision id behind each day, so a reader can reconstruct any prompt without
+    trusting either Wikipedia's current state or ours.
+
+    **A digest is only archived once its window has closed.** The window is the
+    fourteen days before the lock, so before the lock most of it has not
+    happened: pre-fetching a round that locks in ten days produced six days of
+    news out of fourteen, and archiving that would have been worse than not
+    caching at all -- `for_round` serves the archive whenever the asof matches,
+    so the round would have used the truncated copy at lock time instead of the
+    corpus that actually existed by then. Partial digests are therefore
+    computed and returned but never written, and a stored record that is
+    somehow incomplete is ignored and refetched.
+    """
+    os.makedirs(ROUNDS, exist_ok=True)
+    path = os.path.join(ROUNDS, f"{round_id}.json")
+    closed = _window_closed(asof, now)
+    if os.path.exists(path):
+        try:
+            with open(path) as f:
+                got = json.load(f)
+            if got.get("asof") == asof and got.get("window_closed"):
+                return got
+        except (OSError, json.JSONDecodeError):
+            pass
+    out = digest(asof, days=days, **kw)
+    out["window_closed"] = closed
+    end = date.fromisoformat(asof[:10])
+    sources = []
+    for i in range(days, 0, -1):
+        d = end - timedelta(days=i)
+        body = load_archived(d, asof) or {}
+        sources.append({"date": d.isoformat(), "revid": body.get("revid"),
+                        "revision_timestamp": body.get("revision_timestamp")})
+    out["round_id"] = round_id
+    out["sources"] = sources
+    if closed:
+        with open(path, "w") as f:
+            json.dump(out, f, indent=2, ensure_ascii=False, sort_keys=True)
+            f.write("\n")
+    return out

@@ -11,6 +11,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ssa import crosstab, scoring
+from ssa.adapters import newsdigest
 
 
 def _series(rows):
@@ -122,6 +123,20 @@ def test_noise_is_published_per_cell_with_a_forecastable_flag():
     nb = crosstab.noise_by_cell(flip, crosstab.CELLS[:1])
     assert nb[cell]["forecastable"] is False, nb
     assert nb[cell]["noise"] > nb[cell]["movement"]
+
+
+def test_a_digest_for_a_lock_that_has_not_happened_is_never_archived():
+    """The window is the fourteen days before the lock, so before the lock most
+    of it has not happened. Pre-fetching a round ten days out produced six days
+    of fourteen; archiving that would be worse than no cache, because for_round
+    serves the archive whenever the asof matches and the round would then use
+    the truncated copy at lock time instead of the corpus that existed by then."""
+    from datetime import datetime, timezone
+    now = datetime(2026, 8, 12, 10, 0, tzinfo=timezone.utc)
+    assert not newsdigest._window_closed("2026-08-22T14:00:00Z", now)
+    assert newsdigest._window_closed("2026-08-01T14:00:00Z", now)
+    # exactly at the lock counts as closed
+    assert newsdigest._window_closed("2026-08-12T10:00:00Z", now)
 
 
 def test_month_end():
