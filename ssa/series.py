@@ -284,6 +284,40 @@ _CELLS = [
      "performance"),
 ]
 
+# --- independent trackers -------------------------------------------------
+#
+# The cells above are more *cuts*, not more *tasks*: eight of them come out of
+# one YouGov wave and six out of one Morning Consult wave, so their errors share
+# a sample, a weighting scheme and a house effect. Scored as if independent they
+# would inflate the effective number of observations and make every average look
+# better resolved than it is.
+#
+# Independence comes from a different fielding operation, not a different slice
+# of the same one. These four are separate houses asking the same question of
+# their own samples, with their own populations and their own biases -- which is
+# exactly the comparison worth making: a model that has learned the *construct*
+# should track all of them, while a model that has memorised one series should
+# not. House effects are already first-class here (resolution runs through
+# average.adjusted_average), so disagreement between them is signal, not noise.
+#
+# Rasmussen is the sharpest of the four and the most awkward: daily, likely
+# voters, and the strongest house lean in the file. Registering it is a
+# deliberate stress test of whether the arena's house-effect handling survives
+# contact with a house that really does differ.
+_HOUSES = [
+    # id                    pollster              pop   cadence         note
+    ("rasmussen_approval",  "Rasmussen Reports",  "LV", "daily",
+     "daily tracking poll of likely voters; consistently the most "
+     "Republican-leaning house in the field, by several points"),
+    ("rmg_approval",        "RMG Research",       "RV", "weekly",
+     "weekly online survey of registered voters"),
+    ("ipsos_approval",      "Ipsos",              "A",  "roughly weekly",
+     "probability-based online panel of US adults"),
+    ("navigator_approval",  "Global Strategy Group/GBAO (Navigator Research)",
+     "RV", "roughly every three weeks",
+     "Democratic-aligned research collaborative; registered voters"),
+]
+
 _POP_NAME = {"A": "US adults", "RV": "US registered voters", "LV": "likely voters"}
 
 for _sid, _pollster, _sub, _pop, _asks in _CELLS:
@@ -320,6 +354,67 @@ for _sid, _pollster, _sub, _pop, _asks in _CELLS:
                           "approve_share_4pt"),
         },
     }
+
+for _sid, _pollster, _pop, _cadence, _note in _HOUSES:
+    SERIES[_sid] = {
+        "label": f"{_pollster.split('/')[0]} Trump approval",
+        "tracker": _sid,
+        "source": "sb_approval",
+        "filters": {"subgroup": "All polls", "pollster": _pollster,
+                    "population": _pop},
+        "value": "approve", "unit": "% approve",
+        "cadence": _cadence,
+        "question": (f"{_pollster.split('/')[0]}: percent of "
+                     f"{_POP_NAME[_pop]} who approve of Donald Trump's job "
+                     f"performance"),
+        "methodology": (
+            f"{_note}. An independent fielding operation from the other "
+            "trackers here: its own sample, weighting and house effect, so its "
+            "level differs from theirs by more than sampling error and the "
+            "difference is a property of the house, not an error to be "
+            "averaged away"),
+        "survey": {
+            "population": _pop,
+            "items": [{
+                "key": "approval",
+                "text": ("Do you approve or disapprove of the way Donald Trump "
+                         "is handling his job as president?"),
+                "options": ["approve", "disapprove", "not sure"],
+            }],
+            "aggregate": "approve_share",
+        },
+    }
+
+# Two more independent houses on the generic ballot, for the same reason.
+for _sid, _pollster, _pop in (("ipsos_generic_margin", "Ipsos", "RV"),):
+    SERIES[_sid] = {
+        "label": f"{_pollster} generic ballot margin",
+        "tracker": _sid,
+        "source": "sb_generic",
+        "filters": {"subgroup": "All polls", "pollster": _pollster},
+        "value": "net", "unit": "net points, Democratic minus Republican",
+        "cadence": "roughly every two weeks",
+        "question": (f"{_pollster} generic congressional ballot: the Democratic "
+                     "margin (Democratic percent minus Republican percent) for "
+                     "the 2026 US House elections"),
+        "methodology": ("probability-based online panel; positive means "
+                        "Democrats lead. An independent house from the "
+                        "Economist/YouGov and Morning Consult reads of the "
+                        "same quantity"),
+        "survey": {
+            "population": _pop,
+            "items": [{
+                "key": "vote",
+                "text": ("If the election for US House of Representatives in "
+                         "your district were held today, would you vote for "
+                         "the Democratic candidate or the Republican "
+                         "candidate?"),
+                "options": ["Democrat", "Republican", "other", "not sure"],
+            }],
+            "aggregate": "party_margin",
+        },
+    }
+
 
 # A second pollster on the generic ballot. The existing generic series is
 # YouGov only; Morning Consult publishes more of them (106 polls against 80),

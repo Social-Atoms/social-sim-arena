@@ -287,9 +287,21 @@ DEFAULT_VARIANT = "recent10"
 #
 # All three see the same ten-release history as `recent10`, so any difference
 # between them is elicitation and not information.
-ELICITATION_VARIANTS = ("persona", "superfc", "news", "web")
+# `web` is written and deliberately NOT in the season. It stays out until the
+# fairness question is settled: nine of fifteen models can run it at all, so a
+# leaderboard containing it compares six models against an arm they were never
+# offered. The code, the capability table and the backtest refusal all remain
+# below, so enabling it later is adding one string to this tuple.
+ELICITATION_VARIANTS = ("persona", "superfc", "news")
 for _v in ELICITATION_VARIANTS:
     VARIANTS[_v] = 10
+
+# `web` is a working condition that is not in the season (see
+# ELICITATION_VARIANTS). It stays registered here so the code path, its
+# capability table and its backtest refusal stay live and tested rather than
+# rotting into something that has to be rediscovered; it simply produces no
+# entrants, so nothing runs it.
+VARIANTS["web"] = 10
 
 # Web search is a *prospective-only* condition, and the guard is not a
 # preference. In a live round the answer does not exist anywhere at lock time,
