@@ -30,6 +30,7 @@ Usage: tools/run_model_backtest.py (dry-run and cost estimate by default).
 """
 import concurrent.futures
 import hashlib
+from datetime import datetime, timedelta
 import json
 import os
 import threading
@@ -94,6 +95,12 @@ def pseudo_round(series, target_date):
         "cadence": meta["cadence"],
         # Releases land mid-day UTC in the live season; only the date is used.
         "release_at": target_date + "T14:00:00Z",
+        # The live season locks 48h before the release, and the news condition
+        # is built from the corpus as it stood at that instant. Without a
+        # lock_at here a backtest round would read the news pages in their
+        # present state and the condition would be reading the outcome.
+        "lock_at": (datetime.strptime(target_date, "%Y-%m-%d")
+                    - timedelta(days=2)).strftime("%Y-%m-%dT14:00:00Z"),
     }
 
 
@@ -169,7 +176,19 @@ def plan(series_map, entrants, start, warmup=WARMUP, end=None):
                 # live arena, so the backtest scores both information
                 # conditions rather than silently replaying only the default.
                 _, variant = harness.resolve(entrant)
-                prompt = harness.build_prompt(r, past, variant)
+                # Live search reads the answer here: every outcome in this
+                # window was published months ago. Refused at plan time, so
+                # the run stops before it bills rather than after it produces
+                # an unpublishable number.
+                harness.assert_prospective(variant)
+                # The news condition is safe here only because the digest is
+                # fetched by revision timestamp as of this round's lock, so it
+                # is the corpus as it read then, not as it reads now.
+                news = None
+                if variant == "news":
+                    from .adapters import newsdigest
+                    news = newsdigest.digest(r["lock_at"])
+                prompt = harness.build_prompt(r, past, variant, news=news)
                 tasks.append({
                     "entrant": entrant, "series": series,
                     "date": target["date"], "outcome": target["value"],

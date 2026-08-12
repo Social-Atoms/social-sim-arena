@@ -2,7 +2,12 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Social Sim Arena entrant registration",
   "type": "object",
-  "required": ["entrant_id", "name", "type", "method"],
+  "required": [
+    "entrant_id",
+    "name",
+    "type",
+    "method"
+  ],
   "additionalProperties": false,
   "properties": {
     "entrant_id": {
@@ -10,15 +15,45 @@
       "pattern": "^[a-z0-9][a-z0-9_.-]{1,47}$",
       "description": "Stable id. Must equal the file name without .json. Forecast files use this id."
     },
-    "name": { "type": "string", "maxLength": 80, "description": "Display name for the leaderboard." },
-    "type": { "type": "string", "enum": ["llm", "human", "firm", "baseline"] },
-    "method": { "type": "string", "maxLength": 300, "description": "One or two sentences: what generates the forecasts." },
+    "name": {
+      "type": "string",
+      "maxLength": 80,
+      "description": "Display name for the leaderboard."
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "llm",
+        "human",
+        "firm",
+        "baseline"
+      ]
+    },
+    "method": {
+      "type": "string",
+      "maxLength": 300,
+      "description": "One or two sentences: what generates the forecasts."
+    },
     "arms": {
       "type": "array",
-      "items": { "type": "string", "enum": ["web", "closed"] },
-      "description": "For LLM entrants: information-access arms you will submit under."
+      "items": {
+        "type": "string",
+        "enum": [
+          "closed",
+          "news",
+          "web"
+        ]
+      },
+      "description": "For LLM entrants: information-access arms you will submit under. 'closed' is the question plus the series history and nothing else; 'news' adds the arena's fixed, archived news digest, identical for every entrant and frozen at the lock; 'web' is live search, which is why it is prospective-only -- in a backtest the outcome is already published."
     },
-    "homepage": { "type": "string", "maxLength": 200 },
-    "contact": { "type": "string", "maxLength": 120, "description": "Email or GitHub handle. Used only to reach you about your entry." }
+    "homepage": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "contact": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Email or GitHub handle. Used only to reach you about your entry."
+    }
   }
 }

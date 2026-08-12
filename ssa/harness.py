@@ -28,6 +28,7 @@ filed forecast carries in=<hash of the prompt> in its notes; if the hash still
 matches, the existing file is kept and no API call is made. So a round costs
 one call per model per new observation, not one per refresh.
 """
+import concurrent.futures
 import hashlib
 import json
 import os
@@ -222,8 +223,92 @@ FOOTER = (
     "sd is your standard deviation in the same unit and must be greater than 0."
 )
 
+# The superforecaster protocol, transplanted from the human forecasting
+# literature: outside view before inside view, decomposition, then a pre-mortem
+# against your own answer. The point is to measure what the *process* is worth
+# on top of the model, so the steps are named and ordered rather than left to
+# "think step by step" -- an instruction that lets each model do whatever it
+# already does and measures nothing.
+SUPERFC = (
+    "Work through the following before answering, in this order.\n"
+    "1. Outside view. What is the base rate here? What has this series done "
+    "historically, how much does it move between releases, and what would a "
+    "naive extrapolation predict?\n"
+    "2. Inside view. What is specific to this release -- events, timing, "
+    "anything that would move this particular number away from the base rate? "
+    "Say how much each is worth, in the unit of the series.\n"
+    "3. Pre-mortem. Assume your answer turns out badly wrong. Write the most "
+    "likely reason, then correct for it.\n"
+    "4. Calibrate. Your sd should be wide enough that the true value falls "
+    "inside one sd about two thirds of the time. Check it against how much "
+    "this series actually moves between releases.\n"
+)
+
+# The fixed corpus, rendered into the prompt. Framed as a digest with an
+# explicit as-of, so a model knows the horizon it is reasoning over and cannot
+# mistake the absence of an event for evidence it did not happen.
+NEWS_BLOCK = (
+    "Recent world events, from the Wikipedia Current Events portal, as the "
+    "pages stood at {asof}. This is the same digest given to every entrant; "
+    "nothing after {asof} is included.\n{news}\n"
+)
+
 VARIANTS = {"none": 0, "recent10": 10}
 DEFAULT_VARIANT = "recent10"
+
+# --- the elicitation axis --------------------------------------------------
+#
+# The conditions above vary *what the model is shown*; every other live
+# benchmark varies the same thing, under names like closed-book versus
+# web-enabled. The conditions below vary *how it is asked*, holding the
+# information fixed, and that axis is the one this arena is for: in a social
+# simulation the question "does role-playing a population beat asking for a
+# number" is not a prompt-engineering detail, it is the scientific claim the
+# whole silicon-sampling literature rests on.
+#
+#   persona   the model is not asked to forecast at all. It answers the real
+#             survey instrument as each of twenty-four weighted respondents in
+#             turn, and the pollster's own arithmetic turns those answers into
+#             the number. This is what the industry actually sells, so a result
+#             either way is worth having: if it does not beat asking directly,
+#             the premise of the method is in question.
+#   superfc   asked directly, but through the human forecasting protocol --
+#             outside view first, then decomposition, then a pre-mortem. Tests
+#             what the *process* is worth, separately from the model.
+#   news      asked directly, plus a fixed news digest: the same corpus for
+#             every entrant, built from the Wikipedia Current Events pages as
+#             they stood at the lock. This is the auditable version of "give it
+#             real-world information" -- one corpus, archived, reproducible,
+#             and safe in the backtest because it is fetched by revision
+#             timestamp rather than as the pages read today.
+#   web       asked directly, with live search. Isolated from the rest because
+#             it is the only condition whose fairness cannot be audited after
+#             the fact; see WEB_VARIANTS below for why it is live-only.
+#
+# All three see the same ten-release history as `recent10`, so any difference
+# between them is elicitation and not information.
+ELICITATION_VARIANTS = ("persona", "superfc", "news", "web")
+for _v in ELICITATION_VARIANTS:
+    VARIANTS[_v] = 10
+
+# Web search is a *prospective-only* condition, and the guard is not a
+# preference. In a live round the answer does not exist anywhere at lock time,
+# so search cannot leak it. In the backtest the answer has been published for
+# months: a model searching the open web for "Michigan sentiment July 2026"
+# reads the outcome and scores perfectly, which measures retrieval, not
+# forecasting. There is no prompt that prevents this and no way to verify
+# after the fact what a model retrieved, so the backtest refuses the condition
+# outright rather than publishing a number nobody can defend.
+WEB_VARIANTS = ("web",)
+
+
+def assert_prospective(variant, where="the backtest"):
+    """Raise if `variant` may only be run on rounds whose answer is unknown."""
+    if variant in WEB_VARIANTS:
+        raise ValueError(
+            f"variant {variant!r} cannot run in {where}: the outcome is "
+            "already published, so live search reads the answer instead of "
+            "forecasting it. It is a live-round condition only.")
 
 # Season 0 runs both conditions, once per release, and scores them as separate
 # entrants -- which is what they are. `recent10` shows the last ten releases,
@@ -240,7 +325,23 @@ SEASON_VARIANTS = ("recent10", "none")
 
 # Entrant id suffix per condition. The default condition keeps the bare model
 # name so existing forecasts, entrant records and leaderboard rows stay valid.
-VARIANT_SUFFIX = {"recent10": "", "none": "-zeroshot"}
+VARIANT_SUFFIX = {"recent10": "", "none": "-zeroshot",
+                  "persona": "-persona", "superfc": "-superfc",
+                  "news": "-news", "web": "-web"}
+
+# Which models run the elicitation conditions, and it is deliberately not all
+# of them. `persona` costs one call per respondent per round -- twenty-four
+# times a normal entrant -- so switching every model on multiplies a refresh by
+# an order of magnitude. This list is the cost dial; tools/estimate_arms.py
+# prints what any given setting comes to before anything is spent.
+ELICITATION_MODELS = ("claude-opus", "gpt-5.6-terra", "gemini-pro")
+
+
+def elicitation_entrants(variants=ELICITATION_VARIANTS,
+                         models=ELICITATION_MODELS):
+    """(entrant_id, model_key, variant) for the how-it-is-asked conditions."""
+    return [(m + VARIANT_SUFFIX[v], m, v)
+            for v in variants for m in models if m in MODELS]
 
 
 # Entered in MODELS but not run: the gateway rejects the prefixed namespace
@@ -322,7 +423,7 @@ def has_key(entrant):
     return bool(os.environ.get(MODELS[model]["env"]))
 
 
-def build_prompt(r, history, variant=DEFAULT_VARIANT):
+def build_prompt(r, history, variant=DEFAULT_VARIANT, news=None):
     """The exact text an entrant sees.
 
     `history` is the strictly pre-lock series the round's baselines were built
@@ -357,7 +458,75 @@ def build_prompt(r, history, variant=DEFAULT_VARIANT):
         pts = (history or [])[-n:]
         lines = "\n".join(f"  {p['date']}: {p['value']}" for p in pts) or "  (none)"
         body = WITH_HISTORY.format(history=lines)
-    return head + body + FOOTER
+    # `web` differs from recent10 in the request, not the text: the search tool
+    # is attached per provider in call_provider. Keeping the prompt identical is
+    # what makes the comparison an information comparison.
+    protocol = SUPERFC if variant == "superfc" else ""
+    digest = ""
+    if variant == "news":
+        if not news or not news.get("text"):
+            raise ValueError(
+                "the news condition needs a digest; refusing to file it as an "
+                "ordinary forecast, which would silently make it a duplicate "
+                "of recent10 under a different entrant name")
+        digest = NEWS_BLOCK.format(asof=news["asof"], news=news["text"])
+    return head + body + digest + protocol + FOOTER
+
+
+# A respondent is being interviewed, not consulted. The framing says nothing
+# about forecasts, releases, dates or aggregates, because a persona told it is
+# feeding a prediction answers as an analyst wearing a costume -- which is the
+# very thing this condition exists to be compared against. Everything the
+# round knows and the respondent would not know is withheld here on purpose;
+# that asymmetry is the experiment, not an oversight.
+PERSONA_HEADER = (
+    "You are answering a public opinion survey as the person described below. "
+    "Answer the way that person would answer, not the way you would.\n\n"
+    "{persona}\n\n"
+    "Answer honestly and in character. Do not explain, hedge, or mention that "
+    "you are playing a role.\n"
+)
+
+PERSONA_FOOTER = (
+    "Reply with exactly one JSON object and no other text, using one of the "
+    "listed options for each key:\n{shape}"
+)
+
+
+def build_persona_prompt(persona, spec):
+    """What one simulated respondent is asked.
+
+    `spec` is the series' `survey` block: the real instrument, item by item.
+    """
+    from . import personas
+    lines, shape = [], []
+    for item in spec["items"]:
+        opts = " / ".join(item["options"])
+        lines.append(f"- {item['key']}: {item['text']}\n  Options: {opts}")
+        shape.append(f'"{item["key"]}": "<{opts}>"')
+    return (PERSONA_HEADER.format(persona=personas.describe(persona))
+            + "\nQuestions:\n" + "\n".join(lines) + "\n\n"
+            + PERSONA_FOOTER.format(shape="{" + ", ".join(shape) + "}"))
+
+
+def parse_survey_reply(text, spec):
+    """One respondent's answers, or raise. Options are matched case-insensitively
+    and unlisted answers are rejected rather than coerced -- a respondent who
+    answered something else did not answer the question, and silently mapping
+    it to the nearest option would put words in their mouth."""
+    obj = _first_json_object(text)
+    out = {}
+    for item in spec["items"]:
+        raw = obj.get(item["key"])
+        if not isinstance(raw, str):
+            raise ValueError(f"no answer for {item['key']!r} in reply")
+        match = next((o for o in item["options"]
+                      if o.lower() == raw.strip().lower()), None)
+        if match is None:
+            raise ValueError(
+                f"{item['key']}: {raw!r} is not one of {item['options']}")
+        out[item["key"]] = match
+    return out
 
 
 def call_identity(entrant):
@@ -405,15 +574,31 @@ def _provider_slot(entrant):
     return sem
 
 
-def call_provider(entrant, prompt, with_usage=False):
+# Server-side search, per wire protocol. Each vendor hosts the tool and runs
+# the searches itself, so the harness stays three protocols wide and gains no
+# scraper. Dated tool versions are pinned for the same reason model ids are: a
+# tool that changes behaviour mid-season silently changes the condition.
+WEB_TOOLS = {
+    "anthropic": {"tools": [{"type": "web_search_20260209",
+                             "name": "web_search"}]},
+    "openai": {"tools": [{"type": "web_search"}]},
+    "gemini": {"tools": [{"google_search": {}}]},
+}
+
+
+def call_provider(entrant, prompt, with_usage=False, variant=None):
     """One completion.
 
     Returns the reply text, or (text, usage) when with_usage is set. `usage` is
     the provider's own token report normalised to {input_tokens, output_tokens,
     thinking_tokens}, so a run's cost is measured rather than estimated. It is
     None for providers that report nothing.
+
+    `variant` only matters where the condition changes the *request* rather
+    than the prompt, which today means attaching the provider's search tool.
     """
-    model, _ = resolve(entrant)
+    model, variant_of_id = resolve(entrant)
+    variant = variant or variant_of_id
     cfg = MODELS[model]
     key = os.environ[cfg["env"]]
     mid = model_id(entrant)
@@ -423,6 +608,13 @@ def call_provider(entrant, prompt, with_usage=False):
           "gemini": _call_gemini}.get(api)
     if fn is None:
         raise ValueError("unknown api: " + api)
+    if variant in WEB_VARIANTS:
+        extra = WEB_TOOLS.get(api)
+        if extra is None:
+            raise ValueError(f"{api} has no configured search tool, so "
+                             f"{entrant} cannot run the web condition")
+        cfg = dict(cfg)
+        cfg["params"] = dict(cfg.get("params") or {}, **extra)
     with _provider_slot(entrant):
         text, usage = fn(cfg, base, key, mid, prompt)
     return (text, usage) if with_usage else text
@@ -591,8 +783,15 @@ def _call_anthropic(cfg, base, key, mid, prompt):
 def _call_gemini(cfg, base, key, mid, prompt):
     # No maxOutputTokens: leave the model's own ceiling in force.
     body = {"contents": [{"parts": [{"text": prompt}]}]}
-    if cfg.get("params"):
-        body["generationConfig"] = dict(cfg["params"])
+    params = dict(cfg.get("params") or {})
+    # `tools` is a sibling of generationConfig, not a member of it. Nesting it
+    # is accepted and silently ignored, which would have produced a "web"
+    # condition that never searched and a comparison that measured nothing.
+    for root_key in ("tools", "toolConfig"):
+        if root_key in params:
+            body[root_key] = params.pop(root_key)
+    if params:
+        body["generationConfig"] = params
     url = f"{base}/models/{mid}:generateContent"
     r = requests.post(url, headers={"x-goog-api-key": key}, json=body, timeout=TIMEOUT)
     data = _check(r, f"{mid} @ {base}")
@@ -602,13 +801,17 @@ def _call_gemini(cfg, base, key, mid, prompt):
 
 # --- parsing ---------------------------------------------------------------
 
-def parse_forecast(text):
-    """Pull {"mean": .., "sd": ..} out of a model reply. Raises on anything
-    that would not survive the submission schema."""
+def _first_json_object(text):
     m = re.search(r"\{[^{}]*\}", text or "", re.S)
     if not m:
         raise ValueError("no JSON object in reply")
-    obj = json.loads(m.group(0))
+    return json.loads(m.group(0))
+
+
+def parse_forecast(text):
+    """Pull {"mean": .., "sd": ..} out of a model reply. Raises on anything
+    that would not survive the submission schema."""
+    obj = _first_json_object(text)
     mean, sd = float(obj["mean"]), float(obj["sd"])
     if not (mean == mean and sd == sd):  # NaN
         raise ValueError("non-finite forecast")
@@ -641,9 +844,98 @@ def mock_forecast(entrant, round_id, persistence_mean, persistence_sd):
     }
 
 
+# --- the persona condition -------------------------------------------------
+
+# How many of the panel may fail to answer before the aggregate is refused. A
+# poll that lost a third of its respondents is not a poll, and quietly
+# publishing a share of whoever happened to reply would hide exactly the
+# failure that matters -- a model that refuses to role-play certain personas
+# does not produce a representative panel, it produces a biased one.
+PERSONA_MIN_RESPONSE = 0.75
+
+
+def forecast_persona(entrant, r, history=None, previous=None):
+    """A poll, simulated: ask every persona the real instrument, then aggregate.
+
+    One call per respondent, run concurrently under the same per-provider limit
+    as everything else. The model never sees the series, the release date or
+    the fact that a forecast is wanted -- only a person and a question. The
+    number comes out of the pollster\'s arithmetic in `personas`, not out of
+    the model, which is the whole point of the condition.
+
+    The input hash covers the persona prompts *and* the panel, so a change to
+    either correctly misses the cache and re-runs.
+    """
+    from . import personas, series as series_registry
+
+    spec = series_registry.survey(r["series"])
+    if spec is None:
+        raise RuntimeError(
+            f"{entrant}: series {r['series']!r} has no survey instrument, so "
+            "there is no honest question to put to a respondent. Register one "
+            "in ssa/series.py or leave this series out of the persona arm.")
+
+    panel = personas.panel()
+    weights = personas.weights_for(spec.get("population"))
+    prompts = {p["id"]: build_persona_prompt(p, spec) for p in panel}
+    # One hash over the whole instrument, so adding a persona or reordering the
+    # panel is a different question set and re-runs rather than reusing.
+    ih = prompt_hash(entrant, "\n\n".join(prompts[p["id"]] for p in panel))
+
+    if previous and f"in={ih}" in (previous.get("notes") or "") \
+            and not (previous.get("notes") or "").startswith("MOCK"):
+        return previous
+
+    if not has_key(entrant):
+        raise RuntimeError(
+            f"{entrant}: no {MODELS[resolve(entrant)[0]]['env']} in the "
+            "environment; the persona condition never files a placeholder.")
+
+    answers, failures = {}, []
+    lock = threading.Lock()
+
+    def ask(p):
+        pid = p["id"]
+        try:
+            reply = call_provider(entrant, prompts[pid], variant="persona")
+            parsed = parse_survey_reply(reply, spec)
+        except Exception as e:                 # noqa: BLE001 - collected below
+            with lock:
+                failures.append(f"{pid}: {type(e).__name__}: {e}")
+            return
+        with lock:
+            answers[pid] = parsed
+
+    with concurrent.futures.ThreadPoolExecutor(
+            max_workers=min(len(panel), PROVIDER_LIMIT)) as ex:
+        list(ex.map(ask, panel))
+
+    responded = sum(weights[pid] for pid in answers)
+    if responded < PERSONA_MIN_RESPONSE:
+        raise RuntimeError(
+            f"{entrant} ({model_id(entrant)}) on {r['round_id']}: only "
+            f"{responded:.0%} of the weighted panel answered, below the "
+            f"{PERSONA_MIN_RESPONSE:.0%} floor. A panel this incomplete is "
+            f"biased, not merely small. First failures: {failures[:3]}")
+
+    mean = personas.aggregate(spec["aggregate"], answers, weights)
+    sd = personas.sd_for(weights, history, scale=spec.get("se_scale", 1.0))
+    note = (f"{model_id(entrant)}, harness v1, variant=persona, "
+            f"{len(answers)}/{len(panel)} respondents, "
+            f"{responded:.0%} of panel weight, "
+            f"aggregate={spec['aggregate']}; in={ih}")
+    return {
+        "round_id": r["round_id"],
+        "entrant": entrant,
+        "topline": {"mean": round(mean, 2), "sd": round(sd, 2)},
+        "notes": note[:500],
+    }
+
+
 # --- entry point -----------------------------------------------------------
 
-def forecast(entrant, r, history=None, previous=None, variant=None):
+def forecast(entrant, r, history=None, previous=None, variant=None,
+             news=None):
     """One forecast dict for a round definition with baselines attached.
 
     `previous` is the forecast already on disk for this (round, entrant), if
@@ -655,7 +947,9 @@ def forecast(entrant, r, history=None, previous=None, variant=None):
     # The condition is carried by the entrant id, so a caller cannot file a
     # forecast under one entrant while prompting for another.
     variant = variant or resolve(entrant)[1]
-    prompt = build_prompt(r, history, variant)
+    if variant == "persona":
+        return forecast_persona(entrant, r, history, previous)
+    prompt = build_prompt(r, history, variant, news=news)
     ih = prompt_hash(entrant, prompt)
 
     if previous and f"in={ih}" in (previous.get("notes") or "") \

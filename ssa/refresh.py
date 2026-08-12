@@ -9,6 +9,7 @@ VoteHub for the Congress and Supreme Court trackers), round status computed agai
 forecasts (persistence, trend) computed from the real series.
 """
 import concurrent.futures
+import threading
 import json
 import os
 from datetime import date, datetime, timezone
@@ -175,6 +176,24 @@ def read_lock_snapshot(round_id):
         return None
 
 
+# The elicitation conditions -- persona sampling, the forecasting protocol, the
+# fixed news digest, live search -- are off unless SSA_ELICITATION=1. They are
+# opt-in rather than on by default because the persona arm alone is one call per
+# simulated respondent per round, roughly two hundred times a normal entrant,
+# and a refresh that quietly starts spending that is exactly the surprise this
+# repository has already paid for once. Turning them on is one variable, in the
+# workflow or the shell, and tools/estimate_arms.py prints the bill first.
+ELICITATION_ON = os.environ.get("SSA_ELICITATION") == "1"
+
+
+def season_roster():
+    """(entrant_id, model, variant) for every condition this run will file."""
+    roster = list(harness.season_entrants())
+    if ELICITATION_ON:
+        roster += list(harness.elicitation_entrants())
+    return roster
+
+
 def update_lock_snapshot(r, hist, now):
     """Record the history a round would freeze, while it is still open.
 
@@ -324,7 +343,7 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
         # Every model runs both conditions and they are filed as separate
         # entrants: same weights, different information, so their scores answer
         # different questions and belong on different leaderboard rows.
-        for entrant, _model, _variant in harness.season_entrants():
+        for entrant, _model, _variant in season_roster():
             jobs.append((r, entrant, os.path.join(rdir, entrant + ".json")))
 
     # One provider call per job, and at max reasoning effort a single call can
@@ -332,12 +351,28 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
     # independent, so they run concurrently. Results are written by the worker
     # that produced them, and `failures` is appended under the GIL, which is
     # sufficient for list.append.
+    # One digest per round, fetched once and handed to every news entrant, so
+    # the condition is literally the same corpus rather than one fetch per
+    # model that could drift between them. Built lazily: a season with no news
+    # entrant never touches Wikipedia.
+    news_cache, news_lock = {}, threading.Lock()
+
+    def news_for(r):
+        rid = r["round_id"]
+        with news_lock:
+            if rid not in news_cache:
+                from .adapters import newsdigest
+                news_cache[rid] = newsdigest.digest(r["lock_at"])
+            return news_cache[rid]
+
     def run_job(job):
         r, entrant, path = job
         try:
+            variant = harness.resolve(entrant)[1]
             body = harness.forecast(entrant, r,
                                     history=hist_by_round.get(r["round_id"]),
-                                    previous=read_forecast(path))
+                                    previous=read_forecast(path),
+                                    news=news_for(r) if variant == "news" else None)
         except Exception as e:                     # noqa: BLE001 - collected
             # Collected rather than raised. Failing at the first bad provider
             # would strand every other entrant's forecast unwritten, and rounds

@@ -184,4 +184,9 @@ def to_series(records, key):
         prev = by_date.get(d)
         if prev is None or r["end_date"] >= prev["end_date"]:
             by_date[d] = r
-    return [{"date": d, "value": by_date[d][key]} for d in sorted(by_date)]
+    # Rounded to two places. `net` is a difference of two published percents
+    # and arrives with float noise -- 4.100002 rather than 4.1 -- which would
+    # be shown on the site and written into every resolution as if the extra
+    # digits meant something.
+    return [{"date": d, "value": round(float(by_date[d][key]), 2)}
+            for d in sorted(by_date)]
