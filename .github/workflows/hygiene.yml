@@ -1,0 +1,50 @@
+name: hygiene
+
+# The arena repo carries the instrument, not the paper. Planning text for any
+# manuscript (venues, deadlines, review phases) lives in the paper's own
+# private repository; this check keeps it from ever landing here again.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: no paper-planning text in the tree
+        run: |
+          set -e
+          pats='ICLR 2027|ICLR 2028|NeurIPS 2026|NeurIPS 2027|camera-ready|rebuttal|submission deadline|abstract deadline|reviews open'
+          hits=$(grep -rInE "$pats" --exclude-dir=.git --exclude=hygiene.yml . || true)
+          if [ -n "$hits" ]; then
+            echo "$hits"
+            echo
+            echo "planning text for the paper belongs in the paper repo, not here"
+            exit 1
+          fi
+
+      - name: no venue talk in new commit messages
+        if: github.event_name == 'pull_request'
+        run: |
+          pats='ICLR|NeurIPS|camera-ready|rebuttal|submission deadline'
+          if git log --format=%B origin/${{ github.base_ref }}..HEAD | grep -inE "$pats"; then
+            echo "venue talk in a commit message; keep it in the paper repo"
+            exit 1
+          fi
+
+      - name: mock stays impossible in CI
+        run: |
+          if [ -n "${SSA_ALLOW_MOCK:-}" ]; then
+            echo "SSA_ALLOW_MOCK is set in the CI environment"
+            exit 1
+          fi
+          if grep -rn "SSA_ALLOW_MOCK" .github/workflows --include='*.yml' | grep -v hygiene.yml | grep -q .; then
+            echo "a workflow sets SSA_ALLOW_MOCK; live data must never be mocked"
+            exit 1
+          fi
