@@ -3,6 +3,10 @@
 Run: python -m tests.test_profile_scoring
 """
 import math
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ssa import scoring
 from ssa.adapters import yougov_xtab
