@@ -41,6 +41,16 @@ jobs:
           url=$(vercel deploy --yes --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
+      - name: one-off, drop deployment protection so previews are public
+        if: github.event_name == 'push'
+        run: |
+          code=$(curl -s -o /tmp/resp.json -w '%{http_code}' -X PATCH \
+            "https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}?teamId=${VERCEL_ORG_ID}" \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"ssoProtection": null}')
+          echo "patch status: $code"; cat /tmp/resp.json | head -c 200; echo
+
       - name: stable alias for the dev branch
         if: github.event_name == 'push'
         run: |
