@@ -33,6 +33,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: sanity check the credentials
+        run: |
+          echo "org-id length: ${#VERCEL_ORG_ID}, project-id length: ${#VERCEL_PROJECT_ID}"
+          npm i -g vercel@latest >/dev/null 2>&1
+          echo '-- whoami:' && vercel whoami --token=${{ secrets.VERCEL_TOKEN }} || true
+          echo '-- teams visible to this token:' && vercel teams ls --token=${{ secrets.VERCEL_TOKEN }} || true
+
       - name: deploy without git metadata
         id: deploy
         run: |
