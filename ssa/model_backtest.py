@@ -570,3 +570,92 @@ def export_run(stamp, records=None):
             r.pop("from_cache", None)
             f.write(json.dumps(r, sort_keys=True) + "\n")
     return path, len(records)
+
+
+def restore_runs(runs_dir=RUNS_DIR, cache_dir=CACHE_DIR,
+                 overwrite_existing=False):
+    """Restore committed JSONL run evidence into the resumable local cache.
+
+    Run files are read in lexical filename order, which is chronological for
+    the repository's ISO-dated names.  When the same call appears more than
+    once, the later committed record wins; this lets a successful retry
+    supersede an earlier recorded failure.  Existing local cache entries are
+    preserved by default because they may be newer than every committed run.
+
+    Returns counts only.  In particular, it never returns or prints raw model
+    replies, prompts, endpoint credentials, or environment values.
+    """
+    selected = {}
+    files = 0
+    lines = 0
+    superseded = 0
+
+    if os.path.isdir(runs_dir):
+        names = sorted(n for n in os.listdir(runs_dir) if n.endswith(".jsonl"))
+    else:
+        names = []
+
+    for name in names:
+        path = os.path.join(runs_dir, name)
+        if not os.path.isfile(path):
+            continue
+        files += 1
+        with open(path) as f:
+            for line_number, line in enumerate(f, 1):
+                if not line.strip():
+                    continue
+                lines += 1
+                try:
+                    record = json.loads(line)
+                except json.JSONDecodeError as e:
+                    raise ValueError(
+                        f"{path}:{line_number}: invalid JSON: {e.msg}") from e
+
+                entrant = record.get("entrant")
+                digest = record.get("prompt_sha256")
+                try:
+                    harness.resolve(entrant)
+                except (KeyError, TypeError) as e:
+                    raise ValueError(
+                        f"{path}:{line_number}: invalid entrant {entrant!r}") from e
+                if (not isinstance(digest, str) or len(digest) != 64
+                        or any(c not in "0123456789abcdef" for c in digest)):
+                    raise ValueError(
+                        f"{path}:{line_number}: invalid prompt_sha256")
+
+                key = (entrant, digest)
+                if key in selected:
+                    superseded += 1
+                selected[key] = record
+
+    restored = 0
+    skipped_existing = 0
+    successful = 0
+    failures = 0
+    for (entrant, digest), record in sorted(selected.items()):
+        path = os.path.join(cache_dir, entrant, digest + ".json")
+        if os.path.exists(path) and not overwrite_existing:
+            skipped_existing += 1
+            continue
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        tmp = path + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(record, f, indent=2, sort_keys=True)
+            f.write("\n")
+        os.replace(tmp, path)
+        restored += 1
+        if record.get("topline") is None:
+            failures += 1
+        else:
+            successful += 1
+
+    return {
+        "files": files,
+        "lines": lines,
+        "unique": len(selected),
+        "superseded": superseded,
+        "restored": restored,
+        "skipped_existing": skipped_existing,
+        "successful": successful,
+        "failures": failures,
+    }
