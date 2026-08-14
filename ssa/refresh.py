@@ -177,20 +177,53 @@ def read_lock_snapshot(round_id):
 
 
 # The elicitation conditions -- persona sampling, the forecasting protocol, the
-# fixed news digest, live search -- are off unless SSA_ELICITATION=1. They are
+# fixed news digest -- are off unless SSA_ELICITATION names them. They are
 # opt-in rather than on by default because the persona arm alone is one call per
 # simulated respondent per round, roughly two hundred times a normal entrant,
 # and a refresh that quietly starts spending that is exactly the surprise this
 # repository has already paid for once. Turning them on is one variable, in the
 # workflow or the shell, and tools/estimate_arms.py prints the bill first.
-ELICITATION_ON = os.environ.get("SSA_ELICITATION") == "1"
+#
+# The switch takes a list, not a flag, because the arms differ in cost by two
+# orders of magnitude: measured over a full season the news arm is about $8 and
+# the persona arm about $39, and `1` used to buy both plus the protocol arm at
+# once. Anyone who wanted only the cheap one had no way to say so, which is a
+# bad shape for a switch whose entire job is to stop an unintended bill.
+#
+#   SSA_ELICITATION=news            just the fixed news corpus
+#   SSA_ELICITATION=news,superfc    two of them
+#   SSA_ELICITATION=1 / all         every arm, as before
+#
+# Unset means none, which stays the default: nothing about merging this starts
+# spending anything.
+def elicitation_variants(value=None):
+    """Which elicitation arms this run files, from SSA_ELICITATION.
+
+    Raises on an unknown name rather than silently filing nothing: a typo in a
+    workflow variable is otherwise invisible until someone notices a leaderboard
+    row that never appeared.
+    """
+    raw = (os.environ.get("SSA_ELICITATION") if value is None else value) or ""
+    raw = raw.strip()
+    if not raw or raw in ("0", "off", "false"):
+        return ()
+    if raw in ("1", "all"):
+        return tuple(harness.ELICITATION_VARIANTS)
+    want = tuple(v.strip() for v in raw.split(",") if v.strip())
+    bad = [v for v in want if v not in harness.ELICITATION_VARIANTS]
+    if bad:
+        raise ValueError(
+            f"SSA_ELICITATION names unknown condition(s) {bad}; known: "
+            f"{list(harness.ELICITATION_VARIANTS)}, or '1' for all")
+    return want
 
 
 def season_roster():
     """(entrant_id, model, variant) for every condition this run will file."""
     roster = list(harness.season_entrants())
-    if ELICITATION_ON:
-        roster += list(harness.elicitation_entrants())
+    want = elicitation_variants()
+    if want:
+        roster += list(harness.elicitation_entrants(variants=want))
     return roster
 
 
