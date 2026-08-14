@@ -33,21 +33,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: sanity check the credentials
-        run: |
-          echo "org-id length: ${#VERCEL_ORG_ID}, project-id length: ${#VERCEL_PROJECT_ID}"
-          npm i -g vercel@latest >/dev/null 2>&1
-          echo '-- whoami:' && vercel whoami --token=${{ secrets.VERCEL_TOKEN }} || true
-          echo '-- teams visible to this token:' && vercel teams ls --token=${{ secrets.VERCEL_TOKEN }} || true
-
-      - name: deploy without git metadata
+      - name: deploy a preview without git metadata
         id: deploy
         run: |
           rm -rf .git .vercel
           npm i -g vercel@latest
-          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-          vercel build --token=${{ secrets.VERCEL_TOKEN }}
-          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          url=$(vercel deploy --yes --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
       - name: stable alias for the dev branch
