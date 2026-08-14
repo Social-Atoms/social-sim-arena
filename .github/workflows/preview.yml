@@ -21,6 +21,9 @@ permissions:
 
 jobs:
   preview:
+    # Fork PRs get no secrets by design; forecast submissions from entrants
+    # only need validate.yml. Previews run for same-repo branches only.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
