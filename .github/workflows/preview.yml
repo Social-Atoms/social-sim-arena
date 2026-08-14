@@ -1,0 +1,55 @@
+name: preview
+
+# Vercel previews for pull requests, without Vercel seats.
+#
+# Production stays on the Vercel Git integration (pushes to main deploy as
+# before). This workflow only builds PR previews: it deploys with the team
+# token from repo secrets, and it strips .git before deploying so the
+# deployment carries no git author for Vercel to reject.
+#
+# Requires three repository secrets (owner sets them once):
+#   VERCEL_TOKEN       - vercel.com/account/tokens
+#   VERCEL_ORG_ID      - .vercel/project.json after `vercel link`
+#   VERCEL_PROJECT_ID  - same file
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: deploy without git metadata
+        id: deploy
+        run: |
+          rm -rf .git
+          npm i -g vercel@latest
+          vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: comment the preview url
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = `${{ steps.deploy.outputs.url }}`;
+            const marker = '<!-- vercel-preview -->';
+            const body = `${marker}\nPreview: ${url}`;
+            const {data: comments} = await github.rest.issues.listComments({
+              ...context.repo, issue_number: context.issue.number});
+            const prev = comments.find(c => c.body.includes(marker));
+            if (prev) {
+              await github.rest.issues.updateComment({...context.repo, comment_id: prev.id, body});
+            } else {
+              await github.rest.issues.createComment({...context.repo, issue_number: context.issue.number, body});
+            }
