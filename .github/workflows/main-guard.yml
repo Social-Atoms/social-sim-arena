@@ -1,0 +1,20 @@
+name: main-guard
+
+# main receives merges from the maintainer and data commits from the cron,
+# nothing else. Until branch protection can be enforced (public repo), this
+# check turns any other push red on the spot.
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: only the maintainer and the cron write to main
+        run: |
+          case "${{ github.actor }}" in
+            jajamoa|github-actions\[bot\]) echo "ok: ${{ github.actor }}" ;;
+            *) echo "::error::main is merged by the maintainer only; code goes to dev (pushed by ${{ github.actor }})"; exit 1 ;;
+          esac
