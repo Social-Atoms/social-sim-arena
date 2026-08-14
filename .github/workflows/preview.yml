@@ -14,6 +14,8 @@ name: preview
 
 on:
   pull_request:
+  push:
+    branches: [dev]
 
 permissions:
   contents: read
@@ -22,8 +24,8 @@ permissions:
 jobs:
   preview:
     # Fork PRs get no secrets by design; forecast submissions from entrants
-    # only need validate.yml. Previews run for same-repo branches only.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    # only need validate.yml. Previews run for same-repo branches and dev.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -41,7 +43,14 @@ jobs:
           url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
+      - name: stable alias for the dev branch
+        if: github.event_name == 'push'
+        run: |
+          vercel alias set ${{ steps.deploy.outputs.url }} social-sim-arena-dev.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
+          echo "dev preview: https://social-sim-arena-dev.vercel.app" >> "$GITHUB_STEP_SUMMARY"
+
       - name: comment the preview url
+        if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
