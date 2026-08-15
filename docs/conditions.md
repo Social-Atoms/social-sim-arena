@@ -45,13 +45,37 @@ Which cells run:
 |  | `direct` | `superfc` | `persona` |
 |---|---|---|---|
 | `none` | ✅ season | ○ | ○ |
-| `recent10` | ✅ season | ○ | ○ |
-| `news` | ○ | ○ | ○ |
-| `web` | ○ *(live-only)* | ○ | ○ |
+| `recent10` | ✅ season | ○ | ✗ |
+| `news` | ○ | ○ | ✗ |
+| `web` | ○ *(live-only)* | ○ | ✗ |
 
 ✅ = files every round by default. ○ = **nameable and runnable**, off until
-`SSA_ELICITATION` asks for it. Nothing but the two season cells costs anything
-by default.
+`SSA_ELICITATION` asks for it. ✗ = **refused**, see below. Nothing but the two
+season cells costs anything by default.
+
+### 1.1 Why persona carries only `none`
+
+`build_persona_prompt` takes a persona and the survey instrument and nothing
+else: no series history, no release date, no mention that a forecast is wanted.
+That is the design, and `ssa/personas.py` states it — *"everything the round
+knows and the respondent would not know is withheld here on purpose; that
+asymmetry is the experiment"*.
+
+A real respondent does not know the tracker's own past readings. **A synthetic
+one shown them has stopped being a respondent and become a forecaster wearing a
+persona**, which is a different thing from what this arm claims to measure.
+
+The enforcement is not a policy, it is a fact about the prompt:
+`recent10 × persona` and `none × persona` build a **byte-identical** prompt
+today, so offering both would put the same work on the leaderboard twice under
+different names. `harness.ELICITATION_CONTEXTS` refuses it, and `resolve()`
+refuses to read back an id it could not build — so `<model>-persona` is no
+longer a valid id and `<model>-zeroshot-persona` is.
+
+`news × persona` is the coherent extension and the one the literature actually
+runs — a real respondent *does* read the news. It needs the digest wired into
+`build_persona_prompt` first; until then it is refused rather than silently
+producing a prompt with no news in it.
 
 ## 2. Entrant ids
 
@@ -69,7 +93,7 @@ each axis is elided**, which is what keeps every id already on disk valid:
 | `news` × `direct` | `claude-opus-news` |
 | `web` × `direct` | `claude-opus-web` |
 | `recent10` × `superfc` | `claude-opus-superfc` |
-| `recent10` × `persona` | `claude-opus-persona` |
+| `none` × `persona` | `claude-opus-zeroshot-persona` |
 | **`news` × `superfc`** | **`claude-opus-news-superfc`** |
 | **`none` × `persona`** | **`claude-opus-zeroshot-persona`** |
 

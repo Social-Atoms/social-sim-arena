@@ -297,6 +297,31 @@ DEFAULT_CONTEXT = "recent10"
 ELICITATION = ("direct", "superfc", "persona")
 DEFAULT_ELICITATION = "direct"
 
+# Which contexts each elicitation can actually convey. Not a policy -- a fact
+# about the prompts.
+#
+# `build_persona_prompt` takes a persona and the survey instrument and nothing
+# else: no series history, no release date, no mention that a forecast is
+# wanted. That is deliberate and `ssa/personas.py` states it as the design --
+# "everything the round knows and the respondent would not know is withheld
+# here on purpose; that asymmetry is the experiment". A real respondent does not
+# know the tracker's own past readings, and a synthetic one shown them has
+# stopped being a respondent and become a forecaster wearing a persona.
+#
+# So `recent10 x persona` and `none x persona` build a *byte-identical* prompt
+# today, and filing them under two entrant ids would put the same work on the
+# leaderboard twice under different names. The constraint is enforced rather
+# than documented, because that trap is invisible in the output.
+#
+# `news x persona` is the coherent extension and is the one the literature
+# actually runs -- a real respondent does read the news. It needs the digest
+# wired into build_persona_prompt first; until then it is not offered.
+ELICITATION_CONTEXTS = {
+    "direct": ("none", "recent10", "news", "web"),
+    "superfc": ("none", "recent10", "news", "web"),
+    "persona": ("none",),
+}
+
 # Kept as an alias because `CONTEXT` is what `build_prompt` reads for the
 # history length, and callers outside this module ask for it by the old name.
 VARIANTS = CONTEXT
@@ -375,6 +400,13 @@ def entrant_id(model, context=DEFAULT_CONTEXT, elicitation=DEFAULT_ELICITATION):
     if elicitation not in ELICITATION_SUFFIX:
         raise ValueError(f"unknown elicitation {elicitation!r}; "
                          f"known: {sorted(ELICITATION_SUFFIX)}")
+    allowed = ELICITATION_CONTEXTS[elicitation]
+    if context not in allowed:
+        raise ValueError(
+            f"{elicitation} cannot carry context {context!r}: its prompt does "
+            f"not convey it, so the forecast would be identical to "
+            f"{allowed[0]} x {elicitation} under a different name. "
+            f"Allowed: {list(allowed)}")
     return model + CONTEXT_SUFFIX[context] + ELICITATION_SUFFIX[elicitation]
 
 
@@ -405,7 +437,19 @@ def cell(name):
                 f"{sorted(CONTEXT_SUFFIX)}, elicitations: {sorted(ELICITATION_SUFFIX)}")
     if not parts:
         raise ValueError("empty condition")
-    return (ctx or DEFAULT_CONTEXT, eli or DEFAULT_ELICITATION)
+    eli = eli or DEFAULT_ELICITATION
+    # A bare elicitation name pairs with the default context *it can carry*,
+    # which for persona is `none` rather than recent10 -- see
+    # ELICITATION_CONTEXTS. So `SSA_ELICITATION=persona` keeps working and now
+    # names the cell that is actually run.
+    if ctx is None:
+        allowed = ELICITATION_CONTEXTS[eli]
+        ctx = DEFAULT_CONTEXT if DEFAULT_CONTEXT in allowed else allowed[0]
+    if ctx not in ELICITATION_CONTEXTS[eli]:
+        raise ValueError(
+            f"{name!r} names {ctx} x {eli}, which {eli} cannot carry; "
+            f"allowed contexts: {list(ELICITATION_CONTEXTS[eli])}")
+    return (ctx, eli)
 
 
 # Which models run the opt-in cells. Every active model, because a three-model
@@ -476,7 +520,11 @@ def resolve(entrant_id_):
             if csuf and not rest.endswith(csuf):
                 continue
             model = rest[:-len(csuf)] if csuf else rest
-            if model in MODELS:
+            # An id this module could not build is not an id. Without this,
+            # `<m>-persona` resolves to recent10 x persona while
+            # `entrant_id` refuses to produce it, and the same cell has two
+            # names -- exactly the duplication ELICITATION_CONTEXTS prevents.
+            if model in MODELS and ctx in ELICITATION_CONTEXTS[eli]:
                 return model, ctx, eli
     raise KeyError(f"unknown entrant id: {entrant_id_!r}")
 

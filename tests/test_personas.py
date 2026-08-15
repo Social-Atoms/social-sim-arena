@@ -225,7 +225,7 @@ def test_persona_forecast_runs_the_panel_and_aggregates_it():
              "baselines": {"persistence": {"mean": 40.0, "sd": 2.0}}}
         hist = [{"date": f"2026-0{1+i%9}-01", "value": 40 + (i % 3)}
                 for i in range(20)]
-        out = harness.forecast_persona("claude-opus-persona", r, hist)
+        out = harness.forecast_persona("claude-opus-zeroshot-persona", r, hist)
     finally:
         harness.call_provider, harness.has_key = real_call, real_key
 
@@ -234,7 +234,7 @@ def test_persona_forecast_runs_the_panel_and_aggregates_it():
     expected = 100 * sum(p["weight"] for p in panel if p["party"] == "Republican")
     assert abs(out["topline"]["mean"] - expected) < 0.05, (out, expected)
     assert out["topline"]["sd"] > 0
-    assert out["entrant"] == "claude-opus-persona"
+    assert out["entrant"] == "claude-opus-zeroshot-persona"
     assert "elicitation=persona" in out["notes"] and "in=" in out["notes"]
 
 
@@ -253,7 +253,7 @@ def test_persona_forecast_refuses_a_panel_that_mostly_refused():
         r = {"round_id": "r1", "series": "yougov_approval",
              "release_at": "2026-08-20T14:00:00Z",
              "baselines": {"persistence": {"mean": 40.0, "sd": 2.0}}}
-        harness.forecast_persona("claude-opus-persona", r, [])
+        harness.forecast_persona("claude-opus-zeroshot-persona", r, [])
         assert False, "a third of the panel missing must not be published"
     except RuntimeError as e:
         assert "below the" in str(e), e
@@ -268,7 +268,7 @@ def test_a_series_without_an_instrument_is_refused_not_invented():
         r = {"round_id": "r1", "series": "house_seats",
              "release_at": "2026-11-03T14:00:00Z",
              "baselines": {"persistence": {"mean": 218.0, "sd": 10.0}}}
-        harness.forecast_persona("claude-opus-persona", r, [])
+        harness.forecast_persona("claude-opus-zeroshot-persona", r, [])
         assert False, "no instrument means no honest question"
     except (RuntimeError, KeyError) as e:
         assert "survey" in str(e) or "house_seats" in str(e), e
