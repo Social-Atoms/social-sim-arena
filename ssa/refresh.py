@@ -16,6 +16,7 @@ from datetime import date, datetime, timezone
 
 from .adapters import fredcsv, silverbulletin, umich
 from . import provenance
+from . import stamps
 from . import average, backtest, baselines, envfile, harness, scoring, sharecard
 from . import series as series_registry
 
@@ -428,6 +429,36 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
     return written, failures
 
 
+def stamp_locked_rounds(rounds):
+    """One manifest per locked round, stamped once and upgraded thereafter.
+
+    The proof that a forecast predates the answer currently rests on a git
+    history we control, which proves nothing to a skeptic. OpenTimestamps moves
+    it onto a chain nobody here controls; see ssa/stamps.py for why the unit is
+    a per-round manifest rather than each forecast.
+
+    Never fatal. Four public calendars being briefly unreachable must not cost a
+    run that has forecasts to file, and the next refresh retries -- but an
+    unstamped round says so rather than passing silently.
+    """
+    out = []
+    for r in rounds:
+        if r.get("status") == "open":
+            continue
+        try:
+            st = stamps.ensure(r["round_id"], r["lock_at"])
+        except Exception as e:                     # noqa: BLE001 - reported
+            print(f"  stamp {r['round_id']}: {type(e).__name__}: {e}")
+            continue
+        out.append(st)
+        mark = "btc" if st.get("bitcoin_attested") else \
+               ("calendar" if st.get("proof") else "UNSTAMPED")
+        print(f"  stamp {r['round_id']:34s} {st['action']:9s} {mark}")
+    if out and not stamps.have_client():
+        print("  (no ots client on PATH; manifests written, proofs pending)")
+    return out
+
+
 def count_forecasts(rounds):
     """Attach filed forecasts to each round: count + per-entrant toplines
     (the page overlays them on the target charts)."""
@@ -603,6 +634,7 @@ def main():
     rounds, hist_by_round = build_rounds(season, series, resolved, now)
     filed, filing_failures = file_baseline_forecasts(rounds, hist_by_round, now)
     count_forecasts(rounds)
+    stamped = stamp_locked_rounds(rounds)
     board = build_leaderboard(rounds, resolved)
     bt = backtest.run({
         "umich_sentiment": series["umich_sentiment"],
@@ -696,6 +728,11 @@ def main():
         # then say "this figure came from that file at that time" instead of
         # crediting a brand.
         "sources": dict(prov, repo="https://github.com/Social-Atoms/social-sim-arena"),
+        # One entry per locked round: the manifest that fixes every forecast
+        # hash at the lock, and whether its proof has reached a Bitcoin block
+        # yet. A reader runs `ots verify` on the file and needs to trust
+        # nobody here.
+        "stamps": {st["round_id"]: st for st in stamped},
         "series_provenance": {
             sid: prov.get(spec["source"], {}).get("source", spec["source"])
             for sid, spec in series_registry.SERIES.items()
