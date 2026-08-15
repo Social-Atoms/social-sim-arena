@@ -16,12 +16,19 @@ import requests
 BASE = "https://fred.stlouisfed.org/graph/fredgraph.csv"
 
 
-def series(series_id, timeout=30):
-    """Full monthly history: [{date: 'YYYY-MM-DD', value: float}], oldest first."""
+URL = BASE + "?id=UMCSENT"
+
+
+def fetch_text(series_id="UMCSENT", timeout=30):
+    """The CSV exactly as served, for ssa/provenance.py to archive."""
     r = requests.get(BASE, params={"id": series_id}, timeout=timeout)
     r.raise_for_status()
+    return r.text
+
+
+def parse(text, series_id="UMCSENT"):
     rows = []
-    reader = csv.reader(io.StringIO(r.text))
+    reader = csv.reader(io.StringIO(text))
     header = next(reader, None)
     if header is None:
         raise RuntimeError("FRED returned an empty body for series " + series_id)
@@ -30,6 +37,11 @@ def series(series_id, timeout=30):
             continue
         rows.append({"date": row[0], "value": float(row[1])})
     return rows
+
+
+def series(series_id, timeout=30):
+    """Full monthly history: [{date: 'YYYY-MM-DD', value: float}], oldest first."""
+    return parse(fetch_text(series_id, timeout), series_id)
 
 
 def umich_sentiment():

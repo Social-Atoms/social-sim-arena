@@ -23,8 +23,14 @@ from .adapters import fredcsv
 from .adapters import silverbulletin as sb
 from .adapters import umich as umich_adapter
 
-# Set by michigan_history() to whichever source answered.
+# Set by michigan_history() to whichever source answered, plus the URL that
+# answered and the body it returned. The body is what ssa/provenance.py
+# archives: a page crediting a source for a value it does not carry is wrong in
+# exactly the direction that matters here, and so is a vintage reconstructed
+# from parsed rows rather than from the file.
 MICHIGAN_SOURCE = "not yet fetched"
+MICHIGAN_URL = umich_adapter.URL
+MICHIGAN_RAW = ""
 
 
 def michigan_history():
@@ -45,9 +51,11 @@ def michigan_history():
     number with where it actually came from. A page crediting FRED for a value
     FRED does not carry is wrong in exactly the direction that matters here.
     """
-    global MICHIGAN_SOURCE
+    global MICHIGAN_SOURCE, MICHIGAN_URL, MICHIGAN_RAW
     try:
-        rows = umich_adapter.umich_sentiment()
+        MICHIGAN_RAW = umich_adapter.fetch_text()
+        rows = umich_adapter.parse(MICHIGAN_RAW)
+        MICHIGAN_URL = umich_adapter.URL
         MICHIGAN_SOURCE = ("Surveys of Consumers, University of Michigan "
                            "(sca.isr.umich.edu), the survey's own monthly table")
         return rows
@@ -57,7 +65,9 @@ def michigan_history():
         MICHIGAN_SOURCE = ("FRED (UMCSENT), which republishes the Michigan "
                            "index one month late; the survey's own table was "
                            "unreachable on this run")
-        return fredcsv.umich_sentiment()
+        MICHIGAN_URL = fredcsv.URL
+        MICHIGAN_RAW = fredcsv.fetch_text()
+        return fredcsv.parse(MICHIGAN_RAW)
 
 # source: which adapter and which filters. value: the column to score.
 SERIES = {
