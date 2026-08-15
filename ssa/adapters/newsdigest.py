@@ -64,8 +64,30 @@ CATEGORIES = (
     "International relations",
 )
 
-DEFAULT_WINDOW_DAYS = 14
-DEFAULT_MAX_ITEMS = 8          # per day, per category, after filtering
+# Seven days at four items a category a day, measured at a median of 20,185
+# characters -- about 5,000 tokens -- over all 63 weekly lock dates from
+# 2025-06-01 to 2026-08-12. The fourteen-day, eight-item corpus this replaces
+# ran to 47,291 characters, about 11,800 tokens, against a forecast prompt whose
+# other content is roughly 400. At that size the condition was not "the model
+# also sees the news", it was "the model sees the news and, somewhere in it, a
+# question".
+#
+# The categories are deliberately *not* narrowed alongside this. Measured per
+# category over the same lock dates, the two most relevant to every target here
+# are the two smallest -- Politics and elections is 15.3% of the corpus and
+# Business and economy 4.5%, against 29.8% for Armed conflicts and attacks and
+# 16.1% for Disasters and accidents. Cutting to the topical categories would
+# therefore change length and relevance at once and neither effect could be
+# read off the result. Length is cut here; whether the remaining categories earn
+# their tokens is a separate arm to run against this one.
+#
+# That Business and economy is 4.5% is a fact about the source rather than a
+# knob: Wikipedia's Current Events portal barely covers economics, so a corpus
+# sized for Michigan sentiment carries about five hundred tokens that mention
+# the economy. Worth knowing before concluding anything about what news is
+# worth to a consumer-sentiment forecast.
+DEFAULT_WINDOW_DAYS = 7
+DEFAULT_MAX_ITEMS = 4          # per day, per category, after filtering
 
 
 def page_title(d):
@@ -289,7 +311,12 @@ DAYS = os.path.join(ARCHIVE, "days")
 # every historical lock; a live lock at another hour still resolves against the
 # stored index, and pays one request for that revision's text if it is one the
 # grid did not already reach.
-ARCHIVE_WINDOW_DAYS = 16       # two days of headroom over DEFAULT_WINDOW_DAYS
+# Deliberately left at sixteen after the window dropped to seven. The archive is
+# what a *refetch* would cost, not what a prompt costs, and the 589 days already
+# committed were collected against this grid -- narrowing it now would save
+# nothing already spent and would silently stop a widened window from being
+# answerable offline. Nine days of headroom, at no ongoing price.
+ARCHIVE_WINDOW_DAYS = 16
 ARCHIVE_HOUR = "T14:00:00Z"
 
 
