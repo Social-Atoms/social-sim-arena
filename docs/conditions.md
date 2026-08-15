@@ -96,11 +96,36 @@ The `news` condition gives every entrant in a round the **same** corpus, built
 from the Wikipedia Current Events portal as those pages stood **at the round's
 lock**. Not a per-model search: one text, archived, reproducible.
 
-- **Window.** The fourteen days before the lock, up to but not including the
-  lock day — a page for the lock day is mid-write and would differ between an
-  entrant filed at 09:00 and one filed at 13:00.
-- **Size.** Measured over all 575 possible lock dates in the archive: median
-  45,047 characters, about 11.3k tokens; range 24,722 to 74,176.
+- **Window.** The seven days before the lock, up to but not including the lock
+  day — a page for the lock day is mid-write and would differ between an entrant
+  filed at 09:00 and one filed at 13:00.
+- **Size.** Measured over 63 weekly lock dates from 2025-06-01 to 2026-08-12:
+  median **20,185 characters, about 5,000 tokens**; range 10,583 to 30,708.
+  Fourteen days at eight items a category ran to 47,291 characters (~11,800
+  tokens) against a forecast prompt whose other content is roughly 400, which
+  made the condition "the model sees the news and, somewhere in it, a question".
+- **Which categories, and why they were not narrowed.** Measured per category
+  over the same lock dates, the two most relevant to every target here are the
+  two smallest:
+
+  | category | share of corpus |
+  |---|---|
+  | Armed conflicts and attacks | 29.8% |
+  | Law and crime | 18.4% |
+  | Disasters and accidents | 16.1% |
+  | Politics and elections | 15.3% |
+  | International relations | 10.4% |
+  | **Business and economy** | **4.5%** |
+  | Health and environment | 2.3% |
+
+  Cutting to the topical categories would change length and relevance at once
+  and neither effect could be read off the result, so only length was cut.
+  Whether the rest earn their tokens is a separate arm to run against this one.
+
+  That Business and economy is 4.5% is a fact about the source rather than a
+  knob — Wikipedia's Current Events portal barely covers economics, so a corpus
+  sized for Michigan sentiment carries roughly five hundred tokens that mention
+  the economy at all.
 - **Fixed, not retrieved.** The corpus does not depend on the question. There
   is no query, no relevance filter, no per-topic retrieval. Two rounds locking
   at the same instant get byte-identical text. This is what makes the condition
@@ -115,10 +140,16 @@ items of every revision that any lock in the following sixteen days resolves
 to, pooled so that near-identical successive revisions are stored once.
 
 Why by revision: measured on five sample days, a Current Events page carries
-40–82 revisions in total, but the fourteen locks that ever read it resolve to
+40–82 revisions in total, but the sixteen locks that can ever read it resolve to
 only **2–5** of them, and the page stops changing 2–6 days after its date.
-Keying by lock stores up to fourteen copies of the same text and is useless to
+Keying by lock stores up to sixteen copies of the same text and is useless to
 a different set of locks — adding a series would refetch the same days again.
+
+The archive grid stays at sixteen days even though the digest window is now
+seven. It is what a *refetch* would cost rather than what a prompt costs, the
+589 days already committed were collected against it, and narrowing it would
+save nothing already spent while silently stopping a widened window from being
+answerable offline.
 
 Each file records `fetched_at` and **answers only asofs earlier than it**. An
 index fetched at time T cannot know about edits after T, so serving a later
@@ -175,14 +206,19 @@ all 15 active models:
 | arm | calls | $ / season |
 |---|---|---|
 | `superfc` | 195 | 1.30 |
-| `news` | 195 | 7.77 |
+| `news` | 195 | 3.55 |
 | `persona` | 31,680 | 39.34 |
+
+`news` is `estimate_arms.py`'s figure rescaled from the 13k-token corpus it
+assumes to the ~5k one now sent; the tool's own constant is due an update.
 
 `persona` is one call per simulated respondent per round — 24 quota cells × 8
 replicates × 11 rounds with a survey instrument. That is also why the
 unimplemented `news × persona` cell is not merely "the next one to add": the
-same 11.3k-token corpus would ride on all 31,680 calls, which prices that one
-cell near a thousand dollars a season before any prompt caching or batch
-discount.
+same 5k-token corpus would ride on all 31,680 calls, pricing that one cell at
+about **$446 a season** before any prompt caching or batch discount. At the old
+14-day corpus it was $993, so shortening the window nearly halved the most
+expensive cell in the design — which is a reason to run the length ablation
+before building that cell, not after.
 
 Run `tools/estimate_arms.py` before turning anything on. It calls nothing.
