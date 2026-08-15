@@ -47,7 +47,7 @@ def main():
                     help="rebuild the table from the committed cache; makes no "
                          "provider calls and bills nothing")
     ap.add_argument("--entrants",
-                    default=",".join(e for e, _, _ in harness.season_entrants()),
+                    default=",".join(e for e, *_ in harness.season_entrants()),
                     help="comma-separated entrant ids; defaults to every model "
                          "in both information conditions")
     ap.add_argument("--start", help="override the first release date (ISO day)")

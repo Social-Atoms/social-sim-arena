@@ -175,20 +175,20 @@ def plan(series_map, entrants, start, warmup=WARMUP, end=None):
                 # The condition is carried by the entrant id, exactly as in the
                 # live arena, so the backtest scores both information
                 # conditions rather than silently replaying only the default.
-                _, variant = harness.resolve(entrant)
+                _, context, elicitation = harness.resolve(entrant)
                 # Live search reads the answer here: every outcome in this
                 # window was published months ago. Refused at plan time, so
                 # the run stops before it bills rather than after it produces
                 # an unpublishable number.
-                harness.assert_prospective(variant)
+                harness.assert_prospective(context)
                 # The news condition is safe here only because the digest is
                 # fetched by revision timestamp as of this round's lock, so it
                 # is the corpus as it read then, not as it reads now.
                 news = None
-                if variant == "news":
+                if context == "news":
                     from .adapters import newsdigest
                     news = newsdigest.digest(r["lock_at"])
-                prompt = harness.build_prompt(r, past, variant, news=news)
+                prompt = harness.build_prompt(r, past, context, elicitation, news=news)
                 tasks.append({
                     "entrant": entrant, "series": series,
                     "date": target["date"], "outcome": target["value"],
@@ -227,7 +227,7 @@ def estimate_cost(tasks):
     for t in tasks:
         if t["cached"]:
             continue
-        model, _ = harness.resolve(t["entrant"])
+        model = harness.resolve(t["entrant"])[0]
         cin, cout = PRICING.get(model, (2.0, 10.0))
         params = harness.MODELS[model].get("params") or {}
         reasoning = ("reasoning_effort" in params
@@ -525,7 +525,7 @@ def actual_cost(records):
         if ino is None or out is None:
             missing += 1
             continue
-        model, _ = harness.resolve(r["entrant"])
+        model = harness.resolve(r["entrant"])[0]
         cin, cout = PRICING.get(model, (2.0, 10.0))
         usd = ino / 1e6 * cin + out / 1e6 * cout
         per[r["entrant"]] = per.get(r["entrant"], 0.0) + usd

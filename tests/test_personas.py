@@ -157,7 +157,7 @@ def test_web_is_refused_for_models_whose_vendor_hosts_no_search():
         assert m in harness.WEB_CAPABLE, m
 
     # such a model never appears in a roster ...
-    ids = [e for e, _, v in harness.elicitation_entrants(
+    ids = [e for e, *_ in harness.elicitation_entrants(
         variants=("web",), models=harness.active_models())]
     assert "grok-web" not in ids and "glm-web" not in ids
     assert "claude-opus-web" in ids
@@ -166,7 +166,7 @@ def test_web_is_refused_for_models_whose_vendor_hosts_no_search():
     import os
     os.environ.setdefault("DEEPSEEK_API_KEY", "x")
     try:
-        harness.call_provider("deepseek-pro", "p", variant="web")
+        harness.call_provider("deepseek-pro", "p", context="web")
         assert False, "must refuse"
     except ValueError as e:
         assert "vendor-hosted search" in str(e), e
@@ -209,7 +209,7 @@ def test_persona_forecast_runs_the_panel_and_aggregates_it():
     are pooled by the pollster's rule, and the id carries the condition."""
     calls = []
 
-    def fake_call(entrant, prompt, with_usage=False, variant=None):
+    def fake_call(entrant, prompt, with_usage=False, context=None):
         calls.append(prompt)
         # Republicans approve, everyone else does not -- so the expected
         # topline is exactly the Republican share of the panel.
@@ -235,13 +235,13 @@ def test_persona_forecast_runs_the_panel_and_aggregates_it():
     assert abs(out["topline"]["mean"] - expected) < 0.05, (out, expected)
     assert out["topline"]["sd"] > 0
     assert out["entrant"] == "claude-opus-persona"
-    assert "variant=persona" in out["notes"] and "in=" in out["notes"]
+    assert "elicitation=persona" in out["notes"] and "in=" in out["notes"]
 
 
 def test_persona_forecast_refuses_a_panel_that_mostly_refused():
     """A model that will not play certain personas does not give a small panel,
     it gives a biased one -- publishing the survivors would hide that."""
-    def fake_call(entrant, prompt, with_usage=False, variant=None):
+    def fake_call(entrant, prompt, with_usage=False, context=None):
         if "Republican" in prompt:
             raise RuntimeError("declined")
         return '{"approval": "disapprove"}'
@@ -280,9 +280,12 @@ def test_superforecaster_protocol_is_added_without_changing_the_data():
     r = {"round_id": "r1", "series": "yougov_approval", "unit": "%",
          "question": "q", "release_at": "2026-08-20T14:00:00Z"}
     hist = [{"date": "2026-08-0%d" % (i + 1), "value": 40 + i} for i in range(9)]
-    base = harness.build_prompt(r, hist, "recent10")
-    sfc = harness.build_prompt(r, hist, "superfc")
-    web = harness.build_prompt(r, hist, "web")
+    base = harness.build_prompt(r, hist, "recent10", "direct")
+    # superfc is an *elicitation*, so it composes with any context rather than
+    # replacing one. That it can now be asked for on top of `news` or `none`
+    # too is the whole point of separating the axes.
+    sfc = harness.build_prompt(r, hist, "recent10", "superfc")
+    web = harness.build_prompt(r, hist, "web", "direct")
     assert "Outside view" in sfc and "Pre-mortem" in sfc
     assert "Outside view" not in base
     # every condition on this axis shows the same data, so a difference in

@@ -253,128 +253,196 @@ NEWS_BLOCK = (
     "nothing after {asof} is included.\n{news}\n"
 )
 
-VARIANTS = {"none": 0, "recent10": 10}
-DEFAULT_VARIANT = "recent10"
+# --- the two axes -----------------------------------------------------------
+#
+# A condition is a *pair*, not a name: what the model is shown, and how it is
+# asked. The two are orthogonal and every combination is meaningful, so they are
+# declared as separate axes rather than as one flat list.
+#
+# Flat was how this started, and it hid a category error: `news` sat in a tuple
+# called ELICITATION_VARIANTS beside `persona` and `superfc`. But news changes
+# *what the model is shown* while those two change *how it is asked*, so the
+# tuple mixed the axes and made `news x superfc` unnameable -- the arena could
+# not express "the forecasting protocol, on a model that has also read the
+# news", which is an obvious thing to want to measure.
+#
+# CONTEXT -- what the model is shown, and how many past releases go with it:
+#
+#   none       the question and nothing else. Two things at once: the ablation
+#              that isolates what the series history is worth, and a
+#              contamination probe, since accuracy on a post-cutoff release
+#              with no history to reason from is not forecasting.
+#   recent10   the last ten releases, the same history the nulls read. The
+#              like-for-like comparison against persistence.
+#   news       recent10 plus a fixed news corpus frozen at the lock -- the same
+#              text for every entrant, archived, reproducible. The auditable
+#              version of "give it real-world information".
+#   web        recent10 plus live search. Live-only; see WEB_CONTEXTS.
+CONTEXT = {"none": 0, "recent10": 10, "news": 10, "web": 10}
+DEFAULT_CONTEXT = "recent10"
 
-# --- the elicitation axis --------------------------------------------------
+# ELICITATION -- how it is asked, holding the context fixed. This is the axis
+# the arena exists for: whether role-playing a population beats asking for a
+# number is not a prompt-engineering detail, it is the claim the whole
+# silicon-sampling literature rests on.
 #
-# The conditions above vary *what the model is shown*; every other live
-# benchmark varies the same thing, under names like closed-book versus
-# web-enabled. The conditions below vary *how it is asked*, holding the
-# information fixed, and that axis is the one this arena is for: in a social
-# simulation the question "does role-playing a population beat asking for a
-# number" is not a prompt-engineering detail, it is the scientific claim the
-# whole silicon-sampling literature rests on.
-#
-#   persona   the model is not asked to forecast at all. It answers the real
-#             survey instrument as each of twenty-four weighted respondents in
-#             turn, and the pollster's own arithmetic turns those answers into
-#             the number. This is what the industry actually sells, so a result
-#             either way is worth having: if it does not beat asking directly,
-#             the premise of the method is in question.
-#   superfc   asked directly, but through the human forecasting protocol --
-#             outside view first, then decomposition, then a pre-mortem. Tests
-#             what the *process* is worth, separately from the model.
-#   news      asked directly, plus a fixed news digest: the same corpus for
-#             every entrant, built from the Wikipedia Current Events pages as
-#             they stood at the lock. This is the auditable version of "give it
-#             real-world information" -- one corpus, archived, reproducible,
-#             and safe in the backtest because it is fetched by revision
-#             timestamp rather than as the pages read today.
-#   web       asked directly, with live search. Isolated from the rest because
-#             it is the only condition whose fairness cannot be audited after
-#             the fact; see WEB_VARIANTS below for why it is live-only.
-#
-# All three see the same ten-release history as `recent10`, so any difference
-# between them is elicitation and not information.
+#   direct     "give a mean and an sd".
+#   superfc    the human forecasting protocol -- base rate, then decomposition,
+#              then a pre-mortem. Tests what the *process* is worth, separately
+#              from the model.
+#   persona    not asked to forecast at all. Answers the real survey instrument
+#              as each of the weighted respondents in turn, and the pollster's
+#              own arithmetic makes the number. This is what the industry
+#              sells, so a result either way is worth having.
+ELICITATION = ("direct", "superfc", "persona")
+DEFAULT_ELICITATION = "direct"
+
+# Kept as an alias because `CONTEXT` is what `build_prompt` reads for the
+# history length, and callers outside this module ask for it by the old name.
+VARIANTS = CONTEXT
+DEFAULT_VARIANT = DEFAULT_CONTEXT
+
 # `web` is written and deliberately NOT in the season. It stays out until the
 # fairness question is settled: nine of fifteen models can run it at all, so a
 # leaderboard containing it compares six models against an arm they were never
 # offered. The code, the capability table and the backtest refusal all remain
-# below, so enabling it later is adding one string to this tuple.
-ELICITATION_VARIANTS = ("persona", "superfc", "news")
-for _v in ELICITATION_VARIANTS:
-    VARIANTS[_v] = 10
+# below, so enabling it later is adding one cell to SEASON_CELLS.
 
-# `web` is a working condition that is not in the season (see
-# ELICITATION_VARIANTS). It stays registered here so the code path, its
-# capability table and its backtest refusal stay live and tested rather than
-# rotting into something that has to be rediscovered; it simply produces no
-# entrants, so nothing runs it.
-VARIANTS["web"] = 10
-
-# Web search is a *prospective-only* condition, and the guard is not a
+# Web search is a *prospective-only* context, and the guard is not a
 # preference. In a live round the answer does not exist anywhere at lock time,
 # so search cannot leak it. In the backtest the answer has been published for
 # months: a model searching the open web for "Michigan sentiment July 2026"
 # reads the outcome and scores perfectly, which measures retrieval, not
 # forecasting. There is no prompt that prevents this and no way to verify
-# after the fact what a model retrieved, so the backtest refuses the condition
-# outright rather than publishing a number nobody can defend.
-WEB_VARIANTS = ("web",)
+# after the fact what a model retrieved, so the backtest refuses it outright
+# rather than publishing a number nobody can defend.
+#
+# It is the *context* that leaks, never the elicitation: how a model is asked
+# cannot reveal an outcome. So the refusal keys on the context axis alone.
+WEB_CONTEXTS = ("web",)
+WEB_VARIANTS = WEB_CONTEXTS          # old name, same tuple
 
 
-def assert_prospective(variant, where="the backtest"):
-    """Raise if `variant` may only be run on rounds whose answer is unknown."""
-    if variant in WEB_VARIANTS:
+def assert_prospective(context, where="the backtest"):
+    """Raise if `context` may only be run on rounds whose answer is unknown.
+
+    Keyed on the context axis. How a model is asked cannot reveal an outcome;
+    what it is shown can. Accepts an elicitation name too and passes it, so a
+    caller holding one half of a condition cannot accidentally skip the check.
+    """
+    if context in WEB_CONTEXTS:
         raise ValueError(
-            f"variant {variant!r} cannot run in {where}: the outcome is "
+            f"context {context!r} cannot run in {where}: the outcome is "
             "already published, so live search reads the answer instead of "
             "forecasting it. It is a live-round condition only.")
 
-# Season 0 runs both conditions, once per release, and scores them as separate
-# entrants -- which is what they are. `recent10` shows the last ten releases,
-# the same history the nulls read, so it is the like-for-like comparison
-# against persistence. `none` shows the question and nothing else, which makes
-# it two things at once: the ablation that isolates how much the series history
-# is worth, and a contamination probe, because accuracy on a post-cutoff
-# release with no history to reason from is not forecasting.
+# The cells the season runs by default. Both are `direct`; the elicitation arms
+# are opt-in through SSA_ELICITATION because one of them costs two hundred times
+# a normal entrant. `recent10` is the like-for-like comparison against
+# persistence, `none` is the ablation and the contamination probe.
 #
 # Repeated sampling is deliberately absent. At the providers' default
 # temperature a rerun does not reproduce, so the committed record of raw
 # replies is the reproducibility mechanism, not a re-run.
-SEASON_VARIANTS = ("recent10", "none")
+SEASON_CELLS = (("recent10", "direct"), ("none", "direct"))
 
-# Entrant id suffix per condition. The default condition keeps the bare model
-# name so existing forecasts, entrant records and leaderboard rows stay valid.
-VARIANT_SUFFIX = {"recent10": "", "none": "-zeroshot",
-                  "persona": "-persona", "superfc": "-superfc",
+# Entrant id = model, then the context suffix, then the elicitation suffix. The
+# default on each axis is elided, which is what keeps every id already on disk
+# valid: `claude-opus` is recent10 x direct, and always was.
+#
+# Context first, then elicitation, so `claude-opus-news-superfc` reads in the
+# order the prompt is built: what it saw, then how it was asked.
+CONTEXT_SUFFIX = {"recent10": "", "none": "-zeroshot",
                   "news": "-news", "web": "-web"}
+ELICITATION_SUFFIX = {"direct": "", "superfc": "-superfc", "persona": "-persona"}
 
-# Which models run the elicitation conditions. Every active model, because the
-# whole matrix costs about $43 for a full season and a three-model subset would
-# leave the axis unable to say whether an effect is real or one vendor's quirk.
+# Old flat table, kept because `docs/conditions.md` and the validator cite it and
+# because every single-axis id still resolves through the pair below. Derived
+# rather than restated, so the two cannot drift.
+VARIANT_SUFFIX = dict(CONTEXT_SUFFIX)
+VARIANT_SUFFIX.update({k: v for k, v in ELICITATION_SUFFIX.items() if v})
+
+# Every condition that is not a season cell. `web` is excluded from the default
+# roster by WEB_CAPABLE below rather than from this list, so the cell stays
+# nameable and testable.
+ELICITATION_VARIANTS = ("persona", "superfc", "news")
+
+
+def entrant_id(model, context=DEFAULT_CONTEXT, elicitation=DEFAULT_ELICITATION):
+    """model + condition -> the id used on disk, in the leaderboard, everywhere."""
+    if context not in CONTEXT_SUFFIX:
+        raise ValueError(f"unknown context {context!r}; known: {sorted(CONTEXT_SUFFIX)}")
+    if elicitation not in ELICITATION_SUFFIX:
+        raise ValueError(f"unknown elicitation {elicitation!r}; "
+                         f"known: {sorted(ELICITATION_SUFFIX)}")
+    return model + CONTEXT_SUFFIX[context] + ELICITATION_SUFFIX[elicitation]
+
+
+def cell(name):
+    """A condition named the way a human writes it -> (context, elicitation).
+
+    Accepts a bare axis name and pairs it with the other axis's default, which
+    is what every existing entrant means: `news` is news x direct, `superfc` is
+    recent10 x superfc. `news+superfc` names a cell on both axes at once.
+
+    This is the spelling SSA_ELICITATION takes, so a workflow variable set
+    before the axes were separated keeps meaning what it meant.
+    """
+    parts = [p.strip() for p in str(name).replace("x", "+").split("+") if p.strip()]
+    ctx, eli = None, None
+    for p in parts:
+        if p in CONTEXT_SUFFIX:
+            if ctx:
+                raise ValueError(f"{name!r} names two contexts")
+            ctx = p
+        elif p in ELICITATION_SUFFIX:
+            if eli:
+                raise ValueError(f"{name!r} names two elicitations")
+            eli = p
+        else:
+            raise ValueError(
+                f"unknown condition {p!r} in {name!r}; contexts: "
+                f"{sorted(CONTEXT_SUFFIX)}, elicitations: {sorted(ELICITATION_SUFFIX)}")
+    if not parts:
+        raise ValueError("empty condition")
+    return (ctx or DEFAULT_CONTEXT, eli or DEFAULT_ELICITATION)
+
+
+# Which models run the opt-in cells. Every active model, because a three-model
+# subset could not say whether an effect is real or one vendor's quirk.
 #
 # The reason to narrow it is cost, not correctness: `persona` is one call per
-# simulated respondent per round, roughly two hundred times a normal entrant,
-# so it dominates the bill. Narrow this tuple to trade coverage for money, and
-# run tools/estimate_arms.py first -- it calls nothing and prints the total.
+# simulated respondent per round, roughly two hundred times a normal entrant, so
+# it dominates the bill. Narrow this to trade coverage for money, and run
+# tools/estimate_arms.py first -- it calls nothing and prints the total.
 #
-# The web condition self-restricts to WEB_CAPABLE regardless of what is listed
-# here, so six models simply have no web arm.
 # Defined as a function rather than a constant because PENDING_ACTIVATION is
 # declared further down; a constant here read it before it existed.
 def elicitation_models():
     return tuple(active_models())
 
 
-def elicitation_entrants(variants=ELICITATION_VARIANTS, models=None):
-    """(entrant_id, model_key, variant) for the how-it-is-asked conditions.
+def cell_entrants(cells, models=None):
+    """(entrant_id, model, context, elicitation) for each (cell, model).
 
-    The web condition is emitted only for models whose vendor hosts a search
-    tool, so a roster never contains an entrant that is guaranteed to fail.
-    Everything else runs anywhere.
+    The web context is emitted only for models whose vendor hosts a search tool,
+    so a roster never contains an entrant guaranteed to fail.
     """
     models = elicitation_models() if models is None else models
     out = []
-    for v in variants:
+    for ctx, eli in cells:
         for m in models:
             if m not in MODELS:
                 continue
-            if v in WEB_VARIANTS and m not in WEB_CAPABLE:
+            if ctx in WEB_CONTEXTS and m not in WEB_CAPABLE:
                 continue
-            out.append((m + VARIANT_SUFFIX[v], m, v))
+            out.append((entrant_id(m, ctx, eli), m, ctx, eli))
     return out
+
+
+def elicitation_entrants(variants=ELICITATION_VARIANTS, models=None):
+    """The opt-in cells, named the way SSA_ELICITATION names them."""
+    return cell_entrants([cell(v) for v in variants], models)
 
 
 # Entered in MODELS but not run: the gateway rejects the prefixed namespace
@@ -389,23 +457,28 @@ def active_models():
 
 
 def season_entrants():
-    """(entrant_id, model_key, variant) for every condition the arena runs."""
-    return [(m + VARIANT_SUFFIX[v], m, v)
-            for v in SEASON_VARIANTS for m in active_models()]
+    """(entrant_id, model, context, elicitation) for every cell the season runs."""
+    return cell_entrants(SEASON_CELLS, active_models())
 
 
-def resolve(entrant_id):
-    """Entrant id -> (model_key, variant). Raises on an unknown id."""
-    for suffix, variant in sorted(
-            ((s, v) for v, s in VARIANT_SUFFIX.items()),
-            key=lambda x: -len(x[0])):          # longest suffix first
-        if suffix and entrant_id.endswith(suffix):
-            model = entrant_id[:-len(suffix)]
+def resolve(entrant_id_):
+    """Entrant id -> (model, context, elicitation). Raises on an unknown id.
+
+    Suffixes are stripped longest-first on each axis so that `-news-superfc`
+    is not read as a model called `<x>-news` in the superfc condition. Every id
+    written before the axes were separated resolves to exactly what it meant.
+    """
+    for eli, esuf in sorted(ELICITATION_SUFFIX.items(), key=lambda kv: -len(kv[1])):
+        if esuf and not entrant_id_.endswith(esuf):
+            continue
+        rest = entrant_id_[:-len(esuf)] if esuf else entrant_id_
+        for ctx, csuf in sorted(CONTEXT_SUFFIX.items(), key=lambda kv: -len(kv[1])):
+            if csuf and not rest.endswith(csuf):
+                continue
+            model = rest[:-len(csuf)] if csuf else rest
             if model in MODELS:
-                return model, variant
-    if entrant_id in MODELS:
-        return entrant_id, DEFAULT_VARIANT
-    raise KeyError(f"unknown entrant id: {entrant_id!r}")
+                return model, ctx, eli
+    raise KeyError(f"unknown entrant id: {entrant_id_!r}")
 
 
 def _env_suffix(entrant):
@@ -418,7 +491,7 @@ def model_id(entrant):
     Accepts either a model key or a full entrant id; the condition suffix does
     not change which model answers, so both resolve to the same name.
     """
-    model, _ = resolve(entrant)
+    model = resolve(entrant)[0]
     return (os.environ.get("SSA_MODEL_" + _env_suffix(model))
             or MODELS[model]["model"])
 
@@ -443,7 +516,7 @@ def base_url(entrant):
     the configured gateway and invalidated their whole backtest cache, since
     `call_identity` (and therefore the cache key) contains the base URL.
     """
-    model, _ = resolve(entrant)
+    model = resolve(entrant)[0]
     shared = ((os.environ.get("SSA_BASE_GATEWAY")
                or os.environ.get("SSA_BASE_QWEN"))
               if model in GATEWAY_ENTRANTS else None)
@@ -452,11 +525,12 @@ def base_url(entrant):
 
 
 def has_key(entrant):
-    model, _ = resolve(entrant)
+    model = resolve(entrant)[0]
     return bool(os.environ.get(MODELS[model]["env"]))
 
 
-def build_prompt(r, history, variant=DEFAULT_VARIANT, news=None):
+def build_prompt(r, history, context=DEFAULT_CONTEXT,
+                 elicitation=DEFAULT_ELICITATION, news=None):
     """The exact text an entrant sees.
 
     `history` is the strictly pre-lock series the round's baselines were built
@@ -466,9 +540,11 @@ def build_prompt(r, history, variant=DEFAULT_VARIANT, news=None):
     Methodology and cadence come from the round when present and fall back to
     the series registry, so a round definition never has to restate them.
     """
-    if variant not in VARIANTS:
-        raise ValueError(f"unknown prompt variant {variant!r}; "
-                         f"known: {sorted(VARIANTS)}")
+    if context not in CONTEXT:
+        raise ValueError(f"unknown context {context!r}; known: {sorted(CONTEXT)}")
+    if elicitation not in ELICITATION_SUFFIX:
+        raise ValueError(f"unknown elicitation {elicitation!r}; "
+                         f"known: {sorted(ELICITATION_SUFFIX)}")
     meta = {}
     if r.get("series"):
         try:
@@ -484,7 +560,7 @@ def build_prompt(r, history, variant=DEFAULT_VARIANT, news=None):
         cadence=r.get("cadence") or meta.get("cadence", "not stated"),
         release=r["release_at"][:10])
 
-    n = VARIANTS[variant]
+    n = CONTEXT[context]
     if n == 0:
         body = NO_HISTORY
     else:
@@ -494,9 +570,9 @@ def build_prompt(r, history, variant=DEFAULT_VARIANT, news=None):
     # `web` differs from recent10 in the request, not the text: the search tool
     # is attached per provider in call_provider. Keeping the prompt identical is
     # what makes the comparison an information comparison.
-    protocol = SUPERFC if variant == "superfc" else ""
+    protocol = SUPERFC if elicitation == "superfc" else ""
     digest = ""
-    if variant == "news":
+    if context == "news":
         if not news or not news.get("text"):
             raise ValueError(
                 "the news condition needs a digest; refusing to file it as an "
@@ -592,7 +668,7 @@ _locks_guard = threading.Lock()
 def _provider_key(entrant):
     """What counts as one provider for rate-limiting: the endpoint host, so the
     four gateway-hosted models share a budget rather than getting one each."""
-    model, _ = resolve(entrant)
+    model = resolve(entrant)[0]
     base = base_url(entrant)
     host = base.split("//", 1)[-1].split("/", 1)[0]
     return f"{MODELS[model]['env']}@{host}"
@@ -636,7 +712,7 @@ WEB_CAPABLE = frozenset({
 })
 
 
-def call_provider(entrant, prompt, with_usage=False, variant=None):
+def call_provider(entrant, prompt, with_usage=False, context=None):
     """One completion.
 
     Returns the reply text, or (text, usage) when with_usage is set. `usage` is
@@ -647,8 +723,8 @@ def call_provider(entrant, prompt, with_usage=False, variant=None):
     `variant` only matters where the condition changes the *request* rather
     than the prompt, which today means attaching the provider's search tool.
     """
-    model, variant_of_id = resolve(entrant)
-    variant = variant or variant_of_id
+    model, context_of_id, _ = resolve(entrant)
+    context = context or context_of_id
     cfg = MODELS[model]
     key = os.environ[cfg["env"]]
     mid = model_id(entrant)
@@ -658,7 +734,7 @@ def call_provider(entrant, prompt, with_usage=False, variant=None):
           "gemini": _call_gemini}.get(api)
     if fn is None:
         raise ValueError("unknown api: " + api)
-    if variant in WEB_VARIANTS:
+    if context in WEB_CONTEXTS:
         extra = WEB_TOOLS.get(api) if model in WEB_CAPABLE else None
         if extra is None:
             raise ValueError(
@@ -951,7 +1027,7 @@ def forecast_persona(entrant, r, history=None, previous=None):
     def ask(p):
         pid = p["id"]
         try:
-            reply = call_provider(entrant, prompts[pid], variant="persona")
+            reply = call_provider(entrant, prompts[pid])
             parsed = parse_survey_reply(reply, spec)
         except Exception as e:                 # noqa: BLE001 - collected below
             with lock:
@@ -974,7 +1050,8 @@ def forecast_persona(entrant, r, history=None, previous=None):
 
     mean = personas.aggregate(spec["aggregate"], answers, weights)
     sd = personas.sd_for(weights, history, scale=spec.get("se_scale", 1.0))
-    note = (f"{model_id(entrant)}, harness v1, variant=persona, "
+    note = (f"{model_id(entrant)}, harness v1, "
+            f"context={resolve(entrant)[1]} elicitation=persona, "
             f"{len(answers)}/{len(panel)} respondents, "
             f"{responded:.0%} of panel weight, "
             f"aggregate={spec['aggregate']}; in={ih}")
@@ -988,8 +1065,8 @@ def forecast_persona(entrant, r, history=None, previous=None):
 
 # --- entry point -----------------------------------------------------------
 
-def forecast(entrant, r, history=None, previous=None, variant=None,
-             news=None):
+def forecast(entrant, r, history=None, previous=None, context=None,
+             elicitation=None, news=None):
     """One forecast dict for a round definition with baselines attached.
 
     `previous` is the forecast already on disk for this (round, entrant), if
@@ -1000,10 +1077,12 @@ def forecast(entrant, r, history=None, previous=None, variant=None,
     per = r["baselines"]["persistence"]
     # The condition is carried by the entrant id, so a caller cannot file a
     # forecast under one entrant while prompting for another.
-    variant = variant or resolve(entrant)[1]
-    if variant == "persona":
+    _, ctx_of_id, eli_of_id = resolve(entrant)
+    context = context or ctx_of_id
+    elicitation = elicitation or eli_of_id
+    if elicitation == "persona":
         return forecast_persona(entrant, r, history, previous)
-    prompt = build_prompt(r, history, variant, news=news)
+    prompt = build_prompt(r, history, context, elicitation, news=news)
     ih = prompt_hash(entrant, prompt)
 
     if previous and f"in={ih}" in (previous.get("notes") or "") \
@@ -1022,7 +1101,8 @@ def forecast(entrant, r, history=None, previous=None, variant=None,
     else:
         try:
             top = parse_forecast(call_provider(entrant, prompt))
-            note = (f"{model_id(entrant)}, harness v1, variant={variant}, "
+            note = (f"{model_id(entrant)}, harness v1, "
+                    f"context={context} elicitation={elicitation}, "
                     f"1 sample; in={ih}")
         except Exception as e:
             if not ALLOW_MOCK:

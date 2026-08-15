@@ -210,11 +210,10 @@ def elicitation_variants(value=None):
     if raw in ("1", "all"):
         return tuple(harness.ELICITATION_VARIANTS)
     want = tuple(v.strip() for v in raw.split(",") if v.strip())
-    bad = [v for v in want if v not in harness.ELICITATION_VARIANTS]
-    if bad:
-        raise ValueError(
-            f"SSA_ELICITATION names unknown condition(s) {bad}; known: "
-            f"{list(harness.ELICITATION_VARIANTS)}, or '1' for all")
+    for v in want:
+        # harness.cell raises on an unknown name and accepts a combination
+        # like `news+superfc`, which is the whole point of the two axes.
+        harness.cell(v)
     return want
 
 
@@ -376,7 +375,7 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
         # Every model runs both conditions and they are filed as separate
         # entrants: same weights, different information, so their scores answer
         # different questions and belong on different leaderboard rows.
-        for entrant, _model, _variant in season_roster():
+        for entrant, _model, _ctx, _eli in season_roster():
             jobs.append((r, entrant, os.path.join(rdir, entrant + ".json")))
 
     # One provider call per job, and at max reasoning effort a single call can
@@ -404,11 +403,11 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
     def run_job(job):
         r, entrant, path = job
         try:
-            variant = harness.resolve(entrant)[1]
+            _, context, _elicitation = harness.resolve(entrant)
             body = harness.forecast(entrant, r,
                                     history=hist_by_round.get(r["round_id"]),
                                     previous=read_forecast(path),
-                                    news=news_for(r) if variant == "news" else None)
+                                    news=news_for(r) if context == "news" else None)
         except Exception as e:                     # noqa: BLE001 - collected
             # Collected rather than raised. Failing at the first bad provider
             # would strand every other entrant's forecast unwritten, and rounds

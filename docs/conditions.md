@@ -10,85 +10,80 @@ measure the conditions, not only the models.
 
 ---
 
-## 1. The grid
+## 1. The two axes
 
-Two axes.
+A condition is a **pair**, not a name.
 
-**Information** — what the model is shown:
+**Context** — what the model is shown:
 
 | id | shown |
 |---|---|
-| `recent10` | the last ten releases of the series, the same history the nulls read |
 | `none` | the question and nothing else |
-| `news` | `recent10`, plus a fixed news corpus frozen at the lock |
-| `web` | `recent10`, plus the vendor's live search tool |
+| `recent10` | the last ten releases, the same history the nulls read |
+| `news` | `recent10` plus a fixed news corpus frozen at the lock |
+| `web` | `recent10` plus live search |
 
-**Elicitation** — how it is asked, holding the information fixed:
+**Elicitation** — how it is asked:
 
 | id | asked |
 |---|---|
-| direct | "give a mean and an sd" |
-| `superfc` | the human forecasting protocol: outside view, decomposition, pre-mortem |
-| `persona` | not asked to forecast at all — answers the real survey instrument as each of 192 weighted respondents, and the pollster's arithmetic makes the number |
+| `direct` | "give a mean and an sd" |
+| `superfc` | the human forecasting protocol — base rate, decomposition, pre-mortem |
+| `persona` | not asked to forecast at all; answers the real survey instrument as each weighted respondent, and the pollster's arithmetic makes the number |
 
-Twelve cells. **Six are implemented, and they form a cross rather than a
-filled grid:**
+The two are **orthogonal**, and every one of the twelve cells is meaningful.
 
-|  | direct | `persona` | `superfc` |
+This was not always the code's shape. `news` used to sit in a tuple called
+`ELICITATION_VARIANTS` beside `persona` and `superfc` — but news changes *what
+the model is shown* while those two change *how it is asked*, so the tuple mixed
+the axes and made `news × superfc` unnameable. The arena could not express "the
+forecasting protocol, on a model that has also read the news", which is an
+obvious thing to want to measure.
+
+Which cells run:
+
+|  | `direct` | `superfc` | `persona` |
 |---|---|---|---|
-| `none` | ✅ | — | — |
-| `recent10` | ✅ | ✅ | ✅ |
-| `news` | ✅ | — | — |
-| `web` | ✅ *(not in the season)* | — | — |
+| `none` | ✅ season | ○ | ○ |
+| `recent10` | ✅ season | ○ | ○ |
+| `news` | ○ | ○ | ○ |
+| `web` | ○ *(live-only)* | ○ | ○ |
 
-That shape is deliberate rather than unfinished: every implemented cell differs
-from `recent10 × direct` in exactly one thing, so any difference is
-attributable. Filling the rest is a cost decision, not a code decision, and the
-costs are wildly uneven — see §4.
+✅ = files every round by default. ○ = **nameable and runnable**, off until
+`SSA_ELICITATION` asks for it. Nothing but the two season cells costs anything
+by default.
 
 ## 2. Entrant ids
 
-An entrant id is the model key, then the condition as a suffix. The **default
-condition on each axis is elided**, so the plain model name is `recent10 ×
-direct`:
+Model, then the context suffix, then the elicitation suffix. **The default on
+each axis is elided**, which is what keeps every id already on disk valid:
+
+```
+<model>[-<context, recent10 elided>][-<elicitation, direct elided>]
+```
 
 | cell | entrant id |
 |---|---|
-| `recent10` × direct | `claude-opus` |
-| `none` × direct | `claude-opus-zeroshot` |
-| `news` × direct | `claude-opus-news` |
-| `web` × direct | `claude-opus-web` |
-| `recent10` × `persona` | `claude-opus-persona` |
+| `recent10` × `direct` | `claude-opus` |
+| `none` × `direct` | `claude-opus-zeroshot` |
+| `news` × `direct` | `claude-opus-news` |
+| `web` × `direct` | `claude-opus-web` |
 | `recent10` × `superfc` | `claude-opus-superfc` |
+| `recent10` × `persona` | `claude-opus-persona` |
+| **`news` × `superfc`** | **`claude-opus-news-superfc`** |
+| **`none` × `persona`** | **`claude-opus-zeroshot-persona`** |
 
-`harness.resolve()` reverses this by longest-suffix-first match, and
-`harness.VARIANT_SUFFIX` is the table. The id is load-bearing in three places
-at once — the forecast path `forecasts/<round_id>/<entrant>.json`, the entrant
-record `entrants/<entrant_id>.json`, and the leaderboard row — and
-`tools/validate_submission.py` checks all three agree.
+Context first, then elicitation, so the id reads in the order the prompt is
+built: what it saw, then how it was asked. `harness.resolve()` reverses it by
+stripping the longest suffix on each axis in turn and returns
+`(model, context, elicitation)`; `harness.entrant_id()` builds it.
 
-### 2.1 When a second axis is added
-
-The suffix table is currently flat: one suffix per condition, six entries. It
-can express any single cell of the cross above and **cannot express a
-combination** — there is no `news × superfc` id today.
-
-The extension, when a combination is first needed, is to compose the two
-suffixes with information first:
-
-```
-<model>[-<information, recent10 elided>][-<elicitation, direct elided>]
-
-  claude-opus-news-superfc      news x superfc
-  claude-opus-zeroshot-persona  none x persona
-```
-
-Every id in the table above survives this unchanged, because eliding the
-defaults is what makes `claude-opus` and `claude-opus-news` mean what they
-already mean. The change is `VARIANT_SUFFIX` and `resolve()`; nothing on disk
-has to be renamed. **Doing it before a combination exists is free; doing it
-after means rewriting committed forecasts**, so it should land with the first
-combination and not later.
+The id is load-bearing in three places at once — the forecast path
+`forecasts/<round_id>/<entrant>.json`, the entrant record
+`entrants/<entrant_id>.json`, and the leaderboard row — and
+`tools/validate_submission.py` checks all three agree. `tests/test_conditions.py`
+asserts that every id already committed resolves to the same condition and
+rebuilds to the same string, because separating the axes must rename nothing.
 
 ## 3. The news corpus
 
@@ -184,20 +179,27 @@ Web search is refused in the backtest (`harness.assert_prospective`) because
 the outcome was published months ago. News is not refused, and the reason is
 exactly the revision-timestamp discipline above.
 
-## 4. Turning an arm on
+## 4. Turning a cell on
 
-Nothing is on by default. `SSA_ELICITATION` names the arms that file:
+Nothing but the two season cells is on. `SSA_ELICITATION` names the cells that
+also file:
 
 ```
-SSA_ELICITATION=news             just the news corpus
-SSA_ELICITATION=news,superfc     two of them
-SSA_ELICITATION=1                every arm
-                                 (unset) none
+SSA_ELICITATION=news              news x direct
+SSA_ELICITATION=superfc           recent10 x superfc
+SSA_ELICITATION=news+superfc      news x superfc
+SSA_ELICITATION=news,superfc      two separate cells
+SSA_ELICITATION=1                 every non-season cell
+                                  (unset) none
 ```
+
+A bare axis name pairs with the other axis's default, which is exactly what it
+meant before the axes were separated — a workflow variable set earlier keeps
+working. `+` composes across the axes. An unknown name raises rather than
+silently filing nothing.
 
 In CI it comes from the repository variable of the same name, so **merging the
-code for an arm never starts paying for it**. An unknown name raises rather
-than silently filing nothing.
+code for a cell never starts paying for it**.
 
 The costs are two orders of magnitude apart, which is the whole reason the
 switch takes a list. From `tools/estimate_arms.py`, for a full season across
