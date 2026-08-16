@@ -23,6 +23,12 @@ needed:
 Model id and endpoint are both overridable per entrant without touching code:
   SSA_MODEL_GROK=grok-4.3   SSA_BASE_QWEN=https://my-gateway/compatible-mode/v1
 
+And a whole entrant can be moved to a different *route* -- a different key,
+protocol, host and model id at once -- with SSA_OPENROUTER, for when a vendor
+account stops serving in a way no code change fixes. Off unless set, manual
+rather than automatic, and recorded in every forecast it produces, because the
+endpoint is part of the condition. See docs/routes.md.
+
 Cost control: a forecast is only re-requested when its inputs changed. Every
 filed forecast carries in=<hash of the prompt> in its notes; if the hash still
 matches, the existing file is kept and no API call is made. So a round costs
@@ -167,6 +173,131 @@ MODELS = {
         "base": GATEWAY, "model": "MiniMax/MiniMax-M3",
     },
 }
+
+# --- routes ----------------------------------------------------------------
+#
+# A *route* is where a model is actually reached: which key opens it, which
+# wire protocol it speaks, which host serves it, and what it is called there.
+# Every model above has a direct route -- its own vendor. Some also have an
+# OpenRouter route, which is one key and one OpenAI-compatible endpoint in
+# front of all of them.
+#
+# This exists because a vendor account can stop serving in a way that no code
+# change fixes. On 2026-08-14 the Anthropic organisation was disabled (HTTP
+# 400, "This organization has been disabled") and the OpenAI account ran out of
+# credits (HTTP 429, insufficient_quota). That is seven of fifteen entrants
+# dead on every six-hourly refresh, on rounds whose locks do not wait.
+#
+# **Opting in is manual and per entrant, never automatic.** An automatic
+# failover on an error would move an entrant to a different endpoint mid-season
+# on a transient 429, and nothing on the leaderboard would say so. The endpoint
+# is part of the condition, not a detail of it: two hosts can serve different
+# weights under one model name, quantise differently, or reach a different
+# reasoning depth. So the switch is a repository variable a human sets, and it
+# is recorded in every forecast it produces.
+OPENROUTER_BASE = "https://openrouter.ai/api/v1"
+# The name the secret is provisioned under. Not OPENROUTER_API_KEY: renaming
+# the lookup without renaming the secret drops the route silently, which is
+# exactly how the SSA_BASE_QWEN override was lost once already.
+OPENROUTER_ENV = "OPEN_ROUTER"
+
+# Model ids on OpenRouter, written out rather than derived. `vendor/model` is a
+# convention, not a rule -- Kimi is `moonshotai/`, GLM is `z-ai/`, Grok is
+# `x-ai/` -- and a derived id that is wrong is a 404 at lock time.
+#
+# Every entry is a model OpenRouter's public catalogue actually lists, checked
+# against https://openrouter.ai/api/v1/models (keyless, free) rather than
+# guessed. Two models are deliberately absent:
+#
+#   qwen-3.7  OpenRouter carries `qwen/qwen3.7-max`, the floating alias, and
+#             not the dated `qwen3.7-max-2026-05-20` snapshot this entrant is
+#             pinned to. An alias that rolls forward mid-season silently swaps
+#             the entrant, and scores from before and after are not comparable.
+#             The pin is worth more than the redundancy.
+#   qwen-3.8  likewise `qwen/qwen3.8-max`; kept out for symmetry with 3.7 so
+#             the two Qwen entrants are never served from different kinds of
+#             pointer.
+OPENROUTER_MODELS = {
+    "gpt-5.6-luna": "openai/gpt-5.6-luna",
+    "gpt-5.6-sol": "openai/gpt-5.6-sol",
+    "gpt-5.6-terra": "openai/gpt-5.6-terra",
+    "claude-opus": "anthropic/claude-opus-4.8",
+    "claude-opus-5": "anthropic/claude-opus-5",
+    "claude-sonnet": "anthropic/claude-sonnet-5",
+    "claude-fable": "anthropic/claude-fable-5",
+    "gemini-pro": "google/gemini-3.1-pro-preview",
+    "gemini-flash": "google/gemini-3.6-flash",
+    "grok": "x-ai/grok-4.5",
+    "deepseek-pro": "deepseek/deepseek-v4-pro",
+    "deepseek-flash": "deepseek/deepseek-v4-flash",
+    "kimi": "moonshotai/kimi-k3",
+    "glm": "z-ai/glm-5.2",
+    "minimax": "minimax/minimax-m3",
+}
+
+# OpenRouter normalises reasoning depth to one parameter across vendors, so the
+# vendor-specific blocks above do not apply here -- sending `reasoning_effort:
+# xhigh` or Anthropic's `thinking`/`output_config` pair to this endpoint is at
+# best ignored and at worst a 400.
+#
+# `high` is the top of OpenRouter's unified scale, and it is **not** the same
+# depth as the direct route's ceiling: OpenAI's own `xhigh` sits above `high`,
+# and Anthropic's `effort: max` is its own scale entirely. So a routed entrant
+# is the same weights asked to think somewhat less hard, which is a real
+# difference and the reason `via=openrouter` is written into the forecast.
+OPENROUTER_EFFORT = {"reasoning": {"effort": "high"}}
+
+
+def openrouter_models():
+    """Which models the OpenRouter route is switched on for.
+
+    `SSA_OPENROUTER` is a comma-separated list of model keys, or `1` for every
+    model with an entry above. Unset means none, so merging this code changes
+    no entrant's endpoint until someone sets the variable.
+
+    An unknown name raises rather than being skipped. A typo that quietly
+    routes nothing would look identical to the outage it was set to work
+    around -- the run would fail exactly as before, with the variable set.
+    """
+    raw = (os.environ.get("SSA_OPENROUTER") or "").strip()
+    if not raw:
+        return frozenset()
+    if raw == "1":
+        return frozenset(OPENROUTER_MODELS)
+    want = [m.strip() for m in raw.split(",") if m.strip()]
+    bad = [m for m in want if m not in OPENROUTER_MODELS]
+    if bad:
+        raise ValueError(
+            f"SSA_OPENROUTER names {bad}, which "
+            + ("is not a model here" if len(bad) == 1 else "are not models here")
+            + f"; routable: {sorted(OPENROUTER_MODELS)}")
+    return frozenset(want)
+
+
+def route(entrant):
+    """Where this entrant is reached: (env, api, base, model, params, via).
+
+    `via` is `direct` or `openrouter` and is the one field that exists purely
+    to be written down -- into the forecast's notes, so a file says which
+    endpoint answered it, and into the entrant record on the site.
+
+    The per-entrant `SSA_MODEL_<ENTRANT>` and `SSA_BASE_<ENTRANT>` overrides
+    still apply on top of whichever route is chosen; they are the escape hatch
+    for a self-hosted gateway and they stay the most specific thing there is.
+    """
+    model = resolve(entrant)[0]
+    cfg = MODELS[model]
+    if model in openrouter_models():
+        return {"env": OPENROUTER_ENV, "api": "openai", "base": OPENROUTER_BASE,
+                "model": OPENROUTER_MODELS[model],
+                "params": dict(OPENROUTER_EFFORT), "via": "openrouter"}
+    shared = ((os.environ.get("SSA_BASE_GATEWAY")
+               or os.environ.get("SSA_BASE_QWEN"))
+              if model in GATEWAY_ENTRANTS else None)
+    return {"env": cfg["env"], "api": cfg["api"],
+            "base": shared or cfg["base"], "model": cfg["model"],
+            "params": dict(cfg.get("params") or {}), "via": "direct"}
+
 
 # No output ceiling is imposed. Thinking tokens count against any cap, so at
 # max reasoning effort a small one truncates the reply before the model reaches
@@ -570,7 +701,7 @@ def model_id(entrant):
     """
     model = resolve(entrant)[0]
     return (os.environ.get("SSA_MODEL_" + _env_suffix(model))
-            or MODELS[model]["model"])
+            or route(entrant)["model"])
 
 
 def base_url(entrant):
@@ -594,16 +725,19 @@ def base_url(entrant):
     `call_identity` (and therefore the cache key) contains the base URL.
     """
     model = resolve(entrant)[0]
-    shared = ((os.environ.get("SSA_BASE_GATEWAY")
-               or os.environ.get("SSA_BASE_QWEN"))
-              if model in GATEWAY_ENTRANTS else None)
     return (os.environ.get("SSA_BASE_" + _env_suffix(model))
-            or shared or MODELS[model]["base"]).rstrip("/")
+            or route(entrant)["base"]).rstrip("/")
 
 
 def has_key(entrant):
-    model = resolve(entrant)[0]
-    return bool(os.environ.get(MODELS[model]["env"]))
+    """Whether the key this entrant's *current route* needs is present.
+
+    Not the vendor's key: a model routed through OpenRouter needs the
+    OpenRouter key and does not care whether its vendor's is set. Reading the
+    vendor's would report ready for an entrant that cannot be called, and not
+    ready for one that can.
+    """
+    return bool(os.environ.get(route(entrant)["env"]))
 
 
 def build_prompt(r, history, context=DEFAULT_CONTEXT,
@@ -744,11 +878,15 @@ _locks_guard = threading.Lock()
 
 def _provider_key(entrant):
     """What counts as one provider for rate-limiting: the endpoint host, so the
-    four gateway-hosted models share a budget rather than getting one each."""
-    model = resolve(entrant)[0]
-    base = base_url(entrant)
-    host = base.split("//", 1)[-1].split("/", 1)[0]
-    return f"{MODELS[model]['env']}@{host}"
+    four gateway-hosted models share a budget rather than getting one each.
+
+    Keyed on the route's own key and host, so entrants moved to OpenRouter join
+    one shared budget there instead of carrying their vendor's quota to a host
+    that never had it.
+    """
+    r = route(entrant)
+    host = base_url(entrant).split("//", 1)[-1].split("/", 1)[0]
+    return f"{r['env']}@{host}"
 
 
 def _provider_slot(entrant):
@@ -802,26 +940,39 @@ def call_provider(entrant, prompt, with_usage=False, context=None):
     """
     model, context_of_id, _ = resolve(entrant)
     context = context or context_of_id
-    cfg = MODELS[model]
-    key = os.environ[cfg["env"]]
+    rt = route(entrant)
+    cfg = {"params": dict(rt["params"])}
+    key = os.environ[rt["env"]]
     mid = model_id(entrant)
     base = base_url(entrant)
-    api = cfg["api"]
+    api = rt["api"]
     fn = {"openai": _call_openai, "anthropic": _call_anthropic,
           "gemini": _call_gemini}.get(api)
     if fn is None:
         raise ValueError("unknown api: " + api)
     if context in WEB_CONTEXTS:
-        extra = WEB_TOOLS.get(api) if model in WEB_CAPABLE else None
+        # Hosted search belongs to the *route*, not to the model. OpenRouter
+        # serves Claude and GPT over one OpenAI-compatible endpoint but does
+        # not proxy Anthropic's `web_search_20260209` or OpenAI's hosted
+        # `web_search`; its own `:online` plugin is a third-party search
+        # bolted on, which is a different condition wearing the same name.
+        # Refusing is the only safe answer -- a host that accepts unknown
+        # fields and ignores them yields a "web" entrant identical to its
+        # closed-book twin, and a published comparison between two arms that
+        # were never different.
+        extra = (WEB_TOOLS.get(api)
+                 if model in WEB_CAPABLE and rt["via"] == "direct" else None)
         if extra is None:
+            why = ("is routed through OpenRouter, which does not proxy the "
+                   "vendor's hosted search" if rt["via"] != "direct"
+                   else "has no vendor-hosted search")
             raise ValueError(
-                f"{entrant} ({model}) has no vendor-hosted search, so it "
-                "cannot run the web condition. Speaking the OpenAI protocol is "
-                "not the same as serving OpenAI's tools; add the model to "
-                "WEB_CAPABLE only once its own endpoint is confirmed to run "
-                "the search server-side.")
-        cfg = dict(cfg)
-        cfg["params"] = dict(cfg.get("params") or {}, **extra)
+                f"{entrant} ({model}) {why}, so it cannot run the web "
+                "condition. Speaking the OpenAI protocol is not the same as "
+                "serving OpenAI's tools; add the model to WEB_CAPABLE only "
+                "once its own endpoint is confirmed to run the search "
+                "server-side.")
+        cfg["params"].update(extra)
     with _provider_slot(entrant):
         text, usage = fn(cfg, base, key, mid, prompt)
     return (text, usage) if with_usage else text
@@ -1095,7 +1246,7 @@ def forecast_persona(entrant, r, history=None, previous=None):
 
     if not has_key(entrant):
         raise RuntimeError(
-            f"{entrant}: no {MODELS[resolve(entrant)[0]]['env']} in the "
+            f"{entrant}: no {route(entrant)['env']} in the "
             "environment; the persona condition never files a placeholder.")
 
     answers, failures = {}, []
@@ -1127,7 +1278,7 @@ def forecast_persona(entrant, r, history=None, previous=None):
 
     mean = personas.aggregate(spec["aggregate"], answers, weights)
     sd = personas.sd_for(weights, history, scale=spec.get("se_scale", 1.0))
-    note = (f"{model_id(entrant)}, harness v1, "
+    note = (f"{model_id(entrant)}, harness v1, via={route(entrant)['via']}, "
             f"context={resolve(entrant)[1]} elicitation=persona, "
             f"{len(answers)}/{len(panel)} respondents, "
             f"{responded:.0%} of panel weight, "
@@ -1169,7 +1320,7 @@ def forecast(entrant, r, history=None, previous=None, context=None,
     if not has_key(entrant):
         if not ALLOW_MOCK:
             raise RuntimeError(
-                f"{entrant}: no {MODELS[resolve(entrant)[0]]['env']} in the "
+                f"{entrant}: no {route(entrant)['env']} in the "
                 "environment. Set the key, or set SSA_ALLOW_MOCK=1 to file a "
                 "labelled placeholder instead.")
         top = mock_forecast(entrant, r["round_id"], per["mean"], per["sd"])
@@ -1178,7 +1329,7 @@ def forecast(entrant, r, history=None, previous=None, context=None,
     else:
         try:
             top = parse_forecast(call_provider(entrant, prompt))
-            note = (f"{model_id(entrant)}, harness v1, "
+            note = (f"{model_id(entrant)}, harness v1, via={route(entrant)['via']}, "
                     f"context={context} elicitation={elicitation}, "
                     f"1 sample; in={ih}")
         except Exception as e:
