@@ -6,6 +6,11 @@ name: source-probe
 # indistinguishable from outside. This asks the failing environment directly.
 on:
   workflow_dispatch:
+  # Also on push to this branch, because workflow_dispatch only works once the
+  # file is on the default branch and the whole point is to get the answer now.
+  push:
+    branches: [umich-preliminary]
+    paths: ['.github/workflows/source-probe.yml']
 
 jobs:
   probe:
