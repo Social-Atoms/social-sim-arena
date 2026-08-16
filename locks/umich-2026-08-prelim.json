@@ -5,10 +5,6 @@
   "observed_at": "2026-08-12T13:59:14Z",
   "history": [
     {
-      "date": "2021-07-01",
-      "value": 81.2
-    },
-    {
       "date": "2021-08-01",
       "value": 70.3
     },
@@ -243,6 +239,23 @@
     {
       "date": "2026-06-01",
       "value": 49.5
+    },
+    {
+      "date": "2026-07-01",
+      "value": 55.2
     }
-  ]
+  ],
+  "corrected": {
+    "at": "2026-08-16T05:44:27Z",
+    "why": "the original snapshot was taken while ssa/series.michigan_history still fell back to FRED, which republishes this series a month late. It froze a history ending 2026-06-01 when the survey's own table already carried 2026-07-01, so this round's baselines were anchored a month stale and its resolution silently became July's final rather than August's preliminary.",
+    "was": {
+      "date": "2026-06-01",
+      "value": 49.5
+    },
+    "now": {
+      "date": "2026-07-01",
+      "value": 55.2
+    },
+    "note": "rewriting a lock snapshot is normally forbidden -- it is the record of what a round actually froze. Done here, once, before public launch, because the file recorded a freeze no correct pipeline would have produced. The fallback that caused it is deleted, not fixed."
+  }
 }

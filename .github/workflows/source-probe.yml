@@ -1,0 +1,64 @@
+name: source-probe
+
+# Asks the failing environment directly, by hand, when a source starts
+# refusing us. It already earned its place once: Civiqs began 403ing the
+# scheduled refresh on 2026-08-14 while returning 200 from a residential IP,
+# and the two candidate causes -- the runner's datacenter address, or our thin
+# request headers -- were indistinguishable from outside.
+#
+# The answer, 2026-08-16: all three header sets get 403 from a runner,
+# including a complete Chrome fingerprint, while Michigan and Silver Bulletin
+# both return 200. So it is the IP range and no header will fix it. Keep this
+# around; the next source to refuse us will pose the same question.
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install requests
+      - name: what does Civiqs say to a runner
+        run: |
+          python - <<'PY'
+          import requests, json
+          URL = "https://civiqs.com/results/approve_president_trump_2025"
+          OURS = {"User-Agent": "social-simulation-arena/1.0 "
+                                "(research benchmark; contact via repository)"}
+          BROWSERISH = dict(OURS, **{
+              "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,"
+                        "image/avif,image/webp,*/*;q=0.8",
+              "Accept-Language": "en-US,en;q=0.9",
+              "Accept-Encoding": "gzip, deflate, br",
+              "Sec-Fetch-Dest": "document", "Sec-Fetch-Mode": "navigate",
+              "Sec-Fetch-Site": "none", "Sec-Fetch-User": "?1",
+              "Upgrade-Insecure-Requests": "1", "Connection": "keep-alive",
+          })
+          CHROME = dict(BROWSERISH, **{"User-Agent":
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"})
+          for name, h in (("ours (UA only)", OURS),
+                          ("ours + browser headers", BROWSERISH),
+                          ("chrome UA + browser headers", CHROME)):
+              try:
+                  r = requests.get(URL, headers=h, timeout=60)
+                  print(f"{name:30s} HTTP {r.status_code}  {len(r.content)/1e6:.2f} MB")
+                  if r.status_code != 200:
+                      print("   body:", r.text[:200].replace("\n", " "))
+              except Exception as e:
+                  print(f"{name:30s} {type(e).__name__}: {e}")
+          # and the two sources that have no fallback any more
+          for name, u in (("michigan finals", "http://www.sca.isr.umich.edu/files/tbmics.csv"),
+                          ("michigan prelim", "http://www.sca.isr.umich.edu/files/tbcics.csv"),
+                          ("silver bulletin", "https://docs.google.com/spreadsheets/d/e/"
+                           "2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv")):
+              try:
+                  r = requests.get(u, timeout=60)
+                  print(f"{name:30s} HTTP {r.status_code}  {len(r.content)/1e6:.2f} MB")
+              except Exception as e:
+                  print(f"{name:30s} {type(e).__name__}: {e}")
+          PY

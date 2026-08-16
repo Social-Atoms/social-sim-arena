@@ -119,6 +119,18 @@ def test_the_adapters_can_fetch_and_parse_separately():
         [{"date": "2026-07-01", "value": 55.2}]
     assert fredcsv.parse("observation_date,UMCSENT\n2026-06-01,49.5\n") == \
         [{"date": "2026-06-01", "value": 49.5}]
+    # The Michigan preliminary lives only in the press-release table, and its
+    # cells sit inside layout padding -- position is meaningless there.
+    assert umich.parse_prelim(
+        ",,,THE INDEX OF CONSUMER SENTIMENT\n,,\n,,July,2026,55.2\n"
+        ",,August (P),2026,51.0\n") == [
+            {"date": "2026-07-01", "value": 55.2, "preliminary": False},
+            {"date": "2026-08-01", "value": 51.0, "preliminary": True}]
+    # A preliminary is appended, never allowed to overwrite a final.
+    assert umich.merge([{"date": "2026-07-01", "value": 55.2}],
+                       [{"date": "2026-07-01", "value": 99.9, "preliminary": True},
+                        {"date": "2026-08-01", "value": 51.0, "preliminary": True}]) == [
+        {"date": "2026-07-01", "value": 55.2}, {"date": "2026-08-01", "value": 51.0}]
 
 
 if __name__ == "__main__":

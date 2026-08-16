@@ -496,8 +496,37 @@ def elicitation_entrants(variants=ELICITATION_VARIANTS, models=None):
 PENDING_ACTIVATION = ("kimi", "minimax")
 
 
+# A local run calls whichever providers have a key in the environment, and the
+# environment is a `.env` that tends to hold all of them. That is fine on a
+# runner and is a real hazard from a workstation: OpenAI and Anthropic do not
+# serve mainland China, and calling them from an unsupported region is a
+# documented cause of account deactivation -- which is what happened here on
+# 2026-08-14, to both accounts, within a day of each other.
+#
+# Deleting the keys works and lasts until someone pastes them back. So the
+# allowlist is explicit and lives beside them:
+#
+#   SSA_MODELS=deepseek-pro,deepseek-flash        in a local .env
+#
+# Unset means every registered model, which is what CI wants. An unknown name
+# raises rather than silently narrowing the roster to nothing -- a typo here
+# would look exactly like "the season has no entrants".
+def allowed_models():
+    raw = (os.environ.get("SSA_MODELS") or "").strip()
+    if not raw:
+        return None
+    want = [m.strip() for m in raw.split(",") if m.strip()]
+    bad = [m for m in want if m not in MODELS]
+    if bad:
+        raise ValueError(f"SSA_MODELS names unknown model(s) {bad}; "
+                         f"known: {sorted(MODELS)}")
+    return want
+
+
 def active_models():
-    return [m for m in MODELS if m not in PENDING_ACTIVATION]
+    out = [m for m in MODELS if m not in PENDING_ACTIVATION]
+    allow = allowed_models()
+    return [m for m in out if m in allow] if allow is not None else out
 
 
 def season_entrants():

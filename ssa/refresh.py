@@ -14,7 +14,8 @@ import json
 import os
 from datetime import date, datetime, timezone
 
-from .adapters import fredcsv, silverbulletin, umich
+from .adapters import silverbulletin, umich
+from . import health
 from . import provenance
 from . import stamps
 from . import average, backtest, baselines, envfile, harness, scoring, sharecard
@@ -534,21 +535,19 @@ def build_leaderboard(rounds, resolved):
     return board
 
 
-def fetch_umich():
-    """Michigan sentiment, preferring the survey's own table over FRED.
+def michigan_history():
+    """Michigan sentiment. Delegates to the registry, which has no fallback.
 
-    FRED republishes this series a month late, which costs every entrant the
-    most recent observation -- the one that matters most. The two agree exactly
-    on all 674 overlapping months, so this is strictly more data, not different
-    data. FRED remains the fallback because the official file is a plain CSV on
-    a university web server and the arena should not go dark if it moves.
+    There used to be a fallback here, to FRED, so the arena would not go dark
+    if the university's plain CSV moved. It went dark in a worse way instead:
+    FRED carries the series a month behind at Michigan's request, so on the one
+    run where the official table was briefly unreachable the fallback answered
+    with a history ending a month early and nothing downstream could tell. That
+    run wrote the lock snapshot for `umich-2026-08-prelim`, whose baselines were
+    then anchored a month stale and whose resolution silently became July's
+    final rather than August's preliminary. See ssa/series.michigan_history.
     """
-    try:
-        return umich.umich_sentiment()
-    except Exception as e:                         # noqa: BLE001 - reported
-        print(f"official Michigan table unavailable ({type(e).__name__}: {e}); "
-              "falling back to FRED, which lags one month")
-        return fredcsv.umich_sentiment()
+    return series_registry.michigan_history()
 
 
 def load_model_backtest():
@@ -609,9 +608,7 @@ def main():
         series_registry.MICHIGAN_RAW or "",
         note=series_registry.MICHIGAN_SOURCE)
     for name, block in sorted(prov.items()):
-        stale = provenance.unchanged_since(name, now)
-        flag = f"  unchanged for {stale}d" if stale and stale > 3 else ""
-        print(f"  {name:12s} {block['bytes']:>9,}B  sha {block['sha256'][:12]}{flag}")
+        print(f"  {name:12s} {block['bytes']:>9,}B  sha {block['sha256'][:12]}")
     # Every series now comes from a source that is days behind rather than
     # weeks. VoteHub is gone: it was 41 days stale at the source and the only
     # two trackers it still supplied, Congress and the Supreme Court, backed no
@@ -635,6 +632,15 @@ def main():
     filed, filing_failures = file_baseline_forecasts(rounds, hist_by_round, now)
     count_forecasts(rounds)
     stamped = stamp_locked_rounds(rounds)
+
+    # Whether each source is still answering, and whether the arena still knows
+    # the answer. A flake must not cost a run; an outage must be loud at once,
+    # because everything downstream keeps working perfectly while publishing
+    # numbers that stopped moving. See ssa/health.py for the two clocks.
+    source_health = health.check(now)
+    print("\nsources:")
+    for line in health.report(source_health):
+        print(line)
     board = build_leaderboard(rounds, resolved)
     bt = backtest.run({
         "umich_sentiment": series["umich_sentiment"],
@@ -733,6 +739,10 @@ def main():
         # yet. A reader runs `ots verify` on the file and needs to trust
         # nobody here.
         "stamps": {st["round_id"]: st for st in stamped},
+        # Per source: how long since a successful fetch, how long since the
+        # content moved, and the budget each is judged against. A page that
+        # renders a number should be able to say how old it is.
+        "source_health": source_health,
         "series_provenance": {
             sid: prov.get(spec["source"], {}).get("source", spec["source"])
             for sid, spec in series_registry.SERIES.items()
