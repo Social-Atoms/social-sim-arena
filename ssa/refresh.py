@@ -773,13 +773,24 @@ def main():
         # than being appended to them.
         bt["models"] = real_mb
         bt["mock_models"] = []
-        board = real_mb.get("board") or []
-        if board:
+        # `mb_board`, NOT `board`. `board` is the *live* leaderboard, built at
+        # line 751 from resolved rounds, and it is published as
+        # leaderboard.entries. Assigning to that name here overwrites it with
+        # the backtest table, so the site presents backtest CRPS over 22
+        # historical releases as though it were the live season's standings --
+        # next to a resolved_rounds count that disagrees with it.
+        #
+        # CLAUDE.md records this exact bug being found and fixed once already.
+        # It came back the moment this block was edited again, because the
+        # names still collide. Renaming is the fix that does not depend on
+        # anyone remembering.
+        mb_board = real_mb.get("board") or []
+        if mb_board:
             bt["baseline_replay"] = {"overall": bt["overall"],
                                      "spans": bt["spans"],
                                      "n_rounds": bt.get("n_rounds")}
-            bt["overall"] = board
-            bt["spans"] = {k: board for k in bt["spans"]}
+            bt["overall"] = mb_board
+            bt["spans"] = {k: mb_board for k in bt["spans"]}
             bt["n_rounds"] = real_mb.get("releases") or bt.get("n_rounds")
             # The charts draw whichever entrants this list names, and read
             # their values out of trajectory[].skills. Both were populated by
