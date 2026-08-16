@@ -331,6 +331,71 @@ LOCK_MARGIN_SECONDS = 30 * 60
 # is a handful of concurrent requests per vendor rather than a burst at one.
 FILING_WORKERS = int(os.environ.get("SSA_FILING_WORKERS", "20"))
 
+# What one refresh may spend before it refuses to run.
+#
+# The cache makes a normal refresh nearly free: over the seven days to
+# 2026-08-17 there were 28 scheduled runs, and each entrant's forecast changed
+# three or four times -- the cost of a new observation landing, not of the
+# clock ticking. A full legitimate sweep, every open round times every entrant
+# all missing at once, is a few dollars.
+#
+# So a run that prices much above that is not doing more work, it is failing to
+# reuse. That happens when the prompt bytes change or the endpoint moves, and
+# both are one merge away: `call_identity` and the prompt are the cache key, so
+# editing either correctly invalidates every stored hash -- and on a six-hourly
+# cron the bill repeats every six hours until a human looks. Nothing in this
+# pipeline would have said so; the site would keep rendering and the forecasts
+# would keep being right.
+#
+# The ceiling is deliberately well above any real sweep. It is a runaway brake,
+# not a budget.
+MAX_SPEND = float(os.environ.get("SSA_MAX_SPEND", "10"))
+
+# Measured, not guessed: 278 in / 1,276 out per call, from the 2,058 calls in
+# backtest/runs/ that carry a usage report. model_backtest's own estimator
+# assumes 400/500, which understates the output side by two and a half times --
+# at maximum reasoning effort the thinking *is* the output.
+EST_IN_TOKENS, EST_OUT_TOKENS = 278, 1276
+
+
+def price_jobs(jobs, hist_by_round, read_forecast, news_for):
+    """(jobs that would really call, estimated USD).
+
+    Recomputes each job's input hash and compares it to what is already filed,
+    which is exactly what `harness.forecast` will do a moment later -- so the
+    number printed is the number about to be spent, not a guess about it.
+    Anything this cannot price without a network round-trip is counted as
+    billable, because the safe error is to over-report the bill.
+    """
+    from . import model_backtest
+    billable, usd = [], 0.0
+    for r, entrant, path in jobs:
+        try:
+            model, ctx, eli = harness.resolve(entrant)
+        except KeyError:
+            continue
+        previous = read_forecast(path)
+        notes = (previous or {}).get("notes") or ""
+        try:
+            if eli == "persona":
+                raise ValueError("panel priced per respondent below")
+            prompt = harness.build_prompt(
+                r, hist_by_round.get(r["round_id"]), ctx, eli,
+                news=news_for(r) if ctx == "news" else None)
+            if f"in={harness.prompt_hash(entrant, prompt)}" in notes \
+                    and not notes.startswith("MOCK"):
+                continue                      # cached: free
+        except Exception:                     # noqa: BLE001 - price it, do not skip it
+            pass
+        billable.append((r, entrant, path))
+        cin, cout = model_backtest.PRICING.get(model, (2.0, 10.0))
+        calls = 1
+        if eli == "persona":
+            from . import personas
+            calls = len(personas.panel())
+        usd += calls * ((EST_IN_TOKENS / 1e6) * cin + (EST_OUT_TOKENS / 1e6) * cout)
+    return billable, usd
+
 
 def read_forecast(path):
     if not os.path.exists(path):
@@ -425,6 +490,28 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
         return 1
 
     if jobs:
+        billable, usd = price_jobs(jobs, hist_by_round, read_forecast,
+                                   news_for)
+        print(f"\nfiling: {len(jobs)} entrant-round(s), {len(jobs) - len(billable)} "
+              f"already answered, {len(billable)} to call, est ${usd:.2f}")
+        if usd > MAX_SPEND:
+            # Not SystemExit: the series were already fetched and the site
+            # should still be rebuilt from them. Only the calls are withheld.
+            # The existing failure channel then exits non-zero at the end, so
+            # this is as loud as a dead provider without being as destructive.
+            for r, entrant, _ in billable[:12]:
+                failures.append(
+                    f"{r['round_id']}/{entrant}: withheld by the spend ceiling")
+            failures.append(
+                f"estimated ${usd:.2f} for one refresh exceeds the "
+                f"${MAX_SPEND:.2f} ceiling; {len(billable)} of {len(jobs)} "
+                "entrant-rounds wanted a call at once. A refresh re-asks an "
+                "entrant only when its series moved, so this many misses means "
+                "the prompt bytes or the endpoint changed -- and on a "
+                "six-hourly cron that bills again every six hours until "
+                "someone looks. Check what moved, then set SSA_MAX_SPEND for "
+                "one run if it was intended.")
+            return written, failures
         with concurrent.futures.ThreadPoolExecutor(max_workers=FILING_WORKERS) as ex:
             written = sum(ex.map(run_job, jobs))
     return written, failures
