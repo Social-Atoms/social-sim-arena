@@ -174,6 +174,35 @@ def test_the_season_roster_is_unchanged_by_the_split():
         "a roster row carries both axes now"
 
 
+def test_the_local_allowlist_narrows_the_roster_and_rejects_a_typo():
+    """A local .env holds every provider's key, and OpenAI and Anthropic do not
+    serve mainland China -- calling them from there is what disabled both
+    accounts on 2026-08-14. Deleting keys works until someone pastes them back,
+    so the constraint is explicit and beside them."""
+    import os
+    saved = os.environ.get("SSA_MODELS")
+    try:
+        os.environ.pop("SSA_MODELS", None)
+        everything = harness.active_models()
+        assert len(everything) > 5, everything
+
+        os.environ["SSA_MODELS"] = "deepseek-pro, deepseek-flash"
+        assert harness.active_models() == ["deepseek-pro", "deepseek-flash"]
+        assert len(harness.season_entrants()) == 4, "two models, two season cells"
+
+        os.environ["SSA_MODELS"] = "deepseek-pro,not-a-model"
+        try:
+            harness.active_models()
+            assert False, "a typo narrowed the roster silently"
+        except ValueError as e:
+            assert "unknown model" in str(e), e
+    finally:
+        if saved is None:
+            os.environ.pop("SSA_MODELS", None)
+        else:
+            os.environ["SSA_MODELS"] = saved
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:
