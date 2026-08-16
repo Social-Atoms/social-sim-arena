@@ -41,6 +41,10 @@ SERIES = list(series_registry.SERIES)
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--max-spend", type=float, default=25.0,
+                    help="refuse to start if the estimate exceeds this many "
+                         "dollars (default 25). The estimate is advice; this "
+                         "is the brake.")
     ap.add_argument("--execute", action="store_true",
                     help="actually call the providers (default: plan only)")
     ap.add_argument("--rescore", action="store_true",
@@ -104,6 +108,24 @@ def main():
         print(f"\nscoring window starts {start}"
               + (" (overridden)" if args.start else " = latest cutoff + margin"))
 
+    # **Restore the committed evidence into the cache before anything is
+    # planned or priced.** The per-call cache is gitignored -- one file per
+    # provider call is right for resuming a run and wrong for a repository --
+    # and the same replies are committed, consolidated, under backtest/runs/.
+    # But nothing here ever read them back, so a fresh clone saw an empty
+    # cache, priced the whole plan at full rate, and re-bought 2,887 replies
+    # that were sitting in the repo it had just downloaded. Every collaborator
+    # paid for the run again, and the estimate printed below agreed with them.
+    #
+    # Restoring is free, local, and idempotent, so it happens unconditionally
+    # rather than behind a flag nobody knew to pass.
+    counts = model_backtest.restore_runs()
+    if counts["restored"]:
+        print(f"restored {counts['restored']} previously-paid replies from "
+              f"{counts['files']} committed run file(s) "
+              f"({counts['successful']} successful, {counts['failures']} "
+              "failures); these will not be re-billed")
+
     series = series_registry.build_all()
     series_map = {k: series[k] for k in SERIES if k in series}
 
@@ -139,6 +161,20 @@ def main():
     print(f"estimated cost ${usd:.2f}" + ("" if todo else " (fully cached)"))
     for e in sorted(per_entrant, key=lambda k: -per_entrant[k]):
         print(f"  {e:14s} ${per_entrant[e]:6.2f}")
+
+    # A ceiling, because the estimate above is advice and this is a brake.
+    # An unguarded --execute is one typo in --entrants or --start away from a
+    # three-figure bill, and the failure is silent: it looks exactly like a
+    # correct run until the invoice arrives.
+    if args.execute and not args.rescore and usd > args.max_spend:
+        sys.exit(
+            f"\nestimated ${usd:.2f} exceeds the ${args.max_spend:.2f} "
+            "ceiling, so nothing was called.\n"
+            "  --rescore                rebuild the table from the cache, free\n"
+            "  --limit N                smoke-test N releases per entrant\n"
+            "  --entrants a,b           narrow the roster\n"
+            f"  --max-spend {usd:.0f}{' ' * max(0, 12 - len(f'{usd:.0f}'))}"
+            "run it anyway, having read the number")
 
     if args.rescore:
         # Scoring changed, the replies did not. Rebuilding from the cache keeps
