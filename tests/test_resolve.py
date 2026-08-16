@@ -209,6 +209,46 @@ def test_an_empty_history_never_overwrites_a_real_snapshot():
         refresh.LOCKS = real_locks
 
 
+def test_a_monthly_row_is_not_available_on_the_day_it_is_labelled():
+    """Michigan labels a row by the month it describes, not by when it was
+    published: 2026-08-01 carries the August preliminary, released 2026-08-14.
+    A date filter therefore reads it as predating a 2026-08-12 lock, which is
+    why the frozen snapshot is the only safe source of pre-lock history.
+
+    This is not hypothetical. The arena's first live resolution scored
+    umich-2026-08-prelim against July's final (55.2, public since July) instead
+    of August's preliminary (51.0), because a FRED fallback wrote a snapshot a
+    month stale and 'the first release after the freeze' moved with it.
+    """
+    r = {"round_id": "m1", "series": "umich_sentiment",
+         "lock_at": "2026-08-12T14:00:00Z", "release_at": "2026-08-14T14:00:00Z"}
+    series = {"umich_sentiment": [
+        {"date": "2026-06-01", "value": 49.5},
+        {"date": "2026-07-01", "value": 55.2},
+        {"date": "2026-08-01", "value": 51.0},        # released 2026-08-14
+    ]}
+    # A snapshot frozen at the lock holds finals through July -- the August row
+    # did not exist yet -- so the next release is the August preliminary.
+    good = [{"date": "2026-06-01", "value": 49.5}, {"date": "2026-07-01", "value": 55.2}]
+    point, why = _with_snapshot(r, series, good)
+    assert point == {"date": "2026-08-01", "value": 51.0}, (point, why)
+
+    # A snapshot a month stale resolves to a number that was already public.
+    stale = [{"date": "2026-06-01", "value": 49.5}]
+    point, why = _with_snapshot(r, series, stale)
+    assert point == {"date": "2026-07-01", "value": 55.2}, (point, why)
+
+
+def _with_snapshot(r, series, history):
+    from ssa import refresh, resolve as R
+    saved = refresh.read_lock_snapshot
+    refresh.read_lock_snapshot = lambda rid: {"history": history}
+    try:
+        return R.candidate(r, series)
+    finally:
+        refresh.read_lock_snapshot = saved
+
+
 if __name__ == "__main__":
     for name, fn in sorted(list(globals().items())):
         if name.startswith("test_") and callable(fn):

@@ -19,7 +19,6 @@ filters were implicit in adapter code, which had two consequences worth naming:
 Adding a tracker means adding a row here, and nothing else.
 """
 from .adapters import civiqs as civiqs_adapter
-from .adapters import fredcsv
 from .adapters import silverbulletin as sb
 from .adapters import umich as umich_adapter
 
@@ -34,40 +33,48 @@ MICHIGAN_RAW = ""
 
 
 def michigan_history():
-    """Michigan sentiment, official table first, FRED second.
+    """Michigan sentiment, from the survey's own tables. No fallback.
 
-    The survey's own file carries the current month; FRED republishes it a
-    month late. The official file is also the less reliable of the two: on
-    2026-08-08 it served the full 676-row table and then began returning 404
-    within the hour, and the site's own download links carry per-request
-    tokens, so they cannot be automated. Hence a fallback rather than a swap --
-    take the extra month when it is there, never go dark when it is not.
+    There used to be one, to FRED, "so the arena never goes dark". It went dark
+    in a worse way instead. FRED carries UMCSENT a month behind at Michigan's
+    request, so on the one run where the official table was briefly unreachable
+    the fallback answered with a history ending a month early -- and nothing
+    downstream could tell.
 
-    The lesson this cost: fetches must be mirrored into the repository, which
-    the paper already promises and the code does not yet do. Had the earlier
-    successful pull been archived, July would still be available now.
+    What that cost, concretely. The 2026-08-12 lock snapshot for
+    `umich-2026-08-prelim` froze a history ending in June instead of July, so
+    the round's baselines were anchored on a level the series had already left;
+    and because `resolve.candidate` takes the first release after the frozen
+    history, "the next release" silently became July's final rather than
+    August's preliminary. The round resolved against 55.2, a number published in
+    July and public well before the lock, instead of 51.0. The arena's one
+    claim -- that at lock time the answer does not exist -- failed on its first
+    round, quietly.
 
-    Sets MICHIGAN_SOURCE to whichever source answered, so the site can label the
-    number with where it actually came from. A page crediting FRED for a value
-    FRED does not carry is wrong in exactly the direction that matters here.
+    **A source that is silently a month behind is worse than no source.** So
+    this raises, and the run is loudly broken, which is the same rule
+    `build_trackers` already follows for an empty VoteHub response.
+
+    Sets MICHIGAN_SOURCE, MICHIGAN_URL and MICHIGAN_RAW so the site can credit
+    the file that actually answered and ssa/provenance.py can archive it.
     """
     global MICHIGAN_SOURCE, MICHIGAN_URL, MICHIGAN_RAW
-    try:
-        MICHIGAN_RAW = umich_adapter.fetch_text()
-        rows = umich_adapter.parse(MICHIGAN_RAW)
-        MICHIGAN_URL = umich_adapter.URL
-        MICHIGAN_SOURCE = ("Surveys of Consumers, University of Michigan "
-                           "(sca.isr.umich.edu), the survey's own monthly table")
-        return rows
-    except Exception as e:                         # noqa: BLE001 - reported
-        print(f"  official Michigan table unavailable ({type(e).__name__}); "
-              "using FRED, which lags one month")
-        MICHIGAN_SOURCE = ("FRED (UMCSENT), which republishes the Michigan "
-                           "index one month late; the survey's own table was "
-                           "unreachable on this run")
-        MICHIGAN_URL = fredcsv.URL
-        MICHIGAN_RAW = fredcsv.fetch_text()
-        return fredcsv.parse(MICHIGAN_RAW)
+    MICHIGAN_RAW = umich_adapter.fetch_text()
+    finals = umich_adapter.parse(MICHIGAN_RAW)
+    prelim = umich_adapter.parse_prelim(umich_adapter.fetch_prelim_text())
+    rows = umich_adapter.merge(finals, prelim)
+    if not rows:
+        raise RuntimeError(
+            "Michigan tables parsed to zero rows; refusing to publish an empty "
+            "series (check whether the files moved)")
+    MICHIGAN_URL = umich_adapter.URL
+    newest = rows[-1]["date"]
+    MICHIGAN_SOURCE = (
+        "Surveys of Consumers, University of Michigan (sca.isr.umich.edu): "
+        "tbmics.csv for finals and tbcics.csv for the current preliminary, "
+        f"newest reading {newest}")
+    return rows
+
 
 # source: which adapter and which filters. value: the column to score.
 SERIES = {

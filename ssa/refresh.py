@@ -14,7 +14,7 @@ import json
 import os
 from datetime import date, datetime, timezone
 
-from .adapters import fredcsv, silverbulletin, umich
+from .adapters import silverbulletin, umich
 from . import provenance
 from . import stamps
 from . import average, backtest, baselines, envfile, harness, scoring, sharecard
@@ -534,21 +534,19 @@ def build_leaderboard(rounds, resolved):
     return board
 
 
-def fetch_umich():
-    """Michigan sentiment, preferring the survey's own table over FRED.
+def michigan_history():
+    """Michigan sentiment. Delegates to the registry, which has no fallback.
 
-    FRED republishes this series a month late, which costs every entrant the
-    most recent observation -- the one that matters most. The two agree exactly
-    on all 674 overlapping months, so this is strictly more data, not different
-    data. FRED remains the fallback because the official file is a plain CSV on
-    a university web server and the arena should not go dark if it moves.
+    There used to be a fallback here, to FRED, so the arena would not go dark
+    if the university's plain CSV moved. It went dark in a worse way instead:
+    FRED carries the series a month behind at Michigan's request, so on the one
+    run where the official table was briefly unreachable the fallback answered
+    with a history ending a month early and nothing downstream could tell. That
+    run wrote the lock snapshot for `umich-2026-08-prelim`, whose baselines were
+    then anchored a month stale and whose resolution silently became July's
+    final rather than August's preliminary. See ssa/series.michigan_history.
     """
-    try:
-        return umich.umich_sentiment()
-    except Exception as e:                         # noqa: BLE001 - reported
-        print(f"official Michigan table unavailable ({type(e).__name__}: {e}); "
-              "falling back to FRED, which lags one month")
-        return fredcsv.umich_sentiment()
+    return series_registry.michigan_history()
 
 
 def load_model_backtest():
