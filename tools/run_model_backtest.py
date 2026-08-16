@@ -19,6 +19,7 @@ interrupted run resumes and a rerun after adding one entrant only pays for that
 entrant.
 """
 import argparse
+import datetime
 import json
 import os
 import sys
@@ -222,6 +223,37 @@ def main():
     with open(args.out, "w") as f:
         json.dump(result, f, indent=2, sort_keys=True)
         f.write("\n")
+
+    # **Export the raw replies, always, whenever calls were made.**
+    #
+    # `model_backtest.export_run` has existed since the first backtest and
+    # nothing has ever called it. So `--execute` paid for N replies, wrote them
+    # to a gitignored cache, wrote the *scores* to a committed JSON -- and left
+    # the replies on one laptop. The single run file in this repository was
+    # written by hand, months ago, as a side effect of a commit about charts.
+    #
+    # That is what makes every run cost full price. Not the fresh clone
+    # re-buying a committed cache -- there was nothing committed to re-buy. The
+    # replies were simply never saved, so no machine but the one that ran it
+    # ever had them, and restoring (above) had nothing to restore from.
+    #
+    # The models run at their providers' default temperature, so a re-run does
+    # not reproduce. These replies are the only reproducibility mechanism the
+    # backtest has, and they are worth more than the scores computed from them.
+    if made:
+        # The whole cache, not just this run's records: the exported file is
+        # then self-contained, and `restore_runs` deduplicates across files, so
+        # a later reader needs the newest one rather than all of them in order.
+        stamp = datetime.date.today().isoformat()
+        i = 1
+        while os.path.exists(os.path.join(model_backtest.RUNS_DIR,
+                                          f"{stamp}.jsonl")):
+            stamp = f"{datetime.date.today().isoformat()}-{i}"
+            i += 1
+        path, n = model_backtest.export_run(stamp)
+        print(f"\nexported {n} replies -> {os.path.relpath(path, ROOT)}")
+        print("  COMMIT THIS. It is the only copy of what you just paid for, "
+              "and the next run restores from it instead of re-buying.")
 
     print(f"\nwrote {os.path.relpath(args.out, ROOT)}")
     print(f"scored {result['matched_releases']} releases answered by all entrants "
