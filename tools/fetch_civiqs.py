@@ -15,13 +15,21 @@ deployment needs: the fetch, separated from the refresh, runnable anywhere.
 Free and keyless. Each tracker page is ~2 MB and the archive is also the fetch
 cache, so a tracker already archived today costs nothing.
 
-**Why this matters more than it looks.** Civiqs republishes its entire daily
+**What a missed day actually costs.** Civiqs republishes its entire daily
 history every night, so the number printed against a past date today is not the
 number that was printed against it then. The dated snapshot under `civiqs/` is
-the only record of what the dashboard actually showed, and it is what every
-Civiqs resolution is checked against. A day not fetched is a day gone, and no
-later run can recover it -- unlike a poll average, which can be rebuilt from the
-polls.
+the only record of what the dashboard actually showed.
+
+A gap is not fatal and it is not free. Each snapshot carries a sixty-day tail
+(`civiqs.SNAPSHOT_POINTS`), so a later fetch recovers the *values* for the days
+in between -- but from a revised vintage, not the one that was on screen. The
+arena's rule is "the freshest reading available on day d, per the earliest
+snapshot we hold taken on or after d", so a missed Friday still resolves; it
+resolves against a number that had been re-modelled since. Past sixty days the
+values are gone too.
+
+So: fetch daily and the record is exact; fetch weekly and it is approximate;
+stop for two months and it is lost.
 
 Run it daily from somewhere Civiqs answers, and commit the result:
 
@@ -97,8 +105,9 @@ def main():
             print(f"  FAILED {name}: {type(e).__name__}: {e}")
     print(f"\narchived {ok}/{len(rows)} in {(time.monotonic() - t0) / 60:.1f} min")
     if failed:
-        print(f"{len(failed)} failed; the archive still serves the last good day, "
-              "but a day not fetched is a day gone")
+        print(f"{len(failed)} failed; the archive still serves the last good "
+              "day. A later fetch recovers the values inside the sixty-day "
+              "tail, from a revised vintage rather than the one on screen.")
 
     print("\nhealth:")
     for line in health.report(health.check()):
