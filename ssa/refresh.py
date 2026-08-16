@@ -764,6 +764,20 @@ def main():
     print("approval avg:", trackers["trump_approval_avg"]["value"],
           "| generic margin:", trackers["generic_ballot_avg"]["value"])
 
+    # A fallback that nobody sees is the failure this design exists to avoid:
+    # the site renders, the leaderboard updates, and four entrants have quietly
+    # moved to a different endpoint at a lower reasoning depth. So a run that
+    # used the standby says so, in the same place it says everything else.
+    down = harness.dead_routes()
+    if down:
+        print(f"\n{len(down)} route(s) failed terminally and fell back to the "
+              "OpenRouter standby:")
+        for env, host in down:
+            print(f"  - {env} @ {host}")
+        print("  Forecasts filed this way carry via=openrouter in their notes "
+              "and the standby's own input hash, so the run after the account "
+              "is fixed re-asks the vendor and upgrades them automatically.")
+
     if filing_failures:
         # site/data.json and every successful forecast are already on disk, so
         # the workflow's commit step (which runs with if: always()) still lands

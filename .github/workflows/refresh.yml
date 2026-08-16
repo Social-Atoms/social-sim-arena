@@ -41,6 +41,21 @@ jobs:
       # existing SSA_BASE_QWEN secret is accepted as a fallback.
       SSA_BASE_GATEWAY: ${{ vars.SSA_BASE_GATEWAY || secrets.SSA_BASE_GATEWAY || secrets.SSA_BASE_QWEN }}
       SSA_BASE_QWEN: ${{ vars.SSA_BASE_QWEN || secrets.SSA_BASE_QWEN }}
+      # One key and one OpenAI-compatible endpoint in front of every vendor, as
+      # a standby for the failure a code change cannot fix: on 2026-08-14 the
+      # Anthropic organisation was disabled and the OpenAI account ran out of
+      # credits, which is seven of fifteen entrants dead on every refresh while
+      # the locks kept arriving on schedule.
+      #
+      # SSA_OPENROUTER is the switch and it is off unless set: a comma-separated
+      # list of model keys, or `1` for all of them. Nothing here fails over on
+      # its own, because the endpoint is part of the condition -- two hosts can
+      # serve different weights under one model name and reach a different
+      # reasoning depth, and an automatic switch on a transient 429 would move
+      # an entrant mid-season with nothing on the leaderboard saying so. Every
+      # forecast records which route produced it (`via=` in its notes).
+      OPEN_ROUTER: ${{ secrets.OPEN_ROUTER }}
+      SSA_OPENROUTER: ${{ vars.SSA_OPENROUTER }}
       # Which elicitation arms file forecasts, as a comma-separated list
       # (`news`, `superfc`, `persona`, or `1` for all). Unset means none, so
       # merging the code for an arm never starts paying for it -- switching one
@@ -60,6 +75,12 @@ jobs:
       # key, four public calendars.
       - run: pip install opentimestamps-client
       - run: python -m tests.test_scoring
+      # Keyless and instant, and it runs here rather than only on a PR because
+      # the thing it guards is this job's configuration: SSA_OPENROUTER is set
+      # in repository variables, so a typo in it never passes through a review.
+      - run: python tests/test_routes.py
+        env:
+          PYTHONPATH: .
       - run: python -m ssa.refresh
       # Resolution runs after the refresh so it scores against the series the
       # same run just fetched. It only ever adds, never overwrites, and
