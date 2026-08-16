@@ -99,8 +99,19 @@ jobs:
         if: always()
       # data.json is rebuilt so the leaderboard reflects anything just
       # resolved, instead of waiting six hours for the next run.
+      #
+      # SSA_SKIP_FILING, because this pass only needs to rebuild the site. A
+      # forecast that failed in the first pass wrote no file, so without this
+      # the second pass finds nothing cached and calls the provider again --
+      # free when the cause was a dead key, and paid twice when it was a
+      # timeout or a dropped stream, since the model generated the answer
+      # either way. On 2026-08-12 glm burned the full 600-second read budget in
+      # both passes of one run: twenty minutes of generation, billed twice,
+      # recorded zero times.
       - run: python -m ssa.refresh
         if: always()
+        env:
+          SSA_SKIP_FILING: "1"
       # always(): ssa.refresh exits non-zero when any entrant's provider call
       # fails, but the forecasts that did succeed are already written and a
       # round locks on a hard deadline. Commit what landed, and let the job

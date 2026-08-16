@@ -716,7 +716,27 @@ def main():
             resolved = json.load(f)
 
     rounds, hist_by_round = build_rounds(season, series, resolved, now)
-    filed, filing_failures = file_baseline_forecasts(rounds, hist_by_round, now)
+    # The workflow runs this module twice: once to fetch and file, then again
+    # after `ssa.resolve` so the leaderboard reflects anything just resolved
+    # instead of waiting six hours. Only the *second* purpose needs the second
+    # pass, and it was silently paying for the first one too.
+    #
+    # A forecast that failed writes no file, so the second pass finds nothing
+    # cached and calls the provider again. That is free when the failure was a
+    # dead key -- and it is not free at all when the failure was a timeout or a
+    # dropped stream, because the model generated the answer and the provider
+    # billed it. On 2026-08-12 glm timed out at the full 600-second read budget
+    # in both passes of one run: twenty minutes of generation, paid for twice,
+    # recorded zero times. That run took 21 minutes, and every long run in the
+    # history is this shape.
+    #
+    # So the second pass rebuilds the site and files nothing.
+    if os.environ.get("SSA_SKIP_FILING") == "1":
+        print("\nSSA_SKIP_FILING=1: rebuilding from what is on disk, "
+              "calling no provider")
+        filed, filing_failures = 0, []
+    else:
+        filed, filing_failures = file_baseline_forecasts(rounds, hist_by_round, now)
     count_forecasts(rounds)
     stamped = stamp_locked_rounds(rounds)
 
