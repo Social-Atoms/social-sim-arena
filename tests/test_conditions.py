@@ -61,7 +61,7 @@ def test_the_single_axis_names_resolve_to_the_pair_they_always_meant():
         "claude-opus-news": ("claude-opus", "news", "direct"),
         "claude-opus-web": ("claude-opus", "web", "direct"),
         "claude-opus-superfc": ("claude-opus", "recent10", "superfc"),
-        "claude-opus-persona": ("claude-opus", "recent10", "persona"),
+        "claude-opus-zeroshot-persona": ("claude-opus", "none", "persona"),
     }
     for i, want in cases.items():
         assert harness.resolve(i) == want, (i, harness.resolve(i))
@@ -78,6 +78,32 @@ def test_a_combination_is_nameable_now_and_was_not_before():
     # contains hyphens and a digit.
     assert harness.resolve("gpt-5.6-luna-zeroshot-persona") \
         == ("gpt-5.6-luna", "none", "persona")
+
+
+def test_persona_can_only_carry_the_context_its_prompt_conveys():
+    """`build_persona_prompt` takes a persona and the instrument and nothing
+    else -- no series history, no release date. So recent10 x persona and
+    none x persona build a byte-identical prompt, and offering both would put
+    the same work on the leaderboard twice under different names."""
+    assert harness.ELICITATION_CONTEXTS["persona"] == ("none",)
+    assert harness.entrant_id("claude-opus", "none", "persona") \
+        == "claude-opus-zeroshot-persona"
+    for ctx in ("recent10", "news", "web"):
+        try:
+            harness.entrant_id("claude-opus", ctx, "persona")
+            assert False, f"{ctx} x persona was accepted"
+        except ValueError as e:
+            assert "does not convey" in str(e), e
+    # And an id this module cannot build is not an id it will read back.
+    try:
+        harness.resolve("claude-opus-persona")
+        assert False, "the old single-suffix persona id still resolved"
+    except KeyError:
+        pass
+    # A bare name in SSA_ELICITATION still works and now names the real cell.
+    assert harness.cell("persona") == ("none", "persona")
+    # superfc is unconstrained: the protocol block composes onto any context.
+    assert harness.ELICITATION_CONTEXTS["superfc"] == tuple(harness.CONTEXT)
 
 
 def test_unknown_ids_and_conditions_raise_rather_than_guess():
@@ -100,7 +126,9 @@ def test_the_switch_spelling_survives_the_split():
     with the other axis's default, which is exactly what it used to mean."""
     assert harness.cell("news") == ("news", "direct")
     assert harness.cell("superfc") == ("recent10", "superfc")
-    assert harness.cell("persona") == ("recent10", "persona")
+    # persona pairs with the only context its prompt can carry, not with
+    # the axis default -- see ELICITATION_CONTEXTS.
+    assert harness.cell("persona") == ("none", "persona")
     assert harness.cell("news+superfc") == ("news", "superfc")
     assert harness.cell("superfc+news") == ("news", "superfc"), "order-free"
 
