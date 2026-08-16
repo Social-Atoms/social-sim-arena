@@ -612,6 +612,111 @@ def test_a_revised_old_point_would_be_mistaken_for_the_release():
         "this is the failure the archive prevents, demonstrated"
 
 
+# --- nets with more than one option a side ----------------------------------
+
+# The sentiment trackers are shaped differently from approval: `display_net`
+# gives each side as a *list*, and on two of them each list holds two options.
+# The numbers below are the real 2026-08-12 economy_us_now reading.
+_ECON_DAYS = [1785974400000, 1786060800000, 1786147200000]
+_ECON = {"Very good": 0.041, "Fairly good": 0.174,
+         "Fairly bad": 0.297, "Very bad": 0.451, "Unsure": 0.037}
+
+
+def econ_payload(net=None, missing_day=None):
+    """A five-option tracker whose net puts two options on each side."""
+    def line(key, v):
+        vals = [{"date": t, "value": v} for t in _ECON_DAYS]
+        if key == missing_day:
+            vals = vals[:-1]
+        return {"key": key, "values": vals}
+    return {
+        "run_id": "econ0001", "sample_size": 1193393,
+        "question_body": ("How would you rate the condition of the national "
+                          "economy right now?"),
+        "job_finish_time": "2026-08-12T01:00:00.000000",
+        "end_date": "2026-08-12",
+        "job_description": {
+            "name": "economy_us_now", "population_model": "registered voters",
+            "display_text": "National Economy: Current Condition",
+            "predictor_list": ["party_3"],
+            "display_net": net if net is not None else {
+                "label": "Net Good",
+                "minuend": ["Very good", "Fairly good"],
+                "subtrahend": ["Very bad", "Fairly bad"]},
+        },
+        "demographics": [],
+        "topline": {"unfiltered_topline": {}, "filtered_topline": {},
+                    "line_chart_data": [line(k, v) for k, v in _ECON.items()]},
+    }
+
+
+def test_a_net_can_have_two_options_on_each_side():
+    """(4.1 + 17.4) - (45.1 + 29.7) = -53.3. The old code passed the side
+    straight to to_points, which raises on a list, so four of the five
+    sentiment trackers were simply unreadable rather than wrong."""
+    p = econ_payload()
+    pts = civiqs.to_net(p)
+    assert len(pts) == 3, pts
+    assert pts[0]["value"] == -53.3, pts[0]
+
+
+def test_a_one_option_side_may_still_arrive_as_a_list():
+    """economy_us_direction declares ["Getting better"] against
+    ["Getting worse"] -- a list of one, not a bare string like approval."""
+    p = econ_payload(net={"label": "Net Good", "minuend": ["Very good"],
+                          "subtrahend": ["Very bad"]})
+    assert civiqs.to_net(p)[0]["value"] == round(4.1 - 45.1, 2)
+
+
+def test_a_side_is_dropped_when_one_of_its_options_is_missing_that_day():
+    """A partially published day must not be reported as a smaller total: the
+    net would move by the whole of the absent option and look like news."""
+    p = econ_payload(missing_day="Fairly good")
+    pts = civiqs.to_net(p)
+    assert len(pts) == 2, "the incomplete day was kept"
+
+
+def test_a_tracker_that_declares_no_net_gets_none_rather_than_a_guess():
+    """describe_feeling_us offers ten emotions and publishes no net. Any net
+    over it would be this repository's construction, so declared_net says so
+    and the registry reads a single share instead."""
+    assert civiqs.declared_net(econ_payload(net={})) is None
+    assert civiqs.declared_net(econ_payload(net={"minuend": ["a"]})) is None, \
+        "half a net is not a net"
+    # The approval fixture declares one with bare strings, and it normalises.
+    got = civiqs.declared_net(payload_json())
+    assert got["minuend"] == ["Approve"] and got["subtrahend"] == ["Disapprove"]
+
+
+def test_the_snapshot_records_which_options_were_added_and_subtracted():
+    """A resolution names the exact quantity, and on a five-option tracker
+    that is not recoverable from the choice list alone."""
+    snap = civiqs.build_snapshot(
+        econ_payload(), "economy_us_now", None,
+        datetime(2026, 8, 12, 5, 0, tzinfo=timezone.utc), full=True)
+    assert snap["display_net"]["minuend"] == ["Very good", "Fairly good"]
+    assert snap["display_net"]["subtrahend"] == ["Very bad", "Fairly bad"]
+    assert snap["choices"] == list(_ECON), snap["choices"]
+
+
+def test_the_new_sentiment_series_are_registered_and_carry_no_instrument():
+    """Registered so they can be scored; without a `survey` so the persona arm
+    refuses them by name instead of guessing a five-option instrument that
+    personas.AGGREGATORS has no aggregator for."""
+    for sid in ("civiqs_net_econ_now", "civiqs_net_econ_direction",
+                "civiqs_net_family_finances", "civiqs_net_inflation_concern",
+                "civiqs_angry_share"):
+        spec = series_registry.SERIES[sid]
+        assert spec["source"] == "civiqs", sid
+        assert series_registry.survey(sid) is None, \
+            f"{sid} claims an instrument with no aggregator behind it"
+        assert series_registry.describe(sid)["methodology"], sid
+    # The share series reads one choice; the nets name both sides explicitly.
+    assert series_registry.SERIES["civiqs_angry_share"]["civiqs"]["choice"] == "Angry"
+    net = series_registry.SERIES["civiqs_net_inflation_concern"]["civiqs"]["net"]
+    assert net["minuend"] == ["Very concerned", "Somewhat concerned"], net
+
+
 TESTS = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
 
 if __name__ == "__main__":

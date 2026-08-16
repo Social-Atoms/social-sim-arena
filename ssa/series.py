@@ -600,6 +600,160 @@ SERIES["civiqs_net_approval_rep"] = {
 }
 
 
+# --- Civiqs sentiment ------------------------------------------------------
+#
+# Four economic-sentiment trackers and one emotion share, all registered voters,
+# all read as the Friday value the same way approval is. They are here for two
+# reasons beyond the topic.
+#
+# First, history. Three of them start 2015-01-16 and carry over six hundred
+# Friday readings, against the 339 releases the whole LLM backtest currently
+# spans. A baseline backtest gains far more from these than from another weekly
+# approval slice.
+#
+# Second, they are *sentiment* rather than approval, and the arena had exactly
+# one such series (Michigan, monthly). These are weekly and they move: measured
+# on the Friday series, mean week-over-week change is 1.03, 1.14, 0.45 and 0.80
+# points, over ranges of 118, 92, 62 and 30 points. That is the check that
+# decided the set -- a series whose null barely moves cannot be scored, because
+# the arena score's denominator is the persistence error and everything divides
+# by it.
+#
+# `scoring.noise_floor` is the usual tool for that check and it is the wrong one
+# here: it returns ~0 for all of these, because Civiqs publishes a smoothed
+# model fit rather than a survey wave, so the published series carries no
+# sampling noise to find. The gate used instead is the persistence error
+# directly.
+#
+# Six of the ten emotions in `describe_feeling_us` failed it -- Proud,
+# Overwhelmed, Satisfied, Ambivalent and Unsure move 0.03 to 0.10 points a week
+# against ranges under 8 -- so only Angry is registered, and Hopeful, Depressed,
+# Scared and Excited (0.17-0.23) are left out as borderline rather than
+# published and quietly unscoreable.
+
+_CIVIQS_METHOD = (
+    "Civiqs is a modeled tracker, not a survey wave: an MRP model over a "
+    "rolling online panel of registered voters, publishing a smoothed daily "
+    "estimate. Two things follow. The published history is revised nightly, so "
+    "the arena scores against its own dated snapshot of what the dashboard "
+    "displayed, not against whatever Civiqs says later. And the smoothing means "
+    "almost all of a week's movement is real signal rather than sampling noise, "
+    "so last Friday's number is a strong guess. The dashboard runs about a day "
+    "behind: the value shown on Friday is the model's estimate for Thursday. "
+    "Shares do not sum to 100; every instrument carries an explicit unsure "
+    "option, which is excluded from both sides of the net.")
+
+_CIVIQS_CADENCE = ("daily model output, read and archived every day; the series "
+                   "scored here is the Friday reading")
+
+
+def _civiqs_net(sid, tracker, label, question, unit, net, method_extra):
+    SERIES[sid] = {
+        "label": label,
+        "tracker": "civiqs",
+        "source": "civiqs",
+        "civiqs": {"name": tracker, "net": net, "weekday": 4},
+        "value": "value",
+        "unit": unit,
+        "cadence": _CIVIQS_CADENCE,
+        "question": question,
+        "methodology": _CIVIQS_METHOD + " " + method_extra,
+        # No `survey`, so `series.survey()` returns None and the persona arm
+        # refuses these by name rather than guessing an instrument -- the same
+        # discipline `civiqs_net_approval_rep` already follows.
+        #
+        # Nothing is lost by waiting: the exact wording and option list are in
+        # every archived snapshot's `question_body` and `choices`. What is
+        # missing is an aggregator. Entries in `personas.AGGREGATORS` are called
+        # as `fn(answers, weights)` and hardcode their own option names, so a
+        # net with two options on each side has none to name, and writing five
+        # bespoke aggregators for an arm that is being redesigned would be work
+        # thrown away. It belongs with the panel rebuild.
+    }
+
+
+_civiqs_net(
+    "civiqs_net_econ_now", "economy_us_now",
+    "Civiqs national economy, net good",
+    ("Civiqs daily tracker: net rating of the condition of the national economy "
+     "among US registered voters (very or fairly good, minus very or fairly "
+     "bad), as the dashboard shows it on Friday"),
+    "net points (good minus bad)",
+    {"minuend": ["Very good", "Fairly good"],
+     "subtrahend": ["Very bad", "Fairly bad"]},
+    ("604 Friday readings from 2015-01-16, over a range of 118 points, mean "
+     "week-over-week change 1.03. Both sides of the net carry two options, "
+     "which is why the quantity is written out here rather than inferred."))
+
+_civiqs_net(
+    "civiqs_net_econ_direction", "economy_us_direction",
+    "Civiqs national economy, net getting better",
+    ("Civiqs daily tracker: net direction of the nation's economy among US "
+     "registered voters (getting better minus getting worse), as the dashboard "
+     "shows it on Friday"),
+    "net points (better minus worse)",
+    {"minuend": ["Getting better"], "subtrahend": ["Getting worse"]},
+    ("604 Friday readings from 2015-01-16, over a range of 92 points, mean "
+     "week-over-week change 1.14. 'Staying about the same' is offered and is "
+     "on neither side of the net, so the two sides do not sum to 100."))
+
+_civiqs_net(
+    "civiqs_net_family_finances", "economy_family_retro",
+    "Civiqs family finances over the last year, net better",
+    ("Civiqs daily tracker: net change in the respondent's own family finances "
+     "over the last year among US registered voters (gotten better minus "
+     "gotten worse), as the dashboard shows it on Friday"),
+    "net points (better minus worse)",
+    {"minuend": ["Gotten better"], "subtrahend": ["Gotten worse"]},
+    ("605 Friday readings from 2015-01-16, over a range of 62 points, mean "
+     "week-over-week change 0.45 -- the least volatile of the four, and the "
+     "one where beating persistence is hardest. It is retrospective and "
+     "personal rather than prospective and national, which is what makes it "
+     "worth carrying next to the other three."))
+
+_civiqs_net(
+    "civiqs_net_inflation_concern", "inflation_impact",
+    "Civiqs inflation concern, net concerned",
+    ("Civiqs daily tracker: net concern about the impact of inflation on "
+     "consumer goods among US registered voters (very or somewhat concerned, "
+     "minus a little or not at all concerned), as the dashboard shows it on "
+     "Friday"),
+    "net points (concerned minus not concerned)",
+    {"minuend": ["Very concerned", "Somewhat concerned"],
+     "subtrahend": ["Not concerned at all", "A little concerned"]},
+    ("166 Friday readings from 2023-06-09, over a range of 30 points, mean "
+     "week-over-week change 0.80. The shortest history of the four because the "
+     "tracker itself is newer."))
+
+SERIES["civiqs_angry_share"] = {
+    "label": "Civiqs share angry about the country",
+    "tracker": "civiqs",
+    "source": "civiqs",
+    # A share, not a net: the tracker declares no net and offers ten emotions,
+    # so any net over it would be this repository's construction rather than
+    # the source's published number.
+    "civiqs": {"name": "describe_feeling_us", "choice": "Angry", "weekday": 4},
+    "value": "value",
+    "unit": "percent",
+    "cadence": _CIVIQS_CADENCE,
+    "question": ("Civiqs daily tracker: percent of US registered voters who "
+                 "describe themselves as angry about the way things are going "
+                 "in the United States, as the dashboard shows it on Friday"),
+    "methodology": _CIVIQS_METHOD + (
+        " Ten emotions are offered and the respondent picks one, so this is a "
+        "share of a ten-way choice rather than of a binary. Angry is the only "
+        "one of the ten registered: 166 Friday readings from 2023-06-09 over a "
+        "range of 16 points, mean week-over-week change 0.31. Proud, "
+        "Overwhelmed, Satisfied, Ambivalent and Unsure move 0.03 to 0.10 points "
+        "a week over ranges under 8, which is not a forecasting question, and "
+        "Hopeful, Depressed, Scared and Excited sit between at 0.17 to 0.23 and "
+        "are left out rather than published as marginal."),
+    # No `survey`, for the same reason as the four nets above: a ten-way choice
+    # has no aggregator in `personas.AGGREGATORS`, and the wording is preserved
+    # in the archived snapshots until the panel rebuild gives it one.
+}
+
+
 def describe(series_id):
     """The question and methodology text an entrant is entitled to see."""
     s = SERIES[series_id]
