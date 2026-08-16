@@ -34,27 +34,66 @@ something the arena's code can be written around.
 
 ---
 
-## 2. Why the switch is manual
-
-The obvious design is a failover: catch the error, retry on OpenRouter. That is
-the wrong design here, for one reason.
+## 2. Two ways in, and the difference matters
 
 **The endpoint is part of the condition, not a detail of it.** Two hosts can
 serve different weights under one model name, quantise differently, or reach a
 different reasoning depth. A forecast produced through OpenRouter is not
 guaranteed to be the forecast the direct route would have produced.
 
-So an automatic failover would move an entrant to a different endpoint
-mid-season, on a transient 429, with nothing anywhere saying it happened — and
-the leaderboard would go on comparing rows that were no longer comparable.
+That is not an argument against falling back — it is an argument for the
+fallback being *narrow, visible, and self-undoing*. There are two ways an
+entrant reaches OpenRouter, and they answer different needs:
 
-Instead:
+| | **Standby** (automatic) | **Force** (`SSA_OPENROUTER`) |
+|---|---|---|
+| when | the vendor route fails **terminally** | always |
+| set by | nobody — it is the default when `OPEN_ROUTER` exists | a human, per entrant |
+| reverts | by itself, the run after the account is fixed | when the variable is removed |
+| use it for | an outage | a deliberate, whole-season choice |
 
-- the switch is a repository **variable a human sets**, per entrant;
-- it is **off unless set**, so merging the code moves nothing;
-- every forecast records the route it came from.
+### What makes the standby safe
 
-## 3. Turning it on
+**It only triggers on a failure that will still be there in six hours.** A 500,
+a read timeout, a plain rate limit — those are fixed by waiting, and switching
+endpoints on one of them would put two endpoints' forecasts in one season for
+reasons nobody recorded. A disabled organisation, a dead key, a zero balance, a
+model not served here — those are not fixed by waiting.
+
+A `429` is deliberately **not** terminal on its own. It is the same status code
+for "you are going too fast" and for "you have no money", and only the response
+body tells them apart. Treating every 429 as terminal would send a burst of
+ordinary rate limiting straight to the standby and bill it.
+
+**A fallback forecast keeps the standby's own input hash, not the vendor's.**
+This is the mechanism that makes it self-undoing. The moment the vendor account
+comes back, the direct hash no longer matches what is on disk, the next run
+re-asks the vendor, and the entrant is upgraded out of the standby without
+anyone having to notice it had been demoted. Storing the *direct* hash instead
+would pin the entrant to the standby for the rest of the season.
+
+**The standby's own cache is checked before it is billed.** A fallback forecast
+never matches the direct hash, so without this every six-hourly run would
+re-buy an answer to a prompt that had not changed.
+
+**One dead account costs one failed probe, not one per entrant.** The first
+terminal failure marks that route dead *for the process*, and the remaining
+entrants on it skip straight to the standby. Nothing is written down, so the
+next run tests the vendor again — persisting it would turn a temporary outage
+into a permanent reroute.
+
+**The run says so.** `ssa.refresh` prints every route that fell back, and every
+forecast produced that way carries `via=openrouter` in its notes. A silent
+fallback is the failure this whole design is shaped against: the site would
+keep rendering, the leaderboard would keep updating, and four entrants would
+have quietly moved to a different endpoint at a lower reasoning depth.
+
+**The backtest never falls back.** `ssa/model_backtest.py` calls the provider
+directly and is not routed through this path. A backtest whose releases came
+from two endpoints is not a comparable mean CRPS, and the fix there is the
+force switch — one endpoint for the whole run — not a per-call retry.
+
+## 3. Forcing a route for a whole season
 
 Repository variable, `Settings → Secrets and variables → Actions → Variables`:
 
@@ -68,6 +107,11 @@ routed nothing would leave the outage in place with the variable set, and the
 run would fail exactly as it did before while the log said the fix was applied.
 
 Locally, the same variable works in a `.env`.
+
+**The standby needs no variable at all** — only the `OPEN_ROUTER` secret. If it
+is set, every model in the route table has somewhere to go when its vendor
+stops answering. Delete the secret and the arena is back to failing loudly,
+which is also a valid choice.
 
 ## 4. What changes when a route changes, and what must not
 

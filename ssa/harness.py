@@ -274,29 +274,159 @@ def openrouter_models():
     return frozenset(want)
 
 
-def route(entrant):
-    """Where this entrant is reached: (env, api, base, model, params, via).
+def _openrouter_route(model):
+    return {"env": OPENROUTER_ENV, "api": "openai", "base": OPENROUTER_BASE,
+            "model": OPENROUTER_MODELS[model],
+            "params": dict(OPENROUTER_EFFORT), "via": "openrouter"}
 
-    `via` is `direct` or `openrouter` and is the one field that exists purely
-    to be written down -- into the forecast's notes, so a file says which
-    endpoint answered it, and into the entrant record on the site.
 
-    The per-entrant `SSA_MODEL_<ENTRANT>` and `SSA_BASE_<ENTRANT>` overrides
-    still apply on top of whichever route is chosen; they are the escape hatch
-    for a self-hosted gateway and they stay the most specific thing there is.
-    """
-    model = resolve(entrant)[0]
+def _direct_route(model):
     cfg = MODELS[model]
-    if model in openrouter_models():
-        return {"env": OPENROUTER_ENV, "api": "openai", "base": OPENROUTER_BASE,
-                "model": OPENROUTER_MODELS[model],
-                "params": dict(OPENROUTER_EFFORT), "via": "openrouter"}
     shared = ((os.environ.get("SSA_BASE_GATEWAY")
                or os.environ.get("SSA_BASE_QWEN"))
               if model in GATEWAY_ENTRANTS else None)
     return {"env": cfg["env"], "api": cfg["api"],
             "base": shared or cfg["base"], "model": cfg["model"],
             "params": dict(cfg.get("params") or {}), "via": "direct"}
+
+
+def route(entrant, via=None):
+    """Where this entrant is reached: env, api, base, model, params, via.
+
+    `via` is `direct` or `openrouter` and is the one field that exists purely
+    to be written down -- into the forecast's notes, so a file says which
+    endpoint answered it, and into the entrant record on the site.
+
+    Passing `via` forces a route rather than asking which one is configured.
+    That is how the standby is reached in `forecast`, and how a caller that
+    must not switch endpoints mid-run (the backtest) pins itself to one.
+
+    The per-entrant `SSA_MODEL_<ENTRANT>` and `SSA_BASE_<ENTRANT>` overrides
+    still apply on top of whichever route is chosen; they are the escape hatch
+    for a self-hosted gateway and they stay the most specific thing there is.
+    """
+    model = resolve(entrant)[0]
+    if via == "openrouter":
+        if model not in OPENROUTER_MODELS:
+            raise ValueError(f"{model} has no OpenRouter route")
+        return _openrouter_route(model)
+    if via == "direct":
+        return _direct_route(model)
+    if via is not None:
+        raise ValueError(f"unknown route {via!r}; known: direct, openrouter")
+    if model in openrouter_models():
+        return _openrouter_route(model)
+    return _direct_route(model)
+
+
+def standby_route(entrant):
+    """The route to use when the configured one is terminally down, or None.
+
+    There is one only when the model is in the OpenRouter table, the key is
+    present, and the configured route is not already OpenRouter -- falling back
+    from a host to itself is not a fallback.
+    """
+    model = resolve(entrant)[0]
+    if model not in OPENROUTER_MODELS:
+        return None
+    if not os.environ.get(OPENROUTER_ENV):
+        return None
+    if route(entrant)["via"] == "openrouter":
+        return None
+    return _openrouter_route(model)
+
+
+# --- when a route stops answering ------------------------------------------
+#
+# Two provider failures look identical at the call site and must be handled in
+# opposite ways.
+#
+# A **transient** failure -- a 500, a read timeout, a plain rate limit -- is
+# fixed by waiting. Switching endpoints on one of those would move an entrant
+# to a different host for one round and back for the next, and the season would
+# quietly contain forecasts from two endpoints for reasons nobody recorded.
+#
+# A **terminal** failure -- the key is dead, the organisation is disabled, the
+# balance is zero, the model is not served here -- is not fixed by waiting, and
+# on 2026-08-14 two of them landed within a day of each other and stayed. Every
+# six-hourly run since filed nothing for seven of fifteen entrants while the
+# locks kept arriving. That is what the standby is for.
+#
+# So the fallback keys on the *kind* of failure, and the patterns below are
+# matched against the provider's own wording, which `_check` already preserves
+# in the exception text for exactly this reason.
+TERMINAL_STATUS = (401, 403, 404)
+TERMINAL_WORDING = (
+    "organization has been disabled",       # Anthropic, seen 2026-08-14
+    "account_deactivated",                  # OpenAI, seen 2026-08-14
+    "insufficient_quota",                   # OpenAI, seen 2026-08-16
+    "credit_balance_exhausted",
+    "no credits remaining",
+    "billing",
+    "invalid_api_key",
+    "incorrect api key",
+    "does not exist or you do not have access",
+)
+
+
+def terminal_failure(exc):
+    """Whether this failure will still be there in six hours.
+
+    A 429 is deliberately *not* terminal on its own: it is the same status for
+    "you are going too fast" and for "you have no money", and only the body
+    tells them apart. Treating every 429 as terminal would send a burst of
+    ordinary rate limiting to the standby and bill it.
+    """
+    text = str(exc)
+    low = text.lower()
+    m = re.search(r"\bHTTP (\d{3})\b", text)
+    if m and int(m.group(1)) in TERMINAL_STATUS:
+        return True
+    return any(w in low for w in TERMINAL_WORDING)
+
+
+# Routes found terminally dead during *this process*, as (env, host). Held in
+# memory and never written down: a run that starts after the account is fixed
+# must try it again, so persisting this would turn a temporary outage into a
+# permanent reroute. Its only job is to stop one dead account from costing a
+# failed request per entrant per round -- 126 of them, on the season as it
+# stands -- before every fallback.
+_dead_routes = set()
+_dead_guard = threading.Lock()
+
+
+def _route_fingerprint(rt):
+    return (rt["env"], rt["base"].split("//", 1)[-1].split("/", 1)[0])
+
+
+def route_is_down(rt):
+    with _dead_guard:
+        return _route_fingerprint(rt) in _dead_routes
+
+
+def mark_route_down(rt, why=""):
+    with _dead_guard:
+        _dead_routes.add(_route_fingerprint(rt))
+
+
+def dead_routes():
+    """(key env, host) for every route that failed terminally this run.
+
+    The run summary prints this. A silent fallback is the failure mode the
+    whole design is shaped against: the site would keep rendering, the
+    leaderboard would keep updating, and nothing anywhere would say that four
+    entrants had quietly moved to a different endpoint at a lower reasoning
+    depth.
+    """
+    with _dead_guard:
+        return sorted(_dead_routes)
+
+
+def forget_dead_routes():
+    """Test hook. Nothing in the pipeline calls this: the set dies with the
+    process, which is the whole point."""
+    with _dead_guard:
+        _dead_routes.clear()
 
 
 # No output ceiling is imposed. Thinking tokens count against any cap, so at
@@ -693,7 +823,7 @@ def _env_suffix(entrant):
     return re.sub(r"[^A-Z0-9]", "_", entrant.upper())
 
 
-def model_id(entrant):
+def model_id(entrant, via=None):
     """Provider-side model name, overridable via SSA_MODEL_<MODEL>.
 
     Accepts either a model key or a full entrant id; the condition suffix does
@@ -701,10 +831,10 @@ def model_id(entrant):
     """
     model = resolve(entrant)[0]
     return (os.environ.get("SSA_MODEL_" + _env_suffix(model))
-            or route(entrant)["model"])
+            or route(entrant, via)["model"])
 
 
-def base_url(entrant):
+def base_url(entrant, via=None):
     """API base, overridable via SSA_BASE_<ENTRANT>.
 
     Needed for self-hosted gateways and regional endpoints: a DashScope or
@@ -726,18 +856,23 @@ def base_url(entrant):
     """
     model = resolve(entrant)[0]
     return (os.environ.get("SSA_BASE_" + _env_suffix(model))
-            or route(entrant)["base"]).rstrip("/")
+            or route(entrant, via)["base"]).rstrip("/")
 
 
 def has_key(entrant):
-    """Whether the key this entrant's *current route* needs is present.
+    """Whether this entrant can be called at all: the configured route's key,
+    or the standby's.
 
-    Not the vendor's key: a model routed through OpenRouter needs the
-    OpenRouter key and does not care whether its vendor's is set. Reading the
-    vendor's would report ready for an entrant that cannot be called, and not
-    ready for one that can.
+    Not the vendor's key specifically. A model routed through OpenRouter needs
+    the OpenRouter key and does not care whether its vendor's is set, and a
+    model whose vendor key is missing is still callable when the standby is
+    configured. Reading the vendor's alone would report ready for an entrant
+    that cannot be called, and not ready for one that can.
     """
-    return bool(os.environ.get(route(entrant)["env"]))
+    if os.environ.get(route(entrant)["env"]):
+        return True
+    standby = standby_route(entrant)
+    return bool(standby and os.environ.get(standby["env"]))
 
 
 def build_prompt(r, history, context=DEFAULT_CONTEXT,
@@ -849,19 +984,25 @@ def parse_survey_reply(text, spec):
     return out
 
 
-def call_identity(entrant):
+def call_identity(entrant, via=None):
     """What actually determines a reply: the model *and* the endpoint serving it.
 
     Both cache keys are built on this. Two gateways can serve different weights
     under the same model name, so a cache keyed on the name alone would reuse a
     forecast the current endpoint never produced.
+
+    `via` asks for a specific route's identity rather than the configured one.
+    That is how a forecast filed by the standby records a hash the *direct*
+    route will not match: when the account comes back, the next run misses,
+    re-asks the vendor, and the entrant is upgraded without anyone noticing it
+    had been demoted.
     """
-    return f"{model_id(entrant)} @ {base_url(entrant)}"
+    return f"{model_id(entrant, via)} @ {base_url(entrant, via)}"
 
 
-def prompt_hash(entrant, prompt):
+def prompt_hash(entrant, prompt, via=None):
     return hashlib.sha256(
-        (call_identity(entrant) + "\n" + prompt).encode()).hexdigest()[:12]
+        (call_identity(entrant, via) + "\n" + prompt).encode()).hexdigest()[:12]
 
 
 # --- provider calls --------------------------------------------------------
@@ -876,7 +1017,7 @@ _provider_locks = {}
 _locks_guard = threading.Lock()
 
 
-def _provider_key(entrant):
+def _provider_key(entrant, via=None):
     """What counts as one provider for rate-limiting: the endpoint host, so the
     four gateway-hosted models share a budget rather than getting one each.
 
@@ -884,13 +1025,13 @@ def _provider_key(entrant):
     one shared budget there instead of carrying their vendor's quota to a host
     that never had it.
     """
-    r = route(entrant)
-    host = base_url(entrant).split("//", 1)[-1].split("/", 1)[0]
+    r = route(entrant, via)
+    host = base_url(entrant, via).split("//", 1)[-1].split("/", 1)[0]
     return f"{r['env']}@{host}"
 
 
-def _provider_slot(entrant):
-    key = _provider_key(entrant)
+def _provider_slot(entrant, via=None):
+    key = _provider_key(entrant, via)
     with _locks_guard:
         sem = _provider_locks.get(key)
         if sem is None:
@@ -927,7 +1068,7 @@ WEB_CAPABLE = frozenset({
 })
 
 
-def call_provider(entrant, prompt, with_usage=False, context=None):
+def call_provider(entrant, prompt, with_usage=False, context=None, via=None):
     """One completion.
 
     Returns the reply text, or (text, usage) when with_usage is set. `usage` is
@@ -940,11 +1081,11 @@ def call_provider(entrant, prompt, with_usage=False, context=None):
     """
     model, context_of_id, _ = resolve(entrant)
     context = context or context_of_id
-    rt = route(entrant)
+    rt = route(entrant, via)
     cfg = {"params": dict(rt["params"])}
     key = os.environ[rt["env"]]
-    mid = model_id(entrant)
-    base = base_url(entrant)
+    mid = model_id(entrant, via)
+    base = base_url(entrant, via)
     api = rt["api"]
     fn = {"openai": _call_openai, "anthropic": _call_anthropic,
           "gemini": _call_gemini}.get(api)
@@ -973,7 +1114,7 @@ def call_provider(entrant, prompt, with_usage=False, context=None):
                 "once its own endpoint is confirmed to run the search "
                 "server-side.")
         cfg["params"].update(extra)
-    with _provider_slot(entrant):
+    with _provider_slot(entrant, via):
         text, usage = fn(cfg, base, key, mid, prompt)
     return (text, usage) if with_usage else text
 
@@ -1293,6 +1434,69 @@ def forecast_persona(entrant, r, history=None, previous=None):
 
 # --- entry point -----------------------------------------------------------
 
+def _ask(entrant, prompt, previous):
+    """Ask the configured route; on a terminal failure, ask the standby.
+
+    Returns (topline, via, input_hash), or (None, via, hash) meaning the
+    forecast already on disk was produced by the standby from this exact
+    prompt and should be kept rather than bought again.
+
+    Three properties are worth stating, because each is a bug that was
+    available here:
+
+    **A forecast keeps the hash of the route that produced it.** So when the
+    vendor account comes back, the direct hash no longer matches, the next run
+    re-asks the vendor, and the entrant is upgraded out of the standby without
+    anyone having to notice it had been demoted. The reverse -- storing the
+    direct hash for a fallback forecast -- would pin the entrant to the standby
+    for the rest of the season.
+
+    **The standby's own cache is checked before it is billed.** Without that,
+    a fallback forecast never matches the direct hash, so every six-hourly run
+    would re-buy an answer to a prompt that had not changed.
+
+    **A dead route is remembered for the process only.** One terminal failure
+    marks it, and the remaining entrants on that route skip straight to the
+    standby instead of each paying a failed request first. Nothing is written
+    down, so the next run tests the vendor again.
+    """
+    primary = route(entrant)
+    standby = standby_route(entrant)
+    ih = prompt_hash(entrant, prompt)
+
+    if standby is not None and not os.environ.get(primary["env"]):
+        # Not an error to catch: a key that is not in the environment will not
+        # appear halfway through the run, and reaching the provider to be told
+        # so costs a request and a confusing traceback.
+        err = f"no {primary['env']} in the environment"
+    elif standby is not None and route_is_down(primary):
+        err = "already failed terminally earlier in this run"
+    else:
+        try:
+            return parse_forecast(call_provider(entrant, prompt)), \
+                primary["via"], ih
+        except Exception as e:                  # noqa: BLE001 - re-raised below
+            if standby is None or not terminal_failure(e):
+                raise
+            mark_route_down(primary, str(e))
+            err = e
+
+    fb_hash = prompt_hash(entrant, prompt, via="openrouter")
+    note = (previous or {}).get("notes") or ""
+    if f"in={fb_hash}" in note and not note.startswith("MOCK"):
+        return None, "openrouter", fb_hash
+    try:
+        return (parse_forecast(call_provider(entrant, prompt, via="openrouter")),
+                "openrouter", fb_hash)
+    except Exception as e:
+        # Both routes are gone. Report the *first* failure as the cause, since
+        # that is the account that actually needs attention, and name the
+        # standby's failure too so nobody debugs a working gateway.
+        raise RuntimeError(
+            f"direct route failed ({err}) and the OpenRouter standby also "
+            f"failed ({e})") from e
+
+
 def forecast(entrant, r, history=None, previous=None, context=None,
              elicitation=None, news=None):
     """One forecast dict for a round definition with baselines attached.
@@ -1328,8 +1532,10 @@ def forecast(entrant, r, history=None, previous=None, context=None,
                 f"replaced by real output once keys are added; in={ih}")
     else:
         try:
-            top = parse_forecast(call_provider(entrant, prompt))
-            note = (f"{model_id(entrant)}, harness v1, via={route(entrant)['via']}, "
+            top, via, ih = _ask(entrant, prompt, previous)
+            if top is None:            # the standby already answered this exact
+                return previous        # prompt; do not pay for it twice
+            note = (f"{model_id(entrant, via)}, harness v1, via={via}, "
                     f"context={context} elicitation={elicitation}, "
                     f"1 sample; in={ih}")
         except Exception as e:
