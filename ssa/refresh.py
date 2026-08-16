@@ -15,6 +15,7 @@ import os
 from datetime import date, datetime, timezone
 
 from .adapters import fredcsv, silverbulletin, umich
+from . import provenance
 from . import average, backtest, baselines, envfile, harness, scoring, sharecard
 from . import series as series_registry
 
@@ -553,11 +554,33 @@ def main():
     # One fetch per upstream file, shared by the series registry and by the
     # averages below, so the site's headline numbers and its series can never
     # be built from different snapshots of the same source.
+    # Each upstream body is archived as it arrived, before anything parses it.
+    # Twenty-one of the registered series come out of one published Google
+    # Sheet that is revised in place, so without a dated vintage a resolution
+    # computed from it today cannot be rechecked tomorrow. See ssa/provenance.py.
+    sb_app_raw = silverbulletin.fetch_text(silverbulletin.APPROVAL_URL)
+    sb_gen_raw = silverbulletin.fetch_text(silverbulletin.GENERIC_URL)
+    prov = {
+        "sb_approval": provenance.record(
+            "sb_approval", silverbulletin.APPROVAL_URL, sb_app_raw,
+            note="Silver Bulletin poll database, published as a Google Sheet"),
+        "sb_generic": provenance.record(
+            "sb_generic", silverbulletin.GENERIC_URL, sb_gen_raw,
+            note="Silver Bulletin generic-ballot database, published as a Google Sheet"),
+    }
     sources = {
-        "sb_approval": silverbulletin.fetch(silverbulletin.APPROVAL_URL),
-        "sb_generic": silverbulletin.fetch(silverbulletin.GENERIC_URL),
+        "sb_approval": silverbulletin.parse(sb_app_raw),
+        "sb_generic": silverbulletin.parse(sb_gen_raw),
         "umich": series_registry.michigan_history(),
     }
+    prov["umich"] = provenance.record(
+        "umich", series_registry.MICHIGAN_URL,
+        series_registry.MICHIGAN_RAW or "",
+        note=series_registry.MICHIGAN_SOURCE)
+    for name, block in sorted(prov.items()):
+        stale = provenance.unchanged_since(name, now)
+        flag = f"  unchanged for {stale}d" if stale and stale > 3 else ""
+        print(f"  {name:12s} {block['bytes']:>9,}B  sha {block['sha256'][:12]}{flag}")
     # Every series now comes from a source that is days behind rather than
     # weeks. VoteHub is gone: it was 41 days stale at the source and the only
     # two trackers it still supplied, Congress and the Supreme Court, backed no
@@ -668,11 +691,14 @@ def main():
             "mc_approval": series["mc_approval"],
         },
         "series_tail": {k: v[-8:] for k, v in series.items()},
-        "sources": {
-            "silver_bulletin_approval": silverbulletin.APPROVAL_URL,
-            "silver_bulletin_generic": silverbulletin.GENERIC_URL,
-            "fred": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=UMCSENT",
-            "repo": "https://github.com/Social-Atoms/social-sim-arena",
+        # Which URL, fetched when, and where the saved raw body is -- per
+        # upstream file, and per series through its `source` key. A page can
+        # then say "this figure came from that file at that time" instead of
+        # crediting a brand.
+        "sources": dict(prov, repo="https://github.com/Social-Atoms/social-sim-arena"),
+        "series_provenance": {
+            sid: prov.get(spec["source"], {}).get("source", spec["source"])
+            for sid, spec in series_registry.SERIES.items()
         },
     }
     os.makedirs(os.path.dirname(OUT), exist_ok=True)

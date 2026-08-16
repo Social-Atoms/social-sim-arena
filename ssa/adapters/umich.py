@@ -48,10 +48,19 @@ def parse(text):
     return rows
 
 
-def umich_sentiment(timeout=30):
+def fetch_text(timeout=30):
+    """The table exactly as served, for ssa/provenance.py to archive.
+
+    A vintage rebuilt from parsed rows is our reading of the file, not the
+    file, and this source has already gone 404 mid-afternoon once.
+    """
     r = requests.get(URL, timeout=timeout)
     r.raise_for_status()
-    rows = parse(r.text)
+    return r.text
+
+
+def umich_sentiment(timeout=30):
+    rows = parse(fetch_text(timeout))
     if not rows:
         raise RuntimeError(
             "Michigan table parsed to zero rows; refusing to publish an empty "
