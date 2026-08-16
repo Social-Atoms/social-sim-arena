@@ -54,6 +54,14 @@ jobs:
       # reasoning depth, and an automatic switch on a transient 429 would move
       # an entrant mid-season with nothing on the leaderboard saying so. Every
       # forecast records which route produced it (`via=` in its notes).
+      # The one search index every `web` entrant uses. Free tier, no card, and
+      # the arm is off unless SSA_ELICITATION names `web` -- so merging the
+      # code never starts spending. Every query and result is committed under
+      # search/, which is simultaneously the cost control (overlapping
+      # keywords cost one request across all fifteen models), the audit trail,
+      # and the only reason a web forecast can be re-derived: search results
+      # change by the minute and this arm cannot be backtested.
+      TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
       OPEN_ROUTER: ${{ secrets.OPEN_ROUTER }}
       SSA_OPENROUTER: ${{ vars.SSA_OPENROUTER }}
       # Which elicitation arms file forecasts, as a comma-separated list
@@ -128,12 +136,16 @@ jobs:
           #            rechecked.
           #   stamps   the per-round manifest and its OpenTimestamps proof. A
           #            proof left on the runner proves nothing to anyone.
-          git add -A forecasts site resolutions locks civiqs news stamps sources
+          #   search   every query a web entrant issued and every result it got
+          #            back. Unlike news, this corpus did not exist until a
+          #            model asked for it, and the index will not return the
+          #            same thing tomorrow.
+          git add -A forecasts site resolutions locks civiqs news stamps sources search
           # ignore the generated_at stamp so no-op runs do not commit
           if git diff --cached --quiet -I '"generated_at"'; then
             echo "no substantive change"
             git reset --quiet
-            git checkout -- site forecasts resolutions locks civiqs news stamps sources
+            git checkout -- site forecasts resolutions locks civiqs news stamps sources search
           else
             git commit -m "data refresh $(date -u +%Y-%m-%dT%H:%MZ)"
             git -c rebase.autoStash=true pull --rebase origin main

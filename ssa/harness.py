@@ -648,9 +648,9 @@ ELICITATION_SUFFIX = {"direct": "", "superfc": "-superfc", "persona": "-persona"
 VARIANT_SUFFIX = dict(CONTEXT_SUFFIX)
 VARIANT_SUFFIX.update({k: v for k, v in ELICITATION_SUFFIX.items() if v})
 
-# Every condition that is not a season cell. `web` is excluded from the default
-# roster by WEB_CAPABLE below rather than from this list, so the cell stays
-# nameable and testable.
+# Every condition that is not a season cell. `web` now runs on all fifteen
+# entrants -- one shared index rather than nine vendors' hosted tools -- so
+# nothing filters the roster any more.
 ELICITATION_VARIANTS = ("persona", "superfc", "news")
 
 
@@ -738,8 +738,6 @@ def cell_entrants(cells, models=None):
     for ctx, eli in cells:
         for m in models:
             if m not in MODELS:
-                continue
-            if ctx in WEB_CONTEXTS and m not in WEB_CAPABLE:
                 continue
             out.append((entrant_id(m, ctx, eli), m, ctx, eli))
     return out
@@ -876,7 +874,7 @@ def has_key(entrant):
 
 
 def build_prompt(r, history, context=DEFAULT_CONTEXT,
-                 elicitation=DEFAULT_ELICITATION, news=None):
+                 elicitation=DEFAULT_ELICITATION, news=None, search=None):
     """The exact text an entrant sees.
 
     `history` is the strictly pre-lock series the round's baselines were built
@@ -913,9 +911,8 @@ def build_prompt(r, history, context=DEFAULT_CONTEXT,
         pts = (history or [])[-n:]
         lines = "\n".join(f"  {p['date']}: {p['value']}" for p in pts) or "  (none)"
         body = WITH_HISTORY.format(history=lines)
-    # `web` differs from recent10 in the request, not the text: the search tool
-    # is attached per provider in call_provider. Keeping the prompt identical is
-    # what makes the comparison an information comparison.
+    # `web` shows recent10's history *plus* the retrieved corpus, so the only
+    # difference from recent10 is the information, not the framing.
     protocol = SUPERFC if elicitation == "superfc" else ""
     digest = ""
     if context == "news":
@@ -925,8 +922,86 @@ def build_prompt(r, history, context=DEFAULT_CONTEXT,
                 "ordinary forecast, which would silently make it a duplicate "
                 "of recent10 under a different entrant name")
         digest = NEWS_BLOCK.format(asof=news["asof"], news=news["text"])
+    if context == "web":
+        # Same refusal as `news`, for the same reason: a web entrant filed with
+        # no corpus is a byte-identical copy of its recent10 twin under a
+        # different leaderboard row, and the comparison would be between two
+        # arms that were never different.
+        if not search or not search.get("results"):
+            raise ValueError(
+                "the web condition needs a retrieved corpus; refusing to file "
+                "it as an ordinary forecast, which would silently make it a "
+                "duplicate of recent10 under a different entrant name")
+        from .adapters import search as search_adapter
+        digest = SEARCH_BLOCK.format(
+            asof=search.get("asof") or search.get("asked_at") or "lock time",
+            results=search_adapter.render(search["results"]))
     return head + body + digest + protocol + FOOTER
 
+
+# --- the search turn --------------------------------------------------------
+#
+# The `web` context is two calls, not one: the model is asked what to look for,
+# we run the searches, and the results come back in the forecast prompt. That
+# shape is the design, not an implementation detail.
+#
+# **No agent framework and no tool calling.** The obvious build is the vendors'
+# native tool protocols, and it would quietly ruin the arm: OpenAI's `tools`,
+# Anthropic's `tools` and Gemini's `functionDeclarations` are three dialects,
+# entrants differ in how fluently they speak their own, and the arm would end
+# up measuring tool-calling competence rather than whether search helps. That
+# is the vendor-index confound in a new costume, and the whole point of running
+# one index is to be rid of it. A fixed number of plain-text turns gives every
+# entrant byte-identical scaffolding, a bounded cost, and no loop that can run
+# away -- and it reuses the JSON parser the forecast reply already goes through.
+QUERY_TURN = (
+    "Before answering, you may search the web. Reply with exactly one JSON "
+    "object and no other text:\n"
+    '{{"queries": ["<search query>", ...]}}\n'
+    "At most {n} queries. They will be run verbatim against a news index "
+    "covering the last {days} days, and the results will come back to you "
+    "before you forecast. Ask for what would actually change your estimate.\n"
+)
+
+SEARCH_BLOCK = (
+    "Results of the searches you asked for, retrieved at {asof}. Every "
+    "entrant searches the same index with the same settings; the queries "
+    "below are your own.\n{results}\n"
+)
+
+
+def build_query_prompt(r, history, context=DEFAULT_CONTEXT, news=None):
+    """The first turn of the web condition: what do you want to look for?
+
+    Deliberately the *same* framing as the forecast prompt, minus the answer
+    format. A model that is told less here than it will be told later would be
+    choosing queries for a question it has not been asked.
+    """
+    from .adapters import search as search_adapter
+    head = build_prompt(r, history, "recent10" if context == "web" else context,
+                        DEFAULT_ELICITATION, news=news)
+    head = head.split(FOOTER)[0]
+    return head + QUERY_TURN.format(n=search_adapter.MAX_QUERIES,
+                                    days=search_adapter.DAYS)
+
+
+def parse_queries(text, limit=None):
+    """The query list out of the first turn's reply.
+
+    Non-strings and blanks are dropped rather than coerced. A model that
+    answered with something other than a list of queries did not ask for a
+    search, and inventing one on its behalf would put our keywords in an arm
+    whose entire point is that the keywords are the model's.
+    """
+    from .adapters import search as search_adapter
+    obj = _first_json_object(text)
+    raw = obj.get("queries")
+    if not isinstance(raw, list):
+        raise ValueError(f"no query list in reply; got {json.dumps(obj)[:200]}")
+    out = [q.strip() for q in raw if isinstance(q, str) and q.strip()]
+    if not out:
+        raise ValueError("the query list was empty")
+    return out[:(limit or search_adapter.MAX_QUERIES)]
 
 # A respondent is being interviewed, not consulted. The framing says nothing
 # about forecasts, releases, dates or aggregates, because a persona told it is
@@ -1039,34 +1114,16 @@ def _provider_slot(entrant, via=None):
     return sem
 
 
-# Server-side search, per wire protocol. Each vendor hosts the tool and runs
-# the searches itself, so the harness stays three protocols wide and gains no
-# scraper. Dated tool versions are pinned for the same reason model ids are: a
-# tool that changes behaviour mid-season silently changes the condition.
-WEB_TOOLS = {
-    "anthropic": {"tools": [{"type": "web_search_20260209",
-                             "name": "web_search"}]},
-    "openai": {"tools": [{"type": "web_search"}]},
-    "gemini": {"tools": [{"google_search": {}}]},
-}
-
-# Hosted search is a *vendor* feature, not a property of the wire protocol, and
-# conflating the two is a trap this nearly fell into: Grok, both Qwens, both
-# DeepSeeks and GLM all speak OpenAI-compatible chat completions, so dispatching
-# on `api` alone would have sent OpenAI's hosted web_search tool to five hosts
-# that do not serve it. The good outcome there is a 400. The bad one is a host
-# that accepts unknown fields and ignores them, which yields a "web" entrant
-# whose prompt and answer are identical to its closed-book twin -- a published
-# comparison between two arms that were never different.
-#
-# So the capability is declared per model, and a model without it is refused by
-# name rather than attempted.
-WEB_CAPABLE = frozenset({
-    "gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6-terra",       # OpenAI hosted tool
-    "claude-opus", "claude-opus-5", "claude-sonnet", "claude-fable",
-    "gemini-pro", "gemini-flash",                          # google_search
-})
-
+# Vendor-hosted search is deliberately NOT used, and the tables that drove it
+# are gone rather than left dormant. The arm now runs one index for every
+# entrant (ssa/adapters/search.py), because three vendors' hosted tools search
+# three different corpora and a leaderboard built on them cannot separate the
+# model from the index behind it. It also covered only 9 of 15 entrants: six
+# models speak OpenAI-compatible chat completions and serve no search tool, and
+# dispatching on the protocol would have sent OpenAI's `web_search` to five
+# hosts that do not run it. The good outcome there is a 400; the bad one is a
+# host that accepts unknown fields and ignores them, publishing a "web" entrant
+# byte-identical to its closed-book twin. See docs/conditions.md.
 
 def call_provider(entrant, prompt, with_usage=False, context=None, via=None):
     """One completion.
@@ -1091,29 +1148,6 @@ def call_provider(entrant, prompt, with_usage=False, context=None, via=None):
           "gemini": _call_gemini}.get(api)
     if fn is None:
         raise ValueError("unknown api: " + api)
-    if context in WEB_CONTEXTS:
-        # Hosted search belongs to the *route*, not to the model. OpenRouter
-        # serves Claude and GPT over one OpenAI-compatible endpoint but does
-        # not proxy Anthropic's `web_search_20260209` or OpenAI's hosted
-        # `web_search`; its own `:online` plugin is a third-party search
-        # bolted on, which is a different condition wearing the same name.
-        # Refusing is the only safe answer -- a host that accepts unknown
-        # fields and ignores them yields a "web" entrant identical to its
-        # closed-book twin, and a published comparison between two arms that
-        # were never different.
-        extra = (WEB_TOOLS.get(api)
-                 if model in WEB_CAPABLE and rt["via"] == "direct" else None)
-        if extra is None:
-            why = ("is routed through OpenRouter, which does not proxy the "
-                   "vendor's hosted search" if rt["via"] != "direct"
-                   else "has no vendor-hosted search")
-            raise ValueError(
-                f"{entrant} ({model}) {why}, so it cannot run the web "
-                "condition. Speaking the OpenAI protocol is not the same as "
-                "serving OpenAI's tools; add the model to WEB_CAPABLE only "
-                "once its own endpoint is confirmed to run the search "
-                "server-side.")
-        cfg["params"].update(extra)
     with _provider_slot(entrant, via):
         text, usage = fn(cfg, base, key, mid, prompt)
     return (text, usage) if with_usage else text
@@ -1434,6 +1468,33 @@ def forecast_persona(entrant, r, history=None, previous=None):
 
 # --- entry point -----------------------------------------------------------
 
+def _retrieve(entrant, r, history):
+    """The web condition's first turn, run once per (round, entrant) and frozen.
+
+    The frozen file *is* the cache. A round's corpus is part of what the
+    entrant was shown at lock time, so it is written once and read forever
+    after: the six-hourly refresh does not re-search, a rerun cannot get a
+    different corpus, and the forecast stays derivable from the repository.
+    Without that, this would be the only arm in the arena that no one --
+    including us -- could reproduce, because search results change by the
+    minute.
+    """
+    from .adapters import search as search_adapter
+    frozen = search_adapter.for_round(r["round_id"], entrant)
+    if frozen is not None:
+        return frozen
+    queries = parse_queries(call_provider(
+        entrant, build_query_prompt(r, history, "web")))
+    records = search_adapter.gather(queries)
+    if not records:
+        raise RuntimeError(
+            f"{entrant} asked for {len(queries)} search(es) on "
+            f"{r['round_id']} and none returned anything. Refusing to file a "
+            "web forecast with an empty corpus, which would be its recent10 "
+            "twin under a different name.")
+    search_adapter.record_round(r["round_id"], entrant, queries, records)
+    return search_adapter.for_round(r["round_id"], entrant)
+
 def _ask(entrant, prompt, previous):
     """Ask the configured route; on a terminal failure, ask the standby.
 
@@ -1498,7 +1559,7 @@ def _ask(entrant, prompt, previous):
 
 
 def forecast(entrant, r, history=None, previous=None, context=None,
-             elicitation=None, news=None):
+             elicitation=None, news=None, search=None):
     """One forecast dict for a round definition with baselines attached.
 
     `previous` is the forecast already on disk for this (round, entrant), if
@@ -1514,7 +1575,10 @@ def forecast(entrant, r, history=None, previous=None, context=None,
     elicitation = elicitation or eli_of_id
     if elicitation == "persona":
         return forecast_persona(entrant, r, history, previous)
-    prompt = build_prompt(r, history, context, elicitation, news=news)
+    if context == "web" and search is None:
+        search = _retrieve(entrant, r, history)
+    prompt = build_prompt(r, history, context, elicitation, news=news,
+                          search=search)
     ih = prompt_hash(entrant, prompt)
 
     if previous and f"in={ih}" in (previous.get("notes") or "") \
