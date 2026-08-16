@@ -1,16 +1,17 @@
 name: source-probe
 
-# One-off diagnostic, run by hand. Civiqs returns 403 to the scheduled refresh
-# and 200 from a residential IP, and the two candidate explanations -- the
-# runner's datacenter address, or our request's thin header fingerprint -- are
-# indistinguishable from outside. This asks the failing environment directly.
+# Asks the failing environment directly, by hand, when a source starts
+# refusing us. It already earned its place once: Civiqs began 403ing the
+# scheduled refresh on 2026-08-14 while returning 200 from a residential IP,
+# and the two candidate causes -- the runner's datacenter address, or our thin
+# request headers -- were indistinguishable from outside.
+#
+# The answer, 2026-08-16: all three header sets get 403 from a runner,
+# including a complete Chrome fingerprint, while Michigan and Silver Bulletin
+# both return 200. So it is the IP range and no header will fix it. Keep this
+# around; the next source to refuse us will pose the same question.
 on:
   workflow_dispatch:
-  # Also on push to this branch, because workflow_dispatch only works once the
-  # file is on the default branch and the whole point is to get the answer now.
-  push:
-    branches: [umich-preliminary]
-    paths: ['.github/workflows/source-probe.yml']
 
 jobs:
   probe:
