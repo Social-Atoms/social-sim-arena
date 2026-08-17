@@ -200,3 +200,88 @@ Two consequences for anything added from here:
   redundancy check** is worth more than the series it duplicates: it alerts when
   the two disagree. `series.MICHIGAN_SOURCE` is the pattern — it records which
   of two sources actually answered, so the site credits the one that replied.
+
+---
+
+## 6. A worked rejection: Michigan sentiment by political party (2026-08-17)
+
+Recorded because the next person to want this series — and someone will, it is
+the obvious first sentiment subgroup task — should start from what is known,
+not from the subset tool's front page. Verdict: **not viable without a new
+dependency, and two readings stale even with one.**
+
+**The target.** The ICS among Democrats / Republicans / Independents
+(`umich_sentiment_dem` / `_rep` / `_ind`), monthly since February 2017,
+sporadic before that back to June 1980. The structure is exactly what a
+social simulation should know and a persistence null cannot: the partisan gap
+flips sign at presidential transitions. October 2016 read Dem 102.1 /
+Rep 74.4; February 2017, Dem 77.5 / Rep 115.7. October 2024 read Dem 91.4 /
+Rep 53.6; December 2024, Dem 69.6 / Rep 85.4. A forty-point swap inside two
+months, twice, on a known calendar.
+
+**What was tried, in order:**
+
+1. **The subset tool** (`data.sca.isr.umich.edu/subset/subset.php`; the form
+   POSTs to `/subset/output.php` and does emit CSV). Its demographic
+   checkboxes are age, region, sex, income, education. There is no party
+   field anywhere in the form — the tool cannot express the cut at all.
+
+2. **The demographic tables** (`/demographic-tables.php`) offer age, income,
+   education, region, gender. `?demographic=political+party` and
+   `?demographic=party` return the default page byte-for-byte. The party
+   table lives instead on the all-households page (`/tables.php`) as
+   **Table 5b**, "The Index of Consumer Sentiment, Current, and Expected
+   Within Political Party".
+
+3. **Table 5b's formats.** PDF and `.xls` only, behind HMAC-keyed URLs
+   (`get-table.php?c=RB&y=2026&m=6&n=5b&f=xls&k=<hex>`). The `.xls` is a
+   genuine BIFF Composite Document (checked by magic bytes), not an HTML
+   table wearing the extension; the key covers `f`, so substituting `f=csv`
+   returns `Not Found`; no table on the page offers CSV at all. Parsing it
+   means a new dependency, which this repository does not take for one
+   series.
+
+4. **And the free Table 5b is stale.** On 2026-08-17 the public tables page
+   is headed "Monthly: June 2026"; the Historical edition of 5b ends at
+   June 2026 (read from its PDF twin) and its `.xls` was last saved
+   2026-06-24 — while the August preliminary, released 2026-08-14, was
+   already public. The site has a sponsor login; the free page runs about
+   two releases behind it.
+
+5. **The only timely party artifact is a PDF.** "Tables Addenda of Political
+   Party Variable", `data.sca.isr.umich.edu/fetchdoc.php?docid=81624` →
+   `demopoliticalparty202608p.pdf`, stamped 8/14/2026 — the preliminary's
+   release day — carrying the full history through the August 2026
+   preliminary row. So the party cut **does publish on the preliminary
+   schedule**, which answers the round-calendar question if a route ever
+   opens: party rounds could share the national prelim/final calendar, with
+   the prelim row revising at the final exactly as `resolve`'s (date, value)
+   keying already handles. But it is a PDF; docids 81618–81631 were scanned
+   and no CSV/XLS twin exists (81623 is the stock-ownership addenda, also
+   PDF); and August 2026 is the first month it has ever appeared —
+   `reports.php?year=2025` lists no addenda at all — one data point of a
+   publishing habit, not a schedule.
+
+6. **Everything else checked, and empty.** The CSV time-series archive
+   (`/data-archive/mine.php`) exports Tables 1–47 only; 5b is not among its
+   options. The party charts (chart 5b on `/charts.php`; a one-off
+   `get-special-chart.php?n=75085`) are keyed PDF/XLS at the same June
+   vintage. `www.sca.isr.umich.edu/files/` — where the national `tbmics.csv`
+   lives — holds exactly the six national tables as CSV and no party file.
+   `data.sca.isr.umich.edu/files/` answers HTTP 200 with the site homepage
+   for *any* path, so nothing can be discovered or verified there. FRED
+   carries no party subseries.
+
+Why the near-miss fails even if an `.xls` reader were allowed: at any lock
+the frozen history would end two readings before what every entrant can read
+in the addenda PDF. The persistence null would be missing public information
+— the same silent staleness that mis-resolved `umich-2026-08-prelim`, as
+§1.2 and `ssa/adapters/umich.py` already record. A source that is public but
+unparseable to us is contamination in one direction only.
+
+**Revisit when** the addenda gains a non-PDF twin, or 5b joins the CSV tables
+(`tbmics.csv` proves they publish CSV when they choose to), or a sponsor
+arrangement makes the current `.xls` worth a dependency argument. Until then
+this stays unbuilt. A hand-keyed resolution would make the maintainer the
+resolver, which is what §1.1 exists to prevent — and a scraper presented as
+sturdier than it is would fail in the quietest possible way, mid-season.
