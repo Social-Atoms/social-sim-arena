@@ -14,7 +14,7 @@ import json
 import os
 from datetime import date, datetime, timezone
 
-from .adapters import silverbulletin, umich
+from .adapters import aaii, silverbulletin, umich
 from . import health
 from . import provenance
 from . import stamps
@@ -607,6 +607,19 @@ def main():
         "umich", series_registry.MICHIGAN_URL,
         series_registry.MICHIGAN_RAW or "",
         note=series_registry.MICHIGAN_SOURCE)
+    # AAII serves a ~22-week rolling window with no deeper machine-readable
+    # history, so the committed vintages *are* the long history: each week the
+    # window slides and the archive keeps the week that fell off. The body is
+    # parsed with the asof from the response that carried it (the page's dates
+    # have no year), and both go into `sources` so the registry never fetches
+    # a second, different snapshot of the same page.
+    aaii_raw, aaii_asof = aaii.fetch_text()
+    prov["aaii"] = provenance.record(
+        "aaii", aaii.URL, aaii_raw, ext="html",
+        note=("AAII sentiment survey results page, a ~22-week rolling window "
+              f"parsed against the response's own date {aaii_asof}; the full "
+              "1987-present .xls is OLE2 and unreadable without a dependency"))
+    sources["aaii"] = aaii.parse(aaii_raw, aaii_asof)
     for name, block in sorted(prov.items()):
         print(f"  {name:12s} {block['bytes']:>9,}B  sha {block['sha256'][:12]}")
     # Every series now comes from a source that is days behind rather than
