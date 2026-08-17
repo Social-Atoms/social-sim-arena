@@ -116,19 +116,20 @@ jobs:
           # the merge committed its forecasts locally and then died there,
           # throwing the work away while the API calls had already been paid
           # for. autoStash is the belt to that braces.
-          # Four directories beyond the obvious ones, each holding something
+          # Five directories beyond the obvious ones, each holding something
           # that cannot be reconstructed after the fact:
           #   civiqs   Civiqs publishes only its current reading, so the daily
           #            snapshot is the only record that a day ever said what it
           #            said, and it is the backfill base for every earlier day.
           #   news     the exact corpus every entrant in a round was given.
+          #   replies  the raw reply behind every live forecast, billed once.
           #   sources  the upstream bodies as they arrived, hashed and dated.
           #            Twenty-one series come through one sheet that is revised
           #            in place; without a vintage a resolution cannot be
           #            rechecked.
           #   stamps   the per-round manifest and its OpenTimestamps proof. A
           #            proof left on the runner proves nothing to anyone.
-          git add -A forecasts site resolutions locks civiqs news stamps sources
+          git add -A forecasts site resolutions locks civiqs news stamps sources replies
           # ignore the generated_at stamp so no-op runs do not commit
           if git diff --cached --quiet -I '"generated_at"'; then
             echo "no substantive change"

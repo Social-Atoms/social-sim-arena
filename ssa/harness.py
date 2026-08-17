@@ -32,7 +32,10 @@ endpoint is part of the condition. See docs/routes.md.
 Cost control: a forecast is only re-requested when its inputs changed. Every
 filed forecast carries in=<hash of the prompt> in its notes; if the hash still
 matches, the existing file is kept and no API call is made. So a round costs
-one call per model per new observation, not one per refresh.
+one call per model per new observation, not one per refresh. Behind that sits
+the reply log (ssa/replies.py): every reply is written to disk on arrival and
+before it is parsed, so a bad parse or a run that dies mid-flight costs the
+tokens once rather than once per attempt.
 """
 import concurrent.futures
 import hashlib
@@ -42,6 +45,8 @@ import re
 import threading
 
 import requests
+
+from . import replies
 
 # Reasoning depth is set as high as each provider allows, and the parameter is
 # not portable -- getting it wrong is a 400, not a silent downgrade:
@@ -628,8 +633,10 @@ def assert_prospective(context, where="the backtest"):
 # persistence, `none` is the ablation and the contamination probe.
 #
 # Repeated sampling is deliberately absent. At the providers' default
-# temperature a rerun does not reproduce, so the committed record of raw
-# replies is the reproducibility mechanism, not a re-run.
+# temperature a rerun does not reproduce, so the committed record of raw replies
+# is the reproducibility mechanism, not a re-run -- and it is now a record
+# rather than a promise: every live reply lands in `replies/<round_id>/` as it
+# arrives, before anything tries to parse it (see ssa/replies.py).
 SEASON_CELLS = (("recent10", "direct"), ("none", "direct"))
 
 # Entrant id = model, then the context suffix, then the elicitation suffix. The
@@ -1343,6 +1350,40 @@ def mock_forecast(entrant, round_id, persistence_mean, persistence_sd):
     }
 
 
+# --- the reply log ---------------------------------------------------------
+
+def _log_reply(round_id, entrant, ih, prompt, text, usage, via=None, persona=None):
+    """Write a reply down the instant it arrives, before anyone parses it.
+
+    Called between the provider returning and the parse, because the failure
+    this exists for is exactly a reply that was paid for and then did not parse.
+    `replies.log` swallows its own errors, so a log that cannot be written never
+    costs a forecast that can be.
+    """
+    rec = {"model": model_id(entrant, via), "via": route(entrant, via)["via"],
+           "prompt_sha256": replies.prompt_sha256(prompt), "reply": text,
+           "usage": usage}
+    if persona is not None:
+        rec["persona"] = persona
+    return replies.log(round_id, entrant, ih, rec)
+
+
+def _replayed(round_id, entrant, ih, parse, persona=None):
+    """A reply already bought for this exact call, parsed, or None.
+
+    None covers both "nothing logged" and "what is logged does not parse": a
+    stale unparseable entry is one of the two failures the log exists for, and
+    it must not be able to stop the run from buying a good reply to replace it.
+    """
+    rec = replies.lookup(round_id, entrant, ih, persona=persona)
+    if not rec:
+        return None
+    try:
+        return parse(rec.get("reply") or "")
+    except Exception:                      # noqa: BLE001 - any parse failure
+        return None
+
+
 # --- the persona condition -------------------------------------------------
 
 # How many of the panel may fail to answer before the aggregate is refused. A
@@ -1364,6 +1405,11 @@ def forecast_persona(entrant, r, history=None, previous=None):
 
     The input hash covers the persona prompts *and* the panel, so a change to
     either correctly misses the cache and re-runs.
+
+    Resume is per respondent, not per panel: each answer is logged under that
+    persona's id, so an interrupted panel buys the answers it is missing rather
+    than all 192 again. This is the most expensive entrant in the season by two
+    orders of magnitude, and the one where a lost run hurts most.
     """
     from . import personas, series as series_registry
 
@@ -1390,13 +1436,25 @@ def forecast_persona(entrant, r, history=None, previous=None):
             f"{entrant}: no {route(entrant)['env']} in the "
             "environment; the persona condition never files a placeholder.")
 
-    answers, failures = {}, []
+    answers, failures, replayed = {}, [], []
     lock = threading.Lock()
 
     def ask(p):
         pid = p["id"]
+        # One respondent, one logged reply. A panel is 192 calls under a single
+        # input hash, so the log is keyed per persona: an interrupted panel then
+        # resumes the respondents it had left instead of re-buying all 192.
+        parsed = _replayed(r["round_id"], entrant, ih,
+                           lambda t: parse_survey_reply(t, spec), persona=pid)
+        if parsed is not None:
+            with lock:
+                answers[pid] = parsed
+                replayed.append(pid)
+            return
         try:
-            reply = call_provider(entrant, prompts[pid])
+            reply, usage = call_provider(entrant, prompts[pid], with_usage=True)
+            _log_reply(r["round_id"], entrant, ih, prompts[pid], reply, usage,
+                       persona=pid)
             parsed = parse_survey_reply(reply, spec)
         except Exception as e:                 # noqa: BLE001 - collected below
             with lock:
@@ -1419,10 +1477,14 @@ def forecast_persona(entrant, r, history=None, previous=None):
 
     mean = personas.aggregate(spec["aggregate"], answers, weights)
     sd = personas.sd_for(weights, history, scale=spec.get("se_scale", 1.0))
+    # How many respondents came out of the log rather than off the wire is part
+    # of what this panel is: a run that resumed 190 of 192 bought two answers,
+    # and the note is where a reader finds that out.
     note = (f"{model_id(entrant)}, harness v1, via={route(entrant)['via']}, "
             f"context={resolve(entrant)[1]} elicitation=persona, "
             f"{len(answers)}/{len(panel)} respondents, "
-            f"{responded:.0%} of panel weight, "
+            + (f"{len(replayed)} replayed, " if replayed else "")
+            + f"{responded:.0%} of panel weight, "
             f"aggregate={spec['aggregate']}; in={ih}")
     return {
         "round_id": r["round_id"],
@@ -1434,14 +1496,26 @@ def forecast_persona(entrant, r, history=None, previous=None):
 
 # --- entry point -----------------------------------------------------------
 
-def _ask(entrant, prompt, previous):
+def _ask(entrant, prompt, previous, round_id):
     """Ask the configured route; on a terminal failure, ask the standby.
 
-    Returns (topline, via, input_hash), or (None, via, hash) meaning the
-    forecast already on disk was produced by the standby from this exact
-    prompt and should be kept rather than bought again.
+    Returns (topline, via, input_hash, replayed), or (None, via, hash, False)
+    meaning the forecast already on disk was produced by the standby from this
+    exact prompt and should be kept rather than bought again. `replayed` says
+    the topline came out of the reply log rather than out of a call, which the
+    caller writes into the notes -- a forecast has to say whether it was bought
+    now or recovered.
 
-    Three properties are worth stating, because each is a bug that was
+    **This is where the reply log is read and written, both routes.** Not in
+    `forecast`, which knows only the configured route's hash: a reply bought
+    from the standby is keyed under the standby's hash, and that is precisely
+    the run most likely to have died halfway -- the standby exists for days when
+    a vendor account is disabled. Checking one hash in the caller would resume
+    the easy case and re-buy the hard one. So each hash is looked up immediately
+    before the call that would otherwise pay for it, and every reply is logged
+    the moment it lands, before `parse_forecast` gets a chance to reject it.
+
+    Three further properties are worth stating, because each is a bug that was
     available here:
 
     **A forecast keeps the hash of the route that produced it.** So when the
@@ -1464,6 +1538,13 @@ def _ask(entrant, prompt, previous):
     standby = standby_route(entrant)
     ih = prompt_hash(entrant, prompt)
 
+    # Ahead of the key check and the dead-route check on purpose: a logged reply
+    # is free and already answers this exact (endpoint, prompt), so whether the
+    # vendor is reachable right now does not come into it.
+    top = _replayed(round_id, entrant, ih, parse_forecast)
+    if top is not None:
+        return top, primary["via"], ih, True
+
     if standby is not None and not os.environ.get(primary["env"]):
         # Not an error to catch: a key that is not in the environment will not
         # appear halfway through the run, and reaching the provider to be told
@@ -1473,8 +1554,9 @@ def _ask(entrant, prompt, previous):
         err = "already failed terminally earlier in this run"
     else:
         try:
-            return parse_forecast(call_provider(entrant, prompt)), \
-                primary["via"], ih
+            text, usage = call_provider(entrant, prompt, with_usage=True)
+            _log_reply(round_id, entrant, ih, prompt, text, usage)
+            return parse_forecast(text), primary["via"], ih, False
         except Exception as e:                  # noqa: BLE001 - re-raised below
             if standby is None or not terminal_failure(e):
                 raise
@@ -1484,10 +1566,16 @@ def _ask(entrant, prompt, previous):
     fb_hash = prompt_hash(entrant, prompt, via="openrouter")
     note = (previous or {}).get("notes") or ""
     if f"in={fb_hash}" in note and not note.startswith("MOCK"):
-        return None, "openrouter", fb_hash
+        return None, "openrouter", fb_hash, False
+    top = _replayed(round_id, entrant, fb_hash, parse_forecast)
+    if top is not None:
+        return top, "openrouter", fb_hash, True
     try:
-        return (parse_forecast(call_provider(entrant, prompt, via="openrouter")),
-                "openrouter", fb_hash)
+        text, usage = call_provider(entrant, prompt, with_usage=True,
+                                    via="openrouter")
+        _log_reply(round_id, entrant, fb_hash, prompt, text, usage,
+                   via="openrouter")
+        return parse_forecast(text), "openrouter", fb_hash, False
     except Exception as e:
         # Both routes are gone. Report the *first* failure as the cause, since
         # that is the account that actually needs attention, and name the
@@ -1505,6 +1593,15 @@ def forecast(entrant, r, history=None, previous=None, context=None,
     any. When its recorded input hash matches the prompt we would send now,
     it is returned unchanged and no API call is made. The variant is part of
     the prompt, so changing it correctly misses the cache.
+
+    Three layers, in this order, and only the third one costs anything:
+
+      1. `previous` carries `in=<ih>` for the prompt we would send -- return it.
+      2. the reply log has a reply to that exact prompt that parses -- file it,
+         marked `replayed` (`_ask`, which owns both routes' hashes).
+      3. pay for the call, and write the reply down the moment it arrives.
+
+    So a run that dies, or a reply that does not parse, costs the tokens once.
     """
     per = r["baselines"]["persistence"]
     # The condition is carried by the entrant id, so a caller cannot file a
@@ -1532,12 +1629,18 @@ def forecast(entrant, r, history=None, previous=None, context=None,
                 f"replaced by real output once keys are added; in={ih}")
     else:
         try:
-            top, via, ih = _ask(entrant, prompt, previous)
+            top, via, ih, replayed = _ask(entrant, prompt, previous,
+                                          r["round_id"])
             if top is None:            # the standby already answered this exact
                 return previous        # prompt; do not pay for it twice
+            # `in={ih}` stays last and stays byte-identical: it is what the next
+            # run matches on, so the marker goes in front of it rather than
+            # after the hash it would otherwise be read as part of.
             note = (f"{model_id(entrant, via)}, harness v1, via={via}, "
                     f"context={context} elicitation={elicitation}, "
-                    f"1 sample; in={ih}")
+                    f"1 sample"
+                    f"{', replayed from the reply log' if replayed else ''}"
+                    f"; in={ih}")
         except Exception as e:
             if not ALLOW_MOCK:
                 raise RuntimeError(

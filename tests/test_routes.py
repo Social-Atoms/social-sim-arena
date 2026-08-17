@@ -13,7 +13,9 @@ and a condition that depends on the vendor's own tooling must be refused rather
 than quietly downgraded.
 """
 import os
+import shutil
 import sys
+import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -84,17 +86,31 @@ class Provider:
         bad = self.fail_standby if self.calls[-1] == "openrouter" else self.fail_direct
         if bad:
             raise RuntimeError(bad)
-        return '{"mean": 41.0, "sd": 1.5}'
+        text = '{"mean": 41.0, "sd": 1.5}'
+        usage = {"input_tokens": 900, "output_tokens": 40, "thinking_tokens": None}
+        return (text, usage) if with_usage else text
 
     def __enter__(self):
         harness.forget_dead_routes()
         self.saved = harness.call_provider
         harness.call_provider = self
+        # The live path writes every reply to `replies/` on receipt, so a test
+        # that files a forecast files a reply too. Send them to a temp dir: a
+        # test suite must not leave anything in the tree, and a fresh log per
+        # block keeps these tests about the `in=` hash they are testing.
+        self.log_dir = tempfile.mkdtemp(prefix="ssa-replies-")
+        self.saved_log = os.environ.get("SSA_REPLIES_DIR")
+        os.environ["SSA_REPLIES_DIR"] = self.log_dir
         return self
 
     def __exit__(self, *a):
         harness.call_provider = self.saved
         harness.forget_dead_routes()
+        if self.saved_log is None:
+            os.environ.pop("SSA_REPLIES_DIR", None)
+        else:
+            os.environ["SSA_REPLIES_DIR"] = self.saved_log
+        shutil.rmtree(self.log_dir, ignore_errors=True)
 
 
 def test_unset_means_every_entrant_stays_where_it_was():
