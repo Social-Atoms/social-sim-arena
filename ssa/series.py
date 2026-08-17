@@ -21,6 +21,7 @@ Adding a tracker means adding a row here, and nothing else.
 from .adapters import civiqs as civiqs_adapter
 from .adapters import silverbulletin as sb
 from .adapters import umich as umich_adapter
+from .adapters import wikipedia as wikipedia_adapter
 
 # Set by michigan_history() to whichever source answered, plus the URL that
 # answered and the body it returned. The body is what ssa/provenance.py
@@ -771,6 +772,104 @@ SERIES["civiqs_angry_share"] = {
 }
 
 
+# --- Wikipedia pageviews -----------------------------------------------------
+#
+# The first *behavioral* target in the registry. Every series above measures
+# stated opinion: someone asked a question and someone answered it. These count
+# an action -- how many times human readers loaded an article -- published
+# daily by the Wikimedia Pageviews API and summed by the adapter into
+# Monday-Sunday weeks. A count is a census of what it measures: no sampling
+# error, no house effect, no nightly re-modelling, and a day's number is final
+# once the logs are aggregated and never revised. All forecast error on these
+# series is therefore about the future, none of it about measurement.
+#
+# They also sit in the opposite regime from Civiqs. Measured on the 188
+# complete weeks from 2023-01-08 to 2026-08-09: the Trump article's weekly
+# total ranged 127 thousand to 5.43 million views with a mean absolute
+# week-over-week change of 31.7%, and Taylor Swift's ranged 76 thousand to
+# 1.71 million at 31.3%. Where the Civiqs registrations worry that persistence
+# is nearly unbeatable, here last week's number misses by nearly a third of
+# the level on an average week: attention is spiky, the spikes are
+# event-driven, and a model that reads the calendar and the news cycle has
+# real room to beat the null.
+#
+# Why these two articles, specifically:
+#
+# - **Donald_Trump** is the same subject as the approval trackers above,
+#   measured as attention rather than opinion. The pairing is the point: an
+#   indictment or a debate can multiply the week's pageviews severalfold while
+#   moving approval by a point or less, so a model that has learned the news
+#   cycle should forecast this series, and a model that has only learned the
+#   level of opinion should not.
+#
+# - **Taylor_Swift** is the non-political control at a comparable scale of
+#   fame, moved by album cycles and tours rather than by anything else this
+#   registry tracks. Skill on both articles says a model understands pageview
+#   dynamics; skill on Trump alone says it understands the political news
+#   cycle; skill on neither localises the failure to the behavioral target
+#   itself rather than to politics.
+#
+# Deliberately NO `survey` instrument on either row. A persona panel cannot be
+# polled for a pageview count: there is no question a simulated respondent
+# could answer whose honest aggregate is "how many times will everyone load
+# this article next week" -- a respondent does not know their own future
+# pageviews, let alone everyone else's. `series.survey()` returning None makes
+# the persona arm refuse these by name, the same discipline as
+# civiqs_net_approval_rep.
+
+_WIKI_METHOD = (
+    "Wikimedia Pageviews REST API (wikimedia.org/api/rest_v1), en.wikipedia "
+    "only -- the English edition, not other language editions. Counts use the "
+    "source's own agent=user split, which excludes traffic its classifier "
+    "marks as spiders or automated: the question is about human attention, "
+    "and a scraper re-crawling the wiki moves the raw count without a single "
+    "person having cared. Daily counts across desktop, mobile web and the "
+    "apps are summed into Monday-Sunday weeks and reported in thousands of "
+    "views; a day's count is a census computed once from the request logs and "
+    "never revised, so unlike a poll there is no sampling error and no house "
+    "effect. ")
+
+SERIES["wiki_views_trump"] = {
+    "label": "Wikipedia weekly pageviews, Donald Trump",
+    "tracker": "wikipedia",
+    "source": "wikipedia",
+    "wikipedia": {"article": "Donald_Trump"},
+    "value": "value",
+    "unit": "thousand pageviews (Mon-Sun week)",
+    "cadence": "weekly, data final ~2 days after the week ends",
+    "question": ("total en.wikipedia pageviews by human readers of the "
+                 "article 'Donald Trump', in thousands, for the "
+                 "Monday-to-Sunday week ending the Sunday the round names"),
+    "methodology": _WIKI_METHOD + (
+        "The series is attention, not opinion: it spikes severalfold on "
+        "indictments, elections and inaugurations regardless of which way "
+        "approval moves. Measured over the 188 complete weeks from "
+        "2023-01-08: median 337 thousand views a week, range 127 thousand to "
+        "5.43 million, mean absolute week-over-week change 31.7% -- last "
+        "week's number is a genuinely beatable baseline here."),
+}
+
+SERIES["wiki_views_taylor_swift"] = {
+    "label": "Wikipedia weekly pageviews, Taylor Swift",
+    "tracker": "wikipedia",
+    "source": "wikipedia",
+    "wikipedia": {"article": "Taylor_Swift"},
+    "value": "value",
+    "unit": "thousand pageviews (Mon-Sun week)",
+    "cadence": "weekly, data final ~2 days after the week ends",
+    "question": ("total en.wikipedia pageviews by human readers of the "
+                 "article 'Taylor Swift', in thousands, for the "
+                 "Monday-to-Sunday week ending the Sunday the round names"),
+    "methodology": _WIKI_METHOD + (
+        "The non-political control next to the Trump pageview series: "
+        "attention here is moved by album releases, tours and award shows "
+        "rather than by the news cycle the rest of this registry lives in. "
+        "Measured over the 188 complete weeks from 2023-01-08: median 203 "
+        "thousand views a week, range 76 thousand to 1.71 million, mean "
+        "absolute week-over-week change 31.3%."),
+}
+
+
 def describe(series_id):
     """The question and methodology text an entrant is entitled to see."""
     s = SERIES[series_id]
@@ -812,6 +911,15 @@ def build_all(sources=None):
     # per series per refresh.
     if "civiqs" in need and "civiqs" not in src:
         src["civiqs"] = {}
+    # Wikipedia is fetched once per *article*, not once per series or per
+    # refresh of the map. `src["wikipedia"]` is a per-article override map --
+    # {article: [{date, views}] daily rows} -- which tests inject to stay off
+    # the network, and which the loop below fills on first use so two series
+    # over one article would cost one request. The rows are daily on purpose:
+    # the Monday-Sunday aggregation is this repository's step, and injecting
+    # pre-aggregated weeks would let a test pass without ever exercising it.
+    if "wikipedia" in need and "wikipedia" not in src:
+        src["wikipedia"] = {}
 
     out = {}
     for sid, spec in SERIES.items():
@@ -832,6 +940,12 @@ def build_all(sources=None):
                     cfg["name"], cfg.get("filters"),
                     choice=cfg.get("choice"), net=cfg.get("net", False),
                     weekday=cfg.get("weekday"))
+        elif spec["source"] == "wikipedia":
+            art = spec["wikipedia"]["article"]
+            if art not in src["wikipedia"]:
+                src["wikipedia"][art] = wikipedia_adapter.fetch_daily(art)
+            out[sid] = wikipedia_adapter.weekly_series(
+                art, daily=src["wikipedia"][art])
         else:
             raise ValueError(f"{sid}: unknown source {spec['source']}")
         if not out[sid]:
