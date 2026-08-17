@@ -20,6 +20,7 @@ Adding a tracker means adding a row here, and nothing else.
 """
 from .adapters import civiqs as civiqs_adapter
 from .adapters import silverbulletin as sb
+from .adapters import trends as trends_adapter
 from .adapters import umich as umich_adapter
 
 # Set by michigan_history() to whichever source answered, plus the URL that
@@ -771,6 +772,83 @@ SERIES["civiqs_angry_share"] = {
 }
 
 
+# --- Google Trends: the market-research track -------------------------------
+#
+# The first two *behavioral* series in the registry: nobody was asked anything.
+# The value is an index over what people typed into a search box, which is a
+# different kind of quantity from every survey and model tracker above, and
+# the reason the arena wants it: a simulated society that can only reproduce
+# poll toplines has learned polls, not people. Search interest moves on product
+# news, recalls, launches and price cuts -- events with public lead-ups an
+# entrant can reason about -- while its measurement quirks (window
+# renormalization, sampling jitter) are the arena's problem, solved by the
+# archive, not the entrant's.
+#
+# Both series read `trends.as_archived`, so every registration decision that
+# matters is documented once, on the adapter: the fixed 12-month window, the
+# one-keyword-per-request rule, why the dated snapshot in `trends/` is the
+# resolution truth, and why a completed week's value is frozen by the earliest
+# snapshot that holds it. What belongs here is only what differs per series:
+# the query string.
+#
+# Neither entry carries a `survey` block, deliberately and permanently -- not,
+# as with the Civiqs cells, pending an aggregator. A persona can be asked how
+# it feels about Tesla; it cannot be asked "how many times did people like you
+# Google 'Tesla' this week, as a share of all searches, scaled to the busiest
+# week of the year". The quantity only exists as an aggregate over behavior,
+# so `series.survey()` returns None and the persona arm refuses these by name.
+
+_TRENDS_UNIT = "search interest index (0-100, 12-month window)"
+
+_TRENDS_CADENCE = ("weekly, Sunday through Saturday; the completed week "
+                   "appears in the following days' snapshots, which are read "
+                   "and archived daily")
+
+_TRENDS_METHOD = (
+    "Google Trends is a behavioral index, not a survey: no one was asked "
+    "anything. Google counts searches containing the query, divides by total "
+    "search volume, and scales the result so the busiest week of the "
+    "requested window reads 100 -- the arena always requests the trailing 12 "
+    "months, so the scale is relative to the past year's peak and can shift "
+    "when a new peak enters the window or an old one leaves it. The index is "
+    "computed from a sample of searches, so the same completed week can read "
+    "a point or two differently on different days. The arena therefore "
+    "archives a dated snapshot of every fetch and scores against its own "
+    "archive: a completed week's value is whatever the earliest snapshot "
+    "containing that week showed, and later re-reads do not move it. The "
+    "in-progress week is never scored.")
+
+
+def _trends(sid, query, asks):
+    SERIES[sid] = {
+        "label": f"Google Trends search interest: {query}",
+        "tracker": "google_trends",
+        "source": "trends",
+        "trends": {"query": query, "geo": trends_adapter.GEO},
+        "value": "value",
+        "unit": _TRENDS_UNIT,
+        "cadence": _TRENDS_CADENCE,
+        "question": (
+            f"Google Trends weekly search interest for the query "
+            f"'{query}' in the United States (web search, all categories): "
+            f"the 0-100 index for the most recent complete Sunday-to-Saturday "
+            f"week, normalized within the trailing 12-month window, as "
+            f"captured by the arena's archived snapshot. {asks}"),
+        "methodology": _TRENDS_METHOD,
+        # No `survey`: see the block comment above. This is a permanent
+        # property of a behavioral target, not a missing feature.
+    }
+
+
+_trends("trends_tesla", "Tesla",
+        "Interest tracks product and company news -- launches, recalls, "
+        "earnings, Musk coverage -- so the week's public events are the "
+        "signal to reason over.")
+_trends("trends_iphone", "iPhone",
+        "Interest is strongly seasonal around Apple's September announcement "
+        "cycle and product rumors, so the calendar itself is informative.")
+
+
 def describe(series_id):
     """The question and methodology text an entrant is entitled to see."""
     s = SERIES[series_id]
@@ -812,6 +890,12 @@ def build_all(sources=None):
     # per series per refresh.
     if "civiqs" in need and "civiqs" not in src:
         src["civiqs"] = {}
+    # Trends works the same way as Civiqs and for the same reason: no single
+    # file to prefetch, one archived request cycle per query per day, so the
+    # override is a per-series map -- `{series_id: [{date, value}]}` -- and
+    # anything not in it is built from (or fetched into) `trends/`.
+    if "trends" in need and "trends" not in src:
+        src["trends"] = {}
 
     out = {}
     for sid, spec in SERIES.items():
@@ -832,6 +916,12 @@ def build_all(sources=None):
                     cfg["name"], cfg.get("filters"),
                     choice=cfg.get("choice"), net=cfg.get("net", False),
                     weekday=cfg.get("weekday"))
+        elif spec["source"] == "trends":
+            cfg = spec["trends"]
+            given = src["trends"].get(sid)
+            out[sid] = list(given) if given is not None else \
+                trends_adapter.as_archived(cfg["query"],
+                                           cfg.get("geo", trends_adapter.GEO))
         else:
             raise ValueError(f"{sid}: unknown source {spec['source']}")
         if not out[sid]:
