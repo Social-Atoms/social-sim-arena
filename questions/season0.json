@@ -1,6 +1,6 @@
 {
   "season": 0,
-  "note": "Season 0 rounds. Lock is always release minus 48 hours. Times are UTC. release_estimated=true means the pollster does not preannounce an exact time; if a wave slips, the round resolves on the next published wave. New weekly rounds are appended by the refresh cron.",
+  "note": "Season 0 rounds. Lock is always release minus 48 hours, except behavioral series (wikipedia), which lock before the measured week begins because their outcome data publishes daily. Times are UTC. release_estimated=true means the pollster does not preannounce an exact time; if a wave slips, the round resolves on the next published wave. New weekly rounds are appended by the refresh cron.",
   "rounds": [
     {
       "round_id": "umich-2026-08-prelim",
@@ -156,6 +156,30 @@
       "release_estimated": true,
       "lock_at": "2026-10-30T22:00:00Z",
       "resolve": "provisional score Dec 1 from AP calls; final on certified results",
+      "target_type": "continuous_normal"
+    },
+    {
+      "round_id": "wiki-2026-08-30-trump",
+      "tracker": "wikipedia",
+      "series": "wiki_views_trump",
+      "question": "Total en.wikipedia pageviews by human readers of the article Donald Trump, in thousands, for the week Mon Aug 24 - Sun Aug 30",
+      "unit": "thousand pageviews (Mon-Sun week)",
+      "release_at": "2026-09-01T14:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-08-21T14:00:00Z",
+      "resolve": "Wikimedia Pageviews API, user traffic, complete week",
+      "target_type": "continuous_normal"
+    },
+    {
+      "round_id": "wiki-2026-08-30-taylor-swift",
+      "tracker": "wikipedia",
+      "series": "wiki_views_taylor_swift",
+      "question": "Total en.wikipedia pageviews by human readers of the article Taylor Swift, in thousands, for the week Mon Aug 24 - Sun Aug 30",
+      "unit": "thousand pageviews (Mon-Sun week)",
+      "release_at": "2026-09-01T14:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-08-21T14:00:00Z",
+      "resolve": "Wikimedia Pageviews API, user traffic, complete week",
       "target_type": "continuous_normal"
     }
   ]
