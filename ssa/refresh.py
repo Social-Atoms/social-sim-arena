@@ -349,7 +349,9 @@ FILING_WORKERS = int(os.environ.get("SSA_FILING_WORKERS", "20"))
 #
 # The ceiling is deliberately well above any real sweep. It is a runaway brake,
 # not a budget.
-MAX_SPEND = float(os.environ.get("SSA_MAX_SPEND", "10"))
+# `or` rather than a dict default: a workflow that passes an unset variable
+# delivers the empty string, which is set-but-false, and float("") is a crash.
+MAX_SPEND = float(os.environ.get("SSA_MAX_SPEND") or "10")
 
 # Measured, not guessed: 278 in / 1,276 out per call, from the 2,058 calls in
 # backtest/runs/ that carry a usage report. model_backtest's own estimator
@@ -387,14 +389,38 @@ def price_jobs(jobs, hist_by_round, read_forecast, news_for):
                 continue                      # cached: free
         except Exception:                     # noqa: BLE001 - price it, do not skip it
             pass
-        billable.append((r, entrant, path))
         cin, cout = model_backtest.PRICING.get(model, (2.0, 10.0))
         calls = 1
         if eli == "persona":
             from . import personas
             calls = len(personas.panel())
-        usd += calls * ((EST_IN_TOKENS / 1e6) * cin + (EST_OUT_TOKENS / 1e6) * cout)
+        cost = calls * ((EST_IN_TOKENS / 1e6) * cin + (EST_OUT_TOKENS / 1e6) * cout)
+        billable.append((r, entrant, path, cost))
+        usd += cost
     return billable, usd
+
+
+def affordable(billable, ceiling):
+    """Split priced jobs into (buy, withhold) under a per-run ceiling.
+
+    Jobs whose locks come soonest are bought first: a withheld forecast is
+    only harmless while its round is still open, so the tail that waits for
+    the next run must always be the tail with the most time left. Returns
+    (jobs to run, jobs to withhold, dollars committed).
+
+    This replaces an all-or-nothing gate that deadlocked: a backlog larger
+    than one ceiling was withheld in full, six hours later the same backlog
+    was estimated again and withheld again, and nothing ever drained.
+    """
+    buy, withhold, spent = [], [], 0.0
+    for job in sorted(billable, key=lambda j: j[0]["lock_at"]):
+        cost = job[3]
+        if spent + cost > ceiling:
+            withhold.append(job)
+        else:
+            spent += cost
+            buy.append(job)
+    return buy, withhold, spent
 
 
 def read_forecast(path):
@@ -494,26 +520,29 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
                                    news_for)
         print(f"\nfiling: {len(jobs)} entrant-round(s), {len(jobs) - len(billable)} "
               f"already answered, {len(billable)} to call, est ${usd:.2f}")
+        withheld = set()
         if usd > MAX_SPEND:
-            # Not SystemExit: the series were already fetched and the site
-            # should still be rebuilt from them. Only the calls are withheld.
-            # The existing failure channel then exits non-zero at the end, so
-            # this is as loud as a dead provider without being as destructive.
-            for r, entrant, _ in billable[:12]:
+            # Buy the ceiling's worth, nearest locks first, and let the tail
+            # wait for the next run -- the backlog drains one ceiling per
+            # six-hourly run instead of deadlocking. Not SystemExit: the
+            # series were already fetched and the site should still be
+            # rebuilt. The failure channel exits non-zero at the end, so a
+            # partially-filled run is loud without being destructive.
+            buy, tail, spent = affordable(billable, MAX_SPEND)
+            withheld = {(j[0]["round_id"], j[1]) for j in tail}
+            for rid, entrant in sorted(withheld)[:12]:
                 failures.append(
-                    f"{r['round_id']}/{entrant}: withheld by the spend ceiling")
+                    f"{rid}/{entrant}: withheld by the spend ceiling")
             failures.append(
-                f"estimated ${usd:.2f} for one refresh exceeds the "
-                f"${MAX_SPEND:.2f} ceiling; {len(billable)} of {len(jobs)} "
-                "entrant-rounds wanted a call at once. A refresh re-asks an "
-                "entrant only when its series moved, so this many misses means "
-                "the prompt bytes or the endpoint changed -- and on a "
-                "six-hourly cron that bills again every six hours until "
-                "someone looks. Check what moved, then set SSA_MAX_SPEND for "
-                "one run if it was intended.")
-            return written, failures
+                f"estimated ${usd:.2f} exceeds the ${MAX_SPEND:.2f} ceiling: "
+                f"bought ${spent:.2f} ({len(buy)} entrant-rounds, nearest "
+                f"locks first) and withheld {len(tail)}, which the next runs "
+                "drain one ceiling at a time. Set SSA_MAX_SPEND for one run "
+                "if the backlog must clear now.")
+        run_list = [j for j in jobs
+                    if (j[0]["round_id"], j[1]) not in withheld]
         with concurrent.futures.ThreadPoolExecutor(max_workers=FILING_WORKERS) as ex:
-            written = sum(ex.map(run_job, jobs))
+            written += sum(ex.map(run_job, run_list))
     return written, failures
 
 
