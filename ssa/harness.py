@@ -756,10 +756,12 @@ def elicitation_entrants(variants=ELICITATION_VARIANTS, models=None):
 
 
 # Entered in MODELS but not run: the gateway rejects the prefixed namespace
-# these two live in ("The product is not activated"), and K3 and M3 exist only
-# there -- the activated bare names top out at kimi-k2.6 and MiniMax-M2.5.
-# Their config and cutoff rows are kept so re-enabling is deleting a line here.
-PENDING_ACTIVATION = ("kimi", "minimax")
+# ("The product is not activated") and the activated bare names top out at
+# MiniMax-M2.5. Kimi left this list on 2026-08-18: OpenRouter carries
+# moonshotai/kimi-k3, so with SSA_OPENROUTER=kimi the entrant never touches
+# the gateway and the activation gate no longer describes it. Minimax's
+# config and cutoff rows are kept so re-enabling is deleting a line here.
+PENDING_ACTIVATION = ("minimax",)
 
 
 # A local run calls whichever providers have a key in the environment, and the
