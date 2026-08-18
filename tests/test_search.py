@@ -35,6 +35,9 @@ class Scratch:
         search.ROUNDS = os.path.join(self.dir, "rounds")
         search.requests.post = self._post
         os.environ[search.ENV] = "tvly-test"
+        # The live path logs every paid reply; keep test replies out of the tree.
+        self.saved_log = os.environ.get("SSA_REPLIES_DIR")
+        os.environ["SSA_REPLIES_DIR"] = os.path.join(self.dir, "replies")
         return self
 
     def _post(self, url, timeout=None, json=None):
@@ -51,6 +54,10 @@ class Scratch:
             os.environ.pop(search.ENV, None)
         else:
             os.environ[search.ENV] = key
+        if self.saved_log is None:
+            os.environ.pop("SSA_REPLIES_DIR", None)
+        else:
+            os.environ["SSA_REPLIES_DIR"] = self.saved_log
         shutil.rmtree(self.dir, ignore_errors=True)
 
 
@@ -165,8 +172,10 @@ def test_the_search_runs_once_per_round_and_the_refresh_reads_the_file():
             # `"queries"` with its quotes appears only in the query turn's
             # answer template; the forecast turn merely mentions the word.
             if '"queries"' in prompt:
-                return '{"queries": ["what moved approval this week"]}'
-            return '{"mean": 41.2, "sd": 1.4}'
+                text = '{"queries": ["what moved approval this week"]}'
+            else:
+                text = '{"mean": 41.2, "sd": 1.4}'
+            return (text, None) if with_usage else text
 
         saved_call, saved_key = harness.call_provider, harness.has_key
         harness.call_provider, harness.has_key = fake_call, lambda e: True

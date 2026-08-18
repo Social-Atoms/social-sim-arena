@@ -6,11 +6,35 @@ rather than the model, so the arithmetic below is the actual estimator and is
 checked against the pollsters' own definitions.
 """
 import os
+import shutil
 import sys
+import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ssa import harness, personas, series as series_registry
+
+
+class TempReplyLog:
+    """Reply-log writes sent to a temp dir for the duration.
+
+    The live persona path writes every respondent's reply to `replies/` as it
+    arrives; a test that runs a 192-person panel would otherwise leave 192 files
+    in the tree.
+    """
+
+    def __enter__(self):
+        self.dir = tempfile.mkdtemp(prefix="ssa-replies-")
+        self.saved = os.environ.get("SSA_REPLIES_DIR")
+        os.environ["SSA_REPLIES_DIR"] = self.dir
+        return self
+
+    def __exit__(self, *a):
+        if self.saved is None:
+            os.environ.pop("SSA_REPLIES_DIR", None)
+        else:
+            os.environ["SSA_REPLIES_DIR"] = self.saved
+        shutil.rmtree(self.dir, ignore_errors=True)
 
 
 def test_panel_is_deterministic_and_weights_sum_to_one():
@@ -227,8 +251,10 @@ def test_persona_forecast_runs_the_panel_and_aggregates_it():
         calls.append(prompt)
         # Republicans approve, everyone else does not -- so the expected
         # topline is exactly the Republican share of the panel.
-        return ('{"approval": "approve"}' if "Republican" in prompt
+        text = ('{"approval": "approve"}' if "Republican" in prompt
                 else '{"approval": "disapprove"}')
+        return (text, {"input_tokens": 300, "output_tokens": 8,
+                       "thinking_tokens": None}) if with_usage else text
 
     real_call, real_key = harness.call_provider, harness.has_key
     harness.call_provider = fake_call
@@ -239,7 +265,8 @@ def test_persona_forecast_runs_the_panel_and_aggregates_it():
              "baselines": {"persistence": {"mean": 40.0, "sd": 2.0}}}
         hist = [{"date": f"2026-0{1+i%9}-01", "value": 40 + (i % 3)}
                 for i in range(20)]
-        out = harness.forecast_persona("claude-opus-zeroshot-persona", r, hist)
+        with TempReplyLog():
+            out = harness.forecast_persona("claude-opus-zeroshot-persona", r, hist)
     finally:
         harness.call_provider, harness.has_key = real_call, real_key
 
@@ -258,7 +285,8 @@ def test_persona_forecast_refuses_a_panel_that_mostly_refused():
     def fake_call(entrant, prompt, with_usage=False, context=None):
         if "Republican" in prompt:
             raise RuntimeError("declined")
-        return '{"approval": "disapprove"}'
+        text = '{"approval": "disapprove"}'
+        return (text, None) if with_usage else text
 
     real_call, real_key = harness.call_provider, harness.has_key
     harness.call_provider = fake_call
@@ -267,7 +295,8 @@ def test_persona_forecast_refuses_a_panel_that_mostly_refused():
         r = {"round_id": "r1", "series": "yougov_approval",
              "release_at": "2026-08-20T14:00:00Z",
              "baselines": {"persistence": {"mean": 40.0, "sd": 2.0}}}
-        harness.forecast_persona("claude-opus-zeroshot-persona", r, [])
+        with TempReplyLog():
+            harness.forecast_persona("claude-opus-zeroshot-persona", r, [])
         assert False, "a third of the panel missing must not be published"
     except RuntimeError as e:
         assert "below the" in str(e), e
