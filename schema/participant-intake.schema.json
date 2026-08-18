@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Social Simulation Arena participant intake review packet",
+  "type": "object",
+  "required": [
+    "participant_type",
+    "organization_name",
+    "product_name",
+    "product_description",
+    "entrant_id",
+    "contact",
+    "leaderboard_visibility",
+    "delivery"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "participant_type": {
+      "type": "string",
+      "enum": ["startup", "research_group", "institution", "individual_researcher"]
+    },
+    "organization_name": {"type": "string", "minLength": 2, "maxLength": 120},
+    "product_name": {"type": "string", "minLength": 2, "maxLength": 120},
+    "product_description": {"type": "string", "minLength": 10, "maxLength": 500},
+    "entrant_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_.-]{1,47}$"
+    },
+    "contact": {
+      "type": "object",
+      "required": ["name", "email"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {"type": "string", "minLength": 2, "maxLength": 100},
+        "email": {"type": "string", "format": "email", "maxLength": 160}
+      }
+    },
+    "website": {"type": "string", "format": "uri", "maxLength": 240},
+    "leaderboard_visibility": {"type": "string", "enum": ["public", "private"]},
+    "delivery": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["method", "endpoint", "auth_mode", "agent_version", "integration_notes"],
+          "additionalProperties": false,
+          "properties": {
+            "method": {"const": "hosted_api"},
+            "endpoint": {"type": "string", "format": "uri", "pattern": "^https://"},
+            "auth_mode": {"type": "string", "enum": ["none", "bearer", "custom_header", "oauth2"]},
+            "credential_supplied": {"type": "boolean"},
+            "agent_version": {"type": "string", "minLength": 1, "maxLength": 120},
+            "operational_limits": {"type": "string", "maxLength": 240},
+            "integration_notes": {"type": "string", "minLength": 10, "maxLength": 1000}
+          }
+        },
+        {
+          "type": "object",
+          "required": ["method", "round_id", "forecast", "commitment"],
+          "additionalProperties": false,
+          "properties": {
+            "method": {"const": "file_commitment"},
+            "round_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+            "forecast": {"$ref": "forecast.schema.json"},
+            "commitment": {
+              "type": "object",
+              "required": ["accepted", "signer_name", "signer_role", "signed_at", "terms_version"],
+              "additionalProperties": false,
+              "properties": {
+                "accepted": {"const": true},
+                "signer_name": {"type": "string", "minLength": 2, "maxLength": 100},
+                "signer_role": {"type": "string", "minLength": 2, "maxLength": 100},
+                "signed_at": {"type": "string", "format": "date-time"},
+                "terms_version": {"const": "ssa-participant-v1"}
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

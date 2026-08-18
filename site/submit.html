@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Submit · Social Simulation Arena</title>
+<meta name="description" content="Submission intake design for organizations, researchers, and human forecasters entering Social Simulation Arena.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700;800&display=swap');
+:root{
+  color-scheme:light;
+  --bg:#fff;--ink:#111110;--ink2:#4f4e49;--mut:#96948d;
+  --line:#e0e0e0;--soft:#f6f6f4;--accent:#15803d;--accent-ink:#0a6a30;
+  --link:#0000ee;--warn:#8a5a00;--secret:#7c3aed;
+  --sans:"Inconsolata",ui-monospace,SFMono-Regular,Menlo,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink2);font:14.5px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+
+nav.top{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:20}
+nav.top .in{display:flex;align-items:center;gap:2px;height:50px;padding:0 16px;max-width:1440px;margin:0 auto}
+nav.top .brand{font-weight:700;color:var(--ink);font-size:15.5px;text-decoration:none;display:flex;align-items:center;gap:8px;margin-right:18px;white-space:nowrap}
+nav.top .brand .by{color:var(--mut);font-weight:400;font-size:11px}
+nav.top .brand .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+nav.top a.item{font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:4px;color:var(--ink2)}
+nav.top a.item.on{background:var(--ink);color:#fff}
+nav.top .right{margin-left:auto;display:flex;align-items:center;gap:16px}
+nav.top .right a{font-size:12.5px;text-decoration:none;color:var(--ink2)}
+nav.top a:hover{color:var(--link)}
+
+.bar{display:flex;align-items:center;gap:12px 16px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.bar .copy{max-width:1180px;width:100%;margin:0 auto;display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap}
+.bar h1{margin:0;font-size:21px;font-weight:800;color:var(--ink);letter-spacing:-.015em}
+.bar p{margin:0;color:var(--mut);flex:1 1 420px}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:800;letter-spacing:.08em}
+.badge .d{width:6px;height:6px;border-radius:50%;background:#fff}
+
+.shell{max-width:1180px;margin:0 auto;padding:24px 20px 44px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:34px}
+.maincol{min-width:0}
+.rail{min-width:0}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--mut)}
+.intro h2{margin:3px 0 7px;color:var(--ink);font-size:23px;line-height:1.2}
+.intro p{margin:0;max-width:760px;font-size:14px}
+.notice{border:1px solid #d6eadc;background:#f4fbf6;border-radius:4px;padding:10px 12px;margin:16px 0;color:var(--accent-ink);font-size:12.5px}
+.notice b{color:var(--accent-ink)}
+
+.tracktabs{display:flex;gap:2px;background:#f5f5f5;border:1px solid var(--line);border-radius:4px;padding:2px;margin:18px 0 20px;width:max-content;max-width:100%}
+.tracktabs button{border:0;background:transparent;border-radius:3px;padding:8px 16px;color:var(--ink2);font-weight:700;white-space:nowrap}
+.tracktabs button.on{background:#fff;color:var(--ink);outline:1px solid var(--line)}
+.track{display:none}
+.track.on{display:block}
+
+.steps{display:flex;align-items:center;gap:7px;margin:0 0 14px}
+.stepchip{display:flex;align-items:center;gap:7px;color:var(--mut);font-size:12px;font-weight:700}
+.stepchip .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border:1px solid var(--line);border-radius:3px;background:#fff}
+.stepchip.on{color:var(--ink)}
+.stepchip.on .n{background:var(--ink);border-color:var(--ink);color:#fff}
+.stepchip.done{color:var(--accent-ink)}
+.stepchip.done .n{background:var(--accent);border-color:var(--accent);color:#fff}
+.stepline{height:1px;width:32px;background:var(--line)}
+
+.panel{border:1px solid var(--line);border-radius:4px;background:#fff;margin-bottom:14px}
+.panelhead{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:12px}
+.panelhead h3{margin:0;color:var(--ink);font-size:16px}
+.panelhead p{margin:2px 0 0;font-size:12.5px;color:var(--mut)}
+.panelbody{padding:16px}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}
+.field{min-width:0}
+.field.full{grid-column:1/-1}
+.field label,.legend{display:flex;align-items:center;gap:7px;margin:0 0 5px;color:var(--ink);font-size:12.5px;font-weight:700}
+.req{color:var(--accent-ink)}
+.field small{display:block;margin-top:4px;color:var(--mut);font-size:11.5px}
+input,select,textarea{width:100%;border:1px solid #cfcec9;border-radius:4px;background:#fff;color:var(--ink);padding:9px 10px;outline:none}
+textarea{min-height:82px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(21,128,61,.09)}
+input::placeholder,textarea::placeholder{color:#aaa8a1}
+input[type=file]{padding:7px;background:var(--soft)}
+
+.privacy{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:3px;padding:1px 6px;font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);background:#fff}
+.privacy.public{border-color:#b8dbc4;color:var(--accent-ink);background:#f4fbf6}
+.privacy.private{border-color:#e4d2ab;color:var(--warn);background:#fffaf0}
+.privacy.secret{border-color:#d8c9f5;color:var(--secret);background:#faf7ff}
+
+.radiochoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.choice{position:relative;display:block;border:1px solid var(--line);border-radius:4px;padding:14px 14px 13px;cursor:pointer;background:#fff}
+.choice:hover{border-color:#aaa8a1}
+.choice:has(input:checked){border-color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}
+.choice input{position:absolute;opacity:0;pointer-events:none}
+.choice b{display:block;color:var(--ink);font-size:14px;margin-bottom:3px}
+.choice span{display:block;color:var(--mut);font-size:12px}
+.methodpanel{display:none;border-top:1px solid var(--line);margin-top:16px;padding-top:16px}
+.methodpanel.on{display:block}
+
+.visibility{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.visibility label{border:1px solid var(--line);border-radius:4px;padding:10px;display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-weight:400;margin:0}
+.visibility label:has(input:checked){border-color:var(--ink)}
+.visibility input{width:auto;margin-top:3px}
+.visibility b{display:block;color:var(--ink);font-size:12.5px}
+.visibility span{display:block;color:var(--mut);font-size:11.5px}
+
+.commitment{background:var(--soft);border-left:3px solid var(--accent);padding:12px 13px;margin-bottom:14px;color:var(--ink2);font-size:12.5px}
+.checkline{display:flex;align-items:flex-start;gap:9px;color:var(--ink2);font-size:12.5px}
+.checkline input{width:auto;margin-top:4px;flex:0 0 auto}
+.file-status{margin-top:7px;padding:8px 10px;border-radius:4px;background:var(--soft);font-size:12px;color:var(--mut)}
+.file-status.ok{background:#f4fbf6;color:var(--accent-ink)}
+.file-status.bad{background:#fff5f4;color:#9c2f28}
+.rounddetail{border-left:2px solid var(--line);padding:6px 0 6px 10px;margin-top:7px;font-size:11.5px;color:var(--mut)}
+.rounddetail b{display:block;color:var(--ink2);font-size:12.5px}
+
+.actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px}
+.actions .right{margin-left:auto;display:flex;gap:8px}
+.btn{border:1px solid var(--line);border-radius:4px;padding:8px 16px;background:#fff;color:var(--ink);font-weight:700;text-decoration:none}
+.btn:hover{border-color:var(--ink)}
+.btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.dark:hover{opacity:.86}
+.btn.green{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.textbtn{border:0;background:none;color:var(--link);padding:7px 0;font-weight:700}
+
+.reviewgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-bottom:12px}
+.reviewbox{border:1px solid var(--line);border-radius:4px;padding:11px;min-height:90px}
+.reviewbox h4{margin:0 0 7px;color:var(--ink);font-size:12.5px}
+.reviewbox p{margin:2px 0;font-size:11.5px;color:var(--mut);overflow-wrap:anywhere}
+.reviewbox b{color:var(--ink2)}
+.packet{background:#151514;color:#e8e7e2;border-radius:4px;padding:13px;max-height:290px;overflow:auto;font:11.5px/1.45 var(--sans);white-space:pre-wrap;overflow-wrap:anywhere}
+.receipt{display:none;margin-top:12px;border:1px solid #b8dbc4;background:#f4fbf6;border-radius:4px;padding:12px;color:var(--accent-ink)}
+.receipt.on{display:block}
+
+.railbox{border-top:2px solid var(--ink);padding:12px 2px 16px;margin-bottom:18px}
+.railbox h3{margin:0 0 8px;color:var(--ink);font-size:14px}
+.railbox p{margin:0 0 8px;font-size:12px;color:var(--mut)}
+.railbox ol{padding-left:18px;margin:0;color:var(--ink2);font-size:12px}
+.railbox li{margin:7px 0}
+.railrow{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #eeede9;padding:7px 0;font-size:11.5px}
+.railrow:last-child{border-bottom:0}
+.railrow b{color:var(--ink);text-align:right}
+
+.humanintro{display:flex;gap:13px;align-items:flex-start;margin-bottom:14px;border-bottom:1px solid var(--line);padding-bottom:14px}
+.humanintro .mark{width:28px;height:28px;border-radius:4px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex:0 0 auto}
+.humanintro h3{margin:0;color:var(--ink);font-size:16px}
+.humanintro p{margin:2px 0 0;color:var(--mut);font-size:12.5px}
+.humanreview{display:none;margin-top:16px}
+.humanreview.on{display:block}
+
+footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:var(--mut);display:flex;gap:14px;flex-wrap:wrap}
+footer a{color:var(--ink2);text-decoration:none}
+footer .right{margin-left:auto}
+
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .rail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+  .railbox{margin:0}
+}
+@media(max-width:650px){
+  nav.top .in{height:auto;min-height:50px;flex-wrap:wrap;padding:8px 12px}
+  nav.top .brand{width:100%;margin-right:0}
+  nav.top .right{display:none}
+  nav.top a.item{padding:6px 10px}
+  .bar{padding:11px 12px}.bar h1{font-size:18px}.bar p{font-size:12.5px}
+  .shell{padding:18px 12px 32px;gap:24px}
+  .tracktabs{width:100%}.tracktabs button{flex:1;white-space:normal;padding:8px 9px}
+  .formgrid,.radiochoices,.visibility,.reviewgrid{grid-template-columns:1fr}
+  .steps{gap:4px}.stepline{width:14px}.stepchip .label{display:none}
+  .rail{display:block}.railbox{margin-bottom:18px}
+  .actions{align-items:stretch;flex-wrap:wrap}.actions .right{width:100%;margin:0}.actions .right .btn{flex:1}
+}
+</style>
+<script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+
+<nav class="top">
+  <div class="in">
+    <a class="brand" href="index.html#live"><span class="dot"></span>Social Simulation Arena <span class="by">by MIT</span></a>
+    <a class="item" href="index.html#live">Live</a>
+    <a class="item" href="index.html#rounds">Rounds</a>
+    <a class="item on" href="submit.html">Submit</a>
+    <a class="item" href="index.html#agents">Agents</a>
+    <div class="right"><a href="docs.html">Docs</a><a href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a></div>
+  </div>
+</nav>
+
+<div class="bar">
+  <div class="copy">
+    <h1><img src="logo.svg" alt="" style="height:.92em;width:auto;vertical-align:-.1em;margin-right:.5em">Submit to the arena</h1>
+    <span class="badge"><span class="d"></span>DESIGN PREVIEW</span>
+    <p>Two intake paths, one public protocol. Every accepted forecast still locks, hashes, and scores through the existing arena pipeline.</p>
+  </div>
+</div>
+
+<div class="shell">
+  <main class="maincol">
+    <header class="intro">
+      <div class="eyebrow">Submission intake · Issue #42</div>
+      <h2>Choose how you are entering.</h2>
+      <p>Organizations and researchers register an agent through an API or a signed forecast file. Human forecasters answer a shorter questionnaire and are pooled into one crowd forecast.</p>
+    </header>
+    <div class="notice"><b>Prototype only.</b> This page validates and builds a redacted review packet in your browser. It does not transmit, upload, or retain any value—including API credentials and email addresses.</div>
+
+    <div class="tracktabs" role="tablist" aria-label="Submission track">
+      <button type="button" class="on" data-track="organization" role="tab" aria-selected="true">Organization or researcher</button>
+      <button type="button" data-track="human" role="tab" aria-selected="false">Human forecaster</button>
+    </div>
+
+    <section class="track on" id="track-organization">
+      <div class="steps" aria-label="Organization submission progress">
+        <div class="stepchip on" data-stepchip="1"><span class="n">1</span><span class="label">Profile</span></div>
+        <span class="stepline"></span>
+        <div class="stepchip" data-stepchip="2"><span class="n">2</span><span class="label">Delivery</span></div>
+        <span class="stepline"></span>
+        <div class="stepchip" data-stepchip="3"><span class="n">3</span><span class="label">Review</span></div>
+      </div>
+
+      <form id="org-form" novalidate>
+        <div class="orgstep" data-orgstep="1">
+          <section class="panel">
+            <div class="panelhead"><div><div class="eyebrow">Participant</div><h3>Who is entering the benchmark?</h3><p>All four participant types use the same intake and review path.</p></div></div>
+            <div class="panelbody formgrid">
+              <div class="field">
+                <label for="participant-type">Participant type <span class="req">*</span> <span class="privacy public">public*</span></label>
+                <select id="participant-type" name="participant_type" required>
+                  <option value="">Select one</option><option value="startup">Startup</option><option value="research_group">Research group</option><option value="institution">Institution</option><option value="individual_researcher">Individual researcher</option>
+                </select>
+                <small>*Public only when public leaderboard identity is selected.</small>
+              </div>
+              <div class="field">
+                <label for="organization-name">Organization or researcher name <span class="req">*</span> <span class="privacy public">public*</span></label>
+                <input id="organization-name" name="organization_name" required minlength="2" maxlength="120" placeholder="Acme Labs or Jane Researcher">
+              </div>
+              <div class="field">
+                <label for="product-name">Product / agent name <span class="req">*</span> <span class="privacy public">public*</span></label>
+                <input id="product-name" name="product_name" required minlength="2" maxlength="120" placeholder="Acme Opinion Agent">
+              </div>
+              <div class="field">
+                <label for="entrant-id">Stable entrant ID <span class="req">*</span> <span class="privacy public">public</span></label>
+                <input id="entrant-id" name="entrant_id" required pattern="[a-z0-9][a-z0-9_.-]{1,47}" maxlength="48" placeholder="acme-opinion-agent" autocapitalize="none">
+                <small>Lowercase; becomes the forecast filename and leaderboard key.</small>
+              </div>
+              <div class="field full">
+                <label for="product-description">Product / agent description <span class="req">*</span> <span class="privacy public">public*</span></label>
+                <textarea id="product-description" name="product_description" required minlength="10" maxlength="500" placeholder="What generates the forecasts, what information it sees, and which version is entering."></textarea>
+              </div>
+              <div class="field">
+                <label for="contact-name">Primary contact <span class="req">*</span> <span class="privacy private">private</span></label>
+                <input id="contact-name" name="contact_name" required minlength="2" maxlength="100" autocomplete="name" placeholder="Full name">
+              </div>
+              <div class="field">
+                <label for="contact-email">Contact email <span class="req">*</span> <span class="privacy private">private</span></label>
+                <input id="contact-email" name="contact_email" type="email" required maxlength="160" autocomplete="email" placeholder="name@example.com">
+              </div>
+              <div class="field full">
+                <label for="website">Website / project URL <span class="privacy public">public*</span></label>
+                <input id="website" name="website" type="url" maxlength="240" placeholder="https://example.com/agent">
+              </div>
+              <fieldset class="field full" style="border:0;padding:0;margin:0">
+                <legend class="legend">Leaderboard identity <span class="req">*</span></legend>
+                <div class="visibility">
+                  <label><input type="radio" name="leaderboard_visibility" value="public" required checked><span><b>Show our identity and product</b><span>Organization, product, description, and website may appear beside the score.</span></span></label>
+                  <label><input type="radio" name="leaderboard_visibility" value="private" required><span><b>Use a neutral entrant label</b><span>Your score remains visible; identity and contact information stay private.</span></span></label>
+                </div>
+              </fieldset>
+            </div>
+          </section>
+          <div class="actions"><span></span><div class="right"><button class="btn dark" type="button" id="org-next-1">Continue to delivery →</button></div></div>
+        </div>
+
+        <div class="orgstep" data-orgstep="2" hidden>
+          <section class="panel">
+            <div class="panelhead"><div><div class="eyebrow">Delivery</div><h3>Choose exactly one way to enter.</h3><p>Both paths end as the same validated forecast JSON before the round lock.</p></div></div>
+            <div class="panelbody">
+              <div class="radiochoices">
+                <label class="choice"><input type="radio" name="delivery_method" value="hosted_api" required checked><b>Hosted agent API</b><span>The arena calls your HTTPS endpoint for every open round. Credential optional.</span></label>
+                <label class="choice"><input type="radio" name="delivery_method" value="file_commitment" required><b>Forecast file + commitment</b><span>Upload one schema-valid JSON file and sign the participation commitment.</span></label>
+              </div>
+
+              <div class="methodpanel on" id="method-api">
+                <div class="formgrid">
+                  <div class="field full">
+                    <label for="api-endpoint">Agent API endpoint <span class="req">*</span> <span class="privacy private">private</span></label>
+                    <input id="api-endpoint" name="api_endpoint" type="url" required pattern="https://.*" placeholder="https://api.example.com/v1/forecast">
+                  </div>
+                  <div class="field">
+                    <label for="auth-mode">Authentication <span class="req">*</span> <span class="privacy private">private</span></label>
+                    <select id="auth-mode" name="auth_mode" required><option value="none">No authentication</option><option value="bearer">Bearer token</option><option value="custom_header">Custom header</option><option value="oauth2">OAuth 2 client credentials</option></select>
+                  </div>
+                  <div class="field">
+                    <label for="api-key">API key / credential <span class="privacy secret">secret</span></label>
+                    <input id="api-key" name="api_key" type="password" autocomplete="new-password" placeholder="Optional · never included in review">
+                    <small>Production uses a one-time encrypted upload after approval.</small>
+                  </div>
+                  <div class="field">
+                    <label for="agent-version">Agent / model version <span class="req">*</span> <span class="privacy private">private</span></label>
+                    <input id="agent-version" name="agent_version" required maxlength="120" placeholder="v2026.08 or immutable model ID">
+                  </div>
+                  <div class="field">
+                    <label for="api-limits">Operational limits <span class="privacy private">private</span></label>
+                    <input id="api-limits" name="api_limits" maxlength="240" placeholder="e.g. 10 req/min, 90 s timeout">
+                  </div>
+                  <div class="field full">
+                    <label for="integration-notes">Request / response instructions <span class="req">*</span> <span class="privacy private">private</span></label>
+                    <textarea id="integration-notes" name="integration_notes" required minlength="10" maxlength="1000" placeholder="Authentication header, required request fields, response shape, retry behavior, and a test route if available."></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="methodpanel" id="method-file">
+                <div class="formgrid">
+                  <div class="field full">
+                    <label for="org-round">Open round <span class="req">*</span> <span class="privacy public">public</span></label>
+                    <select id="org-round" name="org_round" required disabled><option value="">Loading open rounds…</option></select>
+                    <div class="rounddetail" id="org-round-detail">Round data comes from the same generated payload as the arena page.</div>
+                  </div>
+                  <div class="field full">
+                    <label for="forecast-file">Forecast JSON <span class="req">*</span> <span class="privacy public">public</span></label>
+                    <input id="forecast-file" name="forecast_file" type="file" accept="application/json,.json" required disabled>
+                    <div class="file-status" id="file-status" role="status">Choose a round and a JSON file. Validation checks the existing arena format and identity fields.</div>
+                  </div>
+                  <div class="field full">
+                    <div class="commitment"><b style="color:var(--ink)">Participation commitment · ssa-participant-v1</b><br>I am authorized to submit this forecast for the named participant and agent. The file represents the agent's forecast produced without access to the unpublished outcome. I agree that the arena may lock, hash, score, and publish the forecast and the participant's chosen public identity under the published evaluation protocol.</div>
+                  </div>
+                  <div class="field">
+                    <label for="signer-name">Signer legal name <span class="req">*</span> <span class="privacy private">private</span></label>
+                    <input id="signer-name" name="signer_name" required disabled minlength="2" maxlength="100">
+                  </div>
+                  <div class="field">
+                    <label for="signer-role">Signer role / title <span class="req">*</span> <span class="privacy private">private</span></label>
+                    <input id="signer-role" name="signer_role" required disabled minlength="2" maxlength="100">
+                  </div>
+                  <label class="checkline field full"><input id="commitment-accept" name="commitment_accept" type="checkbox" required disabled><span>I have read and electronically sign the commitment above. <span class="privacy private">private</span></span></label>
+                </div>
+              </div>
+            </div>
+          </section>
+          <div class="actions"><button class="textbtn" type="button" id="org-back-2">← Back to profile</button><div class="right"><button class="btn dark" type="button" id="org-review">Build review packet →</button></div></div>
+        </div>
+
+        <div class="orgstep" data-orgstep="3" hidden>
+          <section class="panel">
+            <div class="panelhead"><div><div class="eyebrow">Review</div><h3>Your redacted intake packet</h3><p>Confirm what becomes public, what stays private, and whether a secret was supplied.</p></div></div>
+            <div class="panelbody">
+              <div class="reviewgrid" id="org-review-grid"></div>
+              <pre class="packet" id="org-packet" aria-label="Redacted intake JSON"></pre>
+              <div class="notice" id="org-review-notice" style="margin-bottom:0"></div>
+              <div class="receipt" id="org-receipt" role="status"></div>
+            </div>
+          </section>
+          <div class="actions"><button class="textbtn" type="button" id="org-back-3">← Edit delivery</button><div class="right"><button class="btn green" type="button" id="org-finish">Complete prototype review</button></div></div>
+        </div>
+      </form>
+    </section>
+
+    <section class="track" id="track-human">
+      <section class="panel">
+        <div class="panelbody">
+          <div class="humanintro"><span class="mark">H</span><div><h3>One person, one forecast, one private receipt.</h3><p>Your email and username are not published. At lock, accepted responses are pooled into the Human crowd distribution.</p></div></div>
+          <form id="human-form" class="formgrid" novalidate>
+            <div class="field">
+              <label for="human-username">Username / display name <span class="req">*</span> <span class="privacy private">private</span></label>
+              <input id="human-username" name="username" required minlength="2" maxlength="80" autocomplete="nickname" placeholder="Your display name">
+            </div>
+            <div class="field">
+              <label for="human-email">Contact email <span class="req">*</span> <span class="privacy private">private</span></label>
+              <input id="human-email" name="email" type="email" required maxlength="160" autocomplete="email" placeholder="you@example.com">
+            </div>
+            <div class="field full">
+              <label for="human-round">Open round <span class="req">*</span> <span class="privacy public">aggregate</span></label>
+              <select id="human-round" name="round_id" required><option value="">Loading open rounds…</option></select>
+              <div class="rounddetail" id="human-round-detail">Choose a round to see its question, unit, and lock.</div>
+            </div>
+            <div class="field">
+              <label for="human-mean">Your forecast <span class="req">*</span> <span class="privacy public">aggregate</span></label>
+              <input id="human-mean" name="mean" type="number" step="any" required placeholder="Expected released value">
+            </div>
+            <div class="field">
+              <label for="human-sd">How far off might you be? <span class="req">*</span> <span class="privacy public">aggregate</span></label>
+              <input id="human-sd" name="sd" type="number" step="any" min="0.01" max="50" required placeholder="Standard deviation">
+              <small>Must be greater than 0. Point guesses are not accepted.</small>
+            </div>
+            <div class="field full">
+              <label for="human-notes">Optional rationale <span class="privacy private">private</span></label>
+              <textarea id="human-notes" name="notes" maxlength="500" placeholder="What informed your forecast? This is not published."></textarea>
+            </div>
+            <label class="checkline field full"><input id="human-consent" name="consent" type="checkbox" required><span>I agree that the arena may lock, hash, aggregate, and score this forecast under the published protocol. I understand my username, email, and rationale remain private. <span class="privacy private">private</span></span></label>
+            <div class="field full actions" style="margin-top:2px"><span></span><div class="right"><button class="btn dark" type="submit">Review human forecast →</button></div></div>
+          </form>
+          <div class="humanreview" id="human-review">
+            <div class="reviewgrid" id="human-review-grid"></div>
+            <pre class="packet" id="human-packet" aria-label="Human intake JSON"></pre>
+            <div class="notice" style="margin-bottom:0">The public artifact is the pooled <code>human-crowd</code> distribution, not this person's identity or individual response.</div>
+            <div class="receipt" id="human-receipt"></div>
+            <div class="actions"><button type="button" class="textbtn" id="human-edit">← Edit response</button><div class="right"><button type="button" class="btn green" id="human-finish">Complete prototype review</button></div></div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <aside class="rail">
+    <section class="railbox">
+      <div class="eyebrow">One scoring path</div>
+      <h3>What happens after intake</h3>
+      <ol><li>Validate identity, consent, and delivery method.</li><li>Normalize one forecast per entrant and round.</li><li>Reject at or after the server-side lock.</li><li>Commit canonical JSON; print its SHA-256.</li><li>Stamp the round manifest, then score on release.</li></ol>
+    </section>
+    <section class="railbox">
+      <div class="eyebrow">Field handling</div>
+      <h3>Public by classification, not accident</h3>
+      <div class="railrow"><span>Forecast distribution</span><b><span class="privacy public">public</span></b></div>
+      <div class="railrow"><span>Name / product</span><b>submitter choice</b></div>
+      <div class="railrow"><span>Email / signer</span><b><span class="privacy private">private</span></b></div>
+      <div class="railrow"><span>API credential</span><b><span class="privacy secret">secret</span></b></div>
+    </section>
+    <section class="railbox">
+      <div class="eyebrow">Question contract</div>
+      <h3>Distributions, not point guesses</h3>
+      <p>Every current round asks for one continuous released value. A submission supplies mean + standard deviation, or quantiles including the median. CRPS rewards both accuracy and calibrated uncertainty.</p>
+      <p><a href="docs.html#format" style="color:var(--link);font-weight:700">Read the protocol →</a></p>
+    </section>
+  </aside>
+</div>
+
+<footer><span><b style="color:var(--ink)">Social Simulation Arena</b> · submission intake design</span><a href="index.html#rounds">rounds</a><a href="docs.html">docs</a><a href="https://github.com/Social-Atoms/social-sim-arena/issues/42">issue #42</a><span class="right">No form values leave this browser.</span></footer>
+
+<script>
+const state={track:'organization',step:1,method:'hosted_api',rounds:[],roundById:{},forecast:null,forecastHash:null};
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>{const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML};
+const value=id=>$(id).value.trim();
+
+function setTrack(track,updateHash=true){
+  state.track=track;
+  $$('.tracktabs button').forEach(b=>{const on=b.dataset.track===track;b.classList.toggle('on',on);b.setAttribute('aria-selected',String(on))});
+  $$('.track').forEach(x=>x.classList.toggle('on',x.id==='track-'+track));
+  if(updateHash) history.replaceState(null,'',location.pathname+location.search+'#'+track);
+}
+
+function setOrgStep(step){
+  state.step=step;
+  $$('.orgstep').forEach(x=>x.hidden=Number(x.dataset.orgstep)!==step);
+  $$('.stepchip').forEach(x=>{const n=Number(x.dataset.stepchip);x.classList.toggle('on',n===step);x.classList.toggle('done',n<step)});
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function validWithin(root){
+  const fields=$$(root+' input,'+root+' select,'+root+' textarea').filter(x=>!x.disabled);
+  for(const field of fields){if(!field.checkValidity()){field.reportValidity();field.focus();return false}}
+  return true;
+}
+
+function setMethod(method){
+  state.method=method;
+  $('#method-api').classList.toggle('on',method==='hosted_api');
+  $('#method-file').classList.toggle('on',method==='file_commitment');
+  $$('#method-api input,#method-api select,#method-api textarea').forEach(x=>x.disabled=method!=='hosted_api');
+  $$('#method-file input,#method-file select,#method-file textarea').forEach(x=>x.disabled=method!=='file_commitment');
+}
+
+function stable(obj){
+  if(Array.isArray(obj))return obj.map(stable);
+  if(obj&&typeof obj==='object')return Object.keys(obj).sort().reduce((out,k)=>(out[k]=stable(obj[k]),out),{});
+  return obj;
+}
+async function sha256(obj){
+  const bytes=new TextEncoder().encode(JSON.stringify(stable(obj)));
+  const digest=await crypto.subtle.digest('SHA-256',bytes);
+  return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function formatLock(iso){return new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'})}
+function updateRoundDetail(select,detail){
+  const r=state.roundById[select.value];
+  detail.innerHTML=r?'<b>'+esc(r.question)+'</b>'+esc(r.unit)+' · locks '+esc(formatLock(r.lock_at)):'Choose a round to see its question, unit, and lock.';
+}
+function populateRounds(data){
+  const now=Date.now();
+  state.rounds=(data.rounds||[]).filter(r=>r.status==='open'&&new Date(r.lock_at).getTime()>now).sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
+  state.roundById=Object.fromEntries(state.rounds.map(r=>[r.round_id,r]));
+  const requested=new URLSearchParams(location.search).get('round');
+  for(const sel of [$('#org-round'),$('#human-round')]){
+    sel.innerHTML='<option value="">Select an open round</option>'+state.rounds.map(r=>'<option value="'+esc(r.round_id)+'">'+esc(r.round_id)+' · '+esc(r.unit)+' · locks '+esc(formatLock(r.lock_at))+'</option>').join('');
+    if(requested&&state.roundById[requested])sel.value=requested;
+  }
+  updateRoundDetail($('#org-round'),$('#org-round-detail'));updateRoundDetail($('#human-round'),$('#human-round-detail'));
+  if(!state.rounds.length){
+    for(const sel of [$('#org-round'),$('#human-round')]){sel.innerHTML='<option value="">No rounds are currently open</option>';sel.disabled=true}
+  }
+}
+
+function validateForecast(fc){
+  const plain=x=>x&&typeof x==='object'&&!Array.isArray(x);
+  const exactKeys=(obj,allowed,label)=>{const extra=Object.keys(obj).filter(k=>!allowed.includes(k));if(extra.length)throw Error(label+' has unknown field: '+extra.join(', ')+'.')};
+  const allowed=['round_id','entrant','topline','crosstabs','notes'];
+  if(!plain(fc))throw Error('The file must contain one JSON object.');
+  exactKeys(fc,allowed,'Forecast');
+  if(!/^[a-z0-9][a-z0-9-]{2,63}$/.test(fc.round_id||''))throw Error('round_id does not match the forecast schema.');
+  if(!/^[a-z0-9][a-z0-9_.-]{1,47}$/.test(fc.entrant||''))throw Error('entrant does not match the forecast schema.');
+  if(fc.round_id!==$('#org-round').value)throw Error('round_id must match the selected open round.');
+  if(fc.entrant!==value('#entrant-id'))throw Error('entrant must match the stable entrant ID from step 1.');
+  if(!plain(fc.topline))throw Error('topline is required.');
+  const t=fc.topline;
+  exactKeys(t,['mean','sd','quantiles'],'topline');
+  const hasNormal='mean'in t||'sd'in t,hasQuantiles='quantiles'in t;
+  if(!hasNormal&&!hasQuantiles)throw Error('topline needs mean + sd or quantiles.');
+  if(hasNormal){
+    if(!Number.isFinite(t.mean)||!Number.isFinite(t.sd)||t.sd<=0||t.sd>50)throw Error('topline needs numeric mean and sd, with 0 < sd ≤ 50.');
+  }
+  if(hasQuantiles){
+    if(!plain(t.quantiles))throw Error('quantiles must be one JSON object.');
+    const badLevel=Object.keys(t.quantiles).find(k=>!/^0\.\d{1,3}$/.test(k));
+    if(badLevel)throw Error('Invalid quantile level: '+badLevel+'. Use keys such as 0.05 and 0.5.');
+    const items=Object.entries(t.quantiles).map(([k,v])=>[Number(k),Number(v)]).sort((a,b)=>a[0]-b[0]);
+    if(items.length<3||!items.some(([q])=>Math.abs(q-.5)<1e-9))throw Error('quantiles need at least 3 levels and must include 0.5.');
+    if(items.some(([q,v])=>!(q>0&&q<1&&Number.isFinite(v))))throw Error('quantile levels must be between 0 and 1 and values must be numeric.');
+    if(items.some((x,i)=>i&&x[1]<items[i-1][1]))throw Error('quantile values must not decrease as probability increases.');
+  }
+  if('crosstabs'in fc){
+    if(!plain(fc.crosstabs))throw Error('crosstabs must be one JSON object.');
+    for(const [tab,groups] of Object.entries(fc.crosstabs)){
+      if(!plain(groups))throw Error('crosstabs.'+tab+' must be one JSON object.');
+      for(const [group,dist] of Object.entries(groups)){
+        if(!plain(dist))throw Error('crosstabs.'+tab+'.'+group+' must be one JSON object.');
+        exactKeys(dist,['mean','sd'],'crosstabs.'+tab+'.'+group);
+        if(!Number.isFinite(dist.mean)||!Number.isFinite(dist.sd)||dist.sd<=0||dist.sd>50)throw Error('Each crosstab group needs numeric mean and sd, with 0 < sd ≤ 50.');
+      }
+    }
+  }
+  if('notes'in fc&&(typeof fc.notes!=='string'||fc.notes.length>500))throw Error('notes must be a string of 500 characters or fewer.');
+  return fc;
+}
+
+async function readForecastFile(){
+  const file=$('#forecast-file').files[0],status=$('#file-status');state.forecast=null;state.forecastHash=null;
+  if(!file){status.className='file-status';status.textContent='Choose a round and a JSON file.';return}
+  try{
+    const fc=validateForecast(JSON.parse(await file.text()));
+    const hash=await sha256(fc);state.forecast=fc;state.forecastHash=hash;
+    status.className='file-status ok';status.innerHTML='<b>Valid forecast.</b> Canonical SHA-256: <code>'+esc(hash)+'</code>';
+  }catch(err){status.className='file-status bad';status.textContent=err.message}
+}
+
+function profilePacket(){
+  const website=value('#website');
+  const packet={participant_type:value('#participant-type'),organization_name:value('#organization-name'),product_name:value('#product-name'),product_description:value('#product-description'),entrant_id:value('#entrant-id'),contact:{name:value('#contact-name'),email:value('#contact-email')},leaderboard_visibility:$('input[name="leaderboard_visibility"]:checked').value};
+  if(website)packet.website=website;
+  return packet;
+}
+
+async function buildOrgReview(){
+  if(!validWithin('[data-orgstep="2"]'))return;
+  if(state.method==='file_commitment'&&!state.forecast){$('#file-status').className='file-status bad';$('#file-status').textContent='Choose a valid forecast JSON before review.';$('#forecast-file').focus();return}
+  const packet=profilePacket();
+  if(state.method==='hosted_api')packet.delivery={method:'hosted_api',endpoint:value('#api-endpoint'),auth_mode:value('#auth-mode'),credential_supplied:Boolean($('#api-key').value),agent_version:value('#agent-version'),operational_limits:value('#api-limits'),integration_notes:value('#integration-notes')};
+  else packet.delivery={method:'file_commitment',round_id:value('#org-round'),forecast:state.forecast,commitment:{accepted:true,signer_name:value('#signer-name'),signer_role:value('#signer-role'),signed_at:new Date().toISOString(),terms_version:'ssa-participant-v1'}};
+  const packetHash=await sha256(packet);
+  const publicIdentity=packet.leaderboard_visibility==='public'?packet.organization_name+' · '+packet.product_name:'Private entrant · '+packetHash.slice(0,4).toUpperCase();
+  $('#org-review-grid').innerHTML=
+    '<div class="reviewbox"><h4><span class="privacy public">public</span></h4><p><b>'+esc(publicIdentity)+'</b></p><p>entrant: '+esc(packet.entrant_id)+'</p><p>'+(state.method==='file_commitment'?'forecast hash '+esc(state.forecastHash.slice(0,16))+'…':'normalized forecasts after each API call')+'</p></div>'+
+    '<div class="reviewbox"><h4><span class="privacy private">private</span></h4><p><b>'+esc(packet.contact.name)+'</b></p><p>'+esc(packet.contact.email)+'</p><p>'+(state.method==='hosted_api'?esc(packet.delivery.endpoint):'signed commitment · '+esc(packet.delivery.commitment.signer_name))+'</p></div>'+
+    '<div class="reviewbox"><h4><span class="privacy secret">secret</span></h4><p><b>'+(state.method==='hosted_api'?(packet.delivery.credential_supplied?'Credential supplied':'No credential supplied'):'No secret material')+'</b></p><p>'+(state.method==='hosted_api'?'Any credential value is absent from this packet and must use a one-time encrypted upload.':'The signed commitment contains private signer metadata, but no credential or other secret.')+'</p></div>';
+  $('#org-packet').textContent=JSON.stringify(packet,null,2);
+  $('#org-review-notice').textContent=state.method==='hosted_api'
+    ? 'The API credential value is intentionally absent. Production submission remains disabled until the private intake service and retention policy are deployed.'
+    : 'The forecast and commitment are validated locally. Production submission remains disabled until the private intake service and approved commitment text are deployed.';
+  $('#org-receipt').classList.remove('on');setOrgStep(3);
+}
+
+async function buildHumanReview(event){
+  event.preventDefault();if(!validWithin('#human-form'))return;
+  const payload={username:value('#human-username'),email:value('#human-email'),round_id:value('#human-round'),topline:{mean:Number($('#human-mean').value),sd:Number($('#human-sd').value)},notes:value('#human-notes'),consent:{accepted:true,terms_version:'ssa-human-v1'}};
+  const receiptHash=await sha256(payload);
+  const r=state.roundById[payload.round_id];
+  $('#human-review-grid').innerHTML=
+    '<div class="reviewbox"><h4><span class="privacy public">aggregate</span></h4><p><b>Human crowd</b></p><p>'+esc(payload.round_id)+'</p><p>mean '+esc(payload.topline.mean)+' · sd '+esc(payload.topline.sd)+' '+esc(r?r.unit:'')+'</p></div>'+
+    '<div class="reviewbox"><h4><span class="privacy private">private</span></h4><p><b>'+esc(payload.username)+'</b></p><p>'+esc(payload.email)+'</p><p>rationale '+(payload.notes?'included':'not supplied')+'</p></div>'+
+    '<div class="reviewbox"><h4>Receipt</h4><p><b>'+esc(receiptHash.slice(0,20))+'…</b></p><p>The production receipt enables pre-lock replacement without exposing identity.</p></div>';
+  $('#human-packet').textContent=JSON.stringify(payload,null,2);
+  $('#human-form').hidden=true;$('#human-review').classList.add('on');$('#human-receipt').classList.remove('on');
+}
+
+$$('.tracktabs button').forEach(b=>b.addEventListener('click',()=>setTrack(b.dataset.track)));
+$('#org-next-1').addEventListener('click',()=>{if(validWithin('[data-orgstep="1"]'))setOrgStep(2)});
+$('#org-back-2').addEventListener('click',()=>setOrgStep(1));$('#org-back-3').addEventListener('click',()=>setOrgStep(2));
+$$('input[name="delivery_method"]').forEach(r=>r.addEventListener('change',()=>setMethod(r.value)));
+$('#org-review').addEventListener('click',buildOrgReview);
+$('#org-finish').addEventListener('click',()=>{const x=$('#org-receipt');x.classList.add('on');x.innerHTML='<b>Prototype review complete.</b> No data was sent. The packet demonstrates the production payload and privacy boundary.'});
+$('#org-round').addEventListener('change',()=>{updateRoundDetail($('#org-round'),$('#org-round-detail'));readForecastFile()});
+$('#human-round').addEventListener('change',()=>updateRoundDetail($('#human-round'),$('#human-round-detail')));
+$('#entrant-id').addEventListener('input',()=>{const x=$('#entrant-id');x.value=x.value.toLowerCase().replace(/\s+/g,'-')});
+$('#forecast-file').addEventListener('change',readForecastFile);
+$('#human-form').addEventListener('submit',buildHumanReview);
+$('#human-edit').addEventListener('click',()=>{$('#human-review').classList.remove('on');$('#human-form').hidden=false});
+$('#human-finish').addEventListener('click',()=>{const x=$('#human-receipt');x.classList.add('on');x.innerHTML='<b>Prototype review complete.</b> No response was sent or stored.'});
+
+setMethod('hosted_api');
+const hash=(location.hash||'').slice(1);setTrack(hash==='human'?'human':'organization',false);
+fetch('data.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('round data unavailable');return r.json()}).then(populateRounds).catch(err=>{
+  for(const sel of [$('#org-round'),$('#human-round')]){sel.innerHTML='<option value="">Could not load open rounds</option>';sel.disabled=true}
+  $('#org-round-detail').textContent=err.message;$('#human-round-detail').textContent=err.message;
+});
+</script>
+</body>
+</html>
