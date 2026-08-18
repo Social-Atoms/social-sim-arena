@@ -43,6 +43,7 @@ import json
 import os
 import re
 import threading
+from datetime import datetime
 
 import requests
 
@@ -1557,6 +1558,35 @@ def _provider_text(entrant, prompt):
     return call_provider(entrant, prompt, via=sb["via"])
 
 
+# Model forecasts are bought only inside this window before a round's lock
+# (`refresh.model_jobs_due`; the rationale is written there). It is defined
+# here rather than in refresh because `_retrieve` needs it too and refresh
+# already imports harness.
+FILE_WINDOW_SECONDS = float(os.environ.get("SSA_FILE_WINDOW_DAYS") or "3") * 86400
+
+
+def _gathered_in_window(frozen, r):
+    """True when a frozen corpus was gathered inside this round's own window.
+
+    Only then can it honestly be called "what the entrant saw at lock". Records
+    from before the window exist because the refresh once bought forecasts from
+    listing day; serving one at lock time would hand the entrant search results
+    up to weeks stale, so `_retrieve` supersedes it instead (the old record
+    stays in git history). A record whose timestamp is missing or unreadable is
+    treated as premature for the same reason.
+    """
+    lock = r.get("lock_at")
+    if not lock:               # test rounds carry no lock; nothing to judge
+        return True
+    asked = (frozen or {}).get("asked_at") or ""
+    try:
+        lock_t = datetime.fromisoformat(lock.replace("Z", "+00:00"))
+        asked_t = datetime.fromisoformat(asked.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return (lock_t - asked_t).total_seconds() <= FILE_WINDOW_SECONDS
+
+
 def _retrieve(entrant, r, history):
     """The web condition's first turn, run once per (round, entrant) and frozen.
 
@@ -1566,12 +1596,16 @@ def _retrieve(entrant, r, history):
     different corpus, and the forecast stays derivable from the repository.
     Without that, this would be the only arm in the arena that no one --
     including us -- could reproduce, because search results change by the
-    minute.
+    minute. The one exception is a record gathered before the round's own
+    pre-lock window opened (`_gathered_in_window`): that is not the corpus at
+    lock, and it is re-gathered once the window opens.
     """
     from .adapters import search as search_adapter
     frozen = search_adapter.for_round(r["round_id"], entrant)
     if frozen is not None:
-        return frozen
+        if _gathered_in_window(frozen, r):
+            return frozen
+        os.remove(search_adapter.round_path(r["round_id"], entrant))
     queries = parse_queries(_provider_text(
         entrant, build_query_prompt(r, history, "web")))
     records = search_adapter.gather(queries)

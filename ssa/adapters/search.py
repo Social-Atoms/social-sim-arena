@@ -51,6 +51,7 @@ import hashlib
 import json
 import os
 import time
+from datetime import datetime, timezone
 
 import requests
 
@@ -83,6 +84,15 @@ SEARCH_DEPTH = "basic"   # tavily: "basic" or "advanced"
 TOPIC = "news"
 DAYS = 14                # recency window, matched to the news corpus
 
+# A cached reply older than this is a miss. The cache exists so that fifteen
+# models issuing overlapping keywords inside one round's window cost one
+# request, not fifteen -- it must not also serve last week's snippets to next
+# week's round just because two models phrased the same query. Matched to
+# SSA_FILE_WINDOW_DAYS: within one round's buying window a repeat is a hit,
+# across rounds it is not. Overwriting an aged entry loses nothing, because
+# every round's own corpus is stored in full under search/rounds/.
+CACHE_MAX_AGE_DAYS = float(os.environ.get("SSA_FILE_WINDOW_DAYS") or "3")
+
 
 def params_signature():
     """Everything about the retrieval that is not the query text.
@@ -111,9 +121,18 @@ def cached(query):
         return None
     try:
         with open(path) as f:
-            return json.load(f)
+            rec = json.load(f)
     except (OSError, json.JSONDecodeError):
         return None
+    try:
+        fetched = datetime.fromisoformat(
+            (rec.get("fetched_at") or "").replace("Z", "+00:00"))
+        age = (datetime.now(timezone.utc) - fetched).total_seconds()
+    except ValueError:
+        return None            # unstampable is unserveable; refetch restamps
+    if age > CACHE_MAX_AGE_DAYS * 86400:
+        return None
+    return rec
 
 
 def has_key():

@@ -337,7 +337,9 @@ LOCK_MARGIN_SECONDS = 30 * 60
 # Baselines are exempt: they are free and the site shows them from listing.
 # It also scopes the web condition's retrieval to lock-proximate news by
 # construction, since the query turn cannot run before the window opens.
-FILE_WINDOW_SECONDS = float(os.environ.get("SSA_FILE_WINDOW_DAYS") or "3") * 86400
+# The constant lives in harness because `_retrieve` also needs it, to judge
+# whether a frozen search corpus was gathered inside its round's own window.
+FILE_WINDOW_SECONDS = harness.FILE_WINDOW_SECONDS
 
 
 def model_jobs_due(r, now):

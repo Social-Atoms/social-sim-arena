@@ -219,6 +219,54 @@ def test_the_query_turn_asks_about_the_same_question_it_will_forecast():
     assert "<number>" in f
 
 
+def test_a_cached_reply_goes_stale_after_the_window():
+    """The cache dedupes overlapping queries inside one round's buying window.
+    It must not also serve last week's snippets to next week's round just
+    because two models phrased the same words."""
+    with Scratch() as s:
+        search.gather(["q1"])
+        path = search._cache_path("q1")
+        rec = json.load(open(path))
+        rec["fetched_at"] = "2026-08-01T00:00:00Z"
+        json.dump(rec, open(path, "w"))
+        search.gather(["q1"])
+        assert s.posted == ["q1", "q1"], \
+            "an aged cache entry was served instead of refetched"
+
+
+def test_a_corpus_gathered_before_the_window_is_regathered_inside_it():
+    """A record frozen weeks before its lock -- the era when the refresh bought
+    forecasts from listing day -- is not "what the entrant saw at lock". It is
+    superseded once, when the window opens, and the replacement then stays."""
+    from datetime import datetime, timedelta, timezone
+    with Scratch() as s:
+        lock = (datetime.now(timezone.utc) + timedelta(days=2)) \
+            .strftime("%Y-%m-%dT%H:%M:%SZ")
+        rnd = dict(ROUND, round_id="r2", lock_at=lock)
+        search.record_round("r2", "claude-opus-web", ["stale question"],
+                            search.gather(["stale question"]),
+                            now="2026-08-01T00:00:00Z")
+
+        def fake_call(entrant, prompt, with_usage=False, context=None, via=None):
+            if '"queries"' in prompt:
+                text = '{"queries": ["fresh question"]}'
+            else:
+                text = '{"mean": 41.2, "sd": 1.4}'
+            return (text, None) if with_usage else text
+
+        saved_call, saved_key = harness.call_provider, harness.has_key
+        harness.call_provider, harness.has_key = fake_call, lambda e: True
+        try:
+            harness.forecast("claude-opus-web", rnd, HIST)
+            first = json.load(open(search.round_path("r2", "claude-opus-web")))
+            harness.forecast("claude-opus-web", rnd, HIST)
+            again = json.load(open(search.round_path("r2", "claude-opus-web")))
+        finally:
+            harness.call_provider, harness.has_key = saved_call, saved_key
+        assert first["queries"] == ["fresh question"], first["queries"]
+        assert again == first, "an in-window corpus was re-gathered"
+
+
 def test_the_arm_still_refuses_to_be_backtested():
     """A search run today over a 2025 release retrieves the published answer.
     Nothing in this module weakens that."""
