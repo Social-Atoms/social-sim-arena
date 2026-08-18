@@ -490,6 +490,53 @@ FOOTER = (
     "sd is your standard deviation in the same unit and must be greater than 0."
 )
 
+# --- the profile round ------------------------------------------------------
+#
+# A profile round asks for a whole population in one answer: the same tracker
+# cut sixteen ways, forecast jointly and scored with the energy score. One call
+# per entrant, not sixteen, and that is the design rather than a saving. Asked
+# cell by cell, a model answers each in isolation and the sixteen replies carry
+# no joint structure at all -- which is the one thing this round type exists to
+# measure. Asked together, what comes back is a profile the model actually
+# holds: the cells have to add up against each other in one forward pass.
+#
+# It also makes the cost of the headline round type one call, which is what
+# keeps it affordable to run every entrant on it every week.
+PROFILE_HEADER = (
+    "You are forecasting the next scheduled release of a public opinion "
+    "tracker, broken down by demographic subgroup.\n"
+    "Question: {question}\n"
+    "Unit: {unit}\n"
+    "How the tracker is measured: {methodology}\n"
+    "Release schedule: {cadence}\n"
+    "Scheduled release date: {release}\n"
+    "You are forecasting all {n} subgroups below as one joint answer. They are "
+    "cuts of the same tracker on the same day: they share the national "
+    "movement, and they also move apart from it in ways the national number "
+    "alone does not determine. You are being scored on the whole profile, so "
+    "the relationships between subgroups matter as much as their levels.\n"
+)
+
+PROFILE_NO_HISTORY = "No history of these subgroups is provided.\n"
+
+PROFILE_WITH_HISTORY = (
+    "Recent published values for each subgroup (oldest first, one point per "
+    "release):\n{history}\n"
+)
+
+# Not passed through .format(), so the braces are literal single braces here --
+# the same rule FOOTER follows, and for the same reason: doubling them would ask
+# the model to emit {{...}}, which never parses.
+PROFILE_FOOTER = (
+    "Give a predictive distribution for every subgroup listed above. Reply "
+    "with exactly one JSON object and no other text, keyed by the subgroup "
+    "ids exactly as they appear above:\n"
+    '{"<subgroup id>": {"mean": <number>, "sd": <number>}, ...}\n'
+    "Every subgroup id must be present. A partial answer cannot be scored and "
+    "is discarded. sd is your standard deviation for that subgroup, in the "
+    "same unit, and must be greater than 0."
+)
+
 # The superforecaster protocol, transplanted from the human forecasting
 # literature: outside view before inside view, decomposition, then a pre-mortem
 # against your own answer. The point is to measure what the *process* is worth
@@ -949,6 +996,94 @@ def build_prompt(r, history, context=DEFAULT_CONTEXT,
     return head + body + digest + protocol + FOOTER
 
 
+def render_profile_history(history_by_cell, cells, n, labels=None):
+    """The per-cell history block: one labelled group per cell, oldest first.
+
+    Grouped by cell and headed by the cell's own id, because that id is what
+    the reply has to be keyed by. A model that can see the exact string it must
+    emit next to the numbers it is reasoning about does not have to guess the
+    key format, and a reply that misses a cell is discarded whole -- so making
+    the mapping unmissable is worth the lines it costs.
+    """
+    labels = labels or {}
+    out = []
+    for c in cells:
+        pts = (history_by_cell.get(c) or [])[-n:] if n else []
+        head = f"  {c}" + (f"  ({labels[c]})" if labels.get(c) else "")
+        rows = "\n".join(f"    {p['date']}: {p['value']}" for p in pts) \
+            or "    (none)"
+        out.append(head + "\n" + rows)
+    return "\n".join(out)
+
+
+def build_profile_prompt(r, history_by_cell, context=DEFAULT_CONTEXT,
+                         elicitation=DEFAULT_ELICITATION, news=None,
+                         search=None, cells=None):
+    """The exact text a profile-round entrant sees.
+
+    Deliberately the same skeleton as `build_prompt` -- same header fields,
+    same context/elicitation switches, same news and search blocks -- so that a
+    profile round differs from a topline round in what is asked, not in how it
+    is framed. Anything else would confound the round type with the prompt.
+
+    `history_by_cell` is {cell: pre-lock history}, the same strictly-pre-lock
+    slice the per-cell persistence null is built from, so entrants and nulls
+    read one series per cell.
+    """
+    from . import profile_round
+    if context not in CONTEXT:
+        raise ValueError(f"unknown context {context!r}; known: {sorted(CONTEXT)}")
+    if elicitation not in ELICITATION_SUFFIX:
+        raise ValueError(f"unknown elicitation {elicitation!r}; "
+                         f"known: {sorted(ELICITATION_SUFFIX)}")
+    cells = cells or profile_round.cells_for(r)
+    meta = {}
+    if r.get("series"):
+        try:
+            from . import series as series_registry
+            meta = series_registry.describe(r["series"])
+        except (ImportError, KeyError):
+            meta = {}
+
+    head = PROFILE_HEADER.format(
+        question=r.get("question") or meta.get("question", ""),
+        unit=r.get("unit") or meta.get("unit", ""),
+        methodology=r.get("methodology") or meta.get("methodology", "not stated"),
+        cadence=r.get("cadence") or meta.get("cadence", "not stated"),
+        release=r["release_at"][:10],
+        n=len(cells))
+
+    n = CONTEXT[context]
+    if n == 0:
+        body = PROFILE_NO_HISTORY + "The subgroups to forecast are:\n" + \
+            "\n".join(f"  {c}" for c in cells) + "\n"
+    else:
+        body = PROFILE_WITH_HISTORY.format(
+            history=render_profile_history(
+                history_by_cell or {}, cells, n,
+                profile_round.labels_for(cells)))
+    protocol = SUPERFC if elicitation == "superfc" else ""
+    digest = ""
+    if context == "news":
+        if not news or not news.get("text"):
+            raise ValueError(
+                "the news condition needs a digest; refusing to file it as an "
+                "ordinary forecast, which would silently make it a duplicate "
+                "of recent10 under a different entrant name")
+        digest = NEWS_BLOCK.format(asof=news["asof"], news=news["text"])
+    if context == "web":
+        if not search or not search.get("results"):
+            raise ValueError(
+                "the web condition needs a retrieved corpus; refusing to file "
+                "it as an ordinary forecast, which would silently make it a "
+                "duplicate of recent10 under a different entrant name")
+        from .adapters import search as search_adapter
+        digest = SEARCH_BLOCK.format(
+            asof=search.get("asof") or search.get("asked_at") or "lock time",
+            results=search_adapter.render(search["results"]))
+    return head + body + digest + protocol + PROFILE_FOOTER
+
+
 # --- the search turn --------------------------------------------------------
 #
 # The `web` context is two calls, not one: the model is asked what to look for,
@@ -1351,18 +1486,115 @@ def _first_json_object(text):
     return json.loads(m.group(0))
 
 
+def _distribution(mean, sd, where=""):
+    """(mean, sd) -> the stored form, or a raise. The schema's rules, in code.
+
+    Shared by the topline parser and the profile parser so a cell of a profile
+    is held to exactly the rules a topline is held to -- which is what lets the
+    two formats be scored on one scale.
+    """
+    at = f"{where}: " if where else ""
+    mean, sd = float(mean), float(sd)
+    if not (mean == mean and sd == sd):  # NaN
+        raise ValueError(f"{at}non-finite forecast")
+    if not (0 < sd <= 50):
+        raise ValueError(f"{at}sd out of schema range: {sd}")
+    if abs(mean) > 1000:
+        raise ValueError(f"{at}implausible mean: {mean}")
+    return {"mean": round(mean, 2), "sd": round(sd, 2)}
+
+
 def parse_forecast(text):
     """Pull {"mean": .., "sd": ..} out of a model reply. Raises on anything
     that would not survive the submission schema."""
     obj = _first_json_object(text)
-    mean, sd = float(obj["mean"]), float(obj["sd"])
-    if not (mean == mean and sd == sd):  # NaN
-        raise ValueError("non-finite forecast")
-    if not (0 < sd <= 50):
-        raise ValueError(f"sd out of schema range: {sd}")
-    if abs(mean) > 1000:
-        raise ValueError(f"implausible mean: {mean}")
-    return {"mean": round(mean, 2), "sd": round(sd, 2)}
+    return _distribution(obj["mean"], obj["sd"])
+
+
+def _json_object(text):
+    """The first *complete* JSON object in a reply, nesting included.
+
+    `_first_json_object` matches a brace pair containing no braces, which is
+    exactly right for a flat `{"mean": .., "sd": ..}` and useless for a profile,
+    whose every value is itself an object. It is left alone rather than widened:
+    that regex is what makes the scalar parser reject a reply whose first object
+    is nested, every scalar forecast of the season was parsed by it, and a
+    parser is not the place to take a compatibility risk for tidiness.
+
+    Scans for balanced braces while respecting strings and escapes, so a brace
+    inside a quoted string cannot end the object early. A candidate that does
+    not parse is skipped and the search continues at the next `{`, which is how
+    a reply that opens with prose containing a stray brace still resolves.
+    """
+    s = text or ""
+    start = s.find("{")
+    while start != -1:
+        depth, in_str, esc = 0, False, False
+        for i in range(start, len(s)):
+            ch = s[i]
+            if in_str:
+                if esc:
+                    esc = False
+                elif ch == "\\":
+                    esc = True
+                elif ch == '"':
+                    in_str = False
+                continue
+            if ch == '"':
+                in_str = True
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        return json.loads(s[start:i + 1])
+                    except ValueError:
+                        break
+        start = s.find("{", start + 1)
+    raise ValueError("no JSON object in reply")
+
+
+def parse_profile(text, cells):
+    """A profile reply -> {cell: {mean, sd}} for exactly `cells`. Or a raise.
+
+    **Nothing is ever filled in.** A reply carrying fifteen of sixteen cells is
+    rejected, not completed from the national line or from persistence: the
+    energy score is a norm over the whole vector, so a substituted cell is a
+    forecast the entrant did not make being scored as though it had. That is
+    the one failure mode that would quietly flatter a model which cannot hold a
+    whole population in its head, which is the exact thing this round measures.
+
+    Rejected just as loudly: cells the round did not ask for (the model has
+    invented a subgroup, so the ones it did return cannot be trusted to mean
+    what their keys say), a non-object cell, and any cell that would fail the
+    submission schema.
+    """
+    obj = _json_object(text)
+    if not isinstance(obj, dict):
+        raise ValueError(f"profile reply is a {type(obj).__name__}, not an object")
+    missing = [c for c in cells if c not in obj]
+    if missing:
+        raise ValueError(
+            f"profile reply is missing {len(missing)} of {len(cells)} cells: "
+            f"{', '.join(missing[:5])}{' ...' if len(missing) > 5 else ''}")
+    extra = [k for k in obj if k not in cells]
+    if extra:
+        raise ValueError(
+            f"profile reply has {len(extra)} cell(s) that were not asked for: "
+            f"{', '.join(sorted(extra)[:5])}{' ...' if len(extra) > 5 else ''}")
+    out = {}
+    for c in cells:
+        cell = obj[c]
+        if not isinstance(cell, dict):
+            raise ValueError(f"{c}: expected an object, got {type(cell).__name__}")
+        if "mean" not in cell or "sd" not in cell:
+            raise ValueError(f"{c}: needs both mean and sd")
+        try:
+            out[c] = _distribution(cell["mean"], cell["sd"])
+        except (TypeError, ValueError) as e:
+            raise ValueError(f"{c}: {e}") from e
+    return out
 
 
 # A failed provider call used to become a labelled placeholder, which kept the
@@ -1618,7 +1850,7 @@ def _retrieve(entrant, r, history):
     search_adapter.record_round(r["round_id"], entrant, queries, records)
     return search_adapter.for_round(r["round_id"], entrant)
 
-def _ask(entrant, prompt, previous, round_id):
+def _ask(entrant, prompt, previous, round_id, parse=None):
     """Ask the configured route; on a terminal failure, ask the standby.
 
     Returns (topline, via, input_hash, replayed), or (None, via, hash, False)
@@ -1635,7 +1867,7 @@ def _ask(entrant, prompt, previous, round_id):
     a vendor account is disabled. Checking one hash in the caller would resume
     the easy case and re-buy the hard one. So each hash is looked up immediately
     before the call that would otherwise pay for it, and every reply is logged
-    the moment it lands, before `parse_forecast` gets a chance to reject it.
+    the moment it lands, before `parse` gets a chance to reject it.
 
     Three further properties are worth stating, because each is a bug that was
     available here:
@@ -1656,6 +1888,7 @@ def _ask(entrant, prompt, previous, round_id):
     standby instead of each paying a failed request first. Nothing is written
     down, so the next run tests the vendor again.
     """
+    parse = parse or parse_forecast
     primary = route(entrant)
     standby = standby_route(entrant)
     ih = prompt_hash(entrant, prompt)
@@ -1663,7 +1896,7 @@ def _ask(entrant, prompt, previous, round_id):
     # Ahead of the key check and the dead-route check on purpose: a logged reply
     # is free and already answers this exact (endpoint, prompt), so whether the
     # vendor is reachable right now does not come into it.
-    top = _replayed(round_id, entrant, ih, parse_forecast)
+    top = _replayed(round_id, entrant, ih, parse)
     if top is not None:
         return top, primary["via"], ih, True
 
@@ -1678,7 +1911,7 @@ def _ask(entrant, prompt, previous, round_id):
         try:
             text, usage = call_provider(entrant, prompt, with_usage=True)
             _log_reply(round_id, entrant, ih, prompt, text, usage)
-            return parse_forecast(text), primary["via"], ih, False
+            return parse(text), primary["via"], ih, False
         except Exception as e:                  # noqa: BLE001 - re-raised below
             if standby is None or not terminal_failure(e):
                 raise
@@ -1689,7 +1922,7 @@ def _ask(entrant, prompt, previous, round_id):
     note = (previous or {}).get("notes") or ""
     if f"in={fb_hash}" in note and not note.startswith("MOCK"):
         return None, "openrouter", fb_hash, False
-    top = _replayed(round_id, entrant, fb_hash, parse_forecast)
+    top = _replayed(round_id, entrant, fb_hash, parse)
     if top is not None:
         return top, "openrouter", fb_hash, True
     try:
@@ -1697,7 +1930,7 @@ def _ask(entrant, prompt, previous, round_id):
                                     via="openrouter")
         _log_reply(round_id, entrant, fb_hash, prompt, text, usage,
                    via="openrouter")
-        return parse_forecast(text), "openrouter", fb_hash, False
+        return parse(text), "openrouter", fb_hash, False
     except Exception as e:
         # Both routes are gone. Report the *first* failure as the cause, since
         # that is the account that actually needs attention, and name the
@@ -1707,8 +1940,75 @@ def _ask(entrant, prompt, previous, round_id):
             f"failed ({e})") from e
 
 
+def _forecast_profile(entrant, r, history, profile_history, previous,
+                      context, elicitation, news, search):
+    """One joint forecast of a whole population, bought in a single call.
+
+    The three cost layers are the scalar path's, unchanged and in the same
+    order -- the previous file's input hash, then the reply log, then the call
+    -- because they are properties of a prompt and a route, not of what is
+    being asked for. `_ask` owns both routes' hashes and both log lookups; the
+    only thing that differs here is the parser handed to it.
+
+    **No mock, ever, in either direction.** The scalar path can fall back to a
+    labelled placeholder when `SSA_ALLOW_MOCK=1`, and that is defensible: a
+    persistence value with a stable offset is transparently not a forecast, and
+    it keeps a local pipeline run moving. Sixteen of them would not be
+    transparent. A fabricated profile is a fabricated *joint structure* -- the
+    precise object this round type exists to measure -- and it would sit in the
+    leaderboard's headline section looking like a model's view of a society.
+    Missing keys and failed calls both raise.
+    """
+    from . import profile_round
+    cells = profile_round.cells_for(r)
+    if elicitation == "persona":
+        raise ValueError(
+            f"{entrant}: the persona panel cannot answer a profile round. A "
+            "panel is aggregated into one number from one instrument, and no "
+            "instrument asks a respondent for sixteen subgroup averages; the "
+            "cells also have no `survey` for the same reason.")
+    if context == "web" and search is None:
+        # The search turn asks about the world, not about the cells, so it runs
+        # off the round's anchor series exactly as a scalar round's would.
+        search = _retrieve(entrant, r, history)
+    prompt = build_profile_prompt(r, profile_history, context, elicitation,
+                                  news=news, search=search, cells=cells)
+    ih = prompt_hash(entrant, prompt)
+
+    notes = (previous or {}).get("notes") or ""
+    if previous and f"in={ih}" in notes and not notes.startswith("MOCK"):
+        return previous
+
+    if not has_key(entrant):
+        raise RuntimeError(
+            f"{entrant}: no {route(entrant)['env']} in the environment. A "
+            "profile round is never mocked, so there is nothing to file until "
+            "the key is set.")
+    try:
+        prof, via, ih, replayed = _ask(
+            entrant, prompt, previous, r["round_id"],
+            parse=lambda text: parse_profile(text, cells))
+    except Exception as e:
+        raise RuntimeError(
+            f"{entrant} ({model_id(entrant)}) failed on {r['round_id']}: "
+            f"{type(e).__name__}: {e}") from e
+    if prof is None:               # the standby already answered this exact
+        return previous            # prompt; do not pay for it twice
+    note = (f"{model_id(entrant, via)}, harness v1, via={via}, "
+            f"context={context} elicitation={elicitation}, "
+            f"profile {len(cells)} cells, 1 sample"
+            f"{', replayed from the reply log' if replayed else ''}"
+            f"; in={ih}")
+    return {
+        "round_id": r["round_id"],
+        "entrant": entrant,
+        "profile": prof,
+        "notes": note[:500],
+    }
+
+
 def forecast(entrant, r, history=None, previous=None, context=None,
-             elicitation=None, news=None, search=None):
+             elicitation=None, news=None, search=None, profile_history=None):
     """One forecast dict for a round definition with baselines attached.
 
     `previous` is the forecast already on disk for this (round, entrant), if
@@ -1725,12 +2025,18 @@ def forecast(entrant, r, history=None, previous=None, context=None,
 
     So a run that dies, or a reply that does not parse, costs the tokens once.
     """
-    per = r["baselines"]["persistence"]
     # The condition is carried by the entrant id, so a caller cannot file a
     # forecast under one entrant while prompting for another.
     _, ctx_of_id, eli_of_id = resolve(entrant)
     context = context or ctx_of_id
     elicitation = elicitation or eli_of_id
+    from . import profile_round
+    if profile_round.is_profile(r):
+        # A profile round is answered whole or not at all; it shares every cost
+        # guard below and none of the scalar shape.
+        return _forecast_profile(entrant, r, history, profile_history, previous,
+                                 context, elicitation, news, search)
+    per = r["baselines"]["persistence"]
     if elicitation == "persona":
         return forecast_persona(entrant, r, history, previous)
     if context == "web" and search is None:

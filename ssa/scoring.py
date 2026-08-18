@@ -8,8 +8,8 @@
   copying the last release, the same move weather forecasting makes against
   its persistence and climatology nulls.
 """
+import hashlib
 import math
-import random
 
 SQRT_PI = math.sqrt(math.pi)
 
@@ -184,8 +184,36 @@ def _dist(a, b):
 def energy_score(samples, outcome):
     """Multivariate CRPS: mean||X - y|| - 0.5 * mean||X - X'||.
 
-    Strictly proper for the joint distribution. Lower is better. `samples` is
-    a list of equal-length vectors, `outcome` the observed vector.
+    Strictly proper for the joint distribution (Gneiting and Raftery 2007,
+    section 4.3). Lower is better. `samples` is a list of equal-length vectors
+    standing in for the predictive distribution, `outcome` the observed vector.
+    In one dimension this is exactly `crps_samples`, which is what keeps a
+    profile round and a topline round on one scale.
+
+    **How the estimator is built.** The two expectations are replaced by
+    averages over a fixed, deterministically constructed point set -- see
+    `profile_samples` and `cell_samples` for how a submission becomes one.
+    Nothing here draws a random number, so a third party re-running the scorer
+    on the published forecast files reproduces the leaderboard byte for byte.
+    That is the point: the arena's reproducibility claim would be worthless if
+    the score depended on an RNG, and merely seeding one would make it depend
+    on a particular interpreter's generator instead.
+
+    **What it does not do.** Three limitations, all deliberate and all worth
+    stating because a reader will otherwise assume them away:
+
+    - The second term uses `2 * acc / (n * n)` over unordered pairs, i.e. the
+      biased (V-statistic) form rather than the n(n-1) U-statistic. It is the
+      same convention `crps_samples` already uses, so the two agree exactly in
+      one dimension; the bias is O(1/n) and identical for every entrant in a
+      round, so it cannot reorder a leaderboard.
+    - The estimate is only as good as the point set. With `PROFILE_DRAWS`
+      points the Monte-Carlo error is well under the differences the arena
+      reports, but two forecasts closer than that are not distinguishable and
+      should not be reported as if they were.
+    - It scores the joint distribution the submission *implies*. A submission
+      of per-cell marginals implies independence (see `cell_samples`), which is
+      a real claim about the population and is scored as one.
     """
     n = len(samples)
     if n == 0:
@@ -200,25 +228,111 @@ def energy_score(samples, outcome):
     return t1 - 0.5 * t2
 
 
+_PERMS = {}
+
+
+def _perm(dim, draws, seed):
+    """The fixed permutation of range(draws) used by dimension `dim`.
+
+    The order is the one induced by sorting the indices on
+    sha256("seed:dim:index"). That is a pure function of three integers: no
+    generator, no state, no dependence on the interpreter's `random` module --
+    which is what this replaced, and which tied a headline reproducibility
+    claim to the Mersenne Twister's implementation details.
+
+    A hash order behaves like an arbitrary permutation, which is exactly what
+    is wanted: the dimensions must not line up. Residual linear correlation
+    between two dimensions is O(draws ** -0.5) -- about 0.13 in the worst of
+    the 120 pairs at 16 cells and 400 draws, the same magnitude the seeded
+    shuffle produced. `tests/test_profile_scoring.py` pins that bound, because
+    a construction that quietly coupled two cells would fake exactly the joint
+    structure these rounds exist to measure.
+
+    Cached: the permutation depends on nothing about the forecast, and every
+    submission in every round rebuilds the same sixteen.
+    """
+    key = (dim, draws, seed)
+    got = _PERMS.get(key)
+    if got is None:
+        got = _PERMS[key] = sorted(
+            range(draws),
+            key=lambda i: hashlib.sha256(f"{seed}:{dim}:{i}".encode()).digest())
+    return got
+
+
+def _column(inv_cdf, dim, seed, draws):
+    """One cell's coordinates: the stratified grid, permuted, pushed through
+    the cell's own inverse CDF."""
+    perm = _perm(dim, draws, seed)
+    return [inv_cdf((i + 0.5) / draws) for i in perm]
+
+
+def cell_samples(cells, seed=PROFILE_SEED, draws=PROFILE_DRAWS):
+    """A profile submission -> a deterministic joint sample set.
+
+    `cells` is a list of per-cell forecasts in the round's fixed cell order,
+    each in one of the two formats a scalar topline may take: `{mean, sd}` or a
+    `quantiles` map. Both are turned into the same object -- a column of
+    `draws` values -- so the two formats compete on one scale here for the same
+    reason `crps_forecast` makes them compete on one scale for a topline.
+
+    **The construction is a Latin hypercube on fixed quantile levels.** Every
+    cell walks the same stratified grid `(i + 0.5) / draws`, so each cell's
+    marginal is reproduced exactly rather than sampled; the grid is then
+    permuted per cell by `_perm`, so the cells are not stapled together in rank
+    order. This is the same move `pool_samples` makes for the crowd, one
+    dimension at a time.
+
+    **The dependence assumption is independence, and it is the submission's
+    own.** A forecast that gives sixteen marginals and nothing else has said
+    nothing about how the subgroups move together, and the only honest reading
+    of that is that they move independently. The permutation implements that
+    reading. An entrant who believes the cells move as one can express it --
+    but only by widening the cells whose joint behaviour it is confident about,
+    since the submission format carries no correlation term. That is a real
+    limit of this round type and the place to extend it first.
+    """
+    cols = []
+    for dim, c in enumerate(cells):
+        cols.append(_column(_inv_cdf(c), dim, seed, draws))
+    if not cols:
+        raise ValueError("no cells")
+    return [list(row) for row in zip(*cols)]
+
+
+def _inv_cdf(cell):
+    """A cell forecast -> its quantile function. Rejects a point forecast."""
+    q = cell.get("quantiles") if isinstance(cell, dict) else None
+    if q:
+        items = sorted((float(k), float(v)) for k, v in q.items())
+        return lambda lv: _interp_quantile(items, lv)
+    mean, sd = float(cell["mean"]), float(cell["sd"])
+    if not sd > 0:
+        raise ValueError(f"cell sd must be > 0, got {sd}")
+    return lambda lv: normal_quantile(mean, sd, lv)
+
+
 def profile_samples(means, sds, seed=PROFILE_SEED, draws=PROFILE_DRAWS):
     """Independent normal marginals -> a deterministic joint sample set.
 
-    An entrant may submit a mean and sd per cell and say nothing about how the
-    cells move together. That submission means independence, and it has to be
-    turned into a joint sample set to be scored. A Latin hypercube does it
-    without randomness in the scoring path: every dimension walks the same
-    stratified quantile grid, permuted by a fixed seed, so the marginals are
-    exact and the coordinates are uncoupled. The seed is a constant, so a third
-    party re-running the scorer gets identical numbers.
+    The `{mean, sd}`-only form of `cell_samples`, kept because the crosstab
+    path and its tests are written against it.
     """
-    rng = random.Random(seed)
-    grid = [(i + 0.5) / draws for i in range(draws)]
-    cols = []
-    for mean, sd in zip(means, sds):
-        levels = grid[:]
-        rng.shuffle(levels)
-        cols.append([normal_quantile(mean, sd, lv) for lv in levels])
-    return [list(row) for row in zip(*cols)]
+    return cell_samples([{"mean": m, "sd": s} for m, s in zip(means, sds)],
+                        seed=seed, draws=draws)
+
+
+def profile_skill(entrant_energy, persistence_energy):
+    """1 - ES(entrant) / ES(persistence), the scalar skill convention verbatim.
+
+    Named rather than left as a call to `skill`, because the profile
+    leaderboard has to be readable next to the scalar one: "0.1 of skill" must
+    mean the same thing on both boards -- a tenth of the null's loss removed --
+    and the only way to guarantee that is for both to be this one expression.
+    Positive means better than per-cell persistence, i.e. better than expecting
+    every subgroup to sit where it sat at the last release.
+    """
+    return skill(entrant_energy, persistence_energy)
 
 
 def profile_scores(samples, outcome):
