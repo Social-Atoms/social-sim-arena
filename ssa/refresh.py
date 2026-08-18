@@ -357,7 +357,13 @@ MAX_SPEND = float(os.environ.get("SSA_MAX_SPEND") or "10")
 # backtest/runs/ that carry a usage report. model_backtest's own estimator
 # assumes 400/500, which understates the output side by two and a half times --
 # at maximum reasoning effort the thinking *is* the output.
-EST_IN_TOKENS, EST_OUT_TOKENS = 278, 1276
+# Recalibrated 2026-08-18 from the first fill run's committed receipts
+# (replies/): 1,029 calls averaged 4,641 output tokens against the 1,276 this
+# constant previously assumed -- the reasoning-heavy entrants (deepseek-pro
+# 15k, qwen 8k, kimi 3.9k) tripled the fleet mean, so an "estimated $10"
+# ceiling was actually authorising ~$36. Until the estimator reads per-model
+# averages out of replies/, this stays pinned to the measured fleet mean.
+EST_IN_TOKENS, EST_OUT_TOKENS = 300, 4650
 
 
 def price_jobs(jobs, hist_by_round, read_forecast, news_for):
