@@ -77,6 +77,10 @@ jobs:
       # did on 2026-08-18. An unset variable means every keyed model, so this
       # only narrows when the variable exists.
       SSA_MODELS: ${{ vars.SSA_MODELS }}
+      # Per-run spend ceiling in USD (default 10 in code). The gate buys the
+      # nearest locks first and carries the tail to the next run, so raising
+      # this only changes how fast a backlog drains, never whether it does.
+      SSA_MAX_SPEND: ${{ vars.SSA_MAX_SPEND || '10' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
