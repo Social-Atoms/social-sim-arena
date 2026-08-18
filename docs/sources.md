@@ -203,12 +203,63 @@ Two consequences for anything added from here:
 
 ---
 
-## 6. A worked rejection: Michigan sentiment by political party (2026-08-17)
+## 6. A worked rejection, and its reversal: Michigan sentiment by party
 
-Recorded because the next person to want this series — and someone will, it is
-the obvious first sentiment subgroup task — should start from what is known,
-not from the subset tool's front page. Verdict: **not viable without a new
-dependency, and two readings stale even with one.**
+**Status: built.** `ssa/adapters/umichparty.py`, series `umich_party_dem` /
+`_ind` / `_rep`, first rounds `umich-party-2026-09-{dem,ind,rep}`.
+
+This section was written on 2026-08-17 as a rejection — *not viable without a
+new dependency, and two readings stale even with one* — and it was wrong. It is
+kept in full below, because the survey of what does **not** work here cost real
+hours and is still the map anyone extending this should read. What follows is
+the correction; the original verdict starts at "The target".
+
+**What reopened it (2026-08-18, Route A).** Step 5 below establishes that the
+one timely party artifact is a PDF and then stops, treating "PDF" as a synonym
+for "unparseable". It is not. `pdftotext -layout` — poppler, a *system* package
+(`apt-get install poppler-utils`, one line in `refresh.yml`), not a Python
+dependency this repository has to carry — renders that document as a
+fixed-column table:
+
+```
+DATE OF SURVEY              Dem      Ind     Rep    ...
+August        2026       39.1    48.5   78.7        ...
+```
+
+A regex of `MonthName YYYY` plus nine floats reads all 156 rows, 1980-06 through
+2026-08. So the argument in step 3 — "parsing it means a new dependency, which
+this repository does not take for one series" — is answered on its own terms:
+shelling out to a system binary is the same contract `ssa/stamps.py` already has
+with `ots`, and no `requirements.txt` line was added.
+
+That also disposes of the staleness objection in step 4 and in the closing
+paragraph. The blocker there was the free **Table 5b**, which runs about two
+releases behind; the addenda PDF is stamped with the preliminary's own release
+day and carries the preliminary row. Nothing about it is stale, so the frozen
+lock history is not missing anything an entrant can read.
+
+**What did not change: recurrence.** Step 5's last sentence still stands and is
+the live risk. August 2026 is the first month this addenda has ever appeared,
+and the URL is an opaque docid (`fetchdoc.php?docid=81624`) that gives no way to
+derive September's. The adapter is therefore built for absence: it parses the
+newest PDF committed under `sources/umichparty/` and **never fetches on its
+own**, so a month with no addenda leaves the series where it is instead of
+breaking a refresh. Pointing it at a new month is a maintainer running
+`fetch_latest(docid=...)` — manual until the publication recurs often enough to
+show a pattern worth automating.
+
+**One correction to the probe that opened the route.** It reported 153 rows and
+two holes in the modern run (2019-11, 2023-06). There are 156 rows and no holes
+since 2017-02. `pdftotext` separates pages with a form feed, `^` under
+`re.MULTILINE` does not match after one, and the three rows that sit at the top
+of a page were invisible to a whole-text scan — which reported them as months
+the survey never asked about. The adapter reads line by line and raises on any
+line that opens like a data row and fails to parse, so the same event is now an
+exception rather than a quiet gap.
+
+---
+
+*The original 2026-08-17 rejection follows, unedited.*
 
 **The target.** The ICS among Democrats / Republicans / Independents
 (`umich_sentiment_dem` / `_rep` / `_ind`), monthly since February 2017,
@@ -285,3 +336,9 @@ arrangement makes the current `.xls` worth a dependency argument. Until then
 this stays unbuilt. A hand-keyed resolution would make the maintainer the
 resolver, which is what §1.1 exists to prevent — and a scraper presented as
 sturdier than it is would fail in the quietest possible way, mid-season.
+
+*(End of the original rejection. The dependency argument in step 3 was the load-
+bearing one and it did not survive: a system binary is not a Python dependency.
+The last sentence above is still the standing instruction for this source — it
+is why `umichparty.fetch_latest` refuses a non-PDF body outright and why nothing
+in the pipeline fetches it unasked.)*
