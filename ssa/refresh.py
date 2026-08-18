@@ -504,10 +504,19 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
         r, entrant, path = job
         try:
             _, context, _elicitation = harness.resolve(entrant)
+            news = news_for(r) if context == "news" else None
+            if context == "news" and not (news or {}).get("text") \
+                    and not (news or {}).get("window_closed"):
+                # A round locking far out has a news window mostly in the
+                # future; the digest grows a day at a time and this job
+                # starts succeeding as the lock approaches. Not a failure:
+                # nothing is wrong and nothing was spent -- an empty digest
+                # on a CLOSED window still falls through and fails loudly.
+                return 0
             body = harness.forecast(entrant, r,
                                     history=hist_by_round.get(r["round_id"]),
                                     previous=read_forecast(path),
-                                    news=news_for(r) if context == "news" else None)
+                                    news=news)
         except Exception as e:                     # noqa: BLE001 - collected
             # Collected rather than raised. Failing at the first bad provider
             # would strand every other entrant's forecast unwritten, and rounds

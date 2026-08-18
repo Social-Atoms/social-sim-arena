@@ -1532,6 +1532,31 @@ def forecast_persona(entrant, r, history=None, previous=None):
 
 # --- entry point -----------------------------------------------------------
 
+def _provider_text(entrant, prompt):
+    """One reply over the same road _ask drives: direct, then the standby.
+
+    The query turn needs route awareness for the same reason the forecast
+    turn has it. On 2026-08-18 both US vendor accounts were terminally down
+    and every claude and gpt forecast ran happily over the standby -- while
+    all 112 of their web jobs died, because this turn dialled the dead
+    vendor directly. The raw reply is not logged to replies/: the parsed
+    queries are frozen into search/rounds/, which is the audit record here.
+    """
+    rt = route(entrant)
+    if not route_is_down(rt):
+        try:
+            return call_provider(entrant, prompt)
+        except Exception as e:                       # noqa: BLE001
+            if not terminal_failure(e):
+                raise
+            mark_route_down(rt, str(e))
+    sb = standby_route(entrant)
+    if sb is None:
+        raise RuntimeError(
+            f"{entrant}: configured route is down and no standby exists")
+    return call_provider(entrant, prompt, via=sb["via"])
+
+
 def _retrieve(entrant, r, history):
     """The web condition's first turn, run once per (round, entrant) and frozen.
 
@@ -1547,7 +1572,7 @@ def _retrieve(entrant, r, history):
     frozen = search_adapter.for_round(r["round_id"], entrant)
     if frozen is not None:
         return frozen
-    queries = parse_queries(call_provider(
+    queries = parse_queries(_provider_text(
         entrant, build_query_prompt(r, history, "web")))
     records = search_adapter.gather(queries)
     if not records:
