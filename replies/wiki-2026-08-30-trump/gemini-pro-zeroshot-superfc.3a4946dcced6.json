@@ -1,0 +1,15 @@
+{
+  "entrant": "gemini-pro-zeroshot-superfc",
+  "input_hash": "3a4946dcced6",
+  "logged_at": "2026-08-18T06:28:11Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt_sha256": "c0cc09c39a91b1f5ed0e1a7471a603f187a70754c6e7cc91a94c79ab062ee3af",
+  "reply": "1. Outside view. The series tracks weekly Wikipedia pageviews for Donald Trump. The historical median since early 2023 is 337k views, but the distribution is heavily right-skewed by massive spikes up to 5.43 million during major news events (indictments, elections, etc.). The mean absolute week-over-week change is ~32%. A naive extrapolation would predict the median of ~337k if no major news events occur, but due to the potential for spikes, the long-term expected value (mean) is mathematically higher than the median. \n\n2. Inside view. The forecast is for a week in late August 2026. This date falls a few months before the 2026 midterm elections. At this point, Trump will either be the sitting President or a former candidate out of office. If he is President, his baseline pageviews will likely be somewhat higher (roughly 300k-500k) due to the constant churn of executive branch news. If he is not in office, his baseline could easily settle into the 150k-250k range. August is also historically a slightly slower month for political news unless a major event occurs. Adjusting for the probabilistic mix of these two completely different baselines (President vs. non-President) yields an expected baseline of roughly 280k-300k. \n\n3. Pre-mortem. If this forecast is badly wrong, it will be due to one of two things: a failure to anticipate the correct 2026 baseline (e.g., he is President and generating constant viral news, pushing the baseline to 600k+), or an unpredictable \"black swan\" event occurring exactly during the week of August 24-30 (such as a major health event, a significant geopolitical crisis, or a massive midterm campaign scandal) that sends pageviews into the millions. I will correct for this by inflating the standard deviation substantially to account for the heavy right tail of the distribution.\n\n4. Calibrate. Given that we do not have the immediate preceding week's baseline to anchor to, we must rely on the long-term stationary distribution. The median is 337k, so an expected mean of roughly 380k accounts for the skew. To ensure the true value falls within one standard deviation about two-thirds of the time\u2014accounting for both the low-end possibility of ~150k and the higher end of ~600k+ (as well as factoring in tail risks)\u2014a standard deviation of 280k is appropriate. \n\n{\"mean\": 380, \"sd\": 280}",
+  "round_id": "wiki-2026-08-30-trump",
+  "usage": {
+    "input_tokens": 558,
+    "output_tokens": 574,
+    "thinking_tokens": 1980
+  },
+  "via": "direct"
+}

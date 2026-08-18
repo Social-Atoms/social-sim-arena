@@ -1,0 +1,15 @@
+{
+  "entrant": "gemini-pro-zeroshot-superfc",
+  "input_hash": "a31455dfa443",
+  "logged_at": "2026-08-18T06:14:19Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt_sha256": "a341794a2193e35d0221a89981c119589a78001e183a83c00fd1e90993608836",
+  "reply": "1. Outside view. What is the base rate here? What has this series done historically, how much does it move between releases, and what would a naive extrapolation predict?\nDonald Trump's approval rating and favorability have been remarkably stable over the past eight years, generally fluctuating within a narrow band between 39% and 45% among US adults in Economist/YouGov polling. Between weekly releases, the series typically moves by only 1 to 2 percentage points. A naive extrapolation to any future date heavily anchors to the historical average of roughly 42% to 43%.\n\n2. Inside view. What is specific to this release -- events, timing, anything that would move this particular number away from the base rate? Say how much each is worth, in the unit of the series.\nThe scheduled release date is August 25, 2026. Because this forecast looks two years into the future, the primary uncertainty stems from the outcome of the 2024 presidential election and the trajectory of US politics over the next two years. If Trump is President, his approval will likely be polarized along partisan lines, maintaining his historical \"ceiling\" and \"floor\" (around 42% to 44%). If he is not President, retrospective approval or favorability (which this proxy likely captures) would likely sit in a similar range, as public opinion on Trump is deeply entrenched. There are no immediate events to price in for a date two years away, so I will stick closely to his historical median, adjusting uncertainty outward for the long time horizon.\n\n3. Pre-mortem. Assume your answer turns out badly wrong. Write the most likely reason, then correct for it.\nIf the answer is badly wrong, it is likely because of a structural shift in Trump's standing\u2014either a dramatic loss of base support due to unforeseen legal or personal developments, or a surge in popularity due to a successful second term or a rally-around-the-flag effect. Trump has proven highly immune to normal political gravity, but a 24-month horizon introduces tail risks. To correct for this, I must ensure my standard deviation is wide enough to capture scenarios where he drops to the mid-to-high 30s or rises to the high 40s. \n\n4. Calibrate. Your sd should be wide enough that the true value falls inside one sd about two thirds of the time. Check it against how much this series actually moves between releases.\nWhile week-to-week changes are small (sd ~1.5), predicting two years out requires a wider interval. However, given the rigidity of Trump's numbers, an SD of 3.5 means the 1-SD interval (39.0% to 46.0%) perfectly covers the vast majority of his polling history since 2016. This provides a well-calibrated window. \n\n{\"mean\": 42.5, \"sd\": 3.5}",
+  "round_id": "yougov-2026-w35-approval",
+  "usage": {
+    "input_tokens": 350,
+    "output_tokens": 623,
+    "thinking_tokens": 2534
+  },
+  "via": "direct"
+}
