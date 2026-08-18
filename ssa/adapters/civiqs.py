@@ -51,6 +51,27 @@ and the model rolls over in the small hours UTC. Every snapshot records both
 fields rather than assuming a lag, and the "freshest reading available on day d"
 rule above reads whichever date the snapshot actually had.
 
+**A net can have more than one option on each side, and the tracker says so.**
+This module was written when the only tracker read here was approval, which
+declares no `display_net` at all and falls back to "Approve" minus
+"Disapprove" -- one named choice against one. The sentiment trackers declare
+one, and its sides are *lists*: `economy_us_direction` gives
+`["Getting better"]` against `["Getting worse"]`, and `economy_us_now` gives
+`["Very good", "Fairly good"]` against `["Very bad", "Fairly bad"]`. Passing a
+list where the old code passed a choice name raised in `to_points` rather than
+computing anything wrong, so nothing was ever published incorrectly -- but four
+of the five sentiment trackers were simply unreadable.
+
+Both sides are therefore lists everywhere here, and the archive records the
+tracker's own `display_net` beside the numbers. A resolution has to name the
+exact quantity, and on a five-option tracker "the net" is not recoverable from
+the choice list alone; it has to come from the file rather than from whatever
+the page declares later.
+
+`describe_feeling_us` declares no net and offers ten emotions, so `declared_net`
+returns None for it and any net over it would be this repository's construction
+rather than the source's number. Its shares are read individually instead.
+
 **Subgroup filtering keys on the demographic's `label`, not its predictor id.**
 `?party=Republican` works and returns a full 569-point daily series;
 `?party_3=Republican` is silently ignored and returns the national series under
@@ -312,21 +333,59 @@ def to_points(payload, choice):
                    f"{choices(payload)}")
 
 
-def to_net(payload, minuend=None, subtrahend=None):
-    """Approve minus disapprove, in points, oldest first.
+def _sides(minuend, subtrahend):
+    """Both sides of a net as lists of choice names, or None where unstated.
 
-    Computed from the two choice series rather than read from `topline.net_data`
-    -- Civiqs publishes that field as a float difference of fractions
-    (-0.056999999999999995), and the arena rounds once, at a defined place, so
-    the same input always yields the same committed number. Which two choices to
-    subtract comes from the tracker's own `display_net` when it declares one, so
-    this works on favourability and right-track trackers too.
+    `display_net` gives a side as a bare string on the two-option trackers and
+    as a list on the rest, and the difference is invisible until a `str` is
+    indexed as a sequence. Normalising once here is what lets every net path
+    below be written for lists only.
+    """
+    def side(x):
+        if x is None:
+            return None
+        return [x] if isinstance(x, str) else [str(c) for c in x]
+    return side(minuend), side(subtrahend)
+
+
+def declared_net(payload):
+    """The tracker's own net, normalised to lists, or None if it declares none.
+
+    `describe_feeling_us` is the case that returns None: ten emotions, no
+    published net, so any net over it would be this repository's construction
+    rather than the source's number.
     """
     net = (payload.get("job_description") or {}).get("display_net") or {}
-    a = minuend or net.get("minuend") or "Approve"
-    b = subtrahend or net.get("subtrahend") or "Disapprove"
-    plus = {p["date"]: p["value"] for p in to_points(payload, a)}
-    minus = {p["date"]: p["value"] for p in to_points(payload, b)}
+    a, b = _sides(net.get("minuend"), net.get("subtrahend"))
+    if not a or not b:
+        return None
+    return {"minuend": a, "subtrahend": b, "label": net.get("label")}
+
+
+def _sum_points(payload, names):
+    """{date: sum of these choices} in points; a date needs all of them."""
+    cols = [{p["date"]: p["value"] for p in to_points(payload, n)} for n in names]
+    dates = set(cols[0])
+    for c in cols[1:]:
+        dates &= set(c)
+    return {d: round(sum(c[d] for c in cols), 2) for d in dates}
+
+
+def to_net(payload, minuend=None, subtrahend=None):
+    """One side of a tracker minus the other, in points, oldest first.
+
+    Computed from the choice series rather than read from `topline.net_data`
+    -- Civiqs publishes that field as a float difference of fractions
+    (-0.056999999999999995), and the arena rounds once, at a defined place, so
+    the same input always yields the same committed number. Which choices to
+    subtract comes from the tracker's own `display_net` when it declares one, so
+    this works on the economy and inflation trackers, which put two options on
+    each side, as well as on approval, which puts one.
+    """
+    net = declared_net(payload) or {}
+    a, b = _sides(minuend or net.get("minuend") or "Approve",
+                  subtrahend or net.get("subtrahend") or "Disapprove")
+    plus, minus = _sum_points(payload, a), _sum_points(payload, b)
     both = sorted(set(plus) & set(minus))
     if not both:
         raise RuntimeError(f"Civiqs net {a} minus {b}: no overlapping dates")
@@ -413,6 +472,11 @@ def build_snapshot(payload, name, filters, fetched_at, full):
         "population_model": jd.get("population_model"),
         "question_body": payload.get("question_body"),
         "display_text": jd.get("display_text"),
+        # Which options the source itself adds and which it subtracts. Part of
+        # what the dashboard showed, so it is archived with the numbers: a
+        # resolution names the exact quantity, and on a five-option tracker
+        # that is not recoverable from the choice list alone.
+        "display_net": declared_net(payload),
         "unit": "percentage points",
         "full_history": bool(full),
         "choices": ch,
@@ -430,6 +494,19 @@ def snapshot_series(snap, choice):
         raise KeyError(f"archived snapshot has no choice {choice!r}; it has "
                        f"{snap['choices']}") from None
     return {row[0]: row[i + 1] for row in snap["points"] if row[i + 1] is not None}
+
+
+def snapshot_shares(snap, names):
+    """{date: sum of these choices} out of an archived snapshot, in points.
+
+    A date needs every component, so a partially-published day is dropped
+    rather than reported as a smaller total.
+    """
+    cols = [snapshot_series(snap, n) for n in names]
+    dates = set(cols[0])
+    for c in cols[1:]:
+        dates &= set(c)
+    return {d: round(sum(c[d] for c in cols), 2) for d in dates}
 
 
 def write_snapshot(key, snap, day):
@@ -533,6 +610,11 @@ def as_displayed(name, filters=None, choice=None, net=False, weekday=None,
     persistence null a week back rather than a day back, which is the only
     honest null for a question asked a week ahead.
 
+    `net` is either False, True (take the net the snapshot recorded from
+    Civiqs), or `{"minuend": [...], "subtrahend": [...]}` -- the registry passes
+    the explicit form, so the quantity a round is scored on is written down in
+    one place rather than inferred from whatever the page declares that week.
+
     `fetch=False` builds from the archive alone and touches no network, which is
     what tests and any rerun over committed data want.
     """
@@ -563,7 +645,9 @@ def as_displayed(name, filters=None, choice=None, net=False, weekday=None,
         snap = read_archive(key, d)
         if not snap:
             continue
-        vals = (to_net_from_snapshot(snap) if net
+        spec = net if isinstance(net, dict) else {}
+        vals = (to_net_from_snapshot(snap, spec.get("minuend"),
+                                     spec.get("subtrahend")) if net
                 else snapshot_series(snap, choice or "Approve"))
         end = snap.get("end_date") or (max(vals) if vals else None)
         if vals and end:
@@ -598,12 +682,35 @@ def as_displayed(name, filters=None, choice=None, net=False, weekday=None,
     return out
 
 
-def to_net_from_snapshot(snap):
-    """{date: approve - disapprove} out of an archived snapshot, in points."""
+def to_net_from_snapshot(snap, minuend=None, subtrahend=None):
+    """{date: minuend - subtrahend} out of an archived snapshot, in points.
+
+    Which choices make the net comes from the caller first -- the registry
+    states it, because the resolution rule is what makes a series a target --
+    then from the `display_net` this snapshot recorded from Civiqs, and only
+    then, for a tracker that actually has an Approve/Disapprove pair, from
+    those two. Snapshots archived before `display_net` was recorded therefore
+    still resolve.
+
+    Anything else raises. The rule this replaces was "first choice minus second
+    choice", which on `economy_us_now` is "Very good" minus "Fairly good": a
+    number that is not a net of anything, published as one, on a series whose
+    whole point is that its resolutions are auditable.
+    """
+    stored = snap.get("display_net") or {}
+    a, b = _sides(minuend or stored.get("minuend"),
+                  subtrahend or stored.get("subtrahend"))
     ch = snap["choices"]
-    a = "Approve" if "Approve" in ch else ch[0]
-    b = "Disapprove" if "Disapprove" in ch else ch[1]
-    plus, minus = snapshot_series(snap, a), snapshot_series(snap, b)
+    if not a or not b:
+        if "Approve" in ch and "Disapprove" in ch:
+            a, b = a or ["Approve"], b or ["Disapprove"]
+        else:
+            raise KeyError(
+                f"this snapshot of {snap.get('tracker')!r} declares no net and "
+                f"has no Approve/Disapprove pair (it has {ch}); pass the "
+                "minuend and subtrahend -- refusing to guess which choices "
+                "make a net")
+    plus, minus = snapshot_shares(snap, a), snapshot_shares(snap, b)
     return {d: round(plus[d] - minus[d], 2) for d in set(plus) & set(minus)}
 
 

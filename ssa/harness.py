@@ -23,10 +23,19 @@ needed:
 Model id and endpoint are both overridable per entrant without touching code:
   SSA_MODEL_GROK=grok-4.3   SSA_BASE_QWEN=https://my-gateway/compatible-mode/v1
 
+And a whole entrant can be moved to a different *route* -- a different key,
+protocol, host and model id at once -- with SSA_OPENROUTER, for when a vendor
+account stops serving in a way no code change fixes. Off unless set, manual
+rather than automatic, and recorded in every forecast it produces, because the
+endpoint is part of the condition. See docs/routes.md.
+
 Cost control: a forecast is only re-requested when its inputs changed. Every
 filed forecast carries in=<hash of the prompt> in its notes; if the hash still
 matches, the existing file is kept and no API call is made. So a round costs
-one call per model per new observation, not one per refresh.
+one call per model per new observation, not one per refresh. Behind that sits
+the reply log (ssa/replies.py): every reply is written to disk on arrival and
+before it is parsed, so a bad parse or a run that dies mid-flight costs the
+tokens once rather than once per attempt.
 """
 import concurrent.futures
 import hashlib
@@ -36,6 +45,8 @@ import re
 import threading
 
 import requests
+
+from . import replies
 
 # Reasoning depth is set as high as each provider allows, and the parameter is
 # not portable -- getting it wrong is a 400, not a silent downgrade:
@@ -168,6 +179,261 @@ MODELS = {
     },
 }
 
+# --- routes ----------------------------------------------------------------
+#
+# A *route* is where a model is actually reached: which key opens it, which
+# wire protocol it speaks, which host serves it, and what it is called there.
+# Every model above has a direct route -- its own vendor. Some also have an
+# OpenRouter route, which is one key and one OpenAI-compatible endpoint in
+# front of all of them.
+#
+# This exists because a vendor account can stop serving in a way that no code
+# change fixes. On 2026-08-14 the Anthropic organisation was disabled (HTTP
+# 400, "This organization has been disabled") and the OpenAI account ran out of
+# credits (HTTP 429, insufficient_quota). That is seven of fifteen entrants
+# dead on every six-hourly refresh, on rounds whose locks do not wait.
+#
+# **Opting in is manual and per entrant, never automatic.** An automatic
+# failover on an error would move an entrant to a different endpoint mid-season
+# on a transient 429, and nothing on the leaderboard would say so. The endpoint
+# is part of the condition, not a detail of it: two hosts can serve different
+# weights under one model name, quantise differently, or reach a different
+# reasoning depth. So the switch is a repository variable a human sets, and it
+# is recorded in every forecast it produces.
+OPENROUTER_BASE = "https://openrouter.ai/api/v1"
+# The name the secret is provisioned under. Not OPENROUTER_API_KEY: renaming
+# the lookup without renaming the secret drops the route silently, which is
+# exactly how the SSA_BASE_QWEN override was lost once already.
+OPENROUTER_ENV = "OPEN_ROUTER"
+
+# Model ids on OpenRouter, written out rather than derived. `vendor/model` is a
+# convention, not a rule -- Kimi is `moonshotai/`, GLM is `z-ai/`, Grok is
+# `x-ai/` -- and a derived id that is wrong is a 404 at lock time.
+#
+# Every entry is a model OpenRouter's public catalogue actually lists, checked
+# against https://openrouter.ai/api/v1/models (keyless, free) rather than
+# guessed. Two models are deliberately absent:
+#
+#   qwen-3.7  OpenRouter carries `qwen/qwen3.7-max`, the floating alias, and
+#             not the dated `qwen3.7-max-2026-05-20` snapshot this entrant is
+#             pinned to. An alias that rolls forward mid-season silently swaps
+#             the entrant, and scores from before and after are not comparable.
+#             The pin is worth more than the redundancy.
+#   qwen-3.8  likewise `qwen/qwen3.8-max`; kept out for symmetry with 3.7 so
+#             the two Qwen entrants are never served from different kinds of
+#             pointer.
+OPENROUTER_MODELS = {
+    "gpt-5.6-luna": "openai/gpt-5.6-luna",
+    "gpt-5.6-sol": "openai/gpt-5.6-sol",
+    "gpt-5.6-terra": "openai/gpt-5.6-terra",
+    "claude-opus": "anthropic/claude-opus-4.8",
+    "claude-opus-5": "anthropic/claude-opus-5",
+    "claude-sonnet": "anthropic/claude-sonnet-5",
+    "claude-fable": "anthropic/claude-fable-5",
+    "gemini-pro": "google/gemini-3.1-pro-preview",
+    "gemini-flash": "google/gemini-3.6-flash",
+    "grok": "x-ai/grok-4.5",
+    "deepseek-pro": "deepseek/deepseek-v4-pro",
+    "deepseek-flash": "deepseek/deepseek-v4-flash",
+    "kimi": "moonshotai/kimi-k3",
+    "glm": "z-ai/glm-5.2",
+    "minimax": "minimax/minimax-m3",
+}
+
+# OpenRouter normalises reasoning depth to one parameter across vendors, so the
+# vendor-specific blocks above do not apply here -- sending `reasoning_effort:
+# xhigh` or Anthropic's `thinking`/`output_config` pair to this endpoint is at
+# best ignored and at worst a 400.
+#
+# `high` is the top of OpenRouter's unified scale, and it is **not** the same
+# depth as the direct route's ceiling: OpenAI's own `xhigh` sits above `high`,
+# and Anthropic's `effort: max` is its own scale entirely. So a routed entrant
+# is the same weights asked to think somewhat less hard, which is a real
+# difference and the reason `via=openrouter` is written into the forecast.
+OPENROUTER_EFFORT = {"reasoning": {"effort": "high"}}
+
+
+def openrouter_models():
+    """Which models the OpenRouter route is switched on for.
+
+    `SSA_OPENROUTER` is a comma-separated list of model keys, or `1` for every
+    model with an entry above. Unset means none, so merging this code changes
+    no entrant's endpoint until someone sets the variable.
+
+    An unknown name raises rather than being skipped. A typo that quietly
+    routes nothing would look identical to the outage it was set to work
+    around -- the run would fail exactly as before, with the variable set.
+    """
+    raw = (os.environ.get("SSA_OPENROUTER") or "").strip()
+    if not raw:
+        return frozenset()
+    if raw == "1":
+        return frozenset(OPENROUTER_MODELS)
+    want = [m.strip() for m in raw.split(",") if m.strip()]
+    bad = [m for m in want if m not in OPENROUTER_MODELS]
+    if bad:
+        raise ValueError(
+            f"SSA_OPENROUTER names {bad}, which "
+            + ("is not a model here" if len(bad) == 1 else "are not models here")
+            + f"; routable: {sorted(OPENROUTER_MODELS)}")
+    return frozenset(want)
+
+
+def _openrouter_route(model):
+    return {"env": OPENROUTER_ENV, "api": "openai", "base": OPENROUTER_BASE,
+            "model": OPENROUTER_MODELS[model],
+            "params": dict(OPENROUTER_EFFORT), "via": "openrouter"}
+
+
+def _direct_route(model):
+    cfg = MODELS[model]
+    shared = ((os.environ.get("SSA_BASE_GATEWAY")
+               or os.environ.get("SSA_BASE_QWEN"))
+              if model in GATEWAY_ENTRANTS else None)
+    return {"env": cfg["env"], "api": cfg["api"],
+            "base": shared or cfg["base"], "model": cfg["model"],
+            "params": dict(cfg.get("params") or {}), "via": "direct"}
+
+
+def route(entrant, via=None):
+    """Where this entrant is reached: env, api, base, model, params, via.
+
+    `via` is `direct` or `openrouter` and is the one field that exists purely
+    to be written down -- into the forecast's notes, so a file says which
+    endpoint answered it, and into the entrant record on the site.
+
+    Passing `via` forces a route rather than asking which one is configured.
+    That is how the standby is reached in `forecast`, and how a caller that
+    must not switch endpoints mid-run (the backtest) pins itself to one.
+
+    The per-entrant `SSA_MODEL_<ENTRANT>` and `SSA_BASE_<ENTRANT>` overrides
+    still apply on top of whichever route is chosen; they are the escape hatch
+    for a self-hosted gateway and they stay the most specific thing there is.
+    """
+    model = resolve(entrant)[0]
+    if via == "openrouter":
+        if model not in OPENROUTER_MODELS:
+            raise ValueError(f"{model} has no OpenRouter route")
+        return _openrouter_route(model)
+    if via == "direct":
+        return _direct_route(model)
+    if via is not None:
+        raise ValueError(f"unknown route {via!r}; known: direct, openrouter")
+    if model in openrouter_models():
+        return _openrouter_route(model)
+    return _direct_route(model)
+
+
+def standby_route(entrant):
+    """The route to use when the configured one is terminally down, or None.
+
+    There is one only when the model is in the OpenRouter table, the key is
+    present, and the configured route is not already OpenRouter -- falling back
+    from a host to itself is not a fallback.
+    """
+    model = resolve(entrant)[0]
+    if model not in OPENROUTER_MODELS:
+        return None
+    if not os.environ.get(OPENROUTER_ENV):
+        return None
+    if route(entrant)["via"] == "openrouter":
+        return None
+    return _openrouter_route(model)
+
+
+# --- when a route stops answering ------------------------------------------
+#
+# Two provider failures look identical at the call site and must be handled in
+# opposite ways.
+#
+# A **transient** failure -- a 500, a read timeout, a plain rate limit -- is
+# fixed by waiting. Switching endpoints on one of those would move an entrant
+# to a different host for one round and back for the next, and the season would
+# quietly contain forecasts from two endpoints for reasons nobody recorded.
+#
+# A **terminal** failure -- the key is dead, the organisation is disabled, the
+# balance is zero, the model is not served here -- is not fixed by waiting, and
+# on 2026-08-14 two of them landed within a day of each other and stayed. Every
+# six-hourly run since filed nothing for seven of fifteen entrants while the
+# locks kept arriving. That is what the standby is for.
+#
+# So the fallback keys on the *kind* of failure, and the patterns below are
+# matched against the provider's own wording, which `_check` already preserves
+# in the exception text for exactly this reason.
+TERMINAL_STATUS = (401, 403, 404)
+TERMINAL_WORDING = (
+    "organization has been disabled",       # Anthropic, seen 2026-08-14
+    "account_deactivated",                  # OpenAI, seen 2026-08-14
+    "insufficient_quota",                   # OpenAI, seen 2026-08-16
+    "credit_balance_exhausted",
+    "no credits remaining",
+    "billing",
+    "invalid_api_key",
+    "incorrect api key",
+    "does not exist or you do not have access",
+)
+
+
+def terminal_failure(exc):
+    """Whether this failure will still be there in six hours.
+
+    A 429 is deliberately *not* terminal on its own: it is the same status for
+    "you are going too fast" and for "you have no money", and only the body
+    tells them apart. Treating every 429 as terminal would send a burst of
+    ordinary rate limiting to the standby and bill it.
+    """
+    text = str(exc)
+    low = text.lower()
+    m = re.search(r"\bHTTP (\d{3})\b", text)
+    if m and int(m.group(1)) in TERMINAL_STATUS:
+        return True
+    return any(w in low for w in TERMINAL_WORDING)
+
+
+# Routes found terminally dead during *this process*, as (env, host). Held in
+# memory and never written down: a run that starts after the account is fixed
+# must try it again, so persisting this would turn a temporary outage into a
+# permanent reroute. Its only job is to stop one dead account from costing a
+# failed request per entrant per round -- 126 of them, on the season as it
+# stands -- before every fallback.
+_dead_routes = set()
+_dead_guard = threading.Lock()
+
+
+def _route_fingerprint(rt):
+    return (rt["env"], rt["base"].split("//", 1)[-1].split("/", 1)[0])
+
+
+def route_is_down(rt):
+    with _dead_guard:
+        return _route_fingerprint(rt) in _dead_routes
+
+
+def mark_route_down(rt, why=""):
+    with _dead_guard:
+        _dead_routes.add(_route_fingerprint(rt))
+
+
+def dead_routes():
+    """(key env, host) for every route that failed terminally this run.
+
+    The run summary prints this. A silent fallback is the failure mode the
+    whole design is shaped against: the site would keep rendering, the
+    leaderboard would keep updating, and nothing anywhere would say that four
+    entrants had quietly moved to a different endpoint at a lower reasoning
+    depth.
+    """
+    with _dead_guard:
+        return sorted(_dead_routes)
+
+
+def forget_dead_routes():
+    """Test hook. Nothing in the pipeline calls this: the set dies with the
+    process, which is the whole point."""
+    with _dead_guard:
+        _dead_routes.clear()
+
+
 # No output ceiling is imposed. Thinking tokens count against any cap, so at
 # max reasoning effort a small one truncates the reply before the model reaches
 # its JSON; that fails to parse and falls back to a labelled MOCK -- a silent
@@ -253,177 +519,329 @@ NEWS_BLOCK = (
     "nothing after {asof} is included.\n{news}\n"
 )
 
-VARIANTS = {"none": 0, "recent10": 10}
-DEFAULT_VARIANT = "recent10"
+# --- the two axes -----------------------------------------------------------
+#
+# A condition is a *pair*, not a name: what the model is shown, and how it is
+# asked. The two are orthogonal and every combination is meaningful, so they are
+# declared as separate axes rather than as one flat list.
+#
+# Flat was how this started, and it hid a category error: `news` sat in a tuple
+# called ELICITATION_VARIANTS beside `persona` and `superfc`. But news changes
+# *what the model is shown* while those two change *how it is asked*, so the
+# tuple mixed the axes and made `news x superfc` unnameable -- the arena could
+# not express "the forecasting protocol, on a model that has also read the
+# news", which is an obvious thing to want to measure.
+#
+# CONTEXT -- what the model is shown, and how many past releases go with it:
+#
+#   none       the question and nothing else. Two things at once: the ablation
+#              that isolates what the series history is worth, and a
+#              contamination probe, since accuracy on a post-cutoff release
+#              with no history to reason from is not forecasting.
+#   recent10   the last ten releases, the same history the nulls read. The
+#              like-for-like comparison against persistence.
+#   news       recent10 plus a fixed news corpus frozen at the lock -- the same
+#              text for every entrant, archived, reproducible. The auditable
+#              version of "give it real-world information".
+#   web        recent10 plus live search. Live-only; see WEB_CONTEXTS.
+CONTEXT = {"none": 0, "recent10": 10, "news": 10, "web": 10}
+DEFAULT_CONTEXT = "recent10"
 
-# --- the elicitation axis --------------------------------------------------
+# ELICITATION -- how it is asked, holding the context fixed. This is the axis
+# the arena exists for: whether role-playing a population beats asking for a
+# number is not a prompt-engineering detail, it is the claim the whole
+# silicon-sampling literature rests on.
 #
-# The conditions above vary *what the model is shown*; every other live
-# benchmark varies the same thing, under names like closed-book versus
-# web-enabled. The conditions below vary *how it is asked*, holding the
-# information fixed, and that axis is the one this arena is for: in a social
-# simulation the question "does role-playing a population beat asking for a
-# number" is not a prompt-engineering detail, it is the scientific claim the
-# whole silicon-sampling literature rests on.
+#   direct     "give a mean and an sd".
+#   superfc    the human forecasting protocol -- base rate, then decomposition,
+#              then a pre-mortem. Tests what the *process* is worth, separately
+#              from the model.
+#   persona    not asked to forecast at all. Answers the real survey instrument
+#              as each of the weighted respondents in turn, and the pollster's
+#              own arithmetic makes the number. This is what the industry
+#              sells, so a result either way is worth having.
+ELICITATION = ("direct", "superfc", "persona")
+DEFAULT_ELICITATION = "direct"
+
+# Which contexts each elicitation can actually convey. Not a policy -- a fact
+# about the prompts.
 #
-#   persona   the model is not asked to forecast at all. It answers the real
-#             survey instrument as each of twenty-four weighted respondents in
-#             turn, and the pollster's own arithmetic turns those answers into
-#             the number. This is what the industry actually sells, so a result
-#             either way is worth having: if it does not beat asking directly,
-#             the premise of the method is in question.
-#   superfc   asked directly, but through the human forecasting protocol --
-#             outside view first, then decomposition, then a pre-mortem. Tests
-#             what the *process* is worth, separately from the model.
-#   news      asked directly, plus a fixed news digest: the same corpus for
-#             every entrant, built from the Wikipedia Current Events pages as
-#             they stood at the lock. This is the auditable version of "give it
-#             real-world information" -- one corpus, archived, reproducible,
-#             and safe in the backtest because it is fetched by revision
-#             timestamp rather than as the pages read today.
-#   web       asked directly, with live search. Isolated from the rest because
-#             it is the only condition whose fairness cannot be audited after
-#             the fact; see WEB_VARIANTS below for why it is live-only.
+# `build_persona_prompt` takes a persona and the survey instrument and nothing
+# else: no series history, no release date, no mention that a forecast is
+# wanted. That is deliberate and `ssa/personas.py` states it as the design --
+# "everything the round knows and the respondent would not know is withheld
+# here on purpose; that asymmetry is the experiment". A real respondent does not
+# know the tracker's own past readings, and a synthetic one shown them has
+# stopped being a respondent and become a forecaster wearing a persona.
 #
-# All three see the same ten-release history as `recent10`, so any difference
-# between them is elicitation and not information.
+# So `recent10 x persona` and `none x persona` build a *byte-identical* prompt
+# today, and filing them under two entrant ids would put the same work on the
+# leaderboard twice under different names. The constraint is enforced rather
+# than documented, because that trap is invisible in the output.
+#
+# `news x persona` is the coherent extension and is the one the literature
+# actually runs -- a real respondent does read the news. It needs the digest
+# wired into build_persona_prompt first; until then it is not offered.
+ELICITATION_CONTEXTS = {
+    "direct": ("none", "recent10", "news", "web"),
+    "superfc": ("none", "recent10", "news", "web"),
+    "persona": ("none",),
+}
+
+# Kept as an alias because `CONTEXT` is what `build_prompt` reads for the
+# history length, and callers outside this module ask for it by the old name.
+VARIANTS = CONTEXT
+DEFAULT_VARIANT = DEFAULT_CONTEXT
+
 # `web` is written and deliberately NOT in the season. It stays out until the
 # fairness question is settled: nine of fifteen models can run it at all, so a
 # leaderboard containing it compares six models against an arm they were never
 # offered. The code, the capability table and the backtest refusal all remain
-# below, so enabling it later is adding one string to this tuple.
-ELICITATION_VARIANTS = ("persona", "superfc", "news")
-for _v in ELICITATION_VARIANTS:
-    VARIANTS[_v] = 10
+# below, so enabling it later is adding one cell to SEASON_CELLS.
 
-# `web` is a working condition that is not in the season (see
-# ELICITATION_VARIANTS). It stays registered here so the code path, its
-# capability table and its backtest refusal stay live and tested rather than
-# rotting into something that has to be rediscovered; it simply produces no
-# entrants, so nothing runs it.
-VARIANTS["web"] = 10
-
-# Web search is a *prospective-only* condition, and the guard is not a
+# Web search is a *prospective-only* context, and the guard is not a
 # preference. In a live round the answer does not exist anywhere at lock time,
 # so search cannot leak it. In the backtest the answer has been published for
 # months: a model searching the open web for "Michigan sentiment July 2026"
 # reads the outcome and scores perfectly, which measures retrieval, not
 # forecasting. There is no prompt that prevents this and no way to verify
-# after the fact what a model retrieved, so the backtest refuses the condition
-# outright rather than publishing a number nobody can defend.
-WEB_VARIANTS = ("web",)
+# after the fact what a model retrieved, so the backtest refuses it outright
+# rather than publishing a number nobody can defend.
+#
+# It is the *context* that leaks, never the elicitation: how a model is asked
+# cannot reveal an outcome. So the refusal keys on the context axis alone.
+WEB_CONTEXTS = ("web",)
+WEB_VARIANTS = WEB_CONTEXTS          # old name, same tuple
 
 
-def assert_prospective(variant, where="the backtest"):
-    """Raise if `variant` may only be run on rounds whose answer is unknown."""
-    if variant in WEB_VARIANTS:
+def assert_prospective(context, where="the backtest"):
+    """Raise if `context` may only be run on rounds whose answer is unknown.
+
+    Keyed on the context axis. How a model is asked cannot reveal an outcome;
+    what it is shown can. Accepts an elicitation name too and passes it, so a
+    caller holding one half of a condition cannot accidentally skip the check.
+    """
+    if context in WEB_CONTEXTS:
         raise ValueError(
-            f"variant {variant!r} cannot run in {where}: the outcome is "
+            f"context {context!r} cannot run in {where}: the outcome is "
             "already published, so live search reads the answer instead of "
             "forecasting it. It is a live-round condition only.")
 
-# Season 0 runs both conditions, once per release, and scores them as separate
-# entrants -- which is what they are. `recent10` shows the last ten releases,
-# the same history the nulls read, so it is the like-for-like comparison
-# against persistence. `none` shows the question and nothing else, which makes
-# it two things at once: the ablation that isolates how much the series history
-# is worth, and a contamination probe, because accuracy on a post-cutoff
-# release with no history to reason from is not forecasting.
+# The cells the season runs by default. Both are `direct`; the elicitation arms
+# are opt-in through SSA_ELICITATION because one of them costs two hundred times
+# a normal entrant. `recent10` is the like-for-like comparison against
+# persistence, `none` is the ablation and the contamination probe.
 #
 # Repeated sampling is deliberately absent. At the providers' default
-# temperature a rerun does not reproduce, so the committed record of raw
-# replies is the reproducibility mechanism, not a re-run.
-SEASON_VARIANTS = ("recent10", "none")
+# temperature a rerun does not reproduce, so the committed record of raw replies
+# is the reproducibility mechanism, not a re-run -- and it is now a record
+# rather than a promise: every live reply lands in `replies/<round_id>/` as it
+# arrives, before anything tries to parse it (see ssa/replies.py).
+SEASON_CELLS = (("recent10", "direct"), ("none", "direct"))
 
-# Entrant id suffix per condition. The default condition keeps the bare model
-# name so existing forecasts, entrant records and leaderboard rows stay valid.
-VARIANT_SUFFIX = {"recent10": "", "none": "-zeroshot",
-                  "persona": "-persona", "superfc": "-superfc",
+# Entrant id = model, then the context suffix, then the elicitation suffix. The
+# default on each axis is elided, which is what keeps every id already on disk
+# valid: `claude-opus` is recent10 x direct, and always was.
+#
+# Context first, then elicitation, so `claude-opus-news-superfc` reads in the
+# order the prompt is built: what it saw, then how it was asked.
+CONTEXT_SUFFIX = {"recent10": "", "none": "-zeroshot",
                   "news": "-news", "web": "-web"}
+ELICITATION_SUFFIX = {"direct": "", "superfc": "-superfc", "persona": "-persona"}
 
-# Which models run the elicitation conditions. Every active model, because the
-# whole matrix costs about $43 for a full season and a three-model subset would
-# leave the axis unable to say whether an effect is real or one vendor's quirk.
+# Old flat table, kept because `docs/conditions.md` and the validator cite it and
+# because every single-axis id still resolves through the pair below. Derived
+# rather than restated, so the two cannot drift.
+VARIANT_SUFFIX = dict(CONTEXT_SUFFIX)
+VARIANT_SUFFIX.update({k: v for k, v in ELICITATION_SUFFIX.items() if v})
+
+# Every condition that is not a season cell. `web` now runs on all fifteen
+# entrants -- one shared index rather than nine vendors' hosted tools -- so
+# nothing filters the roster any more.
+ELICITATION_VARIANTS = ("persona", "superfc", "news")
+
+
+def entrant_id(model, context=DEFAULT_CONTEXT, elicitation=DEFAULT_ELICITATION):
+    """model + condition -> the id used on disk, in the leaderboard, everywhere."""
+    if context not in CONTEXT_SUFFIX:
+        raise ValueError(f"unknown context {context!r}; known: {sorted(CONTEXT_SUFFIX)}")
+    if elicitation not in ELICITATION_SUFFIX:
+        raise ValueError(f"unknown elicitation {elicitation!r}; "
+                         f"known: {sorted(ELICITATION_SUFFIX)}")
+    allowed = ELICITATION_CONTEXTS[elicitation]
+    if context not in allowed:
+        raise ValueError(
+            f"{elicitation} cannot carry context {context!r}: its prompt does "
+            f"not convey it, so the forecast would be identical to "
+            f"{allowed[0]} x {elicitation} under a different name. "
+            f"Allowed: {list(allowed)}")
+    return model + CONTEXT_SUFFIX[context] + ELICITATION_SUFFIX[elicitation]
+
+
+def cell(name):
+    """A condition named the way a human writes it -> (context, elicitation).
+
+    Accepts a bare axis name and pairs it with the other axis's default, which
+    is what every existing entrant means: `news` is news x direct, `superfc` is
+    recent10 x superfc. `news+superfc` names a cell on both axes at once.
+
+    This is the spelling SSA_ELICITATION takes, so a workflow variable set
+    before the axes were separated keeps meaning what it meant.
+    """
+    parts = [p.strip() for p in str(name).replace("x", "+").split("+") if p.strip()]
+    ctx, eli = None, None
+    for p in parts:
+        if p in CONTEXT_SUFFIX:
+            if ctx:
+                raise ValueError(f"{name!r} names two contexts")
+            ctx = p
+        elif p in ELICITATION_SUFFIX:
+            if eli:
+                raise ValueError(f"{name!r} names two elicitations")
+            eli = p
+        else:
+            raise ValueError(
+                f"unknown condition {p!r} in {name!r}; contexts: "
+                f"{sorted(CONTEXT_SUFFIX)}, elicitations: {sorted(ELICITATION_SUFFIX)}")
+    if not parts:
+        raise ValueError("empty condition")
+    eli = eli or DEFAULT_ELICITATION
+    # A bare elicitation name pairs with the default context *it can carry*,
+    # which for persona is `none` rather than recent10 -- see
+    # ELICITATION_CONTEXTS. So `SSA_ELICITATION=persona` keeps working and now
+    # names the cell that is actually run.
+    if ctx is None:
+        allowed = ELICITATION_CONTEXTS[eli]
+        ctx = DEFAULT_CONTEXT if DEFAULT_CONTEXT in allowed else allowed[0]
+    if ctx not in ELICITATION_CONTEXTS[eli]:
+        raise ValueError(
+            f"{name!r} names {ctx} x {eli}, which {eli} cannot carry; "
+            f"allowed contexts: {list(ELICITATION_CONTEXTS[eli])}")
+    return (ctx, eli)
+
+
+# Which models run the opt-in cells. Every active model, because a three-model
+# subset could not say whether an effect is real or one vendor's quirk.
 #
 # The reason to narrow it is cost, not correctness: `persona` is one call per
-# simulated respondent per round, roughly two hundred times a normal entrant,
-# so it dominates the bill. Narrow this tuple to trade coverage for money, and
-# run tools/estimate_arms.py first -- it calls nothing and prints the total.
+# simulated respondent per round, roughly two hundred times a normal entrant, so
+# it dominates the bill. Narrow this to trade coverage for money, and run
+# tools/estimate_arms.py first -- it calls nothing and prints the total.
 #
-# The web condition self-restricts to WEB_CAPABLE regardless of what is listed
-# here, so six models simply have no web arm.
 # Defined as a function rather than a constant because PENDING_ACTIVATION is
 # declared further down; a constant here read it before it existed.
 def elicitation_models():
     return tuple(active_models())
 
 
-def elicitation_entrants(variants=ELICITATION_VARIANTS, models=None):
-    """(entrant_id, model_key, variant) for the how-it-is-asked conditions.
+def cell_entrants(cells, models=None):
+    """(entrant_id, model, context, elicitation) for each (cell, model).
 
-    The web condition is emitted only for models whose vendor hosts a search
-    tool, so a roster never contains an entrant that is guaranteed to fail.
-    Everything else runs anywhere.
+    The web context is emitted only for models whose vendor hosts a search tool,
+    so a roster never contains an entrant guaranteed to fail.
     """
     models = elicitation_models() if models is None else models
     out = []
-    for v in variants:
+    for ctx, eli in cells:
         for m in models:
             if m not in MODELS:
                 continue
-            if v in WEB_VARIANTS and m not in WEB_CAPABLE:
-                continue
-            out.append((m + VARIANT_SUFFIX[v], m, v))
+            out.append((entrant_id(m, ctx, eli), m, ctx, eli))
     return out
 
 
+def elicitation_entrants(variants=ELICITATION_VARIANTS, models=None):
+    """The opt-in cells, named the way SSA_ELICITATION names them."""
+    return cell_entrants([cell(v) for v in variants], models)
+
+
 # Entered in MODELS but not run: the gateway rejects the prefixed namespace
-# these two live in ("The product is not activated"), and K3 and M3 exist only
-# there -- the activated bare names top out at kimi-k2.6 and MiniMax-M2.5.
-# Their config and cutoff rows are kept so re-enabling is deleting a line here.
-PENDING_ACTIVATION = ("kimi", "minimax")
+# ("The product is not activated") and the activated bare names top out at
+# MiniMax-M2.5. Kimi left this list on 2026-08-18: OpenRouter carries
+# moonshotai/kimi-k3, so with SSA_OPENROUTER=kimi the entrant never touches
+# the gateway and the activation gate no longer describes it. Minimax's
+# config and cutoff rows are kept so re-enabling is deleting a line here.
+PENDING_ACTIVATION = ("minimax",)
+
+
+# A local run calls whichever providers have a key in the environment, and the
+# environment is a `.env` that tends to hold all of them. That is fine on a
+# runner and is a real hazard from a workstation: OpenAI and Anthropic do not
+# serve mainland China, and calling them from an unsupported region is a
+# documented cause of account deactivation -- which is what happened here on
+# 2026-08-14, to both accounts, within a day of each other.
+#
+# Deleting the keys works and lasts until someone pastes them back. So the
+# allowlist is explicit and lives beside them:
+#
+#   SSA_MODELS=deepseek-pro,deepseek-flash        in a local .env
+#
+# Unset means every registered model, which is what CI wants. An unknown name
+# raises rather than silently narrowing the roster to nothing -- a typo here
+# would look exactly like "the season has no entrants".
+def allowed_models():
+    raw = (os.environ.get("SSA_MODELS") or "").strip()
+    if not raw:
+        return None
+    want = [m.strip() for m in raw.split(",") if m.strip()]
+    bad = [m for m in want if m not in MODELS]
+    if bad:
+        raise ValueError(f"SSA_MODELS names unknown model(s) {bad}; "
+                         f"known: {sorted(MODELS)}")
+    return want
 
 
 def active_models():
-    return [m for m in MODELS if m not in PENDING_ACTIVATION]
+    out = [m for m in MODELS if m not in PENDING_ACTIVATION]
+    allow = allowed_models()
+    return [m for m in out if m in allow] if allow is not None else out
 
 
 def season_entrants():
-    """(entrant_id, model_key, variant) for every condition the arena runs."""
-    return [(m + VARIANT_SUFFIX[v], m, v)
-            for v in SEASON_VARIANTS for m in active_models()]
+    """(entrant_id, model, context, elicitation) for every cell the season runs."""
+    return cell_entrants(SEASON_CELLS, active_models())
 
 
-def resolve(entrant_id):
-    """Entrant id -> (model_key, variant). Raises on an unknown id."""
-    for suffix, variant in sorted(
-            ((s, v) for v, s in VARIANT_SUFFIX.items()),
-            key=lambda x: -len(x[0])):          # longest suffix first
-        if suffix and entrant_id.endswith(suffix):
-            model = entrant_id[:-len(suffix)]
-            if model in MODELS:
-                return model, variant
-    if entrant_id in MODELS:
-        return entrant_id, DEFAULT_VARIANT
-    raise KeyError(f"unknown entrant id: {entrant_id!r}")
+def resolve(entrant_id_):
+    """Entrant id -> (model, context, elicitation). Raises on an unknown id.
+
+    Suffixes are stripped longest-first on each axis so that `-news-superfc`
+    is not read as a model called `<x>-news` in the superfc condition. Every id
+    written before the axes were separated resolves to exactly what it meant.
+    """
+    for eli, esuf in sorted(ELICITATION_SUFFIX.items(), key=lambda kv: -len(kv[1])):
+        if esuf and not entrant_id_.endswith(esuf):
+            continue
+        rest = entrant_id_[:-len(esuf)] if esuf else entrant_id_
+        for ctx, csuf in sorted(CONTEXT_SUFFIX.items(), key=lambda kv: -len(kv[1])):
+            if csuf and not rest.endswith(csuf):
+                continue
+            model = rest[:-len(csuf)] if csuf else rest
+            # An id this module could not build is not an id. Without this,
+            # `<m>-persona` resolves to recent10 x persona while
+            # `entrant_id` refuses to produce it, and the same cell has two
+            # names -- exactly the duplication ELICITATION_CONTEXTS prevents.
+            if model in MODELS and ctx in ELICITATION_CONTEXTS[eli]:
+                return model, ctx, eli
+    raise KeyError(f"unknown entrant id: {entrant_id_!r}")
 
 
 def _env_suffix(entrant):
     return re.sub(r"[^A-Z0-9]", "_", entrant.upper())
 
 
-def model_id(entrant):
+def model_id(entrant, via=None):
     """Provider-side model name, overridable via SSA_MODEL_<MODEL>.
 
     Accepts either a model key or a full entrant id; the condition suffix does
     not change which model answers, so both resolve to the same name.
     """
-    model, _ = resolve(entrant)
+    model = resolve(entrant)[0]
     return (os.environ.get("SSA_MODEL_" + _env_suffix(model))
-            or MODELS[model]["model"])
+            or route(entrant, via)["model"])
 
 
-def base_url(entrant):
+def base_url(entrant, via=None):
     """API base, overridable via SSA_BASE_<ENTRANT>.
 
     Needed for self-hosted gateways and regional endpoints: a DashScope or
@@ -443,20 +861,29 @@ def base_url(entrant):
     the configured gateway and invalidated their whole backtest cache, since
     `call_identity` (and therefore the cache key) contains the base URL.
     """
-    model, _ = resolve(entrant)
-    shared = ((os.environ.get("SSA_BASE_GATEWAY")
-               or os.environ.get("SSA_BASE_QWEN"))
-              if model in GATEWAY_ENTRANTS else None)
+    model = resolve(entrant)[0]
     return (os.environ.get("SSA_BASE_" + _env_suffix(model))
-            or shared or MODELS[model]["base"]).rstrip("/")
+            or route(entrant, via)["base"]).rstrip("/")
 
 
 def has_key(entrant):
-    model, _ = resolve(entrant)
-    return bool(os.environ.get(MODELS[model]["env"]))
+    """Whether this entrant can be called at all: the configured route's key,
+    or the standby's.
+
+    Not the vendor's key specifically. A model routed through OpenRouter needs
+    the OpenRouter key and does not care whether its vendor's is set, and a
+    model whose vendor key is missing is still callable when the standby is
+    configured. Reading the vendor's alone would report ready for an entrant
+    that cannot be called, and not ready for one that can.
+    """
+    if os.environ.get(route(entrant)["env"]):
+        return True
+    standby = standby_route(entrant)
+    return bool(standby and os.environ.get(standby["env"]))
 
 
-def build_prompt(r, history, variant=DEFAULT_VARIANT, news=None):
+def build_prompt(r, history, context=DEFAULT_CONTEXT,
+                 elicitation=DEFAULT_ELICITATION, news=None, search=None):
     """The exact text an entrant sees.
 
     `history` is the strictly pre-lock series the round's baselines were built
@@ -466,9 +893,11 @@ def build_prompt(r, history, variant=DEFAULT_VARIANT, news=None):
     Methodology and cadence come from the round when present and fall back to
     the series registry, so a round definition never has to restate them.
     """
-    if variant not in VARIANTS:
-        raise ValueError(f"unknown prompt variant {variant!r}; "
-                         f"known: {sorted(VARIANTS)}")
+    if context not in CONTEXT:
+        raise ValueError(f"unknown context {context!r}; known: {sorted(CONTEXT)}")
+    if elicitation not in ELICITATION_SUFFIX:
+        raise ValueError(f"unknown elicitation {elicitation!r}; "
+                         f"known: {sorted(ELICITATION_SUFFIX)}")
     meta = {}
     if r.get("series"):
         try:
@@ -484,27 +913,104 @@ def build_prompt(r, history, variant=DEFAULT_VARIANT, news=None):
         cadence=r.get("cadence") or meta.get("cadence", "not stated"),
         release=r["release_at"][:10])
 
-    n = VARIANTS[variant]
+    n = CONTEXT[context]
     if n == 0:
         body = NO_HISTORY
     else:
         pts = (history or [])[-n:]
         lines = "\n".join(f"  {p['date']}: {p['value']}" for p in pts) or "  (none)"
         body = WITH_HISTORY.format(history=lines)
-    # `web` differs from recent10 in the request, not the text: the search tool
-    # is attached per provider in call_provider. Keeping the prompt identical is
-    # what makes the comparison an information comparison.
-    protocol = SUPERFC if variant == "superfc" else ""
+    # `web` shows recent10's history *plus* the retrieved corpus, so the only
+    # difference from recent10 is the information, not the framing.
+    protocol = SUPERFC if elicitation == "superfc" else ""
     digest = ""
-    if variant == "news":
+    if context == "news":
         if not news or not news.get("text"):
             raise ValueError(
                 "the news condition needs a digest; refusing to file it as an "
                 "ordinary forecast, which would silently make it a duplicate "
                 "of recent10 under a different entrant name")
         digest = NEWS_BLOCK.format(asof=news["asof"], news=news["text"])
+    if context == "web":
+        # Same refusal as `news`, for the same reason: a web entrant filed with
+        # no corpus is a byte-identical copy of its recent10 twin under a
+        # different leaderboard row, and the comparison would be between two
+        # arms that were never different.
+        if not search or not search.get("results"):
+            raise ValueError(
+                "the web condition needs a retrieved corpus; refusing to file "
+                "it as an ordinary forecast, which would silently make it a "
+                "duplicate of recent10 under a different entrant name")
+        from .adapters import search as search_adapter
+        digest = SEARCH_BLOCK.format(
+            asof=search.get("asof") or search.get("asked_at") or "lock time",
+            results=search_adapter.render(search["results"]))
     return head + body + digest + protocol + FOOTER
 
+
+# --- the search turn --------------------------------------------------------
+#
+# The `web` context is two calls, not one: the model is asked what to look for,
+# we run the searches, and the results come back in the forecast prompt. That
+# shape is the design, not an implementation detail.
+#
+# **No agent framework and no tool calling.** The obvious build is the vendors'
+# native tool protocols, and it would quietly ruin the arm: OpenAI's `tools`,
+# Anthropic's `tools` and Gemini's `functionDeclarations` are three dialects,
+# entrants differ in how fluently they speak their own, and the arm would end
+# up measuring tool-calling competence rather than whether search helps. That
+# is the vendor-index confound in a new costume, and the whole point of running
+# one index is to be rid of it. A fixed number of plain-text turns gives every
+# entrant byte-identical scaffolding, a bounded cost, and no loop that can run
+# away -- and it reuses the JSON parser the forecast reply already goes through.
+QUERY_TURN = (
+    "Before answering, you may search the web. Reply with exactly one JSON "
+    "object and no other text:\n"
+    '{{"queries": ["<search query>", ...]}}\n'
+    "At most {n} queries. They will be run verbatim against a news index "
+    "covering the last {days} days, and the results will come back to you "
+    "before you forecast. Ask for what would actually change your estimate.\n"
+)
+
+SEARCH_BLOCK = (
+    "Results of the searches you asked for, retrieved at {asof}. Every "
+    "entrant searches the same index with the same settings; the queries "
+    "below are your own.\n{results}\n"
+)
+
+
+def build_query_prompt(r, history, context=DEFAULT_CONTEXT, news=None):
+    """The first turn of the web condition: what do you want to look for?
+
+    Deliberately the *same* framing as the forecast prompt, minus the answer
+    format. A model that is told less here than it will be told later would be
+    choosing queries for a question it has not been asked.
+    """
+    from .adapters import search as search_adapter
+    head = build_prompt(r, history, "recent10" if context == "web" else context,
+                        DEFAULT_ELICITATION, news=news)
+    head = head.split(FOOTER)[0]
+    return head + QUERY_TURN.format(n=search_adapter.MAX_QUERIES,
+                                    days=search_adapter.DAYS)
+
+
+def parse_queries(text, limit=None):
+    """The query list out of the first turn's reply.
+
+    Non-strings and blanks are dropped rather than coerced. A model that
+    answered with something other than a list of queries did not ask for a
+    search, and inventing one on its behalf would put our keywords in an arm
+    whose entire point is that the keywords are the model's.
+    """
+    from .adapters import search as search_adapter
+    obj = _first_json_object(text)
+    raw = obj.get("queries")
+    if not isinstance(raw, list):
+        raise ValueError(f"no query list in reply; got {json.dumps(obj)[:200]}")
+    out = [q.strip() for q in raw if isinstance(q, str) and q.strip()]
+    if not out:
+        raise ValueError("the query list was empty")
+    return out[:(limit or search_adapter.MAX_QUERIES)]
 
 # A respondent is being interviewed, not consulted. The framing says nothing
 # about forecasts, releases, dates or aggregates, because a persona told it is
@@ -562,19 +1068,25 @@ def parse_survey_reply(text, spec):
     return out
 
 
-def call_identity(entrant):
+def call_identity(entrant, via=None):
     """What actually determines a reply: the model *and* the endpoint serving it.
 
     Both cache keys are built on this. Two gateways can serve different weights
     under the same model name, so a cache keyed on the name alone would reuse a
     forecast the current endpoint never produced.
+
+    `via` asks for a specific route's identity rather than the configured one.
+    That is how a forecast filed by the standby records a hash the *direct*
+    route will not match: when the account comes back, the next run misses,
+    re-asks the vendor, and the entrant is upgraded without anyone noticing it
+    had been demoted.
     """
-    return f"{model_id(entrant)} @ {base_url(entrant)}"
+    return f"{model_id(entrant, via)} @ {base_url(entrant, via)}"
 
 
-def prompt_hash(entrant, prompt):
+def prompt_hash(entrant, prompt, via=None):
     return hashlib.sha256(
-        (call_identity(entrant) + "\n" + prompt).encode()).hexdigest()[:12]
+        (call_identity(entrant, via) + "\n" + prompt).encode()).hexdigest()[:12]
 
 
 # --- provider calls --------------------------------------------------------
@@ -589,17 +1101,21 @@ _provider_locks = {}
 _locks_guard = threading.Lock()
 
 
-def _provider_key(entrant):
+def _provider_key(entrant, via=None):
     """What counts as one provider for rate-limiting: the endpoint host, so the
-    four gateway-hosted models share a budget rather than getting one each."""
-    model, _ = resolve(entrant)
-    base = base_url(entrant)
-    host = base.split("//", 1)[-1].split("/", 1)[0]
-    return f"{MODELS[model]['env']}@{host}"
+    four gateway-hosted models share a budget rather than getting one each.
+
+    Keyed on the route's own key and host, so entrants moved to OpenRouter join
+    one shared budget there instead of carrying their vendor's quota to a host
+    that never had it.
+    """
+    r = route(entrant, via)
+    host = base_url(entrant, via).split("//", 1)[-1].split("/", 1)[0]
+    return f"{r['env']}@{host}"
 
 
-def _provider_slot(entrant):
-    key = _provider_key(entrant)
+def _provider_slot(entrant, via=None):
+    key = _provider_key(entrant, via)
     with _locks_guard:
         sem = _provider_locks.get(key)
         if sem is None:
@@ -607,36 +1123,18 @@ def _provider_slot(entrant):
     return sem
 
 
-# Server-side search, per wire protocol. Each vendor hosts the tool and runs
-# the searches itself, so the harness stays three protocols wide and gains no
-# scraper. Dated tool versions are pinned for the same reason model ids are: a
-# tool that changes behaviour mid-season silently changes the condition.
-WEB_TOOLS = {
-    "anthropic": {"tools": [{"type": "web_search_20260209",
-                             "name": "web_search"}]},
-    "openai": {"tools": [{"type": "web_search"}]},
-    "gemini": {"tools": [{"google_search": {}}]},
-}
+# Vendor-hosted search is deliberately NOT used, and the tables that drove it
+# are gone rather than left dormant. The arm now runs one index for every
+# entrant (ssa/adapters/search.py), because three vendors' hosted tools search
+# three different corpora and a leaderboard built on them cannot separate the
+# model from the index behind it. It also covered only 9 of 15 entrants: six
+# models speak OpenAI-compatible chat completions and serve no search tool, and
+# dispatching on the protocol would have sent OpenAI's `web_search` to five
+# hosts that do not run it. The good outcome there is a 400; the bad one is a
+# host that accepts unknown fields and ignores them, publishing a "web" entrant
+# byte-identical to its closed-book twin. See docs/conditions.md.
 
-# Hosted search is a *vendor* feature, not a property of the wire protocol, and
-# conflating the two is a trap this nearly fell into: Grok, both Qwens, both
-# DeepSeeks and GLM all speak OpenAI-compatible chat completions, so dispatching
-# on `api` alone would have sent OpenAI's hosted web_search tool to five hosts
-# that do not serve it. The good outcome there is a 400. The bad one is a host
-# that accepts unknown fields and ignores them, which yields a "web" entrant
-# whose prompt and answer are identical to its closed-book twin -- a published
-# comparison between two arms that were never different.
-#
-# So the capability is declared per model, and a model without it is refused by
-# name rather than attempted.
-WEB_CAPABLE = frozenset({
-    "gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6-terra",       # OpenAI hosted tool
-    "claude-opus", "claude-opus-5", "claude-sonnet", "claude-fable",
-    "gemini-pro", "gemini-flash",                          # google_search
-})
-
-
-def call_provider(entrant, prompt, with_usage=False, variant=None):
+def call_provider(entrant, prompt, with_usage=False, context=None, via=None):
     """One completion.
 
     Returns the reply text, or (text, usage) when with_usage is set. `usage` is
@@ -647,29 +1145,19 @@ def call_provider(entrant, prompt, with_usage=False, variant=None):
     `variant` only matters where the condition changes the *request* rather
     than the prompt, which today means attaching the provider's search tool.
     """
-    model, variant_of_id = resolve(entrant)
-    variant = variant or variant_of_id
-    cfg = MODELS[model]
-    key = os.environ[cfg["env"]]
-    mid = model_id(entrant)
-    base = base_url(entrant)
-    api = cfg["api"]
+    model, context_of_id, _ = resolve(entrant)
+    context = context or context_of_id
+    rt = route(entrant, via)
+    cfg = {"params": dict(rt["params"])}
+    key = os.environ[rt["env"]]
+    mid = model_id(entrant, via)
+    base = base_url(entrant, via)
+    api = rt["api"]
     fn = {"openai": _call_openai, "anthropic": _call_anthropic,
           "gemini": _call_gemini}.get(api)
     if fn is None:
         raise ValueError("unknown api: " + api)
-    if variant in WEB_VARIANTS:
-        extra = WEB_TOOLS.get(api) if model in WEB_CAPABLE else None
-        if extra is None:
-            raise ValueError(
-                f"{entrant} ({model}) has no vendor-hosted search, so it "
-                "cannot run the web condition. Speaking the OpenAI protocol is "
-                "not the same as serving OpenAI's tools; add the model to "
-                "WEB_CAPABLE only once its own endpoint is confirmed to run "
-                "the search server-side.")
-        cfg = dict(cfg)
-        cfg["params"] = dict(cfg.get("params") or {}, **extra)
-    with _provider_slot(entrant):
+    with _provider_slot(entrant, via):
         text, usage = fn(cfg, base, key, mid, prompt)
     return (text, usage) if with_usage else text
 
@@ -898,6 +1386,40 @@ def mock_forecast(entrant, round_id, persistence_mean, persistence_sd):
     }
 
 
+# --- the reply log ---------------------------------------------------------
+
+def _log_reply(round_id, entrant, ih, prompt, text, usage, via=None, persona=None):
+    """Write a reply down the instant it arrives, before anyone parses it.
+
+    Called between the provider returning and the parse, because the failure
+    this exists for is exactly a reply that was paid for and then did not parse.
+    `replies.log` swallows its own errors, so a log that cannot be written never
+    costs a forecast that can be.
+    """
+    rec = {"model": model_id(entrant, via), "via": route(entrant, via)["via"],
+           "prompt_sha256": replies.prompt_sha256(prompt), "reply": text,
+           "usage": usage}
+    if persona is not None:
+        rec["persona"] = persona
+    return replies.log(round_id, entrant, ih, rec)
+
+
+def _replayed(round_id, entrant, ih, parse, persona=None):
+    """A reply already bought for this exact call, parsed, or None.
+
+    None covers both "nothing logged" and "what is logged does not parse": a
+    stale unparseable entry is one of the two failures the log exists for, and
+    it must not be able to stop the run from buying a good reply to replace it.
+    """
+    rec = replies.lookup(round_id, entrant, ih, persona=persona)
+    if not rec:
+        return None
+    try:
+        return parse(rec.get("reply") or "")
+    except Exception:                      # noqa: BLE001 - any parse failure
+        return None
+
+
 # --- the persona condition -------------------------------------------------
 
 # How many of the panel may fail to answer before the aggregate is refused. A
@@ -919,6 +1441,11 @@ def forecast_persona(entrant, r, history=None, previous=None):
 
     The input hash covers the persona prompts *and* the panel, so a change to
     either correctly misses the cache and re-runs.
+
+    Resume is per respondent, not per panel: each answer is logged under that
+    persona's id, so an interrupted panel buys the answers it is missing rather
+    than all 192 again. This is the most expensive entrant in the season by two
+    orders of magnitude, and the one where a lost run hurts most.
     """
     from . import personas, series as series_registry
 
@@ -942,16 +1469,28 @@ def forecast_persona(entrant, r, history=None, previous=None):
 
     if not has_key(entrant):
         raise RuntimeError(
-            f"{entrant}: no {MODELS[resolve(entrant)[0]]['env']} in the "
+            f"{entrant}: no {route(entrant)['env']} in the "
             "environment; the persona condition never files a placeholder.")
 
-    answers, failures = {}, []
+    answers, failures, replayed = {}, [], []
     lock = threading.Lock()
 
     def ask(p):
         pid = p["id"]
+        # One respondent, one logged reply. A panel is 192 calls under a single
+        # input hash, so the log is keyed per persona: an interrupted panel then
+        # resumes the respondents it had left instead of re-buying all 192.
+        parsed = _replayed(r["round_id"], entrant, ih,
+                           lambda t: parse_survey_reply(t, spec), persona=pid)
+        if parsed is not None:
+            with lock:
+                answers[pid] = parsed
+                replayed.append(pid)
+            return
         try:
-            reply = call_provider(entrant, prompts[pid], variant="persona")
+            reply, usage = call_provider(entrant, prompts[pid], with_usage=True)
+            _log_reply(r["round_id"], entrant, ih, prompts[pid], reply, usage,
+                       persona=pid)
             parsed = parse_survey_reply(reply, spec)
         except Exception as e:                 # noqa: BLE001 - collected below
             with lock:
@@ -974,9 +1513,14 @@ def forecast_persona(entrant, r, history=None, previous=None):
 
     mean = personas.aggregate(spec["aggregate"], answers, weights)
     sd = personas.sd_for(weights, history, scale=spec.get("se_scale", 1.0))
-    note = (f"{model_id(entrant)}, harness v1, variant=persona, "
+    # How many respondents came out of the log rather than off the wire is part
+    # of what this panel is: a run that resumed 190 of 192 bought two answers,
+    # and the note is where a reader finds that out.
+    note = (f"{model_id(entrant)}, harness v1, via={route(entrant)['via']}, "
+            f"context={resolve(entrant)[1]} elicitation=persona, "
             f"{len(answers)}/{len(panel)} respondents, "
-            f"{responded:.0%} of panel weight, "
+            + (f"{len(replayed)} replayed, " if replayed else "")
+            + f"{responded:.0%} of panel weight, "
             f"aggregate={spec['aggregate']}; in={ih}")
     return {
         "round_id": r["round_id"],
@@ -988,22 +1532,152 @@ def forecast_persona(entrant, r, history=None, previous=None):
 
 # --- entry point -----------------------------------------------------------
 
-def forecast(entrant, r, history=None, previous=None, variant=None,
-             news=None):
+def _retrieve(entrant, r, history):
+    """The web condition's first turn, run once per (round, entrant) and frozen.
+
+    The frozen file *is* the cache. A round's corpus is part of what the
+    entrant was shown at lock time, so it is written once and read forever
+    after: the six-hourly refresh does not re-search, a rerun cannot get a
+    different corpus, and the forecast stays derivable from the repository.
+    Without that, this would be the only arm in the arena that no one --
+    including us -- could reproduce, because search results change by the
+    minute.
+    """
+    from .adapters import search as search_adapter
+    frozen = search_adapter.for_round(r["round_id"], entrant)
+    if frozen is not None:
+        return frozen
+    queries = parse_queries(call_provider(
+        entrant, build_query_prompt(r, history, "web")))
+    records = search_adapter.gather(queries)
+    if not records:
+        raise RuntimeError(
+            f"{entrant} asked for {len(queries)} search(es) on "
+            f"{r['round_id']} and none returned anything. Refusing to file a "
+            "web forecast with an empty corpus, which would be its recent10 "
+            "twin under a different name.")
+    search_adapter.record_round(r["round_id"], entrant, queries, records)
+    return search_adapter.for_round(r["round_id"], entrant)
+
+def _ask(entrant, prompt, previous, round_id):
+    """Ask the configured route; on a terminal failure, ask the standby.
+
+    Returns (topline, via, input_hash, replayed), or (None, via, hash, False)
+    meaning the forecast already on disk was produced by the standby from this
+    exact prompt and should be kept rather than bought again. `replayed` says
+    the topline came out of the reply log rather than out of a call, which the
+    caller writes into the notes -- a forecast has to say whether it was bought
+    now or recovered.
+
+    **This is where the reply log is read and written, both routes.** Not in
+    `forecast`, which knows only the configured route's hash: a reply bought
+    from the standby is keyed under the standby's hash, and that is precisely
+    the run most likely to have died halfway -- the standby exists for days when
+    a vendor account is disabled. Checking one hash in the caller would resume
+    the easy case and re-buy the hard one. So each hash is looked up immediately
+    before the call that would otherwise pay for it, and every reply is logged
+    the moment it lands, before `parse_forecast` gets a chance to reject it.
+
+    Three further properties are worth stating, because each is a bug that was
+    available here:
+
+    **A forecast keeps the hash of the route that produced it.** So when the
+    vendor account comes back, the direct hash no longer matches, the next run
+    re-asks the vendor, and the entrant is upgraded out of the standby without
+    anyone having to notice it had been demoted. The reverse -- storing the
+    direct hash for a fallback forecast -- would pin the entrant to the standby
+    for the rest of the season.
+
+    **The standby's own cache is checked before it is billed.** Without that,
+    a fallback forecast never matches the direct hash, so every six-hourly run
+    would re-buy an answer to a prompt that had not changed.
+
+    **A dead route is remembered for the process only.** One terminal failure
+    marks it, and the remaining entrants on that route skip straight to the
+    standby instead of each paying a failed request first. Nothing is written
+    down, so the next run tests the vendor again.
+    """
+    primary = route(entrant)
+    standby = standby_route(entrant)
+    ih = prompt_hash(entrant, prompt)
+
+    # Ahead of the key check and the dead-route check on purpose: a logged reply
+    # is free and already answers this exact (endpoint, prompt), so whether the
+    # vendor is reachable right now does not come into it.
+    top = _replayed(round_id, entrant, ih, parse_forecast)
+    if top is not None:
+        return top, primary["via"], ih, True
+
+    if standby is not None and not os.environ.get(primary["env"]):
+        # Not an error to catch: a key that is not in the environment will not
+        # appear halfway through the run, and reaching the provider to be told
+        # so costs a request and a confusing traceback.
+        err = f"no {primary['env']} in the environment"
+    elif standby is not None and route_is_down(primary):
+        err = "already failed terminally earlier in this run"
+    else:
+        try:
+            text, usage = call_provider(entrant, prompt, with_usage=True)
+            _log_reply(round_id, entrant, ih, prompt, text, usage)
+            return parse_forecast(text), primary["via"], ih, False
+        except Exception as e:                  # noqa: BLE001 - re-raised below
+            if standby is None or not terminal_failure(e):
+                raise
+            mark_route_down(primary, str(e))
+            err = e
+
+    fb_hash = prompt_hash(entrant, prompt, via="openrouter")
+    note = (previous or {}).get("notes") or ""
+    if f"in={fb_hash}" in note and not note.startswith("MOCK"):
+        return None, "openrouter", fb_hash, False
+    top = _replayed(round_id, entrant, fb_hash, parse_forecast)
+    if top is not None:
+        return top, "openrouter", fb_hash, True
+    try:
+        text, usage = call_provider(entrant, prompt, with_usage=True,
+                                    via="openrouter")
+        _log_reply(round_id, entrant, fb_hash, prompt, text, usage,
+                   via="openrouter")
+        return parse_forecast(text), "openrouter", fb_hash, False
+    except Exception as e:
+        # Both routes are gone. Report the *first* failure as the cause, since
+        # that is the account that actually needs attention, and name the
+        # standby's failure too so nobody debugs a working gateway.
+        raise RuntimeError(
+            f"direct route failed ({err}) and the OpenRouter standby also "
+            f"failed ({e})") from e
+
+
+def forecast(entrant, r, history=None, previous=None, context=None,
+             elicitation=None, news=None, search=None):
     """One forecast dict for a round definition with baselines attached.
 
     `previous` is the forecast already on disk for this (round, entrant), if
     any. When its recorded input hash matches the prompt we would send now,
     it is returned unchanged and no API call is made. The variant is part of
     the prompt, so changing it correctly misses the cache.
+
+    Three layers, in this order, and only the third one costs anything:
+
+      1. `previous` carries `in=<ih>` for the prompt we would send -- return it.
+      2. the reply log has a reply to that exact prompt that parses -- file it,
+         marked `replayed` (`_ask`, which owns both routes' hashes).
+      3. pay for the call, and write the reply down the moment it arrives.
+
+    So a run that dies, or a reply that does not parse, costs the tokens once.
     """
     per = r["baselines"]["persistence"]
     # The condition is carried by the entrant id, so a caller cannot file a
     # forecast under one entrant while prompting for another.
-    variant = variant or resolve(entrant)[1]
-    if variant == "persona":
+    _, ctx_of_id, eli_of_id = resolve(entrant)
+    context = context or ctx_of_id
+    elicitation = elicitation or eli_of_id
+    if elicitation == "persona":
         return forecast_persona(entrant, r, history, previous)
-    prompt = build_prompt(r, history, variant, news=news)
+    if context == "web" and search is None:
+        search = _retrieve(entrant, r, history)
+    prompt = build_prompt(r, history, context, elicitation, news=news,
+                          search=search)
     ih = prompt_hash(entrant, prompt)
 
     if previous and f"in={ih}" in (previous.get("notes") or "") \
@@ -1013,7 +1687,7 @@ def forecast(entrant, r, history=None, previous=None, variant=None,
     if not has_key(entrant):
         if not ALLOW_MOCK:
             raise RuntimeError(
-                f"{entrant}: no {MODELS[resolve(entrant)[0]]['env']} in the "
+                f"{entrant}: no {route(entrant)['env']} in the "
                 "environment. Set the key, or set SSA_ALLOW_MOCK=1 to file a "
                 "labelled placeholder instead.")
         top = mock_forecast(entrant, r["round_id"], per["mean"], per["sd"])
@@ -1021,9 +1695,18 @@ def forecast(entrant, r, history=None, previous=None, variant=None,
                 f"replaced by real output once keys are added; in={ih}")
     else:
         try:
-            top = parse_forecast(call_provider(entrant, prompt))
-            note = (f"{model_id(entrant)}, harness v1, variant={variant}, "
-                    f"1 sample; in={ih}")
+            top, via, ih, replayed = _ask(entrant, prompt, previous,
+                                          r["round_id"])
+            if top is None:            # the standby already answered this exact
+                return previous        # prompt; do not pay for it twice
+            # `in={ih}` stays last and stays byte-identical: it is what the next
+            # run matches on, so the marker goes in front of it rather than
+            # after the hash it would otherwise be read as part of.
+            note = (f"{model_id(entrant, via)}, harness v1, via={via}, "
+                    f"context={context} elicitation={elicitation}, "
+                    f"1 sample"
+                    f"{', replayed from the reply log' if replayed else ''}"
+                    f"; in={ih}")
         except Exception as e:
             if not ALLOW_MOCK:
                 raise RuntimeError(

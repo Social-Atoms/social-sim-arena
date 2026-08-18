@@ -18,46 +18,66 @@ filters were implicit in adapter code, which had two consequences worth naming:
 
 Adding a tracker means adding a row here, and nothing else.
 """
+from .adapters import aaii as aaii_adapter
 from .adapters import civiqs as civiqs_adapter
-from .adapters import fredcsv
 from .adapters import silverbulletin as sb
+from .adapters import trends as trends_adapter
 from .adapters import umich as umich_adapter
+from .adapters import wikipedia as wikipedia_adapter
 
-# Set by michigan_history() to whichever source answered.
+# Set by michigan_history() to whichever source answered, plus the URL that
+# answered and the body it returned. The body is what ssa/provenance.py
+# archives: a page crediting a source for a value it does not carry is wrong in
+# exactly the direction that matters here, and so is a vintage reconstructed
+# from parsed rows rather than from the file.
 MICHIGAN_SOURCE = "not yet fetched"
+MICHIGAN_URL = umich_adapter.URL
+MICHIGAN_RAW = ""
 
 
 def michigan_history():
-    """Michigan sentiment, official table first, FRED second.
+    """Michigan sentiment, from the survey's own tables. No fallback.
 
-    The survey's own file carries the current month; FRED republishes it a
-    month late. The official file is also the less reliable of the two: on
-    2026-08-08 it served the full 676-row table and then began returning 404
-    within the hour, and the site's own download links carry per-request
-    tokens, so they cannot be automated. Hence a fallback rather than a swap --
-    take the extra month when it is there, never go dark when it is not.
+    There used to be one, to FRED, "so the arena never goes dark". It went dark
+    in a worse way instead. FRED carries UMCSENT a month behind at Michigan's
+    request, so on the one run where the official table was briefly unreachable
+    the fallback answered with a history ending a month early -- and nothing
+    downstream could tell.
 
-    The lesson this cost: fetches must be mirrored into the repository, which
-    the paper already promises and the code does not yet do. Had the earlier
-    successful pull been archived, July would still be available now.
+    What that cost, concretely. The 2026-08-12 lock snapshot for
+    `umich-2026-08-prelim` froze a history ending in June instead of July, so
+    the round's baselines were anchored on a level the series had already left;
+    and because `resolve.candidate` takes the first release after the frozen
+    history, "the next release" silently became July's final rather than
+    August's preliminary. The round resolved against 55.2, a number published in
+    July and public well before the lock, instead of 51.0. The arena's one
+    claim -- that at lock time the answer does not exist -- failed on its first
+    round, quietly.
 
-    Sets MICHIGAN_SOURCE to whichever source answered, so the site can label the
-    number with where it actually came from. A page crediting FRED for a value
-    FRED does not carry is wrong in exactly the direction that matters here.
+    **A source that is silently a month behind is worse than no source.** So
+    this raises, and the run is loudly broken, which is the same rule
+    `build_trackers` already follows for an empty VoteHub response.
+
+    Sets MICHIGAN_SOURCE, MICHIGAN_URL and MICHIGAN_RAW so the site can credit
+    the file that actually answered and ssa/provenance.py can archive it.
     """
-    global MICHIGAN_SOURCE
-    try:
-        rows = umich_adapter.umich_sentiment()
-        MICHIGAN_SOURCE = ("Surveys of Consumers, University of Michigan "
-                           "(sca.isr.umich.edu), the survey's own monthly table")
-        return rows
-    except Exception as e:                         # noqa: BLE001 - reported
-        print(f"  official Michigan table unavailable ({type(e).__name__}); "
-              "using FRED, which lags one month")
-        MICHIGAN_SOURCE = ("FRED (UMCSENT), which republishes the Michigan "
-                           "index one month late; the survey's own table was "
-                           "unreachable on this run")
-        return fredcsv.umich_sentiment()
+    global MICHIGAN_SOURCE, MICHIGAN_URL, MICHIGAN_RAW
+    MICHIGAN_RAW = umich_adapter.fetch_text()
+    finals = umich_adapter.parse(MICHIGAN_RAW)
+    prelim = umich_adapter.parse_prelim(umich_adapter.fetch_prelim_text())
+    rows = umich_adapter.merge(finals, prelim)
+    if not rows:
+        raise RuntimeError(
+            "Michigan tables parsed to zero rows; refusing to publish an empty "
+            "series (check whether the files moved)")
+    MICHIGAN_URL = umich_adapter.URL
+    newest = rows[-1]["date"]
+    MICHIGAN_SOURCE = (
+        "Surveys of Consumers, University of Michigan (sca.isr.umich.edu): "
+        "tbmics.csv for finals and tbcics.csv for the current preliminary, "
+        f"newest reading {newest}")
+    return rows
+
 
 # source: which adapter and which filters. value: the column to score.
 SERIES = {
@@ -600,6 +620,450 @@ SERIES["civiqs_net_approval_rep"] = {
 }
 
 
+# --- Civiqs sentiment ------------------------------------------------------
+#
+# Four economic-sentiment trackers and one emotion share, all registered voters,
+# all read as the Friday value the same way approval is. They are here for two
+# reasons beyond the topic.
+#
+# First, history. Three of them start 2015-01-16 and carry over six hundred
+# Friday readings, against the 339 releases the whole LLM backtest currently
+# spans. A baseline backtest gains far more from these than from another weekly
+# approval slice.
+#
+# Second, they are *sentiment* rather than approval, and the arena had exactly
+# one such series (Michigan, monthly). These are weekly and they move: measured
+# on the Friday series, mean week-over-week change is 1.03, 1.14, 0.45 and 0.80
+# points, over ranges of 118, 92, 62 and 30 points. That is the check that
+# decided the set -- a series whose null barely moves cannot be scored, because
+# the arena score's denominator is the persistence error and everything divides
+# by it.
+#
+# `scoring.noise_floor` is the usual tool for that check and it is the wrong one
+# here: it returns ~0 for all of these, because Civiqs publishes a smoothed
+# model fit rather than a survey wave, so the published series carries no
+# sampling noise to find. The gate used instead is the persistence error
+# directly.
+#
+# Six of the ten emotions in `describe_feeling_us` failed it -- Proud,
+# Overwhelmed, Satisfied, Ambivalent and Unsure move 0.03 to 0.10 points a week
+# against ranges under 8 -- so only Angry is registered, and Hopeful, Depressed,
+# Scared and Excited (0.17-0.23) are left out as borderline rather than
+# published and quietly unscoreable.
+
+_CIVIQS_METHOD = (
+    "Civiqs is a modeled tracker, not a survey wave: an MRP model over a "
+    "rolling online panel of registered voters, publishing a smoothed daily "
+    "estimate. Two things follow. The published history is revised nightly, so "
+    "the arena scores against its own dated snapshot of what the dashboard "
+    "displayed, not against whatever Civiqs says later. And the smoothing means "
+    "almost all of a week's movement is real signal rather than sampling noise, "
+    "so last Friday's number is a strong guess. The dashboard runs about a day "
+    "behind: the value shown on Friday is the model's estimate for Thursday. "
+    "Shares do not sum to 100; every instrument carries an explicit unsure "
+    "option, which is excluded from both sides of the net.")
+
+_CIVIQS_CADENCE = ("daily model output, read and archived every day; the series "
+                   "scored here is the Friday reading")
+
+
+def _civiqs_net(sid, tracker, label, question, unit, net, method_extra):
+    SERIES[sid] = {
+        "label": label,
+        "tracker": "civiqs",
+        "source": "civiqs",
+        "civiqs": {"name": tracker, "net": net, "weekday": 4},
+        "value": "value",
+        "unit": unit,
+        "cadence": _CIVIQS_CADENCE,
+        "question": question,
+        "methodology": _CIVIQS_METHOD + " " + method_extra,
+        # No `survey`, so `series.survey()` returns None and the persona arm
+        # refuses these by name rather than guessing an instrument -- the same
+        # discipline `civiqs_net_approval_rep` already follows.
+        #
+        # Nothing is lost by waiting: the exact wording and option list are in
+        # every archived snapshot's `question_body` and `choices`. What is
+        # missing is an aggregator. Entries in `personas.AGGREGATORS` are called
+        # as `fn(answers, weights)` and hardcode their own option names, so a
+        # net with two options on each side has none to name, and writing five
+        # bespoke aggregators for an arm that is being redesigned would be work
+        # thrown away. It belongs with the panel rebuild.
+    }
+
+
+_civiqs_net(
+    "civiqs_net_econ_now", "economy_us_now",
+    "Civiqs national economy, net good",
+    ("Civiqs daily tracker: net rating of the condition of the national economy "
+     "among US registered voters (very or fairly good, minus very or fairly "
+     "bad), as the dashboard shows it on Friday"),
+    "net points (good minus bad)",
+    {"minuend": ["Very good", "Fairly good"],
+     "subtrahend": ["Very bad", "Fairly bad"]},
+    ("604 Friday readings from 2015-01-16, over a range of 118 points, mean "
+     "week-over-week change 1.03. Both sides of the net carry two options, "
+     "which is why the quantity is written out here rather than inferred."))
+
+_civiqs_net(
+    "civiqs_net_econ_direction", "economy_us_direction",
+    "Civiqs national economy, net getting better",
+    ("Civiqs daily tracker: net direction of the nation's economy among US "
+     "registered voters (getting better minus getting worse), as the dashboard "
+     "shows it on Friday"),
+    "net points (better minus worse)",
+    {"minuend": ["Getting better"], "subtrahend": ["Getting worse"]},
+    ("604 Friday readings from 2015-01-16, over a range of 92 points, mean "
+     "week-over-week change 1.14. 'Staying about the same' is offered and is "
+     "on neither side of the net, so the two sides do not sum to 100."))
+
+_civiqs_net(
+    "civiqs_net_family_finances", "economy_family_retro",
+    "Civiqs family finances over the last year, net better",
+    ("Civiqs daily tracker: net change in the respondent's own family finances "
+     "over the last year among US registered voters (gotten better minus "
+     "gotten worse), as the dashboard shows it on Friday"),
+    "net points (better minus worse)",
+    {"minuend": ["Gotten better"], "subtrahend": ["Gotten worse"]},
+    ("605 Friday readings from 2015-01-16, over a range of 62 points, mean "
+     "week-over-week change 0.45 -- the least volatile of the four, and the "
+     "one where beating persistence is hardest. It is retrospective and "
+     "personal rather than prospective and national, which is what makes it "
+     "worth carrying next to the other three."))
+
+_civiqs_net(
+    "civiqs_net_inflation_concern", "inflation_impact",
+    "Civiqs inflation concern, net concerned",
+    ("Civiqs daily tracker: net concern about the impact of inflation on "
+     "consumer goods among US registered voters (very or somewhat concerned, "
+     "minus a little or not at all concerned), as the dashboard shows it on "
+     "Friday"),
+    "net points (concerned minus not concerned)",
+    {"minuend": ["Very concerned", "Somewhat concerned"],
+     "subtrahend": ["Not concerned at all", "A little concerned"]},
+    ("166 Friday readings from 2023-06-09, over a range of 30 points, mean "
+     "week-over-week change 0.80. The shortest history of the four because the "
+     "tracker itself is newer."))
+
+SERIES["civiqs_angry_share"] = {
+    "label": "Civiqs share angry about the country",
+    "tracker": "civiqs",
+    "source": "civiqs",
+    # A share, not a net: the tracker declares no net and offers ten emotions,
+    # so any net over it would be this repository's construction rather than
+    # the source's published number.
+    "civiqs": {"name": "describe_feeling_us", "choice": "Angry", "weekday": 4},
+    "value": "value",
+    "unit": "percent",
+    "cadence": _CIVIQS_CADENCE,
+    "question": ("Civiqs daily tracker: percent of US registered voters who "
+                 "describe themselves as angry about the way things are going "
+                 "in the United States, as the dashboard shows it on Friday"),
+    "methodology": _CIVIQS_METHOD + (
+        " Ten emotions are offered and the respondent picks one, so this is a "
+        "share of a ten-way choice rather than of a binary. Angry is the only "
+        "one of the ten registered: 166 Friday readings from 2023-06-09 over a "
+        "range of 16 points, mean week-over-week change 0.31. Proud, "
+        "Overwhelmed, Satisfied, Ambivalent and Unsure move 0.03 to 0.10 points "
+        "a week over ranges under 8, which is not a forecasting question, and "
+        "Hopeful, Depressed, Scared and Excited sit between at 0.17 to 0.23 and "
+        "are left out rather than published as marginal."),
+    # No `survey`, for the same reason as the four nets above: a ten-way choice
+    # has no aggregator in `personas.AGGREGATORS`, and the wording is preserved
+    # in the archived snapshots until the panel rebuild gives it one.
+}
+
+
+# --- Wikipedia pageviews -----------------------------------------------------
+#
+# The first *behavioral* target in the registry. Every series above measures
+# stated opinion: someone asked a question and someone answered it. These count
+# an action -- how many times human readers loaded an article -- published
+# daily by the Wikimedia Pageviews API and summed by the adapter into
+# Monday-Sunday weeks. A count is a census of what it measures: no sampling
+# error, no house effect, no nightly re-modelling, and a day's number is final
+# once the logs are aggregated and never revised. All forecast error on these
+# series is therefore about the future, none of it about measurement.
+#
+# They also sit in the opposite regime from Civiqs. Measured on the 188
+# complete weeks from 2023-01-08 to 2026-08-09: the Trump article's weekly
+# total ranged 127 thousand to 5.43 million views with a mean absolute
+# week-over-week change of 31.7%, and Taylor Swift's ranged 76 thousand to
+# 1.71 million at 31.3%. Where the Civiqs registrations worry that persistence
+# is nearly unbeatable, here last week's number misses by nearly a third of
+# the level on an average week: attention is spiky, the spikes are
+# event-driven, and a model that reads the calendar and the news cycle has
+# real room to beat the null.
+#
+# Why these two articles, specifically:
+#
+# - **Donald_Trump** is the same subject as the approval trackers above,
+#   measured as attention rather than opinion. The pairing is the point: an
+#   indictment or a debate can multiply the week's pageviews severalfold while
+#   moving approval by a point or less, so a model that has learned the news
+#   cycle should forecast this series, and a model that has only learned the
+#   level of opinion should not.
+#
+# - **Taylor_Swift** is the non-political control at a comparable scale of
+#   fame, moved by album cycles and tours rather than by anything else this
+#   registry tracks. Skill on both articles says a model understands pageview
+#   dynamics; skill on Trump alone says it understands the political news
+#   cycle; skill on neither localises the failure to the behavioral target
+#   itself rather than to politics.
+#
+# Deliberately NO `survey` instrument on either row. A persona panel cannot be
+# polled for a pageview count: there is no question a simulated respondent
+# could answer whose honest aggregate is "how many times will everyone load
+# this article next week" -- a respondent does not know their own future
+# pageviews, let alone everyone else's. `series.survey()` returning None makes
+# the persona arm refuse these by name, the same discipline as
+# civiqs_net_approval_rep.
+
+_WIKI_METHOD = (
+    "Wikimedia Pageviews REST API (wikimedia.org/api/rest_v1), en.wikipedia "
+    "only -- the English edition, not other language editions. Counts use the "
+    "source's own agent=user split, which excludes traffic its classifier "
+    "marks as spiders or automated: the question is about human attention, "
+    "and a scraper re-crawling the wiki moves the raw count without a single "
+    "person having cared. Daily counts across desktop, mobile web and the "
+    "apps are summed into Monday-Sunday weeks and reported in thousands of "
+    "views; a day's count is a census computed once from the request logs and "
+    "never revised, so unlike a poll there is no sampling error and no house "
+    "effect. ")
+
+SERIES["wiki_views_trump"] = {
+    "label": "Wikipedia weekly pageviews, Donald Trump",
+    "tracker": "wikipedia",
+    "source": "wikipedia",
+    "wikipedia": {"article": "Donald_Trump"},
+    "value": "value",
+    "unit": "thousand pageviews (Mon-Sun week)",
+    "cadence": "weekly, data final ~2 days after the week ends",
+    "question": ("total en.wikipedia pageviews by human readers of the "
+                 "article 'Donald Trump', in thousands, for the "
+                 "Monday-to-Sunday week ending the Sunday the round names"),
+    "methodology": _WIKI_METHOD + (
+        "The series is attention, not opinion: it spikes severalfold on "
+        "indictments, elections and inaugurations regardless of which way "
+        "approval moves. Measured over the 188 complete weeks from "
+        "2023-01-08: median 337 thousand views a week, range 127 thousand to "
+        "5.43 million, mean absolute week-over-week change 31.7% -- last "
+        "week's number is a genuinely beatable baseline here."),
+}
+
+SERIES["wiki_views_taylor_swift"] = {
+    "label": "Wikipedia weekly pageviews, Taylor Swift",
+    "tracker": "wikipedia",
+    "source": "wikipedia",
+    "wikipedia": {"article": "Taylor_Swift"},
+    "value": "value",
+    "unit": "thousand pageviews (Mon-Sun week)",
+    "cadence": "weekly, data final ~2 days after the week ends",
+    "question": ("total en.wikipedia pageviews by human readers of the "
+                 "article 'Taylor Swift', in thousands, for the "
+                 "Monday-to-Sunday week ending the Sunday the round names"),
+    "methodology": _WIKI_METHOD + (
+        "The non-political control next to the Trump pageview series: "
+        "attention here is moved by album releases, tours and award shows "
+        "rather than by the news cycle the rest of this registry lives in. "
+        "Measured over the 188 complete weeks from 2023-01-08: median 203 "
+        "thousand views a week, range 76 thousand to 1.71 million, mean "
+        "absolute week-over-week change 31.3%."),
+}
+
+
+# --- AAII investor sentiment -------------------------------------------------
+#
+# The first market-sentiment series in the registry, and the first weekly
+# tracker that is neither political nor a Civiqs model. The headline is the
+# bull-bear spread: percent of AAII members bullish on stocks over the next
+# six months, minus percent bearish. Published weekly since 1987, which makes
+# it one of the oldest sentiment series in existence -- though the machine-
+# readable route only reaches the results page's ~22-week rolling window; the
+# full history lives in an .xls this repository cannot read without a
+# dependency (see ssa/adapters/aaii.py for that trade, stated in full).
+#
+# Two facts about the target that entrants will run into:
+#
+# - **The long-run mean spread is about +6.5 points** (members lean bullish on
+#   average) **and the series is famously mean-reverting** -- extreme readings
+#   are widely used as contrarian signals precisely because they decay. That
+#   makes persistence a strong null here: at a one-week horizon the level
+#   carries, mean reversion operates over months, and the week-over-week noise
+#   punishes anyone who reaches for the long-run mean too eagerly.
+# - The three shares are exhaustive (bullish + neutral + bearish = 100), so
+#   the spread moves two-for-one with any bull<->bear flow but not at all with
+#   flows into neutral. A forecast of the spread is implicitly a forecast of
+#   which side the fence-sitters fall off.
+SERIES["aaii_bull_bear_spread"] = {
+    "label": "AAII bull-bear spread",
+    "tracker": "aaii",
+    "source": "aaii", "value": "spread",
+    "unit": "percentage points (bullish minus bearish)",
+    "cadence": ("weekly; voting runs Thursday through Wednesday, rows are "
+                "dated by the closing Wednesday, results publish Thursday"),
+    "question": ("AAII Investor Sentiment Survey: percent of AAII members "
+                 "bullish about the stock market's direction over the next "
+                 "six months, minus percent bearish (the bull-bear spread)"),
+    "methodology": (
+        "weekly online poll of American Association of Individual Investors "
+        "members, running since 1987; one vote per member per weekly voting "
+        "period (Thursday through Wednesday), results published Thursday. "
+        "Bullish, neutral and bearish shares sum to 100. The long-run mean "
+        "spread is roughly +6.5 points and the series is famously "
+        "mean-reverting, which is why extreme readings are watched as "
+        "contrarian signals. Respondents are self-selected active individual "
+        "investors, not a probability sample of any general population."),
+    # No `survey` instrument, deliberately. The persona panel is a
+    # general-population demographic panel; AAII members are a self-selected
+    # population of active individual investors (older, wealthier, far more
+    # market-engaged than any demographic cell approximates). Putting this
+    # question to the panel would answer "what do simulated US adults think",
+    # score it against "what AAII members said", and call the gap model error.
+    # `series.survey()` returning None makes the persona arm refuse the series
+    # by name -- the same discipline as civiqs_net_approval_rep -- until a
+    # panel with an AAII-member population definition exists.
+}
+
+
+# --- Google Trends: the market-research track -------------------------------
+#
+# The first two *behavioral* series in the registry: nobody was asked anything.
+# The value is an index over what people typed into a search box, which is a
+# different kind of quantity from every survey and model tracker above, and
+# the reason the arena wants it: a simulated society that can only reproduce
+# poll toplines has learned polls, not people. Search interest moves on product
+# news, recalls, launches and price cuts -- events with public lead-ups an
+# entrant can reason about -- while its measurement quirks (window
+# renormalization, sampling jitter) are the arena's problem, solved by the
+# archive, not the entrant's.
+#
+# Both series read `trends.as_archived`, so every registration decision that
+# matters is documented once, on the adapter: the fixed 12-month window, the
+# one-keyword-per-request rule, why the dated snapshot in `trends/` is the
+# resolution truth, and why a completed week's value is frozen by the earliest
+# snapshot that holds it. What belongs here is only what differs per series:
+# the query string.
+#
+# Neither entry carries a `survey` block, deliberately and permanently -- not,
+# as with the Civiqs cells, pending an aggregator. A persona can be asked how
+# it feels about Tesla; it cannot be asked "how many times did people like you
+# Google 'Tesla' this week, as a share of all searches, scaled to the busiest
+# week of the year". The quantity only exists as an aggregate over behavior,
+# so `series.survey()` returns None and the persona arm refuses these by name.
+
+_TRENDS_UNIT = "search interest index (0-100, 12-month window)"
+
+_TRENDS_CADENCE = ("weekly, Sunday through Saturday; the completed week "
+                   "appears in the following days' snapshots, which are read "
+                   "and archived daily")
+
+_TRENDS_METHOD = (
+    "Google Trends is a behavioral index, not a survey: no one was asked "
+    "anything. Google counts searches containing the query, divides by total "
+    "search volume, and scales the result so the busiest week of the "
+    "requested window reads 100 -- the arena always requests the trailing 12 "
+    "months, so the scale is relative to the past year's peak and can shift "
+    "when a new peak enters the window or an old one leaves it. The index is "
+    "computed from a sample of searches, so the same completed week can read "
+    "a point or two differently on different days. The arena therefore "
+    "archives a dated snapshot of every fetch and scores against its own "
+    "archive: a completed week's value is whatever the earliest snapshot "
+    "containing that week showed, and later re-reads do not move it. The "
+    "in-progress week is never scored.")
+
+
+def _trends(sid, query, asks):
+    SERIES[sid] = {
+        "label": f"Google Trends search interest: {query}",
+        "tracker": "google_trends",
+        "source": "trends",
+        "trends": {"query": query, "geo": trends_adapter.GEO},
+        "value": "value",
+        "unit": _TRENDS_UNIT,
+        "cadence": _TRENDS_CADENCE,
+        "question": (
+            f"Google Trends weekly search interest for the query "
+            f"'{query}' in the United States (web search, all categories): "
+            f"the 0-100 index for the most recent complete Sunday-to-Saturday "
+            f"week, normalized within the trailing 12-month window, as "
+            f"captured by the arena's archived snapshot. {asks}"),
+        "methodology": _TRENDS_METHOD,
+        # No `survey`: see the block comment above. This is a permanent
+        # property of a behavioral target, not a missing feature.
+    }
+
+
+_trends("trends_tesla", "Tesla",
+        "Interest tracks product and company news -- launches, recalls, "
+        "earnings, Musk coverage -- so the week's public events are the "
+        "signal to reason over.")
+_trends("trends_iphone", "iPhone",
+        "Interest is strongly seasonal around Apple's September announcement "
+        "cycle and product rumors, so the calendar itself is informative.")
+
+
+# --- the Civiqs 16-cell population profile ----------------------------------
+#
+# Fifteen more cuts of the same modeled approval tracker, completing -- with
+# civiqs_net_approval_rep above -- one cell per bucket of every demographic
+# axis the dashboard exposes: party (3), age (4), race (4), education (3),
+# gender (2). Sixteen numbers that together describe *which people* moved.
+#
+# These are the data layer of the joint population-profile task, and that is
+# the only capacity in which most of them earn a place. As standalone scalar
+# rounds the measured objections stand (see the block above
+# civiqs_net_approval_rep): Democrats are floor-bound, independents and the
+# young echo the national line at 0.97+. But a profile scored jointly with the
+# energy score is exactly where a flat cell still carries information -- a
+# model that believes Democrats might move books real loss against one that
+# knows they will not -- so every cell is collected daily and none except
+# Republicans gets its own round. Labels are byte-exact from the dashboard's
+# own demographics list (fetched 2026-08-18); a typo'd label is a hard error
+# in the adapter, never a silently-national series.
+_PROFILE_CELLS = [
+    # id suffix          axis          label                        short
+    ("dem",              "party",      "Democrat",                  "Democrats"),
+    ("ind",              "party",      "Independent",               "independents"),
+    ("age_18_34",        "age",        "18-34",                     "adults 18-34"),
+    ("age_35_49",        "age",        "35-49",                     "adults 35-49"),
+    ("age_50_64",        "age",        "50-64",                     "adults 50-64"),
+    ("age_65_up",        "age",        "65+",                       "adults 65 and older"),
+    ("race_white",       "race",       "White",                     "White registered voters"),
+    ("race_black",       "race",       "Black or African-American", "Black registered voters"),
+    ("race_hispanic",    "race",       "Hispanic/Latino",           "Hispanic/Latino registered voters"),
+    ("race_other",       "race",       "Other",                     "registered voters of other races"),
+    ("edu_noncollege",   "education",  "Non-College Graduate",      "non-college graduates"),
+    ("edu_college",      "education",  "College Graduate",          "college graduates"),
+    ("edu_postgrad",     "education",  "Postgraduate",              "postgraduates"),
+    ("male",             "gender",     "Male",                      "men"),
+    ("female",           "gender",     "Female",                    "women"),
+]
+
+for _sfx, _axis, _label, _short in _PROFILE_CELLS:
+    SERIES[f"civiqs_net_approval_{_sfx}"] = {
+        "label": f"Civiqs Trump net approval, {_short}",
+        "tracker": "civiqs",
+        "source": "civiqs",
+        "civiqs": {"name": _CIVIQS_APPROVAL, "filters": {_axis: _label},
+                   "net": True, "weekday": 4},
+        "value": "value",
+        "unit": "net points (approve minus disapprove)",
+        "cadence": _CIVIQS_CADENCE,
+        "question": ("Civiqs daily tracker: Donald Trump's net job approval "
+                     "(percent approve minus percent disapprove) among US "
+                     f"registered voters, {_short} only, as the dashboard "
+                     "shows it on Friday"),
+        "methodology": _CIVIQS_METHOD + (
+            f" Filtered to the dashboard's {_axis} = {_label} subgroup. "
+            "Collected as one cell of the sixteen-cell population profile; "
+            "scored jointly with the other cells, not as its own round."),
+        # No `survey` instrument: personas.weights_for cannot express a
+        # subgroup-only population -- same refusal as civiqs_net_approval_rep.
+    }
+
+
+
 def describe(series_id):
     """The question and methodology text an entrant is entitled to see."""
     s = SERIES[series_id]
@@ -631,6 +1095,13 @@ def build_all(sources=None):
         src["sb_generic"] = sb.fetch(sb.GENERIC_URL)
     if "umich" in need and "umich" not in src:
         src["umich"] = michigan_history()
+    # `src["aaii"]` holds *parsed* rows rather than the page body, because the
+    # page's dates carry no year: parsing needs the `asof` from the response
+    # that served it, and the two must never be separated (aaii.fetch_text
+    # returns the pair, aaii.fetch keeps them together). Tests inject rows
+    # here and stay off the network.
+    if "aaii" in need and "aaii" not in src:
+        src["aaii"] = aaii_adapter.fetch()
     # Civiqs is the one source with no single file to prefetch: every tracker
     # and every subgroup is its own ~2 MB page. So `src["civiqs"]` is not a
     # payload but a per-series override map -- `{series_id: [{date, value}]}` --
@@ -641,6 +1112,22 @@ def build_all(sources=None):
     # per series per refresh.
     if "civiqs" in need and "civiqs" not in src:
         src["civiqs"] = {}
+    # Wikipedia is fetched once per *article*, not once per series or per
+    # refresh of the map. `src["wikipedia"]` is a per-article override map --
+    # {article: [{date, views}] daily rows} -- which tests inject to stay off
+    # the network, and which the loop below fills on first use so two series
+    # over one article would cost one request. The rows are daily on purpose:
+    # the Monday-Sunday aggregation is this repository's step, and injecting
+    # pre-aggregated weeks would let a test pass without ever exercising it.
+    if "wikipedia" in need and "wikipedia" not in src:
+        src["wikipedia"] = {}
+
+    # Trends works the same way as Civiqs and for the same reason: no single
+    # file to prefetch, one archived request cycle per query per day, so the
+    # override is a per-series map -- `{series_id: [{date, value}]}` -- and
+    # anything not in it is built from (or fetched into) `trends/`.
+    if "trends" in need and "trends" not in src:
+        src["trends"] = {}
 
     out = {}
     for sid, spec in SERIES.items():
@@ -653,6 +1140,8 @@ def build_all(sources=None):
         elif spec["source"] == "sb_generic":
             recs = sb.generic_ballot_polls(rows=src["sb_generic"], **f)
             out[sid] = sb.to_series(recs, spec["value"])
+        elif spec["source"] == "aaii":
+            out[sid] = aaii_adapter.to_series(src["aaii"], spec["value"])
         elif spec["source"] == "civiqs":
             cfg = spec["civiqs"]
             given = src["civiqs"].get(sid)
@@ -661,6 +1150,18 @@ def build_all(sources=None):
                     cfg["name"], cfg.get("filters"),
                     choice=cfg.get("choice"), net=cfg.get("net", False),
                     weekday=cfg.get("weekday"))
+        elif spec["source"] == "wikipedia":
+            art = spec["wikipedia"]["article"]
+            if art not in src["wikipedia"]:
+                src["wikipedia"][art] = wikipedia_adapter.fetch_daily(art)
+            out[sid] = wikipedia_adapter.weekly_series(
+                art, daily=src["wikipedia"][art])
+        elif spec["source"] == "trends":
+            cfg = spec["trends"]
+            given = src["trends"].get(sid)
+            out[sid] = list(given) if given is not None else \
+                trends_adapter.as_archived(cfg["query"],
+                                           cfg.get("geo", trends_adapter.GEO))
         else:
             raise ValueError(f"{sid}: unknown source {spec['source']}")
         if not out[sid]:

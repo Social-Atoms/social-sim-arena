@@ -6,11 +6,35 @@ rather than the model, so the arithmetic below is the actual estimator and is
 checked against the pollsters' own definitions.
 """
 import os
+import shutil
 import sys
+import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ssa import harness, personas, series as series_registry
+
+
+class TempReplyLog:
+    """Reply-log writes sent to a temp dir for the duration.
+
+    The live persona path writes every respondent's reply to `replies/` as it
+    arrives; a test that runs a 192-person panel would otherwise leave 192 files
+    in the tree.
+    """
+
+    def __enter__(self):
+        self.dir = tempfile.mkdtemp(prefix="ssa-replies-")
+        self.saved = os.environ.get("SSA_REPLIES_DIR")
+        os.environ["SSA_REPLIES_DIR"] = self.dir
+        return self
+
+    def __exit__(self, *a):
+        if self.saved is None:
+            os.environ.pop("SSA_REPLIES_DIR", None)
+        else:
+            os.environ["SSA_REPLIES_DIR"] = self.saved
+        shutil.rmtree(self.dir, ignore_errors=True)
 
 
 def test_panel_is_deterministic_and_weights_sum_to_one():
@@ -145,36 +169,50 @@ def test_web_search_is_refused_wherever_the_answer_is_already_published():
         assert "already published" in str(e), e
 
 
-def test_web_is_refused_for_models_whose_vendor_hosts_no_search():
-    """Speaking the OpenAI protocol is not the same as serving OpenAI's tools.
-    Five hosts here are OpenAI-compatible and have no hosted search; sending
-    them the tool would 400, or worse, be ignored -- which would publish a
-    'web' arm identical to its closed-book twin."""
-    for m in ("grok", "qwen-3.7", "deepseek-pro", "glm"):
-        assert m not in harness.WEB_CAPABLE, m
-        assert harness.MODELS[m]["api"] == "openai", "the trap is protocol vs vendor"
-    for m in ("gpt-5.6-terra", "claude-opus", "gemini-pro"):
-        assert m in harness.WEB_CAPABLE, m
-
-    # such a model never appears in a roster ...
-    ids = [e for e, _, v in harness.elicitation_entrants(
+def test_web_runs_on_every_entrant_now_that_the_index_is_ours():
+    """The hosted-search design covered 9 of 15: six models speak OpenAI-
+    compatible chat completions and serve no search tool, and dispatching on
+    the protocol would have sent OpenAI's `web_search` to five hosts that do
+    not run it. One shared index removes both that trap and the confound of
+    comparing models across three different corpora."""
+    assert not hasattr(harness, "WEB_CAPABLE"), \
+        "the per-vendor capability table should be gone, not dormant"
+    ids = [e for e, *_ in harness.elicitation_entrants(
         variants=("web",), models=harness.active_models())]
-    assert "grok-web" not in ids and "glm-web" not in ids
-    assert "claude-opus-web" in ids
+    assert len(ids) == len(harness.active_models()), ids
+    for m in ("grok", "deepseek-pro", "glm", "claude-opus"):
+        if m in harness.active_models():
+            assert f"{m}-web" in ids, m
 
-    # ... and is refused by name if asked for directly
-    import os
-    os.environ.setdefault("DEEPSEEK_API_KEY", "x")
-    try:
-        harness.call_provider("deepseek-pro", "p", variant="web")
-        assert False, "must refuse"
-    except ValueError as e:
-        assert "vendor-hosted search" in str(e), e
+
+def test_a_web_forecast_without_a_corpus_is_refused():
+    """A web entrant filed with nothing retrieved is a byte-identical copy of
+    its recent10 twin under a different leaderboard row -- a published
+    comparison between two arms that were never different. Same refusal, same
+    reason, as the news condition."""
+    r = {"round_id": "r1", "series": "yougov_approval", "unit": "%",
+         "question": "q", "release_at": "2026-08-20T14:00:00Z"}
+    hist = [{"date": f"2026-08-{i+1:02d}", "value": 40.0 + i} for i in range(12)]
+    for empty in (None, {}, {"results": []}):
+        try:
+            harness.build_prompt(r, hist, "web", "direct", search=empty)
+            assert False, f"a web prompt was built with search={empty!r}"
+        except ValueError as e:
+            assert "retrieved corpus" in str(e), e
+    ok = harness.build_prompt(r, hist, "web", "direct", search={
+        "asked_at": "2026-08-18T14:00:00Z",
+        "results": [{"query": "trump approval august",
+                     "results": [{"title": "T", "url": "u", "published": None,
+                                  "content": "SOMETHING RETRIEVED"}]}]})
+    assert "SOMETHING RETRIEVED" in ok
+    assert "trump approval august" in ok, "the model's own query is shown back"
 
 
 def test_gemini_puts_tools_at_the_body_root():
-    """Nested under generationConfig they are accepted and ignored, which would
-    produce a 'web' condition that never searched."""
+    """`tools` is a sibling of generationConfig, not a member. Nested, it is
+    accepted and silently ignored. The arena no longer sends a search tool --
+    the web arm runs one index of its own -- but _call_gemini still shapes
+    whatever `params` carries, so the trap stays one careless caller away."""
     sent = {}
 
     def fake_post(url, headers=None, json=None, timeout=None):
@@ -185,7 +223,7 @@ def test_gemini_puts_tools_at_the_body_root():
     harness.requests.post = fake_post
     try:
         cfg = dict(harness.MODELS["gemini-pro"])
-        cfg["params"] = dict(harness.WEB_TOOLS["gemini"], temperature=1)
+        cfg["params"] = {"tools": [{"google_search": {}}], "temperature": 1}
         harness._call_gemini(cfg, "https://h", "k", "m", "p")
         assert "tools" in sent, "tools must be a sibling of generationConfig"
         assert "tools" not in sent.get("generationConfig", {})
@@ -209,12 +247,14 @@ def test_persona_forecast_runs_the_panel_and_aggregates_it():
     are pooled by the pollster's rule, and the id carries the condition."""
     calls = []
 
-    def fake_call(entrant, prompt, with_usage=False, variant=None):
+    def fake_call(entrant, prompt, with_usage=False, context=None):
         calls.append(prompt)
         # Republicans approve, everyone else does not -- so the expected
         # topline is exactly the Republican share of the panel.
-        return ('{"approval": "approve"}' if "Republican" in prompt
+        text = ('{"approval": "approve"}' if "Republican" in prompt
                 else '{"approval": "disapprove"}')
+        return (text, {"input_tokens": 300, "output_tokens": 8,
+                       "thinking_tokens": None}) if with_usage else text
 
     real_call, real_key = harness.call_provider, harness.has_key
     harness.call_provider = fake_call
@@ -225,7 +265,8 @@ def test_persona_forecast_runs_the_panel_and_aggregates_it():
              "baselines": {"persistence": {"mean": 40.0, "sd": 2.0}}}
         hist = [{"date": f"2026-0{1+i%9}-01", "value": 40 + (i % 3)}
                 for i in range(20)]
-        out = harness.forecast_persona("claude-opus-persona", r, hist)
+        with TempReplyLog():
+            out = harness.forecast_persona("claude-opus-zeroshot-persona", r, hist)
     finally:
         harness.call_provider, harness.has_key = real_call, real_key
 
@@ -234,17 +275,18 @@ def test_persona_forecast_runs_the_panel_and_aggregates_it():
     expected = 100 * sum(p["weight"] for p in panel if p["party"] == "Republican")
     assert abs(out["topline"]["mean"] - expected) < 0.05, (out, expected)
     assert out["topline"]["sd"] > 0
-    assert out["entrant"] == "claude-opus-persona"
-    assert "variant=persona" in out["notes"] and "in=" in out["notes"]
+    assert out["entrant"] == "claude-opus-zeroshot-persona"
+    assert "elicitation=persona" in out["notes"] and "in=" in out["notes"]
 
 
 def test_persona_forecast_refuses_a_panel_that_mostly_refused():
     """A model that will not play certain personas does not give a small panel,
     it gives a biased one -- publishing the survivors would hide that."""
-    def fake_call(entrant, prompt, with_usage=False, variant=None):
+    def fake_call(entrant, prompt, with_usage=False, context=None):
         if "Republican" in prompt:
             raise RuntimeError("declined")
-        return '{"approval": "disapprove"}'
+        text = '{"approval": "disapprove"}'
+        return (text, None) if with_usage else text
 
     real_call, real_key = harness.call_provider, harness.has_key
     harness.call_provider = fake_call
@@ -253,7 +295,8 @@ def test_persona_forecast_refuses_a_panel_that_mostly_refused():
         r = {"round_id": "r1", "series": "yougov_approval",
              "release_at": "2026-08-20T14:00:00Z",
              "baselines": {"persistence": {"mean": 40.0, "sd": 2.0}}}
-        harness.forecast_persona("claude-opus-persona", r, [])
+        with TempReplyLog():
+            harness.forecast_persona("claude-opus-zeroshot-persona", r, [])
         assert False, "a third of the panel missing must not be published"
     except RuntimeError as e:
         assert "below the" in str(e), e
@@ -268,7 +311,7 @@ def test_a_series_without_an_instrument_is_refused_not_invented():
         r = {"round_id": "r1", "series": "house_seats",
              "release_at": "2026-11-03T14:00:00Z",
              "baselines": {"persistence": {"mean": 218.0, "sd": 10.0}}}
-        harness.forecast_persona("claude-opus-persona", r, [])
+        harness.forecast_persona("claude-opus-zeroshot-persona", r, [])
         assert False, "no instrument means no honest question"
     except (RuntimeError, KeyError) as e:
         assert "survey" in str(e) or "house_seats" in str(e), e
@@ -280,16 +323,30 @@ def test_superforecaster_protocol_is_added_without_changing_the_data():
     r = {"round_id": "r1", "series": "yougov_approval", "unit": "%",
          "question": "q", "release_at": "2026-08-20T14:00:00Z"}
     hist = [{"date": "2026-08-0%d" % (i + 1), "value": 40 + i} for i in range(9)]
-    base = harness.build_prompt(r, hist, "recent10")
-    sfc = harness.build_prompt(r, hist, "superfc")
-    web = harness.build_prompt(r, hist, "web")
+    base = harness.build_prompt(r, hist, "recent10", "direct")
+    # superfc is an *elicitation*, so it composes with any context rather than
+    # replacing one. That it can now be asked for on top of `news` or `none`
+    # too is the whole point of separating the axes.
+    sfc = harness.build_prompt(r, hist, "recent10", "superfc")
     assert "Outside view" in sfc and "Pre-mortem" in sfc
     assert "Outside view" not in base
     # every condition on this axis shows the same data, so a difference in
     # score is elicitation and not information
     for pt in hist:
         assert str(pt["value"]) in sfc and str(pt["value"]) in base
-    assert web == base, "web differs in the request, not the prompt"
+    # `web` is the one context that used to differ in the *request* rather than
+    # the prompt, back when the vendors' hosted tools did the searching. It now
+    # shows recent10's history plus a corpus the model asked for, so it differs
+    # in the text like every other context -- which is what makes it comparable
+    # to `news` at all.
+    web = harness.build_prompt(r, hist, "web", "direct", search={
+        "asked_at": "2026-08-18T14:00:00Z",
+        "results": [{"query": "q1", "results": [
+            {"title": "T", "url": "u", "published": None, "content": "BODY"}]}]})
+    assert web != base
+    for pt in hist:
+        assert str(pt["value"]) in web, "web keeps recent10's history"
+    assert "BODY" in web
 
 
 if __name__ == "__main__":

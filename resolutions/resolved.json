@@ -1,9 +1,25 @@
 {
-  "umich-2026-08-prelim": {
+  "civiqs-2026-w33-approval": {
     "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
-    "observed_date": "2026-07-01",
-    "resolved_at": "2026-08-14T19:20:13Z",
+    "observed_date": "2026-08-14",
+    "resolved_at": "2026-08-16T05:45:00Z",
+    "series": "civiqs_net_approval",
+    "value": -24.2
+  },
+  "umich-2026-08-prelim": {
+    "corrected": {
+      "at": "2026-08-16T05:45:09Z",
+      "replaces": {
+        "observed_date": "2026-07-01",
+        "resolved_at": "2026-08-14T19:20:13Z",
+        "value": 55.2
+      },
+      "why": "the superseded entry resolved this round against July's final -- a number published in July and public well before the round's 2026-08-12 lock, so every entrant could have known it. The round asks for the August preliminary, 51.0, published 2026-08-14. The cause was a FRED fallback that republishes this series a month late; it wrote a lock snapshot ending in June, and 'the first release after the frozen history' silently became July. The fallback is deleted and the snapshot corrected."
+    },
+    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
+    "observed_date": "2026-08-01",
+    "resolved_at": "2026-08-16T05:45:00Z",
     "series": "umich_sentiment",
-    "value": 55.2
+    "value": 51.0
   }
 }

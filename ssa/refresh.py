@@ -14,7 +14,10 @@ import json
 import os
 from datetime import date, datetime, timezone
 
-from .adapters import fredcsv, silverbulletin, umich
+from .adapters import aaii, silverbulletin, umich
+from . import health
+from . import provenance
+from . import stamps
 from . import average, backtest, baselines, envfile, harness, scoring, sharecard
 from . import series as series_registry
 
@@ -210,11 +213,10 @@ def elicitation_variants(value=None):
     if raw in ("1", "all"):
         return tuple(harness.ELICITATION_VARIANTS)
     want = tuple(v.strip() for v in raw.split(",") if v.strip())
-    bad = [v for v in want if v not in harness.ELICITATION_VARIANTS]
-    if bad:
-        raise ValueError(
-            f"SSA_ELICITATION names unknown condition(s) {bad}; known: "
-            f"{list(harness.ELICITATION_VARIANTS)}, or '1' for all")
+    for v in want:
+        # harness.cell raises on an unknown name and accepts a combination
+        # like `news+superfc`, which is the whole point of the two axes.
+        harness.cell(v)
     return want
 
 
@@ -329,6 +331,71 @@ LOCK_MARGIN_SECONDS = 30 * 60
 # is a handful of concurrent requests per vendor rather than a burst at one.
 FILING_WORKERS = int(os.environ.get("SSA_FILING_WORKERS", "20"))
 
+# What one refresh may spend before it refuses to run.
+#
+# The cache makes a normal refresh nearly free: over the seven days to
+# 2026-08-17 there were 28 scheduled runs, and each entrant's forecast changed
+# three or four times -- the cost of a new observation landing, not of the
+# clock ticking. A full legitimate sweep, every open round times every entrant
+# all missing at once, is a few dollars.
+#
+# So a run that prices much above that is not doing more work, it is failing to
+# reuse. That happens when the prompt bytes change or the endpoint moves, and
+# both are one merge away: `call_identity` and the prompt are the cache key, so
+# editing either correctly invalidates every stored hash -- and on a six-hourly
+# cron the bill repeats every six hours until a human looks. Nothing in this
+# pipeline would have said so; the site would keep rendering and the forecasts
+# would keep being right.
+#
+# The ceiling is deliberately well above any real sweep. It is a runaway brake,
+# not a budget.
+MAX_SPEND = float(os.environ.get("SSA_MAX_SPEND", "10"))
+
+# Measured, not guessed: 278 in / 1,276 out per call, from the 2,058 calls in
+# backtest/runs/ that carry a usage report. model_backtest's own estimator
+# assumes 400/500, which understates the output side by two and a half times --
+# at maximum reasoning effort the thinking *is* the output.
+EST_IN_TOKENS, EST_OUT_TOKENS = 278, 1276
+
+
+def price_jobs(jobs, hist_by_round, read_forecast, news_for):
+    """(jobs that would really call, estimated USD).
+
+    Recomputes each job's input hash and compares it to what is already filed,
+    which is exactly what `harness.forecast` will do a moment later -- so the
+    number printed is the number about to be spent, not a guess about it.
+    Anything this cannot price without a network round-trip is counted as
+    billable, because the safe error is to over-report the bill.
+    """
+    from . import model_backtest
+    billable, usd = [], 0.0
+    for r, entrant, path in jobs:
+        try:
+            model, ctx, eli = harness.resolve(entrant)
+        except KeyError:
+            continue
+        previous = read_forecast(path)
+        notes = (previous or {}).get("notes") or ""
+        try:
+            if eli == "persona":
+                raise ValueError("panel priced per respondent below")
+            prompt = harness.build_prompt(
+                r, hist_by_round.get(r["round_id"]), ctx, eli,
+                news=news_for(r) if ctx == "news" else None)
+            if f"in={harness.prompt_hash(entrant, prompt)}" in notes \
+                    and not notes.startswith("MOCK"):
+                continue                      # cached: free
+        except Exception:                     # noqa: BLE001 - price it, do not skip it
+            pass
+        billable.append((r, entrant, path))
+        cin, cout = model_backtest.PRICING.get(model, (2.0, 10.0))
+        calls = 1
+        if eli == "persona":
+            from . import personas
+            calls = len(personas.panel())
+        usd += calls * ((EST_IN_TOKENS / 1e6) * cin + (EST_OUT_TOKENS / 1e6) * cout)
+    return billable, usd
+
 
 def read_forecast(path):
     if not os.path.exists(path):
@@ -376,7 +443,7 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
         # Every model runs both conditions and they are filed as separate
         # entrants: same weights, different information, so their scores answer
         # different questions and belong on different leaderboard rows.
-        for entrant, _model, _variant in season_roster():
+        for entrant, _model, _ctx, _eli in season_roster():
             jobs.append((r, entrant, os.path.join(rdir, entrant + ".json")))
 
     # One provider call per job, and at max reasoning effort a single call can
@@ -404,11 +471,11 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
     def run_job(job):
         r, entrant, path = job
         try:
-            variant = harness.resolve(entrant)[1]
+            _, context, _elicitation = harness.resolve(entrant)
             body = harness.forecast(entrant, r,
                                     history=hist_by_round.get(r["round_id"]),
                                     previous=read_forecast(path),
-                                    news=news_for(r) if variant == "news" else None)
+                                    news=news_for(r) if context == "news" else None)
         except Exception as e:                     # noqa: BLE001 - collected
             # Collected rather than raised. Failing at the first bad provider
             # would strand every other entrant's forecast unwritten, and rounds
@@ -423,9 +490,61 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
         return 1
 
     if jobs:
+        billable, usd = price_jobs(jobs, hist_by_round, read_forecast,
+                                   news_for)
+        print(f"\nfiling: {len(jobs)} entrant-round(s), {len(jobs) - len(billable)} "
+              f"already answered, {len(billable)} to call, est ${usd:.2f}")
+        if usd > MAX_SPEND:
+            # Not SystemExit: the series were already fetched and the site
+            # should still be rebuilt from them. Only the calls are withheld.
+            # The existing failure channel then exits non-zero at the end, so
+            # this is as loud as a dead provider without being as destructive.
+            for r, entrant, _ in billable[:12]:
+                failures.append(
+                    f"{r['round_id']}/{entrant}: withheld by the spend ceiling")
+            failures.append(
+                f"estimated ${usd:.2f} for one refresh exceeds the "
+                f"${MAX_SPEND:.2f} ceiling; {len(billable)} of {len(jobs)} "
+                "entrant-rounds wanted a call at once. A refresh re-asks an "
+                "entrant only when its series moved, so this many misses means "
+                "the prompt bytes or the endpoint changed -- and on a "
+                "six-hourly cron that bills again every six hours until "
+                "someone looks. Check what moved, then set SSA_MAX_SPEND for "
+                "one run if it was intended.")
+            return written, failures
         with concurrent.futures.ThreadPoolExecutor(max_workers=FILING_WORKERS) as ex:
             written = sum(ex.map(run_job, jobs))
     return written, failures
+
+
+def stamp_locked_rounds(rounds):
+    """One manifest per locked round, stamped once and upgraded thereafter.
+
+    The proof that a forecast predates the answer currently rests on a git
+    history we control, which proves nothing to a skeptic. OpenTimestamps moves
+    it onto a chain nobody here controls; see ssa/stamps.py for why the unit is
+    a per-round manifest rather than each forecast.
+
+    Never fatal. Four public calendars being briefly unreachable must not cost a
+    run that has forecasts to file, and the next refresh retries -- but an
+    unstamped round says so rather than passing silently.
+    """
+    out = []
+    for r in rounds:
+        if r.get("status") == "open":
+            continue
+        try:
+            st = stamps.ensure(r["round_id"], r["lock_at"])
+        except Exception as e:                     # noqa: BLE001 - reported
+            print(f"  stamp {r['round_id']}: {type(e).__name__}: {e}")
+            continue
+        out.append(st)
+        mark = "btc" if st.get("bitcoin_attested") else \
+               ("calendar" if st.get("proof") else "UNSTAMPED")
+        print(f"  stamp {r['round_id']:34s} {st['action']:9s} {mark}")
+    if out and not stamps.have_client():
+        print("  (no ots client on PATH; manifests written, proofs pending)")
+    return out
 
 
 def count_forecasts(rounds):
@@ -503,21 +622,19 @@ def build_leaderboard(rounds, resolved):
     return board
 
 
-def fetch_umich():
-    """Michigan sentiment, preferring the survey's own table over FRED.
+def michigan_history():
+    """Michigan sentiment. Delegates to the registry, which has no fallback.
 
-    FRED republishes this series a month late, which costs every entrant the
-    most recent observation -- the one that matters most. The two agree exactly
-    on all 674 overlapping months, so this is strictly more data, not different
-    data. FRED remains the fallback because the official file is a plain CSV on
-    a university web server and the arena should not go dark if it moves.
+    There used to be a fallback here, to FRED, so the arena would not go dark
+    if the university's plain CSV moved. It went dark in a worse way instead:
+    FRED carries the series a month behind at Michigan's request, so on the one
+    run where the official table was briefly unreachable the fallback answered
+    with a history ending a month early and nothing downstream could tell. That
+    run wrote the lock snapshot for `umich-2026-08-prelim`, whose baselines were
+    then anchored a month stale and whose resolution silently became July's
+    final rather than August's preliminary. See ssa/series.michigan_history.
     """
-    try:
-        return umich.umich_sentiment()
-    except Exception as e:                         # noqa: BLE001 - reported
-        print(f"official Michigan table unavailable ({type(e).__name__}: {e}); "
-              "falling back to FRED, which lags one month")
-        return fredcsv.umich_sentiment()
+    return series_registry.michigan_history()
 
 
 def load_model_backtest():
@@ -554,11 +671,44 @@ def main():
     # One fetch per upstream file, shared by the series registry and by the
     # averages below, so the site's headline numbers and its series can never
     # be built from different snapshots of the same source.
+    # Each upstream body is archived as it arrived, before anything parses it.
+    # Twenty-one of the registered series come out of one published Google
+    # Sheet that is revised in place, so without a dated vintage a resolution
+    # computed from it today cannot be rechecked tomorrow. See ssa/provenance.py.
+    sb_app_raw = silverbulletin.fetch_text(silverbulletin.APPROVAL_URL)
+    sb_gen_raw = silverbulletin.fetch_text(silverbulletin.GENERIC_URL)
+    prov = {
+        "sb_approval": provenance.record(
+            "sb_approval", silverbulletin.APPROVAL_URL, sb_app_raw,
+            note="Silver Bulletin poll database, published as a Google Sheet"),
+        "sb_generic": provenance.record(
+            "sb_generic", silverbulletin.GENERIC_URL, sb_gen_raw,
+            note="Silver Bulletin generic-ballot database, published as a Google Sheet"),
+    }
     sources = {
-        "sb_approval": silverbulletin.fetch(silverbulletin.APPROVAL_URL),
-        "sb_generic": silverbulletin.fetch(silverbulletin.GENERIC_URL),
+        "sb_approval": silverbulletin.parse(sb_app_raw),
+        "sb_generic": silverbulletin.parse(sb_gen_raw),
         "umich": series_registry.michigan_history(),
     }
+    prov["umich"] = provenance.record(
+        "umich", series_registry.MICHIGAN_URL,
+        series_registry.MICHIGAN_RAW or "",
+        note=series_registry.MICHIGAN_SOURCE)
+    # AAII serves a ~22-week rolling window with no deeper machine-readable
+    # history, so the committed vintages *are* the long history: each week the
+    # window slides and the archive keeps the week that fell off. The body is
+    # parsed with the asof from the response that carried it (the page's dates
+    # have no year), and both go into `sources` so the registry never fetches
+    # a second, different snapshot of the same page.
+    aaii_raw, aaii_asof = aaii.fetch_text()
+    prov["aaii"] = provenance.record(
+        "aaii", aaii.URL, aaii_raw, ext="html",
+        note=("AAII sentiment survey results page, a ~22-week rolling window "
+              f"parsed against the response's own date {aaii_asof}; the full "
+              "1987-present .xls is OLE2 and unreadable without a dependency"))
+    sources["aaii"] = aaii.parse(aaii_raw, aaii_asof)
+    for name, block in sorted(prov.items()):
+        print(f"  {name:12s} {block['bytes']:>9,}B  sha {block['sha256'][:12]}")
     # Every series now comes from a source that is days behind rather than
     # weeks. VoteHub is gone: it was 41 days stale at the source and the only
     # two trackers it still supplied, Congress and the Supreme Court, backed no
@@ -579,8 +729,38 @@ def main():
             resolved = json.load(f)
 
     rounds, hist_by_round = build_rounds(season, series, resolved, now)
-    filed, filing_failures = file_baseline_forecasts(rounds, hist_by_round, now)
+    # The workflow runs this module twice: once to fetch and file, then again
+    # after `ssa.resolve` so the leaderboard reflects anything just resolved
+    # instead of waiting six hours. Only the *second* purpose needs the second
+    # pass, and it was silently paying for the first one too.
+    #
+    # A forecast that failed writes no file, so the second pass finds nothing
+    # cached and calls the provider again. That is free when the failure was a
+    # dead key -- and it is not free at all when the failure was a timeout or a
+    # dropped stream, because the model generated the answer and the provider
+    # billed it. On 2026-08-12 glm timed out at the full 600-second read budget
+    # in both passes of one run: twenty minutes of generation, paid for twice,
+    # recorded zero times. That run took 21 minutes, and every long run in the
+    # history is this shape.
+    #
+    # So the second pass rebuilds the site and files nothing.
+    if os.environ.get("SSA_SKIP_FILING") == "1":
+        print("\nSSA_SKIP_FILING=1: rebuilding from what is on disk, "
+              "calling no provider")
+        filed, filing_failures = 0, []
+    else:
+        filed, filing_failures = file_baseline_forecasts(rounds, hist_by_round, now)
     count_forecasts(rounds)
+    stamped = stamp_locked_rounds(rounds)
+
+    # Whether each source is still answering, and whether the arena still knows
+    # the answer. A flake must not cost a run; an outage must be loud at once,
+    # because everything downstream keeps working perfectly while publishing
+    # numbers that stopped moving. See ssa/health.py for the two clocks.
+    source_health = health.check(now)
+    print("\nsources:")
+    for line in health.report(source_health):
+        print(line)
     board = build_leaderboard(rounds, resolved)
     bt = backtest.run({
         "umich_sentiment": series["umich_sentiment"],
@@ -606,13 +786,24 @@ def main():
         # than being appended to them.
         bt["models"] = real_mb
         bt["mock_models"] = []
-        board = real_mb.get("board") or []
-        if board:
+        # `mb_board`, NOT `board`. `board` is the *live* leaderboard, built at
+        # line 751 from resolved rounds, and it is published as
+        # leaderboard.entries. Assigning to that name here overwrites it with
+        # the backtest table, so the site presents backtest CRPS over 22
+        # historical releases as though it were the live season's standings --
+        # next to a resolved_rounds count that disagrees with it.
+        #
+        # CLAUDE.md records this exact bug being found and fixed once already.
+        # It came back the moment this block was edited again, because the
+        # names still collide. Renaming is the fix that does not depend on
+        # anyone remembering.
+        mb_board = real_mb.get("board") or []
+        if mb_board:
             bt["baseline_replay"] = {"overall": bt["overall"],
                                      "spans": bt["spans"],
                                      "n_rounds": bt.get("n_rounds")}
-            bt["overall"] = board
-            bt["spans"] = {k: board for k in bt["spans"]}
+            bt["overall"] = mb_board
+            bt["spans"] = {k: mb_board for k in bt["spans"]}
             bt["n_rounds"] = real_mb.get("releases") or bt.get("n_rounds")
             # The charts draw whichever entrants this list names, and read
             # their values out of trajectory[].skills. Both were populated by
@@ -669,11 +860,23 @@ def main():
             "mc_approval": series["mc_approval"],
         },
         "series_tail": {k: v[-8:] for k, v in series.items()},
-        "sources": {
-            "silver_bulletin_approval": silverbulletin.APPROVAL_URL,
-            "silver_bulletin_generic": silverbulletin.GENERIC_URL,
-            "fred": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=UMCSENT",
-            "repo": "https://github.com/Social-Atoms/social-sim-arena",
+        # Which URL, fetched when, and where the saved raw body is -- per
+        # upstream file, and per series through its `source` key. A page can
+        # then say "this figure came from that file at that time" instead of
+        # crediting a brand.
+        "sources": dict(prov, repo="https://github.com/Social-Atoms/social-sim-arena"),
+        # One entry per locked round: the manifest that fixes every forecast
+        # hash at the lock, and whether its proof has reached a Bitcoin block
+        # yet. A reader runs `ots verify` on the file and needs to trust
+        # nobody here.
+        "stamps": {st["round_id"]: st for st in stamped},
+        # Per source: how long since a successful fetch, how long since the
+        # content moved, and the budget each is judged against. A page that
+        # renders a number should be able to say how old it is.
+        "source_health": source_health,
+        "series_provenance": {
+            sid: prov.get(spec["source"], {}).get("source", spec["source"])
+            for sid, spec in series_registry.SERIES.items()
         },
     }
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
@@ -691,6 +894,20 @@ def main():
           "| umich points:", len(umich))
     print("approval avg:", trackers["trump_approval_avg"]["value"],
           "| generic margin:", trackers["generic_ballot_avg"]["value"])
+
+    # A fallback that nobody sees is the failure this design exists to avoid:
+    # the site renders, the leaderboard updates, and four entrants have quietly
+    # moved to a different endpoint at a lower reasoning depth. So a run that
+    # used the standby says so, in the same place it says everything else.
+    down = harness.dead_routes()
+    if down:
+        print(f"\n{len(down)} route(s) failed terminally and fell back to the "
+              "OpenRouter standby:")
+        for env, host in down:
+            print(f"  - {env} @ {host}")
+        print("  Forecasts filed this way carry via=openrouter in their notes "
+              "and the standby's own input hash, so the run after the account "
+              "is fixed re-asks the vendor and upgrades them automatically.")
 
     if filing_failures:
         # site/data.json and every successful forecast are already on disk, so

@@ -19,6 +19,7 @@ interrupted run resumes and a rerun after adding one entrant only pays for that
 entrant.
 """
 import argparse
+import datetime
 import json
 import os
 import sys
@@ -41,13 +42,17 @@ SERIES = list(series_registry.SERIES)
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--max-spend", type=float, default=25.0,
+                    help="refuse to start if the estimate exceeds this many "
+                         "dollars (default 25). The estimate is advice; this "
+                         "is the brake.")
     ap.add_argument("--execute", action="store_true",
                     help="actually call the providers (default: plan only)")
     ap.add_argument("--rescore", action="store_true",
                     help="rebuild the table from the committed cache; makes no "
                          "provider calls and bills nothing")
     ap.add_argument("--entrants",
-                    default=",".join(e for e, _, _ in harness.season_entrants()),
+                    default=",".join(e for e, *_ in harness.season_entrants()),
                     help="comma-separated entrant ids; defaults to every model "
                          "in both information conditions")
     ap.add_argument("--start", help="override the first release date (ISO day)")
@@ -104,6 +109,24 @@ def main():
         print(f"\nscoring window starts {start}"
               + (" (overridden)" if args.start else " = latest cutoff + margin"))
 
+    # **Restore the committed evidence into the cache before anything is
+    # planned or priced.** The per-call cache is gitignored -- one file per
+    # provider call is right for resuming a run and wrong for a repository --
+    # and the same replies are committed, consolidated, under backtest/runs/.
+    # But nothing here ever read them back, so a fresh clone saw an empty
+    # cache, priced the whole plan at full rate, and re-bought 2,887 replies
+    # that were sitting in the repo it had just downloaded. Every collaborator
+    # paid for the run again, and the estimate printed below agreed with them.
+    #
+    # Restoring is free, local, and idempotent, so it happens unconditionally
+    # rather than behind a flag nobody knew to pass.
+    counts = model_backtest.restore_runs()
+    if counts["restored"]:
+        print(f"restored {counts['restored']} previously-paid replies from "
+              f"{counts['files']} committed run file(s) "
+              f"({counts['successful']} successful, {counts['failures']} "
+              "failures); these will not be re-billed")
+
     series = series_registry.build_all()
     series_map = {k: series[k] for k in SERIES if k in series}
 
@@ -139,6 +162,20 @@ def main():
     print(f"estimated cost ${usd:.2f}" + ("" if todo else " (fully cached)"))
     for e in sorted(per_entrant, key=lambda k: -per_entrant[k]):
         print(f"  {e:14s} ${per_entrant[e]:6.2f}")
+
+    # A ceiling, because the estimate above is advice and this is a brake.
+    # An unguarded --execute is one typo in --entrants or --start away from a
+    # three-figure bill, and the failure is silent: it looks exactly like a
+    # correct run until the invoice arrives.
+    if args.execute and not args.rescore and usd > args.max_spend:
+        sys.exit(
+            f"\nestimated ${usd:.2f} exceeds the ${args.max_spend:.2f} "
+            "ceiling, so nothing was called.\n"
+            "  --rescore                rebuild the table from the cache, free\n"
+            "  --limit N                smoke-test N releases per entrant\n"
+            "  --entrants a,b           narrow the roster\n"
+            f"  --max-spend {usd:.0f}{' ' * max(0, 12 - len(f'{usd:.0f}'))}"
+            "run it anyway, having read the number")
 
     if args.rescore:
         # Scoring changed, the replies did not. Rebuilding from the cache keeps
@@ -186,6 +223,37 @@ def main():
     with open(args.out, "w") as f:
         json.dump(result, f, indent=2, sort_keys=True)
         f.write("\n")
+
+    # **Export the raw replies, always, whenever calls were made.**
+    #
+    # `model_backtest.export_run` has existed since the first backtest and
+    # nothing has ever called it. So `--execute` paid for N replies, wrote them
+    # to a gitignored cache, wrote the *scores* to a committed JSON -- and left
+    # the replies on one laptop. The single run file in this repository was
+    # written by hand, months ago, as a side effect of a commit about charts.
+    #
+    # That is what makes every run cost full price. Not the fresh clone
+    # re-buying a committed cache -- there was nothing committed to re-buy. The
+    # replies were simply never saved, so no machine but the one that ran it
+    # ever had them, and restoring (above) had nothing to restore from.
+    #
+    # The models run at their providers' default temperature, so a re-run does
+    # not reproduce. These replies are the only reproducibility mechanism the
+    # backtest has, and they are worth more than the scores computed from them.
+    if made:
+        # The whole cache, not just this run's records: the exported file is
+        # then self-contained, and `restore_runs` deduplicates across files, so
+        # a later reader needs the newest one rather than all of them in order.
+        stamp = datetime.date.today().isoformat()
+        i = 1
+        while os.path.exists(os.path.join(model_backtest.RUNS_DIR,
+                                          f"{stamp}.jsonl")):
+            stamp = f"{datetime.date.today().isoformat()}-{i}"
+            i += 1
+        path, n = model_backtest.export_run(stamp)
+        print(f"\nexported {n} replies -> {os.path.relpath(path, ROOT)}")
+        print("  COMMIT THIS. It is the only copy of what you just paid for, "
+              "and the next run restores from it instead of re-buying.")
 
     print(f"\nwrote {os.path.relpath(args.out, ROOT)}")
     print(f"scored {result['matched_releases']} releases answered by all entrants "

@@ -1,0 +1,63 @@
+name: backfill-cci
+# Recover the Conference Board CCI's first prints from the Internet Archive.
+#
+# Manual only. This is a one-off that becomes a no-op once the history is in
+# the tree -- the tool never overwrites a file, because a first print is
+# recorded once and does not change afterwards.
+#
+# **It runs here rather than on a laptop for a specific reason.** The Archive
+# answers a sustained crawl with a 1 KB stub instead of an error, which parses
+# as "no reading on this page" and is indistinguishable from a capture that
+# never had one. From a residential connection roughly two thirds of the
+# captures came back as stubs. Unlike Civiqs, the Archive does not refuse
+# datacenter IPs, so a runner gets a far better hit rate -- and the tool treats
+# anything under 20 KB as throttling and retries rather than recording a miss.
+#
+# Free and keyless. The alternative is the Conference Board's own history,
+# which is $2,370 and is the *revised* series -- not the first prints a round
+# resolves against.
+on:
+  workflow_dispatch:
+    inputs:
+      since:
+        description: "earliest snapshot year (2020 predates the (1985=100) headline)"
+        default: "2021"
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: backfill-cci
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    # The Archive is slow on purpose here: the tool paces itself and retries,
+    # and 59 captures at a polite rate is not a five-minute job.
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: python tests/test_confboard.py
+        env:
+          PYTHONPATH: .
+      - run: python tools/backfill_cci.py --since "${{ inputs.since || '2021' }}"
+      - run: python tools/backfill_cci.py --since "${{ inputs.since || '2021' }}" --execute
+      - name: commit what was recovered
+        if: always()
+        run: |
+          git config user.name "ssa-bot"
+          git config user.email "actions@github.com"
+          git add -A sources/confboard
+          if git diff --cached --quiet; then
+            echo "nothing new recovered"
+          else
+            git commit -m "cci: first prints recovered from the Internet Archive"
+            git -c rebase.autoStash=true pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi

@@ -20,9 +20,21 @@ tools/check_provider.py
 
 # Per-call working cache for the LLM backtest: one file per call, which is
 # right for resuming an interrupted run and wrong for a repository. The
-# committed evidence is backtest/runs/*.jsonl, the same content consolidated.
-cache/
+# committed evidence is backtest/runs/*.jsonl, the same content consolidated,
+# and tools/run_model_backtest.py restores from it before planning so a fresh
+# clone never re-buys a reply the repository already contains.
+#
+# **Anchored, because `cache/` matches a directory of that name at ANY depth.**
+# Unanchored, it silently swallowed search/cache/ too -- the archive that is
+# supposed to make the web arm reproducible and stop fifteen models paying
+# fifteen times for one query. That directory is committed on purpose, and an
+# unanchored rule would have made the search arm repeat, byte for byte, the
+# mistake that cost the backtest a rerun for every collaborator.
+/cache/
 
 # News page fetch cache. The per-round digests under news/rounds/ are the audit
 # record and are committed; these are just the raw pages they were built from.
 news/pages/
+
+# Claude Code session worktrees, never repository content
+/.claude/

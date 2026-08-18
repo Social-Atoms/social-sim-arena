@@ -105,7 +105,10 @@ def test_digest_reads_the_archive_and_never_the_network():
         nd.PAGES = os.path.join(tmp, "pages")
         nd.DAYS = os.path.join(tmp, "days")
         asof = "2026-06-20T14:00:00Z"
-        for k in range(1, 15):
+        # Sized off the constant rather than a literal: the window is a tuning
+        # knob and this test is about the archive answering, not about its value.
+        window = nd.DEFAULT_WINDOW_DAYS
+        for k in range(1, window + 1):
             d = date(2026, 6, 20 - k)
             nd.save_day(d, {
                 "date": d.isoformat(), "title": nd.page_title(d),
@@ -121,9 +124,12 @@ def test_digest_reads_the_archive_and_never_the_network():
         finally:
             nd._get = real_get
         assert out["days_missing"] == 0, out["days_missing"]
-        assert out["text"].count("[Politics and elections]") == 14
-        assert "2026-06-06:" in out["text"] and "2026-06-20:" not in out["text"], \
+        assert out["text"].count("[Politics and elections]") == window
+        first = date(2026, 6, 20 - window).isoformat()
+        assert f"{first}:" in out["text"], out["text"][:200]
+        assert "2026-06-20:" not in out["text"], \
             "the lock day itself must never be in the corpus"
+        assert "2026-06-19:" in out["text"], "the day before the lock is in"
     finally:
         nd.PAGES, nd.DAYS = pages, days
         shutil.rmtree(tmp)
