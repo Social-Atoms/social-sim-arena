@@ -71,6 +71,12 @@ jobs:
       # the season's bill for each before anyone does. The arms differ by two
       # orders of magnitude: news is about $8 a season, persona about $39.
       SSA_ELICITATION: ${{ vars.SSA_ELICITATION }}
+      # The model allowlist. Without this line the runner sees every key in
+      # secrets and runs all seventeen models -- including the ones the season
+      # deliberately dropped -- which is exactly what the first re-enabled run
+      # did on 2026-08-18. An unset variable means every keyed model, so this
+      # only narrows when the variable exists.
+      SSA_MODELS: ${{ vars.SSA_MODELS }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
