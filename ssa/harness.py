@@ -537,6 +537,73 @@ PROFILE_FOOTER = (
     "same unit, and must be greater than 0."
 )
 
+# --- the ranking round ------------------------------------------------------
+#
+# One call, one ordered list. The framing follows the profile block's rule --
+# same header fields, same context and elicitation switches, same news and
+# search blocks -- so a ranking round differs from a topline round in what is
+# asked and not in how it is framed.
+#
+# What differs is the answer format and, deliberately, the absence of an
+# uncertainty field. Everywhere else in this harness a reply without an sd is
+# rejected; here there is nothing to put one on, and saying so in the prompt
+# matters: a model told to "give a distribution" over a list will invent
+# probabilities that nothing scores, spend its output budget on them, and
+# sometimes bury the list itself.
+RANKING_HEADER = (
+    "You are forecasting an ordered list, not a number.\n"
+    "Question: {question}\n"
+    "Answer format: {unit}\n"
+    "How the ranking is measured: {methodology}\n"
+    "Measurement window: {week_start} through {week_end}, inclusive.\n"
+    "Release schedule: {cadence}\n"
+    "Scheduled release date: {release}\n"
+    "{universe}"
+)
+
+RANKING_NO_HISTORY = "No past weeks of this ranking are provided.\n"
+
+RANKING_WITH_HISTORY = (
+    "The true ranked list for each recent completed week (oldest first, rank 1 "
+    "first within each week):\n{history}\n")
+
+# Formatted, unlike FOOTER and PROFILE_FOOTER, because the list length is the
+# round's. So the literal braces of the JSON example are doubled here -- the
+# opposite convention to the two footers above, and the reason is only that
+# this string goes through .format() and they do not.
+RANKING_FOOTER = (
+    "Give exactly {n} items in the order you predict, highest first. Reply "
+    "with exactly one JSON object and no other text:\n"
+    '{{"ranking": ["<rank 1>", "<rank 2>", ...]}}\n'
+    "Exactly {n} items, each appearing exactly once, written exactly as "
+    "described above. Do not give probabilities, confidence levels or ranges: "
+    "this round is scored on the list itself -- how much of the true list you "
+    "recovered and how nearly in the right order -- and anything else in the "
+    "reply is discarded."
+)
+
+# The forecasting protocol, rewritten for an order. SUPERFC's fourth step asks
+# the model to calibrate a standard deviation, which does not exist here; asking
+# for it anyway would be asking a question the round does not score and inviting
+# the model to answer that one instead. Steps 1-3 are the same instruction with
+# the quantity changed from a level to a list.
+RANKING_SUPERFC = (
+    "Work through the following before answering, in this order.\n"
+    "1. Outside view. How much does this list normally change week to week? "
+    "How many entries typically survive from one week to the next, and how far "
+    "do they move? What would simply repeating last week's list get right?\n"
+    "2. Inside view. What is specific to this week -- scheduled events, "
+    "releases, anniversaries, anything already in motion that would put a new "
+    "item high or push an existing one down? Say where each belongs in the "
+    "order.\n"
+    "3. Pre-mortem. Assume your list turns out badly wrong. Write the most "
+    "likely reason, then correct for it.\n"
+    "4. Check the tail. The positions you are least sure of are usually the "
+    "lower ones. Make sure each is still your best single guess rather than a "
+    "placeholder, since a wrong item there costs the same as a wrong item "
+    "anywhere.\n"
+)
+
 # The superforecaster protocol, transplanted from the human forecasting
 # literature: outside view before inside view, decomposition, then a pre-mortem
 # against your own answer. The point is to measure what the *process* is worth
@@ -1084,6 +1151,84 @@ def build_profile_prompt(r, history_by_cell, context=DEFAULT_CONTEXT,
     return head + body + digest + protocol + PROFILE_FOOTER
 
 
+def render_ranking_history(history, n):
+    """The recent weeks block: one numbered list per week, oldest first.
+
+    Written out in full rather than summarized, because the summary a reader
+    would reach for -- "seven of ten changed" -- is exactly the inference the
+    round is testing. Showing the raw weeks lets a model work out the churn rate
+    for itself and, more importantly, lets it see *what kind of thing* tends to
+    appear, which is most of the signal in the Wikipedia version.
+    """
+    out = []
+    for o in (history or [])[-n:] if n else []:
+        rows = "\n".join(f"    {i}. {item}"
+                         for i, item in enumerate(o["items"], 1))
+        out.append(f"  week ending {o['date']}\n{rows}")
+    return "\n".join(out) or "  (none)"
+
+
+def build_ranking_prompt(r, history, context=DEFAULT_CONTEXT,
+                         elicitation=DEFAULT_ELICITATION, news=None,
+                         search=None, spec=None):
+    """The exact text a ranking-round entrant sees.
+
+    `history` is the strictly pre-lock list history the round's persistence null
+    was taken from, so entrants and the null read one record. Same skeleton as
+    `build_prompt` and `build_profile_prompt` for the reason stated there:
+    anything else would confound the round type with the prompt.
+    """
+    from . import ranking_round
+    if context not in CONTEXT:
+        raise ValueError(f"unknown context {context!r}; known: {sorted(CONTEXT)}")
+    if elicitation not in ELICITATION_SUFFIX:
+        raise ValueError(f"unknown elicitation {elicitation!r}; "
+                         f"known: {sorted(ELICITATION_SUFFIX)}")
+    spec = spec or ranking_round.spec_for(r)
+    meta = {}
+    if r.get("series"):
+        try:
+            from . import series as series_registry
+            meta = series_registry.describe(r["series"])
+        except (ImportError, KeyError):
+            meta = {}
+
+    head = RANKING_HEADER.format(
+        question=r.get("question") or meta.get("question", ""),
+        unit=r.get("unit") or meta.get("unit", ""),
+        methodology=r.get("methodology") or meta.get("methodology")
+        or r.get("resolve") or "not stated",
+        cadence=r.get("cadence") or meta.get("cadence", "not stated"),
+        week_start=spec["week_start"], week_end=spec["week_end"],
+        release=r["release_at"][:10],
+        universe=ranking_round.question_universe(spec))
+
+    n = CONTEXT[context]
+    body = RANKING_NO_HISTORY if n == 0 else RANKING_WITH_HISTORY.format(
+        history=render_ranking_history(history, n))
+    protocol = RANKING_SUPERFC if elicitation == "superfc" else ""
+    digest = ""
+    if context == "news":
+        if not news or not news.get("text"):
+            raise ValueError(
+                "the news condition needs a digest; refusing to file it as an "
+                "ordinary forecast, which would silently make it a duplicate "
+                "of recent10 under a different entrant name")
+        digest = NEWS_BLOCK.format(asof=news["asof"], news=news["text"])
+    if context == "web":
+        if not search or not search.get("results"):
+            raise ValueError(
+                "the web condition needs a retrieved corpus; refusing to file "
+                "it as an ordinary forecast, which would silently make it a "
+                "duplicate of recent10 under a different entrant name")
+        from .adapters import search as search_adapter
+        digest = SEARCH_BLOCK.format(
+            asof=search.get("asof") or search.get("asked_at") or "lock time",
+            results=search_adapter.render(search["results"]))
+    return head + body + digest + protocol + \
+        RANKING_FOOTER.format(n=spec["length"])
+
+
 # --- the search turn --------------------------------------------------------
 #
 # The `web` context is two calls, not one: the model is asked what to look for,
@@ -1122,10 +1267,21 @@ def build_query_prompt(r, history, context=DEFAULT_CONTEXT, news=None):
     format. A model that is told less here than it will be told later would be
     choosing queries for a question it has not been asked.
     """
+    from . import ranking_round
     from .adapters import search as search_adapter
-    head = build_prompt(r, history, "recent10" if context == "web" else context,
-                        DEFAULT_ELICITATION, news=news)
-    head = head.split(FOOTER)[0]
+    ctx = "recent10" if context == "web" else context
+    if ranking_round.is_ranking(r):
+        # The ranking framing, minus its answer format, for the same reason the
+        # scalar branch drops FOOTER: a model choosing searches for "the next
+        # value of this series" when it is about to be asked for a top-ten list
+        # is choosing them for a question nobody asked it.
+        spec = ranking_round.spec_for(r)
+        head = build_ranking_prompt(r, history, ctx, DEFAULT_ELICITATION,
+                                    news=news, spec=spec)
+        head = head.split(RANKING_FOOTER.format(n=spec["length"]))[0]
+    else:
+        head = build_prompt(r, history, ctx, DEFAULT_ELICITATION, news=news)
+        head = head.split(FOOTER)[0]
     return head + QUERY_TURN.format(n=search_adapter.MAX_QUERIES,
                                     days=search_adapter.DAYS)
 
@@ -1597,6 +1753,77 @@ def parse_profile(text, cells):
     return out
 
 
+def _json_array(text):
+    """The first *complete* JSON array in a reply, nesting and strings included.
+
+    `_json_object`'s scanner with the brackets swapped. Written out rather than
+    parameterized because the two are read side by side and a shared version
+    with a pair of delimiter arguments is harder to check than two twelve-line
+    loops that each do one thing.
+    """
+    s = text or ""
+    start = s.find("[")
+    while start != -1:
+        depth, in_str, esc = 0, False, False
+        for i in range(start, len(s)):
+            ch = s[i]
+            if in_str:
+                if esc:
+                    esc = False
+                elif ch == "\\":
+                    esc = True
+                elif ch == '"':
+                    in_str = False
+                continue
+            if ch == '"':
+                in_str = True
+            elif ch == "[":
+                depth += 1
+            elif ch == "]":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        return json.loads(s[start:i + 1])
+                    except ValueError:
+                        break
+        start = s.find("[", start + 1)
+    raise ValueError("no JSON array in reply")
+
+
+def parse_ranking(text, spec):
+    """A ranking reply -> the ordered list, canonicalized. Or a raise.
+
+    Two envelopes are accepted: the `{"ranking": [...]}` the prompt asks for,
+    and a bare JSON array. The second is a deliberate leniency and the only one
+    here -- a model that replied with the list itself has *answered the
+    question*, and re-billing it for the shape of its wrapper buys nothing. The
+    contents get no such latitude: `ranking_round.normalize` rejects the wrong
+    length, a repeat, a non-string, an excluded title, or anything outside a
+    fixed basket, because every one of those is a different answer rather than a
+    differently-packaged one.
+
+    Nothing is ever filled in or truncated. A nine-item reply to a ten-item
+    round is a failure, not a list with a hole: pad it and the entrant is scored
+    on a tenth pick it never made, trim the round and it is scored on an easier
+    question than everyone else.
+    """
+    from . import ranking_round
+    try:
+        obj = _json_object(text)
+    except ValueError:
+        obj = None
+    raw = obj.get("ranking") if isinstance(obj, dict) else None
+    if raw is None:
+        try:
+            raw = _json_array(text)
+        except ValueError:
+            raise ValueError(
+                "no ranking in reply: no JSON object with a `ranking` key and "
+                "no JSON array" + (f"; the object found holds {sorted(obj)[:6]}"
+                                   if isinstance(obj, dict) else "")) from None
+    return ranking_round.normalize(raw, spec, where="reply")
+
+
 # A failed provider call used to become a labelled placeholder, which kept the
 # pages populated at the cost of hiding the failure: a wrong model name or a
 # rejected parameter produced a green workflow and an arena quietly full of
@@ -2039,8 +2266,77 @@ def _forecast_profile(entrant, r, history, profile_history, previous,
     }
 
 
+def _forecast_ranking(entrant, r, ranking_history, previous, context,
+                      elicitation, news, search):
+    """One ordered list, bought in a single call.
+
+    The three cost layers are the scalar path's, unchanged and in the same order
+    -- the previous file's input hash, then the reply log, then the call --
+    because they are properties of a prompt and a route, not of what is being
+    asked for. `_ask` owns both routes' hashes and both log lookups; the only
+    thing that differs here is the parser handed to it.
+
+    **No mock, ever, in either direction.** The scalar path can fall back to a
+    labelled placeholder when `SSA_ALLOW_MOCK=1`, and there it is defensible: a
+    persistence value with a stable offset is transparently not a forecast. Here
+    the only placeholder available is last week's list, which is not
+    transparently anything -- it is a *valid, plausible, competitive answer*,
+    the exact answer the null already gives, and it would sit on the board
+    scoring a skill of zero against persistence as though a model had produced
+    it. There is no visible seam the way a MOCK topline has one. Missing keys
+    and failed calls both raise.
+    """
+    from . import ranking_round
+    spec = ranking_round.spec_for(r)
+    if elicitation == "persona":
+        raise ValueError(
+            f"{entrant}: the persona panel cannot answer a ranking round. A "
+            "panel is aggregated into one number from one survey instrument, "
+            "and no instrument asks a respondent to rank what everyone else "
+            "will read or search; these series carry no `survey` for the same "
+            "reason.")
+    if context == "web" and search is None:
+        search = _retrieve(entrant, r, ranking_history)
+    prompt = build_ranking_prompt(r, ranking_history, context, elicitation,
+                                  news=news, search=search, spec=spec)
+    ih = prompt_hash(entrant, prompt)
+
+    notes = (previous or {}).get("notes") or ""
+    if previous and f"in={ih}" in notes and not notes.startswith("MOCK"):
+        return previous
+
+    if not has_key(entrant):
+        raise RuntimeError(
+            f"{entrant}: no {route(entrant)['env']} in the environment. A "
+            "ranking round is never mocked, so there is nothing to file until "
+            "the key is set.")
+    try:
+        items, via, ih, replayed = _ask(
+            entrant, prompt, previous, r["round_id"],
+            parse=lambda text: parse_ranking(text, spec))
+    except Exception as e:
+        raise RuntimeError(
+            f"{entrant} ({model_id(entrant)}) failed on {r['round_id']}: "
+            f"{type(e).__name__}: {e}") from e
+    if items is None:              # the standby already answered this exact
+        return previous            # prompt; do not pay for it twice
+    note = (f"filed={filed_stamp()}, "
+            f"{model_id(entrant, via)}, harness v1, via={via}, "
+            f"context={context} elicitation={elicitation}, "
+            f"ranking {spec['length']} items, 1 sample"
+            f"{', replayed from the reply log' if replayed else ''}"
+            f"; in={ih}")
+    return {
+        "round_id": r["round_id"],
+        "entrant": entrant,
+        "ranking": items,
+        "notes": note[:500],
+    }
+
+
 def forecast(entrant, r, history=None, previous=None, context=None,
-             elicitation=None, news=None, search=None, profile_history=None):
+             elicitation=None, news=None, search=None, profile_history=None,
+             ranking_history=None):
     """One forecast dict for a round definition with baselines attached.
 
     `previous` is the forecast already on disk for this (round, entrant), if
@@ -2062,11 +2358,17 @@ def forecast(entrant, r, history=None, previous=None, context=None,
     _, ctx_of_id, eli_of_id = resolve(entrant)
     context = context or ctx_of_id
     elicitation = elicitation or eli_of_id
-    from . import profile_round
+    from . import profile_round, ranking_round
     if profile_round.is_profile(r):
         # A profile round is answered whole or not at all; it shares every cost
         # guard below and none of the scalar shape.
         return _forecast_profile(entrant, r, history, profile_history, previous,
+                                 context, elicitation, news, search)
+    if ranking_round.is_ranking(r):
+        # Likewise an ordered list: same three cost layers, different parser,
+        # and no `baselines` to read below because a ranking round has no scalar
+        # null.
+        return _forecast_ranking(entrant, r, ranking_history, previous,
                                  context, elicitation, news, search)
     per = r["baselines"]["persistence"]
     if elicitation == "persona":

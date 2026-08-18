@@ -28,7 +28,8 @@
   },
   "oneOf": [
     { "required": ["topline"] },
-    { "required": ["profile"] }
+    { "required": ["profile"] },
+    { "required": ["ranking"] }
   ],
   "properties": {
     "round_id": {
@@ -43,7 +44,15 @@
     },
     "topline": {
       "$ref": "#/definitions/distribution",
-      "description": "The answer to a scalar round. Exactly one of topline or profile is present: a scalar round takes a topline, a profile round takes a profile."
+      "description": "The answer to a scalar round. Exactly one of topline, profile or ranking is present, and which one is fixed by the round's target_type: a scalar round takes a topline, a profile round a profile, a ranking round a ranking."
+    },
+    "ranking": {
+      "type": "array",
+      "description": "The answer to a ranking round: the items in predicted order, best-ranked first. A point answer by design and the one place in this schema where that is accepted -- the alternative is a distribution over permutations, which nobody can express and which the round deliberately does not ask for. Length, and for a fixed-basket round the exact item set, come from the round definition; tools/validate_submission.py checks the list against the round's own ranking block.",
+      "minItems": 2,
+      "maxItems": 50,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 256 }
     },
     "profile": {
       "type": "object",
