@@ -15,6 +15,6 @@ jobs:
       - name: only the maintainer and the cron write to main
         run: |
           case "${{ github.actor }}" in
-            jajamoa|github-actions\[bot\]) echo "ok: ${{ github.actor }}" ;;
+            jajamoa|assassin808|github-actions\[bot\]) echo "ok: ${{ github.actor }}" ;;
             *) echo "::error::main is merged by the maintainer only; code goes to dev (pushed by ${{ github.actor }})"; exit 1 ;;
           esac
