@@ -326,6 +326,25 @@ def build_rounds(season, series, resolved, now):
 # then (correctly) rejects as late.
 LOCK_MARGIN_SECONDS = 30 * 60
 
+# Model forecasts are bought only inside this window before a round's lock.
+# A draft written earlier is arithmetically dead: any weekly series will
+# publish again before the lock, the new point changes the prompt hash, and
+# the rewrite replaces the draft -- so a forecast bought two weeks out is a
+# forecast bought to be erased. Three days still spans ~12 six-hourly runs
+# (the redundancy that survives a failed cron or a down provider), and for a
+# weekly series the last pre-lock release is usually already in the history
+# by then, so a round typically costs one call per entrant, not three.
+# Baselines are exempt: they are free and the site shows them from listing.
+# It also scopes the web condition's retrieval to lock-proximate news by
+# construction, since the query turn cannot run before the window opens.
+FILE_WINDOW_SECONDS = float(os.environ.get("SSA_FILE_WINDOW_DAYS") or "3") * 86400
+
+
+def model_jobs_due(r, now):
+    """True when this round's model forecasts are worth buying now."""
+    left = (parse_iso(r["lock_at"]) - now).total_seconds()
+    return LOCK_MARGIN_SECONDS <= left <= FILE_WINDOW_SECONDS
+
 # Concurrent provider calls when filing forecasts. Each job is one call to one
 # provider, and the eleven entered models spread across five providers, so this
 # is a handful of concurrent requests per vendor rather than a burst at one.
@@ -472,6 +491,10 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
                 json.dump(body, f, indent=2)
                 f.write("\n")
             written += 1
+        # Model forecasts wait for the round's own pre-lock window; a draft
+        # bought earlier is bought to be erased (see FILE_WINDOW_SECONDS).
+        if not model_jobs_due(r, now):
+            continue
         # Every model runs both conditions and they are filed as separate
         # entrants: same weights, different information, so their scores answer
         # different questions and belong on different leaderboard rows.

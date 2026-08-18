@@ -62,4 +62,16 @@ if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_"):
             fn()
-    print("5 spend-ceiling tests passed")
+    print("6 spend-ceiling tests passed")
+
+
+def test_model_jobs_wait_for_their_window():
+    from datetime import datetime, timezone
+    from ssa.refresh import model_jobs_due
+    now = datetime(2026, 8, 18, 12, 0, tzinfo=timezone.utc)
+    far = {"lock_at": "2026-08-30T14:00:00Z"}     # 12 days out: wait
+    due = {"lock_at": "2026-08-20T14:00:00Z"}     # 2 days out: buy
+    shut = {"lock_at": "2026-08-18T12:10:00Z"}    # inside the 30-min margin
+    assert not model_jobs_due(far, now)
+    assert model_jobs_due(due, now)
+    assert not model_jobs_due(shut, now)
