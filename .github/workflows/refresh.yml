@@ -94,7 +94,10 @@ jobs:
       - run: pip install opentimestamps-client
       # pdftotext, for ssa/adapters/umichparty.py: the Michigan party series is
       # published only as a PDF and the adapter raises without this binary.
+      # Self-healing on a stale package index: build_all fails loud, so a
+      # failed install here would take down the whole refresh, not one series.
       - run: sudo apt-get install -y --no-install-recommends poppler-utils
+          || (sudo apt-get update && sudo apt-get install -y --no-install-recommends poppler-utils)
       - run: python -m tests.test_scoring
       # Keyless and instant, and it runs here rather than only on a PR because
       # the thing it guards is this job's configuration: SSA_OPENROUTER is set
