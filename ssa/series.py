@@ -1003,6 +1003,67 @@ _trends("trends_iphone", "iPhone",
         "cycle and product rumors, so the calendar itself is informative.")
 
 
+# --- the Civiqs 16-cell population profile ----------------------------------
+#
+# Fifteen more cuts of the same modeled approval tracker, completing -- with
+# civiqs_net_approval_rep above -- one cell per bucket of every demographic
+# axis the dashboard exposes: party (3), age (4), race (4), education (3),
+# gender (2). Sixteen numbers that together describe *which people* moved.
+#
+# These are the data layer of the joint population-profile task, and that is
+# the only capacity in which most of them earn a place. As standalone scalar
+# rounds the measured objections stand (see the block above
+# civiqs_net_approval_rep): Democrats are floor-bound, independents and the
+# young echo the national line at 0.97+. But a profile scored jointly with the
+# energy score is exactly where a flat cell still carries information -- a
+# model that believes Democrats might move books real loss against one that
+# knows they will not -- so every cell is collected daily and none except
+# Republicans gets its own round. Labels are byte-exact from the dashboard's
+# own demographics list (fetched 2026-08-18); a typo'd label is a hard error
+# in the adapter, never a silently-national series.
+_PROFILE_CELLS = [
+    # id suffix          axis          label                        short
+    ("dem",              "party",      "Democrat",                  "Democrats"),
+    ("ind",              "party",      "Independent",               "independents"),
+    ("age_18_34",        "age",        "18-34",                     "adults 18-34"),
+    ("age_35_49",        "age",        "35-49",                     "adults 35-49"),
+    ("age_50_64",        "age",        "50-64",                     "adults 50-64"),
+    ("age_65_up",        "age",        "65+",                       "adults 65 and older"),
+    ("race_white",       "race",       "White",                     "White registered voters"),
+    ("race_black",       "race",       "Black or African-American", "Black registered voters"),
+    ("race_hispanic",    "race",       "Hispanic/Latino",           "Hispanic/Latino registered voters"),
+    ("race_other",       "race",       "Other",                     "registered voters of other races"),
+    ("edu_noncollege",   "education",  "Non-College Graduate",      "non-college graduates"),
+    ("edu_college",      "education",  "College Graduate",          "college graduates"),
+    ("edu_postgrad",     "education",  "Postgraduate",              "postgraduates"),
+    ("male",             "gender",     "Male",                      "men"),
+    ("female",           "gender",     "Female",                    "women"),
+]
+
+for _sfx, _axis, _label, _short in _PROFILE_CELLS:
+    SERIES[f"civiqs_net_approval_{_sfx}"] = {
+        "label": f"Civiqs Trump net approval, {_short}",
+        "tracker": "civiqs",
+        "source": "civiqs",
+        "civiqs": {"name": _CIVIQS_APPROVAL, "filters": {_axis: _label},
+                   "net": True, "weekday": 4},
+        "value": "value",
+        "unit": "net points (approve minus disapprove)",
+        "cadence": _CIVIQS_CADENCE,
+        "question": ("Civiqs daily tracker: Donald Trump's net job approval "
+                     "(percent approve minus percent disapprove) among US "
+                     f"registered voters, {_short} only, as the dashboard "
+                     "shows it on Friday"),
+        "methodology": _CIVIQS_METHOD + (
+            f" Filtered to the dashboard's {_axis} = {_label} subgroup. "
+            "Collected as one cell of the sixteen-cell population profile; "
+            "scored jointly with the other cells, not as its own round."),
+        # No `survey` instrument: personas.weights_for cannot express a
+        # subgroup-only population -- same refusal as civiqs_net_approval_rep.
+    }
+
+
+
 def describe(series_id):
     """The question and methodology text an entrant is entitled to see."""
     s = SERIES[series_id]

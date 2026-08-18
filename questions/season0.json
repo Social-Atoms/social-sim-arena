@@ -1,6 +1,6 @@
 {
   "season": 0,
-  "note": "Season 0 rounds. Lock is always release minus 48 hours, except behavioral series (wikipedia), which lock before the measured week begins because their outcome data publishes daily. Times are UTC. release_estimated=true means the pollster does not preannounce an exact time; if a wave slips, the round resolves on the next published wave. New weekly rounds are appended by the refresh cron.",
+  "note": "Season 0 rounds. Lock is always release minus 48 hours, except behavioral series (wikipedia, google_trends), which lock before the measured week begins because their outcome data publishes daily. Times are UTC. release_estimated=true means the pollster does not preannounce an exact time; if a wave slips, the round resolves on the next published wave. New weekly rounds are appended by the refresh cron.",
   "rounds": [
     {
       "round_id": "umich-2026-08-prelim",
@@ -180,6 +180,138 @@
       "release_estimated": false,
       "lock_at": "2026-08-21T14:00:00Z",
       "resolve": "Wikimedia Pageviews API, user traffic, complete week",
+      "target_type": "continuous_normal"
+    },
+    {
+      "round_id": "yougov-2026-w36-approval",
+      "tracker": "economist_yougov",
+      "series": "yougov_approval",
+      "question": "Economist/YouGov weekly tracker: percent of US adult citizens who approve of Donald Trump's job performance",
+      "unit": "% approve",
+      "release_at": "2026-09-01T14:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-08-30T14:00:00Z",
+      "resolve": "topline PDF of the wave",
+      "target_type": "continuous_normal"
+    },
+    {
+      "round_id": "yougov-2026-w36-generic",
+      "tracker": "economist_yougov",
+      "series": "yougov_generic_margin",
+      "question": "Economist/YouGov generic congressional ballot: the Democratic margin (Democratic percent minus Republican percent) for the 2026 US House elections",
+      "unit": "net points, Democratic minus Republican",
+      "release_at": "2026-09-01T14:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-08-30T14:00:00Z",
+      "resolve": "topline PDF of the wave",
+      "target_type": "continuous_normal"
+    },
+    {
+      "round_id": "mc-2026-w36-approval",
+      "tracker": "morning_consult",
+      "series": "mc_approval",
+      "question": "Morning Consult weekly tracker: percent of US registered voters who approve of Donald Trump's job performance",
+      "unit": "% approve",
+      "release_at": "2026-09-02T14:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-08-31T14:00:00Z",
+      "resolve": "adjusted average at the release date",
+      "target_type": "continuous_normal"
+    },
+    {
+      "round_id": "civiqs-2026-w35-approval",
+      "tracker": "civiqs",
+      "series": "civiqs_net_approval",
+      "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, as the dashboard shows it on Friday",
+      "unit": "net points (approve minus disapprove)",
+      "release_at": "2026-08-28T14:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-08-26T14:00:00Z",
+      "resolve": "dashboard Friday value, from the daily archive",
+      "target_type": "continuous_normal"
+    },
+    {
+      "round_id": "civiqs-2026-w36-approval",
+      "tracker": "civiqs",
+      "series": "civiqs_net_approval",
+      "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, as the dashboard shows it on Friday",
+      "unit": "net points (approve minus disapprove)",
+      "release_at": "2026-09-04T14:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-09-02T14:00:00Z",
+      "resolve": "dashboard Friday value, from the daily archive",
+      "target_type": "continuous_normal"
+    },
+    {
+      "round_id": "civiqs-rep-2026-w35",
+      "tracker": "civiqs",
+      "series": "civiqs_net_approval_rep",
+      "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters who identify as Republicans, as the dashboard shows it on Friday",
+      "unit": "net points (approve minus disapprove)",
+      "release_at": "2026-08-28T14:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-08-26T14:00:00Z",
+      "resolve": "dashboard Friday value, Republicans filter, from the daily archive",
+      "target_type": "continuous_normal"
+    },
+    {
+      "round_id": "civiqs-rep-2026-w36",
+      "tracker": "civiqs",
+      "series": "civiqs_net_approval_rep",
+      "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters who identify as Republicans, as the dashboard shows it on Friday",
+      "unit": "net points (approve minus disapprove)",
+      "release_at": "2026-09-04T14:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-09-02T14:00:00Z",
+      "resolve": "dashboard Friday value, Republicans filter, from the daily archive",
+      "target_type": "continuous_normal"
+    },
+    {
+      "round_id": "aaii-2026-08-27",
+      "tracker": "aaii",
+      "series": "aaii_bull_bear_spread",
+      "question": "AAII Investor Sentiment Survey: percent of AAII members bullish about the stock market's direction over the next six months, minus percent bearish (the bull-bear spread)",
+      "unit": "percentage points (bullish minus bearish)",
+      "release_at": "2026-08-27T14:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-08-25T14:00:00Z",
+      "resolve": "results page row for the voting week ending 2026-08-26",
+      "target_type": "continuous_normal"
+    },
+    {
+      "round_id": "aaii-2026-09-03",
+      "tracker": "aaii",
+      "series": "aaii_bull_bear_spread",
+      "question": "AAII Investor Sentiment Survey: percent of AAII members bullish about the stock market's direction over the next six months, minus percent bearish (the bull-bear spread)",
+      "unit": "percentage points (bullish minus bearish)",
+      "release_at": "2026-09-03T14:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-09-01T14:00:00Z",
+      "resolve": "results page row for the voting week ending 2026-09-02",
+      "target_type": "continuous_normal"
+    },
+    {
+      "round_id": "trends-2026-08-29-tesla",
+      "tracker": "google_trends",
+      "series": "trends_tesla",
+      "question": "Google Trends weekly search interest for the query 'Tesla' in the United States (web search, all categories): the 0-100 index for the most recent complete Sunday-to-Saturday week, normalized within the trailing 12-month window, as captured by the arena's archived snapshot. Interest tracks product and company news -- launches, recalls, earnings, Musk coverage -- so the week's public events are the signal to reason over. (week Sun Aug 23 - Sat Aug 29)",
+      "unit": "search interest index (0-100, 12-month window)",
+      "release_at": "2026-09-01T14:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-08-21T14:00:00Z",
+      "resolve": "first archived snapshot carrying the completed week ending 2026-08-29",
+      "target_type": "continuous_normal"
+    },
+    {
+      "round_id": "trends-2026-08-29-iphone",
+      "tracker": "google_trends",
+      "series": "trends_iphone",
+      "question": "Google Trends weekly search interest for the query 'iPhone' in the United States (web search, all categories): the 0-100 index for the most recent complete Sunday-to-Saturday week, normalized within the trailing 12-month window, as captured by the arena's archived snapshot. Interest is strongly seasonal around Apple's September announcement cycle and product rumors, so the calendar itself is informative. (week Sun Aug 23 - Sat Aug 29)",
+      "unit": "search interest index (0-100, 12-month window)",
+      "release_at": "2026-09-01T14:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-08-21T14:00:00Z",
+      "resolve": "first archived snapshot carrying the completed week ending 2026-08-29",
       "target_type": "continuous_normal"
     }
   ]
