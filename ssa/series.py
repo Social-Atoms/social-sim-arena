@@ -18,6 +18,7 @@ filters were implicit in adapter code, which had two consequences worth naming:
 
 Adding a tracker means adding a row here, and nothing else.
 """
+from .adapters import aaii as aaii_adapter
 from .adapters import civiqs as civiqs_adapter
 from .adapters import silverbulletin as sb
 from .adapters import umich as umich_adapter
@@ -870,6 +871,60 @@ SERIES["wiki_views_taylor_swift"] = {
 }
 
 
+# --- AAII investor sentiment -------------------------------------------------
+#
+# The first market-sentiment series in the registry, and the first weekly
+# tracker that is neither political nor a Civiqs model. The headline is the
+# bull-bear spread: percent of AAII members bullish on stocks over the next
+# six months, minus percent bearish. Published weekly since 1987, which makes
+# it one of the oldest sentiment series in existence -- though the machine-
+# readable route only reaches the results page's ~22-week rolling window; the
+# full history lives in an .xls this repository cannot read without a
+# dependency (see ssa/adapters/aaii.py for that trade, stated in full).
+#
+# Two facts about the target that entrants will run into:
+#
+# - **The long-run mean spread is about +6.5 points** (members lean bullish on
+#   average) **and the series is famously mean-reverting** -- extreme readings
+#   are widely used as contrarian signals precisely because they decay. That
+#   makes persistence a strong null here: at a one-week horizon the level
+#   carries, mean reversion operates over months, and the week-over-week noise
+#   punishes anyone who reaches for the long-run mean too eagerly.
+# - The three shares are exhaustive (bullish + neutral + bearish = 100), so
+#   the spread moves two-for-one with any bull<->bear flow but not at all with
+#   flows into neutral. A forecast of the spread is implicitly a forecast of
+#   which side the fence-sitters fall off.
+SERIES["aaii_bull_bear_spread"] = {
+    "label": "AAII bull-bear spread",
+    "tracker": "aaii",
+    "source": "aaii", "value": "spread",
+    "unit": "percentage points (bullish minus bearish)",
+    "cadence": ("weekly; voting runs Thursday through Wednesday, rows are "
+                "dated by the closing Wednesday, results publish Thursday"),
+    "question": ("AAII Investor Sentiment Survey: percent of AAII members "
+                 "bullish about the stock market's direction over the next "
+                 "six months, minus percent bearish (the bull-bear spread)"),
+    "methodology": (
+        "weekly online poll of American Association of Individual Investors "
+        "members, running since 1987; one vote per member per weekly voting "
+        "period (Thursday through Wednesday), results published Thursday. "
+        "Bullish, neutral and bearish shares sum to 100. The long-run mean "
+        "spread is roughly +6.5 points and the series is famously "
+        "mean-reverting, which is why extreme readings are watched as "
+        "contrarian signals. Respondents are self-selected active individual "
+        "investors, not a probability sample of any general population."),
+    # No `survey` instrument, deliberately. The persona panel is a
+    # general-population demographic panel; AAII members are a self-selected
+    # population of active individual investors (older, wealthier, far more
+    # market-engaged than any demographic cell approximates). Putting this
+    # question to the panel would answer "what do simulated US adults think",
+    # score it against "what AAII members said", and call the gap model error.
+    # `series.survey()` returning None makes the persona arm refuse the series
+    # by name -- the same discipline as civiqs_net_approval_rep -- until a
+    # panel with an AAII-member population definition exists.
+}
+
+
 def describe(series_id):
     """The question and methodology text an entrant is entitled to see."""
     s = SERIES[series_id]
@@ -901,6 +956,13 @@ def build_all(sources=None):
         src["sb_generic"] = sb.fetch(sb.GENERIC_URL)
     if "umich" in need and "umich" not in src:
         src["umich"] = michigan_history()
+    # `src["aaii"]` holds *parsed* rows rather than the page body, because the
+    # page's dates carry no year: parsing needs the `asof` from the response
+    # that served it, and the two must never be separated (aaii.fetch_text
+    # returns the pair, aaii.fetch keeps them together). Tests inject rows
+    # here and stay off the network.
+    if "aaii" in need and "aaii" not in src:
+        src["aaii"] = aaii_adapter.fetch()
     # Civiqs is the one source with no single file to prefetch: every tracker
     # and every subgroup is its own ~2 MB page. So `src["civiqs"]` is not a
     # payload but a per-series override map -- `{series_id: [{date, value}]}` --
@@ -932,6 +994,8 @@ def build_all(sources=None):
         elif spec["source"] == "sb_generic":
             recs = sb.generic_ballot_polls(rows=src["sb_generic"], **f)
             out[sid] = sb.to_series(recs, spec["value"])
+        elif spec["source"] == "aaii":
+            out[sid] = aaii_adapter.to_series(src["aaii"], spec["value"])
         elif spec["source"] == "civiqs":
             cfg = spec["civiqs"]
             given = src["civiqs"].get(sid)
