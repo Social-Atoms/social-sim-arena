@@ -23,6 +23,7 @@ from .adapters import civiqs as civiqs_adapter
 from .adapters import silverbulletin as sb
 from .adapters import trends as trends_adapter
 from .adapters import umich as umich_adapter
+from .adapters import umichparty as umichparty_adapter
 from .adapters import wikipedia as wikipedia_adapter
 
 # Set by michigan_history() to whichever source answered, plus the URL that
@@ -872,6 +873,90 @@ SERIES["wiki_views_taylor_swift"] = {
 }
 
 
+# --- Michigan consumer sentiment by political party --------------------------
+#
+# The same Index of Consumer Sentiment as `umich_sentiment`, cut three ways by
+# how the respondent identifies: Democrat, Independent, Republican. Published on
+# the *preliminary* release day in an addenda PDF and parsed by
+# `ssa/adapters/umichparty.py`, which is the whole reason this exists --
+# `docs/sources.md` section 6 recorded the cut as not viable, and Route A
+# through `pdftotext` reopened it.
+#
+# **This is the registry's first target whose null is structurally wrong on a
+# known calendar.** Everything else here moves by points a month; the partisan
+# gap *inverts* at presidential transitions, and the date is set years ahead.
+# October 2016 read Dem 102.1 / Rep 74.4; February 2017, Dem 77.5 / Rep 115.7.
+# October 2024 read Dem 91.4 / Rep 53.6; two months later, Dem 69.6 / Rep 85.4 --
+# and November 2024 caught it mid-swap at Dem 81.3 / Rep 69.1, the two lines
+# crossing inside a single monthly reading. A persistence null cannot see either
+# event coming. A society simulated from real people's partisanship should.
+#
+# What the three series carry, measured on the 115 unbroken monthly readings
+# from 2017-02 (the archive also holds 41 sporadic rows back to 1980-06, a
+# 46-year span, in fifteen stretches where the party question was asked at all):
+#
+# - **Levels are far apart and stay apart.** August 2026 is Dem 39.1 / Ind 48.5
+#   / Rep 78.7 -- a 39.6-point Dem-Rep gap, wider than the entire range the
+#   national index has moved in over the same decade. Forecasting three numbers
+#   is not forecasting one number three times.
+# - **Volatility is comparable across the three** (mean absolute month-over-
+#   month change 4.4 / 3.8 / 4.6 index points), so no cut is a free win.
+# - **Ranges over the modern run**: Dem 32.4-107.5, Ind 40.6-102.8, Rep
+#   33.0-127.2. The out-party floor is the interesting region and both parties
+#   have now visited it.
+#
+# The newest row is the *preliminary* reading and is revised at the final, which
+# needs no handling here: `resolve.candidate` keys releases on (date, value), so
+# a month's preliminary and its final are two releases and each settles its own
+# round -- exactly as `umich_sentiment` already works.
+_UMICH_PARTY_METHOD = (
+    "Surveys of Consumers, University of Michigan; the same roughly 600-1,000 "
+    "US adults a month, by telephone and web, that produce the headline index, "
+    "split by the respondent's answer to 'Generally speaking, do you usually "
+    "think of yourself as a Republican, a Democrat, an Independent, or what?'. "
+    "The subgroup index is computed by the same published formula over the same "
+    "five items and normalized to the same 1966 = 100 base, so it is directly "
+    "comparable in level to the national number and to the other two parties. "
+    "Subgroup samples are roughly a third of the national one, so month-to-"
+    "month sampling noise is correspondingly larger. Published as an addenda "
+    "table with the preliminary release; the newest month is a preliminary "
+    "reading and is revised when the final lands at the end of the month. ")
+
+
+def _umich_party(sid, party, label, who):
+    SERIES[sid] = {
+        "label": label,
+        "tracker": "umich_party",
+        "source": "umichparty",
+        "umichparty": {"party": party},
+        "value": "value",
+        "unit": "index points (1966=100)",
+        "cadence": "monthly, published with the national preliminary release",
+        "question": ("University of Michigan Index of Consumer Sentiment (ICS) "
+                     f"among US adults who identify as {who}, from the Tables "
+                     "Addenda of Political Party Variable published with the "
+                     "monthly preliminary release"),
+        "methodology": _UMICH_PARTY_METHOD + f"This is the {who} cut.",
+        # No `survey` instrument, deliberately, and for exactly the reason
+        # `civiqs_net_approval_rep` gives: `personas.weights_for` reweights the
+        # panel by population (adults, registered, likely voters) and has no way
+        # to express "Democrats only", so a persona run would put the five ICS
+        # items to a national panel and report the answer as a party subgroup.
+        # `series.survey()` returning None makes the persona arm refuse the
+        # series by name, which is the honest outcome until the panel can be cut
+        # by party -- and this tracker is the strongest argument yet for doing
+        # that, since party is the axis the whole series is about.
+    }
+
+
+_umich_party("umich_party_dem", "dem",
+             "Michigan consumer sentiment, Democrats", "Democrats")
+_umich_party("umich_party_ind", "ind",
+             "Michigan consumer sentiment, Independents", "Independents")
+_umich_party("umich_party_rep", "rep",
+             "Michigan consumer sentiment, Republicans", "Republicans")
+
+
 # --- AAII investor sentiment -------------------------------------------------
 #
 # The first market-sentiment series in the registry, and the first weekly
@@ -1095,6 +1180,13 @@ def build_all(sources=None):
         src["sb_generic"] = sb.fetch(sb.GENERIC_URL)
     if "umich" in need and "umich" not in src:
         src["umich"] = michigan_history()
+    # One PDF conversion shared by all three party series. `umichparty.load()`
+    # reads the newest vintage under `sources/umichparty/` and never the
+    # network -- the addenda has been published exactly once, so nothing here
+    # can be made to depend on it appearing again on schedule. Tests inject
+    # parsed rows here and stay off both the disk and `pdftotext`.
+    if "umichparty" in need and "umichparty" not in src:
+        src["umichparty"] = umichparty_adapter.load()
     # `src["aaii"]` holds *parsed* rows rather than the page body, because the
     # page's dates carry no year: parsing needs the `asof` from the response
     # that served it, and the two must never be separated (aaii.fetch_text
@@ -1134,6 +1226,9 @@ def build_all(sources=None):
         f = spec.get("filters") or {}
         if spec["source"] == "umich":
             out[sid] = list(src["umich"])
+        elif spec["source"] == "umichparty":
+            out[sid] = umichparty_adapter.to_series(
+                src["umichparty"], spec["umichparty"]["party"])
         elif spec["source"] == "sb_approval":
             recs = sb.approval_polls(rows=src["sb_approval"], **f)
             out[sid] = sb.to_series(recs, spec["value"])
