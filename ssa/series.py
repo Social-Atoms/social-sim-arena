@@ -1148,6 +1148,30 @@ for _sfx, _axis, _label, _short in _PROFILE_CELLS:
     }
 
 
+# The profile in its scored order: party, age, race, education, gender, each
+# axis in the dashboard's own order. Republicans are spliced back into the
+# party block they belong to -- they are registered above, separately, because
+# that cell also stands alone as a scalar round and the other fifteen do not.
+#
+# One published constant rather than a list per consumer. A profile round names
+# its cells in `questions/season0.json`, the harness asks for exactly these keys
+# and the scorer reads the outcome vector in exactly this order, so a roster
+# that disagreed anywhere would silently score cell i against cell j's answer --
+# an error no test of any single module could see. Everything checks against
+# this tuple instead.
+PROFILE_CELLS = tuple(
+    ["civiqs_net_approval_dem", "civiqs_net_approval_ind",
+     "civiqs_net_approval_rep"]
+    + [f"civiqs_net_approval_{sfx}" for sfx, _a, _l, _s in _PROFILE_CELLS
+       if sfx not in ("dem", "ind")])
+
+# Fail at import, not at scoring time: a typo'd or dropped cell here would
+# otherwise surface as a sixteen-cell round quietly resolving on fifteen.
+assert len(PROFILE_CELLS) == 16, f"profile has {len(PROFILE_CELLS)} cells, not 16"
+assert len(set(PROFILE_CELLS)) == 16, "a profile cell is registered twice"
+for _cell in PROFILE_CELLS:
+    assert _cell in SERIES, f"profile cell {_cell} is not a registered series"
+
 
 def describe(series_id):
     """The question and methodology text an entrant is entitled to see."""

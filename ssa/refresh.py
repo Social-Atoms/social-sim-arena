@@ -19,6 +19,7 @@ from . import health
 from . import provenance
 from . import stamps
 from . import average, backtest, baselines, envfile, harness, scoring, sharecard
+from . import profile_round
 from . import series as series_registry
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -278,6 +279,11 @@ def build_rounds(season, series, resolved, now):
     for r in season["rounds"]:
         row = {k: r[k] for k in ("round_id", "tracker", "series", "question", "unit",
                                   "release_at", "release_estimated", "lock_at", "resolve")}
+        # Carried through so the site and every downstream consumer can tell
+        # the round types apart without re-reading questions/season0.json.
+        for k in ("target_type", "cells"):
+            if k in r:
+                row[k] = r[k]
         row["status"] = round_status(r, resolved, now)
         # Baselines are frozen at lock time: only history strictly before the
         # lock date counts. Otherwise, once a release lands in the series, the
@@ -314,10 +320,51 @@ def build_rounds(season, series, resolved, now):
                 "no machine-readable series for this tracker: forecasts are "
                 "collected and hashed, but cannot be scored, because skill is "
                 "measured against a persistence baseline this round has none of")
+        # A profile round is answered as a vector, so a scalar null cannot be
+        # its denominator: `baselines` is cleared and the per-cell persistence
+        # under `profile` replaces it. Clearing it is also what keeps the
+        # scalar paths off this round -- `build_leaderboard` and the scalar
+        # baseline filing both key on `baselines` being present.
+        if profile_round.is_profile(r):
+            attach_profile(row, r, series)
         if r["round_id"] in resolved:
             row["resolution"] = resolved[r["round_id"]]
         out.append(row)
     return out, hist_by_round
+
+
+def attach_profile(row, r, series):
+    """Attach the profile block: the round's cells and their frozen nulls.
+
+    **Why the date filter is enough here, with no lock snapshot.** Snapshots
+    exist because a monthly series' point is dated by its month label and
+    published weeks later, so `date < lock_at` cannot tell "existed at lock"
+    from "labelled before lock". The profile cells are the Civiqs daily
+    dashboard, archived every day under the date it was read: label and
+    observation are the same day, and the filter is exact. If a profile round
+    is ever pointed at a monthly tracker, it needs per-cell snapshots first.
+    """
+    cells = profile_round.cells_for(r)
+    hist = profile_round.frozen_history(r, series, cells)
+    block = {
+        "cells": list(cells),
+        "labels": profile_round.labels_for(cells),
+        "history_points": {c: len(hist[c]) for c in cells},
+    }
+    row["baselines"] = None
+    try:
+        block["baselines"] = {"persistence":
+                              profile_round.persistence_profile(hist, cells)}
+        row["scoreable"] = True
+        row.pop("baseline_note", None)
+    except ValueError as e:
+        # Named rather than empty, for the reason the scalar branch gives: a
+        # round with no denominator can never produce a skill number, however
+        # many forecasts it collects.
+        block["baselines"] = None
+        row["scoreable"] = False
+        row["baseline_note"] = str(e)
+    row["profile"] = block
 
 
 # Stop re-filing this long before lock_at. A refresh writes to the working
@@ -387,7 +434,7 @@ MAX_SPEND = float(os.environ.get("SSA_MAX_SPEND") or "10")
 EST_IN_TOKENS, EST_OUT_TOKENS = 300, 4650
 
 
-def price_jobs(jobs, hist_by_round, read_forecast, news_for):
+def price_jobs(jobs, hist_by_round, read_forecast, news_for, prof_hist=None):
     """(jobs that would really call, estimated USD).
 
     Recomputes each job's input hash and compares it to what is already filed,
@@ -408,9 +455,17 @@ def price_jobs(jobs, hist_by_round, read_forecast, news_for):
         try:
             if eli == "persona":
                 raise ValueError("panel priced per respondent below")
-            prompt = harness.build_prompt(
-                r, hist_by_round.get(r["round_id"]), ctx, eli,
-                news=news_for(r) if ctx == "news" else None)
+            news = news_for(r) if ctx == "news" else None
+            if profile_round.is_profile(r):
+                # Same builder the filing pass uses, so a profile round that is
+                # already answered prices as free rather than being counted
+                # billable by the fallback below -- which would let a fully
+                # cached headline round eat the whole spend ceiling.
+                prompt = harness.build_profile_prompt(
+                    r, (prof_hist or {}).get(r["round_id"]), ctx, eli, news=news)
+            else:
+                prompt = harness.build_prompt(
+                    r, hist_by_round.get(r["round_id"]), ctx, eli, news=news)
             if f"in={harness.prompt_hash(entrant, prompt)}" in notes \
                     and not notes.startswith("MOCK"):
                 continue                      # cached: free
@@ -450,6 +505,26 @@ def affordable(billable, ceiling):
     return buy, withhold, spent
 
 
+def nulls_for(r):
+    """The round's reference forecasts, whatever shape the round takes.
+
+    Scalar rounds keep theirs in `baselines`, profile rounds in
+    `profile.baselines` -- one accessor so the filing loop does not have to
+    know, and so a round type added later cannot be silently skipped by a
+    truthiness test on the wrong key.
+    """
+    if r.get("profile"):
+        return (r["profile"] or {}).get("baselines") or {}
+    return r.get("baselines") or {}
+
+
+def profile_history_for(r, series):
+    """{cell: frozen pre-lock history} for a profile round, else None."""
+    if not profile_round.is_profile(r):
+        return None
+    return profile_round.frozen_history(r, series)
+
+
 def read_forecast(path):
     if not os.path.exists(path):
         return None
@@ -460,7 +535,7 @@ def read_forecast(path):
         return None
 
 
-def file_baseline_forecasts(rounds, hist_by_round, now):
+def file_baseline_forecasts(rounds, hist_by_round, now, series=None):
     """Write every entrant's forecast for each open round.
 
     Returns (files_written, failures). Failures are messages, never mocks: a
@@ -475,19 +550,33 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
     failures = []
     jobs = []
     for r in rounds:
-        if r["status"] != "open" or not r.get("baselines"):
+        if r["status"] != "open" or not nulls_for(r):
             continue
         if (parse_iso(r["lock_at"]) - now).total_seconds() < LOCK_MARGIN_SECONDS:
             continue
         rdir = os.path.join(FORECASTS, r["round_id"])
         os.makedirs(rdir, exist_ok=True)
-        for name, fc in r["baselines"].items():
+        for name, fc in nulls_for(r).items():
             path = os.path.join(rdir, name + ".json")
+            if r.get("profile"):
+                # The null for a vector round is a vector: every cell where it
+                # sat at the last release. Filed in the submission format so it
+                # is scored by exactly the code an entrant's file goes through.
+                answer = {"profile": {c: {"mean": v["mean"], "sd": v["sd"]}
+                                      for c, v in fc.items()}}
+                method = name
+            else:
+                answer = {"topline": {"mean": fc["mean"], "sd": fc["sd"]}}
+                method = fc.get("method", name)
+            # Key order is deliberate and matches what has been on disk all
+            # season: these files are rewritten by every refresh, and reordering
+            # them would rewrite four hundred committed forecasts to say the
+            # same thing.
             body = {
                 "round_id": r["round_id"],
                 "entrant": name,
-                "topline": {"mean": fc["mean"], "sd": fc["sd"]},
-                "notes": "auto-filed baseline (" + fc.get("method", name) + "), refreshed until lock",
+                **answer,
+                "notes": "auto-filed baseline (" + method + "), refreshed until lock",
             }
             with open(path, "w") as f:
                 json.dump(body, f, indent=2)
@@ -514,6 +603,13 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
     # entrant never touches Wikipedia.
     news_cache, news_lock = {}, threading.Lock()
 
+    # The frozen per-cell history each profile round's entrants and nulls both
+    # read. Built once per round rather than per job: it is the same sixteen
+    # slices for every entrant, and the pricing pass needs the identical object
+    # to rebuild the identical prompt hash.
+    prof_hist = {r["round_id"]: profile_history_for(r, series or {})
+                 for r in rounds if profile_round.is_profile(r)}
+
     def news_for(r):
         rid = r["round_id"]
         with news_lock:
@@ -538,10 +634,12 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
                 # nothing is wrong and nothing was spent -- an empty digest
                 # on a CLOSED window still falls through and fails loudly.
                 return 0
-            body = harness.forecast(entrant, r,
-                                    history=hist_by_round.get(r["round_id"]),
-                                    previous=read_forecast(path),
-                                    news=news)
+            body = harness.forecast(
+                entrant, r,
+                history=hist_by_round.get(r["round_id"]),
+                previous=read_forecast(path),
+                news=news,
+                profile_history=prof_hist.get(r["round_id"]))
         except Exception as e:                     # noqa: BLE001 - collected
             # Collected rather than raised. Failing at the first bad provider
             # would strand every other entrant's forecast unwritten, and rounds
@@ -557,7 +655,7 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
 
     if jobs:
         billable, usd = price_jobs(jobs, hist_by_round, read_forecast,
-                                   news_for)
+                                   news_for, prof_hist)
         print(f"\nfiling: {len(jobs)} entrant-round(s), {len(jobs) - len(billable)} "
               f"already answered, {len(billable)} to call, est ${usd:.2f}")
         withheld = set()
@@ -691,6 +789,144 @@ def build_leaderboard(rounds, resolved):
     return board
 
 
+def profile_outcome(r, resolved, series):
+    """(outcome vector, detail) for a profile round past its release.
+
+    A resolution written into `resolutions/resolved.json` wins, for the reason
+    `ssa/resolve.py` gives: once written, a resolution is the scoring authority
+    and is never recomputed underneath the scores it already fixed. Absent one,
+    the vector is read from the cells' own archived series as of the release
+    date -- no hand-typed numbers, and reproducible by anyone with the repo.
+
+    Raises rather than returning a partial vector.
+    """
+    cells = profile_round.cells_for(r)
+    res = (resolved or {}).get(r["round_id"])
+    if res and res.get("values"):
+        return profile_round.outcome_vector(res, cells), dict(res, source="resolved.json")
+    detail = profile_round.resolution(r, series or {}, cells)
+    return list(detail["vector"]), detail
+
+
+def build_profile_leaderboard(rounds, resolved, series):
+    """The profile board: energy score and skill, per entrant per profile round.
+
+    Kept apart from `build_leaderboard` rather than folded into it, because the
+    two are not the same measurement and averaging them would be meaningless: a
+    CRPS is in points and an energy score is a distance in sixteen-dimensional
+    points-space, and no weighting of the two answers a question anyone asked.
+    Skill is the exception and the reason both boards are readable together --
+    `scoring.profile_skill` is the scalar skill expression verbatim, so a tenth
+    of skill means the same thing on either board.
+
+    `matched` is the table to cite, for the reason `ssa/model_backtest.py`
+    gives: it holds only entrants who answered *every* scored profile round, so
+    a model that sat out the hard weeks cannot flatter itself with an average
+    over the easy ones.
+    """
+    per_round, entries, skipped = [], {}, []
+    scored_rounds = 0
+    for r in rounds:
+        if not profile_round.is_profile(r):
+            continue
+        nulls = (r.get("profile") or {}).get("baselines") or {}
+        if not nulls.get("persistence"):
+            skipped.append((r["round_id"], r.get("baseline_note")
+                            or "no per-cell persistence null"))
+            continue
+        if now_utc() < parse_iso(r["release_at"]):
+            continue                      # not due; not a problem
+        cells = profile_round.cells_for(r)
+        try:
+            outcome, detail = profile_outcome(r, resolved, series)
+        except ValueError as e:
+            skipped.append((r["round_id"], str(e)))
+            continue
+        per_cells = profile_round.persistence_cells(nulls["persistence"], cells)
+        per_energy = profile_round.score_cells(per_cells, outcome)["energy"]
+        rdir = os.path.join(FORECASTS, r["round_id"])
+        if not os.path.isdir(rdir):
+            skipped.append((r["round_id"], "no forecasts filed"))
+            continue
+        rows = []
+        for fn in sorted(os.listdir(rdir)):
+            if not fn.endswith(".json"):
+                continue
+            with open(os.path.join(rdir, fn)) as f:
+                fc = json.load(f)
+            try:
+                sc = profile_round.score_submission(fc, outcome, cells)
+            except (ValueError, KeyError) as e:
+                # A malformed or partial profile is excluded and named, never
+                # repaired: see harness.parse_profile for why filling a cell in
+                # would flatter exactly the entrant this round exists to catch.
+                skipped.append((f"{r['round_id']}/{fn[:-5]}", str(e)))
+                continue
+            row = {
+                "entrant": fc["entrant"],
+                "energy": round(sc["energy"], 4),
+                "skill": round(scoring.profile_skill(sc["energy"], per_energy), 4),
+                "level": round(sc["level"], 4),
+                "structure": round(sc["structure"], 4),
+                "mean_cell_crps": round(sc["mean_cell_crps"], 4),
+            }
+            rows.append(row)
+            e = entries.setdefault(fc["entrant"],
+                                   {"energy": [], "skill": [], "level": [],
+                                    "structure": [], "rounds": []})
+            for k in ("energy", "skill", "level", "structure"):
+                e[k].append(row[k])
+            e["rounds"].append(r["round_id"])
+        if not rows:
+            skipped.append((r["round_id"], "no scoreable profile submissions"))
+            continue
+        scored_rounds += 1
+        rows.sort(key=lambda x: -x["skill"])
+        per_round.append({
+            "round_id": r["round_id"],
+            "release_at": r["release_at"],
+            "cells": list(cells),
+            "n_cells": len(cells),
+            "persistence_energy": round(per_energy, 4),
+            "outcome": {c: v for c, v in zip(cells, outcome)},
+            "resolution": {k: detail.get(k) for k in
+                           ("method", "release_date", "observed_dates", "source")
+                           if detail.get(k) is not None},
+            "entries": rows,
+        })
+
+    def board_from(names):
+        out = []
+        for name in names:
+            e = entries[name]
+            n = len(e["energy"])
+            out.append({
+                "entrant": name,
+                "rounds": n,
+                "mean_energy": round(sum(e["energy"]) / n, 4),
+                "mean_skill": round(sum(e["skill"]) / n, 4),
+                "mean_level": round(sum(e["level"]) / n, 4),
+                "mean_structure": round(sum(e["structure"]) / n, 4),
+            })
+        out.sort(key=lambda x: -x["mean_skill"])
+        return out
+
+    matched_names = [n for n, e in entries.items()
+                     if len(e["rounds"]) == scored_rounds] if scored_rounds else []
+    return {
+        "scored_rounds": scored_rounds,
+        "rounds": per_round,
+        "board": board_from(list(entries)),
+        "matched": board_from(matched_names),
+        "matched_rounds": scored_rounds,
+        "skipped": [list(s) for s in skipped],
+        "note": ("energy score (multivariate CRPS) over the round's cell "
+                 "vector; skill = 1 - ES(entrant) / ES(per-cell persistence). "
+                 "`matched` holds only entrants who answered every scored "
+                 "profile round."),
+    }
+
+
 def michigan_history():
     """Michigan sentiment. Delegates to the registry, which has no fallback.
 
@@ -818,7 +1054,8 @@ def main():
               "calling no provider")
         filed, filing_failures = 0, []
     else:
-        filed, filing_failures = file_baseline_forecasts(rounds, hist_by_round, now)
+        filed, filing_failures = file_baseline_forecasts(rounds, hist_by_round,
+                                                         now, series)
     count_forecasts(rounds)
     stamped = stamp_locked_rounds(rounds)
 
@@ -831,6 +1068,7 @@ def main():
     for line in health.report(source_health):
         print(line)
     board = build_leaderboard(rounds, resolved)
+    profile_board = build_profile_leaderboard(rounds, resolved, series)
     bt = backtest.run({
         "umich_sentiment": series["umich_sentiment"],
         "yougov_approval": series["yougov_approval"],
@@ -920,6 +1158,11 @@ def main():
             "resolved_rounds": sum(1 for r in rounds if r["status"] == "resolved"),
             "entries": board,
         },
+        # The joint sixteen-cell rounds, scored with the energy score. A
+        # separate section rather than rows on the board above: the two use
+        # different scoring rules on different objects, and only `skill` is
+        # comparable across them.
+        "profile": profile_board,
         "backtest": bt,
         "charts": {
             "approval_avg": average.weekly_series(approval, 80),

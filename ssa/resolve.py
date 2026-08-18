@@ -126,6 +126,18 @@ def resolve_round(r, series, now):
     """(resolution, reason). Resolution is None unless every check passes."""
     if now < _parse(r["release_at"]):
         return None, f"release_at {r['release_at'][:16]} has not passed"
+    from . import profile_round
+    if profile_round.is_profile(r):
+        # A profile round's answer is a sixteen-cell vector, and this function
+        # only knows how to produce a scalar. Refusing here is not tidiness:
+        # a profile round names an anchor `series` it shares with the scalar
+        # rounds on the same tracker, so without this the first of them past
+        # its release would claim the other's observation -- writing a single
+        # number as the profile's resolution, and blocking the scalar round
+        # that the number actually answers. `refresh.build_profile_leaderboard`
+        # reads the vector from the cells' own series instead.
+        return None, ("profile round: resolved as a cell vector by "
+                      "refresh.build_profile_leaderboard, not as a scalar")
     point, why = candidate(r, series)
     if point is None:
         return None, why
