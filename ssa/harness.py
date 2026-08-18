@@ -43,7 +43,7 @@ import json
 import os
 import re
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 
 import requests
 
@@ -1749,7 +1749,8 @@ def forecast_persona(entrant, r, history=None, previous=None):
     # How many respondents came out of the log rather than off the wire is part
     # of what this panel is: a run that resumed 190 of 192 bought two answers,
     # and the note is where a reader finds that out.
-    note = (f"{model_id(entrant)}, harness v1, via={route(entrant)['via']}, "
+    note = (f"filed={filed_stamp()}, "
+            f"{model_id(entrant)}, harness v1, via={route(entrant)['via']}, "
             f"context={resolve(entrant)[1]} elicitation=persona, "
             f"{len(answers)}/{len(panel)} respondents, "
             + (f"{len(replayed)} replayed, " if replayed else "")
@@ -1817,6 +1818,36 @@ def _gathered_in_window(frozen, r):
     except ValueError:
         return False
     return (lock_t - asked_t).total_seconds() <= FILE_WINDOW_SECONDS
+
+
+def filed_stamp():
+    """The moment a forecast was bought, written into its notes as filed=...
+
+    `refresh.job_still_due` reads it back to enforce one-number-one-forecast:
+    a forecast stamped inside its round's buy window is final and is never
+    reopened. Minute precision is plenty; the boundary it is compared against
+    is days wide. MOCK notes are never stamped, which is what keeps mocks
+    retryable.
+    """
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
+
+
+def filed_in_window(notes, lock_at):
+    """True when the notes say this forecast was bought inside its round's
+    own buy window. Files from before the stamp existed -- the era that bought
+    drafts from listing day -- carry no stamp and return False, so they are
+    replaced once, inside the window, where the input hash makes the
+    replacement free if nothing actually changed."""
+    m = re.search(r"filed=(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?Z)",
+                  notes or "")
+    if not m or not lock_at:
+        return False
+    try:
+        filed = datetime.fromisoformat(m.group(1).replace("Z", "+00:00"))
+        lock = datetime.fromisoformat(lock_at.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return (lock - filed).total_seconds() <= FILE_WINDOW_SECONDS
 
 
 def _retrieve(entrant, r, history):
@@ -1994,7 +2025,8 @@ def _forecast_profile(entrant, r, history, profile_history, previous,
             f"{type(e).__name__}: {e}") from e
     if prof is None:               # the standby already answered this exact
         return previous            # prompt; do not pay for it twice
-    note = (f"{model_id(entrant, via)}, harness v1, via={via}, "
+    note = (f"filed={filed_stamp()}, "
+            f"{model_id(entrant, via)}, harness v1, via={via}, "
             f"context={context} elicitation={elicitation}, "
             f"profile {len(cells)} cells, 1 sample"
             f"{', replayed from the reply log' if replayed else ''}"
@@ -2067,7 +2099,8 @@ def forecast(entrant, r, history=None, previous=None, context=None,
             # `in={ih}` stays last and stays byte-identical: it is what the next
             # run matches on, so the marker goes in front of it rather than
             # after the hash it would otherwise be read as part of.
-            note = (f"{model_id(entrant, via)}, harness v1, via={via}, "
+            note = (f"filed={filed_stamp()}, "
+                    f"{model_id(entrant, via)}, harness v1, via={via}, "
                     f"context={context} elicitation={elicitation}, "
                     f"1 sample"
                     f"{', replayed from the reply log' if replayed else ''}"

@@ -194,12 +194,22 @@ def read_lock_snapshot(round_id):
 # once. Anyone who wanted only the cheap one had no way to say so, which is a
 # bad shape for a switch whose entire job is to stop an unintended bill.
 #
-#   SSA_ELICITATION=news            just the fixed news corpus
-#   SSA_ELICITATION=news,superfc    two of them
-#   SSA_ELICITATION=1 / all         every arm, as before
+#   SSA_ELICITATION=news                  just the fixed news corpus
+#   SSA_ELICITATION=news,superfc          two of them
+#   SSA_ELICITATION=1 / all               every arm, as before
+#   SSA_ELICITATION=only:web,web+superfc  the named arms and NOTHING else --
+#                                         the base roster (zeroshot and
+#                                         recent10, direct) stays home too
 #
 # Unset means none, which stays the default: nothing about merging this starts
 # spending anything.
+def elicitation_only(value=None):
+    """True when SSA_ELICITATION says the named arms replace the base roster
+    instead of joining it."""
+    raw = (os.environ.get("SSA_ELICITATION") if value is None else value) or ""
+    return raw.strip().startswith("only:")
+
+
 def elicitation_variants(value=None):
     """Which elicitation arms this run files, from SSA_ELICITATION.
 
@@ -209,6 +219,8 @@ def elicitation_variants(value=None):
     """
     raw = (os.environ.get("SSA_ELICITATION") if value is None else value) or ""
     raw = raw.strip()
+    if raw.startswith("only:"):
+        raw = raw[len("only:"):].strip()
     if not raw or raw in ("0", "off", "false"):
         return ()
     if raw in ("1", "all"):
@@ -223,7 +235,7 @@ def elicitation_variants(value=None):
 
 def season_roster():
     """(entrant_id, model, variant) for every condition this run will file."""
-    roster = list(harness.season_entrants())
+    roster = [] if elicitation_only() else list(harness.season_entrants())
     want = elicitation_variants()
     if want:
         roster += list(harness.elicitation_entrants(variants=want))
@@ -373,26 +385,52 @@ def attach_profile(row, r, series):
 # then (correctly) rejects as late.
 LOCK_MARGIN_SECONDS = 30 * 60
 
-# Model forecasts are bought only inside this window before a round's lock.
-# A draft written earlier is arithmetically dead: any weekly series will
-# publish again before the lock, the new point changes the prompt hash, and
-# the rewrite replaces the draft -- so a forecast bought two weeks out is a
-# forecast bought to be erased. Three days still spans ~12 six-hourly runs
-# (the redundancy that survives a failed cron or a down provider), and for a
-# weekly series the last pre-lock release is usually already in the history
-# by then, so a round typically costs one call per entrant, not three.
+# One number, one forecast, bought at one fixed vantage point.
+#
+# Every entrant's forecast for a round is bought once, inside a window every
+# round shares: between SSA_FILE_WINDOW_DAYS and SSA_BUY_BY_DAYS before its
+# lock (3 to 2 days by default). A forecast stamped inside the window
+# (`harness.filed_stamp`) is final -- data arriving afterwards does not reopen
+# it -- so every entrant answers the same question from the same distance and
+# a round costs exactly one call per entrant per condition, ever.
+#
+# The day-wide window spans ~4 six-hourly runs, and after it closes the runs
+# that remain up to the lock margin are failure insurance only: they buy a
+# forecast that is still missing and never rewrite one that exists. Drafts
+# from before a round's window (the era that bought from listing day) carry
+# no stamp and are replaced once, inside the window, where the input hash
+# makes the replacement free if nothing actually changed.
+#
 # Baselines are exempt: they are free and the site shows them from listing.
-# It also scopes the web condition's retrieval to lock-proximate news by
-# construction, since the query turn cannot run before the window opens.
-# The constant lives in harness because `_retrieve` also needs it, to judge
-# whether a frozen search corpus was gathered inside its round's own window.
+# Web retrieval is scoped to the same window by construction, since the query
+# turn cannot run before the window opens. FILE_WINDOW_SECONDS lives in
+# harness because `_retrieve` and `filed_in_window` need it too.
 FILE_WINDOW_SECONDS = harness.FILE_WINDOW_SECONDS
+BUY_BY_SECONDS = float(os.environ.get("SSA_BUY_BY_DAYS") or "2") * 86400
 
 
 def model_jobs_due(r, now):
-    """True when this round's model forecasts are worth buying now."""
+    """True while the round's buy window (plus its insurance tail) is open."""
     left = (parse_iso(r["lock_at"]) - now).total_seconds()
     return LOCK_MARGIN_SECONDS <= left <= FILE_WINDOW_SECONDS
+
+
+def job_still_due(r, path, now):
+    """Whether this one entrant-forecast still needs buying.
+
+    Three cases, in order: nothing on disk is bought whenever the round is
+    due (that is the insurance tail working); a file stamped inside the
+    window is final and never reopened; an unstamped file is a pre-window
+    draft, replaced only while the window proper is open -- once the buy-by
+    boundary passes, the draft is the insurance and it stands.
+    """
+    prev = read_forecast(path)
+    if prev is None:
+        return True
+    if harness.filed_in_window(prev.get("notes"), r["lock_at"]):
+        return False
+    left = (parse_iso(r["lock_at"]) - now).total_seconds()
+    return left >= BUY_BY_SECONDS
 
 # Concurrent provider calls when filing forecasts. Each job is one call to one
 # provider, and the eleven entered models spread across five providers, so this
@@ -582,15 +620,18 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None):
                 json.dump(body, f, indent=2)
                 f.write("\n")
             written += 1
-        # Model forecasts wait for the round's own pre-lock window; a draft
-        # bought earlier is bought to be erased (see FILE_WINDOW_SECONDS).
+        # Model forecasts wait for the round's own buy window, and each one is
+        # bought exactly once (see the block above BUY_BY_SECONDS).
         if not model_jobs_due(r, now):
             continue
         # Every model runs both conditions and they are filed as separate
         # entrants: same weights, different information, so their scores answer
         # different questions and belong on different leaderboard rows.
         for entrant, _model, _ctx, _eli in season_roster():
-            jobs.append((r, entrant, os.path.join(rdir, entrant + ".json")))
+            path = os.path.join(rdir, entrant + ".json")
+            if not job_still_due(r, path, now):
+                continue
+            jobs.append((r, entrant, path))
 
     # One provider call per job, and at max reasoning effort a single call can
     # take a minute. Sequentially that is hours for a full season; the calls are
