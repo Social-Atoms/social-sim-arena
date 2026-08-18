@@ -244,20 +244,23 @@ def test_the_vendor_effort_block_is_replaced_not_carried_over():
             assert "thinking" not in p and "reasoning_effort" not in p, (m, p)
 
 
-def test_hosted_search_belongs_to_the_route_not_to_the_model():
-    """OpenRouter serves Claude and GPT but does not proxy Anthropic's
-    `web_search_20260209` or OpenAI's hosted `web_search`. A host that accepts
-    unknown fields and ignores them yields a "web" entrant identical to its
-    closed-book twin -- a published comparison between two arms that were never
-    different. So a routed model is refused by name."""
-    os.environ.setdefault("OPEN_ROUTER", "sk-or-test")
-    with Routed("claude-opus"):
-        assert "claude-opus" in harness.WEB_CAPABLE, "still capable, direct"
-        try:
-            harness.call_provider("claude-opus", "p", context="web")
-            assert False, "a routed model ran the web condition"
-        except ValueError as e:
-            assert "does not proxy" in str(e), e
+def test_a_routed_model_can_still_run_the_web_condition():
+    """This used to be a refusal. Vendor-hosted search does not survive a
+    proxy -- OpenRouter serves Claude and GPT but does not forward Anthropic's
+    `web_search_20260209` -- so a routed entrant had to be blocked from the web
+    arm by name. Running one index of our own removes the coupling entirely:
+    the search happens here, and where the completion is served stops mattering
+    to it."""
+    assert not hasattr(harness, "WEB_CAPABLE")
+    with Keys(ANTHROPIC_API_KEY="k", OPEN_ROUTER="sk-or-test"), \
+            Routed("claude-opus"), Provider() as p:
+        f = harness.forecast("claude-opus-web", ROUND, HIST, search={
+            "asked_at": "2026-08-18T14:00:00Z",
+            "results": [{"query": "q", "results": [
+                {"title": "T", "url": "u", "published": None,
+                 "content": "RETRIEVED"}]}]})
+    assert p.calls == ["openrouter"], p.calls
+    assert "context=web" in f["notes"], f["notes"]
 
 
 def test_a_typo_raises_rather_than_routing_nothing():

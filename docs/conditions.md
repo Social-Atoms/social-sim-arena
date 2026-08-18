@@ -21,7 +21,7 @@ A condition is a **pair**, not a name.
 | `none` | the question and nothing else |
 | `recent10` | the last ten releases, the same history the nulls read |
 | `news` | `recent10` plus a fixed news corpus frozen at the lock |
-| `web` | `recent10` plus live search |
+| `web` | `recent10` plus a corpus the model asked for, from one shared index |
 
 **Elicitation** — how it is asked:
 
@@ -47,11 +47,74 @@ Which cells run:
 | `none` | ✅ season | ○ | ○ |
 | `recent10` | ✅ season | ○ | ✗ |
 | `news` | ○ | ○ | ✗ |
-| `web` | ○ *(live-only)* | ○ | ✗ |
+| `web` | ○ *(live-only, all 15)* | ○ | ✗ |
 
 ✅ = files every round by default. ○ = **nameable and runnable**, off until
 `SSA_ELICITATION` asks for it. ✗ = **refused**, see below. Nothing but the two
 season cells costs anything by default.
+
+### 1.0 Why `web` runs one index instead of the vendors' hosted tools
+
+The obvious build is each vendor's server-side search tool: no scraper, no key,
+three lines per protocol. It was built that way first, and it was a confounded
+experiment.
+
+Anthropic's tool searches Anthropic's index, OpenAI's searches Bing-derived
+results, Gemini's searches Google. When `claude-opus-web` beat
+`gpt-5.6-sol-web`, **nothing in the design could say whether that was the model
+or the index behind it** — and the arena exists to compare models.
+
+It also could not cover the field. Hosted search is a *vendor* capability, not
+a property of the wire protocol: six of fifteen entered models speak
+OpenAI-compatible chat completions and serve no search tool at all. Dispatching
+on the protocol would have sent OpenAI's `web_search` to five hosts that do not
+run it — and the bad outcome there is not a 400, it is a host that accepts the
+unknown field, ignores it, and publishes a "web" entrant byte-identical to its
+closed-book twin.
+
+So the arm runs **one index for all fifteen** (`ssa/adapters/search.py`), and
+what is fixed versus chosen is deliberate:
+
+| fixed for everyone | chosen by the model |
+|---|---|
+| the index, the search depth, the recency window | **the queries** |
+| how many queries, how many rounds, how many results | |
+| how results are rendered into text | |
+
+The queries are the model's own because *knowing what to look for* is the
+capability being measured. That is the entire difference between this and
+`news`, where we pick the corpus and everyone reads the same words.
+
+**Two turns, no agent framework, no tool calling.** Turn one asks for a JSON
+list of queries; we run them; turn two is the ordinary forecast prompt with the
+results appended. Native tool-calling would have reintroduced the confound in a
+new costume — OpenAI's `tools`, Anthropic's `tools` and Gemini's
+`functionDeclarations` are three dialects and entrants differ in how fluently
+they speak their own, so the arm would measure tool-calling competence. A fixed
+number of plain-text turns gives every entrant byte-identical scaffolding, a
+bounded cost, and no loop that can run away.
+
+**Everything is archived, and the archive is the cache.** `search/cache/` is
+keyed by `sha256(query + settings)` and shared across entrants, so fifteen
+models issuing overlapping keywords cost one request each, not fifteen.
+`search/rounds/<round>/<entrant>.json` freezes what that entrant asked and
+received. The search happens once, at lock time, and every later refresh reads
+the file — which is the only reason a `web` forecast can be re-derived at all,
+since the index will not return the same thing tomorrow.
+
+**The parameters are not settled.** `MAX_QUERIES`, `MAX_ROUNDS`,
+`RESULTS_PER_QUERY`, `SNIPPET_CHARS`, `SEARCH_DEPTH` and `DAYS` sit together at
+the top of the module as conservative placeholders, chosen to keep the corpus
+comparable in size to the `news` condition (~5,000 tokens). Picking them by
+feel is how an arm ends up measuring the budget instead of the capability, so
+they are one diff away from being changed once decided.
+
+**This arm cannot be backtested, and that is structural.** A search run today
+over a 2025 release retrieves the published answer.
+`harness.assert_prospective` raises on the `web` context and nothing weakens
+it — so the arm's entire evidence base is the live season, and any claim from
+it is small-n until many rounds have resolved. That belongs in the write-up
+next to the number, not in a footnote.
 
 ### 1.1 Why persona carries only `none`
 
