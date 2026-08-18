@@ -126,7 +126,17 @@ def resolve_round(r, series, now):
     """(resolution, reason). Resolution is None unless every check passes."""
     if now < _parse(r["release_at"]):
         return None, f"release_at {r['release_at'][:16]} has not passed"
-    from . import profile_round
+    from . import profile_round, ranking_round
+    if ranking_round.is_ranking(r):
+        # A ranking round's answer is an ordered list, and this function only
+        # knows how to produce a scalar. The refusal matters for a second reason
+        # here: a ranking round names a `series` that is not in the registry at
+        # all (its target is a list, and the registry holds scalar series), so
+        # without this it would take the "no series in the pipeline" path and be
+        # reported as a round awaiting a human -- every week, for every ranking
+        # round, drowning the reports that do need one.
+        return None, ("ranking round: resolved as an ordered list by "
+                      "refresh.build_ranking_leaderboard, not as a scalar")
     if profile_round.is_profile(r):
         # A profile round's answer is a sixteen-cell vector, and this function
         # only knows how to produce a scalar. Refusing here is not tidiness:

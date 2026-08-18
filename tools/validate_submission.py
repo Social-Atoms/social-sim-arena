@@ -9,7 +9,9 @@ Checks, in order:
 3. The round exists in questions/season0.json.
 4. The answer is the shape the round asked for: a scalar round takes a
    `topline`, a profile round takes a `profile` carrying exactly the cells the
-   round names. Neither substitutes for the other.
+   round names, a ranking round takes a `ranking` list of exactly the length it
+   names (and, for a fixed-basket round, exactly its items). None substitutes
+   for another.
 5. The round is still open (now < lock_at). CI runs this at merge time, so
    the commit that lands after the lock fails loudly.
 6. Prints the canonical sha256, which the leaderboard and the paper cite.
@@ -18,8 +20,8 @@ Canonical form: JSON with sorted keys and separators (',', ':'), UTF-8.
 
 This file imports nothing from `ssa/`, deliberately: CI runs it on a bare
 checkout and it degrades to hand-rolled checks when even jsonschema is absent.
-That is why the profile discriminator below is spelled out here rather than
-imported from `ssa/profile_round.py`, which owns it.
+That is why the round-type discriminators below are spelled out here rather than
+imported from `ssa/profile_round.py` and `ssa/ranking_round.py`, which own them.
 """
 import hashlib
 import json
@@ -31,6 +33,25 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Mirrors ssa.profile_round.TARGET_TYPE. A round without this is scalar.
 PROFILE_TARGET_TYPE = "profile_energy"
+
+# Mirrors ssa.ranking_round.TARGET_TYPE.
+RANKING_TARGET_TYPE = "ranking_list"
+
+# Mirrors ssa.adapters.wikipedia.EXCLUSION_RULE_ID and its two constants. The
+# rule *is* part of the question -- a title it drops cannot be part of any
+# answer -- so it is checked here, at pull-request time, rather than being
+# discovered at scoring time when the entrant can no longer fix it. The
+# duplication is the price of this file importing nothing; the copy is small,
+# frozen, and versioned, and a round naming a rule id this copy does not know
+# fails loudly rather than being waved through.
+WIKI_EXCLUSION_RULE_ID = "main_page_and_namespaces_v1"
+WIKI_EXCLUDED_TITLES = ("Main_Page",)
+WIKI_NAMESPACE_PREFIXES = (
+    "Special:", "Wikipedia:", "Portal:", "Help:", "File:", "Template:",
+    "Category:", "Draft:", "User:", "Talk:",
+    "Wikipedia_talk:", "Portal_talk:", "Help_talk:", "File_talk:",
+    "Template_talk:", "Category_talk:", "Draft_talk:", "User_talk:",
+)
 
 
 def fail(msg):
@@ -76,6 +97,12 @@ def answer_blocks(fc):
     if isinstance(fc.get("profile"), dict):
         return [(f"profile cell '{k}'", v)
                 for k, v in sorted(fc["profile"].items())]
+    if "ranking" in fc:
+        # A ranking answer holds no distributions at all: it is a list, scored
+        # by a metric on lists. Returning a fabricated empty topline here would
+        # make every ranking submission fail the shape check below for lacking
+        # an sd it was never asked for.
+        return []
     return [("topline", fc.get("topline") or {})]
 
 
@@ -108,8 +135,83 @@ def check_quantiles(rel, label, t):
         fail(f"{rel}: {label} quantile values must be non-decreasing in level")
 
 
+def wiki_canonical_title(raw):
+    """Mirrors ssa.adapters.wikipedia.canonical_title.
+
+    MediaWiki's own two rules: spaces and underscores are one character, and a
+    main-namespace title's first letter is stored capitalized. Applied here so
+    that a submission is checked for duplicates and exclusions in the same form
+    it will be scored in -- `Roblox` and `roblox` are one article, and a
+    submission listing both is a nine-item answer wearing ten.
+    """
+    t = "_".join(str(raw).split()).strip("_")
+    return t[0].upper() + t[1:] if t else t
+
+
+def wiki_is_excluded(title, rule):
+    if rule != WIKI_EXCLUSION_RULE_ID:
+        fail(f"round names Wikipedia exclusion rule '{rule}', which this "
+             f"checkout does not implement (it has "
+             f"'{WIKI_EXCLUSION_RULE_ID}'). Update tools/validate_submission.py "
+             "and ssa/adapters/wikipedia.py together, or the round cannot be "
+             "validated.")
+    return title in WIKI_EXCLUDED_TITLES or title.startswith(WIKI_NAMESPACE_PREFIXES)
+
+
+def check_ranking(rel, fc, rnd):
+    """A ranking round's answer, against the round's own frozen `ranking` block.
+
+    The rules come from the round definition rather than from any registry, for
+    the reason the profile check gives: what a submission is held to is the
+    frozen question, not a list that could move under it after the lock.
+    """
+    rid = rnd["round_id"]
+    if "ranking" not in fc:
+        fail(f"{rel}: round '{rid}' is a ranking round and takes a `ranking` "
+             "list of its items in predicted order; this submission has "
+             f"{'a `profile`' if 'profile' in fc else 'a `topline`'}. A single "
+             "number is not an answer to this question.")
+    spec = rnd.get("ranking")
+    if not isinstance(spec, dict) or not spec.get("length"):
+        fail(f"{rel}: ranking round '{rid}' does not name its `ranking.length`; "
+             "the round definition is unusable")
+    got = fc["ranking"]
+    if not isinstance(got, list) or not all(isinstance(x, str) for x in got):
+        fail(f"{rel}: `ranking` must be an array of strings")
+    n = spec["length"]
+    if len(got) != n:
+        fail(f"{rel}: round '{rid}' asks for exactly {n} items in order, this "
+             f"submission has {len(got)}")
+
+    basket = spec.get("items")
+    if basket:
+        canon = {q.strip().casefold(): q for q in basket}
+        items, unknown = [], []
+        for x in got:
+            hit = canon.get(x.strip().casefold())
+            (items.append(hit) if hit else unknown.append(x))
+        if unknown:
+            fail(f"{rel}: {', '.join(repr(u) for u in unknown[:3])} "
+                 f"{'is' if len(unknown) == 1 else 'are'} not in round "
+                 f"'{rid}''s basket ({', '.join(basket)}). This round is a "
+                 "permutation of a fixed basket, not a free choice of items.")
+    else:
+        items = [wiki_canonical_title(x) for x in got]
+        rule = spec.get("exclusions") or WIKI_EXCLUSION_RULE_ID
+        bad = [x for x in items if wiki_is_excluded(x, rule)]
+        if bad:
+            fail(f"{rel}: {', '.join(bad[:3])} "
+                 f"{'is' if len(bad) == 1 else 'are'} excluded from round "
+                 f"'{rid}' by rule {rule} and cannot be ranked")
+
+    dupes = sorted({x for x in items if items.count(x) > 1})
+    if dupes:
+        fail(f"{rel}: a ranking lists each item once; repeated: "
+             f"{', '.join(dupes[:3])}")
+
+
 def check_answer_matches_round(rel, fc, rnd):
-    """The answer is the shape this round asked for. Neither substitutes.
+    """The answer is the shape this round asked for. None substitutes.
 
     A profile round's whole point is that a single number cannot answer it, so
     a scalar submission is not a weaker entry -- it is an answer to a different
@@ -122,7 +224,14 @@ def check_answer_matches_round(rel, fc, rnd):
     registry, so what a submission is checked against is the frozen question --
     not a list that could change under it after the round locked.
     """
-    is_profile = rnd.get("target_type") == PROFILE_TARGET_TYPE
+    target = rnd.get("target_type")
+    if target == RANKING_TARGET_TYPE:
+        check_ranking(rel, fc, rnd)
+        return
+    is_profile = target == PROFILE_TARGET_TYPE
+    if "ranking" in fc:
+        fail(f"{rel}: round '{rnd['round_id']}' is not a ranking round; this "
+             "submission has a `ranking` list")
     if not is_profile:
         if "profile" in fc:
             fail(f"{rel}: round '{rnd['round_id']}' is a scalar round and takes "
@@ -177,12 +286,14 @@ def validate(path, now=None):
         for key in ("round_id", "entrant"):
             if key not in fc:
                 fail(f"{rel}: missing required field '{key}'")
-        has = [k for k in ("topline", "profile") if k in fc]
+        has = [k for k in ("topline", "profile", "ranking") if k in fc]
         if len(has) != 1:
-            fail(f"{rel}: a submission carries exactly one of `topline` or "
-                 f"`profile`, found {has or 'neither'}")
+            fail(f"{rel}: a submission carries exactly one of `topline`, "
+                 f"`profile` or `ranking`, found {has or 'neither'}")
         if "profile" in fc and not isinstance(fc["profile"], dict):
             fail(f"{rel}: `profile` must be an object of cells")
+        if "ranking" in fc and not isinstance(fc["ranking"], list):
+            fail(f"{rel}: `ranking` must be an array of items in order")
         for label, t in answer_blocks(fc):
             check_shape(rel, label, t)
     except Exception as e:
