@@ -278,6 +278,13 @@ def build_rounds(season, series, resolved, now):
     for r in season["rounds"]:
         row = {k: r[k] for k in ("round_id", "tracker", "series", "question", "unit",
                                   "release_at", "release_estimated", "lock_at", "resolve")}
+        # The submission questionnaire renders a type-specific answer control.
+        # Keep the type in the public round payload rather than forcing the
+        # browser to infer it from the unit or question wording. Older round
+        # definitions predate this field and are numeric distributions.
+        row["target_type"] = r.get("target_type", "continuous_normal")
+        if r.get("options"):
+            row["options"] = list(r["options"])
         row["status"] = round_status(r, resolved, now)
         # Baselines are frozen at lock time: only history strictly before the
         # lock date counts. Otherwise, once a release lands in the series, the

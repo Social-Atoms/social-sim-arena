@@ -57,8 +57,8 @@ nav.top a:hover{color:var(--link)}
 .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}.field{min-width:0}.field.full{grid-column:1/-1}
 .field label,.legend{display:flex;align-items:center;gap:7px;margin:0 0 5px;color:var(--ink);font-size:12.5px;font-weight:700}.req{color:var(--accent-ink)}
 .field small{display:block;margin-top:4px;color:var(--mut);font-size:11.5px}
-input,textarea{width:100%;border:1px solid #cfcec9;border-radius:4px;background:#fff;color:var(--ink);padding:9px 10px;outline:none}textarea{min-height:116px;resize:vertical}
-input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(21,128,61,.09)}input::placeholder,textarea::placeholder{color:#aaa8a1}
+input{width:100%;border:1px solid #cfcec9;border-radius:4px;background:#fff;color:var(--ink);padding:9px 10px;outline:none}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(21,128,61,.09)}input::placeholder{color:#aaa8a1}
 .privacy{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:3px;padding:1px 6px;font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);background:#fff}
 .privacy.public{border-color:#b8dbc4;color:var(--accent-ink);background:#f4fbf6}.privacy.private{border-color:#e4d2ab;color:var(--warn);background:#fffaf0}.privacy.secret{border-color:#d8c9f5;color:var(--secret);background:#faf7ff}
 
@@ -70,6 +70,9 @@ input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(
 
 .methodchoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}.methodchoice{position:relative;display:block;border:1px solid var(--line);border-radius:4px;padding:14px;cursor:pointer;background:#fff;min-height:92px}.methodchoice:hover{border-color:#aaa8a1}.methodchoice:has(input:checked){border-color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}
 .methodchoice input{position:absolute;opacity:0;pointer-events:none}.methodchoice b{display:block;color:var(--ink);font-size:14px;margin-bottom:3px}.methodchoice span{display:block;color:var(--mut);font-size:12px}.methodpanel{display:none;border-top:1px solid var(--line);padding-top:16px}.methodpanel.on{display:block}
+.questionnaire-intro{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:11px}.questionnaire-intro b{color:var(--ink)}.questionnaire-intro p{margin:2px 0 0;color:var(--mut);font-size:12px}.question-count{white-space:nowrap;border:1px solid var(--line);border-radius:3px;padding:2px 7px;color:var(--mut);font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.question-list{display:grid;gap:10px}.question-state{border:1px dashed #c9c8c2;border-radius:4px;padding:16px;color:var(--mut);text-align:center}.question-state.bad{border-color:#e4c2bf;background:#fff7f6;color:#9c2f28}
+.question-card{border:1px solid var(--line);border-radius:4px;background:#fff;overflow:hidden}.question-head{padding:12px 13px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px}.question-number{width:27px;height:27px;border-radius:3px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}.question-card h4{margin:0;color:var(--ink);font-size:13.5px;line-height:1.42}.question-meta{display:flex;gap:6px 12px;flex-wrap:wrap;margin-top:5px;color:var(--mut);font-size:10.5px}.question-type{color:var(--accent-ink);font-weight:800;text-transform:uppercase;letter-spacing:.04em}.answer-preset{padding:12px 13px;background:#fbfbfa}.answer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.answer-grid.one{grid-template-columns:1fr}.answer-field label{display:block;margin:0 0 4px;color:var(--ink);font-size:11.5px;font-weight:700}.answer-field small{display:block;margin-top:4px;color:var(--mut);font-size:10.5px}.choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.choice-answer{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:4px;padding:8px 9px;background:#fff;color:var(--ink2);cursor:pointer}.choice-answer:has(input:checked){border-color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}.choice-answer input{width:auto;margin:0}.unsupported-type{border-left:3px solid #a12820;background:#fff7f6;padding:9px 10px;color:#9c2f28;font-size:11.5px}
 .commitment{background:var(--soft);border-left:3px solid var(--accent);padding:12px 13px;color:var(--ink2);font-size:12.5px}.checkline{display:flex;align-items:flex-start;gap:9px;color:var(--ink2);font-size:12.5px}.checkline input{width:auto;margin-top:4px;flex:0 0 auto}.consent{border-top:1px solid var(--line);margin-top:18px;padding-top:15px}
 .actions{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:18px}.btn{border:1px solid var(--line);border-radius:4px;padding:8px 18px;background:#fff;color:var(--ink);font-weight:700;text-decoration:none}.btn:hover{border-color:var(--ink)}.btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}.btn.dark:hover{opacity:.86}
 .review{display:none;margin-top:16px}.review.on{display:block}.packet{background:#151514;color:#e8e7e2;border-radius:4px;padding:13px;max-height:290px;overflow:auto;font:11.5px/1.45 var(--sans);white-space:pre-wrap;overflow-wrap:anywhere}.receipt{margin-bottom:8px;border:1px solid #b8dbc4;background:#f4fbf6;border-radius:4px;padding:11px 12px;color:var(--accent-ink)}
@@ -77,7 +80,7 @@ input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(
 .railbox{border-top:2px solid var(--ink);padding:12px 2px 16px;margin-bottom:18px}.railbox h3{margin:0 0 8px;color:var(--ink);font-size:14px}.railbox p{margin:0 0 8px;font-size:12px;color:var(--mut)}.railbox ol{padding-left:18px;margin:0;color:var(--ink2);font-size:12px}.railbox li{margin:7px 0}.railrow{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #eeede9;padding:7px 0;font-size:11.5px}.railrow:last-child{border-bottom:0}.railrow b{color:var(--ink);text-align:right}
 footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:var(--mut);display:flex;gap:14px;flex-wrap:wrap}footer a{color:var(--ink2);text-decoration:none}footer .right{margin-left:auto}
 @media(max-width:900px){.shell{grid-template-columns:1fr}.rail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.railbox{margin:0}}
-@media(max-width:650px){nav.top .in{height:auto;min-height:50px;flex-wrap:wrap;padding:8px 12px}nav.top .brand{width:100%;margin-right:0}nav.top .right{display:none}nav.top a.item{padding:6px 10px}.bar{padding:11px 12px}.bar h1{font-size:18px}.bar p{font-size:12.5px}.shell{padding:18px 12px 32px;gap:24px}.tracktabs,.formgrid,.methodchoices{grid-template-columns:1fr}.rail{display:block}.railbox{margin-bottom:18px}.actions .btn{width:100%}}
+@media(max-width:650px){nav.top .in{height:auto;min-height:50px;flex-wrap:wrap;padding:8px 12px}nav.top .brand{width:100%;margin-right:0}nav.top .right{display:none}nav.top a.item{padding:6px 10px}.bar{padding:11px 12px}.bar h1{font-size:18px}.bar p{font-size:12.5px}.shell{padding:18px 12px 32px;gap:24px}.tracktabs,.formgrid,.methodchoices,.answer-grid,.choice-grid{grid-template-columns:1fr}.rail{display:block}.railbox{margin-bottom:18px}.actions .btn{width:100%}}
 </style>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
@@ -134,7 +137,7 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
           <div class="section-title" style="margin-top:22px">Submission method</div>
           <div class="methodchoices" role="radiogroup" aria-label="Predictive agent submission method">
             <label class="methodchoice"><input type="radio" name="delivery_method" value="openai_compatible_api" checked><b>OpenAI-compatible API</b><span>Provide an endpoint the arena can call. A key is optional and remains secret.</span></label>
-            <label class="methodchoice"><input type="radio" name="delivery_method" value="questionnaire_commitment"><b>Questionnaire + commitment</b><span>Describe the agent and sign the participant commitment.</span></label>
+            <label class="methodchoice"><input type="radio" name="delivery_method" value="questionnaire_commitment"><b>Questionnaire + commitment</b><span>Answer every open Arena question using its preset format, then sign the commitment.</span></label>
           </div>
 
           <div class="methodpanel on" id="method-api">
@@ -145,12 +148,13 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
           </div>
 
           <div class="methodpanel" id="method-questionnaire">
-            <div class="field"><label for="agent-questionnaire">Questionnaire <span class="req">*</span> <span class="privacy private">private review</span></label><textarea id="agent-questionnaire" name="questionnaire" disabled required minlength="40" placeholder="Describe the underlying models, tools and information sources; how the agent produces forecasts; and how the arena can reproduce or operate it."></textarea></div>
+            <div class="questionnaire-intro"><div><b>Open Arena questions</b><p>The question text comes from the live round data. The answer controls are selected from each round's target type.</p></div><span class="question-count" id="agent-question-count">loading</span></div>
+            <div class="question-list" id="agent-questionnaire" data-questionnaire="agent" aria-live="polite"><div class="question-state">Loading open questions…</div></div>
             <div class="commitment" style="margin-top:14px"><label class="checkline"><input id="commitment-accept" name="commitment_accept" type="checkbox" disabled required><span><b>Participant commitment.</b> I am authorized to submit this agent; the information above is accurate; and I agree that accepted runs may be evaluated, locked, hashed, scored, and reported under the arena protocol.</span></label></div>
           </div>
 
           <div class="consent"><label class="checkline"><input id="agent-publication-consent" name="publication_consent" type="checkbox"><span>I confirm that, if this submission is accepted, the arena may publish the <b>Organization name</b> and <b>Product / agent name</b> entered above.</span></label></div>
-          <div class="actions"><button class="btn dark" type="submit">Submit</button></div>
+          <div class="actions"><button class="btn dark" id="agent-submit" type="submit">Submit</button></div>
           <div class="review" id="agent-review" aria-live="polite"><div class="receipt"><b>Review packet generated.</b> Nothing was transmitted. The API key is represented only by whether one was supplied.</div><pre class="packet" id="agent-packet"></pre></div>
         </div>
       </div>
@@ -165,10 +169,11 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
           <div class="formgrid">
             <div class="field"><label for="username">Username <span class="req">*</span> <span class="privacy public">publish with consent</span></label><input id="username" name="username" required autocomplete="username" placeholder="Public username"></div>
             <div class="field"><label for="human-email">Contact email <span class="req">*</span> <span class="privacy private">private</span></label><input id="human-email" name="contact_email" type="email" required autocomplete="email" placeholder="name@example.org"></div>
-            <div class="field full"><label for="human-questionnaire">Questionnaire <span class="req">*</span> <span class="privacy private">private review</span></label><textarea id="human-questionnaire" name="questionnaire" required minlength="40" placeholder="Tell us how you approach forecast questions, which information you rely on, and what human judgment can contribute to the arena."></textarea></div>
           </div>
+          <div class="questionnaire-intro" style="margin-top:20px"><div><b>Open Arena questions</b><p>Answer each live question in its predefined format. Current numeric rounds ask for an expected value and uncertainty.</p></div><span class="question-count" id="human-question-count">loading</span></div>
+          <div class="question-list" id="human-questionnaire" data-questionnaire="human" aria-live="polite"><div class="question-state">Loading open questions…</div></div>
           <div class="consent"><label class="checkline"><input id="human-publication-consent" name="publication_consent" type="checkbox"><span>I confirm that, if this submission is accepted, the arena may publish my <b>username</b> with the Human Wisdom entry.</span></label></div>
-          <div class="actions"><button class="btn dark" type="submit">Submit</button></div>
+          <div class="actions"><button class="btn dark" id="human-submit" type="submit" disabled>Submit</button></div>
           <div class="review" id="human-review" aria-live="polite"><div class="receipt"><b>Review packet generated.</b> Nothing was transmitted. Contact email remains private.</div><pre class="packet" id="human-packet"></pre></div>
         </div>
       </div>
@@ -177,8 +182,9 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
 </main>
 
 <aside class="rail">
-  <div class="railbox"><h3>Two agent routes</h3><ol><li><b>OpenAI-compatible API</b><br>Provide a URL and, only if needed, a key.</li><li><b>Questionnaire + commitment</b><br>Document how the agent works and sign the commitment.</li></ol></div>
-  <div class="railbox"><h3>Publication boundary</h3><div class="railrow"><span>Agent public</span><b>Organization + product name</b></div><div class="railrow"><span>Human public</span><b>Username</b></div><div class="railrow"><span>Always private</span><b>Email, key, questionnaire</b></div><p style="margin-top:9px">Names are published only when the corresponding checkbox is confirmed and the submission is accepted.</p></div>
+  <div class="railbox"><h3>Two agent routes</h3><ol><li><b>OpenAI-compatible API</b><br>Provide a URL and, only if needed, a key.</li><li><b>Questionnaire + commitment</b><br>Answer the open Arena questions and sign the commitment.</li></ol></div>
+  <div class="railbox"><h3>Answer presets</h3><div class="railrow"><span>Continuous</span><b>Expected value + SD</b></div><div class="railrow"><span>Binary</span><b>Probability</b></div><div class="railrow"><span>Multiple choice</span><b>Listed options</b></div><div class="railrow"><span>Short answer</span><b>Single-line response</b></div></div>
+  <div class="railbox"><h3>Publication boundary</h3><div class="railrow"><span>Agent public</span><b>Organization + product name</b></div><div class="railrow"><span>Human public</span><b>Username</b></div><div class="railrow"><span>Always private</span><b>Email + API key</b></div><p style="margin-top:9px">Names are published only when the corresponding checkbox is confirmed and the submission is accepted.</p></div>
   <div class="railbox"><h3>Preview behavior</h3><p>This page demonstrates fields, validation, switching, and redacted packet construction. A production intake service has not been connected.</p><a href="docs.html#format">Read the protocol →</a></div>
 </aside>
 </div>
@@ -226,11 +232,100 @@ options.forEach((option,index)=>{
 });
 document.addEventListener('click',event=>{ if(!picker.contains(event.target)) closePicker(); });
 
+const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+const typeLabels={continuous_normal:'Continuous distribution',binary_probability:'Binary probability',multiple_choice:'Multiple choice',short_answer:'Short answer'};
+let openQuestions=[];
+let questionLoadState='loading';
+
+function normalizeTargetType(value){
+  const type=String(value||'continuous_normal');
+  if(type==='continuous'||type==='numeric') return 'continuous_normal';
+  if(type==='binary') return 'binary_probability';
+  return type;
+}
+function answerPreset(track,round,index,disabled){
+  const type=normalizeTargetType(round.target_type);
+  const prefix=`${track}-q${index}`;
+  const off=disabled?' disabled':'';
+  if(type==='continuous_normal') return `<div class="answer-grid">
+    <div class="answer-field"><label for="${prefix}-mean">Expected value <span class="req">*</span></label><input id="${prefix}-mean" data-answer-field="mean" type="number" step="any" inputmode="decimal" required${off} placeholder="In ${escapeHtml(round.unit)}"><small>The center of your forecast distribution.</small></div>
+    <div class="answer-field"><label for="${prefix}-sd">Uncertainty (SD) <span class="req">*</span></label><input id="${prefix}-sd" data-answer-field="sd" type="number" min="0.01" max="50" step="any" inputmode="decimal" required${off} placeholder="Must be greater than 0"><small>Standard deviation in the same unit.</small></div>
+  </div>`;
+  if(type==='binary_probability') return `<div class="answer-grid one"><div class="answer-field"><label for="${prefix}-probability">Probability of Yes (%) <span class="req">*</span></label><input id="${prefix}-probability" data-answer-field="probability" type="number" min="0" max="100" step="1" inputmode="decimal" required${off} placeholder="0–100"><small>Enter a calibrated probability, not a Yes/No guess.</small></div></div>`;
+  if(type==='multiple_choice'&&Array.isArray(round.options)&&round.options.length){
+    return `<div class="choice-grid">${round.options.map((option,optionIndex)=>`<label class="choice-answer"><input type="radio" name="${prefix}-choice" data-answer-field="choice" value="${escapeHtml(option)}"${optionIndex===0?' required':''}${off}><span>${escapeHtml(option)}</span></label>`).join('')}</div>`;
+  }
+  if(type==='short_answer') return `<div class="answer-grid one"><div class="answer-field"><label for="${prefix}-text">Short answer <span class="req">*</span></label><input id="${prefix}-text" data-answer-field="text" type="text" maxlength="300" required${off} placeholder="One concise line"><small>This type uses a single-line answer, not an open-ended text area.</small></div></div>`;
+  return `<div class="unsupported-type" data-unsupported>Question type “${escapeHtml(type)}” does not yet have a safe answer preset. Submission is disabled until a renderer is defined.</div>`;
+}
+function renderQuestionnaire(track){
+  const container=byId(track+'-questionnaire');
+  const count=byId(track+'-question-count');
+  if(questionLoadState==='failed'){
+    count.textContent='unavailable';
+    container.innerHTML='<div class="question-state bad">Live questions could not be loaded. Refresh the page before submitting.</div>';
+    return;
+  }
+  if(questionLoadState==='loading') return;
+  count.textContent=openQuestions.length+' open';
+  if(!openQuestions.length){
+    container.innerHTML='<div class="question-state">No Arena questions are currently open.</div>';
+    return;
+  }
+  const agentDisabled=track==='agent'&&document.querySelector('input[name="delivery_method"]:checked')?.value!=='questionnaire_commitment';
+  container.innerHTML=openQuestions.map((round,index)=>{
+    const type=normalizeTargetType(round.target_type);
+    const lock=new Date(round.lock_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    return `<article class="question-card" data-answer-card data-round-id="${escapeHtml(round.round_id)}" data-target-type="${escapeHtml(type)}">
+      <div class="question-head"><span class="question-number">${index+1}</span><div><h4>${escapeHtml(round.question)}</h4><div class="question-meta"><span>${escapeHtml(round.round_id)}</span><span>Unit: ${escapeHtml(round.unit)}</span><span>Locks ${escapeHtml(lock)}</span><span class="question-type">${escapeHtml(typeLabels[type]||type)}</span></div></div></div>
+      <div class="answer-preset">${answerPreset(track,round,index,agentDisabled)}</div>
+    </article>`;
+  }).join('');
+}
+function syncQuestionnaireDisabled(track,disabled){
+  byId(track+'-questionnaire').querySelectorAll('input').forEach(input=>{input.disabled=disabled;});
+}
+function questionnaireReady(track){
+  const container=byId(track+'-questionnaire');
+  if(questionLoadState!=='ready'||!openQuestions.length||container.querySelector('[data-unsupported]')){
+    container.scrollIntoView({behavior:'smooth',block:'center'});
+    return false;
+  }
+  return true;
+}
+function collectAnswers(track){
+  return [...byId(track+'-questionnaire').querySelectorAll('[data-answer-card]')].map(card=>{
+    const type=card.dataset.targetType;
+    let response;
+    if(type==='continuous_normal') response={mean:Number(card.querySelector('[data-answer-field="mean"]').value),sd:Number(card.querySelector('[data-answer-field="sd"]').value)};
+    if(type==='binary_probability') response={probability:Number(card.querySelector('[data-answer-field="probability"]').value)/100};
+    if(type==='multiple_choice') response={choice:card.querySelector('[data-answer-field="choice"]:checked').value};
+    if(type==='short_answer') response={text:card.querySelector('[data-answer-field="text"]').value.trim()};
+    return {round_id:card.dataset.roundId,target_type:type,response};
+  });
+}
+async function loadQuestions(){
+  try{
+    const response=await fetch('data.json',{cache:'no-store'});
+    if(!response.ok) throw new Error('question data returned '+response.status);
+    const data=await response.json();
+    const now=Date.now();
+    openQuestions=(data.rounds||[]).filter(round=>round.status==='open'&&Date.parse(round.lock_at)>now).sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
+    questionLoadState='ready';
+  }catch(error){
+    questionLoadState='failed';
+  }
+  renderQuestionnaire('agent');renderQuestionnaire('human');
+  byId('human-submit').disabled=questionLoadState!=='ready'||!openQuestions.length||Boolean(byId('human-questionnaire').querySelector('[data-unsupported]'));
+  setMethod(document.querySelector('input[name="delivery_method"]:checked').value);
+}
+
 const methodInputs=[...document.querySelectorAll('input[name="delivery_method"]')];
 function setMethod(method){
   const api=method==='openai_compatible_api';
   byId('method-api').classList.toggle('on',api); byId('method-questionnaire').classList.toggle('on',!api);
-  byId('api-url').disabled=!api; byId('api-key').disabled=!api; byId('agent-questionnaire').disabled=api; byId('commitment-accept').disabled=api;
+  byId('api-url').disabled=!api; byId('api-key').disabled=!api; byId('commitment-accept').disabled=api; syncQuestionnaireDisabled('agent',api);
+  byId('agent-submit').disabled=!api&&(questionLoadState!=='ready'||!openQuestions.length||Boolean(byId('agent-questionnaire').querySelector('[data-unsupported]')));
 }
 methodInputs.forEach(input=>input.addEventListener('change',()=>setMethod(input.value)));
 setMethod('openai_compatible_api');
@@ -239,24 +334,26 @@ function showPacket(kind,packet){ byId(kind+'-packet').textContent=JSON.stringif
 byId('agent-form').addEventListener('submit',event=>{
   event.preventDefault();
   if(!selectValue.value){ picker.classList.add('invalid'); trigger.classList.add('invalid'); trigger.setAttribute('aria-invalid','true'); trigger.focus(); return; }
-  if(!event.currentTarget.checkValidity()){ event.currentTarget.reportValidity(); return; }
   const method=methodInputs.find(input=>input.checked).value;
+  if(method==='questionnaire_commitment'&&!questionnaireReady('agent')) return;
+  if(!event.currentTarget.checkValidity()){ event.currentTarget.reportValidity(); return; }
   const packet={
     participant_type:selectValue.value,organization_name:byId('organization-name').value.trim(),product_name:byId('product-name').value.trim(),
     contact:{name:byId('contact-name').value.trim(),email:byId('contact-email').value.trim()},
     publication_consent:{accepted:byId('agent-publication-consent').checked,fields:['organization_name','product_name'],terms_version:'ssa-publication-v1'},
     delivery:method==='openai_compatible_api'
       ?{method,endpoint:byId('api-url').value.trim(),credential_supplied:Boolean(byId('api-key').value)}
-      :{method,questionnaire:byId('agent-questionnaire').value.trim(),commitment:{accepted:true,terms_version:'ssa-participant-v1'}}
+      :{method,answers:collectAnswers('agent'),commitment:{accepted:true,terms_version:'ssa-participant-v1'}}
   };
   showPacket('agent',packet);
 });
 byId('human-form').addEventListener('submit',event=>{
-  event.preventDefault(); if(!event.currentTarget.checkValidity()){ event.currentTarget.reportValidity(); return; }
-  showPacket('human',{username:byId('username').value.trim(),contact_email:byId('human-email').value.trim(),questionnaire:byId('human-questionnaire').value.trim(),publication_consent:{accepted:byId('human-publication-consent').checked,field:'username',terms_version:'ssa-publication-v1'}});
+  event.preventDefault(); if(!questionnaireReady('human')) return; if(!event.currentTarget.checkValidity()){ event.currentTarget.reportValidity(); return; }
+  showPacket('human',{username:byId('username').value.trim(),contact_email:byId('human-email').value.trim(),answers:collectAnswers('human'),publication_consent:{accepted:byId('human-publication-consent').checked,field:'username',terms_version:'ssa-publication-v1'}});
 });
 
 activateTrack(location.hash.slice(1));
+loadQuestions();
 </script>
 </body>
 </html>

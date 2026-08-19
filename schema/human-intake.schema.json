@@ -2,12 +2,86 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Social Simulation Arena human wisdom intake",
   "type": "object",
-  "required": ["username", "contact_email", "questionnaire", "publication_consent"],
+  "required": ["username", "contact_email", "answers", "publication_consent"],
+  "definitions": {
+    "questionnaire_answer": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["round_id", "target_type", "response"],
+          "additionalProperties": false,
+          "properties": {
+            "round_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+            "target_type": {"const": "continuous_normal"},
+            "response": {
+              "type": "object",
+              "required": ["mean", "sd"],
+              "additionalProperties": false,
+              "properties": {
+                "mean": {"type": "number"},
+                "sd": {"type": "number", "exclusiveMinimum": 0, "maximum": 50}
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["round_id", "target_type", "response"],
+          "additionalProperties": false,
+          "properties": {
+            "round_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+            "target_type": {"const": "binary_probability"},
+            "response": {
+              "type": "object",
+              "required": ["probability"],
+              "additionalProperties": false,
+              "properties": {"probability": {"type": "number", "minimum": 0, "maximum": 1}}
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["round_id", "target_type", "response"],
+          "additionalProperties": false,
+          "properties": {
+            "round_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+            "target_type": {"const": "multiple_choice"},
+            "response": {
+              "type": "object",
+              "required": ["choice"],
+              "additionalProperties": false,
+              "properties": {"choice": {"type": "string", "minLength": 1, "maxLength": 160}}
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["round_id", "target_type", "response"],
+          "additionalProperties": false,
+          "properties": {
+            "round_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+            "target_type": {"const": "short_answer"},
+            "response": {
+              "type": "object",
+              "required": ["text"],
+              "additionalProperties": false,
+              "properties": {"text": {"type": "string", "minLength": 1, "maxLength": 300}}
+            }
+          }
+        }
+      ]
+    }
+  },
   "additionalProperties": false,
   "properties": {
     "username": {"type": "string", "minLength": 2, "maxLength": 80},
     "contact_email": {"type": "string", "format": "email", "maxLength": 160},
-    "questionnaire": {"type": "string", "minLength": 40, "maxLength": 4000},
+    "answers": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 200,
+      "items": {"$ref": "#/definitions/questionnaire_answer"}
+    },
     "publication_consent": {
       "type": "object",
       "required": ["accepted", "field", "terms_version"],

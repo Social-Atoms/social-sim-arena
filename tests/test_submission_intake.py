@@ -34,6 +34,11 @@ class SubmissionIntakeContracts(unittest.TestCase):
                 "terms_version": "ssa-publication-v1",
             },
         }
+        self.answer = {
+            "round_id": "yougov-2026-w35-approval",
+            "target_type": "continuous_normal",
+            "response": {"mean": 40.5, "sd": 2.1},
+        }
 
     def assertValid(self, schema, body):
         got = errors(schema, body)
@@ -54,10 +59,7 @@ class SubmissionIntakeContracts(unittest.TestCase):
     def test_questionnaire_and_commitment_are_one_valid_route(self):
         body = dict(self.profile, delivery={
             "method": "questionnaire_commitment",
-            "questionnaire": (
-                "We combine public releases with an agent workflow and "
-                "document every reproducible forecasting step."
-            ),
+            "answers": [self.answer],
             "commitment": {
                 "accepted": True,
                 "terms_version": "ssa-participant-v1",
@@ -70,7 +72,7 @@ class SubmissionIntakeContracts(unittest.TestCase):
             "method": "openai_compatible_api",
             "endpoint": "https://api.example.com/v1",
             "credential_supplied": False,
-            "questionnaire": "This extra questionnaire must make the route invalid.",
+            "answers": [self.answer],
         })
         self.assertTrue(errors(self.participant, body))
 
@@ -104,10 +106,7 @@ class SubmissionIntakeContracts(unittest.TestCase):
         body = {
             "username": "forecast-fan",
             "contact_email": "human@example.com",
-            "questionnaire": (
-                "I compare multiple public sources and record reasons before "
-                "making each forecast."
-            ),
+            "answers": [self.answer],
             "publication_consent": {
                 "accepted": True,
                 "field": "username",
@@ -115,8 +114,30 @@ class SubmissionIntakeContracts(unittest.TestCase):
             },
         }
         self.assertValid(self.human, body)
-        body["questionnaire"] = "too short"
+        body["answers"][0]["response"]["sd"] = 0
         self.assertTrue(errors(self.human, body))
+
+    def test_each_question_type_has_a_structured_answer_contract(self):
+        samples = [
+            self.answer,
+            {"round_id": "binary-round", "target_type": "binary_probability",
+             "response": {"probability": 0.65}},
+            {"round_id": "choice-round", "target_type": "multiple_choice",
+             "response": {"choice": "Option A"}},
+            {"round_id": "short-round", "target_type": "short_answer",
+             "response": {"text": "One bounded line"}},
+        ]
+        body = {
+            "username": "forecast-fan",
+            "contact_email": "human@example.com",
+            "answers": samples,
+            "publication_consent": {
+                "accepted": False,
+                "field": "username",
+                "terms_version": "ssa-publication-v1",
+            },
+        }
+        self.assertValid(self.human, body)
 
 
 class SubmissionPrototype(unittest.TestCase):
@@ -126,6 +147,8 @@ class SubmissionPrototype(unittest.TestCase):
             cls.page = f.read()
         with open(os.path.join(ROOT, "site", "index.html")) as f:
             cls.index = f.read()
+        with open(os.path.join(ROOT, "ssa", "refresh.py")) as f:
+            cls.refresh = f.read()
         cls.index_submit = cls.index.split(
             '<div class="page" id="page-submit">', 1)[1].split(
                 '<div class="page" id="page-exam">', 1)[0]
@@ -139,8 +162,25 @@ class SubmissionPrototype(unittest.TestCase):
                 'name="api_key"', 'value="openai_compatible_api"',
                 'value="questionnaire_commitment"',
                 'name="commitment_accept"', 'name="username"',
-                'name="questionnaire"', 'name="publication_consent"'):
+                'id="agent-questionnaire"', 'id="human-questionnaire"',
+                'name="publication_consent"'):
             self.assertIn(marker, self.page)
+
+    def test_questionnaires_render_live_questions_with_type_presets(self):
+        self.assertNotIn("<textarea", self.page.lower())
+        self.assertIn("fetch('data.json'", self.page)
+        self.assertIn("round.question", self.page)
+        self.assertIn("round.target_type", self.page)
+        for marker in (
+                "continuous_normal", "Expected value", "Uncertainty (SD)",
+                "binary_probability", "Probability of Yes (%)",
+                "multiple_choice", "choice-grid", "short_answer",
+                "One concise line", "data-unsupported"):
+            self.assertIn(marker, self.page)
+        self.assertIn("answers:collectAnswers('agent')", self.page)
+        self.assertIn("answers:collectAnswers('human')", self.page)
+        self.assertIn('row["target_type"] = r.get("target_type", "continuous_normal")',
+                      self.refresh)
 
     def test_custom_participant_picker_replaces_native_select(self):
         self.assertNotIn("<select", self.page.lower())

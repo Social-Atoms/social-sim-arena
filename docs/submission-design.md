@@ -14,9 +14,11 @@ The Submit experience has exactly two tracks:
 2. **Human wisdom** — a lightweight questionnaire for people contributing
    human judgment.
 
-These are onboarding records, not per-round forecast files. After review, the
-arena will operate an accepted API agent or convert an approved questionnaire
-submission into the existing repository-native forecast workflow. Question
+The profile fields are onboarding records. The questionnaire portions are live
+round answers: they load the currently open questions, show the exact published
+wording, and choose an answer control from `target_type`. After review, the
+arena either operates an accepted API agent or normalizes the questionnaire
+answers into the existing repository-native forecast workflow. Question
 definitions, locks, canonical hashes, resolution, and scoring remain governed
 by the public arena protocol.
 
@@ -59,20 +61,28 @@ idempotent by entrant, round, and input hash.
 
 ### Route B — questionnaire + commitment
 
-The participant answers one private review questionnaire describing:
+The participant answers every currently open Arena question. The question text,
+unit, round ID, target type, and lock time come from `site/data.json`; they are
+not duplicated in the page. Answer controls are deterministic by target type:
 
-- underlying models, tools, and information sources;
-- how forecasts are produced; and
-- how the arena can reproduce or operate the agent.
+- `continuous_normal`: expected value and standard deviation;
+- `binary_probability`: probability from 0% to 100%;
+- `multiple_choice`: one of the options declared by the round; and
+- `short_answer`: one bounded, single-line response.
+
+An unknown type is shown as unsupported and blocks submission instead of
+falling back to an ambiguous free-text box. The current Season 0 rounds are all
+`continuous_normal`, so their visible preset is expected value + uncertainty.
 
 The participant must also check a versioned commitment confirming authorization
 to submit the agent, accuracy of the supplied information, and agreement to the
 arena's evaluation, lock, hash, scoring, and reporting protocol. Counsel must
 approve the exact production text and retention period.
 
-This route does not upload a forecast file in the onboarding form. After review,
-maintainers establish the operational mechanism for producing schema-valid
-round forecasts.
+After review, each numeric answer is normalized into the corresponding
+schema-valid round forecast. The server must reload the question and deadline;
+it cannot trust a question, target type, option list, or lock supplied by the
+browser.
 
 ## Human wisdom
 
@@ -80,15 +90,15 @@ The human track is a one-page questionnaire with:
 
 - username;
 - private contact email;
-- a private questionnaire describing the person's forecasting approach,
-  information sources, and contribution of human judgment; and
+- every currently open Arena question rendered with the same type-specific
+  answer controls as the agent questionnaire; and
 - an optional checkbox granting consent to publish the username if the
   submission is accepted.
 
-This intake does not ask for a round, forecast mean, or uncertainty value. It
-registers a prospective human contributor; a later production workflow may
-invite accepted contributors to answer round-specific questions under the same
-lock and scoring rules.
+For the current numeric rounds, humans enter an expected value and standard
+deviation for each question. Answers are accepted only before the corresponding
+server-authoritative lock and then enter the same canonicalization and scoring
+boundary as agent forecasts.
 
 ## Data classification
 
@@ -99,9 +109,10 @@ lock and scoring rules.
 | primary contact name and email | private | never |
 | OpenAI-compatible URL | private operational data | never |
 | API key | secret | never; secret-store reference only |
-| agent questionnaire and commitment record | private | terms version or audit hash only |
+| questionnaire answers | private before acceptance | normalized forecast after acceptance |
+| agent commitment record | private | terms version or audit hash only |
 | human username | consent-controlled | username after acceptance |
-| human email and questionnaire | private | never |
+| human email | private | never |
 
 Private data is retained only for the documented review, active-season, and
 dispute windows, then deleted or irreversibly anonymized. Credentials are
@@ -147,9 +158,10 @@ calculation, canonicalization, resolution, or scoring.
 ## Prototype behavior
 
 `site/submit.html` exercises the two single-page tracks, the two agent route
-buttons, an accessible custom participant-type listbox, browser validation, and
-redacted packet construction. It transmits and stores nothing. The API key is
-reduced to a boolean before the packet is displayed.
+buttons, an accessible custom participant-type listbox, live question loading,
+type-specific answer presets, browser validation, and redacted packet
+construction. It transmits and stores nothing. The API key is reduced to a
+boolean before the packet is displayed.
 
 Production activation remains a separate change gated on the private intake
 service, endpoint probe, approved commitment and consent text, privacy notice,
