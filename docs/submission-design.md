@@ -2,192 +2,166 @@
 
 Status: design for Issue #42. The interactive prototype is at
 [`site/submit.html`](../site/submit.html). It deliberately sends no data: the
-arena is currently a static Vercel site, so accepting email addresses, signed
-commitments, or API credentials before a private intake service exists would
-turn a visual prototype into a security bug.
+arena is currently a static Vercel site, so accepting contact information or
+API credentials before a private intake service exists would be a security bug.
 
-## What the arena already guarantees
+## Scope
 
-The intake system must end at the existing public forecast contract rather
-than create a second scoring path.
+The Submit experience has exactly two tracks:
 
-1. A maintainer defines a round in `questions/season0.json`: `round_id`,
-   tracker/series, question, unit, release time, lock time, and resolution rule.
-   Today this is a reviewed repository edit; despite an older note in the file,
-   no cron writes new rounds.
-2. `ssa.refresh` publishes those definitions and their clock-derived status to
-   `site/data.json`. While a round is open it also refreshes the history snapshot
-   and the arena-hosted model and baseline forecasts.
-3. Every accepted forecast must become exactly one
-   `forecasts/<round_id>/<entrant_id>.json` object conforming to
-   `schema/forecast.schema.json`. `tools/validate_submission.py` checks the
-   schema, path identities, known round, and `now < lock_at`, then prints the
-   canonical SHA-256.
-4. The last pre-lock history snapshot is frozen. On the first refresh after
-   lock, `ssa/stamps.py` writes a manifest containing every forecast's canonical
-   hash and submits that manifest to OpenTimestamps.
-5. After the published value arrives, `ssa.resolve` records the first eligible
-   post-lock observation (or a maintainer records a manual resolution). The
-   scoring pipeline applies CRPS and skill against persistence, then rebuilds
-   the public leaderboard.
+1. **Your predictive agent** — for startups, research groups, institutions,
+   and individual researchers.
+2. **Human wisdom** — a lightweight questionnaire for people contributing
+   human judgment.
 
-The intake service therefore owns identity, consent, private contact data,
-credential custody, review, and timely delivery. It does **not** own question
-definitions, lock calculation, canonicalization, resolution, or scoring.
+These are onboarding records, not per-round forecast files. After review, the
+arena will operate an accepted API agent or convert an approved questionnaire
+submission into the existing repository-native forecast workflow. Question
+definitions, locks, canonical hashes, resolution, and scoring remain governed
+by the public arena protocol.
 
-## Two user tracks
+## Your predictive agent
 
-### Track A: organizations and researchers
+Every participant supplies:
 
-Startups, research groups, institutions, and individual researchers share one
-flow. `participant_type` distinguishes them without making four nearly
-identical forms.
+- participant type: startup, research group, institution, or individual
+  researcher;
+- organization name;
+- product / agent name;
+- primary contact name;
+- contact email; and
+- explicit consent to publish the organization name and product / agent name
+  if the submission is accepted.
 
-#### Step 1 — profile
+The contact name and email remain private. The two names are public only after
+the submitter checks the publication checkbox and the arena accepts the entry.
+If the box is left unchecked, the submission can still be reviewed but those
+names are not projected publicly.
 
-Required fields are participant type, organization/independent-researcher
-name, product or agent name, short product description, stable entrant ID,
-primary contact name, and contact email. A website is optional.
+The participant then chooses exactly one of two routes.
 
-The submitter explicitly chooses one leaderboard policy:
+### Route A — OpenAI-compatible API
 
-- `public`: publish the organization and product names.
-- `private`: keep identity and contact data private; publish a stable neutral
-  label such as `Private entrant · 7F3A`. Scores remain visible so the board
-  cannot silently omit an entrant after seeing its result.
+The participant provides an HTTPS OpenAI-compatible URL and, when the endpoint
+requires authentication, an optional API key. The review packet contains only
+`credential_supplied: true|false`; it must never contain the key itself.
 
-The choice is versioned and frozen for each scored season. Changing it later
-does not rewrite historical leaderboard labels.
+In production, registration and the non-secret endpoint should enter review
+first. Credential collection must use a short-lived, single-use upload path
+that encrypts directly into a secret store. A probe then verifies the endpoint,
+supported model behavior, timeouts, and request/response contract before the
+agent becomes active.
 
-#### Step 2 — choose exactly one delivery method
+For each open round, the runner sends the allowed question and context to the
+approved endpoint and normalizes the response into
+`schema/forecast.schema.json` before the public lock. Calls should be
+idempotent by entrant, round, and input hash.
 
-**Hosted API**
+### Route B — questionnaire + commitment
 
-The participant supplies an HTTPS endpoint, agent/version identifier,
-authentication mode, integration notes, and an optional credential. Registration
-and the non-secret endpoint configuration enter review first. If a credential
-is needed, the service returns a short-lived, single-use upload URL only after
-approval. The credential is encrypted directly into the secret store; it never
-passes through GitHub, an Issue, a PR, analytics, application logs, or the
-browser again. A probe verifies the request/response contract before status
-becomes `active`.
+The participant answers one private review questionnaire describing:
 
-For every open round the scheduler sends the round definition, unit, permitted
-history/context, and response schema. A successful response is normalized into
-the existing forecast JSON and submitted before the same lock margin used by
-the arena-hosted agents. Retries are idempotent by `(entrant_id, round_id,
-input_hash)`.
+- underlying models, tools, and information sources;
+- how forecasts are produced; and
+- how the arena can reproduce or operate the agent.
 
-**Submission file + signed commitment**
+The participant must also check a versioned commitment confirming authorization
+to submit the agent, accuracy of the supplied information, and agreement to the
+arena's evaluation, lock, hash, scoring, and reporting protocol. Counsel must
+approve the exact production text and retention period.
 
-The participant selects an open round and uploads one forecast JSON. Client and
-server both validate it against `schema/forecast.schema.json`, verify that its
-`round_id` and `entrant` match the registration, and reject it at or after
-`lock_at`. The submitter then signs the versioned commitment:
+This route does not upload a forecast file in the onboarding form. After review,
+maintainers establish the operational mechanism for producing schema-valid
+round forecasts.
 
-> I am authorized to submit this forecast for the named participant and agent.
-> The file represents the agent's forecast produced without access to the
-> unpublished outcome. I agree that the arena may lock, hash, score, and publish
-> the forecast and the participant's chosen public identity under the published
-> evaluation protocol.
+## Human wisdom
 
-For the first version, a typed legal name, role, UTC timestamp, terms version,
-IP/audit metadata, and explicit checkbox form an electronic signature. Counsel
-must approve the exact text and retention period before production. The signed
-record stays private; only its SHA-256 and terms version are associated with the
-public forecast.
+The human track is a one-page questionnaire with:
 
-Changing delivery method is allowed only while the intake is `draft` or
-`changes_requested`. Once active, a change creates a new reviewed version so an
-API entrant cannot silently become a file entrant mid-season.
+- username;
+- private contact email;
+- a private questionnaire describing the person's forecasting approach,
+  information sources, and contribution of human judgment; and
+- an optional checkbox granting consent to publish the username if the
+  submission is accepted.
 
-### Track B: human forecasters
-
-Humans use a short web questionnaire and never need repository access. It asks
-for username/display name, contact email, an open round, forecast mean,
-uncertainty (`sd`), optional rationale, and explicit consent. Email is private;
-individual humans are not leaderboard entrants. The public row remains
-`human-crowd`.
-
-Before lock, a person may replace a response by using the signed edit link in
-their receipt; the newest accepted version wins. At lock, the worker converts
-the set of individual normal distributions into an equal-weight mixture and
-publishes fixed quantiles (including the median) as
-`forecasts/<round_id>/human-crowd.json`. The notes contain the response count,
-terms version, and a batch hash but no username, email, or rationale.
-
-Each accepted response receives a private receipt and canonical hash. At lock,
-the sorted receipt hashes form a batch manifest whose public root proves the
-aggregate came from pre-lock responses without publishing the people behind
-them.
+This intake does not ask for a round, forecast mean, or uncertainty value. It
+registers a prospective human contributor; a later production workflow may
+invite accepted contributors to answer round-specific questions under the same
+lock and scoring rules.
 
 ## Data classification
 
 | Field | Class | Public projection |
 |---|---|---|
-| participant type | public when identity is public | entrant metadata |
-| organization and product names | participant choice | names or neutral label |
-| product description and website | public when identity is public | entrant metadata |
-| entrant ID | public | forecast path and leaderboard key |
-| leaderboard policy | private control | resulting label only |
-| contact name and email | private | never |
-| API endpoint and integration notes | private | never |
-| API credential | secret | never; secret-store reference only |
-| forecast distribution | public after acceptance | forecast JSON |
-| signed commitment | private | SHA-256 + terms version only |
-| human username, email, rationale | private | never |
-| human aggregate distribution/count | public | `human-crowd` forecast |
+| participant type | private review metadata | none by default |
+| organization and product / agent names | consent-controlled | both names after acceptance |
+| primary contact name and email | private | never |
+| OpenAI-compatible URL | private operational data | never |
+| API key | secret | never; secret-store reference only |
+| agent questionnaire and commitment record | private | terms version or audit hash only |
+| human username | consent-controlled | username after acceptance |
+| human email and questionnaire | private | never |
 
-Private data is retained for the active season plus the documented dispute
-window, then deleted or irreversibly anonymized. Credentials are deleted on
-revocation and rotated without copying their value back to an operator.
+Private data is retained only for the documented review, active-season, and
+dispute windows, then deleted or irreversibly anonymized. Credentials are
+deleted on revocation and rotated without exposing their values to operators.
 
 ## Intake service boundary
 
-The static page must not receive production form actions until these endpoints
-exist behind TLS, CSRF/origin checks, rate limits, bot protection, audit logging
-with field redaction, and encrypted storage:
+The static prototype must not receive a production form action until the
+service has TLS, CSRF/origin checks, rate limits, bot protection, redacted audit
+logging, encrypted storage, an approved privacy notice, and access controls.
+
+Suggested endpoints:
 
 | Endpoint | Purpose | Response |
 |---|---|---|
-| `POST /v1/participant-intakes` | profile + one delivery method, never a credential | intake ID, status, receipt |
-| `PUT /v1/participant-intakes/{id}/credential` | single-use encrypted credential upload | credential version only |
-| `POST /v1/participant-intakes/{id}/forecasts` | file + commitment for one open round | validation result + canonical hash |
-| `POST /v1/human-forecasts` | questionnaire response | receipt + private edit link |
-| `GET /v1/rounds/open` | server-authoritative open rounds | round IDs, questions, units, locks |
-
-The server reloads the round and lock from the repository or generated data;
-it never trusts a client-supplied deadline. File acceptance and the worker that
-writes public forecast JSON share the same Python validator/canonicalizer as CI.
+| `POST /v1/participant-intakes` | participant profile + one route, never the key | intake ID, status, receipt |
+| `PUT /v1/participant-intakes/{id}/credential` | single-use encrypted key upload | credential version only |
+| `POST /v1/human-intakes` | human questionnaire | intake ID, status, receipt |
 
 Administrative states are `draft`, `pending_review`, `changes_requested`,
-`approved`, `active`, `rejected`, and `revoked`. Every transition records actor,
-time, reason, and intake version. Review is required before credential upload or
-public projection.
+`approved`, `active`, `rejected`, and `revoked`. Every transition records the
+actor, time, reason, and intake version. Review is required before credential
+upload, endpoint calls, or public projection.
+
+## Existing arena boundary
+
+The intake system must end at the existing public forecast contract rather
+than create a second scoring path:
+
+1. Maintainers define rounds in `questions/season0.json`.
+2. Every accepted run becomes one
+   `forecasts/<round_id>/<entrant_id>.json` object conforming to
+   `schema/forecast.schema.json` before `lock_at`.
+3. `tools/validate_submission.py` validates the schema, identities, round, and
+   deadline, then prints the canonical SHA-256.
+4. Lock manifests and OpenTimestamps preserve the pre-outcome record.
+5. The existing resolution and CRPS pipeline scores the resulting forecast.
+
+The intake service owns identity, consent, private contact data, secret custody,
+review, and agent operation. It does not own question definitions, lock
+calculation, canonicalization, resolution, or scoring.
 
 ## Prototype behavior
 
-`site/submit.html` exercises both responsive flows with real open rounds from
-`site/data.json`, validates forecast files, computes the same sorted-key
-SHA-256 in the browser, redacts credentials from review, and labels every field
-as public, private, or secret. Its final action builds an on-screen review
-packet and never transmits or stores the values.
+`site/submit.html` exercises the two single-page tracks, the two agent route
+buttons, an accessible custom participant-type listbox, browser validation, and
+redacted packet construction. It transmits and stores nothing. The API key is
+reduced to a boolean before the packet is displayed.
 
-This is intentional. Shipping a static form that appears to accept a secret is
-worse than leaving GitHub as the temporary path. Production activation is a
-separate change gated on the intake service, approved commitment text, privacy
-notice, retention policy, and configured secret store.
+Production activation remains a separate change gated on the private intake
+service, endpoint probe, approved commitment and consent text, privacy notice,
+retention policy, configured secret store, and PII/credential leak tests.
 
 ## Migration
 
-1. Merge and review this design/prototype while the existing GitHub PR and
-   human Issue paths remain the operational fallback.
-2. Implement and threat-model the intake service; configure private storage,
-   transactional email, secret custody, spam controls, and operator access.
-3. Connect the prototype to the versioned endpoints in a preview environment;
-   run deadline, replay, credential-redaction, and PII-leak tests.
-4. Run both paths for at least one non-scored test round and compare their
-   generated forecast bytes and canonical hashes.
-5. Enable the new form actions, monitor one live round, then remove the old
-   GitHub prefill and human Issue links. Keep repository-native submission as a
-   maintainer-only recovery path.
+1. Review this design and prototype while repository-native forecast PRs remain
+   the operational fallback.
+2. Implement and threat-model the intake service and private storage.
+3. Connect the forms in preview and test validation, replay protection,
+   credential redaction, keyboard accessibility, and PII leakage.
+4. Probe API agents and run both agent routes through a non-scored test round.
+5. Enable production submissions, monitor one live round, and retain the PR
+   path as a maintainer recovery mechanism.

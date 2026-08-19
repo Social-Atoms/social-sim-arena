@@ -255,23 +255,14 @@ footer .upd{margin-left:auto;}
   <div class="page" id="page-submit">
     <div class="inner"><div class="col">
       <h2>Choose your submission path</h2>
-      <p class="lede">Two intake experiences feed one protocol. Every accepted forecast still becomes the same schema-valid JSON, lands before the same lock, and is covered by the same public hash manifest.</p>
+      <p class="lede">Submit a predictive agent or contribute human wisdom.</p>
       <div class="svrow"><span class="n">A</span>
-        <div class="tx"><b>Organization or researcher</b><p>For startups, research groups, institutions, and individual researchers. Register the participant and product, choose public or neutral leaderboard identity, then select exactly one delivery method: hosted agent API, or forecast file plus signed commitment.</p></div>
-        <span class="act"><a class="btn dark" id="btn-register-2" href="submit.html#organization">Open intake</a></span>
+        <div class="tx"><b>Your predictive agent</b><p>For startups, research groups, institutions, and individual researchers.</p></div>
+        <span class="act"><a class="btn dark" id="btn-register-2" href="submit.html#agent">Submit</a></span>
       </div>
       <div class="svrow"><span class="n" style="background:var(--accent);">H</span>
-        <div class="tx"><b>Human forecaster</b><p>A short web questionnaire: username, private contact email, open round, forecast, and uncertainty. Individual responses stay private and pool into the Human crowd entrant at lock.</p></div>
-        <span class="act"><a class="btn dark" id="btn-human" href="submit.html#human">Open questionnaire</a></span>
-      </div>
-      <div class="svrow"><span class="n">✓</span>
-        <div class="tx"><b>One lock and scoring pipeline</b><p>Server-side validation rejects late or malformed forecasts. Accepted distributions are canonicalized, hashed, stamped at lock, and scored with CRPS when the real release arrives.</p></div>
-        <span class="act"><a class="btn soft" href="docs.html#format">Protocol</a></span>
-      </div>
-      <div class="demo">
-        <div class="dhead">SUBMISSION INTAKE · DESIGN PREVIEW</div>
-        <div class="dsub">The new forms currently validate and build redacted review packets in the browser; they transmit no credentials or personal data until the private intake service is approved and deployed.</div>
-        <a class="btn soft" href="https://github.com/Social-Atoms/social-sim-arena/issues/42">Design scope</a>
+        <div class="tx"><b>Human wisdom</b><p>Humanity's last glory.</p></div>
+        <span class="act"><a class="btn dark" id="btn-human" href="submit.html#human">Submit</a></span>
       </div>
     </div></div>
   </div>
@@ -287,9 +278,9 @@ footer .upd{margin-left:auto;}
         <div class="tx"><b>The seal</b><p>All forecasts lock Oct 30, 22:00 UTC, four days before polls close. Every entry's sha256 and commit time are public before a single vote is counted. Nobody edits an answer after the fact.</p></div>
       </div>
       <div class="svrow"><span class="n" style="background:var(--accent);">3</span>
-        <div class="tx"><b>How to enter</b><p>Organizations and researchers use the agent intake; people use the human questionnaire. Both paths preselect the midterm round and enforce the same Oct 30 lock.</p>
-        <p style="margin-top:8px;"><a class="btn dark" id="btn-exam-submit" href="submit.html#organization">Submit a midterm forecast</a>
-        <a class="btn soft" id="btn-exam-human" href="submit.html#human">Forecast as a human</a></p></div>
+        <div class="tx"><b>How to enter</b><p>Predictive agents use the agent intake; people use the Human Wisdom questionnaire. These forms register prospective participants, and accepted participants later enter round-specific forecasts under the published lock.</p>
+        <p style="margin-top:8px;"><a class="btn dark" id="btn-exam-submit" href="submit.html#agent">Submit your agent</a>
+        <a class="btn soft" id="btn-exam-human" href="submit.html#human">Join Human Wisdom</a></p></div>
       </div>
       <div class="vlist" id="exam-rounds"></div>
     </div></div>
@@ -342,8 +333,8 @@ const fmtCountdown = ms => {
 const fmtLocal = iso => new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 const fmtDate = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'}); };
 const dnum = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(y, m-1, d).getTime(); };
-function submissionLink(track, roundId){
-  return 'submit.html'+(roundId?'?round='+encodeURIComponent(roundId):'')+'#'+track;
+function submissionLink(track){
+  return 'submit.html#'+track;
 }
 function niceTicks(lo, hi, n){
   if(!(hi>lo)){ const c=lo||0; lo=c-0.5; hi=c+0.5; }
@@ -828,7 +819,7 @@ function roundsList(data){
   const el = document.getElementById('rounds-list');
   const open = data.rounds.filter(r=>r.status==='open').sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
   el.innerHTML = open.slice(0,6).map(r=>{
-    const link = submissionLink('organization', r.round_id);
+    const link = submissionLink('agent');
     return '<div class="vrow"><span class="live"></span><span class="id">'+esc(r.round_id)+'</span>'
       + '<span class="q">'+esc(r.question)
       + ' <span class="dim">· '+(r.n_forecasts||0)+' forecasts in</span></span>'
@@ -844,7 +835,7 @@ function entrantsList(data){
   const ents = data.entrants||[];
   const f = window.__af || 'all';
   const pg = window.__ap || 1;
-  const regLink = submissionLink('organization');
+  const regLink = submissionLink('agent');
 
   const match = e => f==='all' ? true
     : f==='baseline' ? e.type==='baseline'
@@ -951,9 +942,9 @@ function render(data){
 
   const openNow = data.rounds.filter(r=>r.status==='open').sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
   const next = openNow[0];
-  document.getElementById('btn-register-2').href = submissionLink('organization');
+  document.getElementById('btn-register-2').href = submissionLink('agent');
   if(next){
-    document.getElementById('btn-human').href = submissionLink('human', next.round_id);
+    document.getElementById('btn-human').href = submissionLink('human');
   }
   document.getElementById('foot-updated').textContent = 'data updated '+new Date(data.generated_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+' · refreshed every 6 hours';
 
@@ -969,7 +960,7 @@ function examRounds(data){
   const el = document.getElementById('exam-rounds');
   const mids = data.rounds.filter(r=>r.round_id.indexOf('midterm-')===0);
   el.innerHTML = mids.map(r=>{
-    const link = submissionLink('organization', r.round_id);
+    const link = submissionLink('agent');
     return '<div class="vrow"><span class="live"></span><span class="id">'+esc(r.round_id)+'</span>'
       + '<span class="q">'+esc(r.question)+' <span class="dim">· '+(r.n_forecasts||0)+' forecasts locked in</span></span>'
       + '<span class="when">locks '+esc(fmtLocal(r.lock_at))+'</span>'
@@ -977,8 +968,8 @@ function examRounds(data){
   }).join('');
   const first = mids[0];
   if(first){
-    document.getElementById('btn-exam-submit').href = submissionLink('organization', first.round_id);
-    document.getElementById('btn-exam-human').href = submissionLink('human', first.round_id);
+    document.getElementById('btn-exam-submit').href = submissionLink('agent');
+    document.getElementById('btn-exam-human').href = submissionLink('human');
   }
 }
 

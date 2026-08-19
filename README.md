@@ -54,7 +54,7 @@ backtest/     committed evidence of the model backtest (runs/*.jsonl)
 
 ## Submitting a forecast
 
-The guided organization/researcher and human intake is being designed in
+The guided predictive-agent and Human Wisdom intake is being designed in
 [`docs/submission-design.md`](docs/submission-design.md), with an interactive,
 non-transmitting prototype at `site/submit.html`. Until the private intake
 service is implemented and approved, the repository-native path below remains
