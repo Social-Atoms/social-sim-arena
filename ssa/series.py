@@ -20,6 +20,7 @@ Adding a tracker means adding a row here, and nothing else.
 """
 from .adapters import aaii as aaii_adapter
 from .adapters import civiqs as civiqs_adapter
+from .adapters import pentaesi as pentaesi_adapter
 from .adapters import silverbulletin as sb
 from .adapters import trends as trends_adapter
 from .adapters import umich as umich_adapter
@@ -1010,6 +1011,32 @@ SERIES["aaii_bull_bear_spread"] = {
     # panel with an AAII-member population definition exists.
 }
 
+# Penta-CivicScience Economic Sentiment Index: the second sentiment tracker
+# with a sub-monthly cadence. Biweekly Wednesdays, free and keyless via the
+# publisher's own WordPress feed, and self-checking (every release states its
+# own delta and the parser reconciles it -- see the adapter, which is where
+# every hard decision about this source is documented). Like AAII it is a
+# self-selected online population, so no `survey` instrument here either, and
+# for the same reason: the persona panel approximates US adults, not
+# CivicScience respondents.
+SERIES["esi_headline"] = {
+    "label": "Penta-CivicScience Economic Sentiment Index",
+    "tracker": "penta_esi",
+    "source": "pentaesi",
+    "unit": "index points",
+    "cadence": ("biweekly; released every other Wednesday, rows dated by "
+                "the release day"),
+    "question": ("Penta-CivicScience Economic Sentiment Index: the headline "
+                 "ESI reading published in the biweekly release"),
+    "methodology": (
+        "CivicScience online panel, published every other Wednesday by Penta "
+        "since 2013 (HPS-CivicScience before 2023). Five sub-indicators "
+        "averaged into a headline index; the arena tracks the headline only. "
+        "The series here starts where the release wording became "
+        "machine-stable (2022); respondents are a self-selected online panel, "
+        "not a probability sample."),
+}
+
 
 # --- Google Trends: the market-research track -------------------------------
 #
@@ -1218,6 +1245,10 @@ def build_all(sources=None):
     # here and stay off the network.
     if "aaii" in need and "aaii" not in src:
         src["aaii"] = aaii_adapter.fetch()
+    # The ESI feed returns parsed [{date, value}] rows directly; the fetch is
+    # one paginated keyless request cycle, shared by every caller of the map.
+    if "pentaesi" in need and "pentaesi" not in src:
+        src["pentaesi"] = pentaesi_adapter.history()
     # Civiqs is the one source with no single file to prefetch: every tracker
     # and every subgroup is its own ~2 MB page. So `src["civiqs"]` is not a
     # payload but a per-series override map -- `{series_id: [{date, value}]}` --
@@ -1261,6 +1292,8 @@ def build_all(sources=None):
             out[sid] = sb.to_series(recs, spec["value"])
         elif spec["source"] == "aaii":
             out[sid] = aaii_adapter.to_series(src["aaii"], spec["value"])
+        elif spec["source"] == "pentaesi":
+            out[sid] = list(src["pentaesi"])
         elif spec["source"] == "civiqs":
             cfg = spec["civiqs"]
             given = src["civiqs"].get(sid)
