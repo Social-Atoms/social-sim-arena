@@ -1,46 +1,46 @@
 {
- "generated_at": "2026-08-14T13:44:56Z",
+ "generated_at": "2026-08-19T12:20:09Z",
  "season": 0,
  "trackers": {
   "trump_approval_avg": {
    "label": "Trump approval, adjusted average",
    "unit": "% approve",
-   "value": 39.9,
-   "asof": "2026-08-08",
-   "delta_30d": -0.5,
-   "n_polls_window": 42,
+   "value": 39.7,
+   "asof": "2026-08-15",
+   "delta_30d": -0.9,
+   "n_polls_window": 36,
    "source": "Silver Bulletin poll database, house-effect adjusted here, 21-day window"
   },
   "generic_ballot_avg": {
    "label": "2026 generic ballot, adjusted average",
    "unit": "margin, Dem minus Rep",
-   "value": 6.0,
-   "asof": "2026-08-08",
+   "value": 5.9,
+   "asof": "2026-08-15",
    "delta_30d": 1.0,
-   "n_polls_window": 22,
+   "n_polls_window": 19,
    "source": "Silver Bulletin poll database, house-effect adjusted here, 21-day window"
   },
   "yougov_approval": {
    "label": "Economist/YouGov, latest wave",
    "unit": "% approve",
-   "value": 33.0,
-   "asof": "2026-08-08",
+   "value": 35.0,
+   "asof": "2026-08-15",
    "source": "Silver Bulletin poll database (poll-level)"
   },
   "mc_approval": {
    "label": "Morning Consult, latest wave",
    "unit": "% approve",
-   "value": 42.8,
-   "asof": "2026-08-01",
+   "value": 42.9,
+   "asof": "2026-08-15",
    "source": "Silver Bulletin poll database (poll-level)"
   },
   "umich_sentiment": {
    "label": "Michigan consumer sentiment",
    "unit": "index",
-   "value": 55.2,
-   "asof": "2026-07-01",
-   "next_release": "2026-08-14T14:00:00Z",
-   "source": "Surveys of Consumers, University of Michigan (sca.isr.umich.edu), the survey's own monthly table"
+   "value": 51.0,
+   "asof": "2026-08-01",
+   "next_release": "2026-08-28T14:00:00Z",
+   "source": "Surveys of Consumers, University of Michigan (sca.isr.umich.edu): tbmics.csv for finals and tbcics.csv for the current preliminary, newest reading 2026-08-01"
   }
  },
  "rounds": [
@@ -54,31 +54,48 @@
    "release_estimated": false,
    "lock_at": "2026-08-12T14:00:00Z",
    "resolve": "official value published at sca.isr.umich.edu, 10:00 ET",
-   "status": "locked",
+   "target_type": "continuous_normal",
+   "status": "resolved",
    "history_source": "lock snapshot",
    "baselines": {
     "persistence": {
-     "mean": 49.5,
+     "mean": 55.2,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 48.1,
-     "sd": 9.83,
+     "mean": 49.48,
+     "sd": 9.44,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 49.51,
-     "sd": 2.82,
+     "mean": 51.79,
+     "sd": 3.21,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 59.25,
-     "sd": 8.46,
+     "mean": 58.79,
+     "sd": 8.35,
      "method": "climatology"
     }
    },
    "scoreable": true,
+   "resolution": {
+    "corrected": {
+     "at": "2026-08-16T05:45:09Z",
+     "replaces": {
+      "observed_date": "2026-07-01",
+      "resolved_at": "2026-08-14T19:20:13Z",
+      "value": 55.2
+     },
+     "why": "the superseded entry resolved this round against July's final -- a number published in July and public well before the round's 2026-08-12 lock, so every entrant could have known it. The round asks for the August preliminary, 51.0, published 2026-08-14. The cause was a FRED fallback that republishes this series a month late; it wrote a lock snapshot ending in June, and 'the first release after the frozen history' silently became July. The fallback is deleted and the snapshot corrected."
+    },
+    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
+    "observed_date": "2026-08-01",
+    "resolved_at": "2026-08-16T05:45:00Z",
+    "series": "umich_sentiment",
+    "value": 51.0
+   },
    "n_forecasts": 34,
    "forecasts": {
     "claude-fable-zeroshot": {
@@ -229,7 +246,8 @@
    "release_estimated": true,
    "lock_at": "2026-08-12T22:00:00Z",
    "resolve": "civiqs.com/results/approve_president_trump_2025 value on Friday, recorded manually with a screenshot",
-   "status": "locked",
+   "target_type": "continuous_normal",
+   "status": "resolved",
    "history_source": "lock snapshot",
    "baselines": {
     "persistence": {
@@ -254,6 +272,13 @@
     }
    },
    "scoreable": true,
+   "resolution": {
+    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
+    "observed_date": "2026-08-14",
+    "resolved_at": "2026-08-16T05:45:00Z",
+    "series": "civiqs_net_approval",
+    "value": -24.2
+   },
    "n_forecasts": 34,
    "forecasts": {
     "claude-fable-zeroshot": {
@@ -404,7 +429,9 @@
    "release_estimated": true,
    "lock_at": "2026-08-15T14:00:00Z",
    "resolve": "weekly report on pro-assets.morningconsult.com",
-   "status": "open",
+   "target_type": "continuous_normal",
+   "status": "awaiting_resolution",
+   "history_source": "lock snapshot",
    "baselines": {
     "persistence": {
      "mean": 42.8,
@@ -578,7 +605,9 @@
    "release_estimated": true,
    "lock_at": "2026-08-16T14:00:00Z",
    "resolve": "topline PDF of the wave",
-   "status": "open",
+   "target_type": "continuous_normal",
+   "status": "awaiting_resolution",
+   "history_source": "lock snapshot",
    "baselines": {
     "persistence": {
      "mean": 33.0,
@@ -752,7 +781,9 @@
    "release_estimated": true,
    "lock_at": "2026-08-16T14:00:00Z",
    "resolve": "topline PDF of the wave",
-   "status": "open",
+   "target_type": "continuous_normal",
+   "status": "awaiting_resolution",
+   "history_source": "lock snapshot",
    "baselines": {
     "persistence": {
      "mean": 6.0,
@@ -926,31 +957,32 @@
    "release_estimated": true,
    "lock_at": "2026-08-19T22:00:00Z",
    "resolve": "civiqs.com dashboard value on Friday, recorded manually",
+   "target_type": "continuous_normal",
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": -23.9,
+     "mean": -24.2,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": -24.23,
-     "sd": 1.21,
+     "mean": -24.4,
+     "sd": 1.11,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": -22.98,
+     "mean": -23.47,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": -20.92,
-     "sd": 1.36,
+     "mean": -21.15,
+     "sd": 1.43,
      "method": "climatology"
     }
    },
    "scoreable": true,
-   "n_forecasts": 34,
+   "n_forecasts": 44,
    "forecasts": {
     "claude-fable-zeroshot": {
      "mean": -13.0,
@@ -985,8 +1017,8 @@
      "sd": 1.0
     },
     "climatology": {
-     "mean": -20.92,
-     "sd": 1.36
+     "mean": -21.15,
+     "sd": 1.43
     },
     "deepseek-flash-zeroshot": {
      "mean": -14.0,
@@ -1005,8 +1037,16 @@
      "sd": 1.0
     },
     "ewma": {
-     "mean": -22.98,
+     "mean": -23.47,
      "sd": 1.0
+    },
+    "gemini-flash-web-superfc": {
+     "mean": -24.7,
+     "sd": 0.7
+    },
+    "gemini-flash-web": {
+     "mean": -24.6,
+     "sd": 0.6
     },
     "gemini-flash-zeroshot": {
      "mean": -12.5,
@@ -1016,6 +1056,14 @@
      "mean": -24.4,
      "sd": 1.1
     },
+    "gemini-pro-web-superfc": {
+     "mean": -24.6,
+     "sd": 0.6
+    },
+    "gemini-pro-web": {
+     "mean": -24.4,
+     "sd": 0.6
+    },
     "gemini-pro-zeroshot": {
      "mean": -12.0,
      "sd": 7.0
@@ -1023,6 +1071,14 @@
     "gemini-pro": {
      "mean": -24.2,
      "sd": 0.9
+    },
+    "glm-web-superfc": {
+     "mean": -24.5,
+     "sd": 0.6
+    },
+    "glm-web": {
+     "mean": -24.6,
+     "sd": 0.45
     },
     "glm-zeroshot": {
      "mean": -13.0,
@@ -1056,6 +1112,14 @@
      "mean": -24.4,
      "sd": 0.75
     },
+    "grok-web-superfc": {
+     "mean": -24.5,
+     "sd": 0.65
+    },
+    "grok-web": {
+     "mean": -24.5,
+     "sd": 0.65
+    },
     "grok-zeroshot": {
      "mean": -11.5,
      "sd": 4.0
@@ -1065,7 +1129,7 @@
      "sd": 1.0
     },
     "persistence": {
-     "mean": -23.9,
+     "mean": -24.2,
      "sd": 1.5
     },
     "qwen-3.7-zeroshot": {
@@ -1074,6 +1138,14 @@
     },
     "qwen-3.7": {
      "mean": -24.1,
+     "sd": 0.6
+    },
+    "qwen-3.8-web-superfc": {
+     "mean": -24.6,
+     "sd": 0.6
+    },
+    "qwen-3.8-web": {
+     "mean": -24.3,
      "sd": 0.6
     },
     "qwen-3.8-zeroshot": {
@@ -1085,8 +1157,8 @@
      "sd": 0.8
     },
     "trend": {
-     "mean": -24.23,
-     "sd": 1.21
+     "mean": -24.4,
+     "sd": 1.11
     }
    }
   },
@@ -1100,25 +1172,26 @@
    "release_estimated": true,
    "lock_at": "2026-08-22T14:00:00Z",
    "resolve": "weekly report on pro-assets.morningconsult.com",
+   "target_type": "continuous_normal",
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 42.8,
+     "mean": 42.9,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 44.77,
-     "sd": 2.0,
+     "mean": 43.62,
+     "sd": 1.86,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 43.86,
+     "mean": 43.48,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 43.71,
+     "mean": 43.62,
      "sd": 1.0,
      "method": "climatology"
     }
@@ -1159,7 +1232,7 @@
      "sd": 1.2
     },
     "climatology": {
-     "mean": 43.71,
+     "mean": 43.62,
      "sd": 1.0
     },
     "deepseek-flash-zeroshot": {
@@ -1179,7 +1252,7 @@
      "sd": 2.0
     },
     "ewma": {
-     "mean": 43.86,
+     "mean": 43.48,
      "sd": 1.0
     },
     "gemini-flash-zeroshot": {
@@ -1239,7 +1312,7 @@
      "sd": 1.5
     },
     "persistence": {
-     "mean": 42.8,
+     "mean": 42.9,
      "sd": 1.5
     },
     "qwen-3.7-zeroshot": {
@@ -1259,8 +1332,8 @@
      "sd": 1.8
     },
     "trend": {
-     "mean": 44.77,
-     "sd": 2.0
+     "mean": 43.62,
+     "sd": 1.86
     }
    }
   },
@@ -1274,25 +1347,26 @@
    "release_estimated": true,
    "lock_at": "2026-08-23T14:00:00Z",
    "resolve": "topline PDF of the wave",
+   "target_type": "continuous_normal",
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 33.0,
+     "mean": 35.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 33.38,
-     "sd": 3.52,
+     "mean": 34.17,
+     "sd": 3.23,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 34.81,
-     "sd": 2.67,
+     "mean": 34.88,
+     "sd": 2.83,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 36.54,
+     "mean": 36.42,
      "sd": 1.77,
      "method": "climatology"
     }
@@ -1333,7 +1407,7 @@
      "sd": 2.5
     },
     "climatology": {
-     "mean": 36.54,
+     "mean": 36.42,
      "sd": 1.77
     },
     "deepseek-flash-zeroshot": {
@@ -1353,8 +1427,8 @@
      "sd": 2.1
     },
     "ewma": {
-     "mean": 34.81,
-     "sd": 2.67
+     "mean": 34.88,
+     "sd": 2.83
     },
     "gemini-flash-zeroshot": {
      "mean": 42.0,
@@ -1413,7 +1487,7 @@
      "sd": 2.5
     },
     "persistence": {
-     "mean": 33.0,
+     "mean": 35.0,
      "sd": 1.5
     },
     "qwen-3.7-zeroshot": {
@@ -1433,8 +1507,8 @@
      "sd": 2.1
     },
     "trend": {
-     "mean": 33.38,
-     "sd": 3.52
+     "mean": 34.17,
+     "sd": 3.23
     }
    }
   },
@@ -1448,26 +1522,27 @@
    "release_estimated": true,
    "lock_at": "2026-08-23T14:00:00Z",
    "resolve": "topline PDF of the wave",
+   "target_type": "continuous_normal",
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 6.0,
+     "mean": 7.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 6.86,
-     "sd": 2.22,
+     "mean": 7.26,
+     "sd": 2.09,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 5.06,
+     "mean": 5.84,
      "sd": 1.08,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 4.0,
-     "sd": 1.29,
+     "mean": 4.17,
+     "sd": 1.4,
      "method": "climatology"
     }
    },
@@ -1507,8 +1582,8 @@
      "sd": 2.0
     },
     "climatology": {
-     "mean": 4.0,
-     "sd": 1.29
+     "mean": 4.17,
+     "sd": 1.4
     },
     "deepseek-flash-zeroshot": {
      "mean": 5.0,
@@ -1527,7 +1602,7 @@
      "sd": 2.5
     },
     "ewma": {
-     "mean": 5.06,
+     "mean": 5.84,
      "sd": 1.08
     },
     "gemini-flash-zeroshot": {
@@ -1587,7 +1662,7 @@
      "sd": 2.3
     },
     "persistence": {
-     "mean": 6.0,
+     "mean": 7.0,
      "sd": 1.5
     },
     "qwen-3.7-zeroshot": {
@@ -1607,8 +1682,8 @@
      "sd": 2.5
     },
     "trend": {
-     "mean": 6.86,
-     "sd": 2.22
+     "mean": 7.26,
+     "sd": 2.09
     }
    }
   },
@@ -1622,26 +1697,27 @@
    "release_estimated": false,
    "lock_at": "2026-08-26T14:00:00Z",
    "resolve": "official value published at sca.isr.umich.edu, 10:00 ET",
+   "target_type": "continuous_normal",
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 55.2,
+     "mean": 51.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 49.48,
-     "sd": 10.29,
+     "mean": 49.03,
+     "sd": 8.2,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 51.79,
-     "sd": 3.21,
+     "mean": 51.47,
+     "sd": 3.27,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 58.79,
-     "sd": 8.35,
+     "mean": 58.08,
+     "sd": 8.26,
      "method": "climatology"
     }
    },
@@ -1681,8 +1757,8 @@
      "sd": 4.3
     },
     "climatology": {
-     "mean": 58.79,
-     "sd": 8.35
+     "mean": 58.08,
+     "sd": 8.26
     },
     "deepseek-flash-zeroshot": {
      "mean": 75.0,
@@ -1701,8 +1777,8 @@
      "sd": 4.2
     },
     "ewma": {
-     "mean": 51.79,
-     "sd": 3.21
+     "mean": 51.47,
+     "sd": 3.27
     },
     "gemini-flash-zeroshot": {
      "mean": 76.5,
@@ -1761,7 +1837,7 @@
      "sd": 3.8
     },
     "persistence": {
-     "mean": 55.2,
+     "mean": 51.0,
      "sd": 1.5
     },
     "qwen-3.7-zeroshot": {
@@ -1781,8 +1857,8 @@
      "sd": 3.5
     },
     "trend": {
-     "mean": 49.48,
-     "sd": 10.29
+     "mean": 49.03,
+     "sd": 8.2
     }
    }
   },
@@ -1796,26 +1872,27 @@
    "release_estimated": true,
    "lock_at": "2026-09-09T14:00:00Z",
    "resolve": "official value at sca.isr.umich.edu; date confirmed when the calendar posts",
+   "target_type": "continuous_normal",
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 55.2,
+     "mean": 51.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 49.48,
-     "sd": 11.08,
+     "mean": 49.03,
+     "sd": 9.16,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 51.79,
-     "sd": 3.21,
+     "mean": 51.47,
+     "sd": 3.27,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 58.79,
-     "sd": 8.35,
+     "mean": 58.08,
+     "sd": 8.26,
      "method": "climatology"
     }
    },
@@ -1855,8 +1932,8 @@
      "sd": 5.0
     },
     "climatology": {
-     "mean": 58.79,
-     "sd": 8.35
+     "mean": 58.08,
+     "sd": 8.26
     },
     "deepseek-flash-zeroshot": {
      "mean": 75.0,
@@ -1875,8 +1952,8 @@
      "sd": 3.5
     },
     "ewma": {
-     "mean": 51.79,
-     "sd": 3.21
+     "mean": 51.47,
+     "sd": 3.27
     },
     "gemini-flash-zeroshot": {
      "mean": 76.0,
@@ -1935,7 +2012,7 @@
      "sd": 4.1
     },
     "persistence": {
-     "mean": 55.2,
+     "mean": 51.0,
      "sd": 1.5
     },
     "qwen-3.7-zeroshot": {
@@ -1955,8 +2032,8 @@
      "sd": 4.0
     },
     "trend": {
-     "mean": 49.48,
-     "sd": 11.08
+     "mean": 49.03,
+     "sd": 9.16
     }
    }
   },
@@ -1970,20 +2047,21 @@
    "release_estimated": true,
    "lock_at": "2026-10-30T22:00:00Z",
    "resolve": "provisional score Dec 1 from AP tallies; final on certified results",
+   "target_type": "continuous_normal",
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 6.02,
+     "mean": 5.89,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 6.31,
-     "sd": 2.2,
+     "mean": 6.51,
+     "sd": 2.14,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 5.64,
+     "mean": 5.75,
      "sd": 1.0,
      "method": "ewma"
     },
@@ -2049,7 +2127,7 @@
      "sd": 1.5
     },
     "ewma": {
-     "mean": 5.64,
+     "mean": 5.75,
      "sd": 1.0
     },
     "gemini-flash-zeroshot": {
@@ -2109,7 +2187,7 @@
      "sd": 1.4
     },
     "persistence": {
-     "mean": 6.02,
+     "mean": 5.89,
      "sd": 1.5
     },
     "qwen-3.7-zeroshot": {
@@ -2129,8 +2207,8 @@
      "sd": 1.2
     },
     "trend": {
-     "mean": 6.31,
-     "sd": 2.2
+     "mean": 6.51,
+     "sd": 2.14
     }
    }
   },
@@ -2144,10 +2222,2907 @@
    "release_estimated": true,
    "lock_at": "2026-10-30T22:00:00Z",
    "resolve": "provisional score Dec 1 from AP calls; final on certified results",
+   "target_type": "continuous_normal",
    "status": "open",
    "baselines": null,
    "scoreable": false,
    "baseline_note": "no machine-readable series for this tracker: forecasts are collected and hashed, but cannot be scored, because skill is measured against a persistence baseline this round has none of",
+   "n_forecasts": 0,
+   "forecasts": {}
+  },
+  {
+   "round_id": "wiki-2026-08-30-trump",
+   "tracker": "wikipedia",
+   "series": "wiki_views_trump",
+   "question": "Total en.wikipedia pageviews by human readers of the article Donald Trump, in thousands, for the week Mon Aug 24 - Sun Aug 30",
+   "unit": "thousand pageviews (Mon-Sun week)",
+   "release_at": "2026-09-01T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-08-21T14:00:00Z",
+   "resolve": "Wikimedia Pageviews API, user traffic, complete week",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 197.6,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 189.67,
+     "sd": 31.63,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 214.01,
+     "sd": 43.84,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 340.44,
+     "sd": 115.91,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 340.44,
+     "sd": 115.91
+    },
+    "ewma": {
+     "mean": 214.01,
+     "sd": 43.84
+    },
+    "persistence": {
+     "mean": 197.6,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 189.67,
+     "sd": 31.63
+    }
+   }
+  },
+  {
+   "round_id": "wiki-2026-08-30-taylor-swift",
+   "tracker": "wikipedia",
+   "series": "wiki_views_taylor_swift",
+   "question": "Total en.wikipedia pageviews by human readers of the article Taylor Swift, in thousands, for the week Mon Aug 24 - Sun Aug 30",
+   "unit": "thousand pageviews (Mon-Sun week)",
+   "release_at": "2026-09-01T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-08-21T14:00:00Z",
+   "resolve": "Wikimedia Pageviews API, user traffic, complete week",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 90.1,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -112.1,
+     "sd": 460.17,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 113.69,
+     "sd": 153.38,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 142.94,
+     "sd": 164.18,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 142.94,
+     "sd": 164.18
+    },
+    "ewma": {
+     "mean": 113.69,
+     "sd": 153.38
+    },
+    "persistence": {
+     "mean": 90.1,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -112.1,
+     "sd": 460.17
+    }
+   }
+  },
+  {
+   "round_id": "yougov-2026-w36-approval",
+   "tracker": "economist_yougov",
+   "series": "yougov_approval",
+   "question": "Economist/YouGov weekly tracker: percent of US adult citizens who approve of Donald Trump's job performance",
+   "unit": "% approve",
+   "release_at": "2026-09-01T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-08-30T14:00:00Z",
+   "resolve": "topline PDF of the wave",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 35.0,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 33.84,
+     "sd": 3.5,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 34.88,
+     "sd": 2.83,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 36.42,
+     "sd": 1.77,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 36.42,
+     "sd": 1.77
+    },
+    "ewma": {
+     "mean": 34.88,
+     "sd": 2.83
+    },
+    "persistence": {
+     "mean": 35.0,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 33.84,
+     "sd": 3.5
+    }
+   }
+  },
+  {
+   "round_id": "yougov-2026-w36-generic",
+   "tracker": "economist_yougov",
+   "series": "yougov_generic_margin",
+   "question": "Economist/YouGov generic congressional ballot: the Democratic margin (Democratic percent minus Republican percent) for the 2026 US House elections",
+   "unit": "net points, Democratic minus Republican",
+   "release_at": "2026-09-01T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-08-30T14:00:00Z",
+   "resolve": "topline PDF of the wave",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 7.0,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 7.77,
+     "sd": 2.27,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 5.84,
+     "sd": 1.08,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 4.17,
+     "sd": 1.4,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 4.17,
+     "sd": 1.4
+    },
+    "ewma": {
+     "mean": 5.84,
+     "sd": 1.08
+    },
+    "persistence": {
+     "mean": 7.0,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 7.77,
+     "sd": 2.27
+    }
+   }
+  },
+  {
+   "round_id": "mc-2026-w36-approval",
+   "tracker": "morning_consult",
+   "series": "mc_approval",
+   "question": "Morning Consult weekly tracker: percent of US registered voters who approve of Donald Trump's job performance",
+   "unit": "% approve",
+   "release_at": "2026-09-02T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-08-31T14:00:00Z",
+   "resolve": "adjusted average at the release date",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 42.9,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 43.57,
+     "sd": 2.07,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 43.48,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 43.62,
+     "sd": 1.0,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 43.62,
+     "sd": 1.0
+    },
+    "ewma": {
+     "mean": 43.48,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": 42.9,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 43.57,
+     "sd": 2.07
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-2026-w35-approval",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-08-28T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-08-26T14:00:00Z",
+   "resolve": "dashboard Friday value, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -24.2,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -24.81,
+     "sd": 1.21,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -23.47,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -21.15,
+     "sd": 1.43,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -21.15,
+     "sd": 1.43
+    },
+    "ewma": {
+     "mean": -23.47,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -24.2,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -24.81,
+     "sd": 1.21
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-2026-w36-approval",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-04T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-02T14:00:00Z",
+   "resolve": "dashboard Friday value, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -24.2,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -25.22,
+     "sd": 1.3,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -23.47,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -21.15,
+     "sd": 1.43,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -21.15,
+     "sd": 1.43
+    },
+    "ewma": {
+     "mean": -23.47,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -24.2,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -25.22,
+     "sd": 1.3
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-rep-2026-w35",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_rep",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters who identify as Republicans, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-08-28T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-08-26T14:00:00Z",
+   "resolve": "dashboard Friday value, Republicans filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 68.3,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 67.62,
+     "sd": 1.21,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 70.07,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 73.95,
+     "sd": 2.31,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 73.95,
+     "sd": 2.31
+    },
+    "ewma": {
+     "mean": 70.07,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": 68.3,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 67.62,
+     "sd": 1.21
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-rep-2026-w36",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_rep",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters who identify as Republicans, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-04T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-02T14:00:00Z",
+   "resolve": "dashboard Friday value, Republicans filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 68.3,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 66.86,
+     "sd": 1.3,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 70.07,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 73.95,
+     "sd": 2.31,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 73.95,
+     "sd": 2.31
+    },
+    "ewma": {
+     "mean": 70.07,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": 68.3,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 66.86,
+     "sd": 1.3
+    }
+   }
+  },
+  {
+   "round_id": "aaii-2026-08-27",
+   "tracker": "aaii",
+   "series": "aaii_bull_bear_spread",
+   "question": "AAII Investor Sentiment Survey: percent of AAII members bullish about the stock market's direction over the next six months, minus percent bearish (the bull-bear spread)",
+   "unit": "percentage points (bullish minus bearish)",
+   "release_at": "2026-08-27T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-08-25T14:00:00Z",
+   "resolve": "results page row for the voting week ending 2026-08-26",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -3.2,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -8.41,
+     "sd": 17.49,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -3.83,
+     "sd": 11.26,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -4.47,
+     "sd": 9.18,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -4.47,
+     "sd": 9.18
+    },
+    "ewma": {
+     "mean": -3.83,
+     "sd": 11.26
+    },
+    "persistence": {
+     "mean": -3.2,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -8.41,
+     "sd": 17.49
+    }
+   }
+  },
+  {
+   "round_id": "aaii-2026-09-03",
+   "tracker": "aaii",
+   "series": "aaii_bull_bear_spread",
+   "question": "AAII Investor Sentiment Survey: percent of AAII members bullish about the stock market's direction over the next six months, minus percent bearish (the bull-bear spread)",
+   "unit": "percentage points (bullish minus bearish)",
+   "release_at": "2026-09-03T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-01T14:00:00Z",
+   "resolve": "results page row for the voting week ending 2026-09-02",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -3.2,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -9.32,
+     "sd": 18.8,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -3.83,
+     "sd": 11.26,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -4.47,
+     "sd": 9.18,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -4.47,
+     "sd": 9.18
+    },
+    "ewma": {
+     "mean": -3.83,
+     "sd": 11.26
+    },
+    "persistence": {
+     "mean": -3.2,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -9.32,
+     "sd": 18.8
+    }
+   }
+  },
+  {
+   "round_id": "trends-2026-08-29-tesla",
+   "tracker": "google_trends",
+   "series": "trends_tesla",
+   "question": "Google Trends weekly search interest for the query 'Tesla' in the United States (web search, all categories): the 0-100 index for the most recent complete Sunday-to-Saturday week, normalized within the trailing 12-month window, as captured by the arena's archived snapshot. Interest tracks product and company news -- launches, recalls, earnings, Musk coverage -- so the week's public events are the signal to reason over. (week Sun Aug 23 - Sat Aug 29)",
+   "unit": "search interest index (0-100, 12-month window)",
+   "release_at": "2026-09-01T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-08-21T14:00:00Z",
+   "resolve": "first archived snapshot carrying the completed week ending 2026-08-29",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 72,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 69.97,
+     "sd": 7.2,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 76.69,
+     "sd": 3.58,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 84.5,
+     "sd": 6.88,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 6,
+   "forecasts": {
+    "climatology": {
+     "mean": 84.5,
+     "sd": 6.88
+    },
+    "ewma": {
+     "mean": 76.69,
+     "sd": 3.58
+    },
+    "gemini-pro-web-superfc": {
+     "mean": 73.0,
+     "sd": 6.5
+    },
+    "grok-web": {
+     "mean": 71.0,
+     "sd": 8.0
+    },
+    "persistence": {
+     "mean": 72,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 69.97,
+     "sd": 7.2
+    }
+   }
+  },
+  {
+   "round_id": "trends-2026-08-29-iphone",
+   "tracker": "google_trends",
+   "series": "trends_iphone",
+   "question": "Google Trends weekly search interest for the query 'iPhone' in the United States (web search, all categories): the 0-100 index for the most recent complete Sunday-to-Saturday week, normalized within the trailing 12-month window, as captured by the arena's archived snapshot. Interest is strongly seasonal around Apple's September announcement cycle and product rumors, so the calendar itself is informative. (week Sun Aug 23 - Sat Aug 29)",
+   "unit": "search interest index (0-100, 12-month window)",
+   "release_at": "2026-09-01T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-08-21T14:00:00Z",
+   "resolve": "first archived snapshot carrying the completed week ending 2026-08-29",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 52,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 47.82,
+     "sd": 10.28,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 53.83,
+     "sd": 3.5,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 58.54,
+     "sd": 5.47,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 58.54,
+     "sd": 5.47
+    },
+    "ewma": {
+     "mean": 53.83,
+     "sd": 3.5
+    },
+    "persistence": {
+     "mean": 52,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 47.82,
+     "sd": 10.28
+    }
+   }
+  },
+  {
+   "round_id": "umich-party-2026-09-dem",
+   "tracker": "umich_party",
+   "series": "umich_party_dem",
+   "question": "University of Michigan Index of Consumer Sentiment among Democrats, September 2026 preliminary",
+   "unit": "index points (1966=100)",
+   "release_at": "2026-09-11T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-09T14:00:00Z",
+   "resolve": "party addenda PDF published with the September preliminary",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 39.1,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 37.74,
+     "sd": 9.79,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 38.78,
+     "sd": 3.57,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 47.37,
+     "sd": 18.38,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 47.37,
+     "sd": 18.38
+    },
+    "ewma": {
+     "mean": 38.78,
+     "sd": 3.57
+    },
+    "persistence": {
+     "mean": 39.1,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 37.74,
+     "sd": 9.79
+    }
+   }
+  },
+  {
+   "round_id": "umich-party-2026-09-ind",
+   "tracker": "umich_party",
+   "series": "umich_party_ind",
+   "question": "University of Michigan Index of Consumer Sentiment among Independents, September 2026 preliminary",
+   "unit": "index points (1966=100)",
+   "release_at": "2026-09-11T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-09T14:00:00Z",
+   "resolve": "party addenda PDF published with the September preliminary",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 48.5,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 45.44,
+     "sd": 8.09,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 47.47,
+     "sd": 2.9,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 53.89,
+     "sd": 7.94,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 53.89,
+     "sd": 7.94
+    },
+    "ewma": {
+     "mean": 47.47,
+     "sd": 2.9
+    },
+    "persistence": {
+     "mean": 48.5,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 45.44,
+     "sd": 8.09
+    }
+   }
+  },
+  {
+   "round_id": "umich-party-2026-09-rep",
+   "tracker": "umich_party",
+   "series": "umich_party_rep",
+   "question": "University of Michigan Index of Consumer Sentiment among Republicans, September 2026 preliminary",
+   "unit": "index points (1966=100)",
+   "release_at": "2026-09-11T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-09T14:00:00Z",
+   "resolve": "party addenda PDF published with the September preliminary",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 78.7,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 79.5,
+     "sd": 6.4,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 84.33,
+     "sd": 4.62,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 85.95,
+     "sd": 12.35,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 85.95,
+     "sd": 12.35
+    },
+    "ewma": {
+     "mean": 84.33,
+     "sd": 4.62
+    },
+    "persistence": {
+     "mean": 78.7,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 79.5,
+     "sd": 6.4
+    }
+   }
+  },
+  {
+   "round_id": "yougov-2026-w37-approval",
+   "tracker": "economist_yougov",
+   "series": "yougov_approval",
+   "question": "Economist/YouGov weekly tracker: percent of US adult citizens who approve of Donald Trump's job performance",
+   "unit": "% approve",
+   "release_at": "2026-09-08T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-06T14:00:00Z",
+   "resolve": "topline PDF of the wave",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 35.0,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 33.66,
+     "sd": 3.75,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 34.88,
+     "sd": 2.83,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 36.42,
+     "sd": 1.77,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 36.42,
+     "sd": 1.77
+    },
+    "ewma": {
+     "mean": 34.88,
+     "sd": 2.83
+    },
+    "persistence": {
+     "mean": 35.0,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 33.66,
+     "sd": 3.75
+    }
+   }
+  },
+  {
+   "round_id": "yougov-2026-w37-generic",
+   "tracker": "economist_yougov",
+   "series": "yougov_generic_margin",
+   "question": "Economist/YouGov generic congressional ballot: the Democratic margin (Democratic percent minus Republican percent) for the 2026 US House elections",
+   "unit": "net points, Democratic minus Republican",
+   "release_at": "2026-09-08T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-06T14:00:00Z",
+   "resolve": "topline PDF of the wave",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 7.0,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 8.06,
+     "sd": 2.43,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 5.84,
+     "sd": 1.08,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 4.17,
+     "sd": 1.4,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 4.17,
+     "sd": 1.4
+    },
+    "ewma": {
+     "mean": 5.84,
+     "sd": 1.08
+    },
+    "persistence": {
+     "mean": 7.0,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 8.06,
+     "sd": 2.43
+    }
+   }
+  },
+  {
+   "round_id": "yougov-2026-w38-approval",
+   "tracker": "economist_yougov",
+   "series": "yougov_approval",
+   "question": "Economist/YouGov weekly tracker: percent of US adult citizens who approve of Donald Trump's job performance",
+   "unit": "% approve",
+   "release_at": "2026-09-15T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-13T14:00:00Z",
+   "resolve": "topline PDF of the wave",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 35.0,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 33.66,
+     "sd": 3.99,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 34.88,
+     "sd": 2.83,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 36.42,
+     "sd": 1.77,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 36.42,
+     "sd": 1.77
+    },
+    "ewma": {
+     "mean": 34.88,
+     "sd": 2.83
+    },
+    "persistence": {
+     "mean": 35.0,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 33.66,
+     "sd": 3.99
+    }
+   }
+  },
+  {
+   "round_id": "yougov-2026-w38-generic",
+   "tracker": "economist_yougov",
+   "series": "yougov_generic_margin",
+   "question": "Economist/YouGov generic congressional ballot: the Democratic margin (Democratic percent minus Republican percent) for the 2026 US House elections",
+   "unit": "net points, Democratic minus Republican",
+   "release_at": "2026-09-15T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-13T14:00:00Z",
+   "resolve": "topline PDF of the wave",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 7.0,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 8.06,
+     "sd": 2.58,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 5.84,
+     "sd": 1.08,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 4.17,
+     "sd": 1.4,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 4.17,
+     "sd": 1.4
+    },
+    "ewma": {
+     "mean": 5.84,
+     "sd": 1.08
+    },
+    "persistence": {
+     "mean": 7.0,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 8.06,
+     "sd": 2.58
+    }
+   }
+  },
+  {
+   "round_id": "yougov-2026-w39-approval",
+   "tracker": "economist_yougov",
+   "series": "yougov_approval",
+   "question": "Economist/YouGov weekly tracker: percent of US adult citizens who approve of Donald Trump's job performance",
+   "unit": "% approve",
+   "release_at": "2026-09-22T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-20T14:00:00Z",
+   "resolve": "topline PDF of the wave",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 35.0,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 33.66,
+     "sd": 4.21,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 34.88,
+     "sd": 2.83,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 36.42,
+     "sd": 1.77,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 36.42,
+     "sd": 1.77
+    },
+    "ewma": {
+     "mean": 34.88,
+     "sd": 2.83
+    },
+    "persistence": {
+     "mean": 35.0,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 33.66,
+     "sd": 4.21
+    }
+   }
+  },
+  {
+   "round_id": "yougov-2026-w39-generic",
+   "tracker": "economist_yougov",
+   "series": "yougov_generic_margin",
+   "question": "Economist/YouGov generic congressional ballot: the Democratic margin (Democratic percent minus Republican percent) for the 2026 US House elections",
+   "unit": "net points, Democratic minus Republican",
+   "release_at": "2026-09-22T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-20T14:00:00Z",
+   "resolve": "topline PDF of the wave",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 7.0,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 8.06,
+     "sd": 2.73,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 5.84,
+     "sd": 1.08,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 4.17,
+     "sd": 1.4,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 4.17,
+     "sd": 1.4
+    },
+    "ewma": {
+     "mean": 5.84,
+     "sd": 1.08
+    },
+    "persistence": {
+     "mean": 7.0,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 8.06,
+     "sd": 2.73
+    }
+   }
+  },
+  {
+   "round_id": "mc-2026-w37-approval",
+   "tracker": "morning_consult",
+   "series": "mc_approval",
+   "question": "Morning Consult weekly tracker: percent of US registered voters who approve of Donald Trump's job performance",
+   "unit": "% approve",
+   "release_at": "2026-09-09T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-07T14:00:00Z",
+   "resolve": "adjusted average at the release date",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 42.9,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 43.56,
+     "sd": 2.21,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 43.48,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 43.62,
+     "sd": 1.0,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 43.62,
+     "sd": 1.0
+    },
+    "ewma": {
+     "mean": 43.48,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": 42.9,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 43.56,
+     "sd": 2.21
+    }
+   }
+  },
+  {
+   "round_id": "mc-2026-w38-approval",
+   "tracker": "morning_consult",
+   "series": "mc_approval",
+   "question": "Morning Consult weekly tracker: percent of US registered voters who approve of Donald Trump's job performance",
+   "unit": "% approve",
+   "release_at": "2026-09-16T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-14T14:00:00Z",
+   "resolve": "adjusted average at the release date",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 42.9,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 43.56,
+     "sd": 2.35,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 43.48,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 43.62,
+     "sd": 1.0,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 43.62,
+     "sd": 1.0
+    },
+    "ewma": {
+     "mean": 43.48,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": 42.9,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 43.56,
+     "sd": 2.35
+    }
+   }
+  },
+  {
+   "round_id": "mc-2026-w39-approval",
+   "tracker": "morning_consult",
+   "series": "mc_approval",
+   "question": "Morning Consult weekly tracker: percent of US registered voters who approve of Donald Trump's job performance",
+   "unit": "% approve",
+   "release_at": "2026-09-23T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-21T14:00:00Z",
+   "resolve": "adjusted average at the release date",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 42.9,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 43.56,
+     "sd": 2.48,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 43.48,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 43.62,
+     "sd": 1.0,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 43.62,
+     "sd": 1.0
+    },
+    "ewma": {
+     "mean": 43.48,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": 42.9,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 43.56,
+     "sd": 2.48
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-2026-w37-approval",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-11T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-09T14:00:00Z",
+   "resolve": "dashboard Friday value, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -24.2,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -25.22,
+     "sd": 1.39,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -23.47,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -21.15,
+     "sd": 1.43,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -21.15,
+     "sd": 1.43
+    },
+    "ewma": {
+     "mean": -23.47,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -24.2,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -25.22,
+     "sd": 1.39
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-rep-2026-w37",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_rep",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters who identify as Republicans, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-11T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-09T14:00:00Z",
+   "resolve": "dashboard Friday value, Republicans filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 68.3,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 66.86,
+     "sd": 1.39,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 70.07,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 73.95,
+     "sd": 2.31,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 73.95,
+     "sd": 2.31
+    },
+    "ewma": {
+     "mean": 70.07,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": 68.3,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 66.86,
+     "sd": 1.39
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-2026-w38-approval",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-18T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-16T14:00:00Z",
+   "resolve": "dashboard Friday value, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -24.2,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -25.22,
+     "sd": 1.47,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -23.47,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -21.15,
+     "sd": 1.43,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -21.15,
+     "sd": 1.43
+    },
+    "ewma": {
+     "mean": -23.47,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -24.2,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -25.22,
+     "sd": 1.47
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-rep-2026-w38",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_rep",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters who identify as Republicans, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-18T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-16T14:00:00Z",
+   "resolve": "dashboard Friday value, Republicans filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 68.3,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 66.86,
+     "sd": 1.47,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 70.07,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 73.95,
+     "sd": 2.31,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 73.95,
+     "sd": 2.31
+    },
+    "ewma": {
+     "mean": 70.07,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": 68.3,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 66.86,
+     "sd": 1.47
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-2026-w39-approval",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-25T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-23T14:00:00Z",
+   "resolve": "dashboard Friday value, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -24.2,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -25.22,
+     "sd": 1.55,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -23.47,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -21.15,
+     "sd": 1.43,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -21.15,
+     "sd": 1.43
+    },
+    "ewma": {
+     "mean": -23.47,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -24.2,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -25.22,
+     "sd": 1.55
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-rep-2026-w39",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_rep",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters who identify as Republicans, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-25T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-23T14:00:00Z",
+   "resolve": "dashboard Friday value, Republicans filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 68.3,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 66.86,
+     "sd": 1.55,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 70.07,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 73.95,
+     "sd": 2.31,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 73.95,
+     "sd": 2.31
+    },
+    "ewma": {
+     "mean": 70.07,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": 68.3,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 66.86,
+     "sd": 1.55
+    }
+   }
+  },
+  {
+   "round_id": "aaii-2026-09-10",
+   "tracker": "aaii",
+   "series": "aaii_bull_bear_spread",
+   "question": "AAII Investor Sentiment Survey: percent of AAII members bullish about the stock market's direction over the next six months, minus percent bearish (the bull-bear spread)",
+   "unit": "percentage points (bullish minus bearish)",
+   "release_at": "2026-09-10T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-08T14:00:00Z",
+   "resolve": "results page row for the voting week ending 2026-09-09",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -3.2,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -9.32,
+     "sd": 20.02,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -3.83,
+     "sd": 11.26,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -4.47,
+     "sd": 9.18,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -4.47,
+     "sd": 9.18
+    },
+    "ewma": {
+     "mean": -3.83,
+     "sd": 11.26
+    },
+    "persistence": {
+     "mean": -3.2,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -9.32,
+     "sd": 20.02
+    }
+   }
+  },
+  {
+   "round_id": "aaii-2026-09-17",
+   "tracker": "aaii",
+   "series": "aaii_bull_bear_spread",
+   "question": "AAII Investor Sentiment Survey: percent of AAII members bullish about the stock market's direction over the next six months, minus percent bearish (the bull-bear spread)",
+   "unit": "percentage points (bullish minus bearish)",
+   "release_at": "2026-09-17T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-15T14:00:00Z",
+   "resolve": "results page row for the voting week ending 2026-09-16",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -3.2,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -9.32,
+     "sd": 21.18,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -3.83,
+     "sd": 11.26,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -4.47,
+     "sd": 9.18,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -4.47,
+     "sd": 9.18
+    },
+    "ewma": {
+     "mean": -3.83,
+     "sd": 11.26
+    },
+    "persistence": {
+     "mean": -3.2,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -9.32,
+     "sd": 21.18
+    }
+   }
+  },
+  {
+   "round_id": "aaii-2026-09-24",
+   "tracker": "aaii",
+   "series": "aaii_bull_bear_spread",
+   "question": "AAII Investor Sentiment Survey: percent of AAII members bullish about the stock market's direction over the next six months, minus percent bearish (the bull-bear spread)",
+   "unit": "percentage points (bullish minus bearish)",
+   "release_at": "2026-09-24T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-22T14:00:00Z",
+   "resolve": "results page row for the voting week ending 2026-09-23",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -3.2,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -9.32,
+     "sd": 22.27,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -3.83,
+     "sd": 11.26,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -4.47,
+     "sd": 9.18,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -4.47,
+     "sd": 9.18
+    },
+    "ewma": {
+     "mean": -3.83,
+     "sd": 11.26
+    },
+    "persistence": {
+     "mean": -3.2,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -9.32,
+     "sd": 22.27
+    }
+   }
+  },
+  {
+   "round_id": "umich-2026-09-final",
+   "tracker": "umich_sentiment",
+   "series": "umich_sentiment",
+   "question": "University of Michigan consumer sentiment index, September 2026 final",
+   "unit": "index points",
+   "release_at": "2026-09-25T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-23T14:00:00Z",
+   "resolve": "official value at sca.isr.umich.edu; date confirmed when the calendar posts",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 51.0,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 49.03,
+     "sd": 10.02,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 51.47,
+     "sd": 3.27,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 58.08,
+     "sd": 8.26,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 58.08,
+     "sd": 8.26
+    },
+    "ewma": {
+     "mean": 51.47,
+     "sd": 3.27
+    },
+    "persistence": {
+     "mean": 51.0,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 49.03,
+     "sd": 10.02
+    }
+   }
+  },
+  {
+   "round_id": "wiki-top10-2026-09-06",
+   "tracker": "wikipedia",
+   "series": "wiki_top10_en",
+   "question": "The ordered top-10 articles on the English Wikipedia by pageviews for the week Mon Aug 31 - Sun Sep 6, 2026. The seven daily top-1000 lists published by Wikimedia are summed per article and ranked; Main_Page and every non-article namespace (Special:, Wikipedia:, Portal:, Help:, File:, Template:, Category:, Draft:, User:, Talk: and their _talk: variants) are excluded. Give the ten article titles in order, rank 1 first.",
+   "unit": "ordered list of 10 en.wikipedia article titles, canonical underscore form, rank 1 first",
+   "release_at": "2026-09-08T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-08-28T14:00:00Z",
+   "resolve": "Wikimedia daily top endpoint (top/en.wikipedia/all-access), the week's seven archived daily lists summed per article, exclusion rule main_page_and_namespaces_v1 applied, top 10 by weekly total, ties broken by title ascending. An article absent from a day's top-1000 contributes zero for that day.",
+   "target_type": "ranking_list",
+   "status": "open",
+   "baselines": null,
+   "scoreable": true,
+   "ranking": {
+    "kind": "wiki_top10",
+    "length": 10,
+    "loss": "rbo",
+    "week_start": "2026-08-31",
+    "week_end": "2026-09-06",
+    "rbo_p": 0.9,
+    "exclusions": "main_page_and_namespaces_v1",
+    "history_weeks": 3,
+    "baselines": {
+     "persistence": {
+      "items": [
+       "Roblox",
+       "Jason_Arday",
+       "Spider-Man:_Brand_New_Day",
+       ".xxx",
+       "The_Odyssey_(2026_film)",
+       "Deaths_in_2026",
+       "Awarapan_2",
+       "Joshua_Kushner",
+       ".xyz",
+       "The_Last_House"
+      ],
+      "observed_date": "2026-08-16",
+      "method": "persistence"
+     }
+    }
+   },
+   "n_forecasts": 0,
+   "forecasts": {}
+  },
+  {
+   "round_id": "wiki-top10-2026-09-13",
+   "tracker": "wikipedia",
+   "series": "wiki_top10_en",
+   "question": "The ordered top-10 articles on the English Wikipedia by pageviews for the week Mon Sep 7 - Sun Sep 13, 2026. The seven daily top-1000 lists published by Wikimedia are summed per article and ranked; Main_Page and every non-article namespace (Special:, Wikipedia:, Portal:, Help:, File:, Template:, Category:, Draft:, User:, Talk: and their _talk: variants) are excluded. Give the ten article titles in order, rank 1 first.",
+   "unit": "ordered list of 10 en.wikipedia article titles, canonical underscore form, rank 1 first",
+   "release_at": "2026-09-15T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-04T14:00:00Z",
+   "resolve": "Wikimedia daily top endpoint (top/en.wikipedia/all-access), the week's seven archived daily lists summed per article, exclusion rule main_page_and_namespaces_v1 applied, top 10 by weekly total, ties broken by title ascending. An article absent from a day's top-1000 contributes zero for that day.",
+   "target_type": "ranking_list",
+   "status": "open",
+   "baselines": null,
+   "scoreable": true,
+   "ranking": {
+    "kind": "wiki_top10",
+    "length": 10,
+    "loss": "rbo",
+    "week_start": "2026-09-07",
+    "week_end": "2026-09-13",
+    "rbo_p": 0.9,
+    "exclusions": "main_page_and_namespaces_v1",
+    "history_weeks": 2,
+    "baselines": {
+     "persistence": {
+      "items": [
+       "Roblox",
+       "Jason_Arday",
+       "Spider-Man:_Brand_New_Day",
+       ".xxx",
+       "The_Odyssey_(2026_film)",
+       "Deaths_in_2026",
+       "Awarapan_2",
+       "Joshua_Kushner",
+       ".xyz",
+       "The_Last_House"
+      ],
+      "observed_date": "2026-08-16",
+      "method": "persistence"
+     }
+    }
+   },
+   "n_forecasts": 0,
+   "forecasts": {}
+  },
+  {
+   "round_id": "wiki-top10-2026-09-20",
+   "tracker": "wikipedia",
+   "series": "wiki_top10_en",
+   "question": "The ordered top-10 articles on the English Wikipedia by pageviews for the week Mon Sep 14 - Sun Sep 20, 2026. The seven daily top-1000 lists published by Wikimedia are summed per article and ranked; Main_Page and every non-article namespace (Special:, Wikipedia:, Portal:, Help:, File:, Template:, Category:, Draft:, User:, Talk: and their _talk: variants) are excluded. Give the ten article titles in order, rank 1 first.",
+   "unit": "ordered list of 10 en.wikipedia article titles, canonical underscore form, rank 1 first",
+   "release_at": "2026-09-22T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-11T14:00:00Z",
+   "resolve": "Wikimedia daily top endpoint (top/en.wikipedia/all-access), the week's seven archived daily lists summed per article, exclusion rule main_page_and_namespaces_v1 applied, top 10 by weekly total, ties broken by title ascending. An article absent from a day's top-1000 contributes zero for that day.",
+   "target_type": "ranking_list",
+   "status": "open",
+   "baselines": null,
+   "scoreable": true,
+   "ranking": {
+    "kind": "wiki_top10",
+    "length": 10,
+    "loss": "rbo",
+    "week_start": "2026-09-14",
+    "week_end": "2026-09-20",
+    "rbo_p": 0.9,
+    "exclusions": "main_page_and_namespaces_v1",
+    "history_weeks": 2,
+    "baselines": {
+     "persistence": {
+      "items": [
+       "Roblox",
+       "Jason_Arday",
+       "Spider-Man:_Brand_New_Day",
+       ".xxx",
+       "The_Odyssey_(2026_film)",
+       "Deaths_in_2026",
+       "Awarapan_2",
+       "Joshua_Kushner",
+       ".xyz",
+       "The_Last_House"
+      ],
+      "observed_date": "2026-08-16",
+      "method": "persistence"
+     }
+    }
+   },
+   "n_forecasts": 0,
+   "forecasts": {}
+  },
+  {
+   "round_id": "trends-basket-2026-09-05",
+   "tracker": "google_trends",
+   "series": "trends_basket_us5",
+   "question": "Rank these five queries by US Google search interest for the week Sun Aug 30 - Sat Sep 5, 2026: Tesla, iPhone, Samsung, Netflix, Disney. All five are measured in one Google Trends comparison request, so their weekly indices sit on a single shared scale; give the five queries in order, most searched first. September is Apple's announcement window, which is the calendar fact this basket is built around.",
+   "unit": "ordered list of the 5 basket queries, highest weekly search interest first",
+   "release_at": "2026-09-08T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-08-28T14:00:00Z",
+   "resolve": "the first archived five-query comparison snapshot (US, web search, trailing 12-month window) carrying the completed week ending 2026-09-05, ordered by that week's index per query, ties broken by the basket order listed in `ranking.items`",
+   "target_type": "ranking_list",
+   "status": "open",
+   "baselines": null,
+   "scoreable": true,
+   "ranking": {
+    "kind": "trends_basket",
+    "length": 5,
+    "loss": "kendall",
+    "week_start": "2026-08-30",
+    "week_end": "2026-09-05",
+    "items": [
+     "Tesla",
+     "iPhone",
+     "Samsung",
+     "Netflix",
+     "Disney"
+    ],
+    "geo": "US",
+    "history_weeks": 4,
+    "baselines": {
+     "persistence": {
+      "items": [
+       "iPhone",
+       "Disney",
+       "Netflix",
+       "Samsung",
+       "Tesla"
+      ],
+      "observed_date": "2026-08-15",
+      "method": "persistence"
+     }
+    }
+   },
+   "n_forecasts": 0,
+   "forecasts": {}
+  },
+  {
+   "round_id": "trends-basket-2026-09-12",
+   "tracker": "google_trends",
+   "series": "trends_basket_us5",
+   "question": "Rank these five queries by US Google search interest for the week Sun Sep 6 - Sat Sep 12, 2026: Tesla, iPhone, Samsung, Netflix, Disney. All five are measured in one Google Trends comparison request, so their weekly indices sit on a single shared scale; give the five queries in order, most searched first. September is Apple's announcement window, which is the calendar fact this basket is built around.",
+   "unit": "ordered list of the 5 basket queries, highest weekly search interest first",
+   "release_at": "2026-09-15T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-04T14:00:00Z",
+   "resolve": "the first archived five-query comparison snapshot (US, web search, trailing 12-month window) carrying the completed week ending 2026-09-12, ordered by that week's index per query, ties broken by the basket order listed in `ranking.items`",
+   "target_type": "ranking_list",
+   "status": "open",
+   "baselines": null,
+   "scoreable": true,
+   "ranking": {
+    "kind": "trends_basket",
+    "length": 5,
+    "loss": "kendall",
+    "week_start": "2026-09-06",
+    "week_end": "2026-09-12",
+    "items": [
+     "Tesla",
+     "iPhone",
+     "Samsung",
+     "Netflix",
+     "Disney"
+    ],
+    "geo": "US",
+    "history_weeks": 3,
+    "baselines": {
+     "persistence": {
+      "items": [
+       "iPhone",
+       "Disney",
+       "Netflix",
+       "Samsung",
+       "Tesla"
+      ],
+      "observed_date": "2026-08-15",
+      "method": "persistence"
+     }
+    }
+   },
+   "n_forecasts": 0,
+   "forecasts": {}
+  },
+  {
+   "round_id": "trends-basket-2026-09-19",
+   "tracker": "google_trends",
+   "series": "trends_basket_us5",
+   "question": "Rank these five queries by US Google search interest for the week Sun Sep 13 - Sat Sep 19, 2026: Tesla, iPhone, Samsung, Netflix, Disney. All five are measured in one Google Trends comparison request, so their weekly indices sit on a single shared scale; give the five queries in order, most searched first. September is Apple's announcement window, which is the calendar fact this basket is built around.",
+   "unit": "ordered list of the 5 basket queries, highest weekly search interest first",
+   "release_at": "2026-09-22T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-11T14:00:00Z",
+   "resolve": "the first archived five-query comparison snapshot (US, web search, trailing 12-month window) carrying the completed week ending 2026-09-19, ordered by that week's index per query, ties broken by the basket order listed in `ranking.items`",
+   "target_type": "ranking_list",
+   "status": "open",
+   "baselines": null,
+   "scoreable": true,
+   "ranking": {
+    "kind": "trends_basket",
+    "length": 5,
+    "loss": "kendall",
+    "week_start": "2026-09-13",
+    "week_end": "2026-09-19",
+    "items": [
+     "Tesla",
+     "iPhone",
+     "Samsung",
+     "Netflix",
+     "Disney"
+    ],
+    "geo": "US",
+    "history_weeks": 2,
+    "baselines": {
+     "persistence": {
+      "items": [
+       "iPhone",
+       "Disney",
+       "Netflix",
+       "Samsung",
+       "Tesla"
+      ],
+      "observed_date": "2026-08-15",
+      "method": "persistence"
+     }
+    }
+   },
+   "n_forecasts": 0,
+   "forecasts": {}
+  },
+  {
+   "round_id": "civiqs-profile-2026-w38",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval",
+   "question": "Civiqs daily tracker, Trump net approval among registered voters, full 16-cell demographic profile, Friday Sep 18 dashboard values",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-18T22:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-16T22:00:00Z",
+   "resolve": "civiqs.com dashboard value on Friday for each of the sixteen demographic filters, from the daily archive",
+   "target_type": "profile_energy",
+   "cells": [
+    "civiqs_net_approval_dem",
+    "civiqs_net_approval_ind",
+    "civiqs_net_approval_rep",
+    "civiqs_net_approval_age_18_34",
+    "civiqs_net_approval_age_35_49",
+    "civiqs_net_approval_age_50_64",
+    "civiqs_net_approval_age_65_up",
+    "civiqs_net_approval_race_white",
+    "civiqs_net_approval_race_black",
+    "civiqs_net_approval_race_hispanic",
+    "civiqs_net_approval_race_other",
+    "civiqs_net_approval_edu_noncollege",
+    "civiqs_net_approval_edu_college",
+    "civiqs_net_approval_edu_postgrad",
+    "civiqs_net_approval_male",
+    "civiqs_net_approval_female"
+   ],
+   "status": "open",
+   "baselines": null,
+   "scoreable": true,
+   "profile": {
+    "cells": [
+     "civiqs_net_approval_dem",
+     "civiqs_net_approval_ind",
+     "civiqs_net_approval_rep",
+     "civiqs_net_approval_age_18_34",
+     "civiqs_net_approval_age_35_49",
+     "civiqs_net_approval_age_50_64",
+     "civiqs_net_approval_age_65_up",
+     "civiqs_net_approval_race_white",
+     "civiqs_net_approval_race_black",
+     "civiqs_net_approval_race_hispanic",
+     "civiqs_net_approval_race_other",
+     "civiqs_net_approval_edu_noncollege",
+     "civiqs_net_approval_edu_college",
+     "civiqs_net_approval_edu_postgrad",
+     "civiqs_net_approval_male",
+     "civiqs_net_approval_female"
+    ],
+    "labels": {
+     "civiqs_net_approval_dem": "Civiqs Trump net approval, Democrats",
+     "civiqs_net_approval_ind": "Civiqs Trump net approval, independents",
+     "civiqs_net_approval_rep": "Civiqs Trump net approval, Republicans",
+     "civiqs_net_approval_age_18_34": "Civiqs Trump net approval, adults 18-34",
+     "civiqs_net_approval_age_35_49": "Civiqs Trump net approval, adults 35-49",
+     "civiqs_net_approval_age_50_64": "Civiqs Trump net approval, adults 50-64",
+     "civiqs_net_approval_age_65_up": "Civiqs Trump net approval, adults 65 and older",
+     "civiqs_net_approval_race_white": "Civiqs Trump net approval, White registered voters",
+     "civiqs_net_approval_race_black": "Civiqs Trump net approval, Black registered voters",
+     "civiqs_net_approval_race_hispanic": "Civiqs Trump net approval, Hispanic/Latino registered voters",
+     "civiqs_net_approval_race_other": "Civiqs Trump net approval, registered voters of other races",
+     "civiqs_net_approval_edu_noncollege": "Civiqs Trump net approval, non-college graduates",
+     "civiqs_net_approval_edu_college": "Civiqs Trump net approval, college graduates",
+     "civiqs_net_approval_edu_postgrad": "Civiqs Trump net approval, postgraduates",
+     "civiqs_net_approval_male": "Civiqs Trump net approval, men",
+     "civiqs_net_approval_female": "Civiqs Trump net approval, women"
+    },
+    "history_points": {
+     "civiqs_net_approval_dem": 82,
+     "civiqs_net_approval_ind": 82,
+     "civiqs_net_approval_rep": 82,
+     "civiqs_net_approval_age_18_34": 82,
+     "civiqs_net_approval_age_35_49": 82,
+     "civiqs_net_approval_age_50_64": 82,
+     "civiqs_net_approval_age_65_up": 82,
+     "civiqs_net_approval_race_white": 82,
+     "civiqs_net_approval_race_black": 82,
+     "civiqs_net_approval_race_hispanic": 82,
+     "civiqs_net_approval_race_other": 82,
+     "civiqs_net_approval_edu_noncollege": 82,
+     "civiqs_net_approval_edu_college": 82,
+     "civiqs_net_approval_edu_postgrad": 82,
+     "civiqs_net_approval_male": 82,
+     "civiqs_net_approval_female": 82
+    },
+    "baselines": {
+     "persistence": {
+      "civiqs_net_approval_dem": {
+       "mean": -96.3,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -34.4,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 68.3,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_age_18_34": {
+       "mean": -49.6,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -36.9,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -8.5,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -5.9,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -10.3,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -82.9,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -37.3,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -41.9,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -16.9,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -30.7,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -49.1,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_male": {
+       "mean": -12.7,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_female": {
+       "mean": -35.3,
+       "sd": 1.5,
+       "method": "persistence"
+      }
+     }
+    }
+   },
+   "n_forecasts": 0,
+   "forecasts": {}
+  },
+  {
+   "round_id": "esi-2026-08-26",
+   "tracker": "penta_esi",
+   "series": "esi_headline",
+   "question": "Penta-CivicScience Economic Sentiment Index: the headline ESI reading published in the biweekly release of August 26, 2026",
+   "unit": "index points",
+   "release_at": "2026-08-26T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-08-24T14:00:00Z",
+   "resolve": "headline index in the release post on the publisher's feed, dated 2026-08-26",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 32.3,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 33.06,
+     "sd": 1.79,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 31.88,
+     "sd": 1.06,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 31.52,
+     "sd": 1.51,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 31.52,
+     "sd": 1.51
+    },
+    "ewma": {
+     "mean": 31.88,
+     "sd": 1.06
+    },
+    "persistence": {
+     "mean": 32.3,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 33.06,
+     "sd": 1.79
+    }
+   }
+  },
+  {
+   "round_id": "esi-2026-09-09",
+   "tracker": "penta_esi",
+   "series": "esi_headline",
+   "question": "Penta-CivicScience Economic Sentiment Index: the headline ESI reading published in the biweekly release of September 9, 2026",
+   "unit": "index points",
+   "release_at": "2026-09-09T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-07T14:00:00Z",
+   "resolve": "headline index in the release post on the publisher's feed, dated 2026-09-09",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 32.3,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 33.25,
+     "sd": 2.06,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 31.88,
+     "sd": 1.06,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 31.52,
+     "sd": 1.51,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 31.52,
+     "sd": 1.51
+    },
+    "ewma": {
+     "mean": 31.88,
+     "sd": 1.06
+    },
+    "persistence": {
+     "mean": 32.3,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 33.25,
+     "sd": 2.06
+    }
+   }
+  },
+  {
+   "round_id": "esi-2026-09-23",
+   "tracker": "penta_esi",
+   "series": "esi_headline",
+   "question": "Penta-CivicScience Economic Sentiment Index: the headline ESI reading published in the biweekly release of September 23, 2026",
+   "unit": "index points",
+   "release_at": "2026-09-23T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-21T14:00:00Z",
+   "resolve": "headline index in the release post on the publisher's feed, dated 2026-09-23",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 32.3,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 33.25,
+     "sd": 2.3,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 31.88,
+     "sd": 1.06,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 31.52,
+     "sd": 1.51,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 31.52,
+     "sd": 1.51
+    },
+    "ewma": {
+     "mean": 31.88,
+     "sd": 1.06
+    },
+    "persistence": {
+     "mean": 32.3,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 33.25,
+     "sd": 2.3
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-profile-2026-w37",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval",
+   "question": "Civiqs daily tracker, Trump net approval among registered voters, full 16-cell demographic profile, Friday Sep 11 dashboard values",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-11T22:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-09T22:00:00Z",
+   "resolve": "civiqs.com dashboard value on Friday for each of the sixteen demographic filters, from the daily archive",
+   "target_type": "profile_energy",
+   "cells": [
+    "civiqs_net_approval_dem",
+    "civiqs_net_approval_ind",
+    "civiqs_net_approval_rep",
+    "civiqs_net_approval_age_18_34",
+    "civiqs_net_approval_age_35_49",
+    "civiqs_net_approval_age_50_64",
+    "civiqs_net_approval_age_65_up",
+    "civiqs_net_approval_race_white",
+    "civiqs_net_approval_race_black",
+    "civiqs_net_approval_race_hispanic",
+    "civiqs_net_approval_race_other",
+    "civiqs_net_approval_edu_noncollege",
+    "civiqs_net_approval_edu_college",
+    "civiqs_net_approval_edu_postgrad",
+    "civiqs_net_approval_male",
+    "civiqs_net_approval_female"
+   ],
+   "status": "open",
+   "baselines": null,
+   "scoreable": true,
+   "profile": {
+    "cells": [
+     "civiqs_net_approval_dem",
+     "civiqs_net_approval_ind",
+     "civiqs_net_approval_rep",
+     "civiqs_net_approval_age_18_34",
+     "civiqs_net_approval_age_35_49",
+     "civiqs_net_approval_age_50_64",
+     "civiqs_net_approval_age_65_up",
+     "civiqs_net_approval_race_white",
+     "civiqs_net_approval_race_black",
+     "civiqs_net_approval_race_hispanic",
+     "civiqs_net_approval_race_other",
+     "civiqs_net_approval_edu_noncollege",
+     "civiqs_net_approval_edu_college",
+     "civiqs_net_approval_edu_postgrad",
+     "civiqs_net_approval_male",
+     "civiqs_net_approval_female"
+    ],
+    "labels": {
+     "civiqs_net_approval_dem": "Civiqs Trump net approval, Democrats",
+     "civiqs_net_approval_ind": "Civiqs Trump net approval, independents",
+     "civiqs_net_approval_rep": "Civiqs Trump net approval, Republicans",
+     "civiqs_net_approval_age_18_34": "Civiqs Trump net approval, adults 18-34",
+     "civiqs_net_approval_age_35_49": "Civiqs Trump net approval, adults 35-49",
+     "civiqs_net_approval_age_50_64": "Civiqs Trump net approval, adults 50-64",
+     "civiqs_net_approval_age_65_up": "Civiqs Trump net approval, adults 65 and older",
+     "civiqs_net_approval_race_white": "Civiqs Trump net approval, White registered voters",
+     "civiqs_net_approval_race_black": "Civiqs Trump net approval, Black registered voters",
+     "civiqs_net_approval_race_hispanic": "Civiqs Trump net approval, Hispanic/Latino registered voters",
+     "civiqs_net_approval_race_other": "Civiqs Trump net approval, registered voters of other races",
+     "civiqs_net_approval_edu_noncollege": "Civiqs Trump net approval, non-college graduates",
+     "civiqs_net_approval_edu_college": "Civiqs Trump net approval, college graduates",
+     "civiqs_net_approval_edu_postgrad": "Civiqs Trump net approval, postgraduates",
+     "civiqs_net_approval_male": "Civiqs Trump net approval, men",
+     "civiqs_net_approval_female": "Civiqs Trump net approval, women"
+    },
+    "history_points": {
+     "civiqs_net_approval_dem": 82,
+     "civiqs_net_approval_ind": 82,
+     "civiqs_net_approval_rep": 82,
+     "civiqs_net_approval_age_18_34": 82,
+     "civiqs_net_approval_age_35_49": 82,
+     "civiqs_net_approval_age_50_64": 82,
+     "civiqs_net_approval_age_65_up": 82,
+     "civiqs_net_approval_race_white": 82,
+     "civiqs_net_approval_race_black": 82,
+     "civiqs_net_approval_race_hispanic": 82,
+     "civiqs_net_approval_race_other": 82,
+     "civiqs_net_approval_edu_noncollege": 82,
+     "civiqs_net_approval_edu_college": 82,
+     "civiqs_net_approval_edu_postgrad": 82,
+     "civiqs_net_approval_male": 82,
+     "civiqs_net_approval_female": 82
+    },
+    "baselines": {
+     "persistence": {
+      "civiqs_net_approval_dem": {
+       "mean": -96.3,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -34.4,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 68.3,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_age_18_34": {
+       "mean": -49.6,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -36.9,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -8.5,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -5.9,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -10.3,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -82.9,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -37.3,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -41.9,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -16.9,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -30.7,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -49.1,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_male": {
+       "mean": -12.7,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_female": {
+       "mean": -35.3,
+       "sd": 1.5,
+       "method": "persistence"
+      }
+     }
+    }
+   },
+   "n_forecasts": 0,
+   "forecasts": {}
+  },
+  {
+   "round_id": "civiqs-profile-2026-w39",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval",
+   "question": "Civiqs daily tracker, Trump net approval among registered voters, full 16-cell demographic profile, Friday Sep 25 dashboard values",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-25T22:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-23T22:00:00Z",
+   "resolve": "civiqs.com dashboard value on Friday for each of the sixteen demographic filters, from the daily archive",
+   "target_type": "profile_energy",
+   "cells": [
+    "civiqs_net_approval_dem",
+    "civiqs_net_approval_ind",
+    "civiqs_net_approval_rep",
+    "civiqs_net_approval_age_18_34",
+    "civiqs_net_approval_age_35_49",
+    "civiqs_net_approval_age_50_64",
+    "civiqs_net_approval_age_65_up",
+    "civiqs_net_approval_race_white",
+    "civiqs_net_approval_race_black",
+    "civiqs_net_approval_race_hispanic",
+    "civiqs_net_approval_race_other",
+    "civiqs_net_approval_edu_noncollege",
+    "civiqs_net_approval_edu_college",
+    "civiqs_net_approval_edu_postgrad",
+    "civiqs_net_approval_male",
+    "civiqs_net_approval_female"
+   ],
+   "status": "open",
+   "baselines": null,
+   "scoreable": true,
+   "profile": {
+    "cells": [
+     "civiqs_net_approval_dem",
+     "civiqs_net_approval_ind",
+     "civiqs_net_approval_rep",
+     "civiqs_net_approval_age_18_34",
+     "civiqs_net_approval_age_35_49",
+     "civiqs_net_approval_age_50_64",
+     "civiqs_net_approval_age_65_up",
+     "civiqs_net_approval_race_white",
+     "civiqs_net_approval_race_black",
+     "civiqs_net_approval_race_hispanic",
+     "civiqs_net_approval_race_other",
+     "civiqs_net_approval_edu_noncollege",
+     "civiqs_net_approval_edu_college",
+     "civiqs_net_approval_edu_postgrad",
+     "civiqs_net_approval_male",
+     "civiqs_net_approval_female"
+    ],
+    "labels": {
+     "civiqs_net_approval_dem": "Civiqs Trump net approval, Democrats",
+     "civiqs_net_approval_ind": "Civiqs Trump net approval, independents",
+     "civiqs_net_approval_rep": "Civiqs Trump net approval, Republicans",
+     "civiqs_net_approval_age_18_34": "Civiqs Trump net approval, adults 18-34",
+     "civiqs_net_approval_age_35_49": "Civiqs Trump net approval, adults 35-49",
+     "civiqs_net_approval_age_50_64": "Civiqs Trump net approval, adults 50-64",
+     "civiqs_net_approval_age_65_up": "Civiqs Trump net approval, adults 65 and older",
+     "civiqs_net_approval_race_white": "Civiqs Trump net approval, White registered voters",
+     "civiqs_net_approval_race_black": "Civiqs Trump net approval, Black registered voters",
+     "civiqs_net_approval_race_hispanic": "Civiqs Trump net approval, Hispanic/Latino registered voters",
+     "civiqs_net_approval_race_other": "Civiqs Trump net approval, registered voters of other races",
+     "civiqs_net_approval_edu_noncollege": "Civiqs Trump net approval, non-college graduates",
+     "civiqs_net_approval_edu_college": "Civiqs Trump net approval, college graduates",
+     "civiqs_net_approval_edu_postgrad": "Civiqs Trump net approval, postgraduates",
+     "civiqs_net_approval_male": "Civiqs Trump net approval, men",
+     "civiqs_net_approval_female": "Civiqs Trump net approval, women"
+    },
+    "history_points": {
+     "civiqs_net_approval_dem": 82,
+     "civiqs_net_approval_ind": 82,
+     "civiqs_net_approval_rep": 82,
+     "civiqs_net_approval_age_18_34": 82,
+     "civiqs_net_approval_age_35_49": 82,
+     "civiqs_net_approval_age_50_64": 82,
+     "civiqs_net_approval_age_65_up": 82,
+     "civiqs_net_approval_race_white": 82,
+     "civiqs_net_approval_race_black": 82,
+     "civiqs_net_approval_race_hispanic": 82,
+     "civiqs_net_approval_race_other": 82,
+     "civiqs_net_approval_edu_noncollege": 82,
+     "civiqs_net_approval_edu_college": 82,
+     "civiqs_net_approval_edu_postgrad": 82,
+     "civiqs_net_approval_male": 82,
+     "civiqs_net_approval_female": 82
+    },
+    "baselines": {
+     "persistence": {
+      "civiqs_net_approval_dem": {
+       "mean": -96.3,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -34.4,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 68.3,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_age_18_34": {
+       "mean": -49.6,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -36.9,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -8.5,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -5.9,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -10.3,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -82.9,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -37.3,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -41.9,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -16.9,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -30.7,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -49.1,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_male": {
+       "mean": -12.7,
+       "sd": 1.5,
+       "method": "persistence"
+      },
+      "civiqs_net_approval_female": {
+       "mean": -35.3,
+       "sd": 1.5,
+       "method": "persistence"
+      }
+     }
+    }
+   },
    "n_forecasts": 0,
    "forecasts": {}
   }
@@ -2947,193 +5922,237 @@
   }
  ],
  "leaderboard": {
-  "resolved_rounds": 0,
+  "resolved_rounds": 2,
   "entries": [
    {
-    "entrant": "claude-opus-5",
-    "mean_crps": 1.144,
-    "mean_skill": 0.306,
-    "rounds": 22
-   },
-   {
-    "baseline": true,
-    "entrant": "ewma",
-    "mean_crps": 1.148,
-    "mean_skill": 0.304,
-    "rounds": 22
-   },
-   {
-    "entrant": "gpt-5.6-terra",
-    "mean_crps": 1.179,
-    "mean_skill": 0.285,
-    "rounds": 22
-   },
-   {
-    "entrant": "claude-opus",
-    "mean_crps": 1.182,
-    "mean_skill": 0.283,
-    "rounds": 22
-   },
-   {
-    "entrant": "grok",
-    "mean_crps": 1.183,
-    "mean_skill": 0.282,
-    "rounds": 22
-   },
-   {
     "entrant": "glm",
-    "mean_crps": 1.195,
-    "mean_skill": 0.275,
-    "rounds": 22
-   },
-   {
-    "entrant": "gpt-5.6-sol",
-    "mean_crps": 1.208,
-    "mean_skill": 0.267,
-    "rounds": 22
-   },
-   {
-    "entrant": "claude-fable",
-    "mean_crps": 1.21,
-    "mean_skill": 0.266,
-    "rounds": 22
-   },
-   {
-    "baseline": true,
-    "entrant": "climatology",
-    "mean_crps": 1.212,
-    "mean_skill": 0.265,
-    "rounds": 22
-   },
-   {
-    "entrant": "gemini-pro",
-    "mean_crps": 1.217,
-    "mean_skill": 0.262,
-    "rounds": 22
-   },
-   {
-    "entrant": "gpt-5.6-luna",
-    "mean_crps": 1.243,
-    "mean_skill": 0.246,
-    "rounds": 22
-   },
-   {
-    "entrant": "qwen-3.8",
-    "mean_crps": 1.248,
-    "mean_skill": 0.243,
-    "rounds": 22
-   },
-   {
-    "baseline": true,
-    "entrant": "trend",
-    "mean_crps": 1.257,
-    "mean_skill": 0.237,
-    "rounds": 22
-   },
-   {
-    "entrant": "claude-sonnet",
-    "mean_crps": 1.267,
-    "mean_skill": 0.231,
-    "rounds": 22
+    "rounds": 2,
+    "mean_crps": 0.975,
+    "mean_skill": 0.522
    },
    {
     "entrant": "qwen-3.7",
-    "mean_crps": 1.274,
-    "mean_skill": 0.227,
-    "rounds": 22
+    "rounds": 2,
+    "mean_crps": 0.873,
+    "mean_skill": 0.495
+   },
+   {
+    "entrant": "deepseek-flash",
+    "rounds": 2,
+    "mean_crps": 1.003,
+    "mean_skill": 0.481
    },
    {
     "entrant": "deepseek-pro",
-    "mean_crps": 1.348,
-    "mean_skill": 0.183,
-    "rounds": 22
+    "rounds": 2,
+    "mean_crps": 0.929,
+    "mean_skill": 0.459
    },
    {
-    "baseline": true,
+    "entrant": "claude-opus",
+    "rounds": 2,
+    "mean_crps": 1.133,
+    "mean_skill": 0.454
+   },
+   {
+    "entrant": "grok",
+    "rounds": 2,
+    "mean_crps": 1.228,
+    "mean_skill": 0.447
+   },
+   {
+    "entrant": "claude-sonnet",
+    "rounds": 2,
+    "mean_crps": 1.136,
+    "mean_skill": 0.441
+   },
+   {
+    "entrant": "gpt-5.6-sol",
+    "rounds": 2,
+    "mean_crps": 1.226,
+    "mean_skill": 0.44
+   },
+   {
+    "entrant": "qwen-3.8",
+    "rounds": 2,
+    "mean_crps": 1.089,
+    "mean_skill": 0.421
+   },
+   {
+    "entrant": "gpt-5.6-luna",
+    "rounds": 2,
+    "mean_crps": 1.509,
+    "mean_skill": 0.356
+   },
+   {
+    "entrant": "gpt-5.6-terra",
+    "rounds": 2,
+    "mean_crps": 1.633,
+    "mean_skill": 0.347
+   },
+   {
+    "entrant": "gemini-pro",
+    "rounds": 2,
+    "mean_crps": 1.381,
+    "mean_skill": 0.334
+   },
+   {
+    "entrant": "claude-fable",
+    "rounds": 2,
+    "mean_crps": 1.667,
+    "mean_skill": 0.281
+   },
+   {
+    "entrant": "trend",
+    "rounds": 2,
+    "mean_crps": 1.303,
+    "mean_skill": 0.252
+   },
+   {
+    "entrant": "claude-opus-5",
+    "rounds": 2,
+    "mean_crps": 1.823,
+    "mean_skill": 0.249
+   },
+   {
+    "entrant": "gemini-flash",
+    "rounds": 2,
+    "mean_crps": 1.931,
+    "mean_skill": 0.23
+   },
+   {
     "entrant": "persistence",
-    "mean_crps": 1.649,
-    "mean_skill": 0.0,
-    "rounds": 22
+    "rounds": 2,
+    "mean_crps": 1.865,
+    "mean_skill": 0.0
+   },
+   {
+    "entrant": "ewma",
+    "rounds": 2,
+    "mean_crps": 0.795,
+    "mean_skill": -0.143
+   },
+   {
+    "entrant": "crowd",
+    "rounds": 2,
+    "mean_crps": 3.317,
+    "mean_skill": -2.131
+   },
+   {
+    "entrant": "climatology",
+    "rounds": 2,
+    "mean_crps": 3.589,
+    "mean_skill": -3.059
    },
    {
     "entrant": "claude-opus-5-zeroshot",
-    "mean_crps": 1.655,
-    "mean_skill": -0.004,
-    "rounds": 22
-   },
-   {
-    "entrant": "claude-fable-zeroshot",
-    "mean_crps": 2.041,
-    "mean_skill": -0.238,
-    "rounds": 22
-   },
-   {
-    "entrant": "claude-sonnet-zeroshot",
-    "mean_crps": 2.153,
-    "mean_skill": -0.306,
-    "rounds": 22
-   },
-   {
-    "entrant": "gpt-5.6-terra-zeroshot",
-    "mean_crps": 2.384,
-    "mean_skill": -0.446,
-    "rounds": 22
+    "rounds": 2,
+    "mean_crps": 4.041,
+    "mean_skill": -4.017
    },
    {
     "entrant": "claude-opus-zeroshot",
-    "mean_crps": 2.414,
-    "mean_skill": -0.465,
-    "rounds": 22
+    "rounds": 2,
+    "mean_crps": 7.46,
+    "mean_skill": -6.457
    },
    {
-    "entrant": "gpt-5.6-sol-zeroshot",
-    "mean_crps": 2.484,
-    "mean_skill": -0.507,
-    "rounds": 22
+    "entrant": "claude-fable-zeroshot",
+    "rounds": 2,
+    "mean_crps": 5.731,
+    "mean_skill": -6.486
+   },
+   {
+    "entrant": "claude-sonnet-zeroshot",
+    "rounds": 2,
+    "mean_crps": 6.619,
+    "mean_skill": -8.694
    },
    {
     "entrant": "gpt-5.6-luna-zeroshot",
-    "mean_crps": 2.576,
-    "mean_skill": -0.562,
-    "rounds": 22
+    "rounds": 2,
+    "mean_crps": 7.214,
+    "mean_skill": -9.282
+   },
+   {
+    "entrant": "gpt-5.6-terra-zeroshot",
+    "rounds": 2,
+    "mean_crps": 6.46,
+    "mean_skill": -9.835
+   },
+   {
+    "entrant": "gpt-5.6-sol-zeroshot",
+    "rounds": 2,
+    "mean_crps": 7.613,
+    "mean_skill": -9.852
+   },
+   {
+    "entrant": "deepseek-flash-zeroshot",
+    "rounds": 2,
+    "mean_crps": 16.207,
+    "mean_skill": -11.782
    },
    {
     "entrant": "qwen-3.7-zeroshot",
-    "mean_crps": 3.307,
-    "mean_skill": -1.006,
-    "rounds": 22
+    "rounds": 2,
+    "mean_crps": 12.445,
+    "mean_skill": -13.865
    },
    {
     "entrant": "grok-zeroshot",
-    "mean_crps": 3.452,
-    "mean_skill": -1.094,
-    "rounds": 22
-   },
-   {
-    "entrant": "qwen-3.8-zeroshot",
-    "mean_crps": 3.484,
-    "mean_skill": -1.113,
-    "rounds": 22
+    "rounds": 2,
+    "mean_crps": 14.325,
+    "mean_skill": -14.134
    },
    {
     "entrant": "deepseek-pro-zeroshot",
-    "mean_crps": 3.807,
-    "mean_skill": -1.309,
-    "rounds": 22
+    "rounds": 2,
+    "mean_crps": 16.199,
+    "mean_skill": -14.445
+   },
+   {
+    "entrant": "gemini-flash-zeroshot",
+    "rounds": 2,
+    "mean_crps": 14.423,
+    "mean_skill": -14.507
    },
    {
     "entrant": "gemini-pro-zeroshot",
-    "mean_crps": 4.164,
-    "mean_skill": -1.526,
-    "rounds": 22
+    "rounds": 2,
+    "mean_crps": 15.621,
+    "mean_skill": -16.532
    },
    {
     "entrant": "glm-zeroshot",
-    "mean_crps": 4.286,
-    "mean_skill": -1.6,
-    "rounds": 22
+    "rounds": 2,
+    "mean_crps": 13.464,
+    "mean_skill": -17.776
+   },
+   {
+    "entrant": "qwen-3.8-zeroshot",
+    "rounds": 2,
+    "mean_crps": 12.938,
+    "mean_skill": -19.169
    }
   ]
+ },
+ "profile": {
+  "scored_rounds": 0,
+  "rounds": [],
+  "board": [],
+  "matched": [],
+  "matched_rounds": 0,
+  "skipped": [],
+  "note": "energy score (multivariate CRPS) over the round's cell vector; skill = 1 - ES(entrant) / ES(per-cell persistence). `matched` holds only entrants who answered every scored profile round."
+ },
+ "ranking": {
+  "scored_rounds": 0,
+  "rounds": [],
+  "board": [],
+  "matched": [],
+  "matched_rounds": 0,
+  "skipped": [],
+  "note": "a point-scored ordered list: rank-biased overlap (p fixed in the round) for an open-set top-N, normalized Kendall tau distance for a fixed basket. skill = 1 - loss(entrant) / loss(last week's list). `matched` holds only entrants who answered every scored ranking round. When persistence is perfect the denominator is zero and the convention (`scoring.skill`) scores every entrant 0 for that round; `persistence_loss` is published so that is visible."
  },
  "backtest": {
   "note": "22 releases every entrant answered, 2025-05-31 to 2026-07-23. Each model is scored only on releases after its own training cutoff; this table is the intersection, so every row is measured on the same points. Rows ending -zeroshot saw the question and no series history.",
@@ -18867,166 +21886,166 @@
    "overall": [
     {
      "entrant": "crowd",
-     "rounds": 387,
-     "mean_crps": 1.498,
-     "mean_skill": 0.069
+     "rounds": 391,
+     "mean_crps": 1.502,
+     "mean_skill": 0.07
     },
     {
      "entrant": "ewma",
-     "rounds": 387,
-     "mean_crps": 1.523,
-     "mean_skill": 0.053
+     "rounds": 391,
+     "mean_crps": 1.524,
+     "mean_skill": 0.056
     },
     {
      "entrant": "persistence",
-     "rounds": 387,
-     "mean_crps": 1.609,
+     "rounds": 391,
+     "mean_crps": 1.615,
      "mean_skill": 0.0
     },
     {
      "entrant": "trend",
-     "rounds": 387,
-     "mean_crps": 1.766,
-     "mean_skill": -0.098
+     "rounds": 391,
+     "mean_crps": 1.774,
+     "mean_skill": -0.099
     },
     {
      "entrant": "climatology",
-     "rounds": 387,
+     "rounds": 391,
      "mean_crps": 2.505,
-     "mean_skill": -0.557
+     "mean_skill": -0.551
     }
    ],
    "spans": {
     "all": [
      {
       "entrant": "crowd",
-      "rounds": 387,
-      "mean_crps": 1.498,
-      "mean_skill": 0.069
+      "rounds": 391,
+      "mean_crps": 1.502,
+      "mean_skill": 0.07
      },
      {
       "entrant": "ewma",
-      "rounds": 387,
-      "mean_crps": 1.523,
-      "mean_skill": 0.053
+      "rounds": 391,
+      "mean_crps": 1.524,
+      "mean_skill": 0.056
      },
      {
       "entrant": "persistence",
-      "rounds": 387,
-      "mean_crps": 1.609,
+      "rounds": 391,
+      "mean_crps": 1.615,
       "mean_skill": 0.0
      },
      {
       "entrant": "trend",
-      "rounds": 387,
-      "mean_crps": 1.766,
-      "mean_skill": -0.098
+      "rounds": 391,
+      "mean_crps": 1.774,
+      "mean_skill": -0.099
      },
      {
       "entrant": "climatology",
-      "rounds": 387,
+      "rounds": 391,
       "mean_crps": 2.505,
-      "mean_skill": -0.557
+      "mean_skill": -0.551
      }
     ],
     "m6": [
      {
       "entrant": "ewma",
-      "rounds": 101,
-      "mean_crps": 0.974,
-      "mean_skill": 0.16
+      "rounds": 99,
+      "mean_crps": 0.978,
+      "mean_skill": 0.181
      },
      {
       "entrant": "crowd",
-      "rounds": 101,
-      "mean_crps": 0.977,
-      "mean_skill": 0.158
+      "rounds": 99,
+      "mean_crps": 0.992,
+      "mean_skill": 0.169
      },
      {
       "entrant": "trend",
-      "rounds": 101,
-      "mean_crps": 1.054,
-      "mean_skill": 0.091
+      "rounds": 99,
+      "mean_crps": 1.099,
+      "mean_skill": 0.08
      },
      {
       "entrant": "persistence",
-      "rounds": 101,
-      "mean_crps": 1.16,
+      "rounds": 99,
+      "mean_crps": 1.194,
       "mean_skill": 0.0
      },
      {
       "entrant": "climatology",
-      "rounds": 101,
-      "mean_crps": 1.273,
-      "mean_skill": -0.097
+      "rounds": 99,
+      "mean_crps": 1.296,
+      "mean_skill": -0.086
      }
     ],
     "d30": [
      {
-      "entrant": "climatology",
-      "rounds": 16,
-      "mean_crps": 1.053,
-      "mean_skill": 0.209
-     },
-     {
       "entrant": "ewma",
-      "rounds": 16,
-      "mean_crps": 1.06,
-      "mean_skill": 0.204
+      "rounds": 17,
+      "mean_crps": 1.078,
+      "mean_skill": 0.257
      },
      {
       "entrant": "crowd",
-      "rounds": 16,
-      "mean_crps": 1.064,
-      "mean_skill": 0.201
+      "rounds": 17,
+      "mean_crps": 1.135,
+      "mean_skill": 0.217
      },
      {
       "entrant": "trend",
-      "rounds": 16,
-      "mean_crps": 1.179,
-      "mean_skill": 0.115
+      "rounds": 17,
+      "mean_crps": 1.222,
+      "mean_skill": 0.157
+     },
+     {
+      "entrant": "climatology",
+      "rounds": 17,
+      "mean_crps": 1.368,
+      "mean_skill": 0.056
      },
      {
       "entrant": "persistence",
-      "rounds": 16,
-      "mean_crps": 1.332,
+      "rounds": 17,
+      "mean_crps": 1.449,
       "mean_skill": 0.0
      }
     ],
     "last": [
      {
-      "entrant": "trend",
-      "rounds": 2,
-      "mean_crps": 1.327,
-      "mean_skill": 0.233
-     },
-     {
-      "entrant": "ewma",
-      "rounds": 2,
-      "mean_crps": 1.467,
-      "mean_skill": 0.152
-     },
-     {
       "entrant": "crowd",
-      "rounds": 2,
-      "mean_crps": 1.612,
-      "mean_skill": 0.068
+      "rounds": 3,
+      "mean_crps": 0.746,
+      "mean_skill": 0.001
      },
      {
       "entrant": "persistence",
-      "rounds": 2,
-      "mean_crps": 1.73,
+      "rounds": 3,
+      "mean_crps": 0.747,
       "mean_skill": 0.0
      },
      {
+      "entrant": "trend",
+      "rounds": 3,
+      "mean_crps": 0.818,
+      "mean_skill": -0.095
+     },
+     {
+      "entrant": "ewma",
+      "rounds": 3,
+      "mean_crps": 0.856,
+      "mean_skill": -0.145
+     },
+     {
       "entrant": "climatology",
-      "rounds": 2,
-      "mean_crps": 2.18,
-      "mean_skill": -0.26
+      "rounds": 3,
+      "mean_crps": 1.227,
+      "mean_skill": -0.642
      }
     ]
    },
-   "n_rounds": 387,
+   "n_rounds": 391,
    "trajectory": [
     {
      "date": "2016-01-01",
@@ -19129,158 +22148,8 @@
      }
     },
     {
-     "date": "2020-04-01",
-     "n": 64,
-     "ranks": {
-      "crowd": 1,
-      "ewma": 2,
-      "persistence": 3,
-      "trend": 4,
-      "climatology": 5
-     },
-     "skills": {
-      "crowd": 0.065,
-      "ewma": 0.044,
-      "persistence": 0.0,
-      "trend": -0.127,
-      "climatology": -0.399
-     },
-     "crps": {
-      "crowd": 2.084,
-      "ewma": 2.131,
-      "persistence": 2.229,
-      "trend": 2.512,
-      "climatology": 3.119
-     }
-    },
-    {
-     "date": "2021-05-01",
-     "n": 77,
-     "ranks": {
-      "crowd": 1,
-      "ewma": 2,
-      "persistence": 3,
-      "trend": 4,
-      "climatology": 5
-     },
-     "skills": {
-      "crowd": 0.055,
-      "ewma": 0.039,
-      "persistence": 0.0,
-      "trend": -0.179,
-      "climatology": -0.684
-     },
-     "crps": {
-      "crowd": 2.257,
-      "ewma": 2.296,
-      "persistence": 2.388,
-      "trend": 2.815,
-      "climatology": 4.023
-     }
-    },
-    {
-     "date": "2022-06-01",
-     "n": 90,
-     "ranks": {
-      "crowd": 1,
-      "ewma": 2,
-      "persistence": 3,
-      "trend": 4,
-      "climatology": 5
-     },
-     "skills": {
-      "crowd": 0.04,
-      "ewma": 0.026,
-      "persistence": 0.0,
-      "trend": -0.113,
-      "climatology": -0.816
-     },
-     "crps": {
-      "crowd": 2.501,
-      "ewma": 2.539,
-      "persistence": 2.606,
-      "trend": 2.901,
-      "climatology": 4.733
-     }
-    },
-    {
-     "date": "2023-07-01",
-     "n": 103,
-     "ranks": {
-      "crowd": 1,
-      "ewma": 2,
-      "persistence": 3,
-      "trend": 4,
-      "climatology": 5
-     },
-     "skills": {
-      "crowd": 0.054,
-      "ewma": 0.041,
-      "persistence": 0.0,
-      "trend": -0.107,
-      "climatology": -0.846
-     },
-     "crps": {
-      "crowd": 2.503,
-      "ewma": 2.536,
-      "persistence": 2.645,
-      "trend": 2.928,
-      "climatology": 4.884
-     }
-    },
-    {
-     "date": "2024-08-01",
-     "n": 116,
-     "ranks": {
-      "crowd": 1,
-      "ewma": 2,
-      "persistence": 3,
-      "trend": 4,
-      "climatology": 5
-     },
-     "skills": {
-      "crowd": 0.043,
-      "ewma": 0.019,
-      "persistence": 0.0,
-      "trend": -0.148,
-      "climatology": -0.845
-     },
-     "crps": {
-      "crowd": 2.558,
-      "ewma": 2.621,
-      "persistence": 2.673,
-      "trend": 3.068,
-      "climatology": 4.931
-     }
-    },
-    {
-     "date": "2025-03-17",
-     "n": 129,
-     "ranks": {
-      "crowd": 1,
-      "ewma": 2,
-      "persistence": 3,
-      "trend": 4,
-      "climatology": 5
-     },
-     "skills": {
-      "crowd": 0.03,
-      "ewma": 0.007,
-      "persistence": 0.0,
-      "trend": -0.184,
-      "climatology": -0.792
-     },
-     "crps": {
-      "crowd": 2.527,
-      "ewma": 2.588,
-      "persistence": 2.605,
-      "trend": 3.083,
-      "climatology": 4.67
-     }
-    },
-    {
-     "date": "2025-04-13",
-     "n": 142,
+     "date": "2020-05-01",
+     "n": 65,
      "ranks": {
       "crowd": 1,
       "persistence": 2,
@@ -19289,23 +22158,173 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.029,
+      "crowd": 0.02,
       "persistence": 0.0,
-      "ewma": -0.006,
-      "trend": -0.157,
-      "climatology": -0.767
+      "ewma": -0.03,
+      "trend": -0.177,
+      "climatology": -0.536
      },
      "crps": {
-      "crowd": 2.491,
-      "persistence": 2.565,
-      "ewma": 2.58,
-      "trend": 2.969,
-      "climatology": 4.533
+      "crowd": 2.157,
+      "persistence": 2.201,
+      "ewma": 2.268,
+      "trend": 2.591,
+      "climatology": 3.38
+     }
+    },
+    {
+     "date": "2021-06-01",
+     "n": 78,
+     "ranks": {
+      "crowd": 1,
+      "ewma": 2,
+      "persistence": 3,
+      "trend": 4,
+      "climatology": 5
+     },
+     "skills": {
+      "crowd": 0.056,
+      "ewma": 0.041,
+      "persistence": 0.0,
+      "trend": -0.177,
+      "climatology": -0.68
+     },
+     "crps": {
+      "crowd": 2.247,
+      "ewma": 2.284,
+      "persistence": 2.381,
+      "trend": 2.802,
+      "climatology": 4.001
+     }
+    },
+    {
+     "date": "2022-07-01",
+     "n": 91,
+     "ranks": {
+      "crowd": 1,
+      "ewma": 2,
+      "persistence": 3,
+      "trend": 4,
+      "climatology": 5
+     },
+     "skills": {
+      "crowd": 0.031,
+      "ewma": 0.015,
+      "persistence": 0.0,
+      "trend": -0.117,
+      "climatology": -0.879
+     },
+     "crps": {
+      "crowd": 2.507,
+      "ewma": 2.55,
+      "persistence": 2.588,
+      "trend": 2.891,
+      "climatology": 4.863
+     }
+    },
+    {
+     "date": "2023-08-01",
+     "n": 104,
+     "ranks": {
+      "crowd": 1,
+      "ewma": 2,
+      "persistence": 3,
+      "trend": 4,
+      "climatology": 5
+     },
+     "skills": {
+      "crowd": 0.053,
+      "ewma": 0.039,
+      "persistence": 0.0,
+      "trend": -0.11,
+      "climatology": -0.851
+     },
+     "crps": {
+      "crowd": 2.494,
+      "ewma": 2.53,
+      "persistence": 2.633,
+      "trend": 2.921,
+      "climatology": 4.874
+     }
+    },
+    {
+     "date": "2024-09-01",
+     "n": 117,
+     "ranks": {
+      "crowd": 1,
+      "ewma": 2,
+      "persistence": 3,
+      "trend": 4,
+      "climatology": 5
+     },
+     "skills": {
+      "crowd": 0.042,
+      "ewma": 0.02,
+      "persistence": 0.0,
+      "trend": -0.154,
+      "climatology": -0.844
+     },
+     "crps": {
+      "crowd": 2.551,
+      "ewma": 2.608,
+      "persistence": 2.662,
+      "trend": 3.071,
+      "climatology": 4.908
+     }
+    },
+    {
+     "date": "2025-03-22",
+     "n": 130,
+     "ranks": {
+      "crowd": 1,
+      "ewma": 2,
+      "persistence": 3,
+      "trend": 4,
+      "climatology": 5
+     },
+     "skills": {
+      "crowd": 0.028,
+      "ewma": 0.003,
+      "persistence": 0.0,
+      "trend": -0.184,
+      "climatology": -0.797
+     },
+     "crps": {
+      "crowd": 2.517,
+      "ewma": 2.581,
+      "persistence": 2.59,
+      "trend": 3.066,
+      "climatology": 4.654
+     }
+    },
+    {
+     "date": "2025-04-14",
+     "n": 143,
+     "ranks": {
+      "crowd": 1,
+      "persistence": 2,
+      "ewma": 3,
+      "trend": 4,
+      "climatology": 5
+     },
+     "skills": {
+      "crowd": 0.028,
+      "persistence": 0.0,
+      "ewma": -0.007,
+      "trend": -0.158,
+      "climatology": -0.773
+     },
+     "crps": {
+      "crowd": 2.48,
+      "persistence": 2.551,
+      "ewma": 2.569,
+      "trend": 2.955,
+      "climatology": 4.524
      }
     },
     {
      "date": "2025-05-10",
-     "n": 155,
+     "n": 156,
      "ranks": {
       "crowd": 1,
       "persistence": 2,
@@ -19317,45 +22336,20 @@
       "crowd": 0.018,
       "persistence": 0.0,
       "ewma": -0.018,
-      "trend": -0.169,
-      "climatology": -0.823
+      "trend": -0.17,
+      "climatology": -0.824
      },
      "crps": {
-      "crowd": 2.37,
-      "persistence": 2.414,
-      "ewma": 2.458,
-      "trend": 2.823,
-      "climatology": 4.401
+      "crowd": 2.358,
+      "persistence": 2.401,
+      "ewma": 2.444,
+      "trend": 2.81,
+      "climatology": 4.38
      }
     },
     {
      "date": "2025-06-14",
-     "n": 168,
-     "ranks": {
-      "crowd": 1,
-      "persistence": 2,
-      "ewma": 3,
-      "trend": 4,
-      "climatology": 5
-     },
-     "skills": {
-      "crowd": 0.032,
-      "persistence": 0.0,
-      "ewma": -0.004,
-      "trend": -0.16,
-      "climatology": -0.771
-     },
-     "crps": {
-      "crowd": 2.272,
-      "persistence": 2.347,
-      "ewma": 2.356,
-      "trend": 2.723,
-      "climatology": 4.156
-     }
-    },
-    {
-     "date": "2025-07-12",
-     "n": 181,
+     "n": 169,
      "ranks": {
       "crowd": 1,
       "persistence": 2,
@@ -19367,20 +22361,45 @@
       "crowd": 0.031,
       "persistence": 0.0,
       "ewma": -0.003,
-      "trend": -0.171,
-      "climatology": -0.763
+      "trend": -0.161,
+      "climatology": -0.771
      },
      "crps": {
-      "crowd": 2.176,
-      "persistence": 2.246,
-      "ewma": 2.252,
-      "trend": 2.63,
-      "climatology": 3.96
+      "crowd": 2.263,
+      "persistence": 2.337,
+      "ewma": 2.345,
+      "trend": 2.713,
+      "climatology": 4.138
      }
     },
     {
-     "date": "2025-08-09",
-     "n": 194,
+     "date": "2025-07-12",
+     "n": 182,
+     "ranks": {
+      "crowd": 1,
+      "persistence": 2,
+      "ewma": 3,
+      "trend": 4,
+      "climatology": 5
+     },
+     "skills": {
+      "crowd": 0.031,
+      "persistence": 0.0,
+      "ewma": -0.002,
+      "trend": -0.17,
+      "climatology": -0.763
+     },
+     "crps": {
+      "crowd": 2.167,
+      "persistence": 2.237,
+      "ewma": 2.242,
+      "trend": 2.617,
+      "climatology": 3.945
+     }
+    },
+    {
+     "date": "2025-08-10",
+     "n": 196,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -19390,22 +22409,22 @@
      },
      "skills": {
       "crowd": 0.038,
-      "ewma": 0.01,
+      "ewma": 0.009,
       "persistence": 0.0,
-      "trend": -0.158,
-      "climatology": -0.744
+      "trend": -0.162,
+      "climatology": -0.737
      },
      "crps": {
-      "crowd": 2.097,
-      "ewma": 2.158,
-      "persistence": 2.181,
-      "trend": 2.526,
-      "climatology": 3.804
+      "crowd": 2.083,
+      "ewma": 2.147,
+      "persistence": 2.167,
+      "trend": 2.517,
+      "climatology": 3.763
      }
     },
     {
-     "date": "2025-09-01",
-     "n": 206,
+     "date": "2025-09-06",
+     "n": 209,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -19414,23 +22433,23 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.044,
-      "ewma": 0.018,
+      "crowd": 0.045,
+      "ewma": 0.019,
       "persistence": 0.0,
-      "trend": -0.151,
-      "climatology": -0.72
+      "trend": -0.149,
+      "climatology": -0.71
      },
      "crps": {
-      "crowd": 2.033,
-      "ewma": 2.088,
-      "persistence": 2.126,
-      "trend": 2.446,
-      "climatology": 3.656
+      "crowd": 2.015,
+      "ewma": 2.07,
+      "persistence": 2.11,
+      "trend": 2.426,
+      "climatology": 3.609
      }
     },
     {
-     "date": "2025-09-27",
-     "n": 219,
+     "date": "2025-10-02",
+     "n": 222,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -19439,98 +22458,23 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.048,
-      "ewma": 0.022,
+      "crowd": 0.042,
+      "ewma": 0.017,
       "persistence": 0.0,
-      "trend": -0.144,
-      "climatology": -0.692
+      "trend": -0.152,
+      "climatology": -0.709
      },
      "crps": {
-      "crowd": 1.961,
-      "ewma": 2.013,
-      "persistence": 2.059,
-      "trend": 2.355,
-      "climatology": 3.483
+      "crowd": 1.947,
+      "ewma": 1.999,
+      "persistence": 2.032,
+      "trend": 2.341,
+      "climatology": 3.474
      }
     },
     {
-     "date": "2025-10-25",
-     "n": 232,
-     "ranks": {
-      "crowd": 1,
-      "ewma": 2,
-      "persistence": 3,
-      "trend": 4,
-      "climatology": 5
-     },
-     "skills": {
-      "crowd": 0.047,
-      "ewma": 0.022,
-      "persistence": 0.0,
-      "trend": -0.142,
-      "climatology": -0.69
-     },
-     "crps": {
-      "crowd": 1.895,
-      "ewma": 1.944,
-      "persistence": 1.988,
-      "trend": 2.271,
-      "climatology": 3.36
-     }
-    },
-    {
-     "date": "2025-11-16",
-     "n": 245,
-     "ranks": {
-      "crowd": 1,
-      "ewma": 2,
-      "persistence": 3,
-      "trend": 4,
-      "climatology": 5
-     },
-     "skills": {
-      "crowd": 0.044,
-      "ewma": 0.021,
-      "persistence": 0.0,
-      "trend": -0.141,
-      "climatology": -0.691
-     },
-     "crps": {
-      "crowd": 1.846,
-      "ewma": 1.89,
-      "persistence": 1.931,
-      "trend": 2.203,
-      "climatology": 3.265
-     }
-    },
-    {
-     "date": "2025-12-13",
-     "n": 258,
-     "ranks": {
-      "crowd": 1,
-      "ewma": 2,
-      "persistence": 3,
-      "trend": 4,
-      "climatology": 5
-     },
-     "skills": {
-      "crowd": 0.043,
-      "ewma": 0.022,
-      "persistence": 0.0,
-      "trend": -0.142,
-      "climatology": -0.691
-     },
-     "crps": {
-      "crowd": 1.788,
-      "ewma": 1.828,
-      "persistence": 1.869,
-      "trend": 2.136,
-      "climatology": 3.162
-     }
-    },
-    {
-     "date": "2026-01-06",
-     "n": 271,
+     "date": "2025-10-30",
+     "n": 235,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -19540,22 +22484,22 @@
      },
      "skills": {
       "crowd": 0.046,
-      "ewma": 0.025,
+      "ewma": 0.022,
       "persistence": 0.0,
-      "trend": -0.141,
-      "climatology": -0.677
+      "trend": -0.142,
+      "climatology": -0.691
      },
      "crps": {
-      "crowd": 1.738,
-      "ewma": 1.777,
-      "persistence": 1.822,
-      "trend": 2.079,
-      "climatology": 3.055
+      "crowd": 1.877,
+      "ewma": 1.924,
+      "persistence": 1.967,
+      "trend": 2.247,
+      "climatology": 3.326
      }
     },
     {
-     "date": "2026-01-31",
-     "n": 284,
+     "date": "2025-11-22",
+     "n": 248,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -19564,73 +22508,123 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.049,
-      "ewma": 0.029,
+      "crowd": 0.042,
+      "ewma": 0.02,
+      "persistence": 0.0,
+      "trend": -0.143,
+      "climatology": -0.694
+     },
+     "crps": {
+      "crowd": 1.83,
+      "ewma": 1.873,
+      "persistence": 1.911,
+      "trend": 2.185,
+      "climatology": 3.238
+     }
+    },
+    {
+     "date": "2025-12-18",
+     "n": 261,
+     "ranks": {
+      "crowd": 1,
+      "ewma": 2,
+      "persistence": 3,
+      "trend": 4,
+      "climatology": 5
+     },
+     "skills": {
+      "crowd": 0.042,
+      "ewma": 0.021,
+      "persistence": 0.0,
+      "trend": -0.146,
+      "climatology": -0.692
+     },
+     "crps": {
+      "crowd": 1.776,
+      "ewma": 1.815,
+      "persistence": 1.854,
+      "trend": 2.124,
+      "climatology": 3.137
+     }
+    },
+    {
+     "date": "2026-01-10",
+     "n": 274,
+     "ranks": {
+      "crowd": 1,
+      "ewma": 2,
+      "persistence": 3,
+      "trend": 4,
+      "climatology": 5
+     },
+     "skills": {
+      "crowd": 0.046,
+      "ewma": 0.026,
+      "persistence": 0.0,
+      "trend": -0.143,
+      "climatology": -0.675
+     },
+     "crps": {
+      "crowd": 1.727,
+      "ewma": 1.763,
+      "persistence": 1.81,
+      "trend": 2.069,
+      "climatology": 3.032
+     }
+    },
+    {
+     "date": "2026-02-07",
+     "n": 287,
+     "ranks": {
+      "crowd": 1,
+      "ewma": 2,
+      "persistence": 3,
+      "trend": 4,
+      "climatology": 5
+     },
+     "skills": {
+      "crowd": 0.047,
+      "ewma": 0.028,
+      "persistence": 0.0,
+      "trend": -0.142,
+      "climatology": -0.664
+     },
+     "crps": {
+      "crowd": 1.684,
+      "ewma": 1.719,
+      "persistence": 1.768,
+      "trend": 2.019,
+      "climatology": 2.942
+     }
+    },
+    {
+     "date": "2026-02-21",
+     "n": 300,
+     "ranks": {
+      "crowd": 1,
+      "ewma": 2,
+      "persistence": 3,
+      "trend": 4,
+      "climatology": 5
+     },
+     "skills": {
+      "crowd": 0.05,
+      "ewma": 0.03,
       "persistence": 0.0,
       "trend": -0.137,
-      "climatology": -0.658
-     },
-     "crps": {
-      "crowd": 1.688,
-      "ewma": 1.724,
-      "persistence": 1.776,
-      "trend": 2.018,
-      "climatology": 2.944
-     }
-    },
-    {
-     "date": "2026-02-20",
-     "n": 297,
-     "ranks": {
-      "crowd": 1,
-      "ewma": 2,
-      "persistence": 3,
-      "trend": 4,
-      "climatology": 5
-     },
-     "skills": {
-      "crowd": 0.052,
-      "ewma": 0.033,
-      "persistence": 0.0,
-      "trend": -0.131,
       "climatology": -0.644
      },
      "crps": {
-      "crowd": 1.664,
-      "ewma": 1.697,
-      "persistence": 1.755,
-      "trend": 1.985,
-      "climatology": 2.886
+      "crowd": 1.655,
+      "ewma": 1.689,
+      "persistence": 1.742,
+      "trend": 1.981,
+      "climatology": 2.864
      }
     },
     {
-     "date": "2026-03-14",
-     "n": 310,
-     "ranks": {
-      "crowd": 1,
-      "ewma": 2,
-      "persistence": 3,
-      "trend": 4,
-      "climatology": 5
-     },
-     "skills": {
-      "crowd": 0.054,
-      "ewma": 0.036,
-      "persistence": 0.0,
-      "trend": -0.13,
-      "climatology": -0.63
-     },
-     "crps": {
-      "crowd": 1.631,
-      "ewma": 1.662,
-      "persistence": 1.724,
-      "trend": 1.948,
-      "climatology": 2.81
-     }
-    },
-    {
-     "date": "2026-04-04",
-     "n": 322,
+     "date": "2026-03-18",
+     "n": 313,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -19642,20 +22636,20 @@
       "crowd": 0.055,
       "ewma": 0.038,
       "persistence": 0.0,
-      "trend": -0.124,
+      "trend": -0.127,
       "climatology": -0.626
      },
      "crps": {
-      "crowd": 1.604,
-      "ewma": 1.633,
-      "persistence": 1.697,
-      "trend": 1.908,
-      "climatology": 2.76
+      "crowd": 1.626,
+      "ewma": 1.656,
+      "persistence": 1.721,
+      "trend": 1.939,
+      "climatology": 2.797
      }
     },
     {
-     "date": "2026-04-25",
-     "n": 335,
+     "date": "2026-04-11",
+     "n": 326,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -19665,22 +22659,47 @@
      },
      "skills": {
       "crowd": 0.056,
-      "ewma": 0.039,
+      "ewma": 0.04,
       "persistence": 0.0,
-      "trend": -0.121,
-      "climatology": -0.614
+      "trend": -0.124,
+      "climatology": -0.622
      },
      "crps": {
-      "crowd": 1.567,
-      "ewma": 1.597,
-      "persistence": 1.661,
-      "trend": 1.862,
-      "climatology": 2.681
+      "crowd": 1.6,
+      "ewma": 1.627,
+      "persistence": 1.694,
+      "trend": 1.904,
+      "climatology": 2.747
      }
     },
     {
-     "date": "2026-05-23",
-     "n": 348,
+     "date": "2026-05-02",
+     "n": 339,
+     "ranks": {
+      "crowd": 1,
+      "ewma": 2,
+      "persistence": 3,
+      "trend": 4,
+      "climatology": 5
+     },
+     "skills": {
+      "crowd": 0.052,
+      "ewma": 0.035,
+      "persistence": 0.0,
+      "trend": -0.125,
+      "climatology": -0.618
+     },
+     "crps": {
+      "crowd": 1.584,
+      "ewma": 1.612,
+      "persistence": 1.67,
+      "trend": 1.879,
+      "climatology": 2.703
+     }
+    },
+    {
+     "date": "2026-05-30",
+     "n": 352,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -19692,20 +22711,20 @@
       "crowd": 0.053,
       "ewma": 0.037,
       "persistence": 0.0,
-      "trend": -0.121,
-      "climatology": -0.617
+      "trend": -0.122,
+      "climatology": -0.613
      },
      "crps": {
-      "crowd": 1.55,
-      "ewma": 1.577,
-      "persistence": 1.637,
-      "trend": 1.834,
-      "climatology": 2.647
+      "crowd": 1.552,
+      "ewma": 1.578,
+      "persistence": 1.639,
+      "trend": 1.839,
+      "climatology": 2.643
      }
     },
     {
-     "date": "2026-06-18",
-     "n": 361,
+     "date": "2026-06-27",
+     "n": 365,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -19714,23 +22733,23 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.057,
-      "ewma": 0.042,
+      "crowd": 0.06,
+      "ewma": 0.045,
       "persistence": 0.0,
-      "trend": -0.115,
-      "climatology": -0.609
+      "trend": -0.112,
+      "climatology": -0.593
      },
      "crps": {
-      "crowd": 1.527,
-      "ewma": 1.552,
-      "persistence": 1.62,
-      "trend": 1.806,
-      "climatology": 2.606
+      "crowd": 1.533,
+      "ewma": 1.558,
+      "persistence": 1.631,
+      "trend": 1.814,
+      "climatology": 2.597
      }
     },
     {
-     "date": "2026-07-11",
-     "n": 374,
+     "date": "2026-07-23",
+     "n": 378,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -19739,23 +22758,23 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.065,
+      "crowd": 0.064,
       "ewma": 0.048,
       "persistence": 0.0,
-      "trend": -0.105,
-      "climatology": -0.581
+      "trend": -0.109,
+      "climatology": -0.571
      },
      "crps": {
-      "crowd": 1.509,
-      "ewma": 1.536,
-      "persistence": 1.614,
-      "trend": 1.784,
-      "climatology": 2.552
+      "crowd": 1.512,
+      "ewma": 1.538,
+      "persistence": 1.616,
+      "trend": 1.793,
+      "climatology": 2.538
      }
     },
     {
-     "date": "2026-08-08",
-     "n": 387,
+     "date": "2026-08-15",
+     "n": 391,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -19764,17 +22783,17 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.069,
-      "ewma": 0.053,
+      "crowd": 0.07,
+      "ewma": 0.056,
       "persistence": 0.0,
-      "trend": -0.098,
-      "climatology": -0.557
+      "trend": -0.099,
+      "climatology": -0.551
      },
      "crps": {
-      "crowd": 1.498,
-      "ewma": 1.523,
-      "persistence": 1.609,
-      "trend": 1.766,
+      "crowd": 1.502,
+      "ewma": 1.524,
+      "persistence": 1.615,
+      "trend": 1.774,
       "climatology": 2.505
      }
     }
@@ -19783,128 +22802,128 @@
     "umich_sentiment": [
      {
       "entrant": "crowd",
-      "rounds": 139,
-      "mean_crps": 2.64,
-      "mean_skill": 0.011
+      "rounds": 140,
+      "mean_crps": 2.635,
+      "mean_skill": 0.015
      },
      {
       "entrant": "persistence",
-      "rounds": 139,
-      "mean_crps": 2.669,
+      "rounds": 140,
+      "mean_crps": 2.674,
       "mean_skill": 0.0
      },
      {
       "entrant": "ewma",
-      "rounds": 139,
-      "mean_crps": 2.703,
-      "mean_skill": -0.013
+      "rounds": 140,
+      "mean_crps": 2.69,
+      "mean_skill": -0.006
      },
      {
       "entrant": "trend",
-      "rounds": 139,
-      "mean_crps": 3.222,
-      "mean_skill": -0.207
+      "rounds": 140,
+      "mean_crps": 3.214,
+      "mean_skill": -0.202
      },
      {
       "entrant": "climatology",
-      "rounds": 139,
-      "mean_crps": 5.16,
-      "mean_skill": -0.933
+      "rounds": 140,
+      "mean_crps": 5.156,
+      "mean_skill": -0.928
      }
     ],
     "yougov_approval": [
      {
       "entrant": "crowd",
-      "rounds": 109,
-      "mean_crps": 1.029,
-      "mean_skill": 0.165
+      "rounds": 110,
+      "mean_crps": 1.053,
+      "mean_skill": 0.166
      },
      {
       "entrant": "ewma",
-      "rounds": 109,
-      "mean_crps": 1.034,
-      "mean_skill": 0.161
+      "rounds": 110,
+      "mean_crps": 1.055,
+      "mean_skill": 0.165
      },
      {
       "entrant": "trend",
-      "rounds": 109,
-      "mean_crps": 1.107,
-      "mean_skill": 0.101
-     },
-     {
-      "entrant": "persistence",
-      "rounds": 109,
-      "mean_crps": 1.232,
-      "mean_skill": 0.0
+      "rounds": 110,
+      "mean_crps": 1.152,
+      "mean_skill": 0.088
      },
      {
       "entrant": "climatology",
-      "rounds": 109,
-      "mean_crps": 1.247,
-      "mean_skill": -0.012
+      "rounds": 110,
+      "mean_crps": 1.254,
+      "mean_skill": 0.007
+     },
+     {
+      "entrant": "persistence",
+      "rounds": 110,
+      "mean_crps": 1.263,
+      "mean_skill": 0.0
      }
     ],
     "mc_approval": [
      {
       "entrant": "ewma",
-      "rounds": 73,
-      "mean_crps": 0.632,
-      "mean_skill": 0.117
+      "rounds": 74,
+      "mean_crps": 0.631,
+      "mean_skill": 0.112
      },
      {
       "entrant": "crowd",
-      "rounds": 73,
-      "mean_crps": 0.633,
-      "mean_skill": 0.116
+      "rounds": 74,
+      "mean_crps": 0.631,
+      "mean_skill": 0.112
      },
      {
       "entrant": "trend",
-      "rounds": 73,
-      "mean_crps": 0.702,
-      "mean_skill": 0.019
+      "rounds": 74,
+      "mean_crps": 0.707,
+      "mean_skill": 0.006
      },
      {
       "entrant": "persistence",
-      "rounds": 73,
-      "mean_crps": 0.716,
+      "rounds": 74,
+      "mean_crps": 0.711,
       "mean_skill": 0.0
      },
      {
       "entrant": "climatology",
-      "rounds": 73,
-      "mean_crps": 0.819,
-      "mean_skill": -0.145
+      "rounds": 74,
+      "mean_crps": 0.815,
+      "mean_skill": -0.146
      }
     ],
     "yougov_generic_margin": [
      {
       "entrant": "crowd",
-      "rounds": 66,
-      "mean_crps": 0.824,
-      "mean_skill": 0.162
+      "rounds": 67,
+      "mean_crps": 0.832,
+      "mean_skill": 0.149
      },
      {
       "entrant": "ewma",
-      "rounds": 66,
-      "mean_crps": 0.834,
-      "mean_skill": 0.152
+      "rounds": 67,
+      "mean_crps": 0.846,
+      "mean_skill": 0.135
      },
      {
       "entrant": "climatology",
-      "rounds": 66,
-      "mean_crps": 0.858,
-      "mean_skill": 0.128
+      "rounds": 67,
+      "mean_crps": 0.886,
+      "mean_skill": 0.094
      },
      {
       "entrant": "trend",
-      "rounds": 66,
-      "mean_crps": 0.961,
-      "mean_skill": 0.022
+      "rounds": 67,
+      "mean_crps": 0.968,
+      "mean_skill": 0.01
      },
      {
       "entrant": "persistence",
-      "rounds": 66,
-      "mean_crps": 0.983,
+      "rounds": 67,
+      "mean_crps": 0.978,
       "mean_skill": 0.0
      }
     ]
@@ -27810,220 +30829,216 @@
  "charts": {
   "approval_avg": [
    {
-    "date": "2025-02-01",
-    "value": 49.68
-   },
-   {
     "date": "2025-02-08",
-    "value": 49.79
+    "value": 49.82
    },
    {
     "date": "2025-02-15",
-    "value": 49.74
+    "value": 49.78
    },
    {
     "date": "2025-02-22",
-    "value": 49.49
+    "value": 49.53
    },
    {
     "date": "2025-03-01",
-    "value": 49.15
+    "value": 49.17
    },
    {
     "date": "2025-03-08",
-    "value": 48.45
+    "value": 48.47
    },
    {
     "date": "2025-03-15",
-    "value": 48.01
+    "value": 48.03
    },
    {
     "date": "2025-03-22",
-    "value": 47.93
+    "value": 47.97
    },
    {
     "date": "2025-03-29",
-    "value": 47.82
+    "value": 47.85
    },
    {
     "date": "2025-04-05",
-    "value": 46.94
+    "value": 46.96
    },
    {
     "date": "2025-04-12",
-    "value": 46.09
+    "value": 46.11
    },
    {
     "date": "2025-04-19",
-    "value": 45.85
+    "value": 45.87
    },
    {
     "date": "2025-04-26",
-    "value": 45.34
+    "value": 45.36
    },
    {
     "date": "2025-05-03",
-    "value": 45.38
+    "value": 45.41
    },
    {
     "date": "2025-05-10",
-    "value": 45.51
+    "value": 45.53
    },
    {
     "date": "2025-05-17",
-    "value": 46.1
+    "value": 46.12
    },
    {
     "date": "2025-05-24",
-    "value": 46.65
+    "value": 46.68
    },
    {
     "date": "2025-05-31",
-    "value": 47.5
+    "value": 47.53
    },
    {
     "date": "2025-06-07",
-    "value": 46.94
+    "value": 46.97
    },
    {
     "date": "2025-06-14",
-    "value": 46.42
+    "value": 46.45
    },
    {
     "date": "2025-06-21",
-    "value": 46.64
+    "value": 46.66
    },
    {
     "date": "2025-06-28",
-    "value": 46.39
+    "value": 46.41
    },
    {
     "date": "2025-07-05",
-    "value": 46.37
+    "value": 46.4
    },
    {
     "date": "2025-07-12",
-    "value": 45.44
+    "value": 45.47
    },
    {
     "date": "2025-07-19",
-    "value": 44.97
-   },
-   {
-    "date": "2025-07-26",
-    "value": 44.86
-   },
-   {
-    "date": "2025-08-02",
-    "value": 44.95
-   },
-   {
-    "date": "2025-08-09",
-    "value": 44.7
-   },
-   {
-    "date": "2025-08-16",
-    "value": 44.87
-   },
-   {
-    "date": "2025-08-23",
     "value": 45.0
    },
    {
+    "date": "2025-07-26",
+    "value": 44.88
+   },
+   {
+    "date": "2025-08-02",
+    "value": 44.98
+   },
+   {
+    "date": "2025-08-09",
+    "value": 44.71
+   },
+   {
+    "date": "2025-08-16",
+    "value": 44.9
+   },
+   {
+    "date": "2025-08-23",
+    "value": 45.03
+   },
+   {
     "date": "2025-08-30",
-    "value": 45.09
+    "value": 45.12
    },
    {
     "date": "2025-09-06",
-    "value": 45.09
+    "value": 45.13
    },
    {
     "date": "2025-09-13",
-    "value": 45.09
+    "value": 45.11
    },
    {
     "date": "2025-09-20",
-    "value": 45.25
+    "value": 45.28
    },
    {
     "date": "2025-09-27",
-    "value": 45.14
+    "value": 45.17
    },
    {
     "date": "2025-10-04",
-    "value": 44.8
-   },
-   {
-    "date": "2025-10-11",
     "value": 44.83
    },
    {
+    "date": "2025-10-11",
+    "value": 44.86
+   },
+   {
     "date": "2025-10-18",
-    "value": 45.15
+    "value": 45.17
    },
    {
     "date": "2025-10-25",
-    "value": 44.39
+    "value": 44.41
    },
    {
     "date": "2025-11-01",
-    "value": 43.69
+    "value": 43.72
    },
    {
     "date": "2025-11-08",
-    "value": 42.91
+    "value": 42.94
    },
    {
     "date": "2025-11-15",
-    "value": 42.44
+    "value": 42.47
    },
    {
     "date": "2025-11-22",
-    "value": 42.69
+    "value": 42.72
    },
    {
     "date": "2025-11-29",
-    "value": 42.6
+    "value": 42.61
    },
    {
     "date": "2025-12-06",
-    "value": 43.13
+    "value": 43.15
    },
    {
     "date": "2025-12-13",
-    "value": 43.38
+    "value": 43.4
    },
    {
     "date": "2025-12-20",
-    "value": 43.31
+    "value": 43.33
    },
    {
     "date": "2025-12-27",
-    "value": 43.17
+    "value": 43.21
    },
    {
     "date": "2026-01-03",
-    "value": 42.62
+    "value": 42.61
    },
    {
     "date": "2026-01-10",
-    "value": 43.1
+    "value": 43.11
    },
    {
     "date": "2026-01-17",
-    "value": 43.05
+    "value": 43.08
    },
    {
     "date": "2026-01-24",
-    "value": 42.96
+    "value": 42.99
    },
    {
     "date": "2026-01-31",
-    "value": 42.76
+    "value": 42.78
    },
    {
     "date": "2026-02-07",
-    "value": 41.94
+    "value": 41.95
    },
    {
     "date": "2026-02-14",
@@ -28031,63 +31046,63 @@
    },
    {
     "date": "2026-02-21",
-    "value": 42.56
+    "value": 42.58
    },
    {
     "date": "2026-02-28",
-    "value": 43.01
+    "value": 43.04
    },
    {
     "date": "2026-03-07",
-    "value": 42.66
+    "value": 42.68
    },
    {
     "date": "2026-03-14",
-    "value": 41.97
+    "value": 41.99
    },
    {
     "date": "2026-03-21",
-    "value": 41.57
+    "value": 41.6
    },
    {
     "date": "2026-03-28",
-    "value": 41.05
+    "value": 41.07
    },
    {
     "date": "2026-04-04",
-    "value": 41.09
+    "value": 41.11
    },
    {
     "date": "2026-04-11",
-    "value": 41.13
+    "value": 41.16
    },
    {
     "date": "2026-04-18",
-    "value": 40.61
+    "value": 40.64
    },
    {
     "date": "2026-04-25",
-    "value": 40.6
+    "value": 40.63
    },
    {
     "date": "2026-05-02",
-    "value": 40.15
+    "value": 40.19
    },
    {
     "date": "2026-05-09",
-    "value": 40.04
+    "value": 40.08
    },
    {
     "date": "2026-05-16",
-    "value": 39.74
+    "value": 39.77
    },
    {
     "date": "2026-05-23",
-    "value": 39.73
+    "value": 39.76
    },
    {
     "date": "2026-05-30",
-    "value": 39.87
+    "value": 39.9
    },
    {
     "date": "2026-06-06",
@@ -28095,46 +31110,46 @@
    },
    {
     "date": "2026-06-13",
-    "value": 39.68
+    "value": 39.69
    },
    {
     "date": "2026-06-20",
-    "value": 40.1
+    "value": 40.12
    },
    {
     "date": "2026-06-27",
-    "value": 40.49
+    "value": 40.51
    },
    {
     "date": "2026-07-04",
-    "value": 40.37
+    "value": 40.38
    },
    {
     "date": "2026-07-11",
-    "value": 40.62
+    "value": 40.64
    },
    {
     "date": "2026-07-18",
-    "value": 40.55
+    "value": 40.58
    },
    {
     "date": "2026-07-25",
-    "value": 40.3
+    "value": 40.33
    },
    {
     "date": "2026-08-01",
-    "value": 40.21
+    "value": 40.26
    },
    {
     "date": "2026-08-08",
-    "value": 39.88
+    "value": 39.92
+   },
+   {
+    "date": "2026-08-15",
+    "value": 39.73
    }
   ],
   "generic_margin": [
-   {
-    "date": "2025-02-01",
-    "value": -1.43
-   },
    {
     "date": "2025-02-08",
     "value": -1.05
@@ -28145,15 +31160,15 @@
    },
    {
     "date": "2025-02-22",
-    "value": -1.53
+    "value": -1.56
    },
    {
     "date": "2025-03-01",
-    "value": -1.41
+    "value": -1.43
    },
    {
     "date": "2025-03-08",
-    "value": -0.52
+    "value": -0.53
    },
    {
     "date": "2025-03-15",
@@ -28165,7 +31180,7 @@
    },
    {
     "date": "2025-03-29",
-    "value": 0.23
+    "value": 0.24
    },
    {
     "date": "2025-04-05",
@@ -28173,19 +31188,19 @@
    },
    {
     "date": "2025-04-12",
-    "value": 0.69
+    "value": 0.71
    },
    {
     "date": "2025-04-19",
-    "value": 2.02
+    "value": 2.0
    },
    {
     "date": "2025-04-26",
-    "value": 2.16
+    "value": 2.15
    },
    {
     "date": "2025-05-03",
-    "value": 2.67
+    "value": 2.66
    },
    {
     "date": "2025-05-10",
@@ -28193,7 +31208,7 @@
    },
    {
     "date": "2025-05-17",
-    "value": 1.14
+    "value": 1.17
    },
    {
     "date": "2025-05-24",
@@ -28201,19 +31216,19 @@
    },
    {
     "date": "2025-05-31",
-    "value": 1.69
+    "value": 1.72
    },
    {
     "date": "2025-06-07",
-    "value": 1.57
+    "value": 1.61
    },
    {
     "date": "2025-06-14",
-    "value": 1.58
+    "value": 1.59
    },
    {
     "date": "2025-06-21",
-    "value": 1.4
+    "value": 1.38
    },
    {
     "date": "2025-06-28",
@@ -28221,11 +31236,11 @@
    },
    {
     "date": "2025-07-05",
-    "value": 2.14
+    "value": 2.16
    },
    {
     "date": "2025-07-12",
-    "value": 1.93
+    "value": 1.98
    },
    {
     "date": "2025-07-19",
@@ -28233,23 +31248,23 @@
    },
    {
     "date": "2025-07-26",
-    "value": 2.95
+    "value": 2.97
    },
    {
     "date": "2025-08-02",
-    "value": 3.67
+    "value": 3.7
    },
    {
     "date": "2025-08-09",
-    "value": 3.26
+    "value": 3.3
    },
    {
     "date": "2025-08-16",
-    "value": 3.28
+    "value": 3.31
    },
    {
     "date": "2025-08-23",
-    "value": 2.42
+    "value": 2.4
    },
    {
     "date": "2025-08-30",
@@ -28257,15 +31272,15 @@
    },
    {
     "date": "2025-09-06",
-    "value": 2.92
+    "value": 2.95
    },
    {
     "date": "2025-09-13",
-    "value": 2.63
+    "value": 2.66
    },
    {
     "date": "2025-09-20",
-    "value": 2.52
+    "value": 2.54
    },
    {
     "date": "2025-09-27",
@@ -28277,19 +31292,19 @@
    },
    {
     "date": "2025-10-11",
-    "value": 3.2
+    "value": 3.22
    },
    {
     "date": "2025-10-18",
-    "value": 3.21
+    "value": 3.24
    },
    {
     "date": "2025-10-25",
-    "value": 3.1
+    "value": 3.13
    },
    {
     "date": "2025-11-01",
-    "value": 3.12
+    "value": 3.13
    },
    {
     "date": "2025-11-08",
@@ -28301,19 +31316,19 @@
    },
    {
     "date": "2025-11-22",
-    "value": 4.03
+    "value": 4.06
    },
    {
     "date": "2025-11-29",
-    "value": 4.26
+    "value": 4.34
    },
    {
     "date": "2025-12-06",
-    "value": 3.33
+    "value": 3.36
    },
    {
     "date": "2025-12-13",
-    "value": 3.12
+    "value": 3.14
    },
    {
     "date": "2025-12-20",
@@ -28321,67 +31336,67 @@
    },
    {
     "date": "2025-12-27",
-    "value": 4.22
+    "value": 4.26
    },
    {
     "date": "2026-01-03",
-    "value": 4.94
+    "value": 5.08
    },
    {
     "date": "2026-01-10",
-    "value": 4.28
+    "value": 4.32
    },
    {
     "date": "2026-01-17",
-    "value": 4.61
+    "value": 4.63
    },
    {
     "date": "2026-01-24",
-    "value": 4.49
+    "value": 4.53
    },
    {
     "date": "2026-01-31",
-    "value": 4.56
+    "value": 4.59
    },
    {
     "date": "2026-02-07",
-    "value": 4.73
+    "value": 4.77
    },
    {
     "date": "2026-02-14",
-    "value": 4.64
-   },
-   {
-    "date": "2026-02-21",
-    "value": 4.91
-   },
-   {
-    "date": "2026-02-28",
-    "value": 4.47
-   },
-   {
-    "date": "2026-03-07",
-    "value": 4.23
-   },
-   {
-    "date": "2026-03-14",
-    "value": 4.75
-   },
-   {
-    "date": "2026-03-21",
     "value": 4.7
    },
    {
-    "date": "2026-03-28",
+    "date": "2026-02-21",
     "value": 4.96
    },
    {
+    "date": "2026-02-28",
+    "value": 4.52
+   },
+   {
+    "date": "2026-03-07",
+    "value": 4.24
+   },
+   {
+    "date": "2026-03-14",
+    "value": 4.78
+   },
+   {
+    "date": "2026-03-21",
+    "value": 4.72
+   },
+   {
+    "date": "2026-03-28",
+    "value": 5.0
+   },
+   {
     "date": "2026-04-04",
-    "value": 4.62
+    "value": 4.66
    },
    {
     "date": "2026-04-11",
-    "value": 5.18
+    "value": 5.16
    },
    {
     "date": "2026-04-18",
@@ -28389,74 +31404,74 @@
    },
    {
     "date": "2026-04-25",
-    "value": 4.72
+    "value": 4.73
    },
    {
     "date": "2026-05-02",
-    "value": 4.91
+    "value": 4.94
    },
    {
     "date": "2026-05-09",
-    "value": 5.84
+    "value": 5.82
    },
    {
     "date": "2026-05-16",
-    "value": 6.15
+    "value": 6.16
    },
    {
     "date": "2026-05-23",
-    "value": 5.94
+    "value": 5.96
    },
    {
     "date": "2026-05-30",
-    "value": 5.38
+    "value": 5.45
    },
    {
     "date": "2026-06-06",
-    "value": 5.07
+    "value": 5.11
    },
    {
     "date": "2026-06-13",
-    "value": 5.1
+    "value": 5.11
    },
    {
     "date": "2026-06-20",
-    "value": 4.89
+    "value": 4.94
    },
    {
     "date": "2026-06-27",
-    "value": 5.01
+    "value": 5.08
    },
    {
     "date": "2026-07-04",
-    "value": 4.99
+    "value": 5.07
    },
    {
     "date": "2026-07-11",
-    "value": 4.84
+    "value": 4.88
    },
    {
     "date": "2026-07-18",
-    "value": 5.25
+    "value": 5.29
    },
    {
     "date": "2026-07-25",
-    "value": 5.7
+    "value": 5.72
    },
    {
     "date": "2026-08-01",
-    "value": 5.5
+    "value": 5.49
    },
    {
     "date": "2026-08-08",
-    "value": 6.02
+    "value": 6.07
+   },
+   {
+    "date": "2026-08-15",
+    "value": 5.89
    }
   ],
   "umich_sentiment": [
-   {
-    "date": "2022-08-01",
-    "value": 58.2
-   },
    {
     "date": "2022-09-01",
     "value": 58.6
@@ -28644,6 +31659,10 @@
    {
     "date": "2026-07-01",
     "value": 55.2
+   },
+   {
+    "date": "2026-08-01",
+    "value": 51.0
    }
   ],
   "yougov_approval": [
@@ -28825,7 +31844,7 @@
    },
    {
     "date": "2025-07-19",
-    "value": 39.0
+    "value": 41.0
    },
    {
     "date": "2025-07-26",
@@ -28893,7 +31912,7 @@
    },
    {
     "date": "2025-10-25",
-    "value": 40.0
+    "value": 39.0
    },
    {
     "date": "2025-10-30",
@@ -28917,7 +31936,7 @@
    },
    {
     "date": "2025-11-22",
-    "value": 40.0
+    "value": 38.0
    },
    {
     "date": "2025-11-29",
@@ -28989,7 +32008,7 @@
    },
    {
     "date": "2026-02-21",
-    "value": 40.0
+    "value": 39.0
    },
    {
     "date": "2026-02-26",
@@ -29017,7 +32036,7 @@
    },
    {
     "date": "2026-03-28",
-    "value": 39.0
+    "value": 35.0
    },
    {
     "date": "2026-04-04",
@@ -29114,6 +32133,10 @@
    {
     "date": "2026-08-08",
     "value": 33.0
+   },
+   {
+    "date": "2026-08-15",
+    "value": 35.0
    }
   ],
   "mc_approval": [
@@ -29440,15 +32463,15 @@
    {
     "date": "2026-08-01",
     "value": 42.8
+   },
+   {
+    "date": "2026-08-15",
+    "value": 42.9
    }
   ]
  },
  "series_tail": {
   "umich_sentiment": [
-   {
-    "date": "2025-12-01",
-    "value": 52.9
-   },
    {
     "date": "2026-01-01",
     "value": 56.4
@@ -29476,13 +32499,13 @@
    {
     "date": "2026-07-01",
     "value": 55.2
+   },
+   {
+    "date": "2026-08-01",
+    "value": 51.0
    }
   ],
   "yougov_approval": [
-   {
-    "date": "2026-06-27",
-    "value": 38.0
-   },
    {
     "date": "2026-07-04",
     "value": 35.0
@@ -29510,13 +32533,13 @@
    {
     "date": "2026-08-08",
     "value": 33.0
+   },
+   {
+    "date": "2026-08-15",
+    "value": 35.0
    }
   ],
   "mc_approval": [
-   {
-    "date": "2026-06-13",
-    "value": 43.1
-   },
    {
     "date": "2026-06-20",
     "value": 43.1
@@ -29544,13 +32567,13 @@
    {
     "date": "2026-08-01",
     "value": 42.8
+   },
+   {
+    "date": "2026-08-15",
+    "value": 42.9
    }
   ],
   "yougov_generic_margin": [
-   {
-    "date": "2026-06-27",
-    "value": 3.0
-   },
    {
     "date": "2026-07-04",
     "value": 3.0
@@ -29578,6 +32601,10 @@
    {
     "date": "2026-08-08",
     "value": 6.0
+   },
+   {
+    "date": "2026-08-15",
+    "value": 7.0
    }
   ],
   "yougov_econ_approval": [
@@ -29650,10 +32677,6 @@
   ],
   "yougov_rv_approval": [
    {
-    "date": "2026-06-20",
-    "value": 39.0
-   },
-   {
     "date": "2026-06-27",
     "value": 40.0
    },
@@ -29680,13 +32703,13 @@
    {
     "date": "2026-08-08",
     "value": 38.0
+   },
+   {
+    "date": "2026-08-15",
+    "value": 40.0
    }
   ],
   "yougov_strong_approval": [
-   {
-    "date": "2026-06-27",
-    "value": 19.0
-   },
    {
     "date": "2026-07-04",
     "value": 20.0
@@ -29714,13 +32737,13 @@
    {
     "date": "2026-08-08",
     "value": 17.0
+   },
+   {
+    "date": "2026-08-15",
+    "value": 18.0
    }
   ],
   "yougov_weak_approval": [
-   {
-    "date": "2026-06-27",
-    "value": 19.0
-   },
    {
     "date": "2026-07-04",
     "value": 15.0
@@ -29748,6 +32771,10 @@
    {
     "date": "2026-08-08",
     "value": 16.0
+   },
+   {
+    "date": "2026-08-15",
+    "value": 17.0
    }
   ],
   "yougov_cost_approval": [
@@ -29786,10 +32813,6 @@
   ],
   "yougov_trade_approval": [
    {
-    "date": "2026-01-19",
-    "value": 34.0
-   },
-   {
     "date": "2026-02-21",
     "value": 33.0
    },
@@ -29816,13 +32839,13 @@
    {
     "date": "2026-07-26",
     "value": 30.0
+   },
+   {
+    "date": "2026-08-15",
+    "value": 30.0
    }
   ],
   "mc_econ_approval": [
-   {
-    "date": "2026-06-06",
-    "value": 41.0
-   },
    {
     "date": "2026-06-20",
     "value": 41.0
@@ -29850,13 +32873,13 @@
    {
     "date": "2026-08-01",
     "value": 41.0
+   },
+   {
+    "date": "2026-08-15",
+    "value": 40.0
    }
   ],
   "mc_immig_approval": [
-   {
-    "date": "2026-06-06",
-    "value": 48.0
-   },
    {
     "date": "2026-06-20",
     "value": 48.0
@@ -29884,13 +32907,13 @@
    {
     "date": "2026-08-01",
     "value": 49.0
+   },
+   {
+    "date": "2026-08-15",
+    "value": 47.0
    }
   ],
   "mc_trade_approval": [
-   {
-    "date": "2026-05-01",
-    "value": 43.0
-   },
    {
     "date": "2026-05-16",
     "value": 42.0
@@ -29918,6 +32941,10 @@
    {
     "date": "2026-08-01",
     "value": 43.0
+   },
+   {
+    "date": "2026-08-15",
+    "value": 44.0
    }
   ],
   "mc_strong_approval": [
@@ -29990,18 +33017,6 @@
   ],
   "rasmussen_approval": [
    {
-    "date": "2026-07-29",
-    "value": 44.0
-   },
-   {
-    "date": "2026-07-31",
-    "value": 43.0
-   },
-   {
-    "date": "2026-08-01",
-    "value": 43.0
-   },
-   {
     "date": "2026-08-02",
     "value": 43.0
    },
@@ -30020,13 +33035,21 @@
    {
     "date": "2026-08-08",
     "value": 43.0
+   },
+   {
+    "date": "2026-08-09",
+    "value": 43.0
+   },
+   {
+    "date": "2026-08-10",
+    "value": 43.0
+   },
+   {
+    "date": "2026-08-12",
+    "value": 44.0
    }
   ],
   "rmg_approval": [
-   {
-    "date": "2026-05-30",
-    "value": 44.0
-   },
    {
     "date": "2026-06-07",
     "value": 42.0
@@ -30054,13 +33077,13 @@
    {
     "date": "2026-07-31",
     "value": 43.0
+   },
+   {
+    "date": "2026-08-07",
+    "value": 42.0
    }
   ],
   "ipsos_approval": [
-   {
-    "date": "2026-05-09",
-    "value": 36.0
-   },
    {
     "date": "2026-05-16",
     "value": 35.0
@@ -30088,6 +33111,10 @@
    {
     "date": "2026-07-31",
     "value": 35.0
+   },
+   {
+    "date": "2026-08-15",
+    "value": 33.0
    }
   ],
   "navigator_approval": [
@@ -30126,10 +33153,6 @@
   ],
   "ipsos_generic_margin": [
    {
-    "date": "2026-05-09",
-    "value": 6.0
-   },
-   {
     "date": "2026-05-16",
     "value": 1.0
    },
@@ -30156,17 +33179,13 @@
    {
     "date": "2026-07-31",
     "value": 5.0
+   },
+   {
+    "date": "2026-08-15",
+    "value": 5.0
    }
   ],
   "mc_generic_margin": [
-   {
-    "date": "2026-06-18",
-    "value": 3.6
-   },
-   {
-    "date": "2026-06-25",
-    "value": 3.1
-   },
    {
     "date": "2026-06-27",
     "value": 4.0
@@ -30190,13 +33209,17 @@
    {
     "date": "2026-07-30",
     "value": 4.1
+   },
+   {
+    "date": "2026-08-06",
+    "value": 5.0
+   },
+   {
+    "date": "2026-08-13",
+    "value": 4.0
    }
   ],
   "civiqs_net_approval": [
-   {
-    "date": "2026-06-19",
-    "value": -20.8
-   },
    {
     "date": "2026-06-26",
     "value": -21.0
@@ -30224,13 +33247,13 @@
    {
     "date": "2026-08-07",
     "value": -23.9
+   },
+   {
+    "date": "2026-08-14",
+    "value": -24.2
    }
   ],
   "civiqs_net_approval_rep": [
-   {
-    "date": "2026-06-19",
-    "value": 74.3
-   },
    {
     "date": "2026-06-26",
     "value": 74.3
@@ -30258,13 +33281,999 @@
    {
     "date": "2026-08-07",
     "value": 70.2
+   },
+   {
+    "date": "2026-08-14",
+    "value": 68.3
+   }
+  ],
+  "civiqs_net_econ_now": [
+   {
+    "date": "2026-06-26",
+    "value": -32.1
+   },
+   {
+    "date": "2026-07-03",
+    "value": -31.1
+   },
+   {
+    "date": "2026-07-10",
+    "value": -30.0
+   },
+   {
+    "date": "2026-07-17",
+    "value": -30.4
+   },
+   {
+    "date": "2026-07-24",
+    "value": -31.3
+   },
+   {
+    "date": "2026-07-31",
+    "value": -31.8
+   },
+   {
+    "date": "2026-08-07",
+    "value": -32.3
+   },
+   {
+    "date": "2026-08-14",
+    "value": -32.6
+   }
+  ],
+  "civiqs_net_econ_direction": [
+   {
+    "date": "2026-06-26",
+    "value": -32.8
+   },
+   {
+    "date": "2026-07-03",
+    "value": -31.8
+   },
+   {
+    "date": "2026-07-10",
+    "value": -32.1
+   },
+   {
+    "date": "2026-07-17",
+    "value": -32.6
+   },
+   {
+    "date": "2026-07-24",
+    "value": -33.7
+   },
+   {
+    "date": "2026-07-31",
+    "value": -34.8
+   },
+   {
+    "date": "2026-08-07",
+    "value": -35.9
+   },
+   {
+    "date": "2026-08-14",
+    "value": -36.0
+   }
+  ],
+  "civiqs_net_family_finances": [
+   {
+    "date": "2026-06-26",
+    "value": -28.8
+   },
+   {
+    "date": "2026-07-03",
+    "value": -28.4
+   },
+   {
+    "date": "2026-07-10",
+    "value": -27.7
+   },
+   {
+    "date": "2026-07-17",
+    "value": -27.9
+   },
+   {
+    "date": "2026-07-24",
+    "value": -28.4
+   },
+   {
+    "date": "2026-07-31",
+    "value": -28.6
+   },
+   {
+    "date": "2026-08-07",
+    "value": -29.2
+   },
+   {
+    "date": "2026-08-14",
+    "value": -30.0
+   }
+  ],
+  "civiqs_net_inflation_concern": [
+   {
+    "date": "2026-06-26",
+    "value": 55.4
+   },
+   {
+    "date": "2026-07-03",
+    "value": 56.3
+   },
+   {
+    "date": "2026-07-10",
+    "value": 57.8
+   },
+   {
+    "date": "2026-07-17",
+    "value": 57.4
+   },
+   {
+    "date": "2026-07-24",
+    "value": 58.4
+   },
+   {
+    "date": "2026-07-31",
+    "value": 58.5
+   },
+   {
+    "date": "2026-08-07",
+    "value": 60.3
+   },
+   {
+    "date": "2026-08-14",
+    "value": 60.3
+   }
+  ],
+  "civiqs_angry_share": [
+   {
+    "date": "2026-06-26",
+    "value": 28.9
+   },
+   {
+    "date": "2026-07-03",
+    "value": 28.8
+   },
+   {
+    "date": "2026-07-10",
+    "value": 28.7
+   },
+   {
+    "date": "2026-07-17",
+    "value": 28.9
+   },
+   {
+    "date": "2026-07-24",
+    "value": 29.2
+   },
+   {
+    "date": "2026-07-31",
+    "value": 29.4
+   },
+   {
+    "date": "2026-08-07",
+    "value": 29.7
+   },
+   {
+    "date": "2026-08-14",
+    "value": 29.8
+   }
+  ],
+  "wiki_views_trump": [
+   {
+    "date": "2026-06-28",
+    "value": 235.1
+   },
+   {
+    "date": "2026-07-05",
+    "value": 243.0
+   },
+   {
+    "date": "2026-07-12",
+    "value": 252.2
+   },
+   {
+    "date": "2026-07-19",
+    "value": 260.5
+   },
+   {
+    "date": "2026-07-26",
+    "value": 243.3
+   },
+   {
+    "date": "2026-08-02",
+    "value": 211.7
+   },
+   {
+    "date": "2026-08-09",
+    "value": 203.6
+   },
+   {
+    "date": "2026-08-16",
+    "value": 197.6
+   }
+  ],
+  "wiki_views_taylor_swift": [
+   {
+    "date": "2026-06-28",
+    "value": 123.4
+   },
+   {
+    "date": "2026-07-05",
+    "value": 862.7
+   },
+   {
+    "date": "2026-07-12",
+    "value": 331.9
+   },
+   {
+    "date": "2026-07-19",
+    "value": 131.8
+   },
+   {
+    "date": "2026-07-26",
+    "value": 94.9
+   },
+   {
+    "date": "2026-08-02",
+    "value": 87.5
+   },
+   {
+    "date": "2026-08-09",
+    "value": 82.7
+   },
+   {
+    "date": "2026-08-16",
+    "value": 90.1
+   }
+  ],
+  "umich_party_dem": [
+   {
+    "date": "2026-01-01",
+    "value": 41.0
+   },
+   {
+    "date": "2026-02-01",
+    "value": 41.8
+   },
+   {
+    "date": "2026-03-01",
+    "value": 36.4
+   },
+   {
+    "date": "2026-04-01",
+    "value": 32.5
+   },
+   {
+    "date": "2026-05-01",
+    "value": 32.8
+   },
+   {
+    "date": "2026-06-01",
+    "value": 37.3
+   },
+   {
+    "date": "2026-07-01",
+    "value": 42.8
+   },
+   {
+    "date": "2026-08-01",
+    "value": 39.1
+   }
+  ],
+  "umich_party_ind": [
+   {
+    "date": "2026-01-01",
+    "value": 50.8
+   },
+   {
+    "date": "2026-02-01",
+    "value": 50.9
+   },
+   {
+    "date": "2026-03-01",
+    "value": 48.2
+   },
+   {
+    "date": "2026-04-01",
+    "value": 47.3
+   },
+   {
+    "date": "2026-05-01",
+    "value": 40.6
+   },
+   {
+    "date": "2026-06-01",
+    "value": 44.5
+   },
+   {
+    "date": "2026-07-01",
+    "value": 49.3
+   },
+   {
+    "date": "2026-08-01",
+    "value": 48.5
+   }
+  ],
+  "umich_party_rep": [
+   {
+    "date": "2026-01-01",
+    "value": 96.8
+   },
+   {
+    "date": "2026-02-01",
+    "value": 97.1
+   },
+   {
+    "date": "2026-03-01",
+    "value": 92.2
+   },
+   {
+    "date": "2026-04-01",
+    "value": 90.4
+   },
+   {
+    "date": "2026-05-01",
+    "value": 84.6
+   },
+   {
+    "date": "2026-06-01",
+    "value": 86.2
+   },
+   {
+    "date": "2026-07-01",
+    "value": 88.2
+   },
+   {
+    "date": "2026-08-01",
+    "value": 78.7
+   }
+  ],
+  "aaii_bull_bear_spread": [
+   {
+    "date": "2026-06-24",
+    "value": 8.8
+   },
+   {
+    "date": "2026-07-01",
+    "value": -10.9
+   },
+   {
+    "date": "2026-07-08",
+    "value": -0.9
+   },
+   {
+    "date": "2026-07-15",
+    "value": 12.0
+   },
+   {
+    "date": "2026-07-22",
+    "value": -12.7
+   },
+   {
+    "date": "2026-07-29",
+    "value": -11.1
+   },
+   {
+    "date": "2026-08-05",
+    "value": -1.0
+   },
+   {
+    "date": "2026-08-12",
+    "value": -3.2
+   }
+  ],
+  "esi_headline": [
+   {
+    "date": "2026-04-22",
+    "value": 28.9
+   },
+   {
+    "date": "2026-05-20",
+    "value": 30.6
+   },
+   {
+    "date": "2026-06-03",
+    "value": 30.7
+   },
+   {
+    "date": "2026-06-17",
+    "value": 31.9
+   },
+   {
+    "date": "2026-07-01",
+    "value": 31.9
+   },
+   {
+    "date": "2026-07-15",
+    "value": 33.4
+   },
+   {
+    "date": "2026-07-29",
+    "value": 30.8
+   },
+   {
+    "date": "2026-08-12",
+    "value": 32.3
+   }
+  ],
+  "trends_tesla": [
+   {
+    "date": "2026-06-27",
+    "value": 86
+   },
+   {
+    "date": "2026-07-04",
+    "value": 89
+   },
+   {
+    "date": "2026-07-11",
+    "value": 82
+   },
+   {
+    "date": "2026-07-18",
+    "value": 75
+   },
+   {
+    "date": "2026-07-25",
+    "value": 82
+   },
+   {
+    "date": "2026-08-01",
+    "value": 82
+   },
+   {
+    "date": "2026-08-08",
+    "value": 77
+   },
+   {
+    "date": "2026-08-15",
+    "value": 72
+   }
+  ],
+  "trends_iphone": [
+   {
+    "date": "2026-06-27",
+    "value": 69
+   },
+   {
+    "date": "2026-07-04",
+    "value": 54
+   },
+   {
+    "date": "2026-07-11",
+    "value": 55
+   },
+   {
+    "date": "2026-07-18",
+    "value": 51
+   },
+   {
+    "date": "2026-07-25",
+    "value": 50
+   },
+   {
+    "date": "2026-08-01",
+    "value": 56
+   },
+   {
+    "date": "2026-08-08",
+    "value": 56
+   },
+   {
+    "date": "2026-08-15",
+    "value": 52
+   }
+  ],
+  "civiqs_net_approval_dem": [
+   {
+    "date": "2026-06-26",
+    "value": -96.1
+   },
+   {
+    "date": "2026-07-03",
+    "value": -96.2
+   },
+   {
+    "date": "2026-07-10",
+    "value": -96.1
+   },
+   {
+    "date": "2026-07-17",
+    "value": -96.0
+   },
+   {
+    "date": "2026-07-24",
+    "value": -96.1
+   },
+   {
+    "date": "2026-07-31",
+    "value": -96.1
+   },
+   {
+    "date": "2026-08-07",
+    "value": -96.2
+   },
+   {
+    "date": "2026-08-14",
+    "value": -96.3
+   }
+  ],
+  "civiqs_net_approval_ind": [
+   {
+    "date": "2026-06-26",
+    "value": -30.8
+   },
+   {
+    "date": "2026-07-03",
+    "value": -33.0
+   },
+   {
+    "date": "2026-07-10",
+    "value": -33.1
+   },
+   {
+    "date": "2026-07-17",
+    "value": -30.8
+   },
+   {
+    "date": "2026-07-24",
+    "value": -32.4
+   },
+   {
+    "date": "2026-07-31",
+    "value": -32.4
+   },
+   {
+    "date": "2026-08-07",
+    "value": -33.3
+   },
+   {
+    "date": "2026-08-14",
+    "value": -34.4
+   }
+  ],
+  "civiqs_net_approval_age_18_34": [
+   {
+    "date": "2026-06-26",
+    "value": -45.9
+   },
+   {
+    "date": "2026-07-03",
+    "value": -47.1
+   },
+   {
+    "date": "2026-07-10",
+    "value": -47.1
+   },
+   {
+    "date": "2026-07-17",
+    "value": -46.6
+   },
+   {
+    "date": "2026-07-24",
+    "value": -47.7
+   },
+   {
+    "date": "2026-07-31",
+    "value": -48.0
+   },
+   {
+    "date": "2026-08-07",
+    "value": -48.6
+   },
+   {
+    "date": "2026-08-14",
+    "value": -49.6
+   }
+  ],
+  "civiqs_net_approval_age_35_49": [
+   {
+    "date": "2026-06-26",
+    "value": -34.1
+   },
+   {
+    "date": "2026-07-03",
+    "value": -35.1
+   },
+   {
+    "date": "2026-07-10",
+    "value": -34.8
+   },
+   {
+    "date": "2026-07-17",
+    "value": -33.6
+   },
+   {
+    "date": "2026-07-24",
+    "value": -34.3
+   },
+   {
+    "date": "2026-07-31",
+    "value": -34.7
+   },
+   {
+    "date": "2026-08-07",
+    "value": -35.8
+   },
+   {
+    "date": "2026-08-14",
+    "value": -36.9
+   }
+  ],
+  "civiqs_net_approval_age_50_64": [
+   {
+    "date": "2026-06-26",
+    "value": -2.1
+   },
+   {
+    "date": "2026-07-03",
+    "value": -3.6
+   },
+   {
+    "date": "2026-07-10",
+    "value": -4.4
+   },
+   {
+    "date": "2026-07-17",
+    "value": -3.6
+   },
+   {
+    "date": "2026-07-24",
+    "value": -5.4
+   },
+   {
+    "date": "2026-07-31",
+    "value": -6.2
+   },
+   {
+    "date": "2026-08-07",
+    "value": -7.0
+   },
+   {
+    "date": "2026-08-14",
+    "value": -8.5
+   }
+  ],
+  "civiqs_net_approval_age_65_up": [
+   {
+    "date": "2026-06-26",
+    "value": -3.6
+   },
+   {
+    "date": "2026-07-03",
+    "value": -4.9
+   },
+   {
+    "date": "2026-07-10",
+    "value": -4.7
+   },
+   {
+    "date": "2026-07-17",
+    "value": -4.0
+   },
+   {
+    "date": "2026-07-24",
+    "value": -4.8
+   },
+   {
+    "date": "2026-07-31",
+    "value": -4.4
+   },
+   {
+    "date": "2026-08-07",
+    "value": -4.9
+   },
+   {
+    "date": "2026-08-14",
+    "value": -5.9
+   }
+  ],
+  "civiqs_net_approval_race_white": [
+   {
+    "date": "2026-06-26",
+    "value": -5.7
+   },
+   {
+    "date": "2026-07-03",
+    "value": -7.2
+   },
+   {
+    "date": "2026-07-10",
+    "value": -7.5
+   },
+   {
+    "date": "2026-07-17",
+    "value": -6.7
+   },
+   {
+    "date": "2026-07-24",
+    "value": -7.9
+   },
+   {
+    "date": "2026-07-31",
+    "value": -8.1
+   },
+   {
+    "date": "2026-08-07",
+    "value": -8.9
+   },
+   {
+    "date": "2026-08-14",
+    "value": -10.3
+   }
+  ],
+  "civiqs_net_approval_race_black": [
+   {
+    "date": "2026-06-26",
+    "value": -81.5
+   },
+   {
+    "date": "2026-07-03",
+    "value": -82.0
+   },
+   {
+    "date": "2026-07-10",
+    "value": -81.9
+   },
+   {
+    "date": "2026-07-17",
+    "value": -81.7
+   },
+   {
+    "date": "2026-07-24",
+    "value": -82.1
+   },
+   {
+    "date": "2026-07-31",
+    "value": -82.3
+   },
+   {
+    "date": "2026-08-07",
+    "value": -82.5
+   },
+   {
+    "date": "2026-08-14",
+    "value": -82.9
+   }
+  ],
+  "civiqs_net_approval_race_hispanic": [
+   {
+    "date": "2026-06-26",
+    "value": -36.3
+   },
+   {
+    "date": "2026-07-03",
+    "value": -36.6
+   },
+   {
+    "date": "2026-07-10",
+    "value": -36.0
+   },
+   {
+    "date": "2026-07-17",
+    "value": -34.6
+   },
+   {
+    "date": "2026-07-24",
+    "value": -35.6
+   },
+   {
+    "date": "2026-07-31",
+    "value": -36.3
+   },
+   {
+    "date": "2026-08-07",
+    "value": -37.0
+   },
+   {
+    "date": "2026-08-14",
+    "value": -37.3
+   }
+  ],
+  "civiqs_net_approval_race_other": [
+   {
+    "date": "2026-06-26",
+    "value": -38.2
+   },
+   {
+    "date": "2026-07-03",
+    "value": -39.2
+   },
+   {
+    "date": "2026-07-10",
+    "value": -39.0
+   },
+   {
+    "date": "2026-07-17",
+    "value": -38.1
+   },
+   {
+    "date": "2026-07-24",
+    "value": -39.3
+   },
+   {
+    "date": "2026-07-31",
+    "value": -40.5
+   },
+   {
+    "date": "2026-08-07",
+    "value": -41.2
+   },
+   {
+    "date": "2026-08-14",
+    "value": -41.9
+   }
+  ],
+  "civiqs_net_approval_edu_noncollege": [
+   {
+    "date": "2026-06-26",
+    "value": -13.2
+   },
+   {
+    "date": "2026-07-03",
+    "value": -14.7
+   },
+   {
+    "date": "2026-07-10",
+    "value": -14.6
+   },
+   {
+    "date": "2026-07-17",
+    "value": -13.8
+   },
+   {
+    "date": "2026-07-24",
+    "value": -14.9
+   },
+   {
+    "date": "2026-07-31",
+    "value": -15.1
+   },
+   {
+    "date": "2026-08-07",
+    "value": -15.9
+   },
+   {
+    "date": "2026-08-14",
+    "value": -16.9
+   }
+  ],
+  "civiqs_net_approval_edu_college": [
+   {
+    "date": "2026-06-26",
+    "value": -26.7
+   },
+   {
+    "date": "2026-07-03",
+    "value": -27.7
+   },
+   {
+    "date": "2026-07-10",
+    "value": -28.0
+   },
+   {
+    "date": "2026-07-17",
+    "value": -27.5
+   },
+   {
+    "date": "2026-07-24",
+    "value": -28.5
+   },
+   {
+    "date": "2026-07-31",
+    "value": -28.8
+   },
+   {
+    "date": "2026-08-07",
+    "value": -29.5
+   },
+   {
+    "date": "2026-08-14",
+    "value": -30.7
+   }
+  ],
+  "civiqs_net_approval_edu_postgrad": [
+   {
+    "date": "2026-06-26",
+    "value": -45.8
+   },
+   {
+    "date": "2026-07-03",
+    "value": -46.5
+   },
+   {
+    "date": "2026-07-10",
+    "value": -46.9
+   },
+   {
+    "date": "2026-07-17",
+    "value": -45.8
+   },
+   {
+    "date": "2026-07-24",
+    "value": -46.9
+   },
+   {
+    "date": "2026-07-31",
+    "value": -47.4
+   },
+   {
+    "date": "2026-08-07",
+    "value": -47.9
+   },
+   {
+    "date": "2026-08-14",
+    "value": -49.1
+   }
+  ],
+  "civiqs_net_approval_male": [
+   {
+    "date": "2026-06-26",
+    "value": -8.1
+   },
+   {
+    "date": "2026-07-03",
+    "value": -9.4
+   },
+   {
+    "date": "2026-07-10",
+    "value": -9.6
+   },
+   {
+    "date": "2026-07-17",
+    "value": -8.5
+   },
+   {
+    "date": "2026-07-24",
+    "value": -9.7
+   },
+   {
+    "date": "2026-07-31",
+    "value": -10.1
+   },
+   {
+    "date": "2026-08-07",
+    "value": -11.2
+   },
+   {
+    "date": "2026-08-14",
+    "value": -12.7
+   }
+  ],
+  "civiqs_net_approval_female": [
+   {
+    "date": "2026-06-26",
+    "value": -32.3
+   },
+   {
+    "date": "2026-07-03",
+    "value": -33.4
+   },
+   {
+    "date": "2026-07-10",
+    "value": -33.5
+   },
+   {
+    "date": "2026-07-17",
+    "value": -32.9
+   },
+   {
+    "date": "2026-07-24",
+    "value": -33.9
+   },
+   {
+    "date": "2026-07-31",
+    "value": -34.0
+   },
+   {
+    "date": "2026-08-07",
+    "value": -34.5
+   },
+   {
+    "date": "2026-08-14",
+    "value": -35.3
    }
   ],
   "generic_ballot_margin": [
-   {
-    "date": "2026-06-20",
-    "value": 4.8
-   },
    {
     "date": "2026-06-27",
     "value": 4.94
@@ -30291,14 +34300,222 @@
    },
    {
     "date": "2026-08-08",
-    "value": 6.02
+    "value": 6.06
+   },
+   {
+    "date": "2026-08-15",
+    "value": 5.89
    }
   ]
  },
  "sources": {
-  "silver_bulletin_approval": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
-  "silver_bulletin_generic": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
-  "fred": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=UMCSENT",
+  "sb_approval": {
+   "source": "sb_approval",
+   "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
+   "fetched_at": "2026-08-19T12:20:48Z",
+   "sha256": "c7fd66d88060c002e02b0a79d043291b73797526a152ef5dd07a85cfd8db880b",
+   "bytes": 1557057,
+   "file": "sources/sb_approval/2026-08-19.csv",
+   "note": "Silver Bulletin poll database, published as a Google Sheet"
+  },
+  "sb_generic": {
+   "source": "sb_generic",
+   "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
+   "fetched_at": "2026-08-19T12:20:48Z",
+   "sha256": "8b78d5e6adac69635c9e1a1e43d3eb8ecb19a2456eea063ec505af36987a083d",
+   "bytes": 150582,
+   "file": "sources/sb_generic/2026-08-19.csv",
+   "note": "Silver Bulletin generic-ballot database, published as a Google Sheet"
+  },
+  "umich": {
+   "source": "umich",
+   "url": "http://www.sca.isr.umich.edu/files/tbmics.csv",
+   "fetched_at": "2026-08-19T12:20:53Z",
+   "sha256": "81a6adb40258512e65bea575e6d85f499a0a577df4b00da0f2783054d2c684b5",
+   "bytes": 12207,
+   "file": "sources/umich/2026-08-19.csv",
+   "note": "Surveys of Consumers, University of Michigan (sca.isr.umich.edu): tbmics.csv for finals and tbcics.csv for the current preliminary, newest reading 2026-08-01"
+  },
+  "aaii": {
+   "source": "aaii",
+   "url": "https://www.aaii.com/sentimentsurvey/sent_results",
+   "fetched_at": "2026-08-19T12:20:54Z",
+   "sha256": "3dee0e811eff734130703eea0869cde88aa726a88874cec04240b095975ec9d2",
+   "bytes": 46014,
+   "file": "sources/aaii/2026-08-19.html",
+   "note": "AAII sentiment survey results page, a ~22-week rolling window parsed against the response's own date 2026-08-19; the full 1987-present .xls is OLE2 and unreadable without a dependency"
+  },
   "repo": "https://github.com/Social-Atoms/social-sim-arena"
+ },
+ "stamps": {
+  "umich-2026-08-prelim": {
+   "round_id": "umich-2026-08-prelim",
+   "manifest": true,
+   "manifest_file": "stamps/umich-2026-08-prelim.json",
+   "manifest_sha256": "de4da2e739d48bfe8de1c504901f5ec52e99e7c62e8428db6df332e7f8e58dad",
+   "proof": true,
+   "proof_file": "stamps/umich-2026-08-prelim.json.ots",
+   "bitcoin_attested": false,
+   "action": "upgraded",
+   "ok": false,
+   "detail": "nothing to upgrade"
+  },
+  "civiqs-2026-w33-approval": {
+   "round_id": "civiqs-2026-w33-approval",
+   "manifest": true,
+   "manifest_file": "stamps/civiqs-2026-w33-approval.json",
+   "manifest_sha256": "00d55ba49ca24aaad99d4751436eeae32e11a3cbe9115629fec1ed81b332ae8a",
+   "proof": true,
+   "proof_file": "stamps/civiqs-2026-w33-approval.json.ots",
+   "bitcoin_attested": false,
+   "action": "upgraded",
+   "ok": false,
+   "detail": "nothing to upgrade"
+  },
+  "mc-2026-w34-approval": {
+   "round_id": "mc-2026-w34-approval",
+   "manifest": true,
+   "manifest_file": "stamps/mc-2026-w34-approval.json",
+   "manifest_sha256": "fe000e14519c3ff4f2a1a849610f4f785909d93f4716e4b1e208122f551af6d7",
+   "proof": false,
+   "proof_file": null,
+   "bitcoin_attested": false,
+   "action": "upgraded",
+   "ok": false,
+   "detail": "the ots client is not installed"
+  },
+  "yougov-2026-w34-approval": {
+   "round_id": "yougov-2026-w34-approval",
+   "manifest": true,
+   "manifest_file": "stamps/yougov-2026-w34-approval.json",
+   "manifest_sha256": "2c47b5ed5f874089ad1ab37586b6b39f85a936285a29bb5992ed3dc2fdbe9433",
+   "proof": false,
+   "proof_file": null,
+   "bitcoin_attested": false,
+   "action": "upgraded",
+   "ok": false,
+   "detail": "the ots client is not installed"
+  },
+  "yougov-2026-w34-generic": {
+   "round_id": "yougov-2026-w34-generic",
+   "manifest": true,
+   "manifest_file": "stamps/yougov-2026-w34-generic.json",
+   "manifest_sha256": "045f1eccb8cf1c907b6540d51a64f6195ac16ebad96628f12a117f2bf8575cc9",
+   "proof": false,
+   "proof_file": null,
+   "bitcoin_attested": false,
+   "action": "upgraded",
+   "ok": false,
+   "detail": "the ots client is not installed"
+  }
+ },
+ "source_health": [
+  {
+   "source": "aaii",
+   "state": "ok",
+   "fetched_days": -0.0,
+   "changed_days": -0.0,
+   "budget_fetch_days": 3,
+   "budget_change_days": 12,
+   "url": "https://www.aaii.com/sentimentsurvey/sent_results",
+   "file": "sources/aaii/2026-08-19.html"
+  },
+  {
+   "source": "civiqs",
+   "state": "ok",
+   "fetched_days": 0.5,
+   "changed_days": 0.5,
+   "budget_fetch_days": 2,
+   "budget_change_days": 4,
+   "url": null,
+   "file": null,
+   "trackers": 22,
+   "newest_snapshot": "2026-08-19"
+  },
+  {
+   "source": "sb_approval",
+   "state": "ok",
+   "fetched_days": -0.0,
+   "changed_days": 0.0,
+   "budget_fetch_days": 2,
+   "budget_change_days": 7,
+   "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
+   "file": "sources/sb_approval/2026-08-19.csv"
+  },
+  {
+   "source": "sb_generic",
+   "state": "ok",
+   "fetched_days": -0.0,
+   "changed_days": 0.0,
+   "budget_fetch_days": 2,
+   "budget_change_days": 10,
+   "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
+   "file": "sources/sb_generic/2026-08-19.csv"
+  },
+  {
+   "source": "umich",
+   "state": "ok",
+   "fetched_days": -0.0,
+   "changed_days": 0.0,
+   "budget_fetch_days": 3,
+   "budget_change_days": 40,
+   "url": "http://www.sca.isr.umich.edu/files/tbmics.csv",
+   "file": "sources/umich/2026-08-19.csv"
+  }
+ ],
+ "series_provenance": {
+  "umich_sentiment": "umich",
+  "yougov_approval": "sb_approval",
+  "mc_approval": "sb_approval",
+  "yougov_generic_margin": "sb_generic",
+  "yougov_econ_approval": "sb_approval",
+  "yougov_immig_approval": "sb_approval",
+  "yougov_rv_approval": "sb_approval",
+  "yougov_strong_approval": "sb_approval",
+  "yougov_weak_approval": "sb_approval",
+  "yougov_cost_approval": "sb_approval",
+  "yougov_trade_approval": "sb_approval",
+  "mc_econ_approval": "sb_approval",
+  "mc_immig_approval": "sb_approval",
+  "mc_trade_approval": "sb_approval",
+  "mc_strong_approval": "sb_approval",
+  "mc_weak_approval": "sb_approval",
+  "rasmussen_approval": "sb_approval",
+  "rmg_approval": "sb_approval",
+  "ipsos_approval": "sb_approval",
+  "navigator_approval": "sb_approval",
+  "ipsos_generic_margin": "sb_generic",
+  "mc_generic_margin": "sb_generic",
+  "civiqs_net_approval": "civiqs",
+  "civiqs_net_approval_rep": "civiqs",
+  "civiqs_net_econ_now": "civiqs",
+  "civiqs_net_econ_direction": "civiqs",
+  "civiqs_net_family_finances": "civiqs",
+  "civiqs_net_inflation_concern": "civiqs",
+  "civiqs_angry_share": "civiqs",
+  "wiki_views_trump": "wikipedia",
+  "wiki_views_taylor_swift": "wikipedia",
+  "umich_party_dem": "umichparty",
+  "umich_party_ind": "umichparty",
+  "umich_party_rep": "umichparty",
+  "aaii_bull_bear_spread": "aaii",
+  "esi_headline": "pentaesi",
+  "trends_tesla": "trends",
+  "trends_iphone": "trends",
+  "civiqs_net_approval_dem": "civiqs",
+  "civiqs_net_approval_ind": "civiqs",
+  "civiqs_net_approval_age_18_34": "civiqs",
+  "civiqs_net_approval_age_35_49": "civiqs",
+  "civiqs_net_approval_age_50_64": "civiqs",
+  "civiqs_net_approval_age_65_up": "civiqs",
+  "civiqs_net_approval_race_white": "civiqs",
+  "civiqs_net_approval_race_black": "civiqs",
+  "civiqs_net_approval_race_hispanic": "civiqs",
+  "civiqs_net_approval_race_other": "civiqs",
+  "civiqs_net_approval_edu_noncollege": "civiqs",
+  "civiqs_net_approval_edu_college": "civiqs",
+  "civiqs_net_approval_edu_postgrad": "civiqs",
+  "civiqs_net_approval_male": "civiqs",
+  "civiqs_net_approval_female": "civiqs"
  }
 }
