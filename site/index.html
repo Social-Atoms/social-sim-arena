@@ -323,16 +323,40 @@ const ENTITY = { crowd:'#15803d', ewma:'#4b4a46', trend:'#8b897f', climatology:'
 const MCOLORS = { 'gpt-5.5':'#10a37f','claude-opus':'#d97757','gemini-pro':'#4285f4','grok':'#1d1d1f','deepseek':'#4d6bfe','qwen':'#7b5cf0','human-crowd':'#e34948' };
 const VENDORS = [
   [/^claude/, 'claude', 'Anthropic'], [/^gpt/, 'openai', 'OpenAI'], [/^gemini/, 'gemini', 'Google'],
-  [/^grok/, 'grok', 'xAI'], [/^deepseek/, 'deepseek', 'DeepSeek'], [/^qwen/, 'qwen', 'Qwen'], [/^glm/, 'zhipu', 'Zhipu']
+  [/^grok/, 'grok', 'xAI'], [/^deepseek/, 'deepseek', 'DeepSeek'], [/^qwen/, 'qwen', 'Qwen'], [/^glm/, 'zhipu', 'Zhipu'],
+  [/^kimi/, 'kimi', 'Moonshot']
 ];
 const vendorOf = id => { for(const [re,key] of VENDORS) if(re.test(id)) return key; return null; };
 const vendorName = key => { for(const [,k,n] of VENDORS) if(k===key) return n; return key; };
-const VCOLOR = {claude:'#D97757', openai:'#0FA47F', gemini:'#4285F4', grok:'#111110', deepseek:'#4D6BFE', qwen:'#615CED', zhipu:'#2F6BFF'};
+const VCOLOR = {claude:'#D97757', openai:'#0FA47F', gemini:'#4285F4', grok:'#111110', deepseek:'#4D6BFE', qwen:'#615CED', zhipu:'#2F6BFF', kimi:'#0E7490'};
 const avColor = id => { const v = vendorOf(id); if(v) return VCOLOR[v];
   if(id==='human-crowd') return 'var(--accent)'; return '#a8a69e'; };
 const avatar = id => { const v = vendorOf(id);
   return '<span class="av" style="background:'+avColor(id)+'">'+(v?'<img class="lg" src="logos/'+v+'.svg" onerror="this.remove()" alt="">':'')+initOf(id)+'</span>'; };
-const colorOf = id => ENTITY[id] || MCOLORS[id] || '#b3b1aa';
+// Every model wears its vendor's hue; siblings inside a family split on
+// lightness, so a vendor reads as one color at a glance and as distinct
+// lines up close. Harness arms inherit their model's color.
+const MODEL_SHADE = {
+  'claude-opus-5':0, 'claude-fable':1, 'claude-sonnet':2, 'claude-opus':3,
+  'gpt-5.6-terra':0, 'gpt-5.6-sol':1, 'gpt-5.6-luna':2,
+  'gemini-pro':0, 'gemini-flash':1,
+  'deepseek-pro':0, 'deepseek-flash':1,
+  'qwen-3.8':0, 'qwen-3.7':1,
+  'grok':0, 'glm':0, 'kimi':0,
+};
+const stemOf = id => String(id).replace(/(-(zeroshot|news|persona|superfc|web))+$/,'');
+function vshade(hex, k){
+  if(!k || hex[0] !== '#') return hex;
+  const n=parseInt(hex.slice(1),16);
+  const mix=c=>Math.round(c+(255-c)*Math.min(.62,.19*k));
+  return '#'+[n>>16,(n>>8)&255,n&255].map(c=>mix(c).toString(16).padStart(2,'0')).join('');
+}
+const colorOf = id => {
+  if(ENTITY[id]) return ENTITY[id];
+  const stem = stemOf(id), v = vendorOf(stem);
+  if(v) return vshade(VCOLOR[v], MODEL_SHADE[stem] != null ? MODEL_SHADE[stem] : 1);
+  return MCOLORS[id] || '#b3b1aa';
+};
 const INITIALS = { crowd:'CR', ewma:'EW', trend:'TR', climatology:'CL', persistence:'PS' };
 const initOf = id => INITIALS[id] || String(id).slice(0,2).toUpperCase();
 
