@@ -329,7 +329,7 @@ const VENDORS = [
 const vendorOf = id => { for(const [re,key] of VENDORS) if(re.test(id)) return key; return null; };
 const LOGO_VENDORS = new Set(['claude','openai','gemini','grok','deepseek','qwen','zhipu']);
 const vendorName = key => { for(const [,k,n] of VENDORS) if(k===key) return n; return key; };
-const VCOLOR = {claude:'#D97757', openai:'#0FA47F', gemini:'#4285F4', grok:'#111110', deepseek:'#4D6BFE', qwen:'#615CED', zhipu:'#2F6BFF', kimi:'#0E7490'};
+const VCOLOR = {claude:'#C87B60', openai:'#3F9581', gemini:'#6B92D4', grok:'#111110', deepseek:'#7783D8', qwen:'#907FD2', zhipu:'#588FBE', kimi:'#4C8A99'};
 const avColor = id => { const v = vendorOf(id); if(v) return VCOLOR[v];
   if(id==='human-crowd') return 'var(--accent)'; return '#a8a69e'; };
 const avatar = id => { const v = vendorOf(id);
