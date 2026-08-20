@@ -11,7 +11,7 @@
       "additionalProperties": false,
       "properties": {
         "mean": { "type": "number", "description": "Center of the predictive distribution, in the round's unit." },
-        "sd": { "type": "number", "exclusiveMinimum": 0, "maximum": 50, "description": "Standard deviation. Point guesses are not accepted." },
+        "sd": { "type": "number", "exclusiveMinimum": 0, "maximum": 1000000, "description": "Standard deviation. Point guesses are not accepted." },
         "quantiles": {
           "type": "object",
           "minProperties": 3,
@@ -72,7 +72,7 @@
           "additionalProperties": false,
           "properties": {
             "mean": { "type": "number" },
-            "sd": { "type": "number", "exclusiveMinimum": 0, "maximum": 50 }
+            "sd": { "type": "number", "exclusiveMinimum": 0, "maximum": 1000000 }
           }
         }
       }

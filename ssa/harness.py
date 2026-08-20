@@ -1653,9 +1653,17 @@ def _distribution(mean, sd, where=""):
     mean, sd = float(mean), float(sd)
     if not (mean == mean and sd == sd):  # NaN
         raise ValueError(f"{at}non-finite forecast")
-    if not (0 < sd <= 50):
+    # These bounds are garbage filters, not plausibility checks. They must
+    # admit every scale a round can be denominated in -- approval points
+    # (sd ~1), thousand-pageview weeks (mean ~2,500, sd ~100) -- because a
+    # bound tight enough to catch a bad percentage forecast rejects every
+    # honest count forecast, which is exactly what happened when sd was
+    # capped at 50: models answered the Trump pageview round sensibly and
+    # the harness threw their answers away. Calibration is CRPS's job; an
+    # absurd sd punishes its own score, not the pipeline.
+    if not (0 < sd <= 1e6):
         raise ValueError(f"{at}sd out of schema range: {sd}")
-    if abs(mean) > 1000:
+    if abs(mean) > 1e7:
         raise ValueError(f"{at}implausible mean: {mean}")
     return {"mean": round(mean, 2), "sd": round(sd, 2)}
 
