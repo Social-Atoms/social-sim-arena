@@ -392,7 +392,7 @@ function tipShow(tip, ev, html){
 // beat, and the leading few models; everything else stays one legend click
 // away. Chosen from the data rather than hardcoded, so the shortlist follows
 // the standings instead of going stale.
-const DEFAULT_VISIBLE_MODELS = 5;
+const DEFAULT_VISIBLE_MODELS = 14;
 function defaultHidden(data){
   const board = ((data||{}).backtest||{}).overall || [];
   const keep = new Set(['persistence','ewma']);
@@ -437,7 +437,7 @@ function renderLegend(ids, nameOf, note){
     + '</span>';
   // Shown chips stay in the strip, hard-capped so the chart always keeps its
   // height; everything else lives behind `+ N more` in a floating panel.
-  const MAX_STRIP = 9;
+  const MAX_STRIP = 24;
   const on = ids.filter(id=>!hidden.has(id)), off = ids.filter(id=>hidden.has(id));
   const stripOn = on.slice(0, MAX_STRIP), panelOn = on.slice(MAX_STRIP);
   const rest = panelOn.length + off.length;
