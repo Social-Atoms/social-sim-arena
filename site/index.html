@@ -60,10 +60,12 @@ main{flex:1 1 auto;min-height:0;display:flex;max-width:1680px;width:100%;margin:
 .seg button{font-family:var(--sans);font-size:13.5px;font-weight:700;color:var(--ink2);background:none;border:none;border-radius:3px;padding:5px 15px;cursor:pointer;white-space:nowrap;}
 .seg button.on{background:#fff;color:var(--ink);outline:1px solid var(--line);}
 .caption{font-size:12.5px;color:var(--mut);padding:8px 16px 4px;flex:0 0 auto;}
-.legend-strip{padding:2px 16px 4px;flex:0 0 auto;}
+.legend-strip{padding:2px 16px 4px;flex:0 0 auto;position:relative;}
 .lchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:4px;padding:1px 9px;font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;margin:0 6px 4px 0;user-select:none;}
 .lchip.off{opacity:.3;}
 .lchip .sw{width:9px;height:9px;border-radius:2px;}
+.lchip.more{border-style:dashed;color:var(--mut);font-weight:600;}
+#legend-pop{position:absolute;top:100%;left:16px;right:16px;z-index:30;background:#fff;border:1px solid var(--line);border-radius:6px;box-shadow:0 10px 28px rgba(0,0,0,.10);padding:10px 12px 7px;max-height:300px;overflow-y:auto;}
 .chartpane{flex:1 1 auto;min-height:236px;position:relative;padding:2px 10px 6px;}
 .chartctl{position:absolute;top:4px;right:14px;display:flex;gap:8px;z-index:4;}
 .seg.mini button{font-size:12px;padding:3px 11px;}
@@ -416,18 +418,27 @@ function renderLegend(ids, nameOf, note){
   const strip = document.getElementById('legend-strip');
   if(!ids || !ids.length){ strip.style.display='none'; strip.innerHTML=''; return; }
   const hidden = window.__hidden || (window.__hidden = defaultHidden(window.__data));
-  strip.style.display='';
-  strip.innerHTML = ids.map(id =>
+  const open = !!window.__legendOpen;
+  const chip = id =>
     '<span class="lchip'+(hidden.has(id)?' off':'')+'" data-ent="'+esc(id)+'"><span class="sw" style="background:'+colorOf(id)+'"></span>'
     + esc((nameOf[id]||id).split(' (')[0])
     + (condTag(nameOf[id])?' <span style="opacity:.5;">'+condTag(nameOf[id])+'</span>':'')
-    + '</span>').join('')
-    + '<span style="font-size:11.5px;color:var(--mut);margin-left:4px;">'+esc(note||'click to toggle')+'</span>';
-  strip.querySelectorAll('.lchip').forEach(ch => ch.onclick = ()=>{
+    + '</span>';
+  // Shown chips stay in the strip; everything toggled off lives behind the
+  // `+ N more` chip in a floating panel, so expanding never squeezes the chart.
+  const on = ids.filter(id=>!hidden.has(id)), off = ids.filter(id=>hidden.has(id));
+  strip.style.display='';
+  strip.innerHTML = on.map(chip).join('')
+    + (off.length ? '<span class="lchip more" id="legend-more">'+(open?'&#215; close':'+ '+off.length+' more')+'</span>' : '')
+    + '<span style="font-size:11.5px;color:var(--mut);margin-left:4px;">'+esc(note||'click to toggle')+'</span>'
+    + (open && off.length ? '<div id="legend-pop">'+off.map(chip).join('')+'</div>' : '');
+  strip.querySelectorAll('.lchip:not(.more)').forEach(ch => ch.onclick = ()=>{
     const id = ch.dataset.ent;
     if(hidden.has(id)) hidden.delete(id); else hidden.add(id);
     setTab(window.__tab || 'agg');
   });
+  const more = document.getElementById('legend-more');
+  if(more) more.onclick = ()=>{ window.__legendOpen = !window.__legendOpen; setTab(window.__tab || 'agg'); };
 }
 function aggChart(traj, nameOf, unit){
   const svg = clearChart(), tip = pane().querySelector('.tooltip');
