@@ -342,7 +342,9 @@ def test_junk_and_invention_are_refused_loudly():
         json.dumps({c: -20.0 for c in CELLS}),              # bare numbers
         json.dumps({c: {"mean": -20.0} for c in CELLS}),    # no sd
         json.dumps({c: {"mean": -20.0, "sd": 0} for c in CELLS}),
-        json.dumps({c: {"mean": -20.0, "sd": 99} for c in CELLS}),
+        # beyond even the count-scale garbage bound; a merely-wide sd like 99
+        # is legal now and CRPS punishes it, see harness._distribution
+        json.dumps({c: {"mean": -20.0, "sd": 2e7} for c in CELLS}),
     ]
     for text in bad:
         try:
