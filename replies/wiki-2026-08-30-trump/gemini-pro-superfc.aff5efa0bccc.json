@@ -1,0 +1,15 @@
+{
+  "entrant": "gemini-pro-superfc",
+  "input_hash": "aff5efa0bccc",
+  "logged_at": "2026-08-18T06:27:49Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt_sha256": "09b08d9bb8cfc8335b26dea371bc0f063307c61e0cfdfad2e966a8110a6ea334",
+  "reply": "1. Outside view. The historical median for Trump's Wikipedia pageviews is 337k, but the recent trend has shown a steady decline from a June peak (likely tied to his 80th birthday on June 14, 2026) down to 197.6k by mid-August. Although the mean absolute week-over-week change is high at 31.7%, the recent week-over-week changes in August have been very stable (-3.8% and -2.9%), indicating a quiet news period. Extrapolating the recent decay suggests a baseline around 185k\u2013190k for late August. \n\n2. Inside view. The target week is August 24\u2013August 30, 2026. Being a midterm election year, late August precedes the post-Labor Day acceleration of campaign season, and there are no universally scheduled events (like conventions or presidential debates) that guarantee a surge in Trump's pageviews. However, Trump is an inherently highly-volatile public figure. The baseline is likely to remain around 190k, but there is always a ~10-15% tail risk of a sudden news event (endorsements, legal news, health, or controversial statements) that could easily spike views to 400k+. Incorporating this right-skewed tail risk pushes the expected mean up to roughly 215k.\n\n3. Pre-mortem. If this forecast is badly wrong, it will almost certainly be because a major unpredicted news event causes a massive spike in pageviews (e.g., breaking news leading to 600k+ views), making a forecast anchored near 200k too low. To correct for this, the standard deviation must be set wide enough to reflect this asymmetric upside risk, even while the baseline sits lower. \n\n4. Calibrate. A mixture distribution\u2014an 85-90% chance of a quiet week (around 190k) and a 10-15% chance of a news spike (400k-600k)\u2014yields a mathematical mean of roughly 215k and a standard deviation around 105k. This standard deviation covers the quiet-week scenario comfortably within one standard deviation (down to the historical minimums) while reaching up to 320k to capture moderate news spikes.\n\n```json\n{\"mean\": 215.0, \"sd\": 105.0}\n```",
+  "round_id": "wiki-2026-08-30-trump",
+  "usage": {
+    "input_tokens": 756,
+    "output_tokens": 542,
+    "thinking_tokens": 3531
+  },
+  "via": "direct"
+}

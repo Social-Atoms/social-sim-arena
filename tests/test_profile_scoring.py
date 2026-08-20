@@ -108,6 +108,109 @@ def test_arena_score_endpoints():
     assert scoring.arena_score(per * 2, per, noise) < 0
 
 
+def test_energy_score_is_bounded_below_by_a_perfect_forecast():
+    """A forecast concentrated on the outcome scores ~0; anything else scores
+    strictly more. That is what makes the number readable as a loss."""
+    truth = [50.0, 30.0, -10.0, 5.0]
+    sharp = scoring.cell_samples([{"mean": v, "sd": 1e-6} for v in truth])
+    assert scoring.energy_score(sharp, truth) < 1e-4
+
+    ok = scoring.cell_samples([{"mean": v, "sd": 3.0} for v in truth])
+    biased = scoring.cell_samples([{"mean": v + 10.0, "sd": 3.0} for v in truth])
+    e_sharp = scoring.energy_score(sharp, truth)
+    e_ok = scoring.energy_score(ok, truth)
+    e_biased = scoring.energy_score(biased, truth)
+    assert e_sharp < e_ok < e_biased, (e_sharp, e_ok, e_biased)
+
+    # and the skill convention reads the way the scalar board reads
+    assert scoring.profile_skill(e_ok, e_biased) > 0
+    assert scoring.profile_skill(e_biased, e_ok) < 0
+    close(scoring.profile_skill(e_ok, e_ok), 0.0)
+
+
+def test_the_scorer_is_deterministic_to_the_last_bit():
+    """No RNG anywhere in the scoring path. Same inputs, identical float --
+    including across processes, which is where a construction keyed on Python's
+    `hash()` would come apart under hash randomisation."""
+    cells = [{"mean": 40.0 - i, "sd": 2.0 + i / 10.0} for i in range(6)]
+    truth = [41.0 - i for i in range(6)]
+    a = scoring.energy_score(scoring.cell_samples(cells), truth)
+    b = scoring.energy_score(scoring.cell_samples(cells), truth)
+    assert a == b, (a, b)
+    assert scoring.cell_samples(cells) == scoring.cell_samples(cells)
+
+    import subprocess
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    prog = (
+        "import sys; sys.path.insert(0, %r)\n"
+        "from ssa import scoring\n"
+        "cells = [{'mean': 40.0 - i, 'sd': 2.0 + i / 10.0} for i in range(6)]\n"
+        "truth = [41.0 - i for i in range(6)]\n"
+        "print(repr(scoring.energy_score(scoring.cell_samples(cells), truth)))\n"
+        % root)
+    outs = set()
+    for seed in ("0", "1", "12345"):
+        env = dict(os.environ, PYTHONHASHSEED=seed)
+        outs.add(subprocess.run([sys.executable, "-c", prog], env=env,
+                                capture_output=True, text=True,
+                                check=True).stdout.strip())
+    assert outs == {repr(a)}, outs
+
+
+def test_the_cells_of_a_profile_do_not_line_up():
+    """The point set stands in for independent marginals, so no two cells may
+    be coupled by the construction itself. A permutation scheme that lined two
+    dimensions up would manufacture exactly the joint structure these rounds
+    exist to measure."""
+    draws = scoring.PROFILE_DRAWS
+    cols = [[x[k] for x in scoring.profile_samples([0.0] * 16, [1.0] * 16)]
+            for k in range(16)]
+
+    def corr(a, b):
+        n = len(a)
+        ma, mb = sum(a) / n, sum(b) / n
+        va = sum((x - ma) ** 2 for x in a)
+        vb = sum((x - mb) ** 2 for x in b)
+        return sum((x - ma) * (y - mb) for x, y in zip(a, b)) / math.sqrt(va * vb)
+
+    worst = max(abs(corr(cols[i], cols[j]))
+                for i in range(16) for j in range(i + 1, 16))
+    # O(draws ** -0.5) is what an arbitrary permutation gives; the bound is set
+    # a little above the measured worst pair so it catches a construction that
+    # couples dimensions, not ordinary sampling noise.
+    assert worst < 0.20, worst
+    assert worst > 0.0, "identical columns would mean the permutation is a no-op"
+
+    # every cell's marginal is the exact stratified grid, not a sample of it
+    for col in cols:
+        assert len(set(col)) == draws
+
+
+def test_a_quantile_cell_and_a_normal_cell_are_scored_alike():
+    """The two accepted formats must compete fairly, the same claim
+    `crps_forecast` makes for a topline."""
+    truth = [10.0, 20.0]
+    normal = [{"mean": 10.0, "sd": 4.0}, {"mean": 20.0, "sd": 4.0}]
+    levels = [i / 20.0 for i in range(1, 20)]
+    as_q = [{"quantiles": {str(lv): scoring.normal_quantile(c["mean"], c["sd"], lv)
+                           for lv in levels}} for c in normal]
+    e_n = scoring.energy_score(scoring.cell_samples(normal), truth)
+    e_q = scoring.energy_score(scoring.cell_samples(as_q), truth)
+    close(e_n, e_q, tol=0.05)
+
+
+def test_a_point_forecast_cell_is_refused():
+    """Point forecasts are rejected by design, in a profile cell as in a
+    topline."""
+    for bad in ({"mean": 1.0, "sd": 0.0}, {"mean": 1.0, "sd": -2.0}):
+        try:
+            scoring.cell_samples([bad, {"mean": 2.0, "sd": 1.0}])
+        except (ValueError, KeyError):
+            pass
+        else:
+            raise AssertionError(f"accepted a point forecast: {bad}")
+
+
 def test_yougov_roster_is_coherent():
     cells = yougov_xtab.SCORED_CELLS
     assert len(cells) == len(set(cells)), "a cell is registered twice"

@@ -20,6 +20,8 @@ Adding a tracker means adding a row here, and nothing else.
 """
 from .adapters import aaii as aaii_adapter
 from .adapters import civiqs as civiqs_adapter
+from .adapters import confboard as confboard_adapter
+from .adapters import pentaesi as pentaesi_adapter
 from .adapters import silverbulletin as sb
 from .adapters import trends as trends_adapter
 from .adapters import umich as umich_adapter
@@ -1010,6 +1012,56 @@ SERIES["aaii_bull_bear_spread"] = {
     # panel with an AAII-member population definition exists.
 }
 
+# Penta-CivicScience Economic Sentiment Index: the second sentiment tracker
+# with a sub-monthly cadence. Biweekly Wednesdays, free and keyless via the
+# publisher's own WordPress feed, and self-checking (every release states its
+# own delta and the parser reconciles it -- see the adapter, which is where
+# every hard decision about this source is documented). Like AAII it is a
+# self-selected online population, so no `survey` instrument here either, and
+# for the same reason: the persona panel approximates US adults, not
+# CivicScience respondents.
+# Conference Board CCI: the market-research track's monthly anchor. The free
+# page shows only the current release and the paid file holds the *revised*
+# history; what rounds resolve against is the first print, recovered from the
+# Internet Archive by tools/backfill_cci.py and grown one release at a time by
+# the adapter's own write-once capture. Rows are dated by the month measured
+# (Michigan-style label dates), so the lock snapshot, not the date filter, is
+# what freezes this series for a round.
+SERIES["cci_headline"] = {
+    "label": "Conference Board Consumer Confidence Index",
+    "tracker": "conference_board",
+    "source": "confboard",
+    "unit": "index points (1985=100)",
+    "cadence": "monthly; released the last Tuesday of the month, 10:00 ET",
+    "question": ("Conference Board Consumer Confidence Index (1985=100), "
+                 "first print of the monthly release"),
+    "methodology": (
+        "monthly online survey of US households conducted for the Conference "
+        "Board (Toluna panel); the index is benchmarked to 1985=100. Each "
+        "release restates the previous month, so the series here pins the "
+        "first print of every release -- the number as the world first saw "
+        "it -- which is what a forecast locked before the release can "
+        "honestly be scored against."),
+}
+
+SERIES["esi_headline"] = {
+    "label": "Penta-CivicScience Economic Sentiment Index",
+    "tracker": "penta_esi",
+    "source": "pentaesi",
+    "unit": "index points",
+    "cadence": ("biweekly; released every other Wednesday, rows dated by "
+                "the release day"),
+    "question": ("Penta-CivicScience Economic Sentiment Index: the headline "
+                 "ESI reading published in the biweekly release"),
+    "methodology": (
+        "CivicScience online panel, published every other Wednesday by Penta "
+        "since 2013 (HPS-CivicScience before 2023). Five sub-indicators "
+        "averaged into a headline index; the arena tracks the headline only. "
+        "The series here starts where the release wording became "
+        "machine-stable (2022); respondents are a self-selected online panel, "
+        "not a probability sample."),
+}
+
 
 # --- Google Trends: the market-research track -------------------------------
 #
@@ -1148,6 +1200,30 @@ for _sfx, _axis, _label, _short in _PROFILE_CELLS:
     }
 
 
+# The profile in its scored order: party, age, race, education, gender, each
+# axis in the dashboard's own order. Republicans are spliced back into the
+# party block they belong to -- they are registered above, separately, because
+# that cell also stands alone as a scalar round and the other fifteen do not.
+#
+# One published constant rather than a list per consumer. A profile round names
+# its cells in `questions/season0.json`, the harness asks for exactly these keys
+# and the scorer reads the outcome vector in exactly this order, so a roster
+# that disagreed anywhere would silently score cell i against cell j's answer --
+# an error no test of any single module could see. Everything checks against
+# this tuple instead.
+PROFILE_CELLS = tuple(
+    ["civiqs_net_approval_dem", "civiqs_net_approval_ind",
+     "civiqs_net_approval_rep"]
+    + [f"civiqs_net_approval_{sfx}" for sfx, _a, _l, _s in _PROFILE_CELLS
+       if sfx not in ("dem", "ind")])
+
+# Fail at import, not at scoring time: a typo'd or dropped cell here would
+# otherwise surface as a sixteen-cell round quietly resolving on fifteen.
+assert len(PROFILE_CELLS) == 16, f"profile has {len(PROFILE_CELLS)} cells, not 16"
+assert len(set(PROFILE_CELLS)) == 16, "a profile cell is registered twice"
+for _cell in PROFILE_CELLS:
+    assert _cell in SERIES, f"profile cell {_cell} is not a registered series"
+
 
 def describe(series_id):
     """The question and methodology text an entrant is entitled to see."""
@@ -1194,6 +1270,14 @@ def build_all(sources=None):
     # here and stay off the network.
     if "aaii" in need and "aaii" not in src:
         src["aaii"] = aaii_adapter.fetch()
+    # The ESI feed returns parsed [{date, value}] rows directly; the fetch is
+    # one paginated keyless request cycle, shared by every caller of the map.
+    if "pentaesi" in need and "pentaesi" not in src:
+        src["pentaesi"] = pentaesi_adapter.history()
+    # First prints from the committed archive; the fetch also captures a new
+    # release the moment the page shows one (write-once, see the adapter).
+    if "confboard" in need and "confboard" not in src:
+        src["confboard"] = confboard_adapter.history()
     # Civiqs is the one source with no single file to prefetch: every tracker
     # and every subgroup is its own ~2 MB page. So `src["civiqs"]` is not a
     # payload but a per-series override map -- `{series_id: [{date, value}]}` --
@@ -1237,6 +1321,10 @@ def build_all(sources=None):
             out[sid] = sb.to_series(recs, spec["value"])
         elif spec["source"] == "aaii":
             out[sid] = aaii_adapter.to_series(src["aaii"], spec["value"])
+        elif spec["source"] == "pentaesi":
+            out[sid] = list(src["pentaesi"])
+        elif spec["source"] == "confboard":
+            out[sid] = list(src["confboard"])
         elif spec["source"] == "civiqs":
             cfg = spec["civiqs"]
             given = src["civiqs"].get(sid)

@@ -126,6 +126,13 @@ class SubmissionIntakeContracts(unittest.TestCase):
              "response": {"choice": "Option A"}},
             {"round_id": "short-round", "target_type": "short_answer",
              "response": {"text": "One bounded line"}},
+            {"round_id": "ranking-round", "target_type": "ranking_list",
+             "response": {"ranking": ["First", "Second", "Third"]}},
+            {"round_id": "profile-round", "target_type": "profile_energy",
+             "response": {"profile": {
+                 "cell_one": {"mean": -4.0, "sd": 2.1},
+                 "cell_two": {"mean": 7.5, "sd": 1.8},
+             }}},
         ]
         body = {
             "username": "forecast-fan",
@@ -175,12 +182,15 @@ class SubmissionPrototype(unittest.TestCase):
                 "continuous_normal", "Expected value", "Uncertainty (SD)",
                 "binary_probability", "Probability of Yes (%)",
                 "multiple_choice", "choice-grid", "short_answer",
-                "One concise line", "data-unsupported"):
+                "One concise line", "ranking_list", "ranking-item",
+                "profile_energy", "profile-mean", "profile-sd",
+                "data-unsupported"):
             self.assertIn(marker, self.page)
         self.assertIn("answers:collectAnswers('agent')", self.page)
         self.assertIn("answers:collectAnswers('human')", self.page)
         self.assertIn('row["target_type"] = r.get("target_type", "continuous_normal")',
                       self.refresh)
+        self.assertIn('for k in ("cells", "options")', self.refresh)
 
     def test_custom_participant_picker_replaces_native_select(self):
         self.assertNotIn("<select", self.page.lower())
