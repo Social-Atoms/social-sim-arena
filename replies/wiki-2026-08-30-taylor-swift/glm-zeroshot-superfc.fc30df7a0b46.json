@@ -1,0 +1,15 @@
+{
+  "entrant": "glm-zeroshot-superfc",
+  "input_hash": "fc30df7a0b46",
+  "logged_at": "2026-08-18T06:39:52Z",
+  "model": "glm-5.2",
+  "prompt_sha256": "e8304b243ea7d804458117befab7df1d62274bb4232697c27c0492eb278c2405",
+  "reply": "Looking at this systematically:\n\n**1. Outside view**\n- Median: 203k, range: 76k\u20131,710k over 188 weeks\n- Mean absolute week-over-week change: 31.3% \u2014 this is extremely volatile\n- The distribution is clearly right-skewed (median far below max), meaning the mean exceeds the median\n- A log-normal fit (using max \u2248 99.5th percentile) suggests sigma \u2248 0.83, giving an implied mean around 285k and cross-sectional SD around 280k\n\n**2. Inside view**\n- No specific event information is available for Aug 24\u201330, 2026\n- Potential August factors: MTV VMAs often occur late August; \"Lover\" anniversary (Aug 23) falls just before this week; possible tour/album cycle timing\n- Without confirmed events, the base rate dominates. I might shift slightly above the unconditional median to account for August being a seasonally active period for Swift, but I shouldn't over-adjust without evidence\n- Net adjustment: +20\u201340k above pure base-rate median\n\n**3. Pre-mortem**\n- Most likely failure: A major event (album drop, tour announcement, VMA appearance) spikes views well above my forecast, or alternatively a quiet period with no events leaves it near the floor\n- The 31.3% mean absolute weekly change means a single week can easily be 50%+ above or below the median\n- My SD needs to be wide enough to absorb this volatility\n\n**4. Calibration**\n- The cross-sectional SD is likely 200\u2013300k given the extreme range (76\u20131,710)\n- Using range-based estimation: (1710\u201376)/5 \u2248 327k for normal, but right-skew means the effective SD is somewhat lower\n- Setting SD \u2248 250k ensures roughly 2/3 of outcomes fall within [20k, 520k], which captures the bulk of the distribution while acknowledging that extreme spikes (like 1,710k) will be multi-SD outliers\n\n{\"mean\": 270, \"sd\": 250}",
+  "round_id": "wiki-2026-08-30-taylor-swift",
+  "usage": {
+    "input_tokens": 531,
+    "output_tokens": 10237,
+    "thinking_tokens": 9785
+  },
+  "via": "direct"
+}

@@ -142,6 +142,46 @@ def test_fetch_and_parse_are_separate_as_every_adapter_must_be():
     assert callable(confboard.fetch_text) and callable(confboard.parse)
 
 
+def test_history_reads_first_prints_and_dates_rows_by_month():
+    import json
+    import shutil
+    import tempfile
+    d = tempfile.mkdtemp(prefix="ssa-cci-")
+    saved = confboard.ARCHIVE
+    confboard.ARCHIVE = d
+    try:
+        for name, rec in (
+                ("2026-06-30.json", {"month": "2026-06-01", "value": 91.2}),
+                # July's release restates June at 92.2; the first print above
+                # must survive it, which is the entire point of the archive.
+                ("2026-07-28.json", {"month": "2026-07-01", "value": 90.8,
+                                     "previous_value_restated": 92.2})):
+            with open(f"{d}/{name}", "w") as f:
+                json.dump(rec, f)
+        rows = confboard.history(fetch=False)
+        assert rows == [{"date": "2026-06-01", "value": 91.2},
+                        {"date": "2026-07-01", "value": 90.8}], rows
+    finally:
+        confboard.ARCHIVE = saved
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def test_history_with_an_empty_archive_refuses_to_invent_a_series():
+    import shutil
+    import tempfile
+    d = tempfile.mkdtemp(prefix="ssa-cci-")
+    saved = confboard.ARCHIVE
+    confboard.ARCHIVE = d
+    try:
+        confboard.history(fetch=False)
+        assert False, "an empty archive produced a series"
+    except RuntimeError as e:
+        assert "backfill_cci" in str(e), e
+    finally:
+        confboard.ARCHIVE = saved
+        shutil.rmtree(d, ignore_errors=True)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:

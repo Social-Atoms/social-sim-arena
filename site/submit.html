@@ -73,6 +73,7 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(21,128,61,.09)}
 .questionnaire-intro{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:11px}.questionnaire-intro b{color:var(--ink)}.questionnaire-intro p{margin:2px 0 0;color:var(--mut);font-size:12px}.question-count{white-space:nowrap;border:1px solid var(--line);border-radius:3px;padding:2px 7px;color:var(--mut);font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
 .question-list{display:grid;gap:10px}.question-state{border:1px dashed #c9c8c2;border-radius:4px;padding:16px;color:var(--mut);text-align:center}.question-state.bad{border-color:#e4c2bf;background:#fff7f6;color:#9c2f28}
 .question-card{border:1px solid var(--line);border-radius:4px;background:#fff;overflow:hidden}.question-head{padding:12px 13px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px}.question-number{width:27px;height:27px;border-radius:3px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}.question-card h4{margin:0;color:var(--ink);font-size:13.5px;line-height:1.42}.question-meta{display:flex;gap:6px 12px;flex-wrap:wrap;margin-top:5px;color:var(--mut);font-size:10.5px}.question-type{color:var(--accent-ink);font-weight:800;text-transform:uppercase;letter-spacing:.04em}.answer-preset{padding:12px 13px;background:#fbfbfa}.answer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.answer-grid.one{grid-template-columns:1fr}.answer-field label{display:block;margin:0 0 4px;color:var(--ink);font-size:11.5px;font-weight:700}.answer-field small{display:block;margin-top:4px;color:var(--mut);font-size:10.5px}.choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.choice-answer{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:4px;padding:8px 9px;background:#fff;color:var(--ink2);cursor:pointer}.choice-answer:has(input:checked){border-color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}.choice-answer input{width:auto;margin:0}.unsupported-type{border-left:3px solid #a12820;background:#fff7f6;padding:9px 10px;color:#9c2f28;font-size:11.5px}
+.ranking-list{display:grid;gap:7px}.ranking-row{display:grid;grid-template-columns:29px minmax(0,1fr);align-items:center;gap:8px}.ranking-row .rank{width:29px;height:29px;border:1px solid var(--line);border-radius:3px;background:#fff;color:var(--mut);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}.ranking-help{display:block;margin-top:8px;color:var(--mut);font-size:10.5px}.profile-answer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.profile-answer{border:1px solid var(--line);border-radius:4px;background:#fff;padding:9px}.profile-answer b{display:block;margin-bottom:6px;color:var(--ink);font-size:11px;overflow-wrap:anywhere}.profile-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.profile-fields label{display:block;color:var(--mut);font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}.profile-fields input{margin-top:3px;padding:7px 8px}
 .commitment{background:var(--soft);border-left:3px solid var(--accent);padding:12px 13px;color:var(--ink2);font-size:12.5px}.checkline{display:flex;align-items:flex-start;gap:9px;color:var(--ink2);font-size:12.5px}.checkline input{width:auto;margin-top:4px;flex:0 0 auto}.consent{border-top:1px solid var(--line);margin-top:18px;padding-top:15px}
 .actions{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:18px}.btn{border:1px solid var(--line);border-radius:4px;padding:8px 18px;background:#fff;color:var(--ink);font-weight:700;text-decoration:none}.btn:hover{border-color:var(--ink)}.btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}.btn.dark:hover{opacity:.86}
 .review{display:none;margin-top:16px}.review.on{display:block}.packet{background:#151514;color:#e8e7e2;border-radius:4px;padding:13px;max-height:290px;overflow:auto;font:11.5px/1.45 var(--sans);white-space:pre-wrap;overflow-wrap:anywhere}.receipt{margin-bottom:8px;border:1px solid #b8dbc4;background:#f4fbf6;border-radius:4px;padding:11px 12px;color:var(--accent-ink)}
@@ -80,7 +81,7 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(21,128,61,.09)}
 .railbox{border-top:2px solid var(--ink);padding:12px 2px 16px;margin-bottom:18px}.railbox h3{margin:0 0 8px;color:var(--ink);font-size:14px}.railbox p{margin:0 0 8px;font-size:12px;color:var(--mut)}.railbox ol{padding-left:18px;margin:0;color:var(--ink2);font-size:12px}.railbox li{margin:7px 0}.railrow{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #eeede9;padding:7px 0;font-size:11.5px}.railrow:last-child{border-bottom:0}.railrow b{color:var(--ink);text-align:right}
 footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:var(--mut);display:flex;gap:14px;flex-wrap:wrap}footer a{color:var(--ink2);text-decoration:none}footer .right{margin-left:auto}
 @media(max-width:900px){.shell{grid-template-columns:1fr}.rail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.railbox{margin:0}}
-@media(max-width:650px){nav.top .in{height:auto;min-height:50px;flex-wrap:wrap;padding:8px 12px}nav.top .brand{width:100%;margin-right:0}nav.top .right{display:none}nav.top a.item{padding:6px 10px}.bar{padding:11px 12px}.bar h1{font-size:18px}.bar p{font-size:12.5px}.shell{padding:18px 12px 32px;gap:24px}.tracktabs,.formgrid,.methodchoices,.answer-grid,.choice-grid{grid-template-columns:1fr}.rail{display:block}.railbox{margin-bottom:18px}.actions .btn{width:100%}}
+@media(max-width:650px){nav.top .in{height:auto;min-height:50px;flex-wrap:wrap;padding:8px 12px}nav.top .brand{width:100%;margin-right:0}nav.top .right{display:none}nav.top a.item{padding:6px 10px}.bar{padding:11px 12px}.bar h1{font-size:18px}.bar p{font-size:12.5px}.shell{padding:18px 12px 32px;gap:24px}.tracktabs,.formgrid,.methodchoices,.answer-grid,.choice-grid,.profile-answer-grid{grid-template-columns:1fr}.rail{display:block}.railbox{margin-bottom:18px}.actions .btn{width:100%}}
 </style>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
@@ -183,7 +184,7 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
 
 <aside class="rail">
   <div class="railbox"><h3>Two agent routes</h3><ol><li><b>OpenAI-compatible API</b><br>Provide a URL and, only if needed, a key.</li><li><b>Questionnaire + commitment</b><br>Answer the open Arena questions and sign the commitment.</li></ol></div>
-  <div class="railbox"><h3>Answer presets</h3><div class="railrow"><span>Continuous</span><b>Expected value + SD</b></div><div class="railrow"><span>Binary</span><b>Probability</b></div><div class="railrow"><span>Multiple choice</span><b>Listed options</b></div><div class="railrow"><span>Short answer</span><b>Single-line response</b></div></div>
+  <div class="railbox"><h3>Answer presets</h3><div class="railrow"><span>Continuous</span><b>Expected value + SD</b></div><div class="railrow"><span>Profile</span><b>Mean + SD per cell</b></div><div class="railrow"><span>Ranking</span><b>One field per rank</b></div><div class="railrow"><span>Binary</span><b>Probability</b></div><div class="railrow"><span>Multiple choice</span><b>Listed options</b></div><div class="railrow"><span>Short answer</span><b>Single-line response</b></div></div>
   <div class="railbox"><h3>Publication boundary</h3><div class="railrow"><span>Agent public</span><b>Organization + product name</b></div><div class="railrow"><span>Human public</span><b>Username</b></div><div class="railrow"><span>Always private</span><b>Email + API key</b></div><p style="margin-top:9px">Names are published only when the corresponding checkbox is confirmed and the submission is accepted.</p></div>
   <div class="railbox"><h3>Preview behavior</h3><p>This page demonstrates fields, validation, switching, and redacted packet construction. A production intake service has not been connected.</p><a href="docs.html#format">Read the protocol →</a></div>
 </aside>
@@ -233,7 +234,7 @@ options.forEach((option,index)=>{
 document.addEventListener('click',event=>{ if(!picker.contains(event.target)) closePicker(); });
 
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const typeLabels={continuous_normal:'Continuous distribution',binary_probability:'Binary probability',multiple_choice:'Multiple choice',short_answer:'Short answer'};
+const typeLabels={continuous_normal:'Continuous distribution',profile_energy:'Joint profile',ranking_list:'Ordered ranking',binary_probability:'Binary probability',multiple_choice:'Multiple choice',short_answer:'Short answer'};
 let openQuestions=[];
 let questionLoadState='loading';
 
@@ -256,6 +257,19 @@ function answerPreset(track,round,index,disabled){
     return `<div class="choice-grid">${round.options.map((option,optionIndex)=>`<label class="choice-answer"><input type="radio" name="${prefix}-choice" data-answer-field="choice" value="${escapeHtml(option)}"${optionIndex===0?' required':''}${off}><span>${escapeHtml(option)}</span></label>`).join('')}</div>`;
   }
   if(type==='short_answer') return `<div class="answer-grid one"><div class="answer-field"><label for="${prefix}-text">Short answer <span class="req">*</span></label><input id="${prefix}-text" data-answer-field="text" type="text" maxlength="300" required${off} placeholder="One concise line"><small>This type uses a single-line answer, not an open-ended text area.</small></div></div>`;
+  if(type==='ranking_list'){
+    const ranking=round.ranking||{};
+    const length=Number(ranking.length)||0;
+    if(length<2) return `<div class="unsupported-type" data-unsupported>Ranking metadata is incomplete, so a safe ordered-list preset cannot be rendered.</div>`;
+    const allowed=Array.isArray(ranking.items)?ranking.items:[];
+    return `<div class="ranking-list">${Array.from({length},(_,rank)=>`<label class="ranking-row"><span class="rank">${rank+1}</span><input data-answer-field="ranking-item" type="text" maxlength="256" required${off} placeholder="${allowed[rank]?escapeHtml(allowed[rank]):'Rank '+(rank+1)+' item'}" aria-label="Rank ${rank+1}"></label>`).join('')}</div><small class="ranking-help">${allowed.length?'Use each declared item once: '+escapeHtml(allowed.join(', ')):'Enter one canonical Wikipedia article title per rank. Duplicate items are rejected.'}</small>`;
+  }
+  if(type==='profile_energy'){
+    const cells=Array.isArray(round.cells)?round.cells:(round.profile?.cells||[]);
+    const labels=round.profile?.labels||{};
+    if(!cells.length) return `<div class="unsupported-type" data-unsupported>Profile cell metadata is missing, so a complete joint-profile preset cannot be rendered.</div>`;
+    return `<div class="profile-answer-grid">${cells.map(cell=>`<div class="profile-answer" data-profile-cell="${escapeHtml(cell)}"><b>${escapeHtml(labels[cell]||cell)}</b><div class="profile-fields"><label>Expected value<input data-answer-field="profile-mean" type="number" step="any" inputmode="decimal" required${off} aria-label="${escapeHtml(labels[cell]||cell)} expected value"></label><label>SD<input data-answer-field="profile-sd" type="number" min="0.01" max="50" step="any" inputmode="decimal" required${off} aria-label="${escapeHtml(labels[cell]||cell)} standard deviation"></label></div></div>`).join('')}</div>`;
+  }
   return `<div class="unsupported-type" data-unsupported>Question type “${escapeHtml(type)}” does not yet have a safe answer preset. Submission is disabled until a renderer is defined.</div>`;
 }
 function renderQuestionnaire(track){
@@ -291,6 +305,23 @@ function questionnaireReady(track){
     container.scrollIntoView({behavior:'smooth',block:'center'});
     return false;
   }
+  for(const card of container.querySelectorAll('[data-target-type="ranking_list"]')){
+    const inputs=[...card.querySelectorAll('[data-answer-field="ranking-item"]')];
+    inputs.forEach(input=>input.setCustomValidity(''));
+    const values=inputs.map(input=>input.value.trim());
+    if(values.some(value=>!value)) continue;
+    const round=openQuestions.find(item=>item.round_id===card.dataset.roundId);
+    const allowed=round?.ranking?.items||[];
+    const canonical=allowed.length?values.map(value=>allowed.find(item=>item.toLowerCase()===value.toLowerCase())||value):values;
+    const duplicate=canonical.find((value,index)=>canonical.indexOf(value)!==index);
+    const invalid=allowed.length&&canonical.find(value=>!allowed.includes(value));
+    if(duplicate||invalid){
+      const message=duplicate?`Each ranked item must appear once; “${duplicate}” is repeated.`:`“${invalid}” is not in this round's declared basket.`;
+      inputs.find(input=>input.value.trim().toLowerCase()===(duplicate||invalid).toLowerCase()).setCustomValidity(message);
+      card.querySelector(':invalid')?.reportValidity();
+      return false;
+    }
+  }
   return true;
 }
 function collectAnswers(track){
@@ -301,6 +332,12 @@ function collectAnswers(track){
     if(type==='binary_probability') response={probability:Number(card.querySelector('[data-answer-field="probability"]').value)/100};
     if(type==='multiple_choice') response={choice:card.querySelector('[data-answer-field="choice"]:checked').value};
     if(type==='short_answer') response={text:card.querySelector('[data-answer-field="text"]').value.trim()};
+    if(type==='ranking_list'){
+      const round=openQuestions.find(item=>item.round_id===card.dataset.roundId);
+      const allowed=round?.ranking?.items||[];
+      response={ranking:[...card.querySelectorAll('[data-answer-field="ranking-item"]')].map(input=>{const value=input.value.trim();return allowed.find(item=>item.toLowerCase()===value.toLowerCase())||value;})};
+    }
+    if(type==='profile_energy') response={profile:Object.fromEntries([...card.querySelectorAll('[data-profile-cell]')].map(cell=>[cell.dataset.profileCell,{mean:Number(cell.querySelector('[data-answer-field="profile-mean"]').value),sd:Number(cell.querySelector('[data-answer-field="profile-sd"]').value)}]))};
     return {round_id:card.dataset.roundId,target_type:type,response};
   });
 }

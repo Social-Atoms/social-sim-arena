@@ -1,0 +1,15 @@
+{
+  "entrant": "gemini-pro-news-superfc",
+  "input_hash": "84825d595b44",
+  "logged_at": "2026-08-18T06:30:54Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt_sha256": "31f71c07888103f627f0618576844b91b6d29e170be7661e6dac3e91c1739386",
+  "reply": "1. Outside view. What is the base rate here? What has this series done historically, how much does it move between releases, and what would a naive extrapolation predict?\nThe historical values over the previous 10 weeks show a slow, steady decline from around 455k in mid-June to a low of 197.6k in mid-August. With a mean absolute week-over-week change of 31.7% and a median of 337k, the series is currently well below its median. A naive extrapolation using a random walk model would forecast the next couple of weeks to remain around the 190k-210k level, barring any new major attention-grabbing events. \n\n2. Inside view. What is specific to this release -- events, timing, anything that would move this particular number away from the base rate? Say how much each is worth, in the unit of the series.\nThe events digest includes a note on August 17 indicating that Trump orders a reduction in the Ulchi-Freedom Guardian military exercises in South Korea. While this puts him in the news cycle at the start of the August 17-23 week, the forecast is for the following week (August 24-30). This news item does not represent a massive, sustained scandal or an election-level event that would spike views severalfold (which is what usually pushes his views into the millions). Furthermore, the long-term trend line through July and August has been cooling off substantially. This suggests that while there may be a slight bump for the August 17-23 period, the views will likely regress back to their current resting baseline of approximately 190k-210k for the August 24-30 week. \n\n3. Pre-mortem. Assume your answer turns out badly wrong. Write the most likely reason, then correct for it.\nThe most likely reason for a drastic miss is that an unanticipated high-profile event (such as a major new indictment, a health event, or significant involvement in the 2026 midterm election campaigns heating up in late August) causes a sudden spike in attention during the August 24-30 week. Because his pageviews are heavily tail-driven and can jump into the millions on major news, the distribution is positively skewed. To account for this, the standard deviation must be broad enough to encompass an unexpected spike, even if the median expectation is low. \n\n4. Calibrate. Your sd should be wide enough that the true value falls inside one sd about two thirds of the time. Check it against how much this series actually moves between releases.\nGiven the 31.7% historical week-over-week change, one standard deviation for a base of ~200k should be around 60k-70k. This comfortably covers normal fluctuations as well as mild news bumps, leaving the extreme spikes for the outer tails. \n\n```json\n{\"mean\": 205.0, \"sd\": 65.0}\n```",
+  "round_id": "wiki-2026-08-30-trump",
+  "usage": {
+    "input_tokens": 3164,
+    "output_tokens": 648,
+    "thinking_tokens": 1947
+  },
+  "via": "direct"
+}

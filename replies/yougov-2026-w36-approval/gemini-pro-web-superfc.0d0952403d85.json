@@ -1,0 +1,15 @@
+{
+  "entrant": "gemini-pro-web-superfc",
+  "input_hash": "0d0952403d85",
+  "logged_at": "2026-08-18T06:46:44Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt_sha256": "3385beb189727bac8d0dc5705a31818de802bde1d71c2b039ccf64e7b687d3c9",
+  "reply": "1. **Outside view.** The Economist/YouGov tracker of Trump's approval rating has historically fluctuated within a fairly defined band, but with high week-to-week volatility. The 10 most recent polling points average out to 36.0%. The week-to-week values bounce around significantly\u2014e.g., 34 to 38, 39 to 34, and 36 to 33\u2014demonstrating a standard deviation of about 2 percentage points. A naive extrapolation of just the overall mean would predict ~36.0%, while an AR(1) mean-reverting model starting from the last value (33.0%) 3 weeks out would predict roughly 35.5%. \n\n2. **Inside view.** Two factors are heavily influencing the specifics of the upcoming September 1 release. First, there's a clear structural rotation effect in the YouGov polling panel. The results reliably alternate between a \"high\" panel and a \"low\" panel every other week. Recent \"low\" panels scored 34, 35, 36, 34, and 33. Recent \"high\" panels scored 38, 37, 39, and 36. Extrapolating the fieldwork dates, the poll released on September 1 (fielded roughly August 28-31) lines up perfectly to be a \"high\" panel week, which exerts upward pressure on the expectation (worth about +1.5 to +2.0 points over the true average). Second, the news environment\u2014specifically the mid-July resumption of strikes on Iran and the resulting foreign policy crisis\u2014has clearly dragged Trump's approval down slightly, creating a genuine dip in both panels (the most recent high panel dropped to 36%, and the most recent low panel hit a record-low 33%). Combining the \"high\" panel expectation with the genuine negative news trend gives an expected value of around 35.5%.\n\n3. **Pre-mortem.** If this forecast misses entirely, it's likely because the \"panel rotation\" hypothesis is either spurious or the panels have been re-sampled/re-balanced by YouGov, causing the alternation to break. If that happens, or if the negative news cycle surrounding the Iran strikes deepens and breaks Trump's approval floor, the value could crater to 32% or 33%. To correct for this, I will keep my standard deviation wide enough (1.8 points) to comfortably capture the possibility of a sustained sub-34% rating, while remaining centered near the expected mean-reversion level.\n\n4. **Calibrate.** An expected mean of 35.5% with a standard deviation of 1.8% yields a 68% confidence interval of [33.7%, 37.3%]. This interval beautifully captures the vast majority of recent \"high\" panels as well as standard deviations from the true moving average, easily accommodating the historical week-to-week jumps.\n\n{\"mean\": 35.5, \"sd\": 1.8}",
+  "round_id": "yougov-2026-w36-approval",
+  "usage": {
+    "input_tokens": 2729,
+    "output_tokens": 661,
+    "thinking_tokens": 5428
+  },
+  "via": "direct"
+}

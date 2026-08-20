@@ -66,13 +66,18 @@ unit, round ID, target type, and lock time come from `site/data.json`; they are
 not duplicated in the page. Answer controls are deterministic by target type:
 
 - `continuous_normal`: expected value and standard deviation;
+- `profile_energy`: expected value and standard deviation for every declared
+  profile cell, submitted as one complete joint profile;
+- `ranking_list`: one single-line field per rank, with exact length, uniqueness,
+  and any fixed basket enforced;
 - `binary_probability`: probability from 0% to 100%;
 - `multiple_choice`: one of the options declared by the round; and
 - `short_answer`: one bounded, single-line response.
 
 An unknown type is shown as unsupported and blocks submission instead of
-falling back to an ambiguous free-text box. The current Season 0 rounds are all
-`continuous_normal`, so their visible preset is expected value + uncertainty.
+falling back to an ambiguous free-text box. Season 0 currently contains scalar,
+joint-profile, and ordered-ranking rounds, so all three live protocol formats
+have explicit questionnaire controls.
 
 The participant must also check a versioned commitment confirming authorization
 to submit the agent, accuracy of the supplied information, and agreement to the

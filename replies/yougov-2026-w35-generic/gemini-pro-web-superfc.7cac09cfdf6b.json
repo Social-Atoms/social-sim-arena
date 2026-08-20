@@ -1,0 +1,15 @@
+{
+  "entrant": "gemini-pro-web-superfc",
+  "input_hash": "7cac09cfdf6b",
+  "logged_at": "2026-08-18T06:21:03Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt_sha256": "5ff619f1930771fa09b7a4c1810f2494c0c1bf646567cc0fddfe1f3c138ef37d",
+  "reply": "To forecast the generic congressional ballot margin for the Economist/YouGov tracker releasing around August 25, we will follow the specified steps:\n\n1. **Outside view:** Historically, this generic ballot tracker oscillates between consecutive weekly releases without huge leaps. Between mid-June and early August 2026, the Democratic advantage has grown from a steady +2.0 and +3.0 up to +7.0, before settling into the +4.0 to +6.0 range. A naive extrapolation based purely on the last four data points would predict a stable but slightly noisy margin around +5.0 to +6.0. Changes between back-to-back weekly releases have commonly been around 1 to 2 points, though occasionally 3.\n\n2. **Inside view:** Specific polling reports from August indicate continuous momentum for Democrats, fueled by sliding approval ratings for President Trump. The most recent news indicates that in the Economist/YouGov poll conducted July 31\u2013August 3, as well as the one conducted August 7\u201310, Democrats held an 8-point advantage among all adults. Because Democratic margins among registered voters in this specific tracker have generally mirrored or trailed the general adult margins by roughly 1 to 2 points (e.g., the August 8 tracker update logged +6.0, mirroring the adult D+8 lead in earlier August polling), we can expect the upcoming August 25 release to similarly reflect a margin of roughly +6.0 to +7.0 among registered voters. \n\n3. **Pre-mortem:** If this forecast falls badly out of line, it will most likely be due to the natural volatility characteristic of cross-tabs and subsampling in weekly tracking. A poll could easily capture an outlier sample swaying the margin back down to +4.0 (as happened in late July) or extending up to +8.0 or +9.0 if an unfavorable news cycle uniquely depressed GOP voter engagement that particular week. Adjusting the standard deviation to adequately cover these standard poll-to-poll polling deviations corrects for this. \n\n4. **Calibrate:** Given that the true shift is typically 1 to 2 points per week, setting a standard deviation of 1.6 points provides a 68% confidence interval of roughly [4.9, 8.1]. This reliably encompasses recent adult-level polling (+8), the series' most recent value (+6), and captures standard statistical noise. \n\n{\"mean\": 6.5, \"sd\": 1.6}",
+  "round_id": "yougov-2026-w35-generic",
+  "usage": {
+    "input_tokens": 2368,
+    "output_tokens": 529,
+    "thinking_tokens": 3220
+  },
+  "via": "direct"
+}

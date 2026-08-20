@@ -75,6 +75,59 @@
               "properties": {"text": {"type": "string", "minLength": 1, "maxLength": 300}}
             }
           }
+        },
+        {
+          "type": "object",
+          "required": ["round_id", "target_type", "response"],
+          "additionalProperties": false,
+          "properties": {
+            "round_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+            "target_type": {"const": "ranking_list"},
+            "response": {
+              "type": "object",
+              "required": ["ranking"],
+              "additionalProperties": false,
+              "properties": {
+                "ranking": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 50,
+                  "uniqueItems": true,
+                  "items": {"type": "string", "minLength": 1, "maxLength": 256}
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["round_id", "target_type", "response"],
+          "additionalProperties": false,
+          "properties": {
+            "round_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+            "target_type": {"const": "profile_energy"},
+            "response": {
+              "type": "object",
+              "required": ["profile"],
+              "additionalProperties": false,
+              "properties": {
+                "profile": {
+                  "type": "object",
+                  "minProperties": 2,
+                  "propertyNames": {"pattern": "^[a-z][a-z0-9_]{2,63}$"},
+                  "additionalProperties": {
+                    "type": "object",
+                    "required": ["mean", "sd"],
+                    "additionalProperties": false,
+                    "properties": {
+                      "mean": {"type": "number"},
+                      "sd": {"type": "number", "exclusiveMinimum": 0, "maximum": 50}
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       ]
     }

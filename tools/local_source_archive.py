@@ -21,6 +21,8 @@ The script is idempotent within a day (adapters fetch at most once per key
 per day) and commits only when something new arrived. It pushes to the
 branch it is on -- keep the clone on main, which is what the refresh reads.
 """
+import json
+import os
 import subprocess
 import sys
 import time
@@ -77,13 +79,43 @@ def archive_trends():
     return ok, failed
 
 
+def archive_trends_baskets():
+    """One comparison fetch per distinct basket named by a ranking round.
+
+    Baskets come from the season file, not the series registry: the basket IS
+    part of the round's frozen contract (`ranking.items`), and archiving
+    exactly what the rounds name keeps this courier from drifting away from
+    the questions it exists to resolve.
+    """
+    season_path = os.path.join(__file__.rsplit("/", 2)[0],
+                               "questions", "season0.json")
+    with open(season_path) as f:
+        season = json.load(f)
+    seen, ok, failed = set(), 0, []
+    for r in season["rounds"]:
+        spec = r.get("ranking") or {}
+        if r.get("tracker") != "google_trends" or not spec.get("items"):
+            continue
+        key = (tuple(spec["items"]), spec.get("geo", trends_adapter.GEO))
+        if key in seen:
+            continue
+        seen.add(key)
+        try:
+            trends_adapter.basket_snapshot(list(key[0]), key[1])
+            ok += 1
+        except Exception as e:                                  # noqa: BLE001
+            failed.append(f"{r['round_id']}: {type(e).__name__}: {str(e)[:120]}")
+    return ok, failed
+
+
 def main():
     c_ok, c_fail = archive_civiqs()
     t_ok, t_fail = archive_trends()
-    for line in c_fail + t_fail:
+    b_ok, b_fail = archive_trends_baskets()
+    for line in c_fail + t_fail + b_fail:
         print("FAIL", line, file=sys.stderr)
-    print(f"archived: civiqs {c_ok} pages, trends {t_ok} queries; "
-          f"{len(c_fail) + len(t_fail)} failures")
+    print(f"archived: civiqs {c_ok} pages, trends {t_ok} queries, "
+          f"{b_ok} baskets; {len(c_fail) + len(t_fail) + len(b_fail)} failures")
 
     root = __file__.rsplit("/", 2)[0]
 
@@ -94,7 +126,7 @@ def main():
     git("add", "-A", "civiqs", "trends")
     if git("diff", "--cached", "--quiet", check=False).returncode == 0:
         print("nothing new to commit")
-        return 0 if not (c_fail or t_fail) else 1
+        return 0 if not (c_fail or t_fail or b_fail) else 1
     git("-c", "user.name=ssa-bot", "-c", "user.email=actions@github.com",
         "commit", "-m", "source archive (residential courier)\n\n"
         "Co-Authored-By: assassin808 "
@@ -102,7 +134,7 @@ def main():
     git("-c", "rebase.autoStash=true", "pull", "--rebase")
     git("push")
     print("committed and pushed")
-    return 0 if not (c_fail or t_fail) else 1
+    return 0 if not (c_fail or t_fail or b_fail) else 1
 
 
 if __name__ == "__main__":
