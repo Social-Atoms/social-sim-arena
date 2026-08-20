@@ -65,6 +65,7 @@ main{flex:1 1 auto;min-height:0;display:flex;max-width:1680px;width:100%;margin:
 .lchip.off{opacity:.3;}
 .lchip .sw{width:9px;height:9px;border-radius:2px;}
 .lchip.more{border-style:dashed;color:var(--mut);font-weight:600;}
+#chartpane{min-height:340px;}
 #legend-pop{position:absolute;top:100%;left:16px;right:16px;z-index:30;background:#fff;border:1px solid var(--line);border-radius:6px;box-shadow:0 10px 28px rgba(0,0,0,.10);padding:10px 12px 7px;max-height:300px;overflow-y:auto;}
 .chartpane{flex:1 1 auto;min-height:236px;position:relative;padding:2px 10px 6px;}
 .chartctl{position:absolute;top:4px;right:14px;display:flex;gap:8px;z-index:4;}
@@ -403,7 +404,17 @@ function defaultHidden(data){
   }
   const all = new Set(board.map(r=>r.entrant));
   ((data||{}).entrants||[]).forEach(e=>all.add(e.entrant_id));
+  window.__keep = keep;
   return new Set([...all].filter(id=>!keep.has(id)));
+}
+// Ids the default pass never saw (fresh series minted into data.json) start
+// hidden, once, so unknown entrants must opt in instead of flooding the chart.
+function coerceUnknown(ids){
+  const hidden = window.__hidden || (window.__hidden = defaultHidden(window.__data));
+  const seen = window.__seenIds || (window.__seenIds = new Set());
+  const keep = window.__keep || new Set();
+  ids.forEach(id => { if(!seen.has(id)){ seen.add(id); if(!keep.has(id)) hidden.add(id); } });
+  return hidden;
 }
 function condTag(nm){
   if(/\(zero-shot\)/.test(nm||'')) return 'zs';
@@ -417,21 +428,24 @@ function condSuffix(nm, pre){ const c = condTag(nm); return c ? (pre||' ')+c : '
 function renderLegend(ids, nameOf, note){
   const strip = document.getElementById('legend-strip');
   if(!ids || !ids.length){ strip.style.display='none'; strip.innerHTML=''; return; }
-  const hidden = window.__hidden || (window.__hidden = defaultHidden(window.__data));
+  const hidden = coerceUnknown(ids);
   const open = !!window.__legendOpen;
   const chip = id =>
     '<span class="lchip'+(hidden.has(id)?' off':'')+'" data-ent="'+esc(id)+'"><span class="sw" style="background:'+colorOf(id)+'"></span>'
     + esc((nameOf[id]||id).split(' (')[0])
     + (condTag(nameOf[id])?' <span style="opacity:.5;">'+condTag(nameOf[id])+'</span>':'')
     + '</span>';
-  // Shown chips stay in the strip; everything toggled off lives behind the
-  // `+ N more` chip in a floating panel, so expanding never squeezes the chart.
+  // Shown chips stay in the strip, hard-capped so the chart always keeps its
+  // height; everything else lives behind `+ N more` in a floating panel.
+  const MAX_STRIP = 9;
   const on = ids.filter(id=>!hidden.has(id)), off = ids.filter(id=>hidden.has(id));
+  const stripOn = on.slice(0, MAX_STRIP), panelOn = on.slice(MAX_STRIP);
+  const rest = panelOn.length + off.length;
   strip.style.display='';
-  strip.innerHTML = on.map(chip).join('')
-    + (off.length ? '<span class="lchip more" id="legend-more">'+(open?'&#215; close':'+ '+off.length+' more')+'</span>' : '')
+  strip.innerHTML = stripOn.map(chip).join('')
+    + (rest ? '<span class="lchip more" id="legend-more">'+(open?'&#215; close':'+ '+rest+' more')+'</span>' : '')
     + '<span style="font-size:11.5px;color:var(--mut);margin-left:4px;">'+esc(note||'click to toggle')+'</span>'
-    + (open && off.length ? '<div id="legend-pop">'+off.map(chip).join('')+'</div>' : '');
+    + (open && rest ? '<div id="legend-pop">'+panelOn.map(chip).join('')+off.map(chip).join('')+'</div>' : '');
   strip.querySelectorAll('.lchip:not(.more)').forEach(ch => ch.onclick = ()=>{
     const id = ch.dataset.ent;
     if(hidden.has(id)) hidden.delete(id); else hidden.add(id);
@@ -604,10 +618,10 @@ function seriesChart(key, data){
   const pw = pane().clientWidth, ph = pane().clientHeight;
   if(pw < 80 || ph < 80){ svg.style.display='none'; return; }
   if(!window.__hidden){ window.__hidden = defaultHidden(window.__data); }
-  const hidden = window.__hidden;
   const upcoming = (data.rounds||[]).filter(r =>
     r.series === d.rseries && r.forecasts && Object.keys(r.forecasts).length &&
     (r.status==='open' || r.status==='locked'));
+  const hidden = coerceUnknown(upcoming.flatMap(r=>Object.keys(r.forecasts)));
   const W = pw-8, small = W < 640, H = ph-6, P = {t:36,r:70,b:26,l:14};
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
   const months = window.__range || 0;
