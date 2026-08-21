@@ -1,15 +1,21 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "outputDirectory": "site",
-  "buildCommand": "",
-  "functions": {
-    "api/*.py": {
-      "includeFiles": "{site/data.json,schema/*.schema.json,ssa/questionnaire_api.py}"
-    }
-  },
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/*.py",
+      "use": "@vercel/python",
+      "config": {
+        "includeFiles": "{site/data.json,schema/*.schema.json,ssa/questionnaire_api.py}"
+      }
+    },
+    {"src": "site/**", "use": "@vercel/static"}
+  ],
   "rewrites": [
-    {"source": "/api/v1/questionnaire", "destination": "/api/questionnaire"},
-    {"source": "/api/v1/questionnaire-submissions", "destination": "/api/questionnaire_submissions"}
+    {"source": "/api/v1/questionnaire", "destination": "/api/questionnaire.py"},
+    {"source": "/api/v1/questionnaire-submissions", "destination": "/api/questionnaire_submissions.py"},
+    {"source": "/", "destination": "/site/index.html"},
+    {"source": "/(.*)", "destination": "/site/$1"}
   ],
   "redirects": [
     {"source": "/(.*)", "has": [{"type": "host", "value": "socialsimarena.com"}], "destination": "https://social-simulation-arena.com/$1", "permanent": true},

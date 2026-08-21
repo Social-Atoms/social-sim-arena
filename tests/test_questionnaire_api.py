@@ -170,10 +170,16 @@ class QuestionnaireApiContracts(unittest.TestCase):
 
     def test_vercel_bundles_python_functions_and_runtime_data(self):
         root = Path(__file__).resolve().parents[1]
+        self.assertEqual("3.12", (root / ".python-version").read_text().strip())
         config = json.loads((root / "vercel.json").read_text())
-        function_config = config["functions"]["api/*.py"]
-        self.assertIn("site/data.json", function_config["includeFiles"])
-        self.assertIn("schema/*.schema.json", function_config["includeFiles"])
+        python_build = next(build for build in config["builds"]
+                            if build["use"] == "@vercel/python")
+        self.assertEqual("api/*.py", python_build["src"])
+        included = python_build["config"]["includeFiles"]
+        self.assertIn("site/data.json", included)
+        self.assertIn("schema/*.schema.json", included)
+        self.assertTrue(any(build["use"] == "@vercel/static"
+                            for build in config["builds"]))
 
     def test_valid_agent_and_each_human_board_are_accepted(self):
         validate_submission(agent_submission(self.data), self.data, NOW)
