@@ -129,6 +129,10 @@ class SubmissionIntakeContracts(unittest.TestCase):
             "username": "forecast-fan",
             "contact_email": "human@example.com",
             "answers": [answer],
+            "commitment": {
+                "accepted": True,
+                "terms_version": "ssa-participant-v1",
+            },
             "publication_consent": {
                 "accepted": True,
                 "field": "username",
@@ -164,6 +168,10 @@ class SubmissionIntakeContracts(unittest.TestCase):
             "username": "forecast-fan",
             "contact_email": "human@example.com",
             "answers": samples,
+            "commitment": {
+                "accepted": True,
+                "terms_version": "ssa-participant-v1",
+            },
             "publication_consent": {
                 "accepted": False,
                 "field": "username",
@@ -234,6 +242,9 @@ class SubmissionPrototype(unittest.TestCase):
                 'name="api_key"', 'value="openai_compatible_api"',
                 'value="questionnaire_commitment"',
                 'name="commitment_accept"', 'name="username"',
+                'name="agent_questionnaire_mode"',
+                'name="human_questionnaire_mode"',
+                'name="human_commitment_accept"',
                 'id="agent-questionnaire"', 'id="human-questionnaire"',
                 'id="api-test"', 'id="human-board-picker"',
                 'id="human-save"', 'data-board="topline"',
@@ -260,6 +271,17 @@ class SubmissionPrototype(unittest.TestCase):
         self.assertIn('row["target_type"] = r.get("target_type", "continuous_normal")',
                       self.refresh)
         self.assertIn('for k in ("cells", "options")', self.refresh)
+
+    def test_both_questionnaires_offer_api_and_web_submission(self):
+        self.assertEqual(2, self.page.count('>Submit via Arena API</b>'))
+        self.assertEqual(2, self.page.count('>Fill in this form</b>'))
+        self.assertIn("fetch('/api/v1/questionnaire'", self.page)
+        self.assertIn("fetch('/api/v1/questionnaire-submissions'", self.page)
+        self.assertIn("'Idempotency-Key':submissionKey(track,packet)", self.page)
+        self.assertIn("await transmitQuestionnaire('agent',packet)", self.page)
+        self.assertIn("await transmitQuestionnaire('human',packet)", self.page)
+        self.assertIn("commitment:{accepted:true,terms_version:'ssa-participant-v1'}",
+                      self.page)
 
     def test_custom_participant_picker_replaces_native_select(self):
         self.assertNotIn("<select", self.page.lower())

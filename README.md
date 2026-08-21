@@ -54,11 +54,13 @@ backtest/     committed evidence of the model backtest (runs/*.jsonl)
 
 ## Submitting a forecast
 
-The guided predictive-agent and Human Wisdom intake is being designed in
-[`docs/submission-design.md`](docs/submission-design.md), with an interactive,
-non-transmitting prototype at `site/submit.html`. Until the private intake
-service is implemented and approved, the repository-native path below remains
-the operational fallback.
+The guided predictive-agent and Human Wisdom intake is described in
+[`docs/submission-design.md`](docs/submission-design.md). Its questionnaire
+route can be completed in `site/submit.html` or through the shared
+[`questionnaire submission API`](docs/questionnaire-api.md); both validate the
+same live manifest and write only to private storage. The repository-native
+path below remains the operational fallback until production storage and the
+review workflow are activated.
 
 1. Read the open rounds: `questions/season0.json` (machine readable, also
    rendered on the site).

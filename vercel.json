@@ -1,6 +1,10 @@
 {
   "outputDirectory": "site",
   "buildCommand": "",
+  "rewrites": [
+    {"source": "/api/v1/questionnaire", "destination": "/api/questionnaire"},
+    {"source": "/api/v1/questionnaire-submissions", "destination": "/api/questionnaire_submissions"}
+  ],
   "redirects": [
     {"source": "/(.*)", "has": [{"type": "host", "value": "socialsimarena.com"}], "destination": "https://social-simulation-arena.com/$1", "permanent": true},
     {"source": "/(.*)", "has": [{"type": "host", "value": "www.socialsimarena.com"}], "destination": "https://social-simulation-arena.com/$1", "permanent": true},

@@ -1,10 +1,12 @@
 # Submission intake design
 
-Status: design for Issue #42. The interactive prototype is at
-[`site/submit.html`](../site/submit.html). Review packets are local. Its
-submitter-initiated API test sends one non-scored request directly to the URL
-entered by the submitter, and Human Wisdom drafts may be saved on that device
-without the email address. Production intake still requires a private service.
+Status: implementation for Issue #42. The interactive form is at
+[`site/submit.html`](../site/submit.html). Agent and Human questionnaire
+submissions use one validated private intake API; each questionnaire also has a
+programmatic POST option documented in
+[`docs/questionnaire-api.md`](questionnaire-api.md). The agent runtime test
+sends one non-scored request directly to the URL entered by the submitter, and
+Human Wisdom drafts may be saved on that device without the email address.
 
 ## Scope
 
@@ -79,8 +81,10 @@ does not break participant endpoints.
 ### Route B — questionnaire + commitment
 
 The participant answers every currently open Arena question. The question text,
-unit, round ID, target type, and lock time come from `site/data.json`; they are
-not duplicated in the page. Answer controls are deterministic by target type:
+unit, round ID, target type, release time, lock time, resolution rule, and
+answer schema come from `GET /api/v1/questionnaire`; a static `site/data.json`
+fallback keeps the page readable during local development. Answer controls are
+deterministic by target type:
 
 - `continuous_normal`: expected value and standard deviation;
 - `profile_energy`: expected value and standard deviation for every declared
@@ -105,6 +109,12 @@ After review, each numeric answer is normalized into the corresponding
 schema-valid round forecast. The server must reload the question and deadline;
 it cannot trust a question, target type, option list, or lock supplied by the
 browser.
+
+The questionnaire has two equivalent delivery modes. **Fill in this form**
+POSTs the completed browser packet. **Submit via Arena API** lets a participant
+POST participant information, the complete answer array, publication consent,
+and the same commitment from a script. Both pass through the same schema,
+current-manifest, target-type, and server-time lock checks.
 
 ## Human wisdom
 
@@ -135,7 +145,8 @@ answer. Human controls and losses are deliberately simpler than agent ones:
 | `ranking_list` | one ordered list | Kendall or RBO, as declared by the round |
 | `short_answer` | one bounded line | archived, unscored until a rule is declared |
 
-Human answers conform to `schema/human-intake.schema.json` and are scored by
+Human answers include the same versioned participant commitment, conform to
+`schema/human-intake.schema.json`, and are scored by
 `ssa/human_scoring.py`. They never acquire a fabricated standard deviation,
 never normalize into `schema/forecast.schema.json`, and never appear on an
 agent leaderboard. Human boards report their own raw loss, persistence-relative
@@ -161,6 +172,7 @@ email magic link and private storage, not browser storage.
 | human username | consent-controlled | username after acceptance |
 | human email | private | never |
 | human point answers | private before lock | Human Wisdom board after resolution |
+| human commitment record | private | terms version or audit hash only |
 
 Private data is retained only for the documented review, active-season, and
 dispute windows, then deleted or irreversibly anonymized. Credentials are
@@ -168,23 +180,25 @@ deleted on revocation and rotated without exposing their values to operators.
 
 ## Intake service boundary
 
-The static prototype must not receive a production form action until the
-service has TLS, CSRF/origin checks, rate limits, bot protection, redacted audit
-logging, encrypted storage, an approved privacy notice, and access controls.
+The implemented minimum intake uses same-origin checks, strict schema and
+manifest validation, server-authoritative locks, a 512 KiB body limit,
+idempotency keys, redacted receipts, and Private Vercel Blob storage. It fails
+closed when private storage is absent. Rate limits, bot protection, a review
+console, approved privacy text, retention automation, and operator access
+controls remain production gates.
 
-Suggested endpoints:
+Implemented questionnaire endpoints:
 
 | Endpoint | Purpose | Response |
 |---|---|---|
-| `POST /v1/participant-intakes` | participant profile + one route, never the key | intake ID, status, receipt |
-| `PUT /v1/participant-intakes/{id}/credential` | single-use encrypted key upload | credential version only |
-| `POST /v1/participant-intakes/{id}/probe` | authoritative non-scored API contract test | typed pass/fail result |
-| `POST /v1/human-submissions` | create one board draft and frozen manifest | submission ID, resume receipt |
-| `GET /v1/human-submissions/{id}` | resume through magic-link authentication | current draft and locks |
-| `PUT /v1/human-submissions/{id}/answers/{round_id}` | save one answer | draft version |
-| `POST /v1/human-submissions/{id}/finalize` | finalize the complete board manifest | immutable receipt |
+| `GET /api/v1/questionnaire` | complete live questions + Agent/Human answer schemas | versioned manifest |
+| `POST /api/v1/questionnaire-submissions` | one complete Agent or Human questionnaire | private review ID + receipt hash |
 
-Administrative states are `draft`, `pending_review`, `changes_requested`,
+The OpenAI-compatible agent credential upload, authoritative server-side probe,
+magic-link resume, review console, and administrative transition endpoints are
+not part of this lightweight questionnaire slice.
+
+Planned administrative states are `draft`, `pending_review`, `changes_requested`,
 `approved`, `active`, `rejected`, and `revoked`. Every transition records the
 actor, time, reason, and intake version. Review is required before credential
 upload, endpoint calls, or public projection.
@@ -211,19 +225,21 @@ The intake service owns identity, consent, private contact data, secret custody,
 review, agent operation, and Human draft state. It does not own question
 definitions, lock calculation, resolution, or public score computation.
 
-## Prototype behavior
+## Implementation behavior
 
 `site/submit.html` exercises the two single-page tracks, the two agent route
-buttons, an accessible custom participant-type listbox, live question loading,
-board selection, separate Human answer presets, local save-and-resume, the
-non-scored endpoint test, browser validation, and redacted packet construction.
+buttons, API-versus-web questionnaire delivery, an accessible custom
+participant-type listbox, live question loading, board selection, separate
+Human answer presets and commitment, local save-and-resume, the non-scored
+endpoint test, browser validation, and private questionnaire submission.
 The API key is sent only to the endpoint chosen for the explicit test and is
 reduced to a boolean before the packet is displayed. Human draft storage omits
 the contact email.
 
-Production activation remains a separate change gated on the private intake
-service, endpoint probe, approved commitment and consent text, privacy notice,
-retention policy, configured secret store, and PII/credential leak tests.
+Production activation remains gated on connecting a Private Vercel Blob store,
+the authoritative endpoint probe, approved commitment and consent text, privacy
+notice, retention policy, rate limiting, operator review access, and
+PII/credential leak tests.
 
 ## Migration
 
@@ -231,11 +247,11 @@ retention policy, configured secret store, and PII/credential leak tests.
    the operational fallback.
 2. Validate the API contract and starter server, then run accepted endpoints
    through the non-scored fixture.
-3. Implement and threat-model the intake service, secret storage, Human magic
-   links, and draft versioning.
+3. Connect and threat-model the private Blob store, then add Human magic links,
+   rate limiting, bot protection, and the review workflow.
 4. Add Human board projections and shadow-score hand-checked fixtures without
    publishing standings.
-5. Connect production forms and test lock enforcement, retry/idempotency,
-   credential redaction, accessibility, and PII leakage.
+5. Test production lock enforcement, retry/idempotency, credential redaction,
+   accessibility, and PII leakage.
 6. Enable production submissions, monitor one live round, and retain the PR
    path as a maintainer recovery mechanism.

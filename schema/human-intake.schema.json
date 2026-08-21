@@ -9,6 +9,7 @@
     "username",
     "contact_email",
     "answers",
+    "commitment",
     "publication_consent"
   ],
   "definitions": {
@@ -144,6 +145,15 @@
       "minItems": 1,
       "maxItems": 200,
       "items": {"$ref": "#/definitions/questionnaire_answer"}
+    },
+    "commitment": {
+      "type": "object",
+      "required": ["accepted", "terms_version"],
+      "additionalProperties": false,
+      "properties": {
+        "accepted": {"const": true},
+        "terms_version": {"const": "ssa-participant-v1"}
+      }
     },
     "publication_consent": {
       "type": "object",
