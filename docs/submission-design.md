@@ -115,6 +115,12 @@ the open round IDs on that board, shows no questions from other boards, and may
 be saved and resumed. A person can later start a separate submission for a
 different board.
 
+Within the selected board, the form shows one question at a time. **Next**
+validates the current answer before advancing, **Previous** returns without
+discarding answers, and the final question unlocks submission. This progressive
+flow changes only the presentation; the submitted unit remains the complete
+frozen board manifest.
+
 The UI supplies the question wording, unit, lock, resolution source, and the
 latest published persistence reference when one exists. It never pre-fills an
 answer. Human controls and losses are deliberately simpler than agent ones:
@@ -135,9 +141,9 @@ agent leaderboard. Human boards report their own raw loss, persistence-relative
 skill, resolved count, and coverage.
 
 The prototype's explicit **Save draft** action stores the selected board,
-frozen round IDs, username, and partial answers in local browser storage; it
-does not store email. Production save-and-resume uses an email magic link and
-private storage, not browser storage.
+frozen round IDs, current question, username, and partial answers in local
+browser storage; it does not store email. Production save-and-resume uses an
+email magic link and private storage, not browser storage.
 
 ## Data classification
 
