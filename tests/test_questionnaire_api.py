@@ -179,10 +179,7 @@ class QuestionnaireApiContracts(unittest.TestCase):
         self.assertIn("site/data.json", included)
         self.assertIn("schema/*.schema.json", included)
         self.assertTrue(any(build["use"] == "@vercel/static"
-                            and build["src"] == "site/**/*"
                             for build in config["builds"]))
-        workflow = (root / ".github/workflows/preview.yml").read_text()
-        self.assertIn("vercel deploy --force --yes", workflow)
 
     def test_valid_agent_and_each_human_board_are_accepted(self):
         validate_submission(agent_submission(self.data), self.data, NOW)

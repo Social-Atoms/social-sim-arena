@@ -38,9 +38,7 @@ jobs:
         run: |
           rm -rf .git .vercel
           npm i -g vercel@latest
-          # The legacy static builder can otherwise restore an old site/**
-          # artifact even when data.json changed in the checked-out commit.
-          url=$(vercel deploy --force --yes --token=${{ secrets.VERCEL_TOKEN }})
+          url=$(vercel deploy --yes --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
       - name: stable alias for the dev branch
