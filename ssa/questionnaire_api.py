@@ -17,28 +17,10 @@ from typing import Any
 from jsonschema import Draft7Validator, FormatChecker
 
 
-def _project_file(relative_path: str) -> Path:
-    """Resolve bundled project files in local and Vercel runtimes.
-
-    Vercel executes Python functions with the project root as the working
-    directory, while its builder may copy imported modules to another path.
-    Prefer the runtime working directory so an imported module cannot resolve
-    a stale builder-side copy of the arena data, then retain the source-tree
-    path as a local/test fallback.
-    """
-    candidates = (
-        Path.cwd() / relative_path,
-        Path(__file__).resolve().parents[1] / relative_path,
-    )
-    for candidate in candidates:
-        if candidate.is_file():
-            return candidate
-    return candidates[0]
-
-
-DATA_PATH = _project_file("site/data.json")
-PARTICIPANT_SCHEMA_PATH = _project_file("schema/participant-intake.schema.json")
-HUMAN_SCHEMA_PATH = _project_file("schema/human-intake.schema.json")
+ROOT = Path(__file__).resolve().parents[1]
+DATA_PATH = ROOT / "site" / "data.json"
+PARTICIPANT_SCHEMA_PATH = ROOT / "schema" / "participant-intake.schema.json"
+HUMAN_SCHEMA_PATH = ROOT / "schema" / "human-intake.schema.json"
 MANIFEST_VERSION = "ssa-questionnaire-manifest-v1"
 SUBMISSION_VERSION = "ssa-questionnaire-submission-v1"
 TERMS_VERSION = "ssa-participant-v1"
