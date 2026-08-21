@@ -168,6 +168,13 @@ class QuestionnaireApiContracts(unittest.TestCase):
                        if item["round_id"] == "ranking-round")
         self.assertEqual(["A", "B", "C"], ranking["ranking"]["items"])
 
+    def test_vercel_bundles_python_functions_and_runtime_data(self):
+        root = Path(__file__).resolve().parents[1]
+        config = json.loads((root / "vercel.json").read_text())
+        function_config = config["functions"]["api/*.py"]
+        self.assertIn("site/data.json", function_config["includeFiles"])
+        self.assertIn("schema/*.schema.json", function_config["includeFiles"])
+
     def test_valid_agent_and_each_human_board_are_accepted(self):
         validate_submission(agent_submission(self.data), self.data, NOW)
         for board in ("topline", "profile", "ranking"):
