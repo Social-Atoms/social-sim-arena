@@ -172,14 +172,15 @@ class QuestionnaireApiContracts(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         self.assertEqual("3.12", (root / ".python-version").read_text().strip())
         config = json.loads((root / "vercel.json").read_text())
-        python_build = next(build for build in config["builds"]
-                            if build["use"] == "@vercel/python")
-        self.assertEqual("api/*.py", python_build["src"])
-        included = python_build["config"]["includeFiles"]
+        python_function = config["functions"]["api/app.py"]
+        included = python_function["includeFiles"]
         self.assertIn("site/data.json", included)
         self.assertIn("schema/*.schema.json", included)
-        self.assertTrue(any(build["use"] == "@vercel/static"
-                            for build in config["builds"]))
+        self.assertNotIn("builds", config)
+        self.assertEqual(
+            'entrypoint = "api.app:application"',
+            (root / "pyproject.toml").read_text().strip().splitlines()[-1],
+        )
 
     def test_valid_agent_and_each_human_board_are_accepted(self):
         validate_submission(agent_submission(self.data), self.data, NOW)
