@@ -1,6 +1,12 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "outputDirectory": "site",
   "buildCommand": "",
+  "functions": {
+    "api/*.py": {
+      "includeFiles": "{site/data.json,schema/*.schema.json,ssa/questionnaire_api.py}"
+    }
+  },
   "rewrites": [
     {"source": "/api/v1/questionnaire", "destination": "/api/questionnaire"},
     {"source": "/api/v1/questionnaire-submissions", "destination": "/api/questionnaire_submissions"}
