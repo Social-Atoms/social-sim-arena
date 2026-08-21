@@ -298,8 +298,13 @@ class SubmissionPrototype(unittest.TestCase):
         self.assertIn('id="human-previous"', self.page)
         self.assertIn('id="human-next"', self.page)
         self.assertIn('id="human-step-status"', self.page)
+        self.assertIn('id="human-question-index"', self.page)
+        self.assertIn('data-question-index=', self.page)
         self.assertIn("card.hidden=!active", self.page)
-        self.assertIn("validateAnswerCard(current)", self.page)
+        self.assertNotIn("validateAnswerCard(current)", self.page)
+        self.assertIn("humanQuestionIndex=Number(button.dataset.questionIndex)",
+                      self.page)
+        self.assertIn("cards.filter(answerCardComplete)", self.page)
         self.assertIn("current_question_index:humanQuestionIndex", self.page)
         self.assertIn("Question ${humanQuestionIndex+1} of ${cards.length}",
                       self.page)

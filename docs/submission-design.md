@@ -115,11 +115,12 @@ the open round IDs on that board, shows no questions from other boards, and may
 be saved and resumed. A person can later start a separate submission for a
 different board.
 
-Within the selected board, the form shows one question at a time. **Next**
-validates the current answer before advancing, **Previous** returns without
-discarding answers, and the final question unlocks submission. This progressive
-flow changes only the presentation; the submitted unit remains the complete
-frozen board manifest.
+Within the selected board, the form shows one question at a time. **Next** and
+**Previous** move without requiring the current answer, and **All questions**
+opens a numbered overview for direct jumps. The overview distinguishes current,
+answered, and unanswered questions. The final question unlocks the submit
+button, while final submission still requires the complete frozen board
+manifest. Navigation never discards answers.
 
 The UI supplies the question wording, unit, lock, resolution source, and the
 latest published persistence reference when one exists. It never pre-fills an
