@@ -1,9 +1,21 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Social Simulation Arena human wisdom intake",
+  "title": "Social Simulation Arena Human Wisdom board submission",
   "type": "object",
-  "required": ["username", "contact_email", "answers", "publication_consent"],
+  "required": [
+    "submission_version",
+    "board_id",
+    "round_manifest",
+    "username",
+    "contact_email",
+    "answers",
+    "publication_consent"
+  ],
   "definitions": {
+    "round_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"
+    },
     "questionnaire_answer": {
       "oneOf": [
         {
@@ -11,16 +23,13 @@
           "required": ["round_id", "target_type", "response"],
           "additionalProperties": false,
           "properties": {
-            "round_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+            "round_id": {"$ref": "#/definitions/round_id"},
             "target_type": {"const": "continuous_normal"},
             "response": {
               "type": "object",
-              "required": ["mean", "sd"],
+              "required": ["value"],
               "additionalProperties": false,
-              "properties": {
-                "mean": {"type": "number"},
-                "sd": {"type": "number", "exclusiveMinimum": 0, "maximum": 50}
-              }
+              "properties": {"value": {"type": "number"}}
             }
           }
         },
@@ -29,13 +38,13 @@
           "required": ["round_id", "target_type", "response"],
           "additionalProperties": false,
           "properties": {
-            "round_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+            "round_id": {"$ref": "#/definitions/round_id"},
             "target_type": {"const": "binary_probability"},
             "response": {
               "type": "object",
-              "required": ["probability"],
+              "required": ["choice"],
               "additionalProperties": false,
-              "properties": {"probability": {"type": "number", "minimum": 0, "maximum": 1}}
+              "properties": {"choice": {"enum": ["Yes", "No"]}}
             }
           }
         },
@@ -44,7 +53,7 @@
           "required": ["round_id", "target_type", "response"],
           "additionalProperties": false,
           "properties": {
-            "round_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+            "round_id": {"$ref": "#/definitions/round_id"},
             "target_type": {"const": "multiple_choice"},
             "response": {
               "type": "object",
@@ -59,7 +68,7 @@
           "required": ["round_id", "target_type", "response"],
           "additionalProperties": false,
           "properties": {
-            "round_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+            "round_id": {"$ref": "#/definitions/round_id"},
             "target_type": {"const": "short_answer"},
             "response": {
               "type": "object",
@@ -74,7 +83,7 @@
           "required": ["round_id", "target_type", "response"],
           "additionalProperties": false,
           "properties": {
-            "round_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+            "round_id": {"$ref": "#/definitions/round_id"},
             "target_type": {"const": "ranking_list"},
             "response": {
               "type": "object",
@@ -97,7 +106,7 @@
           "required": ["round_id", "target_type", "response"],
           "additionalProperties": false,
           "properties": {
-            "round_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+            "round_id": {"$ref": "#/definitions/round_id"},
             "target_type": {"const": "profile_energy"},
             "response": {
               "type": "object",
@@ -108,15 +117,7 @@
                   "type": "object",
                   "minProperties": 2,
                   "propertyNames": {"pattern": "^[a-z][a-z0-9_]{2,63}$"},
-                  "additionalProperties": {
-                    "type": "object",
-                    "required": ["mean", "sd"],
-                    "additionalProperties": false,
-                    "properties": {
-                      "mean": {"type": "number"},
-                      "sd": {"type": "number", "exclusiveMinimum": 0, "maximum": 50}
-                    }
-                  }
+                  "additionalProperties": {"type": "number"}
                 }
               }
             }
@@ -127,6 +128,15 @@
   },
   "additionalProperties": false,
   "properties": {
+    "submission_version": {"const": 1},
+    "board_id": {"enum": ["topline", "profile", "ranking"]},
+    "round_manifest": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 200,
+      "uniqueItems": true,
+      "items": {"$ref": "#/definitions/round_id"}
+    },
     "username": {"type": "string", "minLength": 2, "maxLength": 80},
     "contact_email": {"type": "string", "format": "email", "maxLength": 160},
     "answers": {

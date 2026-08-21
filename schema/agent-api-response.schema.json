@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SSA Agent API decoded response v1",
+  "description": "JSON decoded from choices[0].message.content (or a documented compatible text field).",
+  "type": "object",
+  "required": ["schema_version", "forecast"],
+  "additionalProperties": false,
+  "definitions": {
+    "distribution": {
+      "type": "object",
+      "required": ["mean", "sd"],
+      "additionalProperties": false,
+      "properties": {
+        "mean": {"type": "number"},
+        "sd": {"type": "number", "exclusiveMinimum": 0, "maximum": 1000000000}
+      }
+    }
+  },
+  "properties": {
+    "schema_version": {"const": "ssa-agent-api-v1"},
+    "forecast": {
+      "oneOf": [
+        {"$ref": "#/definitions/distribution"},
+        {
+          "type": "object",
+          "required": ["probabilities"],
+          "additionalProperties": false,
+          "properties": {
+            "probabilities": {
+              "type": "object",
+              "minProperties": 2,
+              "additionalProperties": {"type": "number", "minimum": 0, "maximum": 1}
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["profile"],
+          "additionalProperties": false,
+          "properties": {
+            "profile": {
+              "type": "object",
+              "minProperties": 2,
+              "additionalProperties": {"$ref": "#/definitions/distribution"}
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["ranking"],
+          "additionalProperties": false,
+          "properties": {
+            "ranking": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 50,
+              "uniqueItems": true,
+              "items": {"type": "string", "minLength": 1, "maxLength": 256}
+            }
+          }
+        }
+      ]
+    },
+    "reasoning_trace": {"type": "string", "maxLength": 20000},
+    "crosstabs": {
+      "type": "object",
+      "propertyNames": {"pattern": "^[a-z][a-z0-9_]{1,63}$"},
+      "additionalProperties": {
+        "type": "object",
+        "minProperties": 2,
+        "additionalProperties": {"$ref": "#/definitions/distribution"}
+      }
+    }
+  }
+}

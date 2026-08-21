@@ -172,12 +172,14 @@
       "oneOf": [
         {
           "type": "object",
-          "required": ["method", "endpoint", "credential_supplied"],
+          "required": ["method", "endpoint", "credential_supplied", "contract_version", "probe_status"],
           "additionalProperties": false,
           "properties": {
             "method": {"const": "openai_compatible_api"},
             "endpoint": {"type": "string", "format": "uri", "pattern": "^https://"},
-            "credential_supplied": {"type": "boolean"}
+            "credential_supplied": {"type": "boolean"},
+            "contract_version": {"const": "ssa-agent-api-v1"},
+            "probe_status": {"const": "passed"}
           }
         },
         {
