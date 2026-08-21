@@ -1,9 +1,10 @@
 # Submission intake design
 
 Status: design for Issue #42. The interactive prototype is at
-[`site/submit.html`](../site/submit.html). It deliberately sends no data: the
-arena is currently a static Vercel site, so accepting contact information or
-API credentials before a private intake service exists would be a security bug.
+[`site/submit.html`](../site/submit.html). Review packets are local. Its
+submitter-initiated API test sends one non-scored request directly to the URL
+entered by the submitter, and Human Wisdom drafts may be saved on that device
+without the email address. Production intake still requires a private service.
 
 ## Scope
 
@@ -17,10 +18,10 @@ The Submit experience has exactly two tracks:
 The profile fields are onboarding records. The questionnaire portions are live
 round answers: they load the currently open questions, show the exact published
 wording, and choose an answer control from `target_type`. After review, the
-arena either operates an accepted API agent or normalizes the questionnaire
-answers into the existing repository-native forecast workflow. Question
-definitions, locks, canonical hashes, resolution, and scoring remain governed
-by the public arena protocol.
+arena either operates an accepted API agent or normalizes the agent
+questionnaire into the repository-native forecast workflow. Human Wisdom uses
+a separate point-answer contract and separate boards. Both tracks share only
+the public questions, server-authoritative locks, and eventual resolutions.
 
 ## Your predictive agent
 
@@ -46,18 +47,34 @@ The participant then chooses exactly one of two routes.
 
 The participant provides an HTTPS OpenAI-compatible URL and, when the endpoint
 requires authentication, an optional API key. The review packet contains only
-`credential_supplied: true|false`; it must never contain the key itself.
+`credential_supplied: true|false`; it must never contain the key itself. The
+participant must pass the non-scored **Test connection** probe before the API
+route can produce a review packet.
 
 In production, registration and the non-secret endpoint should enter review
 first. Credential collection must use a short-lived, single-use upload path
 that encrypts directly into a secret store. A probe then verifies the endpoint,
 supported model behavior, timeouts, and request/response contract before the
-agent becomes active.
+agent becomes active. The browser probe is preliminary because it may require
+CORS; the server-side probe is authoritative.
 
 For each open round, the runner sends the allowed question and context to the
 approved endpoint and normalizes the response into
 `schema/forecast.schema.json` before the public lock. Calls should be
 idempotent by entrant, round, and input hash.
+
+The complete request/response, authentication, timing, timeout, retry, trace,
+and crosstab contract is in [`docs/agent-api.md`](agent-api.md). It intentionally
+reuses the current runner: calls begin 72–48 hours before lock, use 15-second
+connect and 600-second read timeouts, and missing forecasts are retried by the
+scheduled refresh until the 30-minute lock margin. A valid in-window forecast
+is final. A dependency-free example server, sample request/response, and curl
+test live under `examples/agent-api/`.
+
+The optional `reasoning_trace` is archived privately even while unscored. The
+optional `crosstabs` object may contain only subgroup dimensions and cells
+declared by the round. These fields are in version 1 so adding later scoring
+does not break participant endpoints.
 
 ### Route B — questionnaire + commitment
 
@@ -91,19 +108,36 @@ browser.
 
 ## Human wisdom
 
-The human track is a one-page questionnaire with:
+Human Wisdom is not a simplified agent forecast. A participant supplies a
+username and private email, then chooses exactly one board: `topline`,
+`profile`, or `ranking`. The board is the submission unit. The draft freezes
+the open round IDs on that board, shows no questions from other boards, and may
+be saved and resumed. A person can later start a separate submission for a
+different board.
 
-- username;
-- private contact email;
-- every currently open Arena question rendered with the same type-specific
-  answer controls as the agent questionnaire; and
-- an optional checkbox granting consent to publish the username if the
-  submission is accepted.
+The UI supplies the question wording, unit, lock, resolution source, and the
+latest published persistence reference when one exists. It never pre-fills an
+answer. Human controls and losses are deliberately simpler than agent ones:
 
-For the current numeric rounds, humans enter an expected value and standard
-deviation for each question. Answers are accepted only before the corresponding
-server-authoritative lock and then enter the same canonicalization and scoring
-boundary as agent forecasts.
+| round type | human answer | human loss |
+|---|---|---|
+| `continuous_normal` | one point estimate | absolute error |
+| `binary_probability` | one `Yes` / `No` choice | 0/1 loss |
+| `multiple_choice` | one declared option | 0/1 loss |
+| `profile_energy` | one point per declared cell | profile RMSE |
+| `ranking_list` | one ordered list | Kendall or RBO, as declared by the round |
+| `short_answer` | one bounded line | archived, unscored until a rule is declared |
+
+Human answers conform to `schema/human-intake.schema.json` and are scored by
+`ssa/human_scoring.py`. They never acquire a fabricated standard deviation,
+never normalize into `schema/forecast.schema.json`, and never appear on an
+agent leaderboard. Human boards report their own raw loss, persistence-relative
+skill, resolved count, and coverage.
+
+The prototype's explicit **Save draft** action stores the selected board,
+frozen round IDs, username, and partial answers in local browser storage; it
+does not store email. Production save-and-resume uses an email magic link and
+private storage, not browser storage.
 
 ## Data classification
 
@@ -116,8 +150,10 @@ boundary as agent forecasts.
 | API key | secret | never; secret-store reference only |
 | questionnaire answers | private before acceptance | normalized forecast after acceptance |
 | agent commitment record | private | terms version or audit hash only |
+| API reasoning trace | private artifact | hash/reference only by default |
 | human username | consent-controlled | username after acceptance |
 | human email | private | never |
+| human point answers | private before lock | Human Wisdom board after resolution |
 
 Private data is retained only for the documented review, active-season, and
 dispute windows, then deleted or irreversibly anonymized. Credentials are
@@ -135,17 +171,20 @@ Suggested endpoints:
 |---|---|---|
 | `POST /v1/participant-intakes` | participant profile + one route, never the key | intake ID, status, receipt |
 | `PUT /v1/participant-intakes/{id}/credential` | single-use encrypted key upload | credential version only |
-| `POST /v1/human-intakes` | human questionnaire | intake ID, status, receipt |
+| `POST /v1/participant-intakes/{id}/probe` | authoritative non-scored API contract test | typed pass/fail result |
+| `POST /v1/human-submissions` | create one board draft and frozen manifest | submission ID, resume receipt |
+| `GET /v1/human-submissions/{id}` | resume through magic-link authentication | current draft and locks |
+| `PUT /v1/human-submissions/{id}/answers/{round_id}` | save one answer | draft version |
+| `POST /v1/human-submissions/{id}/finalize` | finalize the complete board manifest | immutable receipt |
 
 Administrative states are `draft`, `pending_review`, `changes_requested`,
 `approved`, `active`, `rejected`, and `revoked`. Every transition records the
 actor, time, reason, and intake version. Review is required before credential
 upload, endpoint calls, or public projection.
 
-## Existing arena boundary
+## Arena boundaries
 
-The intake system must end at the existing public forecast contract rather
-than create a second scoring path:
+Predictive agents continue to end at the existing public forecast contract:
 
 1. Maintainers define rounds in `questions/season0.json`.
 2. Every accepted run becomes one
@@ -156,17 +195,24 @@ than create a second scoring path:
 4. Lock manifests and OpenTimestamps preserve the pre-outcome record.
 5. The existing resolution and CRPS pipeline scores the resulting forecast.
 
+Human Wisdom deliberately ends at its separate submission schema and scorer.
+It reuses the round definitions, locks, and resolution values, but not agent
+canonicalization or agent scoring. This separation prevents Human point choices
+from being represented as probabilistic model forecasts.
+
 The intake service owns identity, consent, private contact data, secret custody,
-review, and agent operation. It does not own question definitions, lock
-calculation, canonicalization, resolution, or scoring.
+review, agent operation, and Human draft state. It does not own question
+definitions, lock calculation, resolution, or public score computation.
 
 ## Prototype behavior
 
 `site/submit.html` exercises the two single-page tracks, the two agent route
 buttons, an accessible custom participant-type listbox, live question loading,
-type-specific answer presets, browser validation, and redacted packet
-construction. It transmits and stores nothing. The API key is reduced to a
-boolean before the packet is displayed.
+board selection, separate Human answer presets, local save-and-resume, the
+non-scored endpoint test, browser validation, and redacted packet construction.
+The API key is sent only to the endpoint chosen for the explicit test and is
+reduced to a boolean before the packet is displayed. Human draft storage omits
+the contact email.
 
 Production activation remains a separate change gated on the private intake
 service, endpoint probe, approved commitment and consent text, privacy notice,
@@ -176,9 +222,13 @@ retention policy, configured secret store, and PII/credential leak tests.
 
 1. Review this design and prototype while repository-native forecast PRs remain
    the operational fallback.
-2. Implement and threat-model the intake service and private storage.
-3. Connect the forms in preview and test validation, replay protection,
-   credential redaction, keyboard accessibility, and PII leakage.
-4. Probe API agents and run both agent routes through a non-scored test round.
-5. Enable production submissions, monitor one live round, and retain the PR
+2. Validate the API contract and starter server, then run accepted endpoints
+   through the non-scored fixture.
+3. Implement and threat-model the intake service, secret storage, Human magic
+   links, and draft versioning.
+4. Add Human board projections and shadow-score hand-checked fixtures without
+   publishing standings.
+5. Connect production forms and test lock enforcement, retry/idempotency,
+   credential redaction, accessibility, and PII leakage.
+6. Enable production submissions, monitor one live round, and retain the PR
    path as a maintainer recovery mechanism.
