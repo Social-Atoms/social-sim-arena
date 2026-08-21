@@ -17,6 +17,7 @@
   --sans:"Inconsolata",ui-monospace,SFMono-Regular,Menlo,-apple-system,sans-serif;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink2);font:14.5px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
 a{color:inherit}button,input,textarea{font:inherit}button{cursor:pointer}
@@ -70,6 +71,7 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(21,128,61,.09)}
 
 .methodchoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}.methodchoice{position:relative;display:block;border:1px solid var(--line);border-radius:4px;padding:14px;cursor:pointer;background:#fff;min-height:92px}.methodchoice:hover{border-color:#aaa8a1}.methodchoice:has(input:checked){border-color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}
 .methodchoice input{position:absolute;opacity:0;pointer-events:none}.methodchoice b{display:block;color:var(--ink);font-size:14px;margin-bottom:3px}.methodchoice span{display:block;color:var(--mut);font-size:12px}.methodpanel{display:none;border-top:1px solid var(--line);padding-top:16px}.methodpanel.on{display:block}
+.questionnaire-route-panel{display:none}.questionnaire-route-panel.on{display:block}.api-guide{border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:4px;background:var(--soft);padding:14px}.api-guide h4{margin:0 0 5px;color:var(--ink);font-size:14px}.api-guide p{margin:0 0 10px;font-size:12px}.api-endpoint{display:grid;grid-template-columns:54px minmax(0,1fr);gap:6px 10px;align-items:start;margin:9px 0}.api-endpoint b{color:var(--accent-ink);font-size:11px}.api-endpoint code,.api-guide pre{font:11px/1.5 var(--sans);color:var(--ink);overflow-wrap:anywhere}.api-guide pre{margin:10px 0 0;padding:10px;background:#fff;border:1px solid var(--line);border-radius:3px;white-space:pre-wrap}.api-links{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;font-weight:700}.api-links a{color:var(--link)}
 .probe-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.probe-status{font-size:11.5px;color:var(--mut)}.probe-status.testing{color:var(--warn)}.probe-status.good{color:var(--accent-ink);font-weight:800}.probe-status.bad{color:#9c2f28;font-weight:800}
 .board-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:10px 0 16px}.board-card{border:1px solid var(--line);border-radius:4px;background:#fff;padding:12px;text-align:left;color:var(--ink2);min-height:88px}.board-card:hover{border-color:#aaa8a1}.board-card.on{border-color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}.board-card b{display:block;color:var(--ink);font-size:13px}.board-card span{display:block;margin-top:3px;color:var(--mut);font-size:11px}.board-card em{display:inline-block;margin-top:7px;color:var(--accent-ink);font-size:10px;font-style:normal;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
 .context-row{margin-top:7px;padding:7px 8px;border-left:2px solid #cbd5cb;background:#f7faf7;color:var(--ink2);font-size:10.5px}.draft-status{margin-right:auto;color:var(--mut);font-size:11px}.draft-status.good{color:var(--accent-ink)}
@@ -81,7 +83,7 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(21,128,61,.09)}
 .ranking-list{display:grid;gap:7px}.ranking-row{display:grid;grid-template-columns:29px minmax(0,1fr);align-items:center;gap:8px}.ranking-row .rank{width:29px;height:29px;border:1px solid var(--line);border-radius:3px;background:#fff;color:var(--mut);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}.ranking-help{display:block;margin-top:8px;color:var(--mut);font-size:10.5px}.profile-answer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.profile-answer{border:1px solid var(--line);border-radius:4px;background:#fff;padding:9px}.profile-answer b{display:block;margin-bottom:6px;color:var(--ink);font-size:11px;overflow-wrap:anywhere}.profile-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.profile-fields label{display:block;color:var(--mut);font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}.profile-fields input{margin-top:3px;padding:7px 8px}
 .commitment{background:var(--soft);border-left:3px solid var(--accent);padding:12px 13px;color:var(--ink2);font-size:12.5px}.checkline{display:flex;align-items:flex-start;gap:9px;color:var(--ink2);font-size:12.5px}.checkline input{width:auto;margin-top:4px;flex:0 0 auto}.consent{border-top:1px solid var(--line);margin-top:18px;padding-top:15px}
 .actions{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:18px}.btn{border:1px solid var(--line);border-radius:4px;padding:8px 18px;background:#fff;color:var(--ink);font-weight:700;text-decoration:none}.btn:hover{border-color:var(--ink)}.btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}.btn.dark:hover{opacity:.86}.btn:disabled{cursor:not-allowed;opacity:.42}.btn:disabled:hover{border-color:var(--line)}
-.review{display:none;margin-top:16px}.review.on{display:block}.packet{background:#151514;color:#e8e7e2;border-radius:4px;padding:13px;max-height:290px;overflow:auto;font:11.5px/1.45 var(--sans);white-space:pre-wrap;overflow-wrap:anywhere}.receipt{margin-bottom:8px;border:1px solid #b8dbc4;background:#f4fbf6;border-radius:4px;padding:11px 12px;color:var(--accent-ink)}
+.review{display:none;margin-top:16px}.review.on{display:block}.packet{background:#151514;color:#e8e7e2;border-radius:4px;padding:13px;max-height:290px;overflow:auto;font:11.5px/1.45 var(--sans);white-space:pre-wrap;overflow-wrap:anywhere}.packet:empty{display:none}.receipt{margin-bottom:8px;border:1px solid #b8dbc4;background:#f4fbf6;border-radius:4px;padding:11px 12px;color:var(--accent-ink)}.receipt.bad{border-color:#e4c2bf;background:#fff7f6;color:#9c2f28}
 
 .railbox{border-top:2px solid var(--ink);padding:12px 2px 16px;margin-bottom:18px}.railbox h3{margin:0 0 8px;color:var(--ink);font-size:14px}.railbox p{margin:0 0 8px;font-size:12px;color:var(--mut)}.railbox ol{padding-left:18px;margin:0;color:var(--ink2);font-size:12px}.railbox li{margin:7px 0}.railrow{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #eeede9;padding:7px 0;font-size:11.5px}.railrow:last-child{border-bottom:0}.railrow b{color:var(--ink);text-align:right}
 footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:var(--mut);display:flex;gap:14px;flex-wrap:wrap}footer a{color:var(--ink2);text-decoration:none}footer .right{margin-left:auto}
@@ -99,14 +101,14 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
 
 <div class="bar"><div class="copy">
   <h1><img src="logo.svg" alt="" style="height:.92em;width:auto;vertical-align:-.1em;margin-right:.5em">Submit to the arena</h1>
-  <span class="badge"><span class="d"></span>DESIGN PREVIEW</span>
+  <span class="badge"><span class="d"></span>INTAKE BETA</span>
   <p>One-page intake for predictive agents and human wisdom.</p>
 </div></div>
 
 <div class="shell">
 <main class="maincol">
   <header class="intro"><div class="eyebrow">Submission intake · Issue #42</div><h2>Choose your submission.</h2><p>Register a predictive agent through an OpenAI-compatible endpoint or a signed questionnaire, or contribute your own human judgment.</p></header>
-  <div class="notice"><b>Prototype only.</b> Review packets stay in this browser. The optional API test sends one non-scored request only to the endpoint you enter. Human drafts are saved on this device only and never include the contact email.</div>
+  <div class="notice"><b>Private intake.</b> Questionnaire submissions are validated against the live manifest and sent to the Arena's private submission store. The optional agent connection test sends one non-scored request only to the endpoint you enter. Human drafts stay on this device and never include the contact email.</div>
 
   <div class="tracktabs" role="tablist" aria-label="Submission track">
     <button type="button" class="on" data-track="agent" role="tab" aria-selected="true" aria-controls="track-agent">Your predictive agent</button>
@@ -118,6 +120,7 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
       <div class="panel">
         <div class="panelhead"><span class="mark">A</span><div><h3>Your predictive agent</h3><p>For startups, research groups, institutions, and individual researchers.</p></div></div>
         <div class="panelbody">
+          <div id="agent-profile-fields">
           <div class="section-title">Participant</div>
           <div class="formgrid">
             <div class="field">
@@ -139,6 +142,7 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
             <div class="field"><label for="contact-name">Primary contact name <span class="req">*</span> <span class="privacy private">private</span></label><input id="contact-name" name="contact_name" required autocomplete="name" placeholder="Full name"></div>
             <div class="field"><label for="contact-email">Contact email <span class="req">*</span> <span class="privacy private">private</span></label><input id="contact-email" name="contact_email" type="email" required autocomplete="email" placeholder="name@example.org"></div>
           </div>
+          </div>
 
           <div class="section-title" style="margin-top:22px">Submission method</div>
           <div class="methodchoices" role="radiogroup" aria-label="Predictive agent submission method">
@@ -155,14 +159,24 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
           </div>
 
           <div class="methodpanel" id="method-questionnaire">
-            <div class="questionnaire-intro"><div><b>Open Arena questions</b><p>The question text comes from the live round data. The answer controls are selected from each round's target type.</p></div><span class="question-count" id="agent-question-count">loading</span></div>
-            <div class="question-list" id="agent-questionnaire" data-questionnaire="agent" aria-live="polite"><div class="question-state">Loading open questions…</div></div>
-            <div class="commitment" style="margin-top:14px"><label class="checkline"><input id="commitment-accept" name="commitment_accept" type="checkbox" disabled required><span><b>Participant commitment.</b> I am authorized to submit this agent; the information above is accurate; and I agree that accepted runs may be evaluated, locked, hashed, scored, and reported under the arena protocol.</span></label></div>
+            <div class="section-title">Questionnaire delivery</div>
+            <div class="methodchoices" role="radiogroup" aria-label="Agent questionnaire delivery">
+              <label class="methodchoice"><input type="radio" name="agent_questionnaire_mode" value="arena_api"><b>Submit via Arena API</b><span>POST identity, answers, consent, and commitment as one validated JSON request.</span></label>
+              <label class="methodchoice"><input type="radio" name="agent_questionnaire_mode" value="manual_form" checked><b>Fill in this form</b><span>Use the same live manifest and answer presets directly in this page.</span></label>
+            </div>
+            <div class="questionnaire-route-panel" id="agent-questionnaire-api">
+              <div class="api-guide"><h4>Programmatic questionnaire submission</h4><p>Your client supplies all participant information and answers in the POST body. This is an Arena intake endpoint; it is different from the OpenAI-compatible agent endpoint above.</p><div class="api-endpoint"><b>GET</b><code>/api/v1/questionnaire</code><b>POST</b><code>/api/v1/questionnaire-submissions</code></div><p>Read each question's <code>answer_schema.agent</code>, answer every currently open round, include <code>commitment.accepted: true</code>, and send a unique <code>Idempotency-Key</code> header.</p><div class="api-links"><a href="/api/v1/questionnaire" target="_blank" rel="noopener">View live manifest ↗</a><a href="docs.html#questionnaire-api">API format and examples →</a></div></div>
+            </div>
+            <div class="questionnaire-route-panel on" id="agent-questionnaire-manual">
+              <div class="questionnaire-intro"><div><b>Open Arena questions</b><p>These are the complete live question texts. Answer controls follow each declared target type.</p></div><span class="question-count" id="agent-question-count">loading</span></div>
+              <div class="question-list" id="agent-questionnaire" data-questionnaire="agent" aria-live="polite"><div class="question-state">Loading open questions…</div></div>
+              <div class="commitment" style="margin-top:14px"><label class="checkline"><input id="commitment-accept" name="commitment_accept" type="checkbox" disabled required><span><b>Participant commitment.</b> I am authorized to submit this agent; the information above is accurate; and I agree that accepted runs may be evaluated, locked, hashed, scored, and reported under the arena protocol.</span></label></div>
+            </div>
           </div>
 
-          <div class="consent"><label class="checkline"><input id="agent-publication-consent" name="publication_consent" type="checkbox"><span>I confirm that, if this submission is accepted, the arena may publish the <b>Organization name</b> and <b>Product / agent name</b> entered above.</span></label></div>
-          <div class="actions"><button class="btn dark" id="agent-submit" type="submit">Submit</button></div>
-          <div class="review" id="agent-review" aria-live="polite"><div class="receipt"><b>Review packet generated.</b> Nothing was transmitted. The API key is represented only by whether one was supplied.</div><pre class="packet" id="agent-packet"></pre></div>
+          <div class="consent" id="agent-browser-consent"><label class="checkline"><input id="agent-publication-consent" name="publication_consent" type="checkbox"><span>I confirm that, if this submission is accepted, the arena may publish the <b>Organization name</b> and <b>Product / agent name</b> entered above.</span></label></div>
+          <div class="actions" id="agent-actions"><button class="btn dark" id="agent-submit" type="submit">Submit</button></div>
+          <div class="review" id="agent-review" aria-live="polite"><div class="receipt" id="agent-receipt"><b>Submission result.</b></div><pre class="packet" id="agent-packet"></pre></div>
         </div>
       </div>
     </form>
@@ -173,23 +187,34 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
       <div class="panel">
         <div class="panelhead"><span class="mark human">H</span><div><h3>Human wisdom</h3><p>Humanity's last glory.</p></div></div>
         <div class="panelbody">
-          <div class="formgrid">
-            <div class="field"><label for="username">Username <span class="req">*</span> <span class="privacy public">publish with consent</span></label><input id="username" name="username" required autocomplete="username" placeholder="Public username"></div>
-            <div class="field"><label for="human-email">Contact email <span class="req">*</span> <span class="privacy private">private</span></label><input id="human-email" name="contact_email" type="email" required autocomplete="email" placeholder="name@example.org"></div>
+          <div class="section-title">Questionnaire delivery</div>
+          <div class="methodchoices" role="radiogroup" aria-label="Human questionnaire delivery">
+            <label class="methodchoice"><input type="radio" name="human_questionnaire_mode" value="arena_api"><b>Submit via Arena API</b><span>POST your username, email, answers, consent, and commitment as JSON.</span></label>
+            <label class="methodchoice"><input type="radio" name="human_questionnaire_mode" value="manual_form" checked><b>Fill in this form</b><span>Answer one question at a time, skip freely, and submit when ready.</span></label>
           </div>
-          <div class="section-title" style="margin-top:22px">Choose one Human Wisdom board</div>
-          <div class="board-grid" id="human-board-picker" role="tablist" aria-label="Human Wisdom board">
-            <button class="board-card on" type="button" data-board="topline" role="tab" aria-selected="true"><b>Topline</b><span>Point estimates and Yes / No choices.</span><em data-board-count="topline">loading</em></button>
-            <button class="board-card" type="button" data-board="profile" role="tab" aria-selected="false"><b>Population Profile</b><span>One point estimate for each declared group.</span><em data-board-count="profile">loading</em></button>
-            <button class="board-card" type="button" data-board="ranking" role="tab" aria-selected="false"><b>Ranking</b><span>Put the declared items in order.</span><em data-board-count="ranking">loading</em></button>
+          <div class="questionnaire-route-panel" id="human-questionnaire-api">
+            <div class="api-guide"><h4>Programmatic Human Wisdom submission</h4><p>Your client supplies identity and one selected board's complete answer set. Human binary events use <code>{"choice":"Yes"}</code> or <code>{"choice":"No"}</code>, not a probability.</p><div class="api-endpoint"><b>GET</b><code>/api/v1/questionnaire</code><b>POST</b><code>/api/v1/questionnaire-submissions</code></div><p>Use <code>answer_schema.human</code>, copy the selected board's current round IDs into <code>round_manifest</code>, sign the commitment, and send a unique <code>Idempotency-Key</code>.</p><div class="api-links"><a href="/api/v1/questionnaire" target="_blank" rel="noopener">View live manifest ↗</a><a href="docs.html#questionnaire-api">API format and examples →</a></div></div>
           </div>
-          <div class="questionnaire-intro"><div><b id="human-board-title">Topline questions</b><p>Answer in any order. Next can skip a question; finish all answers before submitting.</p></div><button class="question-count question-overview-toggle" id="human-question-count" type="button" aria-expanded="false" aria-controls="human-question-index" disabled>loading</button></div>
-          <div class="question-index-panel" id="human-question-index" hidden></div>
-          <div class="question-list" id="human-questionnaire" data-questionnaire="human" aria-live="polite"><div class="question-state">Loading open questions…</div></div>
-          <div class="question-step-nav" id="human-question-nav" aria-label="Question navigation" hidden><button class="btn" id="human-previous" type="button">Previous</button><span class="step-progress" id="human-step-status" role="status" aria-live="polite"></span><button class="btn dark" id="human-next" type="button">Next</button></div>
-          <div class="consent"><label class="checkline"><input id="human-publication-consent" name="publication_consent" type="checkbox"><span>I confirm that, if this submission is accepted, the arena may publish my <b>username</b> with the Human Wisdom entry.</span></label></div>
-          <div class="actions"><span class="draft-status" id="human-draft-status" role="status" aria-live="polite">Draft not saved.</span><button class="btn" id="human-save" type="button">Save draft</button><button class="btn dark" id="human-submit" type="submit" disabled>Submit</button></div>
-          <div class="review" id="human-review" aria-live="polite"><div class="receipt"><b>Review packet generated.</b> Nothing was transmitted. Contact email remains private.</div><pre class="packet" id="human-packet"></pre></div>
+          <div class="questionnaire-route-panel on" id="human-questionnaire-manual">
+            <div class="formgrid">
+              <div class="field"><label for="username">Username <span class="req">*</span> <span class="privacy public">publish with consent</span></label><input id="username" name="username" required autocomplete="username" placeholder="Public username"></div>
+              <div class="field"><label for="human-email">Contact email <span class="req">*</span> <span class="privacy private">private</span></label><input id="human-email" name="contact_email" type="email" required autocomplete="email" placeholder="name@example.org"></div>
+            </div>
+            <div class="section-title" style="margin-top:22px">Choose one Human Wisdom board</div>
+            <div class="board-grid" id="human-board-picker" role="tablist" aria-label="Human Wisdom board">
+              <button class="board-card on" type="button" data-board="topline" role="tab" aria-selected="true"><b>Topline</b><span>Point estimates and Yes / No choices.</span><em data-board-count="topline">loading</em></button>
+              <button class="board-card" type="button" data-board="profile" role="tab" aria-selected="false"><b>Population Profile</b><span>One point estimate for each declared group.</span><em data-board-count="profile">loading</em></button>
+              <button class="board-card" type="button" data-board="ranking" role="tab" aria-selected="false"><b>Ranking</b><span>Put the declared items in order.</span><em data-board-count="ranking">loading</em></button>
+            </div>
+            <div class="questionnaire-intro"><div><b id="human-board-title">Topline questions</b><p>Next may skip an unanswered question. Use All questions to preview and jump by number; all answers are required only when you submit.</p></div><button class="question-count question-overview-toggle" id="human-question-count" type="button" aria-expanded="false" aria-controls="human-question-index" disabled>loading</button></div>
+            <div class="question-index-panel" id="human-question-index" hidden></div>
+            <div class="question-list" id="human-questionnaire" data-questionnaire="human" aria-live="polite"><div class="question-state">Loading open questions…</div></div>
+            <div class="question-step-nav" id="human-question-nav" aria-label="Question navigation" hidden><button class="btn" id="human-previous" type="button">Previous</button><span class="step-progress" id="human-step-status" role="status" aria-live="polite"></span><button class="btn dark" id="human-next" type="button">Next</button></div>
+            <div class="commitment" style="margin-top:14px"><label class="checkline"><input id="human-commitment-accept" name="human_commitment_accept" type="checkbox" required><span><b>Participant commitment.</b> I am making this submission myself; the information above is accurate; and I agree that accepted answers may be evaluated, locked, hashed, scored, and reported under the arena protocol.</span></label></div>
+            <div class="consent"><label class="checkline"><input id="human-publication-consent" name="publication_consent" type="checkbox"><span>I confirm that, if this submission is accepted, the arena may publish my <b>username</b> with the Human Wisdom entry.</span></label></div>
+            <div class="actions" id="human-actions"><span class="draft-status" id="human-draft-status" role="status" aria-live="polite">Draft not saved.</span><button class="btn" id="human-save" type="button">Save draft</button><button class="btn dark" id="human-submit" type="submit" disabled>Submit</button></div>
+            <div class="review" id="human-review" aria-live="polite"><div class="receipt" id="human-receipt"><b>Submission result.</b></div><pre class="packet" id="human-packet"></pre></div>
+          </div>
         </div>
       </div>
     </form>
@@ -200,11 +225,11 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
   <div class="railbox"><h3>Two agent routes</h3><ol><li><b>OpenAI-compatible API</b><br>Provide a URL and, only if needed, a key.</li><li><b>Questionnaire + commitment</b><br>Answer the open Arena questions and sign the commitment.</li></ol></div>
   <div class="railbox"><h3>Human answer presets</h3><div class="railrow"><span>Continuous</span><b>One point estimate</b></div><div class="railrow"><span>Profile</span><b>One value per cell</b></div><div class="railrow"><span>Ranking</span><b>One field per rank</b></div><div class="railrow"><span>Binary</span><b>Yes / No choice</b></div><div class="railrow"><span>Multiple choice</span><b>One listed option</b></div></div>
   <div class="railbox"><h3>Publication boundary</h3><div class="railrow"><span>Agent public</span><b>Organization + product name</b></div><div class="railrow"><span>Human public</span><b>Username</b></div><div class="railrow"><span>Always private</span><b>Email + API key</b></div><p style="margin-top:9px">Names are published only when the corresponding checkbox is confirmed and the submission is accepted.</p></div>
-  <div class="railbox"><h3>Preview behavior</h3><p>The endpoint test runs from this browser and may require CORS. Human drafts stay on this device without email. Production activation repeats the test server-side and uses email magic links.</p><a href="docs.html#format">Read the protocol →</a></div>
+  <div class="railbox"><h3>Intake behavior</h3><p>The agent endpoint test runs from this browser and may require CORS. Questionnaire packets are validated against current locks and stored privately; Human drafts stay on this device without email.</p><a href="docs.html#questionnaire-api">Read the API protocol →</a></div>
 </aside>
 </div>
 
-<footer><span><b>Social Simulation Arena</b> by MIT</span><a href="leaderboard.html">targets</a><a href="docs.html">docs</a><a href="https://github.com/Social-Atoms/social-sim-arena">github</a><span class="right">submission design preview</span></footer>
+<footer><span><b>Social Simulation Arena</b> by MIT</span><a href="leaderboard.html">targets</a><a href="docs.html">docs</a><a href="https://github.com/Social-Atoms/social-sim-arena">github</a><span class="right">questionnaire intake beta</span></footer>
 
 <script>
 const byId = id => document.getElementById(id);
@@ -258,6 +283,9 @@ let humanManifest=[];
 let savedHumanDraft=null;
 let humanQuestionIndex=0;
 let apiProbePassed=false;
+let agentQuestionnaireMode='manual_form';
+let humanQuestionnaireMode='manual_form';
+const submissionAttempts={agent:null,human:null};
 
 try{
   savedHumanDraft=JSON.parse(localStorage.getItem(HUMAN_DRAFT_KEY)||'null');
@@ -267,6 +295,7 @@ try{
     humanQuestionIndex=Math.max(0,Number(savedHumanDraft.current_question_index)||0);
     byId('username').value=savedHumanDraft.username||'';
     byId('human-publication-consent').checked=Boolean(savedHumanDraft.publication_consent);
+    byId('human-commitment-accept').checked=Boolean(savedHumanDraft.commitment_accepted);
     byId('human-draft-status').textContent='Saved draft found on this device.';
     byId('human-draft-status').classList.add('good');
   }
@@ -294,7 +323,8 @@ function contextForRound(round){
   const bits=[];
   if(Number.isFinite(persistence?.mean)) bits.push(`Latest published value: ${persistence.mean} ${round.unit||''}`.trim());
   if(Array.isArray(persistence?.items)) bits.push(`Persistence order: ${persistence.items.join(' › ')}`);
-  if(round.resolve) bits.push(`Resolution source: ${round.resolve}`);
+  if(round.resolve) bits.push(`Resolution rule: ${round.resolve}`);
+  if(round.release_at) bits.push(`Resolves ${new Date(round.release_at).toLocaleString()}`);
   return bits.length?`<div class="context-row">${bits.map(escapeHtml).join(' · ')}</div>`:'';
 }
 function answerPreset(track,round,index,disabled){
@@ -399,7 +429,7 @@ function updateHumanQuestionStep(focus=false){
     :`Question ${humanQuestionIndex+1} of ${cards.length}`;
   byId('human-question-count').textContent=`${humanQuestionIndex+1} of ${cards.length} · All questions`;
   renderHumanQuestionIndex(cards);
-  byId('human-submit').disabled=questionLoadState!=='ready'||humanQuestionIndex!==cards.length-1||Boolean(byId('human-questionnaire').querySelector('[data-unsupported]'));
+  byId('human-submit').disabled=humanQuestionnaireMode!=='manual_form'||questionLoadState!=='ready'||humanQuestionIndex!==cards.length-1||Boolean(byId('human-questionnaire').querySelector('[data-unsupported]'));
   if(focus) cards[humanQuestionIndex].querySelector('h4')?.focus();
 }
 function renderBoardPicker(){
@@ -436,7 +466,7 @@ function renderQuestionnaire(track){
     const type=normalizeTargetType(round.target_type);
     const lock=new Date(round.lock_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
     return `<article class="question-card" data-answer-card data-round-id="${escapeHtml(round.round_id)}" data-target-type="${escapeHtml(type)}">
-      <div class="question-head"><span class="question-number">${index+1}</span><div><h4 tabindex="-1">${escapeHtml(round.question)}</h4><div class="question-meta"><span>${escapeHtml(round.round_id)}</span><span>Unit: ${escapeHtml(round.unit)}</span><span>Locks ${escapeHtml(lock)}</span><span class="question-type">${escapeHtml(typeLabels[type]||type)}</span></div>${track==='human'?contextForRound(round):''}</div></div>
+      <div class="question-head"><span class="question-number">${index+1}</span><div><h4 tabindex="-1">${escapeHtml(round.question)}</h4><div class="question-meta"><span>${escapeHtml(round.round_id)}</span><span>Unit: ${escapeHtml(round.unit)}</span><span>Locks ${escapeHtml(lock)}</span><span class="question-type">${escapeHtml(typeLabels[type]||type)}</span></div>${contextForRound(round)}</div></div>
       <div class="answer-preset">${answerPreset(track,round,index,agentDisabled)}</div>
     </article>`;
   }).join('');
@@ -490,11 +520,21 @@ function collectAnswers(track){
 }
 async function loadQuestions(){
   try{
-    const response=await fetch('data.json',{cache:'no-store'});
-    if(!response.ok) throw new Error('question data returned '+response.status);
-    const data=await response.json();
-    const now=Date.now();
-    openQuestions=(data.rounds||[]).filter(round=>round.status==='open'&&Date.parse(round.lock_at)>now).sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
+    let questions;
+    try{
+      const response=await fetch('/api/v1/questionnaire',{cache:'no-store'});
+      if(!response.ok) throw new Error('manifest returned '+response.status);
+      const manifest=await response.json();
+      if(manifest.schema_version!=='ssa-questionnaire-manifest-v1'||!Array.isArray(manifest.questions)) throw new Error('invalid manifest');
+      questions=manifest.questions.map(round=>({...round,resolve:round.resolution_rule,baselines:round.latest_public_reference?{persistence:round.latest_public_reference}:null}));
+    }catch(manifestError){
+      const response=await fetch('data.json',{cache:'no-store'});
+      if(!response.ok) throw new Error('question data returned '+response.status);
+      const data=await response.json();
+      const now=Date.now();
+      questions=(data.rounds||[]).filter(round=>round.status==='open'&&Date.parse(round.lock_at)>now);
+    }
+    openQuestions=questions.sort((a,b)=>a.lock_at.localeCompare(b.lock_at)||a.round_id.localeCompare(b.round_id));
     if(!humanManifest.length) humanManifest=openQuestions.filter(round=>boardForRound(round)===selectedHumanBoard).map(round=>round.round_id);
     else humanManifest=humanManifest.filter(roundId=>openQuestions.some(round=>round.round_id===roundId));
     questionLoadState='ready';
@@ -503,6 +543,7 @@ async function loadQuestions(){
   }
   renderBoardPicker();renderQuestionnaire('agent');renderQuestionnaire('human');
   setMethod(document.querySelector('input[name="delivery_method"]:checked').value);
+  setHumanQuestionnaireMode(document.querySelector('input[name="human_questionnaire_mode"]:checked').value);
 }
 
 document.querySelectorAll('[data-board]').forEach(button=>button.addEventListener('click',()=>{
@@ -545,7 +586,7 @@ byId('human-questionnaire').addEventListener('change',()=>renderHumanQuestionInd
 
 byId('human-save').addEventListener('click',()=>{
   const inputs=[...byId('human-questionnaire').querySelectorAll('input')].map(input=>({value:input.value,checked:input.checked}));
-  const draft={draft_version:2,board_id:selectedHumanBoard,round_manifest:[...humanManifest],current_question_index:humanQuestionIndex,username:byId('username').value.trim(),publication_consent:byId('human-publication-consent').checked,inputs};
+  const draft={draft_version:3,board_id:selectedHumanBoard,round_manifest:[...humanManifest],current_question_index:humanQuestionIndex,username:byId('username').value.trim(),commitment_accepted:byId('human-commitment-accept').checked,publication_consent:byId('human-publication-consent').checked,inputs};
   try{
     localStorage.setItem(HUMAN_DRAFT_KEY,JSON.stringify(draft));
     savedHumanDraft=draft;
@@ -558,14 +599,41 @@ byId('human-save').addEventListener('click',()=>{
 });
 
 const methodInputs=[...document.querySelectorAll('input[name="delivery_method"]')];
+const agentQuestionnaireInputs=[...document.querySelectorAll('input[name="agent_questionnaire_mode"]')];
+const humanQuestionnaireInputs=[...document.querySelectorAll('input[name="human_questionnaire_mode"]')];
+function setAgentQuestionnaireMode(mode){
+  agentQuestionnaireMode=mode==='arena_api'?'arena_api':'manual_form';
+  const programmatic=agentQuestionnaireMode==='arena_api';
+  const questionnaire=document.querySelector('input[name="delivery_method"]:checked')?.value==='questionnaire_commitment';
+  byId('agent-questionnaire-api').classList.toggle('on',programmatic);
+  byId('agent-questionnaire-manual').classList.toggle('on',!programmatic);
+  byId('agent-profile-fields').hidden=questionnaire&&programmatic;
+  byId('agent-browser-consent').hidden=questionnaire&&programmatic;
+  byId('agent-actions').hidden=questionnaire&&programmatic;
+  byId('commitment-accept').disabled=!questionnaire||programmatic;
+  syncQuestionnaireDisabled('agent',!questionnaire||programmatic);
+  byId('agent-submit').disabled=questionnaire&&!programmatic&&(questionLoadState!=='ready'||!openQuestions.length||Boolean(byId('agent-questionnaire').querySelector('[data-unsupported]')));
+}
+function setHumanQuestionnaireMode(mode){
+  humanQuestionnaireMode=mode==='arena_api'?'arena_api':'manual_form';
+  const programmatic=humanQuestionnaireMode==='arena_api';
+  byId('human-questionnaire-api').classList.toggle('on',programmatic);
+  byId('human-questionnaire-manual').classList.toggle('on',!programmatic);
+  byId('human-questionnaire-manual').querySelectorAll('input').forEach(input=>{input.disabled=programmatic;});
+  if(!programmatic) updateHumanQuestionStep();
+}
 function setMethod(method){
   const api=method==='openai_compatible_api';
   byId('method-api').classList.toggle('on',api); byId('method-questionnaire').classList.toggle('on',!api);
-  byId('api-url').disabled=!api; byId('api-key').disabled=!api; byId('api-test').disabled=!api; byId('commitment-accept').disabled=api; syncQuestionnaireDisabled('agent',api);
-  byId('agent-submit').disabled=!api&&(questionLoadState!=='ready'||!openQuestions.length||Boolean(byId('agent-questionnaire').querySelector('[data-unsupported]')));
+  byId('api-url').disabled=!api; byId('api-key').disabled=!api; byId('api-test').disabled=!api;
+  agentQuestionnaireInputs.forEach(input=>{input.disabled=api;});
+  setAgentQuestionnaireMode(agentQuestionnaireInputs.find(input=>input.checked)?.value||'manual_form');
 }
 methodInputs.forEach(input=>input.addEventListener('change',()=>setMethod(input.value)));
+agentQuestionnaireInputs.forEach(input=>input.addEventListener('change',()=>setAgentQuestionnaireMode(input.value)));
+humanQuestionnaireInputs.forEach(input=>input.addEventListener('change',()=>setHumanQuestionnaireMode(input.value)));
 setMethod('openai_compatible_api');
+setHumanQuestionnaireMode('manual_form');
 
 function resetApiProbe(){
   apiProbePassed=false;
@@ -618,11 +686,42 @@ byId('api-test').addEventListener('click',async()=>{
   }
 });
 
-function showPacket(kind,packet){ byId(kind+'-packet').textContent=JSON.stringify(packet,null,2); const review=byId(kind+'-review'); review.classList.add('on'); review.scrollIntoView({behavior:'smooth',block:'nearest'}); }
-byId('agent-form').addEventListener('submit',event=>{
+function showPacket(kind,packet){
+  byId(kind+'-receipt').textContent='Review packet generated locally. Nothing was transmitted; API credentials are redacted.';
+  byId(kind+'-packet').textContent=JSON.stringify(packet,null,2);
+  const review=byId(kind+'-review');review.classList.add('on');review.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function submissionKey(track,packet){
+  const serialized=JSON.stringify(packet);
+  if(submissionAttempts[track]?.serialized===serialized) return submissionAttempts[track].key;
+  const key=globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  submissionAttempts[track]={serialized,key};
+  return key;
+}
+async function transmitQuestionnaire(track,packet){
+  const review=byId(track+'-review');
+  const receipt=byId(track+'-receipt');
+  const output=byId(track+'-packet');
+  review.classList.add('on');receipt.className='receipt';receipt.textContent='Submitting to the Arena private intake…';output.textContent='';
+  review.scrollIntoView({behavior:'smooth',block:'nearest'});
+  try{
+    const response=await fetch('/api/v1/questionnaire-submissions',{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':submissionKey(track,packet)},body:JSON.stringify({track,submission:packet})});
+    const body=await response.json().catch(()=>({error:{message:`The server returned HTTP ${response.status}.`}}));
+    if(!response.ok){const error=new Error(body.error?.message||`Submission failed with HTTP ${response.status}.`);error.status=response.status;error.details=body.error?.details||[];throw error;}
+    receipt.textContent=`Accepted into private review as ${body.submission_id}. Save the receipt hash below; publication consent will be applied only if the submission is accepted.`;
+    output.textContent=JSON.stringify(body,null,2);
+    if(track==='human') try{localStorage.removeItem(HUMAN_DRAFT_KEY);}catch(error){}
+  }catch(error){
+    receipt.className='receipt bad';
+    receipt.textContent=error.status===503?'Submission storage is not active yet. Your answers remain in this browser; ask the maintainer to connect the private Vercel Blob store, then retry.':`Submission was not accepted: ${error.message}`;
+    output.textContent=error.details?.length?JSON.stringify({details:error.details},null,2):'';
+  }
+}
+byId('agent-form').addEventListener('submit',async event=>{
   event.preventDefault();
   if(!selectValue.value){ picker.classList.add('invalid'); trigger.classList.add('invalid'); trigger.setAttribute('aria-invalid','true'); trigger.focus(); return; }
   const method=methodInputs.find(input=>input.checked).value;
+  if(method==='questionnaire_commitment'&&agentQuestionnaireMode==='arena_api') return;
   if(method==='questionnaire_commitment'&&!questionnaireReady('agent')) return;
   if(method==='openai_compatible_api'&&!apiProbePassed){ byId('api-test-status').className='probe-status bad';byId('api-test-status').textContent='Pass the connection test before submitting.';byId('api-test').focus();return; }
   if(!event.currentTarget.checkValidity()){ event.currentTarget.reportValidity(); return; }
@@ -634,10 +733,12 @@ byId('agent-form').addEventListener('submit',event=>{
       ?{method,endpoint:byId('api-url').value.trim(),credential_supplied:Boolean(byId('api-key').value),contract_version:'ssa-agent-api-v1',probe_status:'passed'}
       :{method,answers:collectAnswers('agent'),commitment:{accepted:true,terms_version:'ssa-participant-v1'}}
   };
-  showPacket('agent',packet);
+  if(method==='questionnaire_commitment') await transmitQuestionnaire('agent',packet);
+  else showPacket('agent',packet);
 });
-byId('human-form').addEventListener('submit',event=>{
+byId('human-form').addEventListener('submit',async event=>{
   event.preventDefault();
+  if(humanQuestionnaireMode==='arena_api') return;
   const cards=[...byId('human-questionnaire').querySelectorAll('[data-answer-card]')];
   const incomplete=cards.findIndex(card=>!answerCardComplete(card));
   if(incomplete>=0){
@@ -648,7 +749,8 @@ byId('human-form').addEventListener('submit',event=>{
     return;
   }
   if(!questionnaireReady('human')) return; if(!event.currentTarget.checkValidity()){ event.currentTarget.reportValidity(); return; }
-  showPacket('human',{submission_version:1,board_id:selectedHumanBoard,round_manifest:[...humanManifest],username:byId('username').value.trim(),contact_email:byId('human-email').value.trim(),answers:collectAnswers('human'),publication_consent:{accepted:byId('human-publication-consent').checked,field:'username',terms_version:'ssa-publication-v1'}});
+  const packet={submission_version:1,board_id:selectedHumanBoard,round_manifest:[...humanManifest],username:byId('username').value.trim(),contact_email:byId('human-email').value.trim(),answers:collectAnswers('human'),commitment:{accepted:true,terms_version:'ssa-participant-v1'},publication_consent:{accepted:byId('human-publication-consent').checked,field:'username',terms_version:'ssa-publication-v1'}};
+  await transmitQuestionnaire('human',packet);
 });
 
 activateTrack(location.hash.slice(1));
