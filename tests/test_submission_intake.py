@@ -285,7 +285,7 @@ class SubmissionPrototype(unittest.TestCase):
         self.assertIn("accepted:byId('human-publication-consent').checked", self.page)
 
     def test_human_is_one_board_with_a_frozen_manifest_and_own_contract(self):
-        self.assertIn("questionsForTrack('human')", self.page)
+        self.assertIn("const questions=questionsForTrack(track)", self.page)
         self.assertIn("board_id:selectedHumanBoard", self.page)
         self.assertIn("round_manifest:[...humanManifest]", self.page)
         self.assertIn("response=track==='human'", self.page)
@@ -293,6 +293,16 @@ class SubmissionPrototype(unittest.TestCase):
         with open(os.path.join(ROOT, "docs", "submission-design.md")) as f:
             design = f.read()
         self.assertIn("human_scoring.py", design)
+
+    def test_human_board_shows_one_question_at_a_time(self):
+        self.assertIn('id="human-previous"', self.page)
+        self.assertIn('id="human-next"', self.page)
+        self.assertIn('id="human-step-status"', self.page)
+        self.assertIn("card.hidden=!active", self.page)
+        self.assertIn("validateAnswerCard(current)", self.page)
+        self.assertIn("current_question_index:humanQuestionIndex", self.page)
+        self.assertIn("Question ${humanQuestionIndex+1} of ${cards.length}",
+                      self.page)
 
     def test_index_submit_page_has_exactly_two_submit_paths(self):
         self.assertEqual(2, self.index_submit.count('class="svrow"'))
