@@ -737,6 +737,38 @@ def basket_weeks(queries, geo=GEO, now=None, fetch=False, use_archive=True):
     return [{"date": d, "values": by_week[d]} for d in sorted(by_week)]
 
 
+def share_series(weeks, query, places=2):
+    """One basket member's percent of the basket, [{date, value}] oldest first.
+
+    The scale-free view of a basket week. Trends redraws its sample on every
+    fetch, and the redraw moves the whole basket together -- four fetch days of
+    one settled week moved every one of the five queries by about the same four
+    percent. Dividing by the week's basket total cancels that common factor,
+    which is why the rounds forecast shares: what is left moves only when
+    attention actually moves between these five brands.
+
+    A week whose basket sums to zero is dropped rather than divided: Trends
+    floors small values at zero, and a basket that reads all zeros is a
+    measurement failure, not a week in which nobody searched for anything.
+    """
+    out = []
+    for w in weeks:
+        vals = w["values"]
+        if query not in vals:
+            raise KeyError(
+                f"{query} is not in this basket ({sorted(vals)}); a share "
+                "series must be built from the basket that carries it")
+        total = sum(vals.values())
+        if total <= 0:
+            continue
+        out.append({"date": w["date"], "value": round(100.0 * vals[query] / total, places)})
+    if not out:
+        raise RuntimeError(
+            f"no usable weeks for the {query} basket share; every archived "
+            "week summed to zero")
+    return out
+
+
 def basket_order(values, queries):
     """{query: index} -> the queries ordered by weekly interest, highest first.
 

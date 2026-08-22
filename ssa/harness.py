@@ -502,25 +502,32 @@ FOOTER = (
 #
 # It also makes the cost of the headline round type one call, which is what
 # keeps it affordable to run every entrant on it every week.
+# The word for one row of a profile. Demographic rounds forecast subgroups of
+# a population; the Trends basket forecasts brands sharing one measurement.
+# Calling a brand a subgroup would misdescribe the task to the entrant, so the
+# noun travels with the round definition (`profile_noun`) and is frozen with
+# the question rather than guessed from the tracker at prompt time.
+PROFILE_NOUN = "subgroup"
+
 PROFILE_HEADER = (
-    "You are forecasting the next scheduled release of a public opinion "
-    "tracker, broken down by demographic subgroup.\n"
+    "You are forecasting the next scheduled release of a tracker, broken "
+    "down into its {noun}s.\n"
     "Question: {question}\n"
     "Unit: {unit}\n"
     "How the tracker is measured: {methodology}\n"
     "Release schedule: {cadence}\n"
     "Scheduled release date: {release}\n"
-    "You are forecasting all {n} subgroups below as one joint answer. They are "
-    "cuts of the same tracker on the same day: they share the national "
-    "movement, and they also move apart from it in ways the national number "
-    "alone does not determine. You are being scored on the whole profile, so "
-    "the relationships between subgroups matter as much as their levels.\n"
+    "You are forecasting all {n} {noun}s below as one joint answer. They are "
+    "cuts of the same measurement on the same day: they move together, and "
+    "they also move apart in ways the overall level alone does not determine. "
+    "You are being scored on the whole profile, so the relationships between "
+    "{noun}s matter as much as their levels.\n"
 )
 
-PROFILE_NO_HISTORY = "No history of these subgroups is provided.\n"
+PROFILE_NO_HISTORY = "No history of these {noun}s is provided.\n"
 
 PROFILE_WITH_HISTORY = (
-    "Recent published values for each subgroup (oldest first, one point per "
+    "Recent published values for each {noun} (oldest first, one point per "
     "release):\n{history}\n"
 )
 
@@ -528,12 +535,12 @@ PROFILE_WITH_HISTORY = (
 # the same rule FOOTER follows, and for the same reason: doubling them would ask
 # the model to emit {{...}}, which never parses.
 PROFILE_FOOTER = (
-    "Give a predictive distribution for every subgroup listed above. Reply "
-    "with exactly one JSON object and no other text, keyed by the subgroup "
+    "Give a predictive distribution for every {noun} listed above. Reply "
+    "with exactly one JSON object and no other text, keyed by the {noun} "
     "ids exactly as they appear above:\n"
-    '{"<subgroup id>": {"mean": <number>, "sd": <number>}, ...}\n'
-    "Every subgroup id must be present. A partial answer cannot be scored and "
-    "is discarded. sd is your standard deviation for that subgroup, in the "
+    '{{"<{noun} id>": {{"mean": <number>, "sd": <number>}}, ...}}\n'
+    "Every {noun} id must be present. A partial answer cannot be scored and "
+    "is discarded. sd is your standard deviation for that {noun}, in the "
     "same unit, and must be greater than 0."
 )
 
@@ -1112,20 +1119,23 @@ def build_profile_prompt(r, history_by_cell, context=DEFAULT_CONTEXT,
         except (ImportError, KeyError):
             meta = {}
 
+    noun = r.get("profile_noun") or PROFILE_NOUN
     head = PROFILE_HEADER.format(
         question=r.get("question") or meta.get("question", ""),
         unit=r.get("unit") or meta.get("unit", ""),
         methodology=r.get("methodology") or meta.get("methodology", "not stated"),
         cadence=r.get("cadence") or meta.get("cadence", "not stated"),
         release=r["release_at"][:10],
-        n=len(cells))
+        n=len(cells), noun=noun)
 
     n = CONTEXT[context]
     if n == 0:
-        body = PROFILE_NO_HISTORY + "The subgroups to forecast are:\n" + \
+        body = PROFILE_NO_HISTORY.format(noun=noun) + \
+            f"The {noun}s to forecast are:\n" + \
             "\n".join(f"  {c}" for c in cells) + "\n"
     else:
         body = PROFILE_WITH_HISTORY.format(
+            noun=noun,
             history=render_profile_history(
                 history_by_cell or {}, cells, n,
                 profile_round.labels_for(cells)))
@@ -1148,7 +1158,7 @@ def build_profile_prompt(r, history_by_cell, context=DEFAULT_CONTEXT,
         digest = SEARCH_BLOCK.format(
             asof=search.get("asof") or search.get("asked_at") or "lock time",
             results=search_adapter.render(search["results"]))
-    return head + body + digest + protocol + PROFILE_FOOTER
+    return head + body + digest + protocol + PROFILE_FOOTER.format(noun=noun)
 
 
 def render_ranking_history(history, n):

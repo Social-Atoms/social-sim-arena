@@ -1140,6 +1140,77 @@ _trends("trends_iphone", "iPhone",
         "cycle and product rumors, so the calendar itself is informative.")
 
 
+# --- the five-brand basket, as shares ---------------------------------------
+#
+# One Trends request measures up to five queries on a single shared scale, and
+# the basket rounds forecast how that scale is divided: each brand's percent of
+# the five-brand total for the week.
+#
+# **Why a share rather than the index itself.** The index is a sample, and the
+# sample is redrawn on every fetch: measured over four fetch days, one settled
+# week's whole series moved together by about four percent -- Tesla, iPhone,
+# Samsung, Netflix and Disney all up on one day and all down on the next.
+# That common factor is the sampling draw, not the world. Dividing by the
+# basket total cancels it: across the same four fetches the raw values wobbled
+# 2.0-3.2% while the shares wobbled 1.2-1.9%. What survives is what we want
+# scored -- a launch week really does move iPhone's share of attention, and a
+# share cannot be moved by a peak entering or leaving the 12-month window,
+# which rescales every raw index in the archive.
+#
+# **Why not the ranking.** These five brands sit far apart (iPhone near 55,
+# Tesla near 13), so their order barely changes: over 52 archived weeks,
+# copying last week's order was exactly right 49% of the time and the leader
+# never changed once. A round whose null is perfect half the time cannot
+# separate anyone. Shares move every week and keep the magnitudes the ordering
+# throws away.
+BASKET = ("Tesla", "iPhone", "Samsung", "Netflix", "Disney")
+
+_BASKET_METHOD = (
+    "Google Trends, United States, web search, all categories, one comparison "
+    "request covering all five queries so their weekly indices share a single "
+    "scale. The arena archives a dated snapshot of every fetch and scores "
+    "against its own archive; a completed week's values are whatever the "
+    "earliest snapshot containing that week showed, and the share is that "
+    "week's index for this query divided by the sum over the five, in percent. "
+    "The five shares add to 100 by construction. The in-progress week is "
+    "never scored.")
+
+
+def _trends_share(sid, query, asks):
+    SERIES[sid] = {
+        "label": f"Trends share of the five-brand basket: {query}",
+        "tracker": "google_trends",
+        "source": "trends_basket",
+        "trends_basket": {"query": query, "basket": BASKET,
+                          "geo": trends_adapter.GEO},
+        "unit": "percent of the five-brand basket",
+        "cadence": ("weekly, Sunday through Saturday; the completed week "
+                    "enters the archive the following week"),
+        "question": (
+            f"Google Trends, United States: '{query}' as a percentage of the "
+            f"combined weekly search interest of {', '.join(BASKET)}, for the "
+            f"most recent complete Sunday-to-Saturday week. {asks}"),
+        "methodology": _BASKET_METHOD,
+        # No `survey`, as for every behavioral target.
+    }
+
+
+_trends_share("trends_share_tesla", "Tesla",
+              "Share moves on product and company news -- launches, recalls, "
+              "earnings, Musk coverage.")
+_trends_share("trends_share_iphone", "iPhone",
+              "Share is strongly seasonal around Apple's September "
+              "announcement cycle, which is the largest regular swing in "
+              "this basket.")
+_trends_share("trends_share_samsung", "Samsung",
+              "Share moves on launches and on Apple's calendar, since the "
+              "basket is a fixed pie.")
+_trends_share("trends_share_netflix", "Netflix",
+              "Share moves on release schedules and subscription news.")
+_trends_share("trends_share_disney", "Disney",
+              "Share moves on film releases, park and streaming news.")
+
+
 # --- the Civiqs 16-cell population profile ----------------------------------
 #
 # Fifteen more cuts of the same modeled approval tracker, completing -- with
@@ -1305,6 +1376,11 @@ def build_all(sources=None):
     if "trends" in need and "trends" not in src:
         src["trends"] = {}
 
+    # The basket is one request serving five series: fetched (or read) once
+    # here and shared, so registering all five costs what registering one does.
+    if "trends_basket" in need and "trends_basket" not in src:
+        src["trends_basket"] = {}
+
     out = {}
     for sid, spec in SERIES.items():
         f = spec.get("filters") or {}
@@ -1325,6 +1401,18 @@ def build_all(sources=None):
             out[sid] = list(src["pentaesi"])
         elif spec["source"] == "confboard":
             out[sid] = list(src["confboard"])
+        elif spec["source"] == "trends_basket":
+            cfg = spec["trends_basket"]
+            given = src["trends_basket"].get(sid)
+            if given is not None:
+                out[sid] = list(given)
+            else:
+                key = (tuple(cfg["basket"]), cfg.get("geo", trends_adapter.GEO))
+                if key not in src["trends_basket"]:
+                    src["trends_basket"][key] = trends_adapter.basket_weeks(
+                        list(key[0]), key[1])
+                out[sid] = trends_adapter.share_series(
+                    src["trends_basket"][key], cfg["query"])
         elif spec["source"] == "civiqs":
             cfg = spec["civiqs"]
             given = src["civiqs"].get(sid)
