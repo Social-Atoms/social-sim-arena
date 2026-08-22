@@ -35,6 +35,8 @@ class Scratch:
         search.ROUNDS = os.path.join(self.dir, "rounds")
         search.requests.post = self._post
         os.environ[search.ENV] = "tvly-test"
+        # no network, so no need to pace the fake index
+        self.saved_interval, search.MIN_INTERVAL = search.MIN_INTERVAL, 0.0
         # The live path logs every paid reply; keep test replies out of the tree.
         self.saved_log = os.environ.get("SSA_REPLIES_DIR")
         os.environ["SSA_REPLIES_DIR"] = os.path.join(self.dir, "replies")
@@ -50,6 +52,7 @@ class Scratch:
     def __exit__(self, *a):
         (search.ARCHIVE, search.CACHE, search.ROUNDS,
          search.requests.post, key) = self.saved
+        search.MIN_INTERVAL = self.saved_interval
         if key is None:
             os.environ.pop(search.ENV, None)
         else:
