@@ -87,6 +87,7 @@ SERIES = {
     "umich_sentiment": {
         "label": "Michigan consumer sentiment",
         "tracker": "umich_sentiment",
+        "publisher": 'University of Michigan Surveys of Consumers: a monthly telephone and web survey of US households, published by the university as an official statistic with a preliminary and a final reading each month.',
         "source": "umich", "value": "value",
         "unit": "index points",
         "cadence": "monthly, preliminary mid-month and final end-month",
@@ -146,6 +147,7 @@ SERIES = {
     "yougov_approval": {
         "label": "Economist/YouGov Trump approval",
         "tracker": "economist_yougov",
+        "publisher": "The Economist and YouGov, jointly: a weekly survey wave of YouGov's own online panel of US adults. The published number is what respondents said that week, not a model's estimate.",
         "source": "sb_approval",
         "filters": {"subgroup": "All polls", "pollster": "YouGov", "population": "A"},
         "value": "approve", "unit": "% approve",
@@ -169,6 +171,7 @@ SERIES = {
     "mc_approval": {
         "label": "Morning Consult Trump approval",
         "tracker": "morning_consult",
+        "publisher": 'Morning Consult: a continuously fielded online survey of US registered voters, run by the firm itself. The arena scores a house-effect-adjusted average of the published polls rather than a single wave.',
         "source": "sb_approval",
         "filters": {"subgroup": "All polls", "pollster": "Morning Consult",
                     "population": "RV"},
@@ -192,6 +195,7 @@ SERIES = {
     "yougov_generic_margin": {
         "label": "Economist/YouGov generic ballot margin",
         "tracker": "economist_yougov",
+        "publisher": "The Economist and YouGov, jointly: a weekly survey wave of YouGov's own online panel of US adults. The published number is what respondents said that week, not a model's estimate.",
         "source": "sb_generic",
         "filters": {"subgroup": "All polls", "pollster": "YouGov"},
         "value": "net", "unit": "net points, Democratic minus Republican",
@@ -219,6 +223,7 @@ SERIES = {
     "yougov_econ_approval": {
         "label": "Economist/YouGov Trump approval on the economy",
         "tracker": "economist_yougov",
+        "publisher": "The Economist and YouGov, jointly: a weekly survey wave of YouGov's own online panel of US adults. The published number is what respondents said that week, not a model's estimate.",
         "source": "sb_approval",
         "filters": {"subgroup": "Economy", "pollster": "YouGov"},
         "value": "approve", "unit": "% approve",
@@ -240,6 +245,7 @@ SERIES = {
     "yougov_immig_approval": {
         "label": "Economist/YouGov Trump approval on immigration",
         "tracker": "economist_yougov",
+        "publisher": "The Economist and YouGov, jointly: a weekly survey wave of YouGov's own online panel of US adults. The published number is what respondents said that week, not a model's estimate.",
         "source": "sb_approval",
         "filters": {"subgroup": "Immigration", "pollster": "YouGov"},
         "value": "approve", "unit": "% approve",
@@ -448,6 +454,7 @@ for _sid, _pollster, _pop in (("ipsos_generic_margin", "Ipsos", "RV"),):
 SERIES["mc_generic_margin"] = {
     "label": "Morning Consult generic ballot margin",
     "tracker": "morning_consult",
+        "publisher": 'Morning Consult: a continuously fielded online survey of US registered voters, run by the firm itself. The arena scores a house-effect-adjusted average of the published polls rather than a single wave.',
     "source": "sb_generic",
     "filters": {"subgroup": "All polls", "pollster": "Morning Consult"},
     "value": "net", "unit": "net points, Democratic minus Republican",
@@ -509,6 +516,7 @@ _CIVIQS_APPROVAL = "approve_president_trump_2025"
 SERIES["civiqs_net_approval"] = {
     "label": "Civiqs Trump net approval",
     "tracker": "civiqs",
+        "publisher": 'Civiqs, an independent research firm running its own rolling online panel of registered voters (about 123,000 cumulative interviews). Unlike a survey wave, the published number is a modeled daily estimate (MRP), smoothed and revised nightly. Civiqs is unrelated to YouGov: same subject, different organisation, different instrument.',
     "source": "civiqs",
     "civiqs": {"name": _CIVIQS_APPROVAL, "net": True, "weekday": 4},
     "value": "value",
@@ -596,6 +604,7 @@ SERIES["civiqs_net_approval"] = {
 SERIES["civiqs_net_approval_rep"] = {
     "label": "Civiqs Trump net approval, Republicans",
     "tracker": "civiqs",
+        "publisher": 'Civiqs, an independent research firm running its own rolling online panel of registered voters (about 123,000 cumulative interviews). Unlike a survey wave, the published number is a modeled daily estimate (MRP), smoothed and revised nightly. Civiqs is unrelated to YouGov: same subject, different organisation, different instrument.',
     "source": "civiqs",
     "civiqs": {"name": _CIVIQS_APPROVAL, "filters": {"party": "Republican"},
                "net": True, "weekday": 4},
@@ -674,6 +683,7 @@ def _civiqs_net(sid, tracker, label, question, unit, net, method_extra):
     SERIES[sid] = {
         "label": label,
         "tracker": "civiqs",
+        "publisher": 'Civiqs, an independent research firm running its own rolling online panel of registered voters (about 123,000 cumulative interviews). Unlike a survey wave, the published number is a modeled daily estimate (MRP), smoothed and revised nightly. Civiqs is unrelated to YouGov: same subject, different organisation, different instrument.',
         "source": "civiqs",
         "civiqs": {"name": tracker, "net": net, "weekday": 4},
         "value": "value",
@@ -751,6 +761,7 @@ _civiqs_net(
 SERIES["civiqs_angry_share"] = {
     "label": "Civiqs share angry about the country",
     "tracker": "civiqs",
+        "publisher": 'Civiqs, an independent research firm running its own rolling online panel of registered voters (about 123,000 cumulative interviews). Unlike a survey wave, the published number is a modeled daily estimate (MRP), smoothed and revised nightly. Civiqs is unrelated to YouGov: same subject, different organisation, different instrument.',
     "source": "civiqs",
     # A share, not a net: the tracker declares no net and offers ten emotions,
     # so any net over it would be this repository's construction rather than
@@ -837,6 +848,7 @@ _WIKI_METHOD = (
 SERIES["wiki_views_trump"] = {
     "label": "Wikipedia weekly pageviews, Donald Trump",
     "tracker": "wikipedia",
+        "publisher": 'The Wikimedia Foundation, from its own server logs: not a survey, but a count of how many people actually opened a page, published through a public API.',
     "source": "wikipedia",
     "wikipedia": {"article": "Donald_Trump"},
     "value": "value",
@@ -857,6 +869,7 @@ SERIES["wiki_views_trump"] = {
 SERIES["wiki_views_taylor_swift"] = {
     "label": "Wikipedia weekly pageviews, Taylor Swift",
     "tracker": "wikipedia",
+        "publisher": 'The Wikimedia Foundation, from its own server logs: not a survey, but a count of how many people actually opened a page, published through a public API.',
     "source": "wikipedia",
     "wikipedia": {"article": "Taylor_Swift"},
     "value": "value",
@@ -929,6 +942,7 @@ def _umich_party(sid, party, label, who):
     SERIES[sid] = {
         "label": label,
         "tracker": "umich_party",
+        "publisher": "University of Michigan Surveys of Consumers, party breakdown: the same monthly survey, reported separately for self-identified Democrats, Independents and Republicans in the release's own addendum table.",
         "source": "umichparty",
         "umichparty": {"party": party},
         "value": "value",
@@ -985,6 +999,7 @@ _umich_party("umich_party_rep", "rep",
 SERIES["aaii_bull_bear_spread"] = {
     "label": "AAII bull-bear spread",
     "tracker": "aaii",
+        "publisher": 'The American Association of Individual Investors: a weekly poll of its own members, who are self-selected active individual investors rather than a sample of the public.',
     "source": "aaii", "value": "spread",
     "unit": "percentage points (bullish minus bearish)",
     "cadence": ("weekly; voting runs Thursday through Wednesday, rows are "
@@ -1030,6 +1045,7 @@ SERIES["aaii_bull_bear_spread"] = {
 SERIES["cci_headline"] = {
     "label": "Conference Board Consumer Confidence Index",
     "tracker": "conference_board",
+        "publisher": 'The Conference Board, a business membership and research organisation: a monthly survey of US households, published as an index. Each release restates the previous month; the arena scores the first print.',
     "source": "confboard",
     "unit": "index points (1985=100)",
     "cadence": "monthly; released the last Tuesday of the month, 10:00 ET",
@@ -1047,6 +1063,7 @@ SERIES["cci_headline"] = {
 SERIES["esi_headline"] = {
     "label": "Penta-CivicScience Economic Sentiment Index",
     "tracker": "penta_esi",
+        "publisher": "Penta and CivicScience: a biweekly index built from CivicScience's continuously running online polling, published by Penta as a press release.",
     "source": "pentaesi",
     "unit": "index points",
     "cadence": ("biweekly; released every other Wednesday, rows dated by "
@@ -1114,6 +1131,7 @@ def _trends(sid, query, asks):
     SERIES[sid] = {
         "label": f"Google Trends search interest: {query}",
         "tracker": "google_trends",
+        "publisher": 'Google, from its own search logs: not a survey and not an opinion, but a measure of what people actually typed into a search box, published as a relative index.',
         "source": "trends",
         "trends": {"query": query, "geo": trends_adapter.GEO},
         "value": "value",
@@ -1180,6 +1198,7 @@ def _trends_share(sid, query, asks):
     SERIES[sid] = {
         "label": f"Trends share of the five-brand basket: {query}",
         "tracker": "google_trends",
+        "publisher": 'Google, from its own search logs: not a survey and not an opinion, but a measure of what people actually typed into a search box, published as a relative index.',
         "source": "trends_basket",
         "trends_basket": {"query": query, "basket": BASKET,
                           "geo": trends_adapter.GEO},
@@ -1252,6 +1271,7 @@ for _sfx, _axis, _label, _short in _PROFILE_CELLS:
     SERIES[f"civiqs_net_approval_{_sfx}"] = {
         "label": f"Civiqs Trump net approval, {_short}",
         "tracker": "civiqs",
+        "publisher": 'Civiqs, an independent research firm running its own rolling online panel of registered voters (about 123,000 cumulative interviews). Unlike a survey wave, the published number is a modeled daily estimate (MRP), smoothed and revised nightly. Civiqs is unrelated to YouGov: same subject, different organisation, different instrument.',
         "source": "civiqs",
         "civiqs": {"name": _CIVIQS_APPROVAL, "filters": {_axis: _label},
                    "net": True, "weekday": 4},
@@ -1300,7 +1320,8 @@ def describe(series_id):
     """The question and methodology text an entrant is entitled to see."""
     s = SERIES[series_id]
     return {"question": s["question"], "unit": s["unit"],
-            "methodology": s["methodology"], "cadence": s["cadence"]}
+            "methodology": s["methodology"], "cadence": s["cadence"],
+            "publisher": s.get("publisher", s.get("tracker", ""))}
 
 
 def survey(series_id):

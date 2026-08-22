@@ -462,8 +462,18 @@ TIMEOUT = (15, 600)
 # prompt omits is not a hard question, it is an unfair one: no amount of
 # reasoning recovers whether "approval" here means adults or registered voters,
 # and those differ by several points.
+# `Published by` names the organisation and says what kind of result this is:
+# a survey wave, a modeled estimate, an official statistic, a usage count.
+# Two of the trackers here measure the same thing about the same country --
+# Civiqs and Economist/YouGov both report Trump approval -- and they are
+# independent producers with different instruments, one an MRP model over a
+# rolling panel, the other a weekly wave of fresh interviews. An entrant told
+# only "Trump approval" would reasonably treat one as a noisy copy of the
+# other. Naming the producer is what makes the two questions different
+# questions.
 HEADER = (
     "You are forecasting the next scheduled release of a public opinion tracker.\n"
+    "Published by: {publisher}\n"
     "Question: {question}\n"
     "Unit: {unit}\n"
     "How the tracker is measured: {methodology}\n"
@@ -512,6 +522,7 @@ PROFILE_NOUN = "subgroup"
 PROFILE_HEADER = (
     "You are forecasting the next scheduled release of a tracker, broken "
     "down into its {noun}s.\n"
+    "Published by: {publisher}\n"
     "Question: {question}\n"
     "Unit: {unit}\n"
     "How the tracker is measured: {methodology}\n"
@@ -559,6 +570,7 @@ PROFILE_FOOTER = (
 # sometimes bury the list itself.
 RANKING_HEADER = (
     "You are forecasting an ordered list, not a number.\n"
+    "Published by: {publisher}\n"
     "Question: {question}\n"
     "Answer format: {unit}\n"
     "How the ranking is measured: {methodology}\n"
@@ -1004,6 +1016,18 @@ def has_key(entrant):
     return bool(standby and os.environ.get(standby["env"]))
 
 
+def publisher_of(r, meta):
+    """Who produces this number, and what kind of result it is.
+
+    The round may state it; otherwise the series registry does. Falls back to
+    the tracker id rather than to silence, because a header field that
+    sometimes vanishes changes the shape of the prompt between series and puts
+    a second uncontrolled variable in the comparison.
+    """
+    return (r.get("publisher") or meta.get("publisher")
+            or r.get("tracker") or "not stated")
+
+
 def build_prompt(r, history, context=DEFAULT_CONTEXT,
                  elicitation=DEFAULT_ELICITATION, news=None, search=None):
     """The exact text an entrant sees.
@@ -1029,6 +1053,7 @@ def build_prompt(r, history, context=DEFAULT_CONTEXT,
             meta = {}
 
     head = HEADER.format(
+        publisher=publisher_of(r, meta),
         question=r.get("question") or meta.get("question", ""),
         unit=r.get("unit") or meta.get("unit", ""),
         methodology=r.get("methodology") or meta.get("methodology", "not stated"),
@@ -1121,6 +1146,7 @@ def build_profile_prompt(r, history_by_cell, context=DEFAULT_CONTEXT,
 
     noun = r.get("profile_noun") or PROFILE_NOUN
     head = PROFILE_HEADER.format(
+        publisher=publisher_of(r, meta),
         question=r.get("question") or meta.get("question", ""),
         unit=r.get("unit") or meta.get("unit", ""),
         methodology=r.get("methodology") or meta.get("methodology", "not stated"),
@@ -1204,6 +1230,7 @@ def build_ranking_prompt(r, history, context=DEFAULT_CONTEXT,
             meta = {}
 
     head = RANKING_HEADER.format(
+        publisher=publisher_of(r, meta),
         question=r.get("question") or meta.get("question", ""),
         unit=r.get("unit") or meta.get("unit", ""),
         methodology=r.get("methodology") or meta.get("methodology")
