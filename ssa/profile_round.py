@@ -30,13 +30,26 @@ in that order. One roster, so cell i can never be scored against cell j's
 answer.
 
 **Resolution and the freeze.** The outcome is each cell's own series value as
-of the round's release date, read from the same archive every other Civiqs
-round resolves from -- no hand-typed numbers. The baselines see only history
-strictly before `lock_at`, the identical filter `refresh.build_rounds` applies
-to scalar rounds, applied sixteen times. Both halves fail loud rather than
-guess: a cell with no post-lock release refuses the whole round rather than
-resolving fifteen cells and quietly dropping one, because a profile with a hole
-is not a profile.
+of the round's release date, read from the same archive every other round on
+that source resolves from -- no hand-typed numbers. The baselines see only
+history strictly before `lock_at`, the identical filter `refresh.build_rounds`
+applies to scalar rounds, applied sixteen times. Both halves fail loud rather
+than guess: a cell with no post-lock release refuses the whole round rather
+than resolving fifteen cells and quietly dropping one, because a profile with a
+hole is not a profile.
+
+**This module is no longer Civiqs-only, and nothing in it should become so
+again.** A round names its own cells and every branch here reads them from the
+round definition, so the same machinery now carries three unrelated
+populations: the Civiqs modelled demographic profile (`series.PROFILE_CELLS`),
+the five-brand Google Trends basket, and the Economist/YouGov crosstab
+(`series.YOUGOV_XTAB_CELLS`) -- sixteen *measured* survey cells rather than
+sixteen model outputs, which is the point of carrying a second one. The only
+thing that had quietly hard-coded a source was the sentence a resolution
+publishes about where its number came from; that now comes from
+`ARCHIVE_PHRASE`, keyed by the cells' registered source, because a page
+crediting Civiqs for a YouGov number is exactly the failure
+`ssa/provenance.py` exists to prevent.
 """
 from . import baselines, scoring
 from . import series as series_registry
@@ -166,6 +179,37 @@ def cell_outcome(points, release_date, lock_date, cell):
     return last
 
 
+# How each source's outcome archive is described in a published resolution.
+# This string is written verbatim into `site/data.json` under the round's
+# `resolution.method`, so it is a provenance claim, and it was hard-coded to
+# "the archived Civiqs dashboard" back when Civiqs was the only profile source.
+# The Trends basket and the Economist/YouGov crosstab are profile rounds over
+# entirely different files; a page crediting Civiqs for a number Civiqs never
+# published is exactly the failure ssa/provenance.py exists to prevent. Keyed
+# by the cells' registered `source`, because that is what produced the number.
+ARCHIVE_PHRASE = {
+    "civiqs": "the archived Civiqs dashboard",
+    "trends_basket": "the archived Google Trends comparison snapshots",
+    "yougov_xtab": ("the Economist/YouGov tracker workbook, as the mean of the "
+                    "four weekly waves dated in the scored month"),
+}
+DEFAULT_ARCHIVE_PHRASE = "the cells' own registered series archives"
+
+
+def archive_phrase(cells):
+    """How to describe where a profile round's outcome came from.
+
+    Falls back to a source-neutral phrase when the cells do not share one
+    source, rather than naming whichever source happened to be first: a mixed
+    profile has no single archive, and picking one would misattribute the rest.
+    """
+    sources = {series_registry.SERIES[c]["source"] for c in cells
+               if c in series_registry.SERIES}
+    if len(sources) != 1:
+        return DEFAULT_ARCHIVE_PHRASE
+    return ARCHIVE_PHRASE.get(sources.pop(), DEFAULT_ARCHIVE_PHRASE)
+
+
 def resolution(r, series, cells=None):
     """The outcome vector for a profile round, or a raised explanation.
 
@@ -195,7 +239,7 @@ def resolution(r, series, cells=None):
         "vector": [values[c] for c in cells],
         "release_date": release_date,
         "method": ("each cell's own series value as of the release date, from "
-                   "the archived Civiqs dashboard; the same freeze the round's "
+                   f"{archive_phrase(cells)}; the same freeze the round's "
                    "per-cell persistence null used"),
     }
 

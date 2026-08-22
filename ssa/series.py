@@ -18,6 +18,7 @@ filters were implicit in adapter code, which had two consequences worth naming:
 
 Adding a tracker means adding a row here, and nothing else.
 """
+from . import crosstab
 from .adapters import aaii as aaii_adapter
 from .adapters import civiqs as civiqs_adapter
 from .adapters import confboard as confboard_adapter
@@ -27,6 +28,7 @@ from .adapters import trends as trends_adapter
 from .adapters import umich as umich_adapter
 from .adapters import umichparty as umichparty_adapter
 from .adapters import wikipedia as wikipedia_adapter
+from .adapters import yougov_xtab as yougov_xtab_adapter
 
 # Set by michigan_history() to whichever source answered, plus the URL that
 # answered and the body it returned. The body is what ssa/provenance.py
@@ -1324,6 +1326,184 @@ for _cell in PROFILE_CELLS:
     assert _cell in SERIES, f"profile cell {_cell} is not a registered series"
 
 
+# --- the Economist/YouGov crosstab: a second, independent population ---------
+#
+# Sixteen more subgroup cells of Trump approval, and the reason to carry a
+# second set is that the first one is a *model*. Civiqs publishes an MRP
+# estimate: its sixteen cells are what a statistical model says each subgroup
+# thinks, smoothed, revised nightly, and correlated across cells by
+# construction because one model produced all of them. The Economist/YouGov
+# tracker publishes the survey's own crosstab: the cell labelled "Postgrad" is
+# the answers of the roughly 190 postgraduates who were actually interviewed
+# that week, and nothing links it to the "Hispanic" cell except the world.
+#
+# So the two profiles disagree about what a subgroup round even measures, and
+# an entrant that scores well on both has done something a smoother cannot.
+# Registering them keeps them separable: different `source`, different `unit`
+# (percent approving against net points), different cadence, different rounds.
+#
+# **Why these series are monthly.** `ssa/crosstab.py`'s module docstring holds
+# the measurement and the argument; the short version is that a weekly round on
+# most of these cells is a round on a coin flip. Measured over the 82 waves
+# published 2025-01-28 to 2026-08-17, nine of the sixteen cells have *no* real
+# week-to-week movement at all -- the estimator puts every point of their
+# weekly wobble in the measurement-noise term -- and the seven that do move
+# move less than their own noise. Averaging the four waves dated in a calendar
+# month cuts that noise by a median of 62 percent (Democrat 1.07 -> 0.43
+# points, Republican 1.95 -> 0.58, College grad 2.56 -> 0.96; least improved is
+# independents at 18 percent, most is Black voters, where it vanishes) and
+# leaves fourteen of the sixteen with movement the arena can score. That is why
+# the registered series is monthly and not weekly: it is the coarsest thing the
+# data supports, not a scheduling preference.
+#
+# The monthly figures rest on eighteen complete months, which is thin: treat
+# any single cell's number as indicative and the direction as settled. Both
+# sets are quoted per cell in the rows below, because a reader given only the
+# spread between entrants would otherwise read a noise floor as skill.
+#
+# **What a month's point is, and what it is dated.** The mean of the four
+# weekly waves dated in that calendar month, dated by the last of those four.
+# Six of the twenty months on this tracker carry five waves; those keep the
+# last four, so the target's own noise floor is the same estimator every month
+# and two rounds' scores stay comparable. A month with fewer than four waves
+# publishes no point at all rather than a three-wave average wearing the same
+# name -- `crosstab.month_target` raises, and `crosstab.monthly_coverage` says
+# which months were dropped and why.
+#
+# **The consequence for a round's lock.** A month's point is dated by its last
+# wave, and `profile_round.frozen_history` freezes on `date < lock_at[:10]`. So
+# a round scoring month M must lock on or before the date of M's last wave: one
+# day later and the strict comparison lets the answer into the history its own
+# persistence null is built from. With the arena's release-minus-48h rule that
+# fixes the release at the last wave's date plus exactly two days, which is
+# where `questions/season0.json` puts it.
+#
+# Labels are byte-exact from `yougov_xtab.SCORED_CELLS`, and the assertion at
+# the end of this block is what enforces it: the adapter's roster is the
+# authority on what the workbook contains, and a series registered under a
+# label the workbook does not carry is a round that can never resolve.
+
+_YOUGOV_XTAB_MEASURE = "approve"
+
+_YOUGOV_XTAB_PUBLISHER = (
+    "The Economist and YouGov, published weekly as the tracker's own crosstab "
+    "workbook: each cell is the percentage of the real respondents in that "
+    "subgroup of that week's survey who said they approve -- an actual "
+    "measured cell of the survey, not a modelled estimate for a subgroup. The "
+    "arena scores the mean of the four weekly waves dated in a calendar month.")
+
+# suffix, axis, the workbook's own label, how to say it in a sentence, median
+# weighted base over 82 waves, measured weekly noise, measured noise of the
+# four-wave monthly average -- both in points, both from the cell's own
+# history via scoring.noise_floor, measured 2026-08-23 over waves
+# 2025-01-28..2026-08-17.
+_YOUGOV_XTAB_CELLS = [
+    ("dem",             "party",     "Democrat",     "Democrats",              394, 1.07, 0.43),
+    ("ind",             "party",     "Independent",  "independents",           384, 2.06, 1.69),
+    ("rep",             "party",     "Republican",   "Republicans",            428, 1.95, 0.58),
+    ("age_under_30",    "age",       "Under 30",     "voters under 30",        186, 2.85, 1.23),
+    ("age_30_44",       "age",       "30-44",        "voters aged 30 to 44",   273, 2.26, 1.51),
+    ("age_45_64",       "age",       "45-64",        "voters aged 45 to 64",   414, 2.16, 0.68),
+    ("age_65_up",       "age",       "65+",          "voters aged 65 and over", 317, 2.09, 0.73),
+    ("race_white",      "race",      "White",        "White voters",           842, 1.22, 0.75),
+    ("race_black",      "race",      "Black",        "Black voters",           141, 1.99, 0.00),
+    ("race_hispanic",   "race",      "Hispanic",     "Hispanic voters",        138, 3.31, 0.59),
+    ("male",            "gender",    "Male",         "men",                    558, 1.42, 0.78),
+    ("female",          "gender",    "Female",       "women",                  629, 1.21, 0.56),
+    ("edu_hs_or_less",  "education", "HS or less",   "voters with a high-school education or less", 332, 2.52, 0.85),
+    ("edu_some_college", "education", "Some college", "voters with some college",  356, 2.40, 0.90),
+    ("edu_college_grad", "education", "College grad", "college graduates",        316, 2.56, 0.96),
+    ("edu_postgrad",    "education", "Postgrad",     "postgraduates",          190, 3.49, 1.29),
+]
+
+_YOUGOV_XTAB_CADENCE = (
+    "monthly, and derived rather than published as such: YouGov fields this "
+    "tracker weekly and the workbook carries one column per wave (dated a "
+    "Monday in 67 of 82 waves, a Tuesday in 13, a Sunday in 2). The arena's "
+    "point for a calendar month is the mean of the four waves dated in it, "
+    "dated by the last of those four, and it exists only once that fourth "
+    "wave is in the workbook -- within a week of the wave's own date.")
+
+_YOUGOV_XTAB_METHOD = (
+    "Economist/YouGov weekly tracker of US registered voters, taken from "
+    "YouGov's own public tracker workbook, one sheet per subgroup. This is the "
+    "survey's crosstab, so a cell is the answer of the respondents actually "
+    "interviewed in that subgroup that week and the cells are linked by "
+    "nothing but the electorate -- unlike a modelled tracker, where one model "
+    "produces every cell. YouGov publishes each cell rounded to a whole "
+    "percentage point; approve, disapprove and not sure sum to 100. "
+    "The arena scores the mean of the four weekly waves dated in the calendar "
+    "month (the last four, in a month that carries five), which is the unit "
+    "the noise in this file makes scoreable: at wave level, nine of the "
+    "sixteen cells show no real week-to-week movement whatsoever, and the "
+    "four-wave average cuts a cell's measurement noise by a median of 62 "
+    "percent. Both figures are estimated from the series' own first "
+    "differences, and the monthly one rests on only eighteen complete months, "
+    "so a monthly figure of 0.00 does not mean a cell has no sampling error -- "
+    "it means that over eighteen months the estimator could not separate any "
+    "of its movement from signal. Read the small ones as a lower bound.")
+
+
+def _yougov_xtab(sfx, axis, label, short, base, wave_noise, month_noise):
+    """Register one crosstab cell.
+
+    Every cell carries its own measured base size and noise, because those are
+    the two numbers that decide whether its forecast can be better than a coin
+    flip, and they differ across these cells by a factor of six. Withholding
+    them would grade an entrant on a question it was not shown -- the registry
+    docstring's rule, applied to the one field where these cells differ most.
+    """
+    sid = f"yougov_xtab_approve_{sfx}"
+    SERIES[sid] = {
+        "label": f"Economist/YouGov Trump approval, {short}",
+        "tracker": "yougov_xtab",
+        "publisher": _YOUGOV_XTAB_PUBLISHER,
+        "source": "yougov_xtab",
+        "yougov_xtab": {"cell": label, "axis": axis,
+                        "measure": _YOUGOV_XTAB_MEASURE},
+        "unit": "percent approving",
+        "cadence": _YOUGOV_XTAB_CADENCE,
+        "question": (
+            "Economist/YouGov weekly tracker: Donald Trump's job approval "
+            f"among US registered voters, {short} only -- the percentage "
+            "saying they approve of the way he is handling his job as "
+            "President, averaged over the four weekly waves dated in the "
+            "calendar month"),
+        "methodology": _YOUGOV_XTAB_METHOD + (
+            f" This cell is the workbook's {axis} = '{label}' sheet. Its "
+            f"median weighted base is {base:,} respondents per wave; measured "
+            f"over the published history its weekly measurement noise is "
+            f"{wave_noise:.2f} points and the four-wave monthly average's is "
+            f"{month_noise:.2f}. One cell of the sixteen-cell Economist/YouGov "
+            "population profile, scored jointly with the other cells, not as "
+            "its own round."),
+        # No `survey` instrument, for the same reason every Civiqs subgroup
+        # cell omits one: `personas.weights_for` reweights the panel by
+        # population and cannot express "postgraduates only", so a persona run
+        # would put the question to a national panel and file the answer as a
+        # subgroup. `series.survey()` returning None is the refusal, by name.
+    }
+    return sid
+
+
+# The profile in its scored order -- party, age, race, gender, education, each
+# axis in the workbook's own order. One published constant, for the reason
+# PROFILE_CELLS gives: the round definition names these ids, the harness asks
+# for exactly these keys and the scorer reads the outcome vector in this order,
+# so a roster that disagreed anywhere would score cell i against cell j's
+# answer.
+YOUGOV_XTAB_CELLS = tuple(_yougov_xtab(*row) for row in _YOUGOV_XTAB_CELLS)
+
+# Fail at import, not at scoring time. The adapter's roster is the authority on
+# what the workbook actually contains; a cell registered here under a label the
+# workbook does not carry is a round that can never resolve, and one missing
+# from here is a sixteen-cell round quietly scored on fifteen.
+assert [SERIES[c]["yougov_xtab"]["cell"] for c in YOUGOV_XTAB_CELLS] == \
+    list(yougov_xtab_adapter.SCORED_CELLS), \
+    "the registered crosstab cells no longer match yougov_xtab.SCORED_CELLS"
+assert len(set(YOUGOV_XTAB_CELLS)) == 16, "a crosstab cell is registered twice"
+
+
 def describe(series_id):
     """The question and methodology text an entrant is entitled to see."""
     s = SERIES[series_id]
@@ -1378,6 +1558,15 @@ def build_all(sources=None):
     # release the moment the page shows one (write-once, see the adapter).
     if "confboard" in need and "confboard" not in src:
         src["confboard"] = confboard_adapter.history()
+    # One workbook download carries every wave of every subgroup, so all
+    # sixteen crosstab cells share a single request the way the five basket
+    # series share one Trends comparison. `src["yougov_xtab"]` holds *parsed*
+    # waves rather than the workbook bytes -- the same choice `src["aaii"]`
+    # makes -- so a test injects a handful of waves and stays off both the
+    # network and the zip parser, and the monthly aggregation below is still
+    # the code under test rather than something the fixture pre-computed.
+    if "yougov_xtab" in need and "yougov_xtab" not in src:
+        src["yougov_xtab"] = yougov_xtab_adapter.waves()
     # Civiqs is the one source with no single file to prefetch: every tracker
     # and every subgroup is its own ~2 MB page. So `src["civiqs"]` is not a
     # payload but a per-series override map -- `{series_id: [{date, value}]}` --
@@ -1411,6 +1600,11 @@ def build_all(sources=None):
         src["trends_basket"] = {}
 
     out = {}
+    # {measure: {cell label: monthly series}} -- the one derivation of the
+    # YouGov workbook, memoised across the sixteen cells that read it. Local
+    # rather than stashed in `src`, because `src` is the injection surface and
+    # a caller has no business supplying a half-derived intermediate.
+    xtab_monthly = {}
     for sid, spec in SERIES.items():
         f = spec.get("filters") or {}
         if spec["source"] == "umich":
@@ -1430,6 +1624,18 @@ def build_all(sources=None):
             out[sid] = list(src["pentaesi"])
         elif spec["source"] == "confboard":
             out[sid] = list(src["confboard"])
+        elif spec["source"] == "yougov_xtab":
+            # Derived once for the whole roster, not once per cell. Sixteen
+            # independent aggregations of one payload would be sixteen chances
+            # for the cells to disagree about which four waves September had,
+            # and a profile whose cells were averaged over different waves is
+            # not a profile of anything.
+            cfg = spec["yougov_xtab"]
+            m = cfg["measure"]
+            if m not in xtab_monthly:
+                xtab_monthly[m] = crosstab.monthly_cell_series(
+                    src["yougov_xtab"], yougov_xtab_adapter.SCORED_CELLS, m)
+            out[sid] = list(xtab_monthly[m][cfg["cell"]])
         elif spec["source"] == "trends_basket":
             cfg = spec["trends_basket"]
             given = src["trends_basket"].get(sid)
