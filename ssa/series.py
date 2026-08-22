@@ -1282,10 +1282,18 @@ for _sfx, _axis, _label, _short in _PROFILE_CELLS:
                      "(percent approve minus percent disapprove) among US "
                      f"registered voters, {_short} only, as the dashboard "
                      "shows it on Friday"),
+        # Two cells -- Republicans and Independents -- also carry their own
+        # single-number rounds, so the sentence about how a cell is scored is
+        # written per cell rather than once for all sixteen. Saying "scored
+        # jointly, not as its own round" on a cell that does have its own round
+        # would tell an entrant something false about the question in front of
+        # it, in the one field it is entitled to trust.
         "methodology": _CIVIQS_METHOD + (
             f" Filtered to the dashboard's {_axis} = {_label} subgroup. "
-            "Collected as one cell of the sixteen-cell population profile; "
-            "scored jointly with the other cells, not as its own round."),
+            "One cell of the sixteen-cell population profile, scored jointly "
+            "with the other cells"
+            + (" and also asked as its own single-number round."
+               if _sfx in ("rep", "ind") else ", not as its own round.")),
         # No `survey` instrument: personas.weights_for cannot express a
         # subgroup-only population -- same refusal as civiqs_net_approval_rep.
     }
