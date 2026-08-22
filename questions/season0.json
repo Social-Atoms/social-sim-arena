@@ -805,6 +805,20 @@
       "lock_at": "2026-09-23T14:00:00Z",
       "resolve": "dashboard Friday value, independents filter, from the daily archive",
       "target_type": "continuous_normal"
+    },
+    {
+      "round_id": "yougov-xtab-2026-09",
+      "tracker": "yougov_xtab",
+      "profile_noun": "subgroup",
+      "series": "yougov_xtab_approve_dem",
+      "cells": ["yougov_xtab_approve_dem", "yougov_xtab_approve_ind", "yougov_xtab_approve_rep", "yougov_xtab_approve_age_under_30", "yougov_xtab_approve_age_30_44", "yougov_xtab_approve_age_45_64", "yougov_xtab_approve_age_65_up", "yougov_xtab_approve_race_white", "yougov_xtab_approve_race_black", "yougov_xtab_approve_race_hispanic", "yougov_xtab_approve_male", "yougov_xtab_approve_female", "yougov_xtab_approve_edu_hs_or_less", "yougov_xtab_approve_edu_some_college", "yougov_xtab_approve_edu_college_grad", "yougov_xtab_approve_edu_postgrad"],
+      "question": "Economist/YouGov weekly tracker: Donald Trump's job approval among US registered voters, broken into the survey's own sixteen crosstab cells, for September 2026. Forecast the percentage approving in each subgroup, averaged over the four weekly waves dated in September 2026 (expected 2026-09-07, 09-14, 09-21 and 09-28). These are measured cells of one survey, not a model's subgroup estimates: they move with the national mood and they also move apart, and the whole profile is scored.",
+      "unit": "percent approving",
+      "release_at": "2026-09-30T14:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-09-28T14:00:00Z",
+      "resolve": "for each of the sixteen cells, the mean of that cell's approve percentage over the four weekly Economist/YouGov waves dated in September 2026, read from the tracker workbook. If September carries five waves the last four dated in September are averaged, so the target is always a four-wave mean; if it carries fewer than four the round does not resolve rather than averaging three. The month's point is dated by the last of those four waves, which is why the lock sits on that wave's own date: one day later and the answer would fall inside the strictly-pre-lock history its own persistence null is built from.",
+      "target_type": "profile_energy"
     }
   ]
 }
