@@ -131,6 +131,12 @@ def main():
         "commit", "-m", "source archive (residential courier)\n\n"
         "Co-Authored-By: assassin808 "
         "<93385065+assassin808@users.noreply.github.com>")
+    # SSA_ARCHIVE_NO_PUSH keeps the archive local: the commit still happens,
+    # nothing touches the remote. For the periods when the maintainers want
+    # GitHub left alone; one ordinary push later carries everything up.
+    if os.environ.get("SSA_ARCHIVE_NO_PUSH"):
+        print("committed locally (push disabled by SSA_ARCHIVE_NO_PUSH)")
+        return 0 if not (c_fail or t_fail or b_fail) else 1
     git("-c", "rebase.autoStash=true", "pull", "--rebase")
     git("push")
     print("committed and pushed")
