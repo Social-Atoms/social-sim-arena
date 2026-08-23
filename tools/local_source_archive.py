@@ -13,14 +13,42 @@ Run it from any residential machine with the repo cloned:
 
     cd social-sim-arena && git pull --quiet && python tools/local_source_archive.py
 
-and schedule it daily, e.g. crontab:
-
-    17 9 * * *  cd $HOME/social-sim-arena && git pull -q && python tools/local_source_archive.py >> ~/.ssa-archive.log 2>&1
-
 The script is idempotent within a day (adapters fetch at most once per key
-per day) and commits only when something new arrived. It pushes to the
-branch it is on -- keep the clone on main, which is what the refresh reads.
+per day) and commits only when something new arrived. It pushes to the branch
+it is on; set SSA_ARCHIVE_NO_PUSH=1 to commit locally and leave the remote
+alone.
+
+**The daily pair, as actually scheduled.** Two crontab lines: this courier,
+and the forecast run that spends money. Both were written the obvious short
+way first and both failed silently that way, so the two prefixes below are
+load-bearing rather than decorative:
+
+  * `PATH` -- cron's PATH is /usr/bin:/bin and omits /usr/local/bin, where
+    Homebrew puts `pdftotext`. Without it `series.build_all` raises on the
+    Michigan party PDF and the whole refresh dies before buying a single
+    forecast. It failed this way for two days and wrote nothing but a
+    traceback, because the failure is at series-build time, before any log
+    line a reader would look for.
+  * the proxy variables -- an interactive shell picks them up from the user's
+    profile and cron does not, so `git pull` fails ("HTTP2 framing layer"),
+    the `&&` chain skips the real work, and the log fills with git noise that
+    looks nothing like the actual problem.
+
+    PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
+    # (and, behind a proxy, export https_proxy/http_proxy/all_proxy in the line)
+
+    17 9 * * *   cd $REPO && git pull -q && python tools/local_source_archive.py >> ~/.ssa-archive.log 2>&1
+    47 10 * * *  cd $REPO && SSA_MODELS=... SSA_ELICITATION=only:web,web+superfc \
+                   SSA_OPENROUTER=kimi SSA_MAX_SPEND=6 python -m ssa.refresh >> ~/.ssa-predict.log 2>&1
+
+Provider keys live in `.env` beside the checkout (never committed); the model
+roster and the spend ceiling are environment variables, so the schedule is the
+only thing that has to be edited on the machine. Check the logs for a line
+reading "forecast files filed: N" -- git output alone does not mean the run
+did anything.
 """
+import json
+import os
 import subprocess
 import sys
 import time
@@ -77,13 +105,43 @@ def archive_trends():
     return ok, failed
 
 
+def archive_trends_baskets():
+    """One comparison fetch per distinct basket named by a ranking round.
+
+    Baskets come from the season file, not the series registry: the basket IS
+    part of the round's frozen contract (`ranking.items`), and archiving
+    exactly what the rounds name keeps this courier from drifting away from
+    the questions it exists to resolve.
+    """
+    season_path = os.path.join(__file__.rsplit("/", 2)[0],
+                               "questions", "season0.json")
+    with open(season_path) as f:
+        season = json.load(f)
+    seen, ok, failed = set(), 0, []
+    for r in season["rounds"]:
+        spec = r.get("ranking") or {}
+        if r.get("tracker") != "google_trends" or not spec.get("items"):
+            continue
+        key = (tuple(spec["items"]), spec.get("geo", trends_adapter.GEO))
+        if key in seen:
+            continue
+        seen.add(key)
+        try:
+            trends_adapter.basket_snapshot(list(key[0]), key[1])
+            ok += 1
+        except Exception as e:                                  # noqa: BLE001
+            failed.append(f"{r['round_id']}: {type(e).__name__}: {str(e)[:120]}")
+    return ok, failed
+
+
 def main():
     c_ok, c_fail = archive_civiqs()
     t_ok, t_fail = archive_trends()
-    for line in c_fail + t_fail:
+    b_ok, b_fail = archive_trends_baskets()
+    for line in c_fail + t_fail + b_fail:
         print("FAIL", line, file=sys.stderr)
-    print(f"archived: civiqs {c_ok} pages, trends {t_ok} queries; "
-          f"{len(c_fail) + len(t_fail)} failures")
+    print(f"archived: civiqs {c_ok} pages, trends {t_ok} queries, "
+          f"{b_ok} baskets; {len(c_fail) + len(t_fail) + len(b_fail)} failures")
 
     root = __file__.rsplit("/", 2)[0]
 
@@ -94,15 +152,21 @@ def main():
     git("add", "-A", "civiqs", "trends")
     if git("diff", "--cached", "--quiet", check=False).returncode == 0:
         print("nothing new to commit")
-        return 0 if not (c_fail or t_fail) else 1
+        return 0 if not (c_fail or t_fail or b_fail) else 1
     git("-c", "user.name=ssa-bot", "-c", "user.email=actions@github.com",
         "commit", "-m", "source archive (residential courier)\n\n"
         "Co-Authored-By: assassin808 "
         "<93385065+assassin808@users.noreply.github.com>")
+    # SSA_ARCHIVE_NO_PUSH keeps the archive local: the commit still happens,
+    # nothing touches the remote. For the periods when the maintainers want
+    # GitHub left alone; one ordinary push later carries everything up.
+    if os.environ.get("SSA_ARCHIVE_NO_PUSH"):
+        print("committed locally (push disabled by SSA_ARCHIVE_NO_PUSH)")
+        return 0 if not (c_fail or t_fail or b_fail) else 1
     git("-c", "rebase.autoStash=true", "pull", "--rebase")
     git("push")
     print("committed and pushed")
-    return 0 if not (c_fail or t_fail) else 1
+    return 0 if not (c_fail or t_fail or b_fail) else 1
 
 
 if __name__ == "__main__":

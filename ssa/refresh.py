@@ -19,6 +19,8 @@ from . import health
 from . import provenance
 from . import stamps
 from . import average, backtest, baselines, envfile, harness, scoring, sharecard
+from . import profile_round
+from . import ranking_round
 from . import series as series_registry
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -193,12 +195,22 @@ def read_lock_snapshot(round_id):
 # once. Anyone who wanted only the cheap one had no way to say so, which is a
 # bad shape for a switch whose entire job is to stop an unintended bill.
 #
-#   SSA_ELICITATION=news            just the fixed news corpus
-#   SSA_ELICITATION=news,superfc    two of them
-#   SSA_ELICITATION=1 / all         every arm, as before
+#   SSA_ELICITATION=news                  just the fixed news corpus
+#   SSA_ELICITATION=news,superfc          two of them
+#   SSA_ELICITATION=1 / all               every arm, as before
+#   SSA_ELICITATION=only:web,web+superfc  the named arms and NOTHING else --
+#                                         the base roster (zeroshot and
+#                                         recent10, direct) stays home too
 #
 # Unset means none, which stays the default: nothing about merging this starts
 # spending anything.
+def elicitation_only(value=None):
+    """True when SSA_ELICITATION says the named arms replace the base roster
+    instead of joining it."""
+    raw = (os.environ.get("SSA_ELICITATION") if value is None else value) or ""
+    return raw.strip().startswith("only:")
+
+
 def elicitation_variants(value=None):
     """Which elicitation arms this run files, from SSA_ELICITATION.
 
@@ -208,6 +220,8 @@ def elicitation_variants(value=None):
     """
     raw = (os.environ.get("SSA_ELICITATION") if value is None else value) or ""
     raw = raw.strip()
+    if raw.startswith("only:"):
+        raw = raw[len("only:"):].strip()
     if not raw or raw in ("0", "off", "false"):
         return ()
     if raw in ("1", "all"):
@@ -222,7 +236,7 @@ def elicitation_variants(value=None):
 
 def season_roster():
     """(entrant_id, model, variant) for every condition this run will file."""
-    roster = list(harness.season_entrants())
+    roster = [] if elicitation_only() else list(harness.season_entrants())
     want = elicitation_variants()
     if want:
         roster += list(harness.elicitation_entrants(variants=want))
@@ -269,16 +283,46 @@ def update_lock_snapshot(r, hist, now):
     return True
 
 
-def build_rounds(season, series, resolved, now):
+def build_rounds(season, series, resolved, now, ranking_obs=None):
     """Returns (rounds, history_by_round). The history is the strictly pre-lock
     slice each round's baselines were computed from; the model harness
-    conditions on exactly the same data, so entrants and nulls see one series."""
+    conditions on exactly the same data, so entrants and nulls see one series.
+
+    `ranking_obs` is {round_id: the source's own history of ordered lists} for
+    ranking rounds, which read a different kind of record than a scalar series
+    and cannot be looked up in `series`. Passed in rather than fetched here so
+    that this function stays free of network calls: `main` gathers it once, with
+    fetching on, and a test hands over a fixture.
+    """
     out = []
     hist_by_round = {}
     for r in season["rounds"]:
         row = {k: r[k] for k in ("round_id", "tracker", "series", "question", "unit",
                                   "release_at", "release_estimated", "lock_at", "resolve")}
+        # The submission questionnaire renders a type-specific answer control.
+        # Keep the type and any type-specific answer metadata in the public
+        # payload rather than forcing the browser to re-read season0.json or
+        # infer a contract from the unit/question wording. Older definitions
+        # predate target_type and are numeric distributions.
+        row["target_type"] = r.get("target_type", "continuous_normal")
+        for k in ("cells", "options"):
+            if k in r:
+                row[k] = list(r[k])
         row["status"] = round_status(r, resolved, now)
+        if ranking_round.is_ranking(r):
+            # None of the scalar branch below, and no lock snapshot. A ranking
+            # round's target is a list, so `series` holds no entry for it and
+            # the branch would write a snapshot whose `history` is `[]` on every
+            # refresh -- a file claiming a freeze that records nothing. The
+            # freeze that does apply is the date filter in
+            # `ranking_round.frozen_history`, exact here for the reason
+            # `attach_ranking` gives.
+            attach_ranking(row, r, (ranking_obs or {}).get(r["round_id"]))
+            hist_by_round[r["round_id"]] = []
+            if r["round_id"] in resolved:
+                row["resolution"] = resolved[r["round_id"]]
+            out.append(row)
+            continue
         # Baselines are frozen at lock time: only history strictly before the
         # lock date counts. Otherwise, once a release lands in the series, the
         # persistence null would contain the outcome it is scored against.
@@ -314,10 +358,105 @@ def build_rounds(season, series, resolved, now):
                 "no machine-readable series for this tracker: forecasts are "
                 "collected and hashed, but cannot be scored, because skill is "
                 "measured against a persistence baseline this round has none of")
+        # A profile round is answered as a vector, so a scalar null cannot be
+        # its denominator: `baselines` is cleared and the per-cell persistence
+        # under `profile` replaces it. Clearing it is also what keeps the
+        # scalar paths off this round -- `build_leaderboard` and the scalar
+        # baseline filing both key on `baselines` being present.
+        if profile_round.is_profile(r):
+            attach_profile(row, r, series)
         if r["round_id"] in resolved:
             row["resolution"] = resolved[r["round_id"]]
         out.append(row)
     return out, hist_by_round
+
+
+def attach_profile(row, r, series):
+    """Attach the profile block: the round's cells and their frozen nulls.
+
+    **Why the date filter is enough here, with no lock snapshot.** Snapshots
+    exist because a monthly series' point is dated by its month label and
+    published weeks later, so `date < lock_at` cannot tell "existed at lock"
+    from "labelled before lock". The Civiqs profile cells are the daily
+    dashboard, archived every day under the date it was read: label and
+    observation are the same day, and the filter is exact.
+
+    The Economist/YouGov crosstab cells are monthly and still need no snapshot,
+    which is worth stating because the rule above would seem to forbid them.
+    The difference is what the point is *dated by*. A YouGov month is dated by
+    the last of the four waves it averages -- an observation date, not a month
+    label -- so the gap between "labelled" and "existed" is the few days YouGov
+    takes to put that wave in the workbook, not the weeks a label-dated series
+    runs behind. That residue is closed by the round definition rather than by
+    a snapshot: a crosstab round locks on the date of its month's last wave, so
+    the strict `<` excludes the month being scored, and every earlier month's
+    point is already several weeks old when the round freezes. A crosstab round
+    whose release is set more than 48 hours after its last wave breaks that and
+    would need snapshots; `ssa/series.py`'s crosstab block says so where the
+    series are declared.
+    """
+    cells = profile_round.cells_for(r)
+    hist = profile_round.frozen_history(r, series, cells)
+    block = {
+        "cells": list(cells),
+        "labels": profile_round.labels_for(cells),
+        "history_points": {c: len(hist[c]) for c in cells},
+    }
+    row["baselines"] = None
+    try:
+        block["baselines"] = {"persistence":
+                              profile_round.persistence_profile(hist, cells)}
+        row["scoreable"] = True
+        row.pop("baseline_note", None)
+    except ValueError as e:
+        # Named rather than empty, for the reason the scalar branch gives: a
+        # round with no denominator can never produce a skill number, however
+        # many forecasts it collects.
+        block["baselines"] = None
+        row["scoreable"] = False
+        row["baseline_note"] = str(e)
+    row["profile"] = block
+
+
+def attach_ranking(row, r, obs):
+    """Attach the ranking block: the round's spec, its frozen history, its null.
+
+    **Why the date filter is enough here, with no lock snapshot.** Snapshots
+    exist because a monthly series' point is dated by its month label and
+    published weeks later, so `date < lock_at` cannot tell "existed at lock"
+    from "labelled before lock". Neither ranking source has that gap. A
+    Wikipedia week is dated by the Sunday it ends and its seven daily counts are
+    final within about two days, computed once from the request logs and never
+    revised. A Trends week is dated by its Saturday and takes the value the
+    earliest archived snapshot containing it showed, which is fixed the first
+    time it is seen. In both cases the label and the observation are the same
+    week, and the filter is exact.
+
+    A round whose sources cannot answer yet is named rather than dropped: it
+    keeps collecting forecasts and says in `baseline_note` why it has no skill
+    denominator, which is the treatment the scalar and profile branches give the
+    same situation.
+    """
+    block = {}
+    row["baselines"] = None
+    try:
+        spec = ranking_round.spec_for(r)
+        block.update({k: spec[k] for k in
+                      ("kind", "length", "loss", "week_start", "week_end")})
+        for k in ("items", "rbo_p", "exclusions", "geo"):
+            if k in spec:
+                block[k] = spec[k]
+        hist = ranking_round.frozen_history(r, obs)
+        block["history_weeks"] = len(hist)
+        block["baselines"] = {
+            "persistence": ranking_round.persistence_list(hist, spec)}
+        row["scoreable"] = True
+        row.pop("baseline_note", None)
+    except (ValueError, RuntimeError) as e:
+        block.setdefault("baselines", None)
+        row["scoreable"] = False
+        row["baseline_note"] = str(e)
+    row["ranking"] = block
 
 
 # Stop re-filing this long before lock_at. A refresh writes to the working
@@ -325,6 +464,53 @@ def build_rounds(season, series, resolved, now):
 # starts just before lock could push a file that the merge-time lock audit
 # then (correctly) rejects as late.
 LOCK_MARGIN_SECONDS = 30 * 60
+
+# One number, one forecast, bought at one fixed vantage point.
+#
+# Every entrant's forecast for a round is bought once, inside a window every
+# round shares: between SSA_FILE_WINDOW_DAYS and SSA_BUY_BY_DAYS before its
+# lock (3 to 2 days by default). A forecast stamped inside the window
+# (`harness.filed_stamp`) is final -- data arriving afterwards does not reopen
+# it -- so every entrant answers the same question from the same distance and
+# a round costs exactly one call per entrant per condition, ever.
+#
+# The day-wide window spans ~4 six-hourly runs, and after it closes the runs
+# that remain up to the lock margin are failure insurance only: they buy a
+# forecast that is still missing and never rewrite one that exists. Drafts
+# from before a round's window (the era that bought from listing day) carry
+# no stamp and are replaced once, inside the window, where the input hash
+# makes the replacement free if nothing actually changed.
+#
+# Baselines are exempt: they are free and the site shows them from listing.
+# Web retrieval is scoped to the same window by construction, since the query
+# turn cannot run before the window opens. FILE_WINDOW_SECONDS lives in
+# harness because `_retrieve` and `filed_in_window` need it too.
+FILE_WINDOW_SECONDS = harness.FILE_WINDOW_SECONDS
+BUY_BY_SECONDS = float(os.environ.get("SSA_BUY_BY_DAYS") or "2") * 86400
+
+
+def model_jobs_due(r, now):
+    """True while the round's buy window (plus its insurance tail) is open."""
+    left = (parse_iso(r["lock_at"]) - now).total_seconds()
+    return LOCK_MARGIN_SECONDS <= left <= FILE_WINDOW_SECONDS
+
+
+def job_still_due(r, path, now):
+    """Whether this one entrant-forecast still needs buying.
+
+    Three cases, in order: nothing on disk is bought whenever the round is
+    due (that is the insurance tail working); a file stamped inside the
+    window is final and never reopened; an unstamped file is a pre-window
+    draft, replaced only while the window proper is open -- once the buy-by
+    boundary passes, the draft is the insurance and it stands.
+    """
+    prev = read_forecast(path)
+    if prev is None:
+        return True
+    if harness.filed_in_window(prev.get("notes"), r["lock_at"]):
+        return False
+    left = (parse_iso(r["lock_at"]) - now).total_seconds()
+    return left >= BUY_BY_SECONDS
 
 # Concurrent provider calls when filing forecasts. Each job is one call to one
 # provider, and the eleven entered models spread across five providers, so this
@@ -357,10 +543,17 @@ MAX_SPEND = float(os.environ.get("SSA_MAX_SPEND") or "10")
 # backtest/runs/ that carry a usage report. model_backtest's own estimator
 # assumes 400/500, which understates the output side by two and a half times --
 # at maximum reasoning effort the thinking *is* the output.
-EST_IN_TOKENS, EST_OUT_TOKENS = 278, 1276
+# Recalibrated 2026-08-18 from the first fill run's committed receipts
+# (replies/): 1,029 calls averaged 4,641 output tokens against the 1,276 this
+# constant previously assumed -- the reasoning-heavy entrants (deepseek-pro
+# 15k, qwen 8k, kimi 3.9k) tripled the fleet mean, so an "estimated $10"
+# ceiling was actually authorising ~$36. Until the estimator reads per-model
+# averages out of replies/, this stays pinned to the measured fleet mean.
+EST_IN_TOKENS, EST_OUT_TOKENS = 300, 4650
 
 
-def price_jobs(jobs, hist_by_round, read_forecast, news_for):
+def price_jobs(jobs, hist_by_round, read_forecast, news_for, prof_hist=None,
+               rank_hist=None):
     """(jobs that would really call, estimated USD).
 
     Recomputes each job's input hash and compares it to what is already filed,
@@ -381,9 +574,23 @@ def price_jobs(jobs, hist_by_round, read_forecast, news_for):
         try:
             if eli == "persona":
                 raise ValueError("panel priced per respondent below")
-            prompt = harness.build_prompt(
-                r, hist_by_round.get(r["round_id"]), ctx, eli,
-                news=news_for(r) if ctx == "news" else None)
+            news = news_for(r) if ctx == "news" else None
+            if profile_round.is_profile(r):
+                # Same builder the filing pass uses, so a profile round that is
+                # already answered prices as free rather than being counted
+                # billable by the fallback below -- which would let a fully
+                # cached headline round eat the whole spend ceiling.
+                prompt = harness.build_profile_prompt(
+                    r, (prof_hist or {}).get(r["round_id"]), ctx, eli, news=news)
+            elif ranking_round.is_ranking(r):
+                # Same builder the filing pass uses, for the same reason: an
+                # already-answered ranking round must price as free rather than
+                # falling through to the billable default below.
+                prompt = harness.build_ranking_prompt(
+                    r, (rank_hist or {}).get(r["round_id"]), ctx, eli, news=news)
+            else:
+                prompt = harness.build_prompt(
+                    r, hist_by_round.get(r["round_id"]), ctx, eli, news=news)
             if f"in={harness.prompt_hash(entrant, prompt)}" in notes \
                     and not notes.startswith("MOCK"):
                 continue                      # cached: free
@@ -423,6 +630,56 @@ def affordable(billable, ceiling):
     return buy, withhold, spent
 
 
+def nulls_for(r):
+    """The round's reference forecasts, whatever shape the round takes.
+
+    Scalar rounds keep theirs in `baselines`, profile rounds in
+    `profile.baselines`, ranking rounds in `ranking.baselines` -- one accessor
+    so the filing loop does not have to know, and so a round type added later
+    cannot be silently skipped by a truthiness test on the wrong key.
+    """
+    if r.get("profile"):
+        return (r["profile"] or {}).get("baselines") or {}
+    if r.get("ranking"):
+        return (r["ranking"] or {}).get("baselines") or {}
+    return r.get("baselines") or {}
+
+
+def profile_history_for(r, series):
+    """{cell: frozen pre-lock history} for a profile round, else None."""
+    if not profile_round.is_profile(r):
+        return None
+    return profile_round.frozen_history(r, series)
+
+
+def ranking_observations(season, fetch=True):
+    """{round_id: the source's history of ordered lists} for every ranking round.
+
+    The one place a ranking round touches its sources, and the only place that
+    fetches. Wikipedia's daily top lists are free, keyless and reachable from
+    anywhere, so a refresh fills the archive as it goes; Google Trends is not
+    reachable from a datacenter address at all, so its fetch fails, says so, and
+    `basket_weeks` serves the committed archive.
+
+    A round whose sources cannot answer at all is recorded as an empty history
+    rather than raising. `attach_ranking` turns that into a named, unscoreable
+    round, which is the same treatment a scalar round with no series gets --
+    and the alternative is one unreachable source stopping the whole refresh,
+    with every other round's forecasts unfiled and its lock still coming.
+    """
+    out = {}
+    for r in (season or {}).get("rounds", []):
+        if not ranking_round.is_ranking(r):
+            continue
+        try:
+            out[r["round_id"]] = ranking_round.observations(r, fetch=fetch)
+        except Exception as e:                     # noqa: BLE001 - reported
+            print(f"  ranking {r['round_id']}: no observations "
+                  f"({type(e).__name__}: {e})")
+            out[r["round_id"]] = []
+    return out
+
+
 def read_forecast(path):
     if not os.path.exists(path):
         return None
@@ -433,7 +690,8 @@ def read_forecast(path):
         return None
 
 
-def file_baseline_forecasts(rounds, hist_by_round, now):
+def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
+                            ranking_obs=None):
     """Write every entrant's forecast for each open round.
 
     Returns (files_written, failures). Failures are messages, never mocks: a
@@ -448,29 +706,58 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
     failures = []
     jobs = []
     for r in rounds:
-        if r["status"] != "open" or not r.get("baselines"):
+        if r["status"] != "open" or not nulls_for(r):
             continue
         if (parse_iso(r["lock_at"]) - now).total_seconds() < LOCK_MARGIN_SECONDS:
             continue
         rdir = os.path.join(FORECASTS, r["round_id"])
         os.makedirs(rdir, exist_ok=True)
-        for name, fc in r["baselines"].items():
+        for name, fc in nulls_for(r).items():
             path = os.path.join(rdir, name + ".json")
+            if r.get("profile"):
+                # The null for a vector round is a vector: every cell where it
+                # sat at the last release. Filed in the submission format so it
+                # is scored by exactly the code an entrant's file goes through.
+                answer = {"profile": {c: {"mean": v["mean"], "sd": v["sd"]}
+                                      for c, v in fc.items()}}
+                method = name
+            elif r.get("ranking"):
+                # And the null for a ranking round is a list: last completed
+                # week's, in last week's order. Same reason for filing it in the
+                # submission format -- it goes through the entrant code path, so
+                # a null that could not be submitted is a null that is not being
+                # scored the way entrants are.
+                answer = {"ranking": list(fc["items"])}
+                method = fc.get("method", name)
+            else:
+                answer = {"topline": {"mean": fc["mean"], "sd": fc["sd"]}}
+                method = fc.get("method", name)
+            # Key order is deliberate and matches what has been on disk all
+            # season: these files are rewritten by every refresh, and reordering
+            # them would rewrite four hundred committed forecasts to say the
+            # same thing.
             body = {
                 "round_id": r["round_id"],
                 "entrant": name,
-                "topline": {"mean": fc["mean"], "sd": fc["sd"]},
-                "notes": "auto-filed baseline (" + fc.get("method", name) + "), refreshed until lock",
+                **answer,
+                "notes": "auto-filed baseline (" + method + "), refreshed until lock",
             }
             with open(path, "w") as f:
                 json.dump(body, f, indent=2)
                 f.write("\n")
             written += 1
+        # Model forecasts wait for the round's own buy window, and each one is
+        # bought exactly once (see the block above BUY_BY_SECONDS).
+        if not model_jobs_due(r, now):
+            continue
         # Every model runs both conditions and they are filed as separate
         # entrants: same weights, different information, so their scores answer
         # different questions and belong on different leaderboard rows.
         for entrant, _model, _ctx, _eli in season_roster():
-            jobs.append((r, entrant, os.path.join(rdir, entrant + ".json")))
+            path = os.path.join(rdir, entrant + ".json")
+            if not job_still_due(r, path, now):
+                continue
+            jobs.append((r, entrant, path))
 
     # One provider call per job, and at max reasoning effort a single call can
     # take a minute. Sequentially that is hours for a full season; the calls are
@@ -482,6 +769,19 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
     # model that could drift between them. Built lazily: a season with no news
     # entrant never touches Wikipedia.
     news_cache, news_lock = {}, threading.Lock()
+
+    # The frozen per-cell history each profile round's entrants and nulls both
+    # read. Built once per round rather than per job: it is the same sixteen
+    # slices for every entrant, and the pricing pass needs the identical object
+    # to rebuild the identical prompt hash.
+    prof_hist = {r["round_id"]: profile_history_for(r, series or {})
+                 for r in rounds if profile_round.is_profile(r)}
+
+    # The same object for ranking rounds: the strictly pre-lock weeks the null
+    # was taken from, so an entrant sees exactly the history persistence saw.
+    rank_hist = {r["round_id"]:
+                 ranking_round.frozen_history(r, (ranking_obs or {}).get(r["round_id"]))
+                 for r in rounds if ranking_round.is_ranking(r)}
 
     def news_for(r):
         rid = r["round_id"]
@@ -498,10 +798,22 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
         r, entrant, path = job
         try:
             _, context, _elicitation = harness.resolve(entrant)
-            body = harness.forecast(entrant, r,
-                                    history=hist_by_round.get(r["round_id"]),
-                                    previous=read_forecast(path),
-                                    news=news_for(r) if context == "news" else None)
+            news = news_for(r) if context == "news" else None
+            if context == "news" and not (news or {}).get("text") \
+                    and not (news or {}).get("window_closed"):
+                # A round locking far out has a news window mostly in the
+                # future; the digest grows a day at a time and this job
+                # starts succeeding as the lock approaches. Not a failure:
+                # nothing is wrong and nothing was spent -- an empty digest
+                # on a CLOSED window still falls through and fails loudly.
+                return 0
+            body = harness.forecast(
+                entrant, r,
+                history=hist_by_round.get(r["round_id"]),
+                previous=read_forecast(path),
+                news=news,
+                profile_history=prof_hist.get(r["round_id"]),
+                ranking_history=rank_hist.get(r["round_id"]))
         except Exception as e:                     # noqa: BLE001 - collected
             # Collected rather than raised. Failing at the first bad provider
             # would strand every other entrant's forecast unwritten, and rounds
@@ -517,7 +829,7 @@ def file_baseline_forecasts(rounds, hist_by_round, now):
 
     if jobs:
         billable, usd = price_jobs(jobs, hist_by_round, read_forecast,
-                                   news_for)
+                                   news_for, prof_hist, rank_hist)
         print(f"\nfiling: {len(jobs)} entrant-round(s), {len(jobs) - len(billable)} "
               f"already answered, {len(billable)} to call, est ${usd:.2f}")
         withheld = set()
@@ -651,6 +963,294 @@ def build_leaderboard(rounds, resolved):
     return board
 
 
+def profile_outcome(r, resolved, series):
+    """(outcome vector, detail) for a profile round past its release.
+
+    A resolution written into `resolutions/resolved.json` wins, for the reason
+    `ssa/resolve.py` gives: once written, a resolution is the scoring authority
+    and is never recomputed underneath the scores it already fixed. Absent one,
+    the vector is read from the cells' own archived series as of the release
+    date -- no hand-typed numbers, and reproducible by anyone with the repo.
+
+    Raises rather than returning a partial vector.
+    """
+    cells = profile_round.cells_for(r)
+    res = (resolved or {}).get(r["round_id"])
+    if res and res.get("values"):
+        return profile_round.outcome_vector(res, cells), dict(res, source="resolved.json")
+    detail = profile_round.resolution(r, series or {}, cells)
+    return list(detail["vector"]), detail
+
+
+def build_profile_leaderboard(rounds, resolved, series):
+    """The profile board: energy score and skill, per entrant per profile round.
+
+    Kept apart from `build_leaderboard` rather than folded into it, because the
+    two are not the same measurement and averaging them would be meaningless: a
+    CRPS is in points and an energy score is a distance in sixteen-dimensional
+    points-space, and no weighting of the two answers a question anyone asked.
+    Skill is the exception and the reason both boards are readable together --
+    `scoring.profile_skill` is the scalar skill expression verbatim, so a tenth
+    of skill means the same thing on either board.
+
+    `matched` is the table to cite, for the reason `ssa/model_backtest.py`
+    gives: it holds only entrants who answered *every* scored profile round, so
+    a model that sat out the hard weeks cannot flatter itself with an average
+    over the easy ones.
+    """
+    per_round, entries, skipped = [], {}, []
+    scored_rounds = 0
+    for r in rounds:
+        if not profile_round.is_profile(r):
+            continue
+        nulls = (r.get("profile") or {}).get("baselines") or {}
+        if not nulls.get("persistence"):
+            skipped.append((r["round_id"], r.get("baseline_note")
+                            or "no per-cell persistence null"))
+            continue
+        if now_utc() < parse_iso(r["release_at"]):
+            continue                      # not due; not a problem
+        cells = profile_round.cells_for(r)
+        try:
+            outcome, detail = profile_outcome(r, resolved, series)
+        except ValueError as e:
+            skipped.append((r["round_id"], str(e)))
+            continue
+        per_cells = profile_round.persistence_cells(nulls["persistence"], cells)
+        per_energy = profile_round.score_cells(per_cells, outcome)["energy"]
+        rdir = os.path.join(FORECASTS, r["round_id"])
+        if not os.path.isdir(rdir):
+            skipped.append((r["round_id"], "no forecasts filed"))
+            continue
+        rows = []
+        for fn in sorted(os.listdir(rdir)):
+            if not fn.endswith(".json"):
+                continue
+            with open(os.path.join(rdir, fn)) as f:
+                fc = json.load(f)
+            try:
+                sc = profile_round.score_submission(fc, outcome, cells)
+            except (ValueError, KeyError) as e:
+                # A malformed or partial profile is excluded and named, never
+                # repaired: see harness.parse_profile for why filling a cell in
+                # would flatter exactly the entrant this round exists to catch.
+                skipped.append((f"{r['round_id']}/{fn[:-5]}", str(e)))
+                continue
+            row = {
+                "entrant": fc["entrant"],
+                "energy": round(sc["energy"], 4),
+                "skill": round(scoring.profile_skill(sc["energy"], per_energy), 4),
+                "level": round(sc["level"], 4),
+                "structure": round(sc["structure"], 4),
+                "mean_cell_crps": round(sc["mean_cell_crps"], 4),
+            }
+            rows.append(row)
+            e = entries.setdefault(fc["entrant"],
+                                   {"energy": [], "skill": [], "level": [],
+                                    "structure": [], "rounds": []})
+            for k in ("energy", "skill", "level", "structure"):
+                e[k].append(row[k])
+            e["rounds"].append(r["round_id"])
+        if not rows:
+            skipped.append((r["round_id"], "no scoreable profile submissions"))
+            continue
+        scored_rounds += 1
+        rows.sort(key=lambda x: -x["skill"])
+        per_round.append({
+            "round_id": r["round_id"],
+            "release_at": r["release_at"],
+            "cells": list(cells),
+            "n_cells": len(cells),
+            "persistence_energy": round(per_energy, 4),
+            "outcome": {c: v for c, v in zip(cells, outcome)},
+            "resolution": {k: detail.get(k) for k in
+                           ("method", "release_date", "observed_dates", "source")
+                           if detail.get(k) is not None},
+            "entries": rows,
+        })
+
+    def board_from(names):
+        out = []
+        for name in names:
+            e = entries[name]
+            n = len(e["energy"])
+            out.append({
+                "entrant": name,
+                "rounds": n,
+                "mean_energy": round(sum(e["energy"]) / n, 4),
+                "mean_skill": round(sum(e["skill"]) / n, 4),
+                "mean_level": round(sum(e["level"]) / n, 4),
+                "mean_structure": round(sum(e["structure"]) / n, 4),
+            })
+        out.sort(key=lambda x: -x["mean_skill"])
+        return out
+
+    matched_names = [n for n, e in entries.items()
+                     if len(e["rounds"]) == scored_rounds] if scored_rounds else []
+    return {
+        "scored_rounds": scored_rounds,
+        "rounds": per_round,
+        "board": board_from(list(entries)),
+        "matched": board_from(matched_names),
+        "matched_rounds": scored_rounds,
+        "skipped": [list(s) for s in skipped],
+        "note": ("energy score (multivariate CRPS) over the round's cell "
+                 "vector; skill = 1 - ES(entrant) / ES(per-cell persistence). "
+                 "`matched` holds only entrants who answered every scored "
+                 "profile round."),
+    }
+
+
+def ranking_outcome(r, resolved, spec):
+    """(truth list, detail) for a ranking round past its release.
+
+    A resolution written into `resolutions/resolved.json` wins, for the reason
+    `ssa/resolve.py` gives: once written, a resolution is the scoring authority
+    and is never recomputed underneath the scores it already fixed. Absent one,
+    the list is recomputed from the committed archives by the round's own rule
+    -- no hand-typed answers, and reproducible by anyone with the repository and
+    no network at all.
+    """
+    res = (resolved or {}).get(r["round_id"])
+    if res and res.get("items"):
+        return (ranking_round.outcome_items(res, spec),
+                dict(res, source="resolved.json"))
+    detail = ranking_round.resolution(r, spec=spec)
+    return list(detail["items"]), detail
+
+
+def build_ranking_leaderboard(rounds, resolved, ranking_obs=None):
+    """The ranking board: list loss and skill, per entrant per ranking round.
+
+    A third section rather than rows on either board above, for the reason the
+    profile board is its own: the numbers are not the same measurement. A CRPS
+    is in the series' unit, an energy score is a distance in cell-space, and a
+    ranking loss is a dimensionless [0, 1] disagreement between two orders.
+    Averaging them would produce a number no question has. `skill` is again the
+    exception and the reason the three read together -- it is
+    `scoring.skill` in all three places, so a tenth of skill is a tenth of the
+    null's loss removed wherever it appears.
+
+    `matched` is the table to cite, for the reason `ssa/model_backtest.py`
+    gives: it holds only entrants who answered *every* scored ranking round.
+    """
+    per_round, entries, skipped = [], {}, []
+    scored_rounds = 0
+    for r in rounds:
+        if not ranking_round.is_ranking(r):
+            continue
+        nulls = (r.get("ranking") or {}).get("baselines") or {}
+        if not nulls.get("persistence"):
+            skipped.append((r["round_id"], r.get("baseline_note")
+                            or "no persistence null"))
+            continue
+        if now_utc() < parse_iso(r["release_at"]):
+            continue                      # not due; not a problem
+        try:
+            spec = ranking_round.spec_for(r)
+            outcome, detail = ranking_outcome(r, resolved, spec)
+        except (ValueError, RuntimeError) as e:
+            skipped.append((r["round_id"], str(e)))
+            continue
+        try:
+            per = ranking_round.score_list(
+                ranking_round.normalize(nulls["persistence"]["items"], spec,
+                                        where="persistence"),
+                outcome, spec)
+        except (ValueError, RuntimeError) as e:
+            # The null itself failing is not a round to skip quietly: without a
+            # denominator there is no skill number, and reporting losses with no
+            # skill beside them invites them to be read as one.
+            skipped.append((r["round_id"], f"persistence null: {e}"))
+            continue
+        rdir = os.path.join(FORECASTS, r["round_id"])
+        if not os.path.isdir(rdir):
+            skipped.append((r["round_id"], "no forecasts filed"))
+            continue
+        rows = []
+        for fn in sorted(os.listdir(rdir)):
+            if not fn.endswith(".json"):
+                continue
+            with open(os.path.join(rdir, fn)) as f:
+                fc = json.load(f)
+            try:
+                sc = ranking_round.score_submission(fc, outcome, spec)
+            except (ValueError, KeyError) as e:
+                # Excluded and named, never repaired: see harness.parse_ranking
+                # for why padding a short list would score an entrant on a pick
+                # it never made.
+                skipped.append((f"{r['round_id']}/{fn[:-5]}", str(e)))
+                continue
+            row = {
+                "entrant": fc["entrant"],
+                "loss": round(sc["loss"], 4),
+                "skill": round(ranking_round.ranking_skill(sc["loss"],
+                                                           per["loss"]), 4),
+                "exact_positions": sc["exact_positions"],
+            }
+            for k in ("overlap", "discordant_pairs", "pairs"):
+                if k in sc:
+                    row[k] = sc[k]
+            rows.append(row)
+            e = entries.setdefault(fc["entrant"],
+                                   {"loss": [], "skill": [], "rounds": []})
+            e["loss"].append(row["loss"])
+            e["skill"].append(row["skill"])
+            e["rounds"].append(r["round_id"])
+        if not rows:
+            skipped.append((r["round_id"], "no scoreable ranking submissions"))
+            continue
+        scored_rounds += 1
+        rows.sort(key=lambda x: -x["skill"])
+        per_round.append({
+            "round_id": r["round_id"],
+            "release_at": r["release_at"],
+            "kind": spec["kind"],
+            "loss_rule": spec["loss"],
+            "length": spec["length"],
+            "persistence_loss": round(per["loss"], 4),
+            "persistence_items": list(nulls["persistence"]["items"]),
+            "outcome": list(outcome),
+            "resolution": {k: detail.get(k) for k in
+                           ("method", "week_start", "week_end", "source")
+                           if detail.get(k) is not None},
+            "entries": rows,
+        })
+
+    def board_from(names):
+        out = []
+        for name in names:
+            e = entries[name]
+            n = len(e["loss"])
+            out.append({
+                "entrant": name,
+                "rounds": n,
+                "mean_loss": round(sum(e["loss"]) / n, 4),
+                "mean_skill": round(sum(e["skill"]) / n, 4),
+            })
+        out.sort(key=lambda x: -x["mean_skill"])
+        return out
+
+    matched_names = [n for n, e in entries.items()
+                     if len(e["rounds"]) == scored_rounds] if scored_rounds else []
+    return {
+        "scored_rounds": scored_rounds,
+        "rounds": per_round,
+        "board": board_from(list(entries)),
+        "matched": board_from(matched_names),
+        "matched_rounds": scored_rounds,
+        "skipped": [list(s) for s in skipped],
+        "note": ("a point-scored ordered list: rank-biased overlap (p fixed in "
+                 "the round) for an open-set top-N, normalized Kendall tau "
+                 "distance for a fixed basket. skill = 1 - loss(entrant) / "
+                 "loss(last week's list). `matched` holds only entrants who "
+                 "answered every scored ranking round. When persistence is "
+                 "perfect the denominator is zero and the convention "
+                 "(`scoring.skill`) scores every entrant 0 for that round; "
+                 "`persistence_loss` is published so that is visible."),
+    }
+
+
 def michigan_history():
     """Michigan sentiment. Delegates to the registry, which has no fallback.
 
@@ -757,7 +1357,15 @@ def main():
         with open(RESOLVED) as f:
             resolved = json.load(f)
 
-    rounds, hist_by_round = build_rounds(season, series, resolved, now)
+    # Ranking rounds read ordered lists rather than a scalar series, from their
+    # own archives. Gathered once, before the rounds are built, so that no
+    # network call happens inside `build_rounds` and so every consumer below --
+    # the nulls, the prompts, the pricing pass and the board -- reads the
+    # identical object.
+    ranking_obs = ranking_observations(season, fetch=True)
+
+    rounds, hist_by_round = build_rounds(season, series, resolved, now,
+                                         ranking_obs)
     # The workflow runs this module twice: once to fetch and file, then again
     # after `ssa.resolve` so the leaderboard reflects anything just resolved
     # instead of waiting six hours. Only the *second* purpose needs the second
@@ -778,7 +1386,9 @@ def main():
               "calling no provider")
         filed, filing_failures = 0, []
     else:
-        filed, filing_failures = file_baseline_forecasts(rounds, hist_by_round, now)
+        filed, filing_failures = file_baseline_forecasts(rounds, hist_by_round,
+                                                         now, series,
+                                                         ranking_obs)
     count_forecasts(rounds)
     stamped = stamp_locked_rounds(rounds)
 
@@ -791,6 +1401,8 @@ def main():
     for line in health.report(source_health):
         print(line)
     board = build_leaderboard(rounds, resolved)
+    profile_board = build_profile_leaderboard(rounds, resolved, series)
+    ranking_board = build_ranking_leaderboard(rounds, resolved, ranking_obs)
     bt = backtest.run({
         "umich_sentiment": series["umich_sentiment"],
         "yougov_approval": series["yougov_approval"],
@@ -880,6 +1492,15 @@ def main():
             "resolved_rounds": sum(1 for r in rounds if r["status"] == "resolved"),
             "entries": board,
         },
+        # The joint sixteen-cell rounds, scored with the energy score. A
+        # separate section rather than rows on the board above: the two use
+        # different scoring rules on different objects, and only `skill` is
+        # comparable across them.
+        "profile": profile_board,
+        # The ordered-list rounds, scored with a metric on lists. Separate for
+        # the same reason `profile` is separate: only `skill` is comparable
+        # across the three sections.
+        "ranking": ranking_board,
         "backtest": bt,
         "charts": {
             "approval_avg": average.weekly_series(approval, 80),

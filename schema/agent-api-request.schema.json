@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SSA Agent API prompt envelope v1",
+  "description": "JSON encoded as the single user message in an OpenAI-compatible chat completion request.",
+  "type": "object",
+  "required": ["schema_version", "request_id", "round", "optional_crosstabs"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "ssa-agent-api-v1"},
+    "request_id": {"type": "string", "minLength": 8, "maxLength": 160},
+    "round": {
+      "type": "object",
+      "required": ["round_id", "board_id", "target_type", "question", "unit", "lock_at", "context"],
+      "additionalProperties": false,
+      "properties": {
+        "round_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{2,63}$"},
+        "board_id": {"enum": ["topline", "profile", "ranking"]},
+        "target_type": {"enum": ["continuous_normal", "binary_probability", "multiple_choice", "profile_energy", "ranking_list", "short_answer"]},
+        "question": {"type": "string", "minLength": 1, "maxLength": 4000},
+        "unit": {"type": "string", "minLength": 1, "maxLength": 160},
+        "lock_at": {"type": "string", "format": "date-time"},
+        "context": {"type": "object"},
+        "options": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "cells": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "ranking": {"type": "object"}
+      }
+    },
+    "optional_crosstabs": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "required": ["dimension", "groups"],
+        "additionalProperties": false,
+        "properties": {
+          "dimension": {"type": "string", "pattern": "^[a-z][a-z0-9_]{1,63}$"},
+          "groups": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 50,
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1, "maxLength": 160}
+          }
+        }
+      }
+    }
+  }
+}

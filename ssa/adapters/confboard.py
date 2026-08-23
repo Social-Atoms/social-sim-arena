@@ -38,6 +38,8 @@ because the number changes a month after the round closes. `parse` therefore
 returns both: the month being reported, and the previous month as now restated.
 """
 import calendar
+import json
+import os
 import re
 
 import requests
@@ -248,3 +250,59 @@ def parse(text, year=None):
 
 def current(text=None):
     return parse(text if text is not None else fetch_text())
+
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ARCHIVE = os.path.join(ROOT, "sources", "confboard")
+
+
+def history(fetch=True):
+    """First prints from sources/confboard/, [{date, value}] oldest first.
+
+    Rows are dated by the month measured (the "2026-08-01" label style
+    Michigan uses), not by the release day -- which means the same caveat
+    applies: `date < lock_at` cannot freeze this series, and rounds rely on
+    the lock snapshot like every other monthly tracker.
+
+    The archive is `tools/backfill_cci.py`'s output plus whatever this
+    function adds: with fetch=True the live page is read once, and a release
+    the archive lacks is written down (write-once, keyed by released_on)
+    before it can be restated -- that is the only way a *first print* can be
+    captured, and it is the entire reason this series is usable at all.
+
+    A fetch failure serves the committed archive with a warning instead of
+    raising: a monthly series with years of committed prints must not take a
+    whole refresh down because one page timed out. That mirrors what the
+    Civiqs adapter does when the courier is a day behind.
+    """
+    rows = {}
+    if os.path.isdir(ARCHIVE):
+        for name in sorted(os.listdir(ARCHIVE)):
+            if not name.endswith(".json"):
+                continue
+            with open(os.path.join(ARCHIVE, name)) as f:
+                rec = json.load(f)
+            month = rec["month"][:7] + "-01"
+            if month not in rows:                 # earliest print per month wins
+                rows[month] = rec["value"]
+    if fetch:
+        try:
+            rec = current()
+            day = rec.get("released_on") or rec["month"][:7] + "-28"
+            path = os.path.join(ARCHIVE, day + ".json")
+            if not os.path.exists(path):
+                os.makedirs(ARCHIVE, exist_ok=True)
+                rec["source"] = URL
+                with open(path, "w") as f:
+                    json.dump(rec, f, indent=1, sort_keys=True)
+            rows.setdefault(rec["month"][:7] + "-01", rec["value"])
+        except Exception as e:                                  # noqa: BLE001
+            if not rows:
+                raise
+            print(f"  confboard: fetch failed ({type(e).__name__}: "
+                  f"{str(e)[:120]}); serving the committed archive")
+    if not rows:
+        raise RuntimeError(
+            "no Conference Board history: sources/confboard/ is empty and the "
+            "live page could not be read. Run tools/backfill_cci.py --execute.")
+    return [{"date": d, "value": rows[d]} for d in sorted(rows)]

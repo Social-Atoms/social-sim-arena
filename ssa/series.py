@@ -18,13 +18,17 @@ filters were implicit in adapter code, which had two consequences worth naming:
 
 Adding a tracker means adding a row here, and nothing else.
 """
+from . import crosstab
 from .adapters import aaii as aaii_adapter
 from .adapters import civiqs as civiqs_adapter
+from .adapters import confboard as confboard_adapter
+from .adapters import pentaesi as pentaesi_adapter
 from .adapters import silverbulletin as sb
 from .adapters import trends as trends_adapter
 from .adapters import umich as umich_adapter
 from .adapters import umichparty as umichparty_adapter
 from .adapters import wikipedia as wikipedia_adapter
+from .adapters import yougov_xtab as yougov_xtab_adapter
 
 # Set by michigan_history() to whichever source answered, plus the URL that
 # answered and the body it returned. The body is what ssa/provenance.py
@@ -85,6 +89,7 @@ SERIES = {
     "umich_sentiment": {
         "label": "Michigan consumer sentiment",
         "tracker": "umich_sentiment",
+        "publisher": 'University of Michigan Surveys of Consumers: a monthly telephone and web survey of US households, published by the university as an official statistic with a preliminary and a final reading each month.',
         "source": "umich", "value": "value",
         "unit": "index points",
         "cadence": "monthly, preliminary mid-month and final end-month",
@@ -144,6 +149,7 @@ SERIES = {
     "yougov_approval": {
         "label": "Economist/YouGov Trump approval",
         "tracker": "economist_yougov",
+        "publisher": "The Economist and YouGov, jointly: a weekly survey wave of YouGov's own online panel of US adults. The published number is what respondents said that week, not a model's estimate.",
         "source": "sb_approval",
         "filters": {"subgroup": "All polls", "pollster": "YouGov", "population": "A"},
         "value": "approve", "unit": "% approve",
@@ -167,6 +173,7 @@ SERIES = {
     "mc_approval": {
         "label": "Morning Consult Trump approval",
         "tracker": "morning_consult",
+        "publisher": 'Morning Consult: a continuously fielded online survey of US registered voters, run by the firm itself. The arena scores a house-effect-adjusted average of the published polls rather than a single wave.',
         "source": "sb_approval",
         "filters": {"subgroup": "All polls", "pollster": "Morning Consult",
                     "population": "RV"},
@@ -190,6 +197,7 @@ SERIES = {
     "yougov_generic_margin": {
         "label": "Economist/YouGov generic ballot margin",
         "tracker": "economist_yougov",
+        "publisher": "The Economist and YouGov, jointly: a weekly survey wave of YouGov's own online panel of US adults. The published number is what respondents said that week, not a model's estimate.",
         "source": "sb_generic",
         "filters": {"subgroup": "All polls", "pollster": "YouGov"},
         "value": "net", "unit": "net points, Democratic minus Republican",
@@ -217,6 +225,7 @@ SERIES = {
     "yougov_econ_approval": {
         "label": "Economist/YouGov Trump approval on the economy",
         "tracker": "economist_yougov",
+        "publisher": "The Economist and YouGov, jointly: a weekly survey wave of YouGov's own online panel of US adults. The published number is what respondents said that week, not a model's estimate.",
         "source": "sb_approval",
         "filters": {"subgroup": "Economy", "pollster": "YouGov"},
         "value": "approve", "unit": "% approve",
@@ -238,6 +247,7 @@ SERIES = {
     "yougov_immig_approval": {
         "label": "Economist/YouGov Trump approval on immigration",
         "tracker": "economist_yougov",
+        "publisher": "The Economist and YouGov, jointly: a weekly survey wave of YouGov's own online panel of US adults. The published number is what respondents said that week, not a model's estimate.",
         "source": "sb_approval",
         "filters": {"subgroup": "Immigration", "pollster": "YouGov"},
         "value": "approve", "unit": "% approve",
@@ -446,6 +456,7 @@ for _sid, _pollster, _pop in (("ipsos_generic_margin", "Ipsos", "RV"),):
 SERIES["mc_generic_margin"] = {
     "label": "Morning Consult generic ballot margin",
     "tracker": "morning_consult",
+        "publisher": 'Morning Consult: a continuously fielded online survey of US registered voters, run by the firm itself. The arena scores a house-effect-adjusted average of the published polls rather than a single wave.',
     "source": "sb_generic",
     "filters": {"subgroup": "All polls", "pollster": "Morning Consult"},
     "value": "net", "unit": "net points, Democratic minus Republican",
@@ -507,6 +518,7 @@ _CIVIQS_APPROVAL = "approve_president_trump_2025"
 SERIES["civiqs_net_approval"] = {
     "label": "Civiqs Trump net approval",
     "tracker": "civiqs",
+        "publisher": 'Civiqs, an independent research firm running its own rolling online panel of registered voters (about 123,000 cumulative interviews). Unlike a survey wave, the published number is a modeled daily estimate (MRP), smoothed and revised nightly. Civiqs is unrelated to YouGov: same subject, different organisation, different instrument.',
     "source": "civiqs",
     "civiqs": {"name": _CIVIQS_APPROVAL, "net": True, "weekday": 4},
     "value": "value",
@@ -594,6 +606,7 @@ SERIES["civiqs_net_approval"] = {
 SERIES["civiqs_net_approval_rep"] = {
     "label": "Civiqs Trump net approval, Republicans",
     "tracker": "civiqs",
+        "publisher": 'Civiqs, an independent research firm running its own rolling online panel of registered voters (about 123,000 cumulative interviews). Unlike a survey wave, the published number is a modeled daily estimate (MRP), smoothed and revised nightly. Civiqs is unrelated to YouGov: same subject, different organisation, different instrument.',
     "source": "civiqs",
     "civiqs": {"name": _CIVIQS_APPROVAL, "filters": {"party": "Republican"},
                "net": True, "weekday": 4},
@@ -672,6 +685,7 @@ def _civiqs_net(sid, tracker, label, question, unit, net, method_extra):
     SERIES[sid] = {
         "label": label,
         "tracker": "civiqs",
+        "publisher": 'Civiqs, an independent research firm running its own rolling online panel of registered voters (about 123,000 cumulative interviews). Unlike a survey wave, the published number is a modeled daily estimate (MRP), smoothed and revised nightly. Civiqs is unrelated to YouGov: same subject, different organisation, different instrument.',
         "source": "civiqs",
         "civiqs": {"name": tracker, "net": net, "weekday": 4},
         "value": "value",
@@ -749,6 +763,7 @@ _civiqs_net(
 SERIES["civiqs_angry_share"] = {
     "label": "Civiqs share angry about the country",
     "tracker": "civiqs",
+        "publisher": 'Civiqs, an independent research firm running its own rolling online panel of registered voters (about 123,000 cumulative interviews). Unlike a survey wave, the published number is a modeled daily estimate (MRP), smoothed and revised nightly. Civiqs is unrelated to YouGov: same subject, different organisation, different instrument.',
     "source": "civiqs",
     # A share, not a net: the tracker declares no net and offers ten emotions,
     # so any net over it would be this repository's construction rather than
@@ -835,6 +850,7 @@ _WIKI_METHOD = (
 SERIES["wiki_views_trump"] = {
     "label": "Wikipedia weekly pageviews, Donald Trump",
     "tracker": "wikipedia",
+        "publisher": 'The Wikimedia Foundation, from its own server logs: not a survey, but a count of how many people actually opened a page, published through a public API.',
     "source": "wikipedia",
     "wikipedia": {"article": "Donald_Trump"},
     "value": "value",
@@ -855,6 +871,7 @@ SERIES["wiki_views_trump"] = {
 SERIES["wiki_views_taylor_swift"] = {
     "label": "Wikipedia weekly pageviews, Taylor Swift",
     "tracker": "wikipedia",
+        "publisher": 'The Wikimedia Foundation, from its own server logs: not a survey, but a count of how many people actually opened a page, published through a public API.',
     "source": "wikipedia",
     "wikipedia": {"article": "Taylor_Swift"},
     "value": "value",
@@ -927,6 +944,7 @@ def _umich_party(sid, party, label, who):
     SERIES[sid] = {
         "label": label,
         "tracker": "umich_party",
+        "publisher": "University of Michigan Surveys of Consumers, party breakdown: the same monthly survey, reported separately for self-identified Democrats, Independents and Republicans in the release's own addendum table.",
         "source": "umichparty",
         "umichparty": {"party": party},
         "value": "value",
@@ -983,6 +1001,7 @@ _umich_party("umich_party_rep", "rep",
 SERIES["aaii_bull_bear_spread"] = {
     "label": "AAII bull-bear spread",
     "tracker": "aaii",
+        "publisher": 'The American Association of Individual Investors: a weekly poll of its own members, who are self-selected active individual investors rather than a sample of the public.',
     "source": "aaii", "value": "spread",
     "unit": "percentage points (bullish minus bearish)",
     "cadence": ("weekly; voting runs Thursday through Wednesday, rows are "
@@ -1008,6 +1027,58 @@ SERIES["aaii_bull_bear_spread"] = {
     # `series.survey()` returning None makes the persona arm refuse the series
     # by name -- the same discipline as civiqs_net_approval_rep -- until a
     # panel with an AAII-member population definition exists.
+}
+
+# Penta-CivicScience Economic Sentiment Index: the second sentiment tracker
+# with a sub-monthly cadence. Biweekly Wednesdays, free and keyless via the
+# publisher's own WordPress feed, and self-checking (every release states its
+# own delta and the parser reconciles it -- see the adapter, which is where
+# every hard decision about this source is documented). Like AAII it is a
+# self-selected online population, so no `survey` instrument here either, and
+# for the same reason: the persona panel approximates US adults, not
+# CivicScience respondents.
+# Conference Board CCI: the market-research track's monthly anchor. The free
+# page shows only the current release and the paid file holds the *revised*
+# history; what rounds resolve against is the first print, recovered from the
+# Internet Archive by tools/backfill_cci.py and grown one release at a time by
+# the adapter's own write-once capture. Rows are dated by the month measured
+# (Michigan-style label dates), so the lock snapshot, not the date filter, is
+# what freezes this series for a round.
+SERIES["cci_headline"] = {
+    "label": "Conference Board Consumer Confidence Index",
+    "tracker": "conference_board",
+        "publisher": 'The Conference Board, a business membership and research organisation: a monthly survey of US households, published as an index. Each release restates the previous month; the arena scores the first print.',
+    "source": "confboard",
+    "unit": "index points (1985=100)",
+    "cadence": "monthly; released the last Tuesday of the month, 10:00 ET",
+    "question": ("Conference Board Consumer Confidence Index (1985=100), "
+                 "first print of the monthly release"),
+    "methodology": (
+        "monthly online survey of US households conducted for the Conference "
+        "Board (Toluna panel); the index is benchmarked to 1985=100. Each "
+        "release restates the previous month, so the series here pins the "
+        "first print of every release -- the number as the world first saw "
+        "it -- which is what a forecast locked before the release can "
+        "honestly be scored against."),
+}
+
+SERIES["esi_headline"] = {
+    "label": "Penta-CivicScience Economic Sentiment Index",
+    "tracker": "penta_esi",
+        "publisher": "Penta and CivicScience: a biweekly index built from CivicScience's continuously running online polling, published by Penta as a press release.",
+    "source": "pentaesi",
+    "unit": "index points",
+    "cadence": ("biweekly; released every other Wednesday, rows dated by "
+                "the release day"),
+    "question": ("Penta-CivicScience Economic Sentiment Index: the headline "
+                 "ESI reading published in the biweekly release"),
+    "methodology": (
+        "CivicScience online panel, published every other Wednesday by Penta "
+        "since 2013 (HPS-CivicScience before 2023). Five sub-indicators "
+        "averaged into a headline index; the arena tracks the headline only. "
+        "The series here starts where the release wording became "
+        "machine-stable (2022); respondents are a self-selected online panel, "
+        "not a probability sample."),
 }
 
 
@@ -1062,6 +1133,7 @@ def _trends(sid, query, asks):
     SERIES[sid] = {
         "label": f"Google Trends search interest: {query}",
         "tracker": "google_trends",
+        "publisher": 'Google, from its own search logs: not a survey and not an opinion, but a measure of what people actually typed into a search box, published as a relative index.',
         "source": "trends",
         "trends": {"query": query, "geo": trends_adapter.GEO},
         "value": "value",
@@ -1086,6 +1158,78 @@ _trends("trends_tesla", "Tesla",
 _trends("trends_iphone", "iPhone",
         "Interest is strongly seasonal around Apple's September announcement "
         "cycle and product rumors, so the calendar itself is informative.")
+
+
+# --- the five-brand basket, as shares ---------------------------------------
+#
+# One Trends request measures up to five queries on a single shared scale, and
+# the basket rounds forecast how that scale is divided: each brand's percent of
+# the five-brand total for the week.
+#
+# **Why a share rather than the index itself.** The index is a sample, and the
+# sample is redrawn on every fetch: measured over four fetch days, one settled
+# week's whole series moved together by about four percent -- Tesla, iPhone,
+# Samsung, Netflix and Disney all up on one day and all down on the next.
+# That common factor is the sampling draw, not the world. Dividing by the
+# basket total cancels it: across the same four fetches the raw values wobbled
+# 2.0-3.2% while the shares wobbled 1.2-1.9%. What survives is what we want
+# scored -- a launch week really does move iPhone's share of attention, and a
+# share cannot be moved by a peak entering or leaving the 12-month window,
+# which rescales every raw index in the archive.
+#
+# **Why not the ranking.** These five brands sit far apart (iPhone near 55,
+# Tesla near 13), so their order barely changes: over 52 archived weeks,
+# copying last week's order was exactly right 49% of the time and the leader
+# never changed once. A round whose null is perfect half the time cannot
+# separate anyone. Shares move every week and keep the magnitudes the ordering
+# throws away.
+BASKET = ("Tesla", "iPhone", "Samsung", "Netflix", "Disney")
+
+_BASKET_METHOD = (
+    "Google Trends, United States, web search, all categories, one comparison "
+    "request covering all five queries so their weekly indices share a single "
+    "scale. The arena archives a dated snapshot of every fetch and scores "
+    "against its own archive; a completed week's values are whatever the "
+    "earliest snapshot containing that week showed, and the share is that "
+    "week's index for this query divided by the sum over the five, in percent. "
+    "The five shares add to 100 by construction. The in-progress week is "
+    "never scored.")
+
+
+def _trends_share(sid, query, asks):
+    SERIES[sid] = {
+        "label": f"Trends share of the five-brand basket: {query}",
+        "tracker": "google_trends",
+        "publisher": 'Google, from its own search logs: not a survey and not an opinion, but a measure of what people actually typed into a search box, published as a relative index.',
+        "source": "trends_basket",
+        "trends_basket": {"query": query, "basket": BASKET,
+                          "geo": trends_adapter.GEO},
+        "unit": "percent of the five-brand basket",
+        "cadence": ("weekly, Sunday through Saturday; the completed week "
+                    "enters the archive the following week"),
+        "question": (
+            f"Google Trends, United States: '{query}' as a percentage of the "
+            f"combined weekly search interest of {', '.join(BASKET)}, for the "
+            f"most recent complete Sunday-to-Saturday week. {asks}"),
+        "methodology": _BASKET_METHOD,
+        # No `survey`, as for every behavioral target.
+    }
+
+
+_trends_share("trends_share_tesla", "Tesla",
+              "Share moves on product and company news -- launches, recalls, "
+              "earnings, Musk coverage.")
+_trends_share("trends_share_iphone", "iPhone",
+              "Share is strongly seasonal around Apple's September "
+              "announcement cycle, which is the largest regular swing in "
+              "this basket.")
+_trends_share("trends_share_samsung", "Samsung",
+              "Share moves on launches and on Apple's calendar, since the "
+              "basket is a fixed pie.")
+_trends_share("trends_share_netflix", "Netflix",
+              "Share moves on release schedules and subscription news.")
+_trends_share("trends_share_disney", "Disney",
+              "Share moves on film releases, park and streaming news.")
 
 
 # --- the Civiqs 16-cell population profile ----------------------------------
@@ -1129,6 +1273,7 @@ for _sfx, _axis, _label, _short in _PROFILE_CELLS:
     SERIES[f"civiqs_net_approval_{_sfx}"] = {
         "label": f"Civiqs Trump net approval, {_short}",
         "tracker": "civiqs",
+        "publisher": 'Civiqs, an independent research firm running its own rolling online panel of registered voters (about 123,000 cumulative interviews). Unlike a survey wave, the published number is a modeled daily estimate (MRP), smoothed and revised nightly. Civiqs is unrelated to YouGov: same subject, different organisation, different instrument.',
         "source": "civiqs",
         "civiqs": {"name": _CIVIQS_APPROVAL, "filters": {_axis: _label},
                    "net": True, "weekday": 4},
@@ -1139,21 +1284,232 @@ for _sfx, _axis, _label, _short in _PROFILE_CELLS:
                      "(percent approve minus percent disapprove) among US "
                      f"registered voters, {_short} only, as the dashboard "
                      "shows it on Friday"),
+        # Two cells -- Republicans and Independents -- also carry their own
+        # single-number rounds, so the sentence about how a cell is scored is
+        # written per cell rather than once for all sixteen. Saying "scored
+        # jointly, not as its own round" on a cell that does have its own round
+        # would tell an entrant something false about the question in front of
+        # it, in the one field it is entitled to trust.
         "methodology": _CIVIQS_METHOD + (
             f" Filtered to the dashboard's {_axis} = {_label} subgroup. "
-            "Collected as one cell of the sixteen-cell population profile; "
-            "scored jointly with the other cells, not as its own round."),
+            "One cell of the sixteen-cell population profile, scored jointly "
+            "with the other cells"
+            + (" and also asked as its own single-number round."
+               if _sfx in ("rep", "ind") else ", not as its own round.")),
         # No `survey` instrument: personas.weights_for cannot express a
         # subgroup-only population -- same refusal as civiqs_net_approval_rep.
     }
 
+
+# The profile in its scored order: party, age, race, education, gender, each
+# axis in the dashboard's own order. Republicans are spliced back into the
+# party block they belong to -- they are registered above, separately, because
+# that cell also stands alone as a scalar round and the other fifteen do not.
+#
+# One published constant rather than a list per consumer. A profile round names
+# its cells in `questions/season0.json`, the harness asks for exactly these keys
+# and the scorer reads the outcome vector in exactly this order, so a roster
+# that disagreed anywhere would silently score cell i against cell j's answer --
+# an error no test of any single module could see. Everything checks against
+# this tuple instead.
+PROFILE_CELLS = tuple(
+    ["civiqs_net_approval_dem", "civiqs_net_approval_ind",
+     "civiqs_net_approval_rep"]
+    + [f"civiqs_net_approval_{sfx}" for sfx, _a, _l, _s in _PROFILE_CELLS
+       if sfx not in ("dem", "ind")])
+
+# Fail at import, not at scoring time: a typo'd or dropped cell here would
+# otherwise surface as a sixteen-cell round quietly resolving on fifteen.
+assert len(PROFILE_CELLS) == 16, f"profile has {len(PROFILE_CELLS)} cells, not 16"
+assert len(set(PROFILE_CELLS)) == 16, "a profile cell is registered twice"
+for _cell in PROFILE_CELLS:
+    assert _cell in SERIES, f"profile cell {_cell} is not a registered series"
+
+
+# --- the Economist/YouGov crosstab: a second, independent population ---------
+#
+# Sixteen more subgroup cells of Trump approval, and the reason to carry a
+# second set is that the first one is a *model*. Civiqs publishes an MRP
+# estimate: its sixteen cells are what a statistical model says each subgroup
+# thinks, smoothed, revised nightly, and correlated across cells by
+# construction because one model produced all of them. The Economist/YouGov
+# tracker publishes the survey's own crosstab: the cell labelled "Postgrad" is
+# the answers of the roughly 190 postgraduates who were actually interviewed
+# that week, and nothing links it to the "Hispanic" cell except the world.
+#
+# So the two profiles disagree about what a subgroup round even measures, and
+# an entrant that scores well on both has done something a smoother cannot.
+# Registering them keeps them separable: different `source`, different `unit`
+# (percent approving against net points), different cadence, different rounds.
+#
+# **Why these series are monthly.** `ssa/crosstab.py`'s module docstring holds
+# the measurement and the argument; the short version is that a weekly round on
+# most of these cells is a round on a coin flip. Measured over the 82 waves
+# published 2025-01-28 to 2026-08-17, nine of the sixteen cells have *no* real
+# week-to-week movement at all -- the estimator puts every point of their
+# weekly wobble in the measurement-noise term -- and the seven that do move
+# move less than their own noise. Averaging the four waves dated in a calendar
+# month cuts that noise by a median of 62 percent (Democrat 1.07 -> 0.43
+# points, Republican 1.95 -> 0.58, College grad 2.56 -> 0.96; least improved is
+# independents at 18 percent, most is Black voters, where it vanishes) and
+# leaves fourteen of the sixteen with movement the arena can score. That is why
+# the registered series is monthly and not weekly: it is the coarsest thing the
+# data supports, not a scheduling preference.
+#
+# The monthly figures rest on eighteen complete months, which is thin: treat
+# any single cell's number as indicative and the direction as settled. Both
+# sets are quoted per cell in the rows below, because a reader given only the
+# spread between entrants would otherwise read a noise floor as skill.
+#
+# **What a month's point is, and what it is dated.** The mean of the four
+# weekly waves dated in that calendar month, dated by the last of those four.
+# Six of the twenty months on this tracker carry five waves; those keep the
+# last four, so the target's own noise floor is the same estimator every month
+# and two rounds' scores stay comparable. A month with fewer than four waves
+# publishes no point at all rather than a three-wave average wearing the same
+# name -- `crosstab.month_target` raises, and `crosstab.monthly_coverage` says
+# which months were dropped and why.
+#
+# **The consequence for a round's lock.** A month's point is dated by its last
+# wave, and `profile_round.frozen_history` freezes on `date < lock_at[:10]`. So
+# a round scoring month M must lock on or before the date of M's last wave: one
+# day later and the strict comparison lets the answer into the history its own
+# persistence null is built from. With the arena's release-minus-48h rule that
+# fixes the release at the last wave's date plus exactly two days, which is
+# where `questions/season0.json` puts it.
+#
+# Labels are byte-exact from `yougov_xtab.SCORED_CELLS`, and the assertion at
+# the end of this block is what enforces it: the adapter's roster is the
+# authority on what the workbook contains, and a series registered under a
+# label the workbook does not carry is a round that can never resolve.
+
+_YOUGOV_XTAB_MEASURE = "approve"
+
+_YOUGOV_XTAB_PUBLISHER = (
+    "The Economist and YouGov, published weekly as the tracker's own crosstab "
+    "workbook: each cell is the percentage of the real respondents in that "
+    "subgroup of that week's survey who said they approve -- an actual "
+    "measured cell of the survey, not a modelled estimate for a subgroup. The "
+    "arena scores the mean of the four weekly waves dated in a calendar month.")
+
+# suffix, axis, the workbook's own label, how to say it in a sentence, median
+# weighted base over 82 waves, measured weekly noise, measured noise of the
+# four-wave monthly average -- both in points, both from the cell's own
+# history via scoring.noise_floor, measured 2026-08-23 over waves
+# 2025-01-28..2026-08-17.
+_YOUGOV_XTAB_CELLS = [
+    ("dem",             "party",     "Democrat",     "Democrats",              394, 1.07, 0.43),
+    ("ind",             "party",     "Independent",  "independents",           384, 2.06, 1.69),
+    ("rep",             "party",     "Republican",   "Republicans",            428, 1.95, 0.58),
+    ("age_under_30",    "age",       "Under 30",     "voters under 30",        186, 2.85, 1.23),
+    ("age_30_44",       "age",       "30-44",        "voters aged 30 to 44",   273, 2.26, 1.51),
+    ("age_45_64",       "age",       "45-64",        "voters aged 45 to 64",   414, 2.16, 0.68),
+    ("age_65_up",       "age",       "65+",          "voters aged 65 and over", 317, 2.09, 0.73),
+    ("race_white",      "race",      "White",        "White voters",           842, 1.22, 0.75),
+    ("race_black",      "race",      "Black",        "Black voters",           141, 1.99, 0.00),
+    ("race_hispanic",   "race",      "Hispanic",     "Hispanic voters",        138, 3.31, 0.59),
+    ("male",            "gender",    "Male",         "men",                    558, 1.42, 0.78),
+    ("female",          "gender",    "Female",       "women",                  629, 1.21, 0.56),
+    ("edu_hs_or_less",  "education", "HS or less",   "voters with a high-school education or less", 332, 2.52, 0.85),
+    ("edu_some_college", "education", "Some college", "voters with some college",  356, 2.40, 0.90),
+    ("edu_college_grad", "education", "College grad", "college graduates",        316, 2.56, 0.96),
+    ("edu_postgrad",    "education", "Postgrad",     "postgraduates",          190, 3.49, 1.29),
+]
+
+_YOUGOV_XTAB_CADENCE = (
+    "monthly, and derived rather than published as such: YouGov fields this "
+    "tracker weekly and the workbook carries one column per wave (dated a "
+    "Monday in 67 of 82 waves, a Tuesday in 13, a Sunday in 2). The arena's "
+    "point for a calendar month is the mean of the four waves dated in it, "
+    "dated by the last of those four, and it exists only once that fourth "
+    "wave is in the workbook -- within a week of the wave's own date.")
+
+_YOUGOV_XTAB_METHOD = (
+    "Economist/YouGov weekly tracker of US registered voters, taken from "
+    "YouGov's own public tracker workbook, one sheet per subgroup. This is the "
+    "survey's crosstab, so a cell is the answer of the respondents actually "
+    "interviewed in that subgroup that week and the cells are linked by "
+    "nothing but the electorate -- unlike a modelled tracker, where one model "
+    "produces every cell. YouGov publishes each cell rounded to a whole "
+    "percentage point; approve, disapprove and not sure sum to 100. "
+    "The arena scores the mean of the four weekly waves dated in the calendar "
+    "month (the last four, in a month that carries five), which is the unit "
+    "the noise in this file makes scoreable: at wave level, nine of the "
+    "sixteen cells show no real week-to-week movement whatsoever, and the "
+    "four-wave average cuts a cell's measurement noise by a median of 62 "
+    "percent. Both figures are estimated from the series' own first "
+    "differences, and the monthly one rests on only eighteen complete months, "
+    "so a monthly figure of 0.00 does not mean a cell has no sampling error -- "
+    "it means that over eighteen months the estimator could not separate any "
+    "of its movement from signal. Read the small ones as a lower bound.")
+
+
+def _yougov_xtab(sfx, axis, label, short, base, wave_noise, month_noise):
+    """Register one crosstab cell.
+
+    Every cell carries its own measured base size and noise, because those are
+    the two numbers that decide whether its forecast can be better than a coin
+    flip, and they differ across these cells by a factor of six. Withholding
+    them would grade an entrant on a question it was not shown -- the registry
+    docstring's rule, applied to the one field where these cells differ most.
+    """
+    sid = f"yougov_xtab_approve_{sfx}"
+    SERIES[sid] = {
+        "label": f"Economist/YouGov Trump approval, {short}",
+        "tracker": "yougov_xtab",
+        "publisher": _YOUGOV_XTAB_PUBLISHER,
+        "source": "yougov_xtab",
+        "yougov_xtab": {"cell": label, "axis": axis,
+                        "measure": _YOUGOV_XTAB_MEASURE},
+        "unit": "percent approving",
+        "cadence": _YOUGOV_XTAB_CADENCE,
+        "question": (
+            "Economist/YouGov weekly tracker: Donald Trump's job approval "
+            f"among US registered voters, {short} only -- the percentage "
+            "saying they approve of the way he is handling his job as "
+            "President, averaged over the four weekly waves dated in the "
+            "calendar month"),
+        "methodology": _YOUGOV_XTAB_METHOD + (
+            f" This cell is the workbook's {axis} = '{label}' sheet. Its "
+            f"median weighted base is {base:,} respondents per wave; measured "
+            f"over the published history its weekly measurement noise is "
+            f"{wave_noise:.2f} points and the four-wave monthly average's is "
+            f"{month_noise:.2f}. One cell of the sixteen-cell Economist/YouGov "
+            "population profile, scored jointly with the other cells, not as "
+            "its own round."),
+        # No `survey` instrument, for the same reason every Civiqs subgroup
+        # cell omits one: `personas.weights_for` reweights the panel by
+        # population and cannot express "postgraduates only", so a persona run
+        # would put the question to a national panel and file the answer as a
+        # subgroup. `series.survey()` returning None is the refusal, by name.
+    }
+    return sid
+
+
+# The profile in its scored order -- party, age, race, gender, education, each
+# axis in the workbook's own order. One published constant, for the reason
+# PROFILE_CELLS gives: the round definition names these ids, the harness asks
+# for exactly these keys and the scorer reads the outcome vector in this order,
+# so a roster that disagreed anywhere would score cell i against cell j's
+# answer.
+YOUGOV_XTAB_CELLS = tuple(_yougov_xtab(*row) for row in _YOUGOV_XTAB_CELLS)
+
+# Fail at import, not at scoring time. The adapter's roster is the authority on
+# what the workbook actually contains; a cell registered here under a label the
+# workbook does not carry is a round that can never resolve, and one missing
+# from here is a sixteen-cell round quietly scored on fifteen.
+assert [SERIES[c]["yougov_xtab"]["cell"] for c in YOUGOV_XTAB_CELLS] == \
+    list(yougov_xtab_adapter.SCORED_CELLS), \
+    "the registered crosstab cells no longer match yougov_xtab.SCORED_CELLS"
+assert len(set(YOUGOV_XTAB_CELLS)) == 16, "a crosstab cell is registered twice"
 
 
 def describe(series_id):
     """The question and methodology text an entrant is entitled to see."""
     s = SERIES[series_id]
     return {"question": s["question"], "unit": s["unit"],
-            "methodology": s["methodology"], "cadence": s["cadence"]}
+            "methodology": s["methodology"], "cadence": s["cadence"],
+            "publisher": s.get("publisher", s.get("tracker", ""))}
 
 
 def survey(series_id):
@@ -1194,6 +1550,23 @@ def build_all(sources=None):
     # here and stay off the network.
     if "aaii" in need and "aaii" not in src:
         src["aaii"] = aaii_adapter.fetch()
+    # The ESI feed returns parsed [{date, value}] rows directly; the fetch is
+    # one paginated keyless request cycle, shared by every caller of the map.
+    if "pentaesi" in need and "pentaesi" not in src:
+        src["pentaesi"] = pentaesi_adapter.history()
+    # First prints from the committed archive; the fetch also captures a new
+    # release the moment the page shows one (write-once, see the adapter).
+    if "confboard" in need and "confboard" not in src:
+        src["confboard"] = confboard_adapter.history()
+    # One workbook download carries every wave of every subgroup, so all
+    # sixteen crosstab cells share a single request the way the five basket
+    # series share one Trends comparison. `src["yougov_xtab"]` holds *parsed*
+    # waves rather than the workbook bytes -- the same choice `src["aaii"]`
+    # makes -- so a test injects a handful of waves and stays off both the
+    # network and the zip parser, and the monthly aggregation below is still
+    # the code under test rather than something the fixture pre-computed.
+    if "yougov_xtab" in need and "yougov_xtab" not in src:
+        src["yougov_xtab"] = yougov_xtab_adapter.waves()
     # Civiqs is the one source with no single file to prefetch: every tracker
     # and every subgroup is its own ~2 MB page. So `src["civiqs"]` is not a
     # payload but a per-series override map -- `{series_id: [{date, value}]}` --
@@ -1221,7 +1594,17 @@ def build_all(sources=None):
     if "trends" in need and "trends" not in src:
         src["trends"] = {}
 
+    # The basket is one request serving five series: fetched (or read) once
+    # here and shared, so registering all five costs what registering one does.
+    if "trends_basket" in need and "trends_basket" not in src:
+        src["trends_basket"] = {}
+
     out = {}
+    # {measure: {cell label: monthly series}} -- the one derivation of the
+    # YouGov workbook, memoised across the sixteen cells that read it. Local
+    # rather than stashed in `src`, because `src` is the injection surface and
+    # a caller has no business supplying a half-derived intermediate.
+    xtab_monthly = {}
     for sid, spec in SERIES.items():
         f = spec.get("filters") or {}
         if spec["source"] == "umich":
@@ -1237,6 +1620,34 @@ def build_all(sources=None):
             out[sid] = sb.to_series(recs, spec["value"])
         elif spec["source"] == "aaii":
             out[sid] = aaii_adapter.to_series(src["aaii"], spec["value"])
+        elif spec["source"] == "pentaesi":
+            out[sid] = list(src["pentaesi"])
+        elif spec["source"] == "confboard":
+            out[sid] = list(src["confboard"])
+        elif spec["source"] == "yougov_xtab":
+            # Derived once for the whole roster, not once per cell. Sixteen
+            # independent aggregations of one payload would be sixteen chances
+            # for the cells to disagree about which four waves September had,
+            # and a profile whose cells were averaged over different waves is
+            # not a profile of anything.
+            cfg = spec["yougov_xtab"]
+            m = cfg["measure"]
+            if m not in xtab_monthly:
+                xtab_monthly[m] = crosstab.monthly_cell_series(
+                    src["yougov_xtab"], yougov_xtab_adapter.SCORED_CELLS, m)
+            out[sid] = list(xtab_monthly[m][cfg["cell"]])
+        elif spec["source"] == "trends_basket":
+            cfg = spec["trends_basket"]
+            given = src["trends_basket"].get(sid)
+            if given is not None:
+                out[sid] = list(given)
+            else:
+                key = (tuple(cfg["basket"]), cfg.get("geo", trends_adapter.GEO))
+                if key not in src["trends_basket"]:
+                    src["trends_basket"][key] = trends_adapter.basket_weeks(
+                        list(key[0]), key[1])
+                out[sid] = trends_adapter.share_series(
+                    src["trends_basket"][key], cfg["query"])
         elif spec["source"] == "civiqs":
             cfg = spec["civiqs"]
             given = src["civiqs"].get(sid)

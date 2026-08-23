@@ -1,0 +1,15 @@
+{
+  "entrant": "gemini-pro-web-superfc",
+  "input_hash": "a400c220428e",
+  "logged_at": "2026-08-23T16:16:45Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt_sha256": "82d19dcfdb7bd949fe0a4cfca60a085255f8ee61f029307a244aa29ce687548c",
+  "reply": "1. Outside view. What is the base rate here? What has this series done historically, how much does it move between releases, and what would a naive extrapolation predict?\nThe historical series has shown Donald Trump's net approval declining gradually from -20.8 in mid-June to a low of -24.2 by mid-August, before ticking up slightly to -23.7 on August 21. The stated mean week-to-week change is 0.58 points. A naive extrapolation would simply carry forward the most recent value of -23.7. Since the mean absolute difference of a normal random walk is about 0.8 times its standard deviation, an average week-to-week change of 0.58 implies a weekly standard deviation of roughly 0.73 points.\n\n2. Inside view. What is specific to this release -- events, timing, anything that would move this particular number away from the base rate? Say how much each is worth, in the unit of the series.\nThe provided text snippets indicate that Trump's net approval sits heavily underwater (around 35% approve, 59% disapprove) as of August 19, which matches the recent Civiqs tracker data just prior to the August 21 release of -23.7. Civiqs is an MRP model heavily smoothed over a large rolling sample, meaning it doesn't experience sudden random spikes without major national news. There is no major news in the prompt for the week ending August 28 that strongly suggests a deviation from the recent trend. The brief recovery from -24.2 to -23.7 might plateau as it stabilizes around the -24 mark. I expect a minor reversion or continuation near -23.8. \n\n3. Pre-mortem. Assume your answer turns out badly wrong. Write the most likely reason, then correct for it.\nIf the forecast is badly wrong, it is likely because of an unmentioned compounding event (such as further fallout from the referenced \"war with Iran\" or new tariff impacts) driving net approval down to -25 or -26, or a significant positive news cycle that bounces his net approval back toward the -21 range seen in July. To correct for this, I should not be too overconfident in a perfectly flat line and ensure my standard deviation is wide enough (around 0.8 to 0.9 points) to capture a full point of movement in either direction.\n\n4. Calibrate. Your sd should be wide enough that the true value falls inside one sd about two thirds of the time. Check it against how much this series actually moves between releases.\nWith an average week-to-week change of 0.58, a standard deviation of 0.8 provides a 1-SD interval of approximately +/- 0.8 points. This means there is a ~68% chance the next release will fall between -24.6 and -23.0, which comfortably encompasses the typical weekly variation. \n\n{\"mean\": -23.8, \"sd\": 0.8}",
+  "round_id": "civiqs-2026-w35-approval",
+  "usage": {
+    "input_tokens": 3048,
+    "output_tokens": 657,
+    "thinking_tokens": 1487
+  },
+  "via": "direct"
+}

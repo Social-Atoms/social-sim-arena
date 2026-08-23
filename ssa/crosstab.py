@@ -142,3 +142,140 @@ def month_end(d):
     """Last day of d's month, as a date."""
     first_next = date(d.year + (d.month == 12), d.month % 12 + 1, 1)
     return first_next - timedelta(days=1)
+
+
+# --- the calendar month, which is the unit a crosstab round is scored on -----
+#
+# `target` above averages "the last four waves at or before a date", which is
+# the right rule for a rolling window and the wrong one for a month. Asked for
+# August 2026 -- three waves published so far -- it happily reaches back into
+# July for a fourth and returns a number labelled August that is one quarter
+# July. The functions below exist so that cannot happen: every one of them
+# filters to the month *first* and only then averages, so the boundary is
+# structural rather than something a caller has to remember to check.
+#
+# **Why a month is refused rather than shortened.** The whole justification for
+# this round type is the measured noise reduction of averaging four waves
+# (module docstring above). A three-wave average is a different estimator with
+# a different noise floor, and publishing it under the same series name would
+# make two rounds' scores incomparable while looking identical in the data. The
+# tracker's own calendar makes this common, not hypothetical: of the twenty
+# months from 2025-01 to 2026-08, one has a single wave (the tracker's first
+# month), one has three so far (the month in progress) and six have five.
+
+def month_end_iso(month):
+    """'YYYY-MM' -> the ISO date of that month's last day."""
+    return month_end(date(int(month[:4]), int(month[5:7]), 1)).isoformat()
+
+
+def months_present(series):
+    """The calendar months the series carries waves in, 'YYYY-MM', oldest first."""
+    seen = []
+    for p in series:
+        m = p["date"][:7]
+        if m not in seen:
+            seen.append(m)
+    return seen
+
+
+def monthly_coverage(series):
+    """{'YYYY-MM': waves dated in it} -- what `monthly_profile` kept and dropped.
+
+    Published rather than logged, so a caller can say *why* a month is missing
+    from a monthly series. A month absent because the tracker has not finished
+    it and a month absent because the extractor dropped an incomplete wave look
+    identical in the output series and are entirely different problems.
+    """
+    out = {}
+    for p in series:
+        out[p["date"][:7]] = out.get(p["date"][:7], 0) + 1
+    return out
+
+
+def month_target(series, month, n=WAVES_PER_ROUND):
+    """(vector, detail) -- the n-wave mean for one calendar month. Raises if short.
+
+    The month is isolated before the window is taken, so a short month can
+    never borrow the previous month's last wave to make up its count. It raises
+    instead, for the reason in the block comment above: a three-wave average is
+    a different estimator wearing the same name, and every score computed
+    against it would be quietly incomparable with every other month's.
+
+    A month with *more* than n waves -- six of the twenty months on this
+    tracker have five -- keeps the last n. Fixing n rather than averaging
+    whatever the month happens to carry is what keeps the target's own noise
+    floor the same number every month, which is the property that makes two
+    rounds' energy scores comparable at all.
+    """
+    inside = [p for p in series if p["date"][:7] == month]
+    if len(inside) < n:
+        raise ValueError(
+            f"{month} carries {len(inside)} wave(s), not {n}: refusing to "
+            f"publish a {n}-wave average computed from {len(inside)}")
+    vec, detail = target(inside, month_end_iso(month), n)
+    detail["month"] = month
+    detail["waves_in_month"] = len(inside)
+    return vec, detail
+
+
+def monthly_profile(waves, cells=None, measure="approve", n=WAVES_PER_ROUND):
+    """[{month, date, values, bases, waves}] -- one point per *complete* month.
+
+    Oldest first. A month that cannot produce an n-wave average is not in the
+    output, because there is no n-wave average for it to be: the loud refusal
+    lives in `month_target`, which is the function that would otherwise return
+    a wrong number, and `monthly_coverage` names every month either way so the
+    omission is inspectable rather than mysterious.
+
+    Each point is dated by the newest wave in its own average -- the month's
+    last wave. Not by the month label and not by the month's last day: the
+    round lifecycle freezes history with a string comparison on ISO dates
+    (`refresh.build_rounds`, `profile_round.frozen_history`), so a point dated
+    later than the observation it summarises would be excluded from a history
+    it belongs in, and one dated earlier would leak into a history it does not.
+
+    `bases` is the mean *per-wave* weighted base across the averaged waves, not
+    the effective base of the average. The waves share a panel, so the four are
+    not independent draws and multiplying by four would overstate precision by
+    an unknown amount. What the noise reduction actually is was measured, not
+    computed -- see the module docstring.
+    """
+    names = list(cells or CELLS)
+    series = profile_series(waves, names, measure)
+    out = []
+    for m in months_present(series):
+        try:
+            vec, detail = month_target(series, m, n)
+        except ValueError:
+            continue
+        # Re-selected inside the month, not by date alone: the month filter is
+        # what makes the boundary structural everywhere in this block, and a
+        # lookup keyed only on the date would quietly reintroduce the one bug
+        # these functions exist to prevent if a wave date ever repeated.
+        chosen = set(detail["waves"])
+        got = [p for p in series
+               if p["date"][:7] == m and p["date"] in chosen]
+        k = len(names)
+        out.append({
+            "month": m,
+            "date": detail["waves"][-1],
+            "values": vec,
+            "bases": [round(statistics.fmean(p["bases"][i] for p in got), 1)
+                      for i in range(k)],
+            "waves": list(detail["waves"]),
+        })
+    return out
+
+
+def monthly_cell_series(waves, cells=None, measure="approve", n=WAVES_PER_ROUND):
+    """{cell: [{date, value}]} -- the monthly series the registry publishes.
+
+    One call over the whole workbook produces all sixteen cells, which is why
+    `series.build_all` derives it once and hands each registered cell its own
+    column: sixteen independent aggregations of one payload would be sixteen
+    chances for the cells to disagree about which waves September had.
+    """
+    names = list(cells or CELLS)
+    points = monthly_profile(waves, names, measure, n)
+    return {c: [{"date": p["date"], "value": p["values"][i]} for p in points]
+            for i, c in enumerate(names)}

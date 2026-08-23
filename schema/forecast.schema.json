@@ -2,26 +2,16 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Social Sim Arena forecast submission",
   "type": "object",
-  "required": ["round_id", "entrant", "topline"],
+  "required": ["round_id", "entrant"],
   "additionalProperties": false,
-  "properties": {
-    "round_id": {
-      "type": "string",
-      "pattern": "^[a-z0-9][a-z0-9-]{2,63}$",
-      "description": "Must match an existing round in questions/. Must equal the directory the file sits in."
-    },
-    "entrant": {
-      "type": "string",
-      "pattern": "^[a-z0-9][a-z0-9_.-]{1,47}$",
-      "description": "Stable entrant id, e.g. gpt-5.5_web or myteam_ensemble. Must equal the file name without .json."
-    },
-    "topline": {
+  "definitions": {
+    "distribution": {
       "type": "object",
-      "description": "Either a normal (mean + sd) or a quantile set. Quantiles let you express skew and fat tails; both formats are scored with CRPS.",
+      "description": "Either a normal (mean + sd) or a quantile set. Quantiles let you express skew and fat tails; both formats are scored with CRPS (a topline) or pooled into the energy score (a profile cell). A point guess is not a distribution and is rejected.",
       "additionalProperties": false,
       "properties": {
         "mean": { "type": "number", "description": "Center of the predictive distribution, in the round's unit." },
-        "sd": { "type": "number", "exclusiveMinimum": 0, "maximum": 50, "description": "Standard deviation. Point guesses are not accepted." },
+        "sd": { "type": "number", "exclusiveMinimum": 0, "maximum": 1000000, "description": "Standard deviation. Point guesses are not accepted." },
         "quantiles": {
           "type": "object",
           "minProperties": 3,
@@ -34,6 +24,42 @@
         { "required": ["mean", "sd"] },
         { "required": ["quantiles"] }
       ]
+    }
+  },
+  "oneOf": [
+    { "required": ["topline"] },
+    { "required": ["profile"] },
+    { "required": ["ranking"] }
+  ],
+  "properties": {
+    "round_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{2,63}$",
+      "description": "Must match an existing round in questions/. Must equal the directory the file sits in."
+    },
+    "entrant": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_.-]{1,47}$",
+      "description": "Stable entrant id, e.g. gpt-5.5_web or myteam_ensemble. Must equal the file name without .json."
+    },
+    "topline": {
+      "$ref": "#/definitions/distribution",
+      "description": "The answer to a scalar round. Exactly one of topline, profile or ranking is present, and which one is fixed by the round's target_type: a scalar round takes a topline, a profile round a profile, a ranking round a ranking."
+    },
+    "ranking": {
+      "type": "array",
+      "description": "The answer to a ranking round: the items in predicted order, best-ranked first. A point answer by design and the one place in this schema where that is accepted -- the alternative is a distribution over permutations, which nobody can express and which the round deliberately does not ask for. Length, and for a fixed-basket round the exact item set, come from the round definition; tools/validate_submission.py checks the list against the round's own ranking block.",
+      "minItems": 2,
+      "maxItems": 50,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+    },
+    "profile": {
+      "type": "object",
+      "description": "The answer to a profile round: every cell the round asks for, keyed by its series id (e.g. civiqs_net_approval_dem), each in the same two formats a topline may take. All cells or none -- the energy score is a norm over the whole vector, so a profile with a hole cannot be scored. tools/validate_submission.py checks the key set against the round's own roster.",
+      "minProperties": 2,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]{2,63}$" },
+      "additionalProperties": { "$ref": "#/definitions/distribution" }
     },
     "crosstabs": {
       "type": "object",
@@ -46,7 +72,7 @@
           "additionalProperties": false,
           "properties": {
             "mean": { "type": "number" },
-            "sd": { "type": "number", "exclusiveMinimum": 0, "maximum": 50 }
+            "sd": { "type": "number", "exclusiveMinimum": 0, "maximum": 1000000 }
           }
         }
       }

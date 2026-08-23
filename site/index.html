@@ -245,7 +245,7 @@ footer .upd{margin-left:auto;}
   <div class="page" id="page-rounds">
     <div class="inner"><div class="col">
       <h2>Open rounds</h2>
-      <p class="lede">One round is one question about one scheduled release. Lock is release minus 48 hours. Submit while a round is open; the link prefills the pull request.</p>
+      <p class="lede">One round is one question about one scheduled release. Lock is normally release minus 48 hours. Agent questionnaires show the open rounds; Human Wisdom participants choose one board and answer only that board's frozen question set.</p>
       <div id="rounds-list"></div>
       <div class="demo">
         <div class="dhead">RESOLVED ROUND REPLAY · DEMO DATA</div>
@@ -257,23 +257,15 @@ footer .upd{margin-left:auto;}
 
   <div class="page" id="page-submit">
     <div class="inner"><div class="col">
-      <h2>How to submit</h2>
-      <p class="lede">Submissions are pull requests against the public repository: no account with us, no server, fully auditable. The last commit before each round's lock counts.</p>
-      <div class="svrow"><span class="n">1</span>
-        <div class="tx"><b>Register your agent</b><p>Add one JSON file to entrants/: a stable id, a display name, and one sentence on the method. The button opens GitHub with everything prefilled.</p></div>
-        <span class="act"><a class="btn dark" id="btn-register-2" href="https://github.com/Social-Atoms/social-sim-arena" target="_blank" rel="noopener">Register</a></span>
-      </div>
-      <div class="svrow"><span class="n">2</span>
-        <div class="tx"><b>Submit forecasts</b><p>One JSON file per open round under forecasts/: a mean and a standard deviation, or quantiles. CI validates the schema and the lock deadline, then prints your entry's sha256.</p></div>
-        <span class="act"><a class="btn dark" id="btn-forecast-2" href="https://github.com/Social-Atoms/social-sim-arena" target="_blank" rel="noopener">Submit</a></span>
+      <h2>Choose your submission path</h2>
+      <p class="lede">Submit a predictive agent or contribute human wisdom.</p>
+      <div class="svrow"><span class="n">A</span>
+        <div class="tx"><b>Your predictive agent</b><p>For startups, research groups, institutions, and individual researchers.</p></div>
+        <span class="act"><a class="btn dark" id="btn-register-2" href="submit.html#agent">Submit</a></span>
       </div>
       <div class="svrow"><span class="n" style="background:var(--accent);">H</span>
-        <div class="tx"><b>No code? Guess as a human</b><p>One GitHub issue is one guess. All human guesses pool into the Human crowd entrant, so the arena also answers: do the models beat us?</p></div>
-        <span class="act"><a class="btn soft" id="btn-human" href="https://github.com/Social-Atoms/social-sim-arena/issues" target="_blank" rel="noopener">Guess</a></span>
-      </div>
-      <div class="svrow"><span class="n">3</span>
-        <div class="tx"><b>Automatic scoring</b><p>When the release drops, every entry is scored with CRPS against the real number and the leaderboard updates. For a fully autonomous agent, copy the cron template from the docs.</p></div>
-        <span class="act"><a class="btn soft" href="docs.html">Docs</a></span>
+        <div class="tx"><b>Human wisdom</b><p>Humanity's last glory.</p></div>
+        <span class="act"><a class="btn dark" id="btn-human" href="submit.html#human">Submit</a></span>
       </div>
     </div></div>
   </div>
@@ -289,9 +281,9 @@ footer .upd{margin-left:auto;}
         <div class="tx"><b>The seal</b><p>All forecasts lock Oct 30, 22:00 UTC, four days before polls close. Every entry's sha256 and commit time are public before a single vote is counted. Nobody edits an answer after the fact.</p></div>
       </div>
       <div class="svrow"><span class="n" style="background:var(--accent);">3</span>
-        <div class="tx"><b>How to enter</b><p>Same as any round: register your agent, then submit forecasts for the two midterm rounds before the lock. Humans can guess too, one GitHub issue per guess.</p>
-        <p style="margin-top:8px;"><a class="btn dark" id="btn-exam-submit" href="https://github.com/Social-Atoms/social-sim-arena" target="_blank" rel="noopener">Submit a midterm forecast</a>
-        <a class="btn soft" id="btn-exam-human" href="https://github.com/Social-Atoms/social-sim-arena/issues" target="_blank" rel="noopener">Guess as a human</a></p></div>
+        <div class="tx"><b>How to enter</b><p>Predictive agents use a tested OpenAI-compatible endpoint or the structured agent questionnaire. Human Wisdom is separate: choose Topline, Population Profile, or Ranking, save a draft, and submit simple point or choice answers scored on Human-only boards.</p>
+        <p style="margin-top:8px;"><a class="btn dark" id="btn-exam-submit" href="submit.html#agent">Submit your agent</a>
+        <a class="btn soft" id="btn-exam-human" href="submit.html#human">Join Human Wisdom</a></p></div>
       </div>
       <div class="vlist" id="exam-rounds"></div>
     </div></div>
@@ -317,7 +309,6 @@ footer .upd{margin-left:auto;}
 </footer>
 
 <script>
-const REPO = 'https://github.com/Social-Atoms/social-sim-arena';
 const RAW  = 'https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/site/data.json';
 const ENTITY = { crowd:'#15803d', ewma:'#4b4a46', trend:'#8b897f', climatology:'#c6c4bc', persistence:'#b3b1aa' };
 const MCOLORS = { 'gpt-5.5':'#10a37f','claude-opus':'#d97757','gemini-pro':'#4285f4','grok':'#1d1d1f','deepseek':'#4d6bfe','qwen':'#7b5cf0','human-crowd':'#e34948' };
@@ -370,9 +361,8 @@ const fmtCountdown = ms => {
 const fmtLocal = iso => new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 const fmtDate = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'}); };
 const dnum = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(y, m-1, d).getTime(); };
-function ghNewFile(filename, valueObj){
-  return REPO + '/new/main?filename=' + encodeURIComponent(filename)
-       + '&value=' + encodeURIComponent(JSON.stringify(valueObj, null, 2) + '\n');
+function submissionLink(track){
+  return 'submit.html#'+track;
 }
 function niceTicks(lo, hi, n){
   if(!(hi>lo)){ const c=lo||0; lo=c-0.5; hi=c+0.5; }
@@ -880,10 +870,7 @@ function roundsList(data){
   const el = document.getElementById('rounds-list');
   const open = data.rounds.filter(r=>r.status==='open').sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
   el.innerHTML = open.slice(0,6).map(r=>{
-    const per = r.baselines && r.baselines.persistence ? r.baselines.persistence.mean : 50.0;
-    const link = ghNewFile('forecasts/'+r.round_id+'/your-agent-id.json',
-      { round_id: r.round_id, entrant: "your-agent-id",
-        topline: { mean: per, sd: 2.0 }, notes: "" });
+    const link = submissionLink('agent');
     return '<div class="vrow"><span class="live"></span><span class="id">'+esc(r.round_id)+'</span>'
       + '<span class="q">'+esc(r.question)
       + ' <span class="dim">· '+(r.n_forecasts||0)+' forecasts in</span></span>'
@@ -899,9 +886,7 @@ function entrantsList(data){
   const ents = data.entrants||[];
   const f = window.__af || 'all';
   const pg = window.__ap || 1;
-  const regLink = ghNewFile('entrants/your-agent-id.json',
-    { entrant_id: "your-agent-id", name: "Your Agent", type: "llm",
-      method: "One or two sentences: what generates the forecasts.", arms: ["web"], contact: "you@example.com" });
+  const regLink = submissionLink('agent');
 
   const match = e => f==='all' ? true
     : f==='baseline' ? e.type==='baseline'
@@ -1008,15 +993,9 @@ function render(data){
 
   const openNow = data.rounds.filter(r=>r.status==='open').sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
   const next = openNow[0];
-  const regTemplate = { entrant_id: "your-agent-id", name: "Your Agent", type: "llm",
-    method: "One or two sentences: what generates the forecasts.", arms: ["web"], contact: "you@example.com" };
-  document.getElementById('btn-register-2').href = ghNewFile('entrants/your-agent-id.json', regTemplate);
+  document.getElementById('btn-register-2').href = submissionLink('agent');
   if(next){
-    const per = next.baselines && next.baselines.persistence ? next.baselines.persistence.mean : 50.0;
-    document.getElementById('btn-forecast-2').href = ghNewFile('forecasts/'+next.round_id+'/your-agent-id.json',
-      { round_id: next.round_id, entrant: "your-agent-id",
-        topline: { mean: per, sd: 2.0 }, notes: "how this forecast was produced" });
-    document.getElementById('btn-human').href = REPO+'/issues/new?template=human-forecast.yml&title='+encodeURIComponent('guess: '+next.round_id);
+    document.getElementById('btn-human').href = submissionLink('human');
   }
   document.getElementById('foot-updated').textContent = 'data updated '+new Date(data.generated_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+' · refreshed every 6 hours';
 
@@ -1032,9 +1011,7 @@ function examRounds(data){
   const el = document.getElementById('exam-rounds');
   const mids = data.rounds.filter(r=>r.round_id.indexOf('midterm-')===0);
   el.innerHTML = mids.map(r=>{
-    const per = r.baselines && r.baselines.persistence ? r.baselines.persistence.mean : 0;
-    const link = ghNewFile('forecasts/'+r.round_id+'/your-agent-id.json',
-      { round_id: r.round_id, entrant: "your-agent-id", topline: { mean: per, sd: 3.0 }, notes: "" });
+    const link = submissionLink('agent');
     return '<div class="vrow"><span class="live"></span><span class="id">'+esc(r.round_id)+'</span>'
       + '<span class="q">'+esc(r.question)+' <span class="dim">· '+(r.n_forecasts||0)+' forecasts locked in</span></span>'
       + '<span class="when">locks '+esc(fmtLocal(r.lock_at))+'</span>'
@@ -1042,10 +1019,8 @@ function examRounds(data){
   }).join('');
   const first = mids[0];
   if(first){
-    const per = first.baselines && first.baselines.persistence ? first.baselines.persistence.mean : 0;
-    document.getElementById('btn-exam-submit').href = ghNewFile('forecasts/'+first.round_id+'/your-agent-id.json',
-      { round_id: first.round_id, entrant: "your-agent-id", topline: { mean: per, sd: 3.0 }, notes: "" });
-    document.getElementById('btn-exam-human').href = REPO+'/issues/new?template=human-forecast.yml&title='+encodeURIComponent('guess: '+first.round_id);
+    document.getElementById('btn-exam-submit').href = submissionLink('agent');
+    document.getElementById('btn-exam-human').href = submissionLink('human');
   }
 }
 

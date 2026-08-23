@@ -50,7 +50,9 @@ that.
 import hashlib
 import json
 import os
+import threading
 import time
+from datetime import datetime, timezone
 
 import requests
 
@@ -83,6 +85,35 @@ SEARCH_DEPTH = "basic"   # tavily: "basic" or "advanced"
 TOPIC = "news"
 DAYS = 14                # recency window, matched to the news corpus
 
+# A cached reply older than this is a miss. The cache exists so that fifteen
+# models issuing overlapping keywords inside one round's window cost one
+# request, not fifteen -- it must not also serve last week's snippets to next
+# week's round just because two models phrased the same query. Matched to
+# SSA_FILE_WINDOW_DAYS: within one round's buying window a repeat is a hit,
+# across rounds it is not. Overwriting an aged entry loses nothing, because
+# every round's own corpus is stored in full under search/rounds/.
+CACHE_MAX_AGE_DAYS = float(os.environ.get("SSA_FILE_WINDOW_DAYS") or "3")
+
+# Tavily rate-limits per key. A refresh fans its jobs across FILING_WORKERS
+# threads and each may fire four queries at once, so one run bursts dozens of
+# requests in a few seconds and the index answers 429 to everything after the
+# first handful -- 20 of 26 failures in one pass on 2026-08-22, each one a
+# query turn already paid for. One request at a time, spaced, keeps a whole
+# run under the limit for the price of a few seconds per round; a 429 that
+# still gets through is retried with a pause rather than failing the forecast.
+MIN_INTERVAL = float(os.environ.get("SSA_TAVILY_INTERVAL") or "0.75")
+RETRIES_ON_429 = 3
+_RATE_LOCK = threading.Lock()
+_last_request = [0.0]
+
+
+def _throttle():
+    with _RATE_LOCK:
+        wait = _last_request[0] + MIN_INTERVAL - time.monotonic()
+        if wait > 0:
+            time.sleep(wait)
+        _last_request[0] = time.monotonic()
+
 
 def params_signature():
     """Everything about the retrieval that is not the query text.
@@ -111,9 +142,18 @@ def cached(query):
         return None
     try:
         with open(path) as f:
-            return json.load(f)
+            rec = json.load(f)
     except (OSError, json.JSONDecodeError):
         return None
+    try:
+        fetched = datetime.fromisoformat(
+            (rec.get("fetched_at") or "").replace("Z", "+00:00"))
+        age = (datetime.now(timezone.utc) - fetched).total_seconds()
+    except ValueError:
+        return None            # unstampable is unserveable; refetch restamps
+    if age > CACHE_MAX_AGE_DAYS * 86400:
+        return None
+    return rec
 
 
 def has_key():
@@ -136,10 +176,16 @@ def search(query, now=None):
             f"no {ENV} in the environment and '{query}' is not in the archive. "
             "The search arm bills per query; refusing to file a forecast whose "
             "corpus we cannot produce, rather than one silently missing it.")
-    r = requests.post(ENDPOINT, timeout=TIMEOUT, json={
-        "api_key": key, "query": query, "topic": TOPIC,
-        "search_depth": SEARCH_DEPTH, "max_results": RESULTS_PER_QUERY,
-        "days": DAYS, "include_answer": False, "include_raw_content": False})
+    for attempt in range(RETRIES_ON_429):
+        _throttle()
+        r = requests.post(ENDPOINT, timeout=TIMEOUT, json={
+            "api_key": key, "query": query, "topic": TOPIC,
+            "search_depth": SEARCH_DEPTH, "max_results": RESULTS_PER_QUERY,
+            "days": DAYS, "include_answer": False,
+            "include_raw_content": False})
+        if r.status_code != 429:
+            break
+        time.sleep(5 * (attempt + 1))
     if r.status_code >= 400:
         detail = " ".join((r.text or "").split())[:300]
         raise RuntimeError(f"Tavily HTTP {r.status_code}: {detail}")

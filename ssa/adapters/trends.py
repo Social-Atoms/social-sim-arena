@@ -473,3 +473,318 @@ def as_archived(query, geo=GEO, now=None, fetch=True, use_archive=True):
             f"Trends archive for {key} holds no completed weeks; refusing to "
             "publish an empty series")
     return [{"date": d, "value": by_week[d]} for d in sorted(by_week)]
+
+
+# --- the five-query comparison basket ----------------------------------------
+#
+# Everything above sends one keyword per request, deliberately, so that each
+# registered *series* is its own 0-100 scale. A ranking round wants the opposite
+# property and needs it for the same reason: the question "which of these five
+# was searched most last week" is only answerable if the five numbers are on one
+# scale, and numbers from five separate requests are not. Google normalizes a
+# comparison to the busiest (query, week) pair in the window, so within one
+# response the five are directly comparable and across responses they are not.
+#
+# **Five is the endpoint's limit, not a design choice, and it is why the basket
+# is a hard constraint rather than a parameter.** `comparisonItem` accepts at
+# most five entries; a sixth query would have to come from a second request, and
+# stitching two responses together would silently compare two different scales.
+# So the basket is fixed in the round definition, frozen at lock, and
+# `fetch_basket` refuses more than five.
+#
+# The scale being shared also means the basket's *own* numbers are not a series
+# in the registry sense and are not registered as one: adding or removing a
+# query would renormalize all of them, so a basket is only ever comparable to
+# itself. What a round asks for is the *ordering*, which is exactly the part of
+# a comparison response that survives the normalization -- and that is the whole
+# reason a ranking round is the right shape for this source rather than five
+# more scalar rounds.
+#
+# Archive-as-truth, unchanged: one immutable file per (basket, fetch day) beside
+# the single-query directories, the earliest snapshot carrying a completed week
+# wins forever, and CI reads the committed archive because a datacenter address
+# gets a 429 or a dropped TLS connection rather than data.
+
+BASKET_MAX = 5
+
+
+def basket_key(queries, geo=GEO):
+    """Directory name for one (basket, geo): `basket.Tesla-iPhone-....geo-US`.
+
+    Order-sensitive on purpose. The queries' order is the order of the columns
+    in every archived row, and it is also the round's declared tie-break order,
+    so two baskets holding the same five words in a different order are two
+    different archives rather than one archive read two ways.
+    """
+    return _SAFE.sub("_", "basket." + "-".join(queries) + f".geo-{geo}")
+
+
+def basket_public_url(queries, geo=GEO):
+    """The UI page a human would check this snapshot against."""
+    q = urllib.parse.urlencode({"q": ",".join(queries), "geo": geo,
+                                "date": WINDOW},
+                               quote_via=urllib.parse.quote)
+    return f"https://trends.google.com/trends/explore?{q}"
+
+
+def check_basket(queries):
+    """The basket's shape, checked once, loudly. Returns it as a tuple."""
+    qs = tuple(queries or ())
+    if not (2 <= len(qs) <= BASKET_MAX):
+        raise ValueError(
+            f"a Trends comparison basket holds 2 to {BASKET_MAX} queries; "
+            f"got {len(qs)}. Five is the endpoint's own limit, and a sixth "
+            "query would need a second request on a different scale.")
+    if len(set(qs)) != len(qs):
+        raise ValueError(f"a Trends basket lists a query twice: {qs}")
+    if any(not isinstance(q, str) or not q.strip() for q in qs):
+        raise ValueError(f"every Trends basket query must be a non-empty string: {qs}")
+    return qs
+
+
+def parse_basket_timeline(text, queries):
+    """Multiline JSON -> weekly rows carrying all `queries`, oldest first.
+
+    Each row: {week_start, week_end, values: {query: number}, partial}.
+
+    Written beside `parse_timeline` rather than generalizing it. That function
+    *refuses* a row carrying more than one value, and that refusal is the thing
+    keeping every registered single-keyword series on its own scale; widening it
+    to "however many the caller expected" would delete the check that catches a
+    single-query request accidentally sent as a comparison. Two parsers, two
+    contracts, neither able to pass for the other.
+    """
+    qs = check_basket(queries)
+    try:
+        obj = json.loads(strip_junk(text))
+    except json.JSONDecodeError as e:
+        raise RuntimeError(
+            "Google Trends multiline response did not parse as JSON; the "
+            "endpoint contract changed and this adapter needs revisiting") from e
+    rows = ((obj.get("default") or {}).get("timelineData")) or []
+    if not rows:
+        raise RuntimeError(
+            "Google Trends returned an empty basket timeline; refusing to "
+            "archive a record that could never resolve anything")
+    out, prev = [], None
+    for r in rows:
+        t = int(r["time"])
+        if prev is not None and t - prev != WEEK_SECONDS:
+            raise RuntimeError(
+                f"Google Trends basket rows are {t - prev}s apart, not weekly; "
+                "the 12-month window stopped returning weekly rows and this "
+                "adapter must not resample its way past that")
+        prev = t
+        vals = r.get("value") or []
+        if len(vals) != len(qs):
+            raise RuntimeError(
+                f"Google Trends basket row carries {len(vals)} values for "
+                f"{len(qs)} queries; the response does not answer the request "
+                "this adapter sent, and its columns cannot be matched to "
+                "queries by position")
+        start = _iso(t)
+        out.append({
+            "week_start": start.isoformat(),
+            "week_end": (start + timedelta(days=6)).isoformat(),
+            "values": {q: v for q, v in zip(qs, vals)},
+            "partial": bool(r.get("isPartial")),
+        })
+    return out
+
+
+def fetch_basket(queries, geo=GEO):
+    """One full request cycle for one basket, on a fresh session.
+
+    Three requests total for all five queries, against fifteen for five
+    single-query cycles -- the shared normalization is the point, and the lower
+    request count is a welcome side effect on a host that rate-limits hard.
+    """
+    qs = check_basket(queries)
+    session = requests.Session()
+    session.headers.update({"User-Agent": UA,
+                            "Accept-Language": "en-US,en;q=0.9"})
+    _get(session, HOME)                       # sets the NID cookie
+    req = {"comparisonItem": [{"keyword": q, "geo": geo, "time": WINDOW}
+                              for q in qs],
+           "category": 0, "property": ""}
+    widgets = parse_widgets(_get(
+        session, EXPLORE,
+        {"hl": "en-US", "tz": "0", "req": json.dumps(req)}))
+    ts = timeseries_widget(widgets)
+    body = _get(session, MULTILINE,
+                {"hl": "en-US", "tz": "0",
+                 "req": json.dumps(ts["request"]), "token": ts["token"]})
+    return parse_basket_timeline(body, qs)
+
+
+def build_basket_snapshot(rows, queries, geo, fetched_at):
+    """The record written to disk for one basket fetch.
+
+    Same shape and same reasoning as `build_snapshot`, with the values column
+    widened to a list per row and the query order written down beside it: the
+    positions in `points` mean nothing without it, and a snapshot that cannot
+    say which column was which is not evidence of anything.
+    """
+    qs = check_basket(queries)
+    complete = [r for r in rows if not r["partial"]]
+    if not complete:
+        raise RuntimeError(
+            f"Google Trends basket snapshot for {list(qs)} holds no complete "
+            "week; refusing to archive a record that could never resolve "
+            "anything")
+    return {
+        "queries": list(qs),
+        "geo": geo,
+        "window": WINDOW,
+        "resolution": "WEEK",
+        "url": basket_public_url(qs, geo),
+        "fetched_at": fetched_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "asof": max(r["week_end"] for r in complete),
+        "unit": ("search interest index (0-100, 12-month window, normalized "
+                 "jointly across the basket)"),
+        # [week_start, week_end, [value per query, in `queries` order], partial]
+        "points": [[r["week_start"], r["week_end"],
+                    [r["values"][q] for q in qs], r["partial"]]
+                   for r in rows],
+    }
+
+
+def basket_snapshot(queries, geo=GEO, now=None, use_archive=True, fetch=True):
+    """Today's basket snapshot: read it, or fetch it and write it.
+
+    `snapshot`'s rule verbatim -- once today's file exists the day is closed --
+    plus a `fetch=False` that reads the archive alone, which is what a test or
+    any rerun over committed data wants and what CI gets in practice.
+    """
+    now = now or datetime.now(timezone.utc)
+    today = now.date()
+    key = basket_key(check_basket(queries), geo)
+    if use_archive:
+        have = read_archive(key, today)
+        if have:
+            return have
+    if not fetch:
+        return None
+    snap = build_basket_snapshot(fetch_basket(queries, geo), queries, geo,
+                                 fetched_at=now)
+    if use_archive:
+        write_snapshot(key, snap, today)
+    return snap
+
+
+def basket_weeks(queries, geo=GEO, now=None, fetch=False, use_archive=True):
+    """The basket archive's own history: [{date, values}] oldest first.
+
+    One entry per *completed* week, dated by the week's last day (the
+    Saturday), valued at whatever the earliest snapshot containing that
+    completed week showed. `as_archived`'s rule with the columns widened, and
+    every consequence it lists carries over unchanged -- points never move, the
+    week-end dating keeps a resolved week from sorting into frozen history, and
+    weeks before the archive began come from the first snapshot's own year of
+    back rows.
+
+    `fetch` defaults to False here, the opposite of `as_archived`. A ranking
+    round reads this at build time on every refresh including CI's, where the
+    fetch cannot succeed; the caller that wants a fetch asks for one.
+    """
+    qs = check_basket(queries)
+    key = basket_key(qs, geo)
+    if fetch:
+        try:
+            basket_snapshot(qs, geo, now=now, use_archive=use_archive)
+        except Exception as e:                    # noqa: BLE001 - reported
+            # The `as_archived` trade, for the same reason: a refresh that dies
+            # here files nothing for any tracker, and rounds lock on a hard
+            # deadline. Stale beats dark -- but only when there is an archive to
+            # be stale from.
+            if not archive_days(key):
+                raise
+            print(f"  trends {key}: fetch failed ({type(e).__name__}: {e}); "
+                  "serving the archive, which may be a day behind")
+
+    days = archive_days(key)
+    if not days:
+        raise RuntimeError(
+            f"no Trends archive for {key} -- refusing to publish an empty "
+            f"basket history. Run a refresh from a residential address, or "
+            f"check {archive_dir(key)}")
+    by_week = {}
+    for d in days:                                # oldest snapshot first
+        snap = read_archive(key, d)
+        if not snap:
+            continue
+        cols = snap.get("queries") or []
+        if list(cols) != list(qs):
+            # Not skipped quietly: a snapshot under this key whose columns are
+            # not this basket means the key collided or the archive was
+            # hand-edited, and reading its numbers positionally would answer
+            # the round with another basket's ordering.
+            raise RuntimeError(
+                f"{key}/{d.isoformat()}.json holds columns {cols}, not "
+                f"{list(qs)}; refusing to read one basket's archive as another's")
+        for start, end, values, partial in snap.get("points", []):
+            if partial or end in by_week:
+                continue                          # earliest snapshot wins
+            if len(values) != len(qs):
+                raise RuntimeError(
+                    f"{key}/{d.isoformat()}.json week {end} holds "
+                    f"{len(values)} values for {len(qs)} queries")
+            by_week[end] = {q: v for q, v in zip(qs, values)}
+    if not by_week:
+        raise RuntimeError(
+            f"Trends basket archive for {key} holds no completed weeks; "
+            "refusing to publish an empty history")
+    return [{"date": d, "values": by_week[d]} for d in sorted(by_week)]
+
+
+def share_series(weeks, query, places=2):
+    """One basket member's percent of the basket, [{date, value}] oldest first.
+
+    The scale-free view of a basket week. Trends redraws its sample on every
+    fetch, and the redraw moves the whole basket together -- four fetch days of
+    one settled week moved every one of the five queries by about the same four
+    percent. Dividing by the week's basket total cancels that common factor,
+    which is why the rounds forecast shares: what is left moves only when
+    attention actually moves between these five brands.
+
+    A week whose basket sums to zero is dropped rather than divided: Trends
+    floors small values at zero, and a basket that reads all zeros is a
+    measurement failure, not a week in which nobody searched for anything.
+    """
+    out = []
+    for w in weeks:
+        vals = w["values"]
+        if query not in vals:
+            raise KeyError(
+                f"{query} is not in this basket ({sorted(vals)}); a share "
+                "series must be built from the basket that carries it")
+        total = sum(vals.values())
+        if total <= 0:
+            continue
+        out.append({"date": w["date"], "value": round(100.0 * vals[query] / total, places)})
+    if not out:
+        raise RuntimeError(
+            f"no usable weeks for the {query} basket share; every archived "
+            "week summed to zero")
+    return out
+
+
+def basket_order(values, queries):
+    """{query: index} -> the queries ordered by weekly interest, highest first.
+
+    Ties are broken by the basket's declared order, which is frozen in the
+    round definition. A tie is not rare here the way it is on a pageview count:
+    the index is an integer 0-100 and five queries share it, so two of them
+    reading 47 is an ordinary week. Some rule has to decide, it has to be fixed
+    before the lock, and it has to be equally unknown to every entrant -- the
+    declared order is all three, and it is written in the round the entrants
+    read.
+    """
+    qs = check_basket(queries)
+    missing = [q for q in qs if q not in (values or {})]
+    if missing:
+        raise ValueError(
+            f"the week is missing {len(missing)} of {len(qs)} basket queries: "
+            f"{', '.join(missing)}")
+    pos = {q: i for i, q in enumerate(qs)}
+    return sorted(qs, key=lambda q: (-float(values[q]), pos[q]))
