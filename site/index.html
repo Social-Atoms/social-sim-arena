@@ -60,10 +60,13 @@ main{flex:1 1 auto;min-height:0;display:flex;max-width:1680px;width:100%;margin:
 .seg button{font-family:var(--sans);font-size:13.5px;font-weight:700;color:var(--ink2);background:none;border:none;border-radius:3px;padding:5px 15px;cursor:pointer;white-space:nowrap;}
 .seg button.on{background:#fff;color:var(--ink);outline:1px solid var(--line);}
 .caption{font-size:12.5px;color:var(--mut);padding:8px 16px 4px;flex:0 0 auto;}
-.legend-strip{padding:2px 16px 4px;flex:0 0 auto;}
+.legend-strip{padding:2px 16px 4px;flex:0 0 auto;position:relative;}
 .lchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:4px;padding:1px 9px;font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;margin:0 6px 4px 0;user-select:none;}
 .lchip.off{opacity:.3;}
 .lchip .sw{width:9px;height:9px;border-radius:2px;}
+.lchip.more{border-style:dashed;color:var(--mut);font-weight:600;}
+#chartpane{min-height:340px;}
+#legend-pop{position:absolute;top:100%;left:16px;right:16px;z-index:30;background:#fff;border:1px solid var(--line);border-radius:6px;box-shadow:0 10px 28px rgba(0,0,0,.10);padding:10px 12px 7px;max-height:300px;overflow-y:auto;}
 .chartpane{flex:1 1 auto;min-height:236px;position:relative;padding:2px 10px 6px;}
 .chartctl{position:absolute;top:4px;right:14px;display:flex;gap:8px;z-index:4;}
 .seg.mini button{font-size:12px;padding:3px 11px;}
@@ -311,16 +314,41 @@ const ENTITY = { crowd:'#15803d', ewma:'#4b4a46', trend:'#8b897f', climatology:'
 const MCOLORS = { 'gpt-5.5':'#10a37f','claude-opus':'#d97757','gemini-pro':'#4285f4','grok':'#1d1d1f','deepseek':'#4d6bfe','qwen':'#7b5cf0','human-crowd':'#e34948' };
 const VENDORS = [
   [/^claude/, 'claude', 'Anthropic'], [/^gpt/, 'openai', 'OpenAI'], [/^gemini/, 'gemini', 'Google'],
-  [/^grok/, 'grok', 'xAI'], [/^deepseek/, 'deepseek', 'DeepSeek'], [/^qwen/, 'qwen', 'Qwen'], [/^glm/, 'zhipu', 'Zhipu']
+  [/^grok/, 'grok', 'xAI'], [/^deepseek/, 'deepseek', 'DeepSeek'], [/^qwen/, 'qwen', 'Qwen'], [/^glm/, 'zhipu', 'Zhipu'],
+  [/^kimi/, 'kimi', 'Moonshot']
 ];
 const vendorOf = id => { for(const [re,key] of VENDORS) if(re.test(id)) return key; return null; };
+const LOGO_VENDORS = new Set(['claude','openai','gemini','grok','deepseek','qwen','zhipu']);
 const vendorName = key => { for(const [,k,n] of VENDORS) if(k===key) return n; return key; };
-const VCOLOR = {claude:'#D97757', openai:'#0FA47F', gemini:'#4285F4', grok:'#111110', deepseek:'#4D6BFE', qwen:'#615CED', zhipu:'#2F6BFF'};
+const VCOLOR = {claude:'#C87B60', openai:'#3F9581', gemini:'#6B92D4', grok:'#111110', deepseek:'#7783D8', qwen:'#907FD2', zhipu:'#588FBE', kimi:'#4C8A99'};
 const avColor = id => { const v = vendorOf(id); if(v) return VCOLOR[v];
   if(id==='human-crowd') return 'var(--accent)'; return '#a8a69e'; };
 const avatar = id => { const v = vendorOf(id);
   return '<span class="av" style="background:'+avColor(id)+'">'+(v?'<img class="lg" src="logos/'+v+'.svg" onerror="this.remove()" alt="">':'')+initOf(id)+'</span>'; };
-const colorOf = id => ENTITY[id] || MCOLORS[id] || '#b3b1aa';
+// Every model wears its vendor's hue; siblings inside a family split on
+// lightness, so a vendor reads as one color at a glance and as distinct
+// lines up close. Harness arms inherit their model's color.
+const MODEL_SHADE = {
+  'claude-opus-5':0, 'claude-fable':1, 'claude-sonnet':2, 'claude-opus':3,
+  'gpt-5.6-terra':0, 'gpt-5.6-sol':1, 'gpt-5.6-luna':2,
+  'gemini-pro':0, 'gemini-flash':1,
+  'deepseek-pro':0, 'deepseek-flash':1,
+  'qwen-3.8':0, 'qwen-3.7':1,
+  'grok':0, 'glm':0, 'kimi':0,
+};
+const stemOf = id => String(id).replace(/(-(zeroshot|news|persona|superfc|web))+$/,'');
+function vshade(hex, k){
+  if(!k || hex[0] !== '#') return hex;
+  const n=parseInt(hex.slice(1),16);
+  const mix=c=>Math.round(c+(255-c)*Math.min(.62,.19*k));
+  return '#'+[n>>16,(n>>8)&255,n&255].map(c=>mix(c).toString(16).padStart(2,'0')).join('');
+}
+const colorOf = id => {
+  if(ENTITY[id]) return ENTITY[id];
+  const stem = stemOf(id), v = vendorOf(stem);
+  if(v) return vshade(VCOLOR[v], MODEL_SHADE[stem] != null ? MODEL_SHADE[stem] : 1);
+  return MCOLORS[id] || '#b3b1aa';
+};
 const INITIALS = { crowd:'CR', ewma:'EW', trend:'TR', climatology:'CL', persistence:'PS' };
 const initOf = id => INITIALS[id] || String(id).slice(0,2).toUpperCase();
 
@@ -379,7 +407,7 @@ function tipShow(tip, ev, html){
 // beat, and the leading few models; everything else stays one legend click
 // away. Chosen from the data rather than hardcoded, so the shortlist follows
 // the standings instead of going stale.
-const DEFAULT_VISIBLE_MODELS = 5;
+const DEFAULT_VISIBLE_MODELS = 14;
 function defaultHidden(data){
   const board = ((data||{}).backtest||{}).overall || [];
   const keep = new Set(['persistence','ewma']);
@@ -391,7 +419,17 @@ function defaultHidden(data){
   }
   const all = new Set(board.map(r=>r.entrant));
   ((data||{}).entrants||[]).forEach(e=>all.add(e.entrant_id));
+  window.__keep = keep;
   return new Set([...all].filter(id=>!keep.has(id)));
+}
+// Ids the default pass never saw (fresh series minted into data.json) start
+// hidden, once, so unknown entrants must opt in instead of flooding the chart.
+function coerceUnknown(ids){
+  const hidden = window.__hidden || (window.__hidden = defaultHidden(window.__data));
+  const seen = window.__seenIds || (window.__seenIds = new Set());
+  const keep = window.__keep || new Set();
+  ids.forEach(id => { if(!seen.has(id)){ seen.add(id); if(!keep.has(id)) hidden.add(id); } });
+  return hidden;
 }
 function condTag(nm){
   if(/\(zero-shot\)/.test(nm||'')) return 'zs';
@@ -405,19 +443,31 @@ function condSuffix(nm, pre){ const c = condTag(nm); return c ? (pre||' ')+c : '
 function renderLegend(ids, nameOf, note){
   const strip = document.getElementById('legend-strip');
   if(!ids || !ids.length){ strip.style.display='none'; strip.innerHTML=''; return; }
-  const hidden = window.__hidden || (window.__hidden = defaultHidden(window.__data));
-  strip.style.display='';
-  strip.innerHTML = ids.map(id =>
+  const hidden = coerceUnknown(ids);
+  const open = !!window.__legendOpen;
+  const chip = id =>
     '<span class="lchip'+(hidden.has(id)?' off':'')+'" data-ent="'+esc(id)+'"><span class="sw" style="background:'+colorOf(id)+'"></span>'
     + esc((nameOf[id]||id).split(' (')[0])
     + (condTag(nameOf[id])?' <span style="opacity:.5;">'+condTag(nameOf[id])+'</span>':'')
-    + '</span>').join('')
-    + '<span style="font-size:11.5px;color:var(--mut);margin-left:4px;">'+esc(note||'click to toggle')+'</span>';
-  strip.querySelectorAll('.lchip').forEach(ch => ch.onclick = ()=>{
+    + '</span>';
+  // Shown chips stay in the strip, hard-capped so the chart always keeps its
+  // height; everything else lives behind `+ N more` in a floating panel.
+  const MAX_STRIP = 24;
+  const on = ids.filter(id=>!hidden.has(id)), off = ids.filter(id=>hidden.has(id));
+  const stripOn = on.slice(0, MAX_STRIP), panelOn = on.slice(MAX_STRIP);
+  const rest = panelOn.length + off.length;
+  strip.style.display='';
+  strip.innerHTML = stripOn.map(chip).join('')
+    + (rest ? '<span class="lchip more" id="legend-more">'+(open?'&#215; close':'+ '+rest+' more')+'</span>' : '')
+    + '<span style="font-size:11.5px;color:var(--mut);margin-left:4px;">'+esc(note||'click to toggle')+'</span>'
+    + (open && rest ? '<div id="legend-pop">'+panelOn.map(chip).join('')+off.map(chip).join('')+'</div>' : '');
+  strip.querySelectorAll('.lchip:not(.more)').forEach(ch => ch.onclick = ()=>{
     const id = ch.dataset.ent;
     if(hidden.has(id)) hidden.delete(id); else hidden.add(id);
     setTab(window.__tab || 'agg');
   });
+  const more = document.getElementById('legend-more');
+  if(more) more.onclick = ()=>{ window.__legendOpen = !window.__legendOpen; setTab(window.__tab || 'agg'); };
 }
 function aggChart(traj, nameOf, unit){
   const svg = clearChart(), tip = pane().querySelector('.tooltip');
@@ -546,8 +596,9 @@ function aggChart(traj, nameOf, unit){
     g += `<line x1="${X(traj.length-1)}" x2="${X(traj.length-1)+8}" y1="${Y(last)}" y2="${ly}" stroke="${colorOf(s)}" stroke-width="1" opacity=".5"/>`;
     g += `<circle cx="${X(traj.length-1)}" cy="${Y(last)}" r="3" fill="${colorOf(s)}" stroke="#fff" stroke-width="1.5"/>`;
     g += `<rect x="${X(traj.length-1)+8}" y="${ly-8.5}" width="19" height="17" rx="3" fill="${colorOf(s)}"/>`;
-    if(MCOLORS[s] && s!=='human-crowd'){
-      g += `<image href="logos/${vendorOf(s)||s}.svg" x="${X(traj.length-1)+10.5}" y="${ly-6}" width="14" height="12"/>`;
+    const lv = vendorOf(s);
+    if(lv && LOGO_VENDORS.has(lv)){
+      g += `<image href="logos/${lv}.svg" x="${X(traj.length-1)+10.5}" y="${ly-6}" width="14" height="12"/>`;
     } else {
       g += `<text x="${X(traj.length-1)+17.5}" y="${ly+3.5}" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">${initOf(s)}</text>`;
     }
@@ -583,10 +634,10 @@ function seriesChart(key, data){
   const pw = pane().clientWidth, ph = pane().clientHeight;
   if(pw < 80 || ph < 80){ svg.style.display='none'; return; }
   if(!window.__hidden){ window.__hidden = defaultHidden(window.__data); }
-  const hidden = window.__hidden;
   const upcoming = (data.rounds||[]).filter(r =>
     r.series === d.rseries && r.forecasts && Object.keys(r.forecasts).length &&
     (r.status==='open' || r.status==='locked'));
+  const hidden = coerceUnknown(upcoming.flatMap(r=>Object.keys(r.forecasts)));
   const W = pw-8, small = W < 640, H = ph-6, P = {t:36,r:70,b:26,l:14};
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
   const months = window.__range || 0;
