@@ -1570,16 +1570,15 @@ def _call_openai(cfg, base, key, mid, prompt):
     body = {"model": mid, "messages": [{"role": "user", "content": prompt}]}
     body.update(cfg.get("params") or {})
     url = base + "/chat/completions"
-    r = requests.post(url, headers={"Authorization": "Bearer " + key},
-                      json=body, timeout=TIMEOUT)
+    headers = {"Authorization": "Bearer " + key} if key else {}
+    r = requests.post(url, headers=headers, json=body, timeout=TIMEOUT)
     # Newer OpenAI models replaced max_tokens with max_completion_tokens and
     # reject the old name outright. Retry once on the rename rather than make
     # every caller know which vintage its model is.
     if (r.status_code == 400 and "max_completion_tokens" in (r.text or "")
             and "max_tokens" in body):
         body["max_completion_tokens"] = body.pop("max_tokens")
-        r = requests.post(url, headers={"Authorization": "Bearer " + key},
-                          json=body, timeout=TIMEOUT)
+        r = requests.post(url, headers=headers, json=body, timeout=TIMEOUT)
     data = _check(r, f"{mid} @ {base}")
     return _extract_text(data, mid), _usage(data)
 
