@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-08-23T13:10:28Z",
+ "generated_at": "2026-08-23T17:51:25Z",
  "season": 0,
  "trackers": {
   "trump_approval_avg": {
@@ -978,7 +978,8 @@
    "release_estimated": true,
    "lock_at": "2026-08-19T22:00:00Z",
    "resolve": "civiqs.com dashboard value on Friday, recorded manually",
-   "status": "awaiting_resolution",
+   "target_type": "continuous_normal",
+   "status": "resolved",
    "history_source": "lock snapshot",
    "baselines": {
     "persistence": {
@@ -1003,6 +1004,13 @@
     }
    },
    "scoreable": true,
+   "resolution": {
+    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
+    "observed_date": "2026-08-21",
+    "resolved_at": "2026-08-23T17:51:19Z",
+    "series": "civiqs_net_approval",
+    "value": -22.6
+   },
    "n_forecasts": 98,
    "forecasts": {
     "claude-fable-zeroshot": {
@@ -1409,6 +1417,7 @@
    "release_estimated": true,
    "lock_at": "2026-08-22T14:00:00Z",
    "resolve": "weekly report on pro-assets.morningconsult.com",
+   "target_type": "continuous_normal",
    "status": "locked",
    "history_source": "lock snapshot",
    "baselines": {
@@ -2833,7 +2842,7 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 81,
+   "n_forecasts": 82,
    "forecasts": {
     "claude-fable-zeroshot": {
      "mean": 63.0,
@@ -2984,8 +2993,8 @@
      "sd": 1.8
     },
     "gemini-pro-web-superfc": {
-     "mean": 51.0,
-     "sd": 1.2
+     "mean": 50.9,
+     "sd": 1.3
     },
     "gemini-pro-web": {
      "mean": 51.0,
@@ -3024,6 +3033,10 @@
      "sd": 3.5
     },
     "gpt-5.6-luna-superfc": {
+     "mean": 51.0,
+     "sd": 1.5
+    },
+    "gpt-5.6-luna-web-superfc": {
      "mean": 51.0,
      "sd": 1.5
     },
@@ -3539,6 +3552,7 @@
    "release_estimated": false,
    "lock_at": "2026-08-21T14:00:00Z",
    "resolve": "Wikimedia Pageviews API, user traffic, complete week",
+   "target_type": "continuous_normal",
    "status": "locked",
    "history_source": "lock snapshot",
    "baselines": {
@@ -3726,6 +3740,7 @@
    "release_estimated": false,
    "lock_at": "2026-08-21T14:00:00Z",
    "resolve": "Wikimedia Pageviews API, user traffic, complete week",
+   "target_type": "continuous_normal",
    "status": "locked",
    "history_source": "lock snapshot",
    "baselines": {
@@ -4866,23 +4881,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": -23.7,
+     "mean": -22.6,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": -24.41,
-     "sd": 1.11,
+     "mean": -23.86,
+     "sd": 1.22,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": -23.56,
+     "mean": -23.12,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": -21.34,
-     "sd": 1.45,
+     "mean": -21.3,
+     "sd": 1.39,
      "method": "climatology"
     }
    },
@@ -4938,8 +4953,8 @@
      "sd": 0.9
     },
     "climatology": {
-     "mean": -21.34,
-     "sd": 1.45
+     "mean": -21.3,
+     "sd": 1.39
     },
     "deepseek-flash-superfc": {
      "mean": -25.0,
@@ -4990,7 +5005,7 @@
      "sd": 0.8
     },
     "ewma": {
-     "mean": -23.56,
+     "mean": -23.12,
      "sd": 1.0
     },
     "gemini-flash-superfc": {
@@ -5158,7 +5173,7 @@
      "sd": 0.8
     },
     "persistence": {
-     "mean": -23.7,
+     "mean": -22.6,
      "sd": 1.5
     },
     "qwen-3.8-superfc": {
@@ -5186,8 +5201,8 @@
      "sd": 0.8
     },
     "trend": {
-     "mean": -24.41,
-     "sd": 1.11
+     "mean": -23.86,
+     "sd": 1.22
     }
    }
   },
@@ -5205,23 +5220,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": -23.7,
+     "mean": -22.6,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": -24.75,
-     "sd": 1.21,
+     "mean": -24.1,
+     "sd": 1.33,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": -23.56,
+     "mean": -23.12,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": -21.34,
-     "sd": 1.45,
+     "mean": -21.3,
+     "sd": 1.39,
      "method": "climatology"
     }
    },
@@ -5229,20 +5244,20 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "mean": -21.34,
-     "sd": 1.45
+     "mean": -21.3,
+     "sd": 1.39
     },
     "ewma": {
-     "mean": -23.56,
+     "mean": -23.12,
      "sd": 1.0
     },
     "persistence": {
-     "mean": -23.7,
+     "mean": -22.6,
      "sd": 1.5
     },
     "trend": {
-     "mean": -24.75,
-     "sd": 1.21
+     "mean": -24.1,
+     "sd": 1.33
     }
    }
   },
@@ -5260,23 +5275,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 66.8,
+     "mean": 68.3,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 66.8,
-     "sd": 1.23,
+     "mean": 67.55,
+     "sd": 1.11,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 68.76,
+     "mean": 69.36,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 73.45,
-     "sd": 2.52,
+     "mean": 73.52,
+     "sd": 2.36,
      "method": "climatology"
     }
    },
@@ -5332,8 +5347,8 @@
      "sd": 2.5
     },
     "climatology": {
-     "mean": 73.45,
-     "sd": 2.52
+     "mean": 73.52,
+     "sd": 2.36
     },
     "deepseek-flash-superfc": {
      "mean": 67.0,
@@ -5384,7 +5399,7 @@
      "sd": 1.2
     },
     "ewma": {
-     "mean": 68.76,
+     "mean": 69.36,
      "sd": 1.0
     },
     "gemini-flash-web-superfc": {
@@ -5412,8 +5427,8 @@
      "sd": 1.6
     },
     "gemini-pro-web-superfc": {
-     "mean": 66.3,
-     "sd": 1.6
+     "mean": 68.1,
+     "sd": 0.9
     },
     "gemini-pro-web": {
      "mean": 65.4,
@@ -5552,7 +5567,7 @@
      "sd": 1.5
     },
     "persistence": {
-     "mean": 66.8,
+     "mean": 68.3,
      "sd": 1.5
     },
     "qwen-3.8-superfc": {
@@ -5580,8 +5595,8 @@
      "sd": 2.0
     },
     "trend": {
-     "mean": 66.8,
-     "sd": 1.23
+     "mean": 67.55,
+     "sd": 1.11
     }
    }
   },
@@ -5599,23 +5614,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 66.8,
+     "mean": 68.3,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 65.9,
-     "sd": 1.34,
+     "mean": 66.78,
+     "sd": 1.21,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 68.76,
+     "mean": 69.36,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 73.45,
-     "sd": 2.52,
+     "mean": 73.52,
+     "sd": 2.36,
      "method": "climatology"
     }
    },
@@ -5623,20 +5638,20 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "mean": 73.45,
-     "sd": 2.52
+     "mean": 73.52,
+     "sd": 2.36
     },
     "ewma": {
-     "mean": 68.76,
+     "mean": 69.36,
      "sd": 1.0
     },
     "persistence": {
-     "mean": 66.8,
+     "mean": 68.3,
      "sd": 1.5
     },
     "trend": {
-     "mean": 65.9,
-     "sd": 1.34
+     "mean": 66.78,
+     "sd": 1.21
     }
    }
   },
@@ -5675,7 +5690,7 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 94,
+   "n_forecasts": 95,
    "forecasts": {
     "claude-opus-5-news-superfc": {
      "mean": -2.0,
@@ -5909,6 +5924,10 @@
      "mean": 6.5,
      "sd": 18.0
     },
+    "gpt-5.6-luna-web-superfc": {
+     "mean": -6.5,
+     "sd": 13.0
+    },
     "gpt-5.6-luna-web": {
      "mean": -1.5,
      "sd": 9.5
@@ -6120,6 +6139,7 @@
    "release_estimated": true,
    "lock_at": "2026-08-21T14:00:00Z",
    "resolve": "first archived snapshot carrying the completed week ending 2026-08-29",
+   "target_type": "continuous_normal",
    "status": "locked",
    "history_source": "lock snapshot",
    "baselines": {
@@ -6543,6 +6563,7 @@
    "release_estimated": true,
    "lock_at": "2026-08-21T14:00:00Z",
    "resolve": "first archived snapshot carrying the completed week ending 2026-08-29",
+   "target_type": "continuous_normal",
    "status": "locked",
    "history_source": "lock snapshot",
    "baselines": {
@@ -7618,23 +7639,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": -23.7,
+     "mean": -22.6,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": -25.08,
-     "sd": 1.3,
+     "mean": -24.35,
+     "sd": 1.43,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": -23.56,
+     "mean": -23.12,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": -21.34,
-     "sd": 1.45,
+     "mean": -21.3,
+     "sd": 1.39,
      "method": "climatology"
     }
    },
@@ -7642,20 +7663,20 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "mean": -21.34,
-     "sd": 1.45
+     "mean": -21.3,
+     "sd": 1.39
     },
     "ewma": {
-     "mean": -23.56,
+     "mean": -23.12,
      "sd": 1.0
     },
     "persistence": {
-     "mean": -23.7,
+     "mean": -22.6,
      "sd": 1.5
     },
     "trend": {
-     "mean": -25.08,
-     "sd": 1.3
+     "mean": -24.35,
+     "sd": 1.43
     }
    }
   },
@@ -7673,23 +7694,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 66.8,
+     "mean": 68.3,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 65.01,
-     "sd": 1.44,
+     "mean": 66.01,
+     "sd": 1.3,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 68.76,
+     "mean": 69.36,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 73.45,
-     "sd": 2.52,
+     "mean": 73.52,
+     "sd": 2.36,
      "method": "climatology"
     }
    },
@@ -7697,20 +7718,20 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "mean": 73.45,
-     "sd": 2.52
+     "mean": 73.52,
+     "sd": 2.36
     },
     "ewma": {
-     "mean": 68.76,
+     "mean": 69.36,
      "sd": 1.0
     },
     "persistence": {
-     "mean": 66.8,
+     "mean": 68.3,
      "sd": 1.5
     },
     "trend": {
-     "mean": 65.01,
-     "sd": 1.44
+     "mean": 66.01,
+     "sd": 1.3
     }
    }
   },
@@ -7728,23 +7749,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": -23.7,
+     "mean": -22.6,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": -25.08,
-     "sd": 1.39,
+     "mean": -24.35,
+     "sd": 1.52,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": -23.56,
+     "mean": -23.12,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": -21.34,
-     "sd": 1.45,
+     "mean": -21.3,
+     "sd": 1.39,
      "method": "climatology"
     }
    },
@@ -7752,20 +7773,20 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "mean": -21.34,
-     "sd": 1.45
+     "mean": -21.3,
+     "sd": 1.39
     },
     "ewma": {
-     "mean": -23.56,
+     "mean": -23.12,
      "sd": 1.0
     },
     "persistence": {
-     "mean": -23.7,
+     "mean": -22.6,
      "sd": 1.5
     },
     "trend": {
-     "mean": -25.08,
-     "sd": 1.39
+     "mean": -24.35,
+     "sd": 1.52
     }
    }
   },
@@ -7783,23 +7804,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 66.8,
+     "mean": 68.3,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 65.01,
-     "sd": 1.54,
+     "mean": 66.01,
+     "sd": 1.39,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 68.76,
+     "mean": 69.36,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 73.45,
-     "sd": 2.52,
+     "mean": 73.52,
+     "sd": 2.36,
      "method": "climatology"
     }
    },
@@ -7807,20 +7828,20 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "mean": 73.45,
-     "sd": 2.52
+     "mean": 73.52,
+     "sd": 2.36
     },
     "ewma": {
-     "mean": 68.76,
+     "mean": 69.36,
      "sd": 1.0
     },
     "persistence": {
-     "mean": 66.8,
+     "mean": 68.3,
      "sd": 1.5
     },
     "trend": {
-     "mean": 65.01,
-     "sd": 1.54
+     "mean": 66.01,
+     "sd": 1.39
     }
    }
   },
@@ -7838,23 +7859,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": -23.7,
+     "mean": -22.6,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": -25.08,
-     "sd": 1.47,
+     "mean": -24.35,
+     "sd": 1.61,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": -23.56,
+     "mean": -23.12,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": -21.34,
-     "sd": 1.45,
+     "mean": -21.3,
+     "sd": 1.39,
      "method": "climatology"
     }
    },
@@ -7862,20 +7883,20 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "mean": -21.34,
-     "sd": 1.45
+     "mean": -21.3,
+     "sd": 1.39
     },
     "ewma": {
-     "mean": -23.56,
+     "mean": -23.12,
      "sd": 1.0
     },
     "persistence": {
-     "mean": -23.7,
+     "mean": -22.6,
      "sd": 1.5
     },
     "trend": {
-     "mean": -25.08,
-     "sd": 1.47
+     "mean": -24.35,
+     "sd": 1.61
     }
    }
   },
@@ -7893,23 +7914,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 66.8,
+     "mean": 68.3,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 65.01,
-     "sd": 1.63,
+     "mean": 66.01,
+     "sd": 1.47,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 68.76,
+     "mean": 69.36,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 73.45,
-     "sd": 2.52,
+     "mean": 73.52,
+     "sd": 2.36,
      "method": "climatology"
     }
    },
@@ -7917,20 +7938,20 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "mean": 73.45,
-     "sd": 2.52
+     "mean": 73.52,
+     "sd": 2.36
     },
     "ewma": {
-     "mean": 68.76,
+     "mean": 69.36,
      "sd": 1.0
     },
     "persistence": {
-     "mean": 66.8,
+     "mean": 68.3,
      "sd": 1.5
     },
     "trend": {
-     "mean": 65.01,
-     "sd": 1.63
+     "mean": 66.01,
+     "sd": 1.47
     }
    }
   },
@@ -8617,7 +8638,7 @@
        "method": "persistence"
       },
       "civiqs_net_approval_rep": {
-       "mean": 66.8,
+       "mean": 68.3,
        "sd": 1.5,
        "method": "persistence"
       },
@@ -9053,7 +9074,7 @@
        "method": "persistence"
       },
       "civiqs_net_approval_rep": {
-       "mean": 66.8,
+       "mean": 68.3,
        "sd": 1.5,
        "method": "persistence"
       },
@@ -9228,7 +9249,7 @@
        "method": "persistence"
       },
       "civiqs_net_approval_rep": {
-       "mean": 66.8,
+       "mean": 68.3,
        "sd": 1.5,
        "method": "persistence"
       },
@@ -9470,7 +9491,7 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 24,
+   "n_forecasts": 28,
    "forecasts": {
     "claude-opus-5-web-superfc": {
      "mean": -31.8,
@@ -9512,6 +9533,10 @@
      "mean": -32.43,
      "sd": 1.17
     },
+    "gemini-flash-web-superfc": {
+     "mean": -31.6,
+     "sd": 1.5
+    },
     "gemini-flash-web": {
      "mean": -32.0,
      "sd": 1.8
@@ -9536,6 +9561,10 @@
      "mean": -31.7,
      "sd": 1.9
     },
+    "gpt-5.6-luna-web": {
+     "mean": -31.0,
+     "sd": 1.6
+    },
     "gpt-5.6-terra-web-superfc": {
      "mean": -31.6,
      "sd": 1.8
@@ -9548,9 +9577,17 @@
      "mean": -31.7,
      "sd": 1.9
     },
+    "grok-web": {
+     "mean": -31.3,
+     "sd": 1.7
+    },
     "kimi-web-superfc": {
      "mean": -32.0,
      "sd": 2.1
+    },
+    "kimi-web": {
+     "mean": -31.9,
+     "sd": 1.6
     },
     "persistence": {
      "mean": -31.1,
@@ -10761,217 +10798,601 @@
   }
  ],
  "leaderboard": {
-  "resolved_rounds": 5,
+  "resolved_rounds": 6,
   "entries": [
    {
+    "entrant": "claude-sonnet-zeroshot-superfc",
+    "rounds": 1,
+    "mean_crps": 0.749,
+    "mean_skill": 0.231
+   },
+   {
     "entrant": "deepseek-flash",
-    "rounds": 5,
-    "mean_crps": 0.757,
-    "mean_skill": 0.179
-   },
-   {
-    "entrant": "deepseek-pro",
-    "rounds": 5,
-    "mean_crps": 0.736,
-    "mean_skill": 0.174
-   },
-   {
-    "entrant": "gpt-5.6-sol",
-    "rounds": 5,
-    "mean_crps": 0.855,
-    "mean_skill": 0.161
+    "rounds": 6,
+    "mean_crps": 0.833,
+    "mean_skill": 0.108
    },
    {
     "entrant": "claude-fable",
-    "rounds": 5,
-    "mean_crps": 1.012,
-    "mean_skill": 0.117
+    "rounds": 6,
+    "mean_crps": 1.056,
+    "mean_skill": 0.045
    },
    {
-    "entrant": "grok",
-    "rounds": 5,
-    "mean_crps": 0.911,
-    "mean_skill": 0.102
+    "entrant": "gpt-5.6-sol",
+    "rounds": 6,
+    "mean_crps": 0.962,
+    "mean_skill": 0.044
    },
    {
-    "entrant": "claude-sonnet",
-    "rounds": 5,
-    "mean_crps": 0.847,
-    "mean_skill": 0.09
-   },
-   {
-    "entrant": "claude-opus",
-    "rounds": 5,
-    "mean_crps": 0.873,
-    "mean_skill": 0.078
-   },
-   {
-    "entrant": "gpt-5.6-terra",
-    "rounds": 5,
-    "mean_crps": 1.064,
-    "mean_skill": 0.068
+    "entrant": "deepseek-pro",
+    "rounds": 6,
+    "mean_crps": 0.881,
+    "mean_skill": 0.037
    },
    {
     "entrant": "qwen-3.7",
-    "rounds": 5,
-    "mean_crps": 0.791,
-    "mean_skill": 0.062
+    "rounds": 6,
+    "mean_crps": 0.853,
+    "mean_skill": 0.019
    },
    {
-    "entrant": "glm",
-    "rounds": 5,
-    "mean_crps": 0.833,
-    "mean_skill": 0.061
-   },
-   {
-    "entrant": "gpt-5.6-luna",
-    "rounds": 5,
-    "mean_crps": 1.014,
-    "mean_skill": 0.05
-   },
-   {
-    "entrant": "gemini-pro",
-    "rounds": 5,
-    "mean_crps": 0.993,
-    "mean_skill": 0.014
-   },
-   {
-    "entrant": "qwen-3.8",
-    "rounds": 5,
-    "mean_crps": 0.869,
+    "entrant": "claude-opus",
+    "rounds": 6,
+    "mean_crps": 0.944,
     "mean_skill": 0.01
    },
    {
     "entrant": "persistence",
-    "rounds": 5,
-    "mean_crps": 1.194,
+    "rounds": 6,
+    "mean_crps": 1.158,
     "mean_skill": 0.0
    },
    {
+    "entrant": "grok",
+    "rounds": 6,
+    "mean_crps": 1.015,
+    "mean_skill": -0.011
+   },
+   {
+    "entrant": "glm",
+    "rounds": 6,
+    "mean_crps": 0.946,
+    "mean_skill": -0.041
+   },
+   {
+    "entrant": "qwen-3.8",
+    "rounds": 6,
+    "mean_crps": 0.934,
+    "mean_skill": -0.041
+   },
+   {
+    "entrant": "claude-sonnet",
+    "rounds": 6,
+    "mean_crps": 0.982,
+    "mean_skill": -0.043
+   },
+   {
+    "entrant": "gpt-5.6-terra",
+    "rounds": 6,
+    "mean_crps": 1.154,
+    "mean_skill": -0.052
+   },
+   {
+    "entrant": "gemini-pro",
+    "rounds": 6,
+    "mean_crps": 1.055,
+    "mean_skill": -0.055
+   },
+   {
+    "entrant": "gpt-5.6-luna",
+    "rounds": 6,
+    "mean_crps": 1.131,
+    "mean_skill": -0.086
+   },
+   {
     "entrant": "claude-opus-5",
-    "rounds": 5,
-    "mean_crps": 1.161,
-    "mean_skill": -0.013
+    "rounds": 6,
+    "mean_crps": 1.219,
+    "mean_skill": -0.102
    },
    {
     "entrant": "gemini-flash",
-    "rounds": 5,
-    "mean_crps": 1.24,
-    "mean_skill": -0.092
-   },
-   {
-    "entrant": "trend",
-    "rounds": 5,
-    "mean_crps": 1.025,
-    "mean_skill": -0.222
+    "rounds": 6,
+    "mean_crps": 1.311,
+    "mean_skill": -0.195
    },
    {
     "entrant": "ewma",
-    "rounds": 5,
-    "mean_crps": 0.832,
-    "mean_skill": -0.33
+    "rounds": 6,
+    "mean_crps": 0.779,
+    "mean_skill": -0.197
+   },
+   {
+    "entrant": "trend",
+    "rounds": 6,
+    "mean_crps": 1.058,
+    "mean_skill": -0.228
+   },
+   {
+    "entrant": "gpt-5.6-luna-news-superfc",
+    "rounds": 1,
+    "mean_crps": 1.362,
+    "mean_skill": -0.399
+   },
+   {
+    "entrant": "gemini-pro-web",
+    "rounds": 1,
+    "mean_crps": 1.407,
+    "mean_skill": -0.446
+   },
+   {
+    "entrant": "qwen-3.8-web-superfc",
+    "rounds": 1,
+    "mean_crps": 1.407,
+    "mean_skill": -0.446
+   },
+   {
+    "entrant": "gemini-pro-news-superfc",
+    "rounds": 1,
+    "mean_crps": 1.434,
+    "mean_skill": -0.473
+   },
+   {
+    "entrant": "qwen-3.8-superfc",
+    "rounds": 1,
+    "mean_crps": 1.434,
+    "mean_skill": -0.473
+   },
+   {
+    "entrant": "gemini-pro-superfc",
+    "rounds": 1,
+    "mean_crps": 1.462,
+    "mean_skill": -0.502
+   },
+   {
+    "entrant": "glm-news-superfc",
+    "rounds": 1,
+    "mean_crps": 1.462,
+    "mean_skill": -0.502
+   },
+   {
+    "entrant": "gemini-flash-news-superfc",
+    "rounds": 1,
+    "mean_crps": 1.49,
+    "mean_skill": -0.53
+   },
+   {
+    "entrant": "gemini-flash-superfc",
+    "rounds": 1,
+    "mean_crps": 1.506,
+    "mean_skill": -0.547
+   },
+   {
+    "entrant": "glm-news",
+    "rounds": 1,
+    "mean_crps": 1.506,
+    "mean_skill": -0.547
+   },
+   {
+    "entrant": "glm-superfc",
+    "rounds": 1,
+    "mean_crps": 1.506,
+    "mean_skill": -0.547
+   },
+   {
+    "entrant": "gpt-5.6-terra-superfc",
+    "rounds": 1,
+    "mean_crps": 1.506,
+    "mean_skill": -0.547
+   },
+   {
+    "entrant": "grok-news-superfc",
+    "rounds": 1,
+    "mean_crps": 1.506,
+    "mean_skill": -0.547
+   },
+   {
+    "entrant": "grok-superfc",
+    "rounds": 1,
+    "mean_crps": 1.506,
+    "mean_skill": -0.547
+   },
+   {
+    "entrant": "kimi-superfc",
+    "rounds": 1,
+    "mean_crps": 1.506,
+    "mean_skill": -0.547
+   },
+   {
+    "entrant": "claude-opus-5-news-superfc",
+    "rounds": 1,
+    "mean_crps": 1.512,
+    "mean_skill": -0.553
+   },
+   {
+    "entrant": "deepseek-pro-news",
+    "rounds": 1,
+    "mean_crps": 1.534,
+    "mean_skill": -0.576
+   },
+   {
+    "entrant": "grok-web-superfc",
+    "rounds": 1,
+    "mean_crps": 1.534,
+    "mean_skill": -0.576
+   },
+   {
+    "entrant": "grok-web",
+    "rounds": 1,
+    "mean_crps": 1.534,
+    "mean_skill": -0.576
+   },
+   {
+    "entrant": "qwen-3.8-web",
+    "rounds": 1,
+    "mean_crps": 1.534,
+    "mean_skill": -0.576
+   },
+   {
+    "entrant": "claude-opus-5-superfc",
+    "rounds": 1,
+    "mean_crps": 1.552,
+    "mean_skill": -0.594
+   },
+   {
+    "entrant": "deepseek-flash-superfc",
+    "rounds": 1,
+    "mean_crps": 1.552,
+    "mean_skill": -0.594
+   },
+   {
+    "entrant": "claude-opus-5-news",
+    "rounds": 1,
+    "mean_crps": 1.562,
+    "mean_skill": -0.604
+   },
+   {
+    "entrant": "gemini-pro-news",
+    "rounds": 1,
+    "mean_crps": 1.562,
+    "mean_skill": -0.604
+   },
+   {
+    "entrant": "glm-web",
+    "rounds": 1,
+    "mean_crps": 1.562,
+    "mean_skill": -0.604
+   },
+   {
+    "entrant": "gpt-5.6-terra-news-superfc",
+    "rounds": 1,
+    "mean_crps": 1.562,
+    "mean_skill": -0.604
+   },
+   {
+    "entrant": "grok-news",
+    "rounds": 1,
+    "mean_crps": 1.562,
+    "mean_skill": -0.604
+   },
+   {
+    "entrant": "deepseek-flash-news",
+    "rounds": 1,
+    "mean_crps": 1.606,
+    "mean_skill": -0.65
+   },
+   {
+    "entrant": "deepseek-flash-web",
+    "rounds": 1,
+    "mean_crps": 1.606,
+    "mean_skill": -0.65
+   },
+   {
+    "entrant": "deepseek-pro-superfc",
+    "rounds": 1,
+    "mean_crps": 1.606,
+    "mean_skill": -0.65
+   },
+   {
+    "entrant": "deepseek-pro-web",
+    "rounds": 1,
+    "mean_crps": 1.606,
+    "mean_skill": -0.65
+   },
+   {
+    "entrant": "glm-web-superfc",
+    "rounds": 1,
+    "mean_crps": 1.606,
+    "mean_skill": -0.65
+   },
+   {
+    "entrant": "kimi-news-superfc",
+    "rounds": 1,
+    "mean_crps": 1.606,
+    "mean_skill": -0.65
+   },
+   {
+    "entrant": "claude-sonnet-news",
+    "rounds": 1,
+    "mean_crps": 1.618,
+    "mean_skill": -0.662
+   },
+   {
+    "entrant": "gemini-flash-news",
+    "rounds": 1,
+    "mean_crps": 1.618,
+    "mean_skill": -0.662
+   },
+   {
+    "entrant": "deepseek-flash-news-superfc",
+    "rounds": 1,
+    "mean_crps": 1.651,
+    "mean_skill": -0.696
+   },
+   {
+    "entrant": "claude-sonnet-superfc",
+    "rounds": 1,
+    "mean_crps": 1.662,
+    "mean_skill": -0.707
+   },
+   {
+    "entrant": "kimi",
+    "rounds": 1,
+    "mean_crps": 1.662,
+    "mean_skill": -0.707
+   },
+   {
+    "entrant": "kimi-web-superfc",
+    "rounds": 1,
+    "mean_crps": 1.678,
+    "mean_skill": -0.724
+   },
+   {
+    "entrant": "gemini-flash-web",
+    "rounds": 1,
+    "mean_crps": 1.69,
+    "mean_skill": -0.736
+   },
+   {
+    "entrant": "deepseek-pro-news-superfc",
+    "rounds": 1,
+    "mean_crps": 1.706,
+    "mean_skill": -0.752
+   },
+   {
+    "entrant": "kimi-news",
+    "rounds": 1,
+    "mean_crps": 1.718,
+    "mean_skill": -0.765
+   },
+   {
+    "entrant": "gemini-flash-web-superfc",
+    "rounds": 1,
+    "mean_crps": 1.733,
+    "mean_skill": -0.781
+   },
+   {
+    "entrant": "gemini-pro-web-superfc",
+    "rounds": 1,
+    "mean_crps": 1.733,
+    "mean_skill": -0.781
+   },
+   {
+    "entrant": "gpt-5.6-luna-superfc",
+    "rounds": 1,
+    "mean_crps": 1.733,
+    "mean_skill": -0.781
+   },
+   {
+    "entrant": "kimi-web",
+    "rounds": 1,
+    "mean_crps": 1.733,
+    "mean_skill": -0.781
+   },
+   {
+    "entrant": "gpt-5.6-luna-news",
+    "rounds": 1,
+    "mean_crps": 1.746,
+    "mean_skill": -0.794
+   },
+   {
+    "entrant": "gpt-5.6-terra-news",
+    "rounds": 1,
+    "mean_crps": 1.746,
+    "mean_skill": -0.794
+   },
+   {
+    "entrant": "claude-sonnet-news-superfc",
+    "rounds": 1,
+    "mean_crps": 1.818,
+    "mean_skill": -0.867
+   },
+   {
+    "entrant": "deepseek-flash-web-superfc",
+    "rounds": 1,
+    "mean_crps": 1.85,
+    "mean_skill": -0.9
+   },
+   {
+    "entrant": "deepseek-pro-web-superfc",
+    "rounds": 1,
+    "mean_crps": 1.85,
+    "mean_skill": -0.9
    },
    {
     "entrant": "crowd",
-    "rounds": 5,
-    "mean_crps": 2.021,
-    "mean_skill": -1.277
+    "rounds": 6,
+    "mean_crps": 1.904,
+    "mean_skill": -1.123
    },
    {
     "entrant": "climatology",
-    "rounds": 5,
-    "mean_crps": 2.171,
-    "mean_skill": -1.791
+    "rounds": 6,
+    "mean_crps": 1.955,
+    "mean_skill": -1.476
    },
    {
     "entrant": "claude-opus-5-zeroshot",
-    "rounds": 5,
-    "mean_crps": 2.641,
-    "mean_skill": -2.308
+    "rounds": 6,
+    "mean_crps": 2.558,
+    "mean_skill": -2.124
    },
    {
-    "entrant": "claude-fable-zeroshot",
-    "rounds": 5,
-    "mean_crps": 3.585,
-    "mean_skill": -3.708
+    "entrant": "claude-opus-5-zeroshot-superfc",
+    "rounds": 1,
+    "mean_crps": 3.637,
+    "mean_skill": -2.736
    },
    {
     "entrant": "claude-opus-zeroshot",
-    "rounds": 5,
-    "mean_crps": 4.298,
-    "mean_skill": -3.797
+    "rounds": 6,
+    "mean_crps": 4.155,
+    "mean_skill": -3.586
    },
    {
-    "entrant": "claude-sonnet-zeroshot",
-    "rounds": 5,
-    "mean_crps": 3.896,
-    "mean_skill": -4.645
+    "entrant": "kimi-zeroshot",
+    "rounds": 1,
+    "mean_crps": 4.801,
+    "mean_skill": -3.932
+   },
+   {
+    "entrant": "claude-fable-zeroshot",
+    "rounds": 6,
+    "mean_crps": 4.134,
+    "mean_skill": -4.102
    },
    {
     "entrant": "gpt-5.6-sol-zeroshot",
-    "rounds": 5,
-    "mean_crps": 4.177,
-    "mean_skill": -4.663
+    "rounds": 6,
+    "mean_crps": 4.183,
+    "mean_skill": -4.44
+   },
+   {
+    "entrant": "claude-sonnet-zeroshot",
+    "rounds": 6,
+    "mean_crps": 4.047,
+    "mean_skill": -4.526
    },
    {
     "entrant": "gpt-5.6-luna-zeroshot",
-    "rounds": 5,
-    "mean_crps": 4.229,
-    "mean_skill": -4.672
+    "rounds": 6,
+    "mean_crps": 4.428,
+    "mean_skill": -4.655
+   },
+   {
+    "entrant": "gpt-5.6-terra-zeroshot-superfc",
+    "rounds": 1,
+    "mean_crps": 5.624,
+    "mean_skill": -4.777
    },
    {
     "entrant": "gpt-5.6-terra-zeroshot",
-    "rounds": 5,
-    "mean_crps": 3.804,
-    "mean_skill": -4.959
+    "rounds": 6,
+    "mean_crps": 4.244,
+    "mean_skill": -5.07
+   },
+   {
+    "entrant": "deepseek-flash-zeroshot-superfc",
+    "rounds": 1,
+    "mean_crps": 6.943,
+    "mean_skill": -6.132
    },
    {
     "entrant": "deepseek-flash-zeroshot",
-    "rounds": 5,
-    "mean_crps": 8.283,
-    "mean_skill": -6.605
+    "rounds": 6,
+    "mean_crps": 7.84,
+    "mean_skill": -6.3
    },
    {
     "entrant": "qwen-3.7-zeroshot",
-    "rounds": 5,
-    "mean_crps": 6.533,
-    "mean_skill": -6.913
+    "rounds": 6,
+    "mean_crps": 7.095,
+    "mean_skill": -7.291
    },
    {
-    "entrant": "grok-zeroshot",
-    "rounds": 5,
-    "mean_crps": 7.886,
-    "mean_skill": -7.675
+    "entrant": "gemini-flash-zeroshot-superfc",
+    "rounds": 1,
+    "mean_crps": 8.089,
+    "mean_skill": -7.309
+   },
+   {
+    "entrant": "gemini-pro-zeroshot-superfc",
+    "rounds": 1,
+    "mean_crps": 8.254,
+    "mean_skill": -7.478
    },
    {
     "entrant": "gemini-flash-zeroshot",
-    "rounds": 5,
-    "mean_crps": 7.803,
-    "mean_skill": -7.893
+    "rounds": 6,
+    "mean_crps": 7.693,
+    "mean_skill": -7.634
    },
    {
-    "entrant": "deepseek-pro-zeroshot",
-    "rounds": 5,
-    "mean_crps": 8.804,
-    "mean_skill": -8.432
+    "entrant": "grok-zeroshot",
+    "rounds": 6,
+    "mean_crps": 8.047,
+    "mean_skill": -7.744
+   },
+   {
+    "entrant": "deepseek-pro-zeroshot-superfc",
+    "rounds": 1,
+    "mean_crps": 8.628,
+    "mean_skill": -7.863
+   },
+   {
+    "entrant": "gpt-5.6-luna-zeroshot-superfc",
+    "rounds": 1,
+    "mean_crps": 8.649,
+    "mean_skill": -7.884
    },
    {
     "entrant": "gemini-pro-zeroshot",
-    "rounds": 5,
-    "mean_crps": 8.226,
-    "mean_skill": -8.654
+    "rounds": 6,
+    "mean_crps": 8.03,
+    "mean_skill": -8.251
+   },
+   {
+    "entrant": "deepseek-pro-zeroshot",
+    "rounds": 6,
+    "mean_crps": 8.691,
+    "mean_skill": -8.252
    },
    {
     "entrant": "glm-zeroshot",
-    "rounds": 5,
-    "mean_crps": 7.288,
-    "mean_skill": -8.845
+    "rounds": 6,
+    "mean_crps": 7.156,
+    "mean_skill": -8.316
+   },
+   {
+    "entrant": "kimi-zeroshot-superfc",
+    "rounds": 1,
+    "mean_crps": 9.19,
+    "mean_skill": -8.44
+   },
+   {
+    "entrant": "grok-zeroshot-superfc",
+    "rounds": 1,
+    "mean_crps": 10.19,
+    "mean_skill": -9.467
    },
    {
     "entrant": "qwen-3.8-zeroshot",
-    "rounds": 5,
-    "mean_crps": 7.328,
-    "mean_skill": -9.924
+    "rounds": 6,
+    "mean_crps": 7.98,
+    "mean_skill": -10.028
+   },
+   {
+    "entrant": "glm-zeroshot-superfc",
+    "rounds": 1,
+    "mean_crps": 11.064,
+    "mean_skill": -10.365
+   },
+   {
+    "entrant": "qwen-3.8-zeroshot-superfc",
+    "rounds": 1,
+    "mean_crps": 11.286,
+    "mean_skill": -10.593
    }
   ]
  },
@@ -26726,32 +27147,32 @@
     {
      "entrant": "crowd",
      "rounds": 391,
-     "mean_crps": 1.487,
-     "mean_skill": 0.069
+     "mean_crps": 1.494,
+     "mean_skill": 0.071
     },
     {
      "entrant": "ewma",
      "rounds": 391,
-     "mean_crps": 1.508,
-     "mean_skill": 0.056
+     "mean_crps": 1.516,
+     "mean_skill": 0.057
     },
     {
      "entrant": "persistence",
      "rounds": 391,
-     "mean_crps": 1.597,
+     "mean_crps": 1.608,
      "mean_skill": 0.0
     },
     {
      "entrant": "trend",
      "rounds": 391,
-     "mean_crps": 1.752,
-     "mean_skill": -0.096
+     "mean_crps": 1.76,
+     "mean_skill": -0.095
     },
     {
      "entrant": "climatology",
      "rounds": 391,
-     "mean_crps": 2.497,
-     "mean_skill": -0.563
+     "mean_crps": 2.501,
+     "mean_skill": -0.555
     }
    ],
    "spans": {
@@ -26759,64 +27180,64 @@
      {
       "entrant": "crowd",
       "rounds": 391,
-      "mean_crps": 1.487,
-      "mean_skill": 0.069
+      "mean_crps": 1.494,
+      "mean_skill": 0.071
      },
      {
       "entrant": "ewma",
       "rounds": 391,
-      "mean_crps": 1.508,
-      "mean_skill": 0.056
+      "mean_crps": 1.516,
+      "mean_skill": 0.057
      },
      {
       "entrant": "persistence",
       "rounds": 391,
-      "mean_crps": 1.597,
+      "mean_crps": 1.608,
       "mean_skill": 0.0
      },
      {
       "entrant": "trend",
       "rounds": 391,
-      "mean_crps": 1.752,
-      "mean_skill": -0.096
+      "mean_crps": 1.76,
+      "mean_skill": -0.095
      },
      {
       "entrant": "climatology",
       "rounds": 391,
-      "mean_crps": 2.497,
-      "mean_skill": -0.563
+      "mean_crps": 2.501,
+      "mean_skill": -0.555
      }
     ],
     "m6": [
      {
       "entrant": "ewma",
       "rounds": 99,
-      "mean_crps": 0.941,
-      "mean_skill": 0.177
+      "mean_crps": 0.952,
+      "mean_skill": 0.181
      },
      {
       "entrant": "crowd",
       "rounds": 99,
-      "mean_crps": 0.953,
-      "mean_skill": 0.167
+      "mean_crps": 0.964,
+      "mean_skill": 0.171
      },
      {
       "entrant": "trend",
       "rounds": 99,
-      "mean_crps": 1.037,
-      "mean_skill": 0.094
+      "mean_crps": 1.049,
+      "mean_skill": 0.097
      },
      {
       "entrant": "persistence",
       "rounds": 99,
-      "mean_crps": 1.144,
+      "mean_crps": 1.162,
       "mean_skill": 0.0
      },
      {
       "entrant": "climatology",
       "rounds": 99,
-      "mean_crps": 1.286,
-      "mean_skill": -0.124
+      "mean_crps": 1.288,
+      "mean_skill": -0.108
      }
     ],
     "d30": [
@@ -26841,8 +27262,8 @@
      {
       "entrant": "climatology",
       "rounds": 17,
-      "mean_crps": 1.386,
-      "mean_skill": 0.044
+      "mean_crps": 1.387,
+      "mean_skill": 0.043
      },
      {
       "entrant": "persistence",
@@ -27250,15 +27671,15 @@
       "crowd": 0.04,
       "ewma": 0.011,
       "persistence": 0.0,
-      "trend": -0.161,
-      "climatology": -0.734
+      "trend": -0.16,
+      "climatology": -0.731
      },
      "crps": {
-      "crowd": 2.075,
-      "ewma": 2.138,
-      "persistence": 2.161,
-      "trend": 2.509,
-      "climatology": 3.747
+      "crowd": 2.08,
+      "ewma": 2.143,
+      "persistence": 2.168,
+      "trend": 2.514,
+      "climatology": 3.752
      }
     },
     {
@@ -27272,18 +27693,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.047,
-      "ewma": 0.022,
+      "crowd": 0.048,
+      "ewma": 0.023,
       "persistence": 0.0,
-      "trend": -0.146,
-      "climatology": -0.705
+      "trend": -0.145,
+      "climatology": -0.702
      },
      "crps": {
-      "crowd": 2.012,
-      "ewma": 2.065,
-      "persistence": 2.111,
-      "trend": 2.42,
-      "climatology": 3.6
+      "crowd": 2.016,
+      "ewma": 2.069,
+      "persistence": 2.117,
+      "trend": 2.424,
+      "climatology": 3.604
      }
     },
     {
@@ -27297,18 +27718,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.044,
-      "ewma": 0.02,
+      "crowd": 0.045,
+      "ewma": 0.021,
       "persistence": 0.0,
-      "trend": -0.149,
-      "climatology": -0.705
+      "trend": -0.147,
+      "climatology": -0.7
      },
      "crps": {
-      "crowd": 1.945,
-      "ewma": 1.994,
-      "persistence": 2.034,
-      "trend": 2.338,
-      "climatology": 3.467
+      "crowd": 1.948,
+      "ewma": 1.998,
+      "persistence": 2.04,
+      "trend": 2.34,
+      "climatology": 3.469
      }
     },
     {
@@ -27322,18 +27743,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.047,
-      "ewma": 0.024,
+      "crowd": 0.048,
+      "ewma": 0.025,
       "persistence": 0.0,
-      "trend": -0.14,
-      "climatology": -0.689
+      "trend": -0.138,
+      "climatology": -0.685
      },
      "crps": {
-      "crowd": 1.873,
-      "ewma": 1.918,
-      "persistence": 1.966,
-      "trend": 2.241,
-      "climatology": 3.321
+      "crowd": 1.877,
+      "ewma": 1.922,
+      "persistence": 1.972,
+      "trend": 2.244,
+      "climatology": 3.322
      }
     },
     {
@@ -27348,17 +27769,17 @@
      },
      "skills": {
       "crowd": 0.044,
-      "ewma": 0.022,
+      "ewma": 0.023,
       "persistence": 0.0,
-      "trend": -0.142,
-      "climatology": -0.692
+      "trend": -0.14,
+      "climatology": -0.688
      },
      "crps": {
-      "crowd": 1.822,
-      "ewma": 1.864,
-      "persistence": 1.906,
-      "trend": 2.176,
-      "climatology": 3.226
+      "crowd": 1.83,
+      "ewma": 1.871,
+      "persistence": 1.915,
+      "trend": 2.183,
+      "climatology": 3.232
      }
     },
     {
@@ -27375,15 +27796,15 @@
       "crowd": 0.043,
       "ewma": 0.023,
       "persistence": 0.0,
-      "trend": -0.144,
-      "climatology": -0.694
+      "trend": -0.143,
+      "climatology": -0.69
      },
      "crps": {
-      "crowd": 1.768,
-      "ewma": 1.804,
-      "persistence": 1.847,
-      "trend": 2.112,
-      "climatology": 3.129
+      "crowd": 1.775,
+      "ewma": 1.813,
+      "persistence": 1.856,
+      "trend": 2.121,
+      "climatology": 3.135
      }
     },
     {
@@ -27400,15 +27821,15 @@
       "crowd": 0.047,
       "ewma": 0.027,
       "persistence": 0.0,
-      "trend": -0.142,
-      "climatology": -0.677
+      "trend": -0.141,
+      "climatology": -0.672
      },
      "crps": {
-      "crowd": 1.719,
-      "ewma": 1.754,
-      "persistence": 1.803,
-      "trend": 2.059,
-      "climatology": 3.024
+      "crowd": 1.726,
+      "ewma": 1.762,
+      "persistence": 1.812,
+      "trend": 2.067,
+      "climatology": 3.03
      }
     },
     {
@@ -27425,15 +27846,15 @@
       "crowd": 0.048,
       "ewma": 0.029,
       "persistence": 0.0,
-      "trend": -0.141,
-      "climatology": -0.666
+      "trend": -0.14,
+      "climatology": -0.662
      },
      "crps": {
-      "crowd": 1.677,
-      "ewma": 1.71,
-      "persistence": 1.761,
-      "trend": 2.009,
-      "climatology": 2.935
+      "crowd": 1.683,
+      "ewma": 1.718,
+      "persistence": 1.769,
+      "trend": 2.016,
+      "climatology": 2.94
      }
     },
     {
@@ -27447,18 +27868,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.05,
-      "ewma": 0.031,
+      "crowd": 0.051,
+      "ewma": 0.032,
       "persistence": 0.0,
-      "trend": -0.136,
-      "climatology": -0.645
+      "trend": -0.135,
+      "climatology": -0.641
      },
      "crps": {
-      "crowd": 1.648,
-      "ewma": 1.681,
-      "persistence": 1.736,
-      "trend": 1.972,
-      "climatology": 2.856
+      "crowd": 1.654,
+      "ewma": 1.688,
+      "persistence": 1.743,
+      "trend": 1.979,
+      "climatology": 2.86
      }
     },
     {
@@ -27472,18 +27893,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.054,
-      "ewma": 0.037,
+      "crowd": 0.056,
+      "ewma": 0.039,
       "persistence": 0.0,
-      "trend": -0.128,
-      "climatology": -0.631
+      "trend": -0.125,
+      "climatology": -0.623
      },
      "crps": {
-      "crowd": 1.617,
-      "ewma": 1.645,
-      "persistence": 1.709,
-      "trend": 1.927,
-      "climatology": 2.788
+      "crowd": 1.626,
+      "ewma": 1.655,
+      "persistence": 1.722,
+      "trend": 1.937,
+      "climatology": 2.795
      }
     },
     {
@@ -27497,18 +27918,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.054,
-      "ewma": 0.039,
+      "crowd": 0.056,
+      "ewma": 0.04,
       "persistence": 0.0,
-      "trend": -0.125,
-      "climatology": -0.632
+      "trend": -0.122,
+      "climatology": -0.623
      },
      "crps": {
-      "crowd": 1.583,
-      "ewma": 1.609,
-      "persistence": 1.673,
-      "trend": 1.882,
-      "climatology": 2.73
+      "crowd": 1.592,
+      "ewma": 1.618,
+      "persistence": 1.686,
+      "trend": 1.891,
+      "climatology": 2.736
      }
     },
     {
@@ -27522,18 +27943,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.051,
-      "ewma": 0.034,
+      "crowd": 0.052,
+      "ewma": 0.036,
       "persistence": 0.0,
-      "trend": -0.124,
-      "climatology": -0.629
+      "trend": -0.122,
+      "climatology": -0.621
      },
      "crps": {
-      "crowd": 1.567,
-      "ewma": 1.594,
-      "persistence": 1.65,
-      "trend": 1.855,
-      "climatology": 2.689
+      "crowd": 1.575,
+      "ewma": 1.603,
+      "persistence": 1.662,
+      "trend": 1.864,
+      "climatology": 2.694
      }
     },
     {
@@ -27547,18 +27968,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.052,
-      "ewma": 0.036,
+      "crowd": 0.053,
+      "ewma": 0.038,
       "persistence": 0.0,
-      "trend": -0.12,
-      "climatology": -0.626
+      "trend": -0.118,
+      "climatology": -0.617
      },
      "crps": {
-      "crowd": 1.535,
-      "ewma": 1.56,
-      "persistence": 1.619,
-      "trend": 1.814,
-      "climatology": 2.632
+      "crowd": 1.544,
+      "ewma": 1.569,
+      "persistence": 1.631,
+      "trend": 1.823,
+      "climatology": 2.637
      }
     },
     {
@@ -27572,18 +27993,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.059,
-      "ewma": 0.044,
+      "crowd": 0.061,
+      "ewma": 0.045,
       "persistence": 0.0,
-      "trend": -0.11,
-      "climatology": -0.605
+      "trend": -0.108,
+      "climatology": -0.597
      },
      "crps": {
-      "crowd": 1.517,
-      "ewma": 1.541,
-      "persistence": 1.612,
-      "trend": 1.789,
-      "climatology": 2.588
+      "crowd": 1.525,
+      "ewma": 1.549,
+      "persistence": 1.623,
+      "trend": 1.798,
+      "climatology": 2.592
      }
     },
     {
@@ -27597,18 +28018,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.064,
-      "ewma": 0.048,
+      "crowd": 0.065,
+      "ewma": 0.049,
       "persistence": 0.0,
-      "trend": -0.107,
-      "climatology": -0.583
+      "trend": -0.105,
+      "climatology": -0.575
      },
      "crps": {
-      "crowd": 1.496,
-      "ewma": 1.521,
-      "persistence": 1.598,
-      "trend": 1.769,
-      "climatology": 2.529
+      "crowd": 1.504,
+      "ewma": 1.53,
+      "persistence": 1.609,
+      "trend": 1.778,
+      "climatology": 2.533
      }
     },
     {
@@ -27622,18 +28043,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.069,
-      "ewma": 0.056,
+      "crowd": 0.071,
+      "ewma": 0.057,
       "persistence": 0.0,
-      "trend": -0.096,
-      "climatology": -0.563
+      "trend": -0.095,
+      "climatology": -0.555
      },
      "crps": {
-      "crowd": 1.487,
-      "ewma": 1.508,
-      "persistence": 1.597,
-      "trend": 1.752,
-      "climatology": 2.497
+      "crowd": 1.494,
+      "ewma": 1.516,
+      "persistence": 1.608,
+      "trend": 1.76,
+      "climatology": 2.501
      }
     }
    ],
@@ -27672,34 +28093,34 @@
     ],
     "yougov_approval": [
      {
-      "entrant": "ewma",
-      "rounds": 110,
-      "mean_crps": 1.012,
-      "mean_skill": 0.171
-     },
-     {
       "entrant": "crowd",
       "rounds": 110,
-      "mean_crps": 1.013,
-      "mean_skill": 0.17
+      "mean_crps": 1.039,
+      "mean_skill": 0.174
+     },
+     {
+      "entrant": "ewma",
+      "rounds": 110,
+      "mean_crps": 1.04,
+      "mean_skill": 0.173
      },
      {
       "entrant": "trend",
       "rounds": 110,
-      "mean_crps": 1.087,
-      "mean_skill": 0.109
-     },
-     {
-      "entrant": "persistence",
-      "rounds": 110,
-      "mean_crps": 1.221,
-      "mean_skill": 0.0
+      "mean_crps": 1.117,
+      "mean_skill": 0.112
      },
      {
       "entrant": "climatology",
       "rounds": 110,
-      "mean_crps": 1.237,
-      "mean_skill": -0.014
+      "mean_crps": 1.252,
+      "mean_skill": 0.005
+     },
+     {
+      "entrant": "persistence",
+      "rounds": 110,
+      "mean_crps": 1.258,
+      "mean_skill": 0.0
      }
     ],
     "mc_approval": [
@@ -36775,7 +37196,7 @@
    },
    {
     "date": "2025-11-22",
-    "value": 40.0
+    "value": 38.0
    },
    {
     "date": "2025-11-29",
@@ -38089,7 +38510,7 @@
    },
    {
     "date": "2026-08-21",
-    "value": -23.7
+    "value": -22.6
    }
   ],
   "civiqs_net_approval_rep": [
@@ -38123,7 +38544,7 @@
    },
    {
     "date": "2026-08-21",
-    "value": 66.8
+    "value": 68.3
    }
   ],
   "civiqs_net_econ_now": [
@@ -38157,7 +38578,7 @@
    },
    {
     "date": "2026-08-21",
-    "value": -31.6
+    "value": -32.5
    }
   ],
   "civiqs_net_econ_direction": [
@@ -38500,6 +38921,74 @@
     "value": -4.4
    }
   ],
+  "cci_headline": [
+   {
+    "date": "2025-12-01",
+    "value": 89.1
+   },
+   {
+    "date": "2026-01-01",
+    "value": 84.5
+   },
+   {
+    "date": "2026-02-01",
+    "value": 91.2
+   },
+   {
+    "date": "2026-03-01",
+    "value": 91.8
+   },
+   {
+    "date": "2026-04-01",
+    "value": 92.8
+   },
+   {
+    "date": "2026-05-01",
+    "value": 93.1
+   },
+   {
+    "date": "2026-06-01",
+    "value": 91.2
+   },
+   {
+    "date": "2026-07-01",
+    "value": 90.8
+   }
+  ],
+  "esi_headline": [
+   {
+    "date": "2026-04-22",
+    "value": 28.9
+   },
+   {
+    "date": "2026-05-20",
+    "value": 30.6
+   },
+   {
+    "date": "2026-06-03",
+    "value": 30.7
+   },
+   {
+    "date": "2026-06-17",
+    "value": 31.9
+   },
+   {
+    "date": "2026-07-01",
+    "value": 31.9
+   },
+   {
+    "date": "2026-07-15",
+    "value": 33.4
+   },
+   {
+    "date": "2026-07-29",
+    "value": 30.8
+   },
+   {
+    "date": "2026-08-12",
+    "value": 32.3
+   }
+  ],
   "trends_tesla": [
    {
     "date": "2026-07-04",
@@ -38531,7 +39020,7 @@
    },
    {
     "date": "2026-08-22",
-    "value": 75
+    "value": 74
    }
   ],
   "trends_iphone": [
@@ -38565,7 +39054,177 @@
    },
    {
     "date": "2026-08-22",
-    "value": 52
+    "value": 53
+   }
+  ],
+  "trends_share_tesla": [
+   {
+    "date": "2026-06-27",
+    "value": 8.28
+   },
+   {
+    "date": "2026-07-04",
+    "value": 10.56
+   },
+   {
+    "date": "2026-07-11",
+    "value": 10.14
+   },
+   {
+    "date": "2026-07-18",
+    "value": 9.77
+   },
+   {
+    "date": "2026-07-25",
+    "value": 10.45
+   },
+   {
+    "date": "2026-08-01",
+    "value": 9.63
+   },
+   {
+    "date": "2026-08-08",
+    "value": 9.7
+   },
+   {
+    "date": "2026-08-15",
+    "value": 9.09
+   }
+  ],
+  "trends_share_iphone": [
+   {
+    "date": "2026-06-27",
+    "value": 42.01
+   },
+   {
+    "date": "2026-07-04",
+    "value": 38.03
+   },
+   {
+    "date": "2026-07-11",
+    "value": 39.86
+   },
+   {
+    "date": "2026-07-18",
+    "value": 39.1
+   },
+   {
+    "date": "2026-07-25",
+    "value": 38.81
+   },
+   {
+    "date": "2026-08-01",
+    "value": 40.74
+   },
+   {
+    "date": "2026-08-08",
+    "value": 41.04
+   },
+   {
+    "date": "2026-08-15",
+    "value": 40.91
+   }
+  ],
+  "trends_share_samsung": [
+   {
+    "date": "2026-06-27",
+    "value": 17.16
+   },
+   {
+    "date": "2026-07-04",
+    "value": 16.2
+   },
+   {
+    "date": "2026-07-11",
+    "value": 15.22
+   },
+   {
+    "date": "2026-07-18",
+    "value": 12.78
+   },
+   {
+    "date": "2026-07-25",
+    "value": 14.18
+   },
+   {
+    "date": "2026-08-01",
+    "value": 13.33
+   },
+   {
+    "date": "2026-08-08",
+    "value": 12.69
+   },
+   {
+    "date": "2026-08-15",
+    "value": 13.64
+   }
+  ],
+  "trends_share_netflix": [
+   {
+    "date": "2026-06-27",
+    "value": 16.57
+   },
+   {
+    "date": "2026-07-04",
+    "value": 19.01
+   },
+   {
+    "date": "2026-07-11",
+    "value": 17.39
+   },
+   {
+    "date": "2026-07-18",
+    "value": 19.55
+   },
+   {
+    "date": "2026-07-25",
+    "value": 17.91
+   },
+   {
+    "date": "2026-08-01",
+    "value": 17.04
+   },
+   {
+    "date": "2026-08-08",
+    "value": 17.91
+   },
+   {
+    "date": "2026-08-15",
+    "value": 17.42
+   }
+  ],
+  "trends_share_disney": [
+   {
+    "date": "2026-06-27",
+    "value": 15.98
+   },
+   {
+    "date": "2026-07-04",
+    "value": 16.2
+   },
+   {
+    "date": "2026-07-11",
+    "value": 17.39
+   },
+   {
+    "date": "2026-07-18",
+    "value": 18.8
+   },
+   {
+    "date": "2026-07-25",
+    "value": 18.66
+   },
+   {
+    "date": "2026-08-01",
+    "value": 19.26
+   },
+   {
+    "date": "2026-08-08",
+    "value": 18.66
+   },
+   {
+    "date": "2026-08-15",
+    "value": 18.94
    }
   ],
   "civiqs_net_approval_dem": [
@@ -39661,8 +40320,8 @@
   "sb_approval": {
    "source": "sb_approval",
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
-   "fetched_at": "2026-08-23T13:10:33Z",
-   "sha256": "f97c7160c319b327d8884d2345f6dc7ac9a64131f641b9f79869be7a9471c34c",
+   "fetched_at": "2026-08-23T17:51:27Z",
+   "sha256": "f5a5d9e7a96c4cc774f35286de935b97b222b61390fb44e07e84dca7d4ed8ca6",
    "bytes": 1566679,
    "file": "sources/sb_approval/2026-08-23.csv",
    "note": "Silver Bulletin poll database, published as a Google Sheet"
@@ -39670,8 +40329,8 @@
   "sb_generic": {
    "source": "sb_generic",
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
-   "fetched_at": "2026-08-23T13:10:33Z",
-   "sha256": "5f0845c514cc459bbd9019cef59503267de81f00a84dda2d586e1a28d2230c45",
+   "fetched_at": "2026-08-23T17:51:28Z",
+   "sha256": "8f2800e975dcdb016918782ee2b8ead23288f32861899884ca1602282299dc2f",
    "bytes": 151341,
    "file": "sources/sb_generic/2026-08-23.csv",
    "note": "Silver Bulletin generic-ballot database, published as a Google Sheet"
@@ -39679,7 +40338,7 @@
   "umich": {
    "source": "umich",
    "url": "http://www.sca.isr.umich.edu/files/tbmics.csv",
-   "fetched_at": "2026-08-23T13:10:33Z",
+   "fetched_at": "2026-08-23T17:51:28Z",
    "sha256": "81a6adb40258512e65bea575e6d85f499a0a577df4b00da0f2783054d2c684b5",
    "bytes": 12207,
    "file": "sources/umich/2026-08-23.csv",
@@ -39688,9 +40347,9 @@
   "aaii": {
    "source": "aaii",
    "url": "https://www.aaii.com/sentimentsurvey/sent_results",
-   "fetched_at": "2026-08-23T13:10:33Z",
-   "sha256": "968d6be7ec4fd65124f03a607923e81d1c1531fd35392c68f7e3438c21ec6774",
-   "bytes": 46169,
+   "fetched_at": "2026-08-23T17:51:28Z",
+   "sha256": "599ad20530eee6df98bea6c261b6a38a0d38836df5095c401270b5ad8f1db1ba",
+   "bytes": 46302,
    "file": "sources/aaii/2026-08-23.html",
    "note": "AAII sentiment survey results page, a ~22-week rolling window parsed against the response's own date 2026-08-23; the full 1987-present .xls is OLE2 and unreadable without a dependency"
   },
@@ -39704,10 +40363,10 @@
    "manifest_sha256": "de4da2e739d48bfe8de1c504901f5ec52e99e7c62e8428db6df332e7f8e58dad",
    "proof": true,
    "proof_file": "stamps/umich-2026-08-prelim.json.ots",
-   "bitcoin_attested": false,
+   "bitcoin_attested": true,
    "action": "upgraded",
    "ok": false,
-   "detail": "nothing to upgrade"
+   "detail": "Success! Timestamp complete"
   },
   "civiqs-2026-w33-approval": {
    "round_id": "civiqs-2026-w33-approval",
@@ -39716,10 +40375,10 @@
    "manifest_sha256": "00d55ba49ca24aaad99d4751436eeae32e11a3cbe9115629fec1ed81b332ae8a",
    "proof": true,
    "proof_file": "stamps/civiqs-2026-w33-approval.json.ots",
-   "bitcoin_attested": false,
+   "bitcoin_attested": true,
    "action": "upgraded",
    "ok": false,
-   "detail": "nothing to upgrade"
+   "detail": "Success! Timestamp complete"
   },
   "mc-2026-w34-approval": {
    "round_id": "mc-2026-w34-approval",
@@ -39728,10 +40387,10 @@
    "manifest_sha256": "53aa32851d3618b5340788eda14a4a388ea3a92a00f48ff8dca04c88841d5dcd",
    "proof": true,
    "proof_file": "stamps/mc-2026-w34-approval.json.ots",
-   "bitcoin_attested": false,
+   "bitcoin_attested": true,
    "action": "upgraded",
    "ok": false,
-   "detail": "nothing to upgrade"
+   "detail": "Success! Timestamp complete"
   },
   "yougov-2026-w34-approval": {
    "round_id": "yougov-2026-w34-approval",
@@ -39740,10 +40399,10 @@
    "manifest_sha256": "8e5723ed15d21dbc870b74a143fee570d0cc8d69ada118a2fdc729307440ab0d",
    "proof": true,
    "proof_file": "stamps/yougov-2026-w34-approval.json.ots",
-   "bitcoin_attested": false,
+   "bitcoin_attested": true,
    "action": "upgraded",
    "ok": false,
-   "detail": "nothing to upgrade"
+   "detail": "Success! Timestamp complete"
   },
   "yougov-2026-w34-generic": {
    "round_id": "yougov-2026-w34-generic",
@@ -39752,10 +40411,10 @@
    "manifest_sha256": "97eaf6a859f7fad1b5e4499bf70e08c458b289cff25952ceca4444a625f0a542",
    "proof": true,
    "proof_file": "stamps/yougov-2026-w34-generic.json.ots",
-   "bitcoin_attested": false,
+   "bitcoin_attested": true,
    "action": "upgraded",
    "ok": false,
-   "detail": "nothing to upgrade"
+   "detail": "Success! Timestamp complete"
   },
   "civiqs-2026-w34-approval": {
    "round_id": "civiqs-2026-w34-approval",
@@ -39780,6 +40439,30 @@
    "action": "upgraded",
    "ok": false,
    "detail": "Success! Timestamp complete"
+  },
+  "yougov-2026-w35-approval": {
+   "round_id": "yougov-2026-w35-approval",
+   "manifest": true,
+   "manifest_file": "stamps/yougov-2026-w35-approval.json",
+   "manifest_sha256": "b9d9c90fcbaf0d0b0c5107fd682d0a4955f1bf1bb4fe7a6f36a7a50a1f962d77",
+   "proof": true,
+   "proof_file": "stamps/yougov-2026-w35-approval.json.ots",
+   "bitcoin_attested": false,
+   "action": "upgraded",
+   "ok": false,
+   "detail": "Failed! Timestamp not complete"
+  },
+  "yougov-2026-w35-generic": {
+   "round_id": "yougov-2026-w35-generic",
+   "manifest": true,
+   "manifest_file": "stamps/yougov-2026-w35-generic.json",
+   "manifest_sha256": "1fa03a7cb144230f491d7e0a5c73ebd11d2124677ae45ee143ec4ad34eca5016",
+   "proof": true,
+   "proof_file": "stamps/yougov-2026-w35-generic.json.ots",
+   "bitcoin_attested": false,
+   "action": "upgraded",
+   "ok": false,
+   "detail": "Failed! Timestamp not complete"
   },
   "wiki-2026-08-30-trump": {
    "round_id": "wiki-2026-08-30-trump",
@@ -39828,6 +40511,18 @@
    "action": "upgraded",
    "ok": false,
    "detail": "Success! Timestamp complete"
+  },
+  "cci-2026-08": {
+   "round_id": "cci-2026-08",
+   "manifest": true,
+   "manifest_file": "stamps/cci-2026-08.json",
+   "manifest_sha256": "443a6d52c0b48ffefac6a34a7cbb5a3d773d6cdd51ecbab6205a6e5697008db9",
+   "proof": true,
+   "proof_file": "stamps/cci-2026-08.json.ots",
+   "bitcoin_attested": false,
+   "action": "upgraded",
+   "ok": false,
+   "detail": "Failed! Timestamp not complete"
   }
  },
  "source_health": [
@@ -39843,9 +40538,9 @@
   },
   {
    "source": "civiqs",
-   "state": "failing",
-   "fetched_days": 5.5,
-   "changed_days": 5.5,
+   "state": "ok",
+   "fetched_days": 0.7,
+   "changed_days": 0.7,
    "budget_fetch_days": 2,
    "budget_change_days": 4,
    "url": null,
@@ -39857,7 +40552,7 @@
    "source": "sb_approval",
    "state": "ok",
    "fetched_days": -0.0,
-   "changed_days": -0.0,
+   "changed_days": 0.0,
    "budget_fetch_days": 2,
    "budget_change_days": 7,
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
@@ -39867,7 +40562,7 @@
    "source": "sb_generic",
    "state": "ok",
    "fetched_days": -0.0,
-   "changed_days": -0.0,
+   "changed_days": 0.0,
    "budget_fetch_days": 2,
    "budget_change_days": 10,
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
@@ -39877,7 +40572,7 @@
    "source": "umich",
    "state": "ok",
    "fetched_days": -0.0,
-   "changed_days": 5.3,
+   "changed_days": 5.5,
    "budget_fetch_days": 3,
    "budget_change_days": 40,
    "url": "http://www.sca.isr.umich.edu/files/tbmics.csv",
