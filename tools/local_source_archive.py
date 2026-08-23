@@ -13,13 +13,39 @@ Run it from any residential machine with the repo cloned:
 
     cd social-sim-arena && git pull --quiet && python tools/local_source_archive.py
 
-and schedule it daily, e.g. crontab:
-
-    17 9 * * *  cd $HOME/social-sim-arena && git pull -q && python tools/local_source_archive.py >> ~/.ssa-archive.log 2>&1
-
 The script is idempotent within a day (adapters fetch at most once per key
-per day) and commits only when something new arrived. It pushes to the
-branch it is on -- keep the clone on main, which is what the refresh reads.
+per day) and commits only when something new arrived. It pushes to the branch
+it is on; set SSA_ARCHIVE_NO_PUSH=1 to commit locally and leave the remote
+alone.
+
+**The daily pair, as actually scheduled.** Two crontab lines: this courier,
+and the forecast run that spends money. Both were written the obvious short
+way first and both failed silently that way, so the two prefixes below are
+load-bearing rather than decorative:
+
+  * `PATH` -- cron's PATH is /usr/bin:/bin and omits /usr/local/bin, where
+    Homebrew puts `pdftotext`. Without it `series.build_all` raises on the
+    Michigan party PDF and the whole refresh dies before buying a single
+    forecast. It failed this way for two days and wrote nothing but a
+    traceback, because the failure is at series-build time, before any log
+    line a reader would look for.
+  * the proxy variables -- an interactive shell picks them up from the user's
+    profile and cron does not, so `git pull` fails ("HTTP2 framing layer"),
+    the `&&` chain skips the real work, and the log fills with git noise that
+    looks nothing like the actual problem.
+
+    PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin
+    # (and, behind a proxy, export https_proxy/http_proxy/all_proxy in the line)
+
+    17 9 * * *   cd $REPO && git pull -q && python tools/local_source_archive.py >> ~/.ssa-archive.log 2>&1
+    47 10 * * *  cd $REPO && SSA_MODELS=... SSA_ELICITATION=only:web,web+superfc \
+                   SSA_OPENROUTER=kimi SSA_MAX_SPEND=6 python -m ssa.refresh >> ~/.ssa-predict.log 2>&1
+
+Provider keys live in `.env` beside the checkout (never committed); the model
+roster and the spend ceiling are environment variables, so the schedule is the
+only thing that has to be edited on the machine. Check the logs for a line
+reading "forecast files filed: N" -- git output alone does not mean the run
+did anything.
 """
 import json
 import os
