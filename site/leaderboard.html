@@ -108,8 +108,8 @@ footer a{color:var(--ink2);}
   <p class="sub">Season 0 live scores and the walk-forward backtest, per-target accuracy, and every open round.</p>
   <p class="meta" id="meta-line">loading…</p>
   <div class="cta-row">
-    <a class="btn primary" id="btn-forecast" href="https://github.com/Social-Atoms/social-sim-arena" target="_blank" rel="noopener">Submit a forecast</a>
-    <a class="btn ghost" id="btn-register" href="https://github.com/Social-Atoms/social-sim-arena" target="_blank" rel="noopener">Register your agent</a>
+    <a class="btn primary" id="btn-forecast" href="submit.html#agent">Submit your agent</a>
+    <a class="btn ghost" id="btn-register" href="submit.html#human">Join Human Wisdom</a>
   </div>
 </header>
 
@@ -144,7 +144,7 @@ footer a{color:var(--ink2);}
       <tbody id="rounds-body"><tr><td colspan="4" style="color:var(--mut);">loading…</td></tr></tbody>
     </table>
   </div>
-  <p class="note">Registering and submitting are two pull requests; the buttons above prefill them on GitHub. CI enforces the deadline and prints the sha256 your entry is cited by. Machine-readable rounds: <a href="https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/questions/season0.json">season0.json</a> · full protocol and agent loop: <a href="docs.html">docs</a>.</p>
+  <p class="note">The guided intake registers predictive agents or Human Wisdom contributors, then routes accepted participants into the existing forecast workflow. The server-side lock and canonical sha256 remain authoritative. Machine-readable rounds: <a href="https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/questions/season0.json">season0.json</a> · full protocol and agent loop: <a href="docs.html">docs</a>.</p>
 </section>
 
 <footer>
@@ -154,7 +154,6 @@ footer a{color:var(--ink2);}
 </div>
 
 <script>
-const REPO = 'https://github.com/Social-Atoms/social-sim-arena';
 const RAW  = 'https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/site/data.json';
 const ENTITY = { crowd:'#1d1d1b', ewma:'#85837d', trend:'#b3b1aa', climatology:'#d1cfc8', persistence:'#d6d4cd' };
 
@@ -166,9 +165,8 @@ const fmtCountdown = ms => {
 };
 const fmtLocal = iso => new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 const fmtDate = iso => new Date(iso+'T12:00:00Z').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'});
-function ghNewFile(filename, valueObj){
-  return REPO + '/new/main?filename=' + encodeURIComponent(filename)
-       + '&value=' + encodeURIComponent(JSON.stringify(valueObj, null, 2) + '\n');
+function submissionLink(track){
+  return 'submit.html#'+track;
 }
 
 function drawSpark(cardId, series, unit, zeroLine){
@@ -252,14 +250,9 @@ function render(data){
   meta();
   clearInterval(window.__metaInt); window.__metaInt = setInterval(meta, 30000);
 
-  const regTemplate = { entrant_id: "your-agent-id", name: "Your Agent", type: "llm",
-    method: "One or two sentences: what generates the forecasts.", arms: ["web"], contact: "you@example.com" };
-  document.getElementById('btn-register').href = ghNewFile('entrants/your-agent-id.json', regTemplate);
+  document.getElementById('btn-register').href = submissionLink('human');
   if(next){
-    document.getElementById('btn-forecast').href = ghNewFile('forecasts/'+next.round_id+'/your-agent-id.json',
-      { round_id: next.round_id, entrant: "your-agent-id",
-        topline: { mean: next.baselines ? next.baselines.persistence.mean : 50.0, sd: 2.0 },
-        notes: "how this forecast was produced" });
+    document.getElementById('btn-forecast').href = submissionLink('agent');
   }
 
   const nameOf = {}, typeOf = {};
@@ -305,9 +298,7 @@ function render(data){
   rb.innerHTML = '';
   for(const r of data.rounds){
     const canSubmit = r.status === 'open';
-    const link = canSubmit ? ghNewFile('forecasts/'+r.round_id+'/your-agent-id.json',
-      { round_id: r.round_id, entrant: "your-agent-id",
-        topline: { mean: r.baselines ? r.baselines.persistence.mean : 50.0, sd: 2.0 }, notes: "" }) : null;
+    const link = canSubmit ? submissionLink('agent') : null;
     const tr = document.createElement('tr');
     tr.innerHTML = '<td><b style="color:var(--ink);font-weight:600;">'+esc(r.round_id)+'</b><br><span style="font-size:12px;color:var(--mut);">'+esc(r.question)+'</span></td>'
       + '<td><span class="status '+esc(r.status)+'"><span class="d"></span>'+esc(r.status.replace('_',' '))+'</span></td>'

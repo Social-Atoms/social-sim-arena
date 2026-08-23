@@ -299,11 +299,15 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
     for r in season["rounds"]:
         row = {k: r[k] for k in ("round_id", "tracker", "series", "question", "unit",
                                   "release_at", "release_estimated", "lock_at", "resolve")}
-        # Carried through so the site and every downstream consumer can tell
-        # the round types apart without re-reading questions/season0.json.
-        for k in ("target_type", "cells"):
+        # The submission questionnaire renders a type-specific answer control.
+        # Keep the type and any type-specific answer metadata in the public
+        # payload rather than forcing the browser to re-read season0.json or
+        # infer a contract from the unit/question wording. Older definitions
+        # predate target_type and are numeric distributions.
+        row["target_type"] = r.get("target_type", "continuous_normal")
+        for k in ("cells", "options"):
             if k in r:
-                row[k] = r[k]
+                row[k] = list(r[k])
         row["status"] = round_status(r, resolved, now)
         if ranking_round.is_ranking(r):
             # None of the scalar branch below, and no lock snapshot. A ranking
