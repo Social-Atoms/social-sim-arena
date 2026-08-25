@@ -105,13 +105,38 @@ def archive_trends():
     return ok, failed
 
 
+def basket_of(round_def):
+    """The five queries a Google Trends round is scored against, or None.
+
+    Two round shapes name a basket and they name it differently. A ranking
+    round carries the queries inline (`ranking.items`); a share round carries
+    `cells`, one series id per brand, and the basket lives in the series
+    registry under `trends_basket.basket`. Reading only the first shape is how
+    this courier quietly stopped archiving on the day the basket rounds were
+    converted from rankings to shares -- it reported "0 baskets" for two days
+    with a zero exit status, because "no round names a basket" and "every
+    basket round changed shape" look identical from here.
+    """
+    if round_def.get("tracker") != "google_trends":
+        return None
+    inline = (round_def.get("ranking") or {}).get("items")
+    if inline:
+        return tuple(inline), (round_def.get("ranking") or {}).get(
+            "geo", trends_adapter.GEO)
+    for cell in round_def.get("cells") or []:
+        cfg = (series_registry.SERIES.get(cell) or {}).get("trends_basket")
+        if cfg:
+            return tuple(cfg["basket"]), cfg.get("geo", trends_adapter.GEO)
+    return None
+
+
 def archive_trends_baskets():
-    """One comparison fetch per distinct basket named by a ranking round.
+    """One comparison fetch per distinct basket named by a Trends round.
 
     Baskets come from the season file, not the series registry: the basket IS
-    part of the round's frozen contract (`ranking.items`), and archiving
-    exactly what the rounds name keeps this courier from drifting away from
-    the questions it exists to resolve.
+    part of the round's frozen contract, and archiving exactly what the rounds
+    name keeps this courier from drifting away from the questions it exists to
+    resolve.
     """
     season_path = os.path.join(__file__.rsplit("/", 2)[0],
                                "questions", "season0.json")
@@ -119,10 +144,9 @@ def archive_trends_baskets():
         season = json.load(f)
     seen, ok, failed = set(), 0, []
     for r in season["rounds"]:
-        spec = r.get("ranking") or {}
-        if r.get("tracker") != "google_trends" or not spec.get("items"):
+        key = basket_of(r)
+        if key is None:
             continue
-        key = (tuple(spec["items"]), spec.get("geo", trends_adapter.GEO))
         if key in seen:
             continue
         seen.add(key)
@@ -131,6 +155,11 @@ def archive_trends_baskets():
             ok += 1
         except Exception as e:                                  # noqa: BLE001
             failed.append(f"{r['round_id']}: {type(e).__name__}: {str(e)[:120]}")
+    # A Trends round on the board with no basket behind it resolves against
+    # nothing, so say so here rather than at resolution time in September.
+    wanted = sum(1 for r in season["rounds"] if basket_of(r))
+    if wanted and not seen:
+        failed.append("google_trends rounds exist but none named a basket")
     return ok, failed
 
 
