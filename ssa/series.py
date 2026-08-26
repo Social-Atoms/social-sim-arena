@@ -22,7 +22,9 @@ from . import crosstab
 from .adapters import aaii as aaii_adapter
 from .adapters import civiqs as civiqs_adapter
 from .adapters import confboard as confboard_adapter
+from .adapters import hhpoll as hhpoll_adapter
 from .adapters import pentaesi as pentaesi_adapter
+from .adapters import sce as sce_adapter
 from .adapters import silverbulletin as sb
 from .adapters import trends as trends_adapter
 from .adapters import umich as umich_adapter
@@ -1082,6 +1084,73 @@ SERIES["esi_headline"] = {
 }
 
 
+_SCE_METHODOLOGY = (
+    "Survey of Consumer Expectations, Federal Reserve Bank of New York; "
+    "rotating internet panel of about 1,300 US household heads. Each "
+    "respondent assigns probabilities to inflation outcome bins; the "
+    "published number is the median across respondents of the density "
+    "means, in percent. Rows are dated by the reference month; the release "
+    "lands early the following month, on a date preannounced on the NY Fed "
+    "economic-indicators calendar. The workbook carries its own license "
+    "sheet granting a worldwide, royalty-free right to reproduce and "
+    "distribute the published data.")
+
+SERIES["sce_inflation_1y"] = {
+    "label": "NY Fed SCE 1-year inflation expectations",
+    "tracker": "ny_fed_sce",
+    "publisher": ("The Federal Reserve Bank of New York: a monthly internet "
+                  "survey of a rotating panel of about 1,300 US household "
+                  "heads, published by the bank as an official statistic "
+                  "with release dates announced months ahead."),
+    "source": "sce",
+    "sce": {"horizon": "1y"},
+    "unit": "percent, median expected inflation",
+    "cadence": ("monthly; released in the first ten days of the following "
+                "month, dates preannounced on the NY Fed CMD calendar"),
+    "question": ("NY Fed Survey of Consumer Expectations: median one-year-"
+                 "ahead expected inflation rate"),
+    "methodology": _SCE_METHODOLOGY,
+}
+
+SERIES["sce_inflation_3y"] = {
+    "label": "NY Fed SCE 3-year inflation expectations",
+    "tracker": "ny_fed_sce",
+    "publisher": SERIES["sce_inflation_1y"]["publisher"],
+    "source": "sce",
+    "sce": {"horizon": "3y"},
+    "unit": "percent, median expected inflation",
+    "cadence": SERIES["sce_inflation_1y"]["cadence"],
+    "question": ("NY Fed Survey of Consumer Expectations: median three-year-"
+                 "ahead expected inflation rate"),
+    "methodology": _SCE_METHODOLOGY,
+}
+
+SERIES["hh_trump_approval"] = {
+    "label": "Harvard-Harris Trump approval",
+    "tracker": "harvard_harris",
+    "publisher": ("Harvard CAPS and The Harris Poll, jointly: a roughly "
+                  "monthly online survey of US registered voters, published "
+                  "as PDF toplines with no preannounced calendar; some "
+                  "months are skipped."),
+    "source": "hhpoll",
+    "unit": "% approve",
+    "cadence": ("roughly monthly, no preannounced schedule; rows dated by "
+                "the day the topline was published, never the fielding day"),
+    "question": ("Harvard CAPS/Harris Poll: percent who approve (strongly "
+                 "or somewhat) of the job Donald J. Trump is doing as "
+                 "President, among surveyed US registered voters"),
+    "methodology": (
+        "Harvard CAPS/Harris Poll online survey, roughly 1,700-2,750 US "
+        "registered voters per wave, weighted to the US general adult "
+        "population; approve is the published strongly/somewhat net from "
+        "the topline PDF (question code M3ALT). Rows are dated by the "
+        "production stamp -- the day the number became public -- so a "
+        "late-published wave can never slide into history a forecaster "
+        "already locked against. The series reads only the committed "
+        "vintages under sources/hhpoll/; a new wave enters when a "
+        "maintainer fetches its PDF."),
+}
+
 # --- Google Trends: the market-research track -------------------------------
 #
 # The first two *behavioral* series in the registry: nobody was asked anything.
@@ -1582,6 +1651,16 @@ def build_all(sources=None):
     # release the moment the page shows one (write-once, see the adapter).
     if "confboard" in need and "confboard" not in src:
         src["confboard"] = confboard_adapter.history()
+    # One workbook download shared by both SCE horizons; write-once dated
+    # capture on success, newest archived vintage (with a loud warning) on
+    # fetch failure -- the confboard contract, on an xlsx.
+    if "sce" in need and "sce" not in src:
+        src["sce"] = sce_adapter.history()
+    # Harvard-Harris publishes no calendar and no derivable URL, so the
+    # archive is the source of truth and nothing here fetches on its own; a
+    # new wave is a maintainer passing hhpoll.fetch a URL.
+    if "hhpoll" in need and "hhpoll" not in src:
+        src["hhpoll"] = hhpoll_adapter.load()
     # One workbook download carries every wave of every subgroup, so all
     # sixteen crosstab cells share a single request the way the five basket
     # series share one Trends comparison. `src["yougov_xtab"]` holds *parsed*
@@ -1648,6 +1727,11 @@ def build_all(sources=None):
             out[sid] = list(src["pentaesi"])
         elif spec["source"] == "confboard":
             out[sid] = list(src["confboard"])
+        elif spec["source"] == "sce":
+            out[sid] = sce_adapter.to_series(src["sce"],
+                                             spec["sce"]["horizon"])
+        elif spec["source"] == "hhpoll":
+            out[sid] = hhpoll_adapter.to_series(src["hhpoll"])
         elif spec["source"] == "yougov_xtab":
             # Derived once for the whole roster, not once per cell. Sixteen
             # independent aggregations of one payload would be sixteen chances
