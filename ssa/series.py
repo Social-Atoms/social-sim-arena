@@ -1246,10 +1246,26 @@ _trends_share("trends_share_disney", "Disney",
 # young echo the national line at 0.97+. But a profile scored jointly with the
 # energy score is exactly where a flat cell still carries information -- a
 # model that believes Democrats might move books real loss against one that
-# knows they will not -- so every cell is collected daily and none except
-# Republicans gets its own round. Labels are byte-exact from the dashboard's
+# knows they will not -- so every cell is collected daily whether or not it
+# also runs as its own round. Labels are byte-exact from the dashboard's
 # own demographics list (fetched 2026-08-18); a typo'd label is a hard error
 # in the adapter, never a silently-national series.
+#
+# Which cells *do* also stand alone as weekly scalar rounds is
+# `_STANDALONE_CELLS` below. Republicans and independents came first; four
+# more were added after a movement check on the archive as of 2026-08-26
+# (mean absolute week-over-week change of the Friday net over the trailing
+# 26 weeks, gate ~0.5 pts/wk, capped at the strongest movers):
+#
+#     kept:     men 0.92, adults 35-49 0.84, Hispanic/Latino 0.80,
+#               adults 50-64 0.77 -- the last also has the lowest correlation
+#               of weekly changes with the national series of any candidate
+#               (0.75, Republicans' company as a cut that moves on its own)
+#     cleared the gate, not kept: non-college 0.77 and White 0.76 echo the
+#               national line at 0.94+; 18-34 0.71, postgrad 0.65, other-race
+#               0.65, college 0.63, 65+ 0.59 and women 0.50 move less than
+#               every kept cell
+#     rejected: Black 0.29 and Democrats 0.09, floor-bound
 _PROFILE_CELLS = [
     # id suffix          axis          label                        short
     ("dem",              "party",      "Democrat",                  "Democrats"),
@@ -1269,6 +1285,14 @@ _PROFILE_CELLS = [
     ("female",           "gender",     "Female",                    "women"),
 ]
 
+# Cells that also run as their own single-number weekly rounds in
+# `questions/season0.json` ("rep" is registered above the loop, listed here so
+# the roster is complete in one place). Adding a cell here without adding its
+# rounds -- or the reverse -- makes the methodology text lie to entrants about
+# the question in front of them; the two change together.
+_STANDALONE_CELLS = ("rep", "ind", "male", "age_35_49", "age_50_64",
+                     "race_hispanic")
+
 for _sfx, _axis, _label, _short in _PROFILE_CELLS:
     SERIES[f"civiqs_net_approval_{_sfx}"] = {
         "label": f"Civiqs Trump net approval, {_short}",
@@ -1284,8 +1308,8 @@ for _sfx, _axis, _label, _short in _PROFILE_CELLS:
                      "(percent approve minus percent disapprove) among US "
                      f"registered voters, {_short} only, as the dashboard "
                      "shows it on Friday"),
-        # Two cells -- Republicans and Independents -- also carry their own
-        # single-number rounds, so the sentence about how a cell is scored is
+        # Some cells (`_STANDALONE_CELLS`) also carry their own single-number
+        # rounds, so the sentence about how a cell is scored is
         # written per cell rather than once for all sixteen. Saying "scored
         # jointly, not as its own round" on a cell that does have its own round
         # would tell an entrant something false about the question in front of
@@ -1295,7 +1319,7 @@ for _sfx, _axis, _label, _short in _PROFILE_CELLS:
             "One cell of the sixteen-cell population profile, scored jointly "
             "with the other cells"
             + (" and also asked as its own single-number round."
-               if _sfx in ("rep", "ind") else ", not as its own round.")),
+               if _sfx in _STANDALONE_CELLS else ", not as its own round.")),
         # No `survey` instrument: personas.weights_for cannot express a
         # subgroup-only population -- same refusal as civiqs_net_approval_rep.
     }
