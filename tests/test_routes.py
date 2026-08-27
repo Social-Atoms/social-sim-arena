@@ -296,12 +296,20 @@ def test_a_typo_raises_rather_than_routing_nothing():
 def test_the_pinned_qwen_snapshot_is_deliberately_not_routable():
     """OpenRouter carries `qwen/qwen3.7-max`, the floating alias, not the dated
     snapshot this entrant is pinned to. An alias that rolls forward mid-season
-    swaps the entrant, and scores from before and after are not comparable."""
+    swaps the entrant, and scores from before and after are not comparable.
+
+    qwen-3.8 is different and IS routable (added 2026-08-26, DashScope gateway
+    drops on large prompts): its direct route already runs the floating alias
+    `qwen3.8-max`, so OpenRouter's `qwen/qwen3.8-max` changes the host, not
+    the kind of pointer -- the objection that keeps 3.7 out does not apply."""
     assert "qwen-3.7" not in harness.OPENROUTER_MODELS
-    assert "qwen-3.8" not in harness.OPENROUTER_MODELS
     assert harness.MODELS["qwen-3.7"]["model"] == "qwen3.7-max-2026-05-20"
     with Routed("1"):
         assert harness.route("qwen-3.7")["via"] == "direct"
+    assert harness.OPENROUTER_MODELS["qwen-3.8"] == "qwen/qwen3.8-max"
+    assert harness.MODELS["qwen-3.8"]["model"] == "qwen3.8-max"
+    with Routed("kimi,qwen-3.8"):
+        assert harness.route("qwen-3.8")["via"] == "openrouter"
 
 
 def test_every_routable_model_is_a_model_and_every_slug_is_vendor_qualified():

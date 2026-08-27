@@ -213,16 +213,24 @@ OPENROUTER_ENV = "OPEN_ROUTER"
 #
 # Every entry is a model OpenRouter's public catalogue actually lists, checked
 # against https://openrouter.ai/api/v1/models (keyless, free) rather than
-# guessed. Two models are deliberately absent:
+# guessed. One model is deliberately absent:
 #
 #   qwen-3.7  OpenRouter carries `qwen/qwen3.7-max`, the floating alias, and
 #             not the dated `qwen3.7-max-2026-05-20` snapshot this entrant is
 #             pinned to. An alias that rolls forward mid-season silently swaps
 #             the entrant, and scores from before and after are not comparable.
 #             The pin is worth more than the redundancy.
-#   qwen-3.8  likewise `qwen/qwen3.8-max`; kept out for symmetry with 3.7 so
-#             the two Qwen entrants are never served from different kinds of
-#             pointer.
+#
+# qwen-3.8 used to be kept out too, for symmetry with 3.7 -- but its direct
+# route already runs the floating alias `qwen3.8-max` (DashScope publishes no
+# dated snapshot for it), so routing it through OpenRouter's `qwen/qwen3.8-max`
+# changes the host, not the kind of pointer. Added 2026-08-26 after the
+# DashScope gateway dropped the connection on three consecutive runs, both
+# arms, exactly on the two large-prompt round types (ranking and profile) --
+# small prompts filed fine, so this is a gateway limit, not a model failure.
+# `call_identity` hashes the base, so the switch correctly re-runs the failed
+# cells and cannot silently reuse a stale direct-route reply. (Catalogue
+# checked 2026-08-26: `qwen/qwen3.8-max` is listed.)
 OPENROUTER_MODELS = {
     "gpt-5.6-luna": "openai/gpt-5.6-luna",
     "gpt-5.6-sol": "openai/gpt-5.6-sol",
@@ -234,6 +242,7 @@ OPENROUTER_MODELS = {
     "gemini-pro": "google/gemini-3.1-pro-preview",
     "gemini-flash": "google/gemini-3.6-flash",
     "grok": "x-ai/grok-4.5",
+    "qwen-3.8": "qwen/qwen3.8-max",
     "deepseek-pro": "deepseek/deepseek-v4-pro",
     "deepseek-flash": "deepseek/deepseek-v4-flash",
     "kimi": "moonshotai/kimi-k3",
