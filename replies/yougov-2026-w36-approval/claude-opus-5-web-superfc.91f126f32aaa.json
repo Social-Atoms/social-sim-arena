@@ -1,0 +1,15 @@
+{
+  "entrant": "claude-opus-5-web-superfc",
+  "input_hash": "91f126f32aaa",
+  "logged_at": "2026-08-27T22:15:52Z",
+  "model": "anthropic/claude-opus-5",
+  "prompt_sha256": "a45c2dc11a0452f67f1ac38897a07c46405e1619b332c116145cb44e302ea1ee",
+  "reply": "1. **Outside view.** The last ten waves: 38, 35, 37, 36, 39, 34, 36, 33, 35, 36 \u2014 mean \u2248 35.9, range 33\u201339. Week-to-week absolute changes are roughly 1\u20133 points (mean |\u0394| \u2248 2.0), which is about what you'd expect from sampling noise alone on n\u22481,500 (\u00b11.2 pts sd on a single share, so ~1.7 pts sd on a difference), plus a little real movement. There's a mild downward drift since June (38 \u2192 ~35\u201336) but nothing dramatic. A naive extrapolation blending the last value (36) with the trailing mean (35.5\u201336) and a small negative drift gives ~35.3\u201335.7. Mean-reversion matters: after a 36 following a 33, the best guess is near the local average, not the last print.\n\n2. **Inside view.** Environment is negative but not newly so: Reuters/Ipsos hit a series low of 33 in mid-August, AP-NORC 33, Republican-base erosion stories, gas prices up on the Iran/oil disruption, plus the Economist/YouGov state-level projection story showing Trump underwater in 47 states. None of that is a fresh shock relative to what the last three waves (33, 35, 36) already absorbed; the 36 last week suggests no ongoing collapse. Worth about \u22120.3 as a drift term. Late-August/Labor Day-adjacent fielding sometimes shifts panel composition slightly, but YouGov weighting mostly handles this; treat as noise, not bias. Nothing here justifies moving more than a fraction of a point off the local mean, so ~35.4.\n\n3. **Pre-mortem.** Most likely way I'm badly wrong: a single-wave excursion, either a 32\u201333 low (if gas prices/war coverage bites and the panel produces another dip like the Aug 8 wave) or a 38\u201339 bounce like July 23. This series produces such excursions roughly one wave in five, in both directions. Because they're roughly symmetric, they don't shift my mean much, but they do mean I must not use a narrow sd. Secondary risk: a genuine regime break (scandal, escalation) pushing sub-32 \u2014 low probability, but it fattens the left tail slightly. Correct by keeping the mean essentially at the local average and widening sd rather than chasing the negative headlines.\n\n4. **Calibration.** Observed sd of the last ten values is ~1.7; mean |\u0394| of ~2.0 implies a step sd of ~2.3, but part of that is mean-reverting noise, so forecasting the level around the local mean should be a bit tighter than the step sd. An sd of ~1.7 puts 33.7\u201337.1 inside one sd, which historically captures about two-thirds of these waves (7 of the last 10 fall in that band). That seems right; I'll add a touch for left-tail risk.\n\n{\"mean\": 35.4, \"sd\": 1.8}",
+  "round_id": "yougov-2026-w36-approval",
+  "usage": {
+    "input_tokens": 4044,
+    "output_tokens": 1130,
+    "thinking_tokens": 148
+  },
+  "via": "openrouter"
+}
