@@ -1,14 +1,14 @@
 {
- "generated_at": "2026-08-27T22:22:01Z",
+ "generated_at": "2026-08-28T22:24:31Z",
  "season": 0,
  "trackers": {
   "trump_approval_avg": {
    "label": "Trump approval, adjusted average",
    "unit": "% approve",
-   "value": 39.7,
-   "asof": "2026-08-23",
-   "delta_30d": -0.9,
-   "n_polls_window": 40,
+   "value": 39.9,
+   "asof": "2026-08-24",
+   "delta_30d": -0.5,
+   "n_polls_window": 41,
    "source": "Silver Bulletin poll database, house-effect adjusted here, 21-day window"
   },
   "generic_ballot_avg": {
@@ -37,9 +37,9 @@
   "umich_sentiment": {
    "label": "Michigan consumer sentiment",
    "unit": "index",
-   "value": 51.0,
+   "value": 51.7,
    "asof": "2026-08-01",
-   "next_release": "2026-08-28T14:00:00Z",
+   "next_release": "2026-09-11T14:00:00Z",
    "source": "Surveys of Consumers, University of Michigan (sca.isr.umich.edu): tbmics.csv for finals and tbcics.csv for the current preliminary, newest reading 2026-08-01"
   }
  },
@@ -2839,7 +2839,7 @@
    "lock_at": "2026-08-26T14:00:00Z",
    "resolve": "official value published at sca.isr.umich.edu, 10:00 ET",
    "target_type": "continuous_normal",
-   "status": "locked",
+   "status": "resolved",
    "history_source": "lock snapshot",
    "baselines": {
     "persistence": {
@@ -2864,6 +2864,13 @@
     }
    },
    "scoreable": true,
+   "resolution": {
+    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
+    "observed_date": "2026-08-01",
+    "resolved_at": "2026-08-28T22:24:17Z",
+    "series": "umich_sentiment",
+    "value": 51.7
+   },
    "n_forecasts": 82,
    "forecasts": {
     "claude-fable-zeroshot": {
@@ -3210,23 +3217,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 51.0,
+     "mean": 51.7,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 49.03,
-     "sd": 9.16,
+     "mean": 49.37,
+     "sd": 9.27,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 51.47,
-     "sd": 3.27,
+     "mean": 51.75,
+     "sd": 3.21,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 58.08,
-     "sd": 8.26,
+     "mean": 58.11,
+     "sd": 8.24,
      "method": "climatology"
     }
    },
@@ -3266,8 +3273,8 @@
      "sd": 5.0
     },
     "climatology": {
-     "mean": 58.08,
-     "sd": 8.26
+     "mean": 58.11,
+     "sd": 8.24
     },
     "deepseek-flash-zeroshot": {
      "mean": 75.0,
@@ -3286,8 +3293,8 @@
      "sd": 3.5
     },
     "ewma": {
-     "mean": 51.47,
-     "sd": 3.27
+     "mean": 51.75,
+     "sd": 3.21
     },
     "gemini-flash-zeroshot": {
      "mean": 76.0,
@@ -3346,7 +3353,7 @@
      "sd": 4.1
     },
     "persistence": {
-     "mean": 51.0,
+     "mean": 51.7,
      "sd": 1.5
     },
     "qwen-3.7-zeroshot": {
@@ -3366,8 +3373,8 @@
      "sd": 4.0
     },
     "trend": {
-     "mean": 49.03,
-     "sd": 9.16
+     "mean": 49.37,
+     "sd": 9.27
     }
    }
   },
@@ -4745,11 +4752,19 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 52,
+   "n_forecasts": 74,
    "forecasts": {
     "claude-opus-5-superfc": {
      "mean": 43.6,
      "sd": 1.7
+    },
+    "claude-opus-5-web-superfc": {
+     "mean": 42.4,
+     "sd": 1.4
+    },
+    "claude-opus-5-web": {
+     "mean": 42.7,
+     "sd": 1.0
     },
     "claude-opus-5-zeroshot-superfc": {
      "mean": 43.5,
@@ -4766,6 +4781,14 @@
     "claude-sonnet-superfc": {
      "mean": 43.5,
      "sd": 1.0
+    },
+    "claude-sonnet-web-superfc": {
+     "mean": 42.8,
+     "sd": 1.3
+    },
+    "claude-sonnet-web": {
+     "mean": 42.9,
+     "sd": 0.9
     },
     "claude-sonnet-zeroshot-superfc": {
      "mean": 41.5,
@@ -4787,9 +4810,13 @@
      "mean": 43.7,
      "sd": 1.5
     },
+    "deepseek-flash-web-superfc": {
+     "mean": 42.3,
+     "sd": 2.3
+    },
     "deepseek-flash-web": {
-     "mean": 41.5,
-     "sd": 3.0
+     "mean": 42.3,
+     "sd": 2.0
     },
     "deepseek-flash-zeroshot-superfc": {
      "mean": 46.0,
@@ -4806,6 +4833,14 @@
     "deepseek-pro-superfc": {
      "mean": 43.8,
      "sd": 1.2
+    },
+    "deepseek-pro-web-superfc": {
+     "mean": 42.7,
+     "sd": 1.5
+    },
+    "deepseek-pro-web": {
+     "mean": 43.0,
+     "sd": 1.1
     },
     "deepseek-pro-zeroshot-superfc": {
      "mean": 43.5,
@@ -4827,6 +4862,14 @@
      "mean": 43.7,
      "sd": 1.3
     },
+    "gemini-flash-web-superfc": {
+     "mean": 42.6,
+     "sd": 1.35
+    },
+    "gemini-flash-web": {
+     "mean": 42.45,
+     "sd": 0.85
+    },
     "gemini-flash-zeroshot-superfc": {
      "mean": 42.5,
      "sd": 3.8
@@ -4842,6 +4885,14 @@
     "gemini-pro-superfc": {
      "mean": 43.5,
      "sd": 1.1
+    },
+    "gemini-pro-web-superfc": {
+     "mean": 42.9,
+     "sd": 1.1
+    },
+    "gemini-pro-web": {
+     "mean": 42.4,
+     "sd": 0.8
     },
     "gemini-pro-zeroshot-superfc": {
      "mean": 42.5,
@@ -4859,6 +4910,10 @@
      "mean": 43.5,
      "sd": 2.0
     },
+    "glm-web-superfc": {
+     "mean": 41.8,
+     "sd": 2.0
+    },
     "glm-zeroshot-superfc": {
      "mean": 44.0,
      "sd": 4.0
@@ -4870,6 +4925,14 @@
     "gpt-5.6-luna-superfc": {
      "mean": 43.8,
      "sd": 1.6
+    },
+    "gpt-5.6-luna-web-superfc": {
+     "mean": 42.6,
+     "sd": 1.5
+    },
+    "gpt-5.6-luna-web": {
+     "mean": 42.5,
+     "sd": 1.3
     },
     "gpt-5.6-luna-zeroshot-superfc": {
      "mean": 43.5,
@@ -4887,6 +4950,14 @@
      "mean": 43.5,
      "sd": 2.0
     },
+    "gpt-5.6-terra-web-superfc": {
+     "mean": 42.9,
+     "sd": 1.4
+    },
+    "gpt-5.6-terra-web": {
+     "mean": 42.6,
+     "sd": 0.9
+    },
     "gpt-5.6-terra-zeroshot-superfc": {
      "mean": 44.0,
      "sd": 4.5
@@ -4903,6 +4974,14 @@
      "mean": 43.4,
      "sd": 1.7
     },
+    "grok-web-superfc": {
+     "mean": 42.8,
+     "sd": 1.15
+    },
+    "grok-web": {
+     "mean": 42.8,
+     "sd": 1.3
+    },
     "grok-zeroshot-superfc": {
      "mean": 44.0,
      "sd": 3.5
@@ -4918,6 +4997,14 @@
     "kimi-superfc": {
      "mean": 43.6,
      "sd": 1.5
+    },
+    "kimi-web-superfc": {
+     "mean": 42.7,
+     "sd": 1.4
+    },
+    "kimi-web": {
+     "mean": 41.4,
+     "sd": 1.6
     },
     "kimi-zeroshot-superfc": {
      "mean": 44.0,
@@ -4938,6 +5025,14 @@
     "qwen-3.8-superfc": {
      "mean": 43.7,
      "sd": 1.7
+    },
+    "qwen-3.8-web-superfc": {
+     "mean": 42.6,
+     "sd": 1.8
+    },
+    "qwen-3.8-web": {
+     "mean": 42.9,
+     "sd": 0.9
     },
     "qwen-3.8-zeroshot-superfc": {
      "mean": 44.5,
@@ -4968,7 +5063,7 @@
    "lock_at": "2026-08-26T14:00:00Z",
    "resolve": "dashboard Friday value, from the daily archive",
    "target_type": "continuous_normal",
-   "status": "locked",
+   "status": "resolved",
    "history_source": "lock snapshot",
    "baselines": {
     "persistence": {
@@ -4993,6 +5088,13 @@
     }
    },
    "scoreable": true,
+   "resolution": {
+    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
+    "observed_date": "2026-08-28",
+    "resolved_at": "2026-08-28T22:24:17Z",
+    "series": "civiqs_net_approval",
+    "value": -23.3
+   },
    "n_forecasts": 75,
    "forecasts": {
     "claude-opus-5-superfc": {
@@ -5311,23 +5413,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": -22.6,
+     "mean": -23.3,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": -24.1,
-     "sd": 1.33,
+     "mean": -23.86,
+     "sd": 1.25,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": -23.12,
+     "mean": -23.19,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": -21.3,
-     "sd": 1.39,
+     "mean": -21.47,
+     "sd": 1.37,
      "method": "climatology"
     }
    },
@@ -5335,20 +5437,20 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "mean": -21.3,
-     "sd": 1.39
+     "mean": -21.47,
+     "sd": 1.37
     },
     "ewma": {
-     "mean": -23.12,
+     "mean": -23.19,
      "sd": 1.0
     },
     "persistence": {
-     "mean": -22.6,
+     "mean": -23.3,
      "sd": 1.5
     },
     "trend": {
-     "mean": -24.1,
-     "sd": 1.33
+     "mean": -23.86,
+     "sd": 1.25
     }
    }
   },
@@ -5363,7 +5465,7 @@
    "lock_at": "2026-08-26T14:00:00Z",
    "resolve": "dashboard Friday value, Republicans filter, from the daily archive",
    "target_type": "continuous_normal",
-   "status": "locked",
+   "status": "awaiting_resolution",
    "history_source": "lock snapshot",
    "baselines": {
     "persistence": {
@@ -7739,23 +7841,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": -22.6,
+     "mean": -23.3,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": -24.35,
-     "sd": 1.43,
+     "mean": -24.06,
+     "sd": 1.37,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": -23.12,
+     "mean": -23.19,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": -21.3,
-     "sd": 1.39,
+     "mean": -21.47,
+     "sd": 1.37,
      "method": "climatology"
     }
    },
@@ -7763,20 +7865,20 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "mean": -21.3,
-     "sd": 1.39
+     "mean": -21.47,
+     "sd": 1.37
     },
     "ewma": {
-     "mean": -23.12,
+     "mean": -23.19,
      "sd": 1.0
     },
     "persistence": {
-     "mean": -22.6,
+     "mean": -23.3,
      "sd": 1.5
     },
     "trend": {
-     "mean": -24.35,
-     "sd": 1.43
+     "mean": -24.06,
+     "sd": 1.37
     }
    }
   },
@@ -7849,23 +7951,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": -22.6,
+     "mean": -23.3,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": -24.35,
-     "sd": 1.52,
+     "mean": -24.27,
+     "sd": 1.47,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": -23.12,
+     "mean": -23.19,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": -21.3,
-     "sd": 1.39,
+     "mean": -21.47,
+     "sd": 1.37,
      "method": "climatology"
     }
    },
@@ -7873,20 +7975,20 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "mean": -21.3,
-     "sd": 1.39
+     "mean": -21.47,
+     "sd": 1.37
     },
     "ewma": {
-     "mean": -23.12,
+     "mean": -23.19,
      "sd": 1.0
     },
     "persistence": {
-     "mean": -22.6,
+     "mean": -23.3,
      "sd": 1.5
     },
     "trend": {
-     "mean": -24.35,
-     "sd": 1.52
+     "mean": -24.27,
+     "sd": 1.47
     }
    }
   },
@@ -7959,23 +8061,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": -22.6,
+     "mean": -23.3,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": -24.35,
-     "sd": 1.61,
+     "mean": -24.27,
+     "sd": 1.57,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": -23.12,
+     "mean": -23.19,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": -21.3,
-     "sd": 1.39,
+     "mean": -21.47,
+     "sd": 1.37,
      "method": "climatology"
     }
    },
@@ -7983,20 +8085,20 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "mean": -21.3,
-     "sd": 1.39
+     "mean": -21.47,
+     "sd": 1.37
     },
     "ewma": {
-     "mean": -23.12,
+     "mean": -23.19,
      "sd": 1.0
     },
     "persistence": {
-     "mean": -22.6,
+     "mean": -23.3,
      "sd": 1.5
     },
     "trend": {
-     "mean": -24.35,
-     "sd": 1.61
+     "mean": -24.27,
+     "sd": 1.57
     }
    }
   },
@@ -8234,23 +8336,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 51.0,
+     "mean": 51.7,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 49.03,
-     "sd": 10.02,
+     "mean": 49.37,
+     "sd": 10.14,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 51.47,
-     "sd": 3.27,
+     "mean": 51.75,
+     "sd": 3.21,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 58.08,
-     "sd": 8.26,
+     "mean": 58.11,
+     "sd": 8.24,
      "method": "climatology"
     }
    },
@@ -8258,20 +8360,20 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "mean": 58.08,
-     "sd": 8.26
+     "mean": 58.11,
+     "sd": 8.24
     },
     "ewma": {
-     "mean": 51.47,
-     "sd": 3.27
+     "mean": 51.75,
+     "sd": 3.21
     },
     "persistence": {
-     "mean": 51.0,
+     "mean": 51.7,
      "sd": 1.5
     },
     "trend": {
-     "mean": 49.03,
-     "sd": 10.02
+     "mean": 49.37,
+     "sd": 10.14
     }
    }
   },
@@ -8286,7 +8388,7 @@
    "lock_at": "2026-08-28T14:00:00Z",
    "resolve": "Wikimedia daily top endpoint (top/en.wikipedia/all-access), the week's seven archived daily lists summed per article, exclusion rule main_page_and_namespaces_v1 applied, top 10 by weekly total, ties broken by title ascending. An article absent from a day's top-1000 contributes zero for that day.",
    "target_type": "ranking_list",
-   "status": "open",
+   "status": "locked",
    "baselines": null,
    "scoreable": true,
    "ranking": {
@@ -8428,7 +8530,8 @@
     "trends_share_netflix",
     "trends_share_disney"
    ],
-   "status": "open",
+   "status": "locked",
+   "history_source": "lock snapshot",
    "baselines": null,
    "scoreable": true,
    "profile": {
@@ -8447,36 +8550,36 @@
      "trends_share_disney": "Trends share of the five-brand basket: Disney"
     },
     "history_points": {
-     "trends_share_tesla": 52,
-     "trends_share_iphone": 52,
-     "trends_share_samsung": 52,
-     "trends_share_netflix": 52,
-     "trends_share_disney": 52
+     "trends_share_tesla": 53,
+     "trends_share_iphone": 53,
+     "trends_share_samsung": 53,
+     "trends_share_netflix": 53,
+     "trends_share_disney": 53
     },
     "baselines": {
      "persistence": {
       "trends_share_tesla": {
-       "mean": 9.09,
+       "mean": 9.38,
        "sd": 1.5,
        "method": "persistence"
       },
       "trends_share_iphone": {
-       "mean": 40.91,
+       "mean": 40.62,
        "sd": 1.5,
        "method": "persistence"
       },
       "trends_share_samsung": {
-       "mean": 13.64,
+       "mean": 12.5,
        "sd": 1.5,
        "method": "persistence"
       },
       "trends_share_netflix": {
-       "mean": 17.42,
+       "mean": 16.41,
        "sd": 1.5,
        "method": "persistence"
       },
       "trends_share_disney": {
-       "mean": 18.94,
+       "mean": 21.09,
        "sd": 1.5,
        "method": "persistence"
       }
@@ -8523,36 +8626,36 @@
      "trends_share_disney": "Trends share of the five-brand basket: Disney"
     },
     "history_points": {
-     "trends_share_tesla": 52,
-     "trends_share_iphone": 52,
-     "trends_share_samsung": 52,
-     "trends_share_netflix": 52,
-     "trends_share_disney": 52
+     "trends_share_tesla": 53,
+     "trends_share_iphone": 53,
+     "trends_share_samsung": 53,
+     "trends_share_netflix": 53,
+     "trends_share_disney": 53
     },
     "baselines": {
      "persistence": {
       "trends_share_tesla": {
-       "mean": 9.09,
+       "mean": 9.38,
        "sd": 1.5,
        "method": "persistence"
       },
       "trends_share_iphone": {
-       "mean": 40.91,
+       "mean": 40.62,
        "sd": 1.5,
        "method": "persistence"
       },
       "trends_share_samsung": {
-       "mean": 13.64,
+       "mean": 12.5,
        "sd": 1.5,
        "method": "persistence"
       },
       "trends_share_netflix": {
-       "mean": 17.42,
+       "mean": 16.41,
        "sd": 1.5,
        "method": "persistence"
       },
       "trends_share_disney": {
-       "mean": 18.94,
+       "mean": 21.09,
        "sd": 1.5,
        "method": "persistence"
       }
@@ -8599,36 +8702,36 @@
      "trends_share_disney": "Trends share of the five-brand basket: Disney"
     },
     "history_points": {
-     "trends_share_tesla": 52,
-     "trends_share_iphone": 52,
-     "trends_share_samsung": 52,
-     "trends_share_netflix": 52,
-     "trends_share_disney": 52
+     "trends_share_tesla": 53,
+     "trends_share_iphone": 53,
+     "trends_share_samsung": 53,
+     "trends_share_netflix": 53,
+     "trends_share_disney": 53
     },
     "baselines": {
      "persistence": {
       "trends_share_tesla": {
-       "mean": 9.09,
+       "mean": 9.38,
        "sd": 1.5,
        "method": "persistence"
       },
       "trends_share_iphone": {
-       "mean": 40.91,
+       "mean": 40.62,
        "sd": 1.5,
        "method": "persistence"
       },
       "trends_share_samsung": {
-       "mean": 13.64,
+       "mean": 12.5,
        "sd": 1.5,
        "method": "persistence"
       },
       "trends_share_netflix": {
-       "mean": 17.42,
+       "mean": 16.41,
        "sd": 1.5,
        "method": "persistence"
       },
       "trends_share_disney": {
-       "mean": 18.94,
+       "mean": 21.09,
        "sd": 1.5,
        "method": "persistence"
       }
@@ -8716,14 +8819,14 @@
      "civiqs_net_approval_age_50_64": 83,
      "civiqs_net_approval_age_65_up": 83,
      "civiqs_net_approval_race_white": 83,
-     "civiqs_net_approval_race_black": 83,
-     "civiqs_net_approval_race_hispanic": 83,
+     "civiqs_net_approval_race_black": 84,
+     "civiqs_net_approval_race_hispanic": 84,
      "civiqs_net_approval_race_other": 83,
-     "civiqs_net_approval_edu_noncollege": 83,
-     "civiqs_net_approval_edu_college": 83,
-     "civiqs_net_approval_edu_postgrad": 83,
-     "civiqs_net_approval_male": 83,
-     "civiqs_net_approval_female": 83
+     "civiqs_net_approval_edu_noncollege": 84,
+     "civiqs_net_approval_edu_college": 84,
+     "civiqs_net_approval_edu_postgrad": 84,
+     "civiqs_net_approval_male": 84,
+     "civiqs_net_approval_female": 84
     },
     "baselines": {
      "persistence": {
@@ -8768,12 +8871,12 @@
        "method": "persistence"
       },
       "civiqs_net_approval_race_black": {
-       "mean": -81.3,
+       "mean": -82.2,
        "sd": 1.5,
        "method": "persistence"
       },
       "civiqs_net_approval_race_hispanic": {
-       "mean": -34.3,
+       "mean": -35.8,
        "sd": 1.5,
        "method": "persistence"
       },
@@ -8783,27 +8886,27 @@
        "method": "persistence"
       },
       "civiqs_net_approval_edu_noncollege": {
-       "mean": -14.1,
+       "mean": -14.8,
        "sd": 1.5,
        "method": "persistence"
       },
       "civiqs_net_approval_edu_college": {
-       "mean": -31.2,
+       "mean": -31.1,
        "sd": 1.5,
        "method": "persistence"
       },
       "civiqs_net_approval_edu_postgrad": {
-       "mean": -48.2,
+       "mean": -49.8,
        "sd": 1.5,
        "method": "persistence"
       },
       "civiqs_net_approval_male": {
-       "mean": -10.8,
+       "mean": -11.7,
        "sd": 1.5,
        "method": "persistence"
       },
       "civiqs_net_approval_female": {
-       "mean": -33.4,
+       "mean": -33.7,
        "sd": 1.5,
        "method": "persistence"
       }
@@ -9153,14 +9256,14 @@
      "civiqs_net_approval_age_50_64": 83,
      "civiqs_net_approval_age_65_up": 83,
      "civiqs_net_approval_race_white": 83,
-     "civiqs_net_approval_race_black": 83,
-     "civiqs_net_approval_race_hispanic": 83,
+     "civiqs_net_approval_race_black": 84,
+     "civiqs_net_approval_race_hispanic": 84,
      "civiqs_net_approval_race_other": 83,
-     "civiqs_net_approval_edu_noncollege": 83,
-     "civiqs_net_approval_edu_college": 83,
-     "civiqs_net_approval_edu_postgrad": 83,
-     "civiqs_net_approval_male": 83,
-     "civiqs_net_approval_female": 83
+     "civiqs_net_approval_edu_noncollege": 84,
+     "civiqs_net_approval_edu_college": 84,
+     "civiqs_net_approval_edu_postgrad": 84,
+     "civiqs_net_approval_male": 84,
+     "civiqs_net_approval_female": 84
     },
     "baselines": {
      "persistence": {
@@ -9205,12 +9308,12 @@
        "method": "persistence"
       },
       "civiqs_net_approval_race_black": {
-       "mean": -81.3,
+       "mean": -82.2,
        "sd": 1.5,
        "method": "persistence"
       },
       "civiqs_net_approval_race_hispanic": {
-       "mean": -34.3,
+       "mean": -35.8,
        "sd": 1.5,
        "method": "persistence"
       },
@@ -9220,27 +9323,27 @@
        "method": "persistence"
       },
       "civiqs_net_approval_edu_noncollege": {
-       "mean": -14.1,
+       "mean": -14.8,
        "sd": 1.5,
        "method": "persistence"
       },
       "civiqs_net_approval_edu_college": {
-       "mean": -31.2,
+       "mean": -31.1,
        "sd": 1.5,
        "method": "persistence"
       },
       "civiqs_net_approval_edu_postgrad": {
-       "mean": -48.2,
+       "mean": -49.8,
        "sd": 1.5,
        "method": "persistence"
       },
       "civiqs_net_approval_male": {
-       "mean": -10.8,
+       "mean": -11.7,
        "sd": 1.5,
        "method": "persistence"
       },
       "civiqs_net_approval_female": {
-       "mean": -33.4,
+       "mean": -33.7,
        "sd": 1.5,
        "method": "persistence"
       }
@@ -9328,14 +9431,14 @@
      "civiqs_net_approval_age_50_64": 83,
      "civiqs_net_approval_age_65_up": 83,
      "civiqs_net_approval_race_white": 83,
-     "civiqs_net_approval_race_black": 83,
-     "civiqs_net_approval_race_hispanic": 83,
+     "civiqs_net_approval_race_black": 84,
+     "civiqs_net_approval_race_hispanic": 84,
      "civiqs_net_approval_race_other": 83,
-     "civiqs_net_approval_edu_noncollege": 83,
-     "civiqs_net_approval_edu_college": 83,
-     "civiqs_net_approval_edu_postgrad": 83,
-     "civiqs_net_approval_male": 83,
-     "civiqs_net_approval_female": 83
+     "civiqs_net_approval_edu_noncollege": 84,
+     "civiqs_net_approval_edu_college": 84,
+     "civiqs_net_approval_edu_postgrad": 84,
+     "civiqs_net_approval_male": 84,
+     "civiqs_net_approval_female": 84
     },
     "baselines": {
      "persistence": {
@@ -9380,12 +9483,12 @@
        "method": "persistence"
       },
       "civiqs_net_approval_race_black": {
-       "mean": -81.3,
+       "mean": -82.2,
        "sd": 1.5,
        "method": "persistence"
       },
       "civiqs_net_approval_race_hispanic": {
-       "mean": -34.3,
+       "mean": -35.8,
        "sd": 1.5,
        "method": "persistence"
       },
@@ -9395,27 +9498,27 @@
        "method": "persistence"
       },
       "civiqs_net_approval_edu_noncollege": {
-       "mean": -14.1,
+       "mean": -14.8,
        "sd": 1.5,
        "method": "persistence"
       },
       "civiqs_net_approval_edu_college": {
-       "mean": -31.2,
+       "mean": -31.1,
        "sd": 1.5,
        "method": "persistence"
       },
       "civiqs_net_approval_edu_postgrad": {
-       "mean": -48.2,
+       "mean": -49.8,
        "sd": 1.5,
        "method": "persistence"
       },
       "civiqs_net_approval_male": {
-       "mean": -10.8,
+       "mean": -11.7,
        "sd": 1.5,
        "method": "persistence"
       },
       "civiqs_net_approval_female": {
-       "mean": -33.4,
+       "mean": -33.7,
        "sd": 1.5,
        "method": "persistence"
       }
@@ -9575,7 +9678,7 @@
    "lock_at": "2026-08-26T14:00:00Z",
    "resolve": "dashboard Friday value, independents filter, from the daily archive",
    "target_type": "continuous_normal",
-   "status": "locked",
+   "status": "awaiting_resolution",
    "history_source": "lock snapshot",
    "baselines": {
     "persistence": {
@@ -9937,6 +10040,886 @@
    }
   },
   {
+   "round_id": "civiqs-male-2026-w36",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_male",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, men only, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-04T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-02T14:00:00Z",
+   "resolve": "dashboard Friday value, men filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -11.7,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -12.48,
+     "sd": 1.46,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -11.31,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -8.89,
+     "sd": 1.74,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -8.89,
+     "sd": 1.74
+    },
+    "ewma": {
+     "mean": -11.31,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -11.7,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -12.48,
+     "sd": 1.46
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-male-2026-w37",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_male",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, men only, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-11T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-09T14:00:00Z",
+   "resolve": "dashboard Friday value, men filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -11.7,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -12.91,
+     "sd": 1.59,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -11.31,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -8.89,
+     "sd": 1.74,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -8.89,
+     "sd": 1.74
+    },
+    "ewma": {
+     "mean": -11.31,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -11.7,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -12.91,
+     "sd": 1.59
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-male-2026-w38",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_male",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, men only, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-18T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-16T14:00:00Z",
+   "resolve": "dashboard Friday value, men filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -11.7,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -13.35,
+     "sd": 1.72,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -11.31,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -8.89,
+     "sd": 1.74,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -8.89,
+     "sd": 1.74
+    },
+    "ewma": {
+     "mean": -11.31,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -11.7,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -13.35,
+     "sd": 1.72
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-male-2026-w39",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_male",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, men only, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-25T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-23T14:00:00Z",
+   "resolve": "dashboard Friday value, men filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -11.7,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -13.35,
+     "sd": 1.83,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -11.31,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -8.89,
+     "sd": 1.74,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -8.89,
+     "sd": 1.74
+    },
+    "ewma": {
+     "mean": -11.31,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -11.7,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -13.35,
+     "sd": 1.83
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-age3549-2026-w36",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_age_35_49",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, adults 35-49 only, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-04T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-02T14:00:00Z",
+   "resolve": "dashboard Friday value, adults 35-49 filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -34.4,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -35.78,
+     "sd": 1.85,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -35.21,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -33.24,
+     "sd": 2.0,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -33.24,
+     "sd": 2.0
+    },
+    "ewma": {
+     "mean": -35.21,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -34.4,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -35.78,
+     "sd": 1.85
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-age3549-2026-w37",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_age_35_49",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, adults 35-49 only, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-11T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-09T14:00:00Z",
+   "resolve": "dashboard Friday value, adults 35-49 filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -34.4,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -35.93,
+     "sd": 1.99,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -35.21,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -33.24,
+     "sd": 2.0,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -33.24,
+     "sd": 2.0
+    },
+    "ewma": {
+     "mean": -35.21,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -34.4,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -35.93,
+     "sd": 1.99
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-age3549-2026-w38",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_age_35_49",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, adults 35-49 only, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-18T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-16T14:00:00Z",
+   "resolve": "dashboard Friday value, adults 35-49 filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -34.4,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -35.93,
+     "sd": 2.13,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -35.21,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -33.24,
+     "sd": 2.0,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -33.24,
+     "sd": 2.0
+    },
+    "ewma": {
+     "mean": -35.21,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -34.4,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -35.93,
+     "sd": 2.13
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-age3549-2026-w39",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_age_35_49",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, adults 35-49 only, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-25T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-23T14:00:00Z",
+   "resolve": "dashboard Friday value, adults 35-49 filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -34.4,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -35.93,
+     "sd": 2.25,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -35.21,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -33.24,
+     "sd": 2.0,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -33.24,
+     "sd": 2.0
+    },
+    "ewma": {
+     "mean": -35.21,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -34.4,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -35.93,
+     "sd": 2.25
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-age5064-2026-w36",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_age_50_64",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, adults 50-64 only, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-04T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-02T14:00:00Z",
+   "resolve": "dashboard Friday value, adults 50-64 filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -8.7,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -10.33,
+     "sd": 1.21,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -7.62,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -3.52,
+     "sd": 2.2,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -3.52,
+     "sd": 2.2
+    },
+    "ewma": {
+     "mean": -7.62,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -8.7,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -10.33,
+     "sd": 1.21
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-age5064-2026-w37",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_age_50_64",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, adults 50-64 only, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-11T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-09T14:00:00Z",
+   "resolve": "dashboard Friday value, adults 50-64 filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -8.7,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -11.12,
+     "sd": 1.3,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -7.62,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -3.52,
+     "sd": 2.2,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -3.52,
+     "sd": 2.2
+    },
+    "ewma": {
+     "mean": -7.62,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -8.7,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -11.12,
+     "sd": 1.3
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-age5064-2026-w38",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_age_50_64",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, adults 50-64 only, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-18T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-16T14:00:00Z",
+   "resolve": "dashboard Friday value, adults 50-64 filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -8.7,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -11.12,
+     "sd": 1.39,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -7.62,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -3.52,
+     "sd": 2.2,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -3.52,
+     "sd": 2.2
+    },
+    "ewma": {
+     "mean": -7.62,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -8.7,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -11.12,
+     "sd": 1.39
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-age5064-2026-w39",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_age_50_64",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, adults 50-64 only, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-25T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-23T14:00:00Z",
+   "resolve": "dashboard Friday value, adults 50-64 filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -8.7,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -11.12,
+     "sd": 1.47,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -7.62,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -3.52,
+     "sd": 2.2,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -3.52,
+     "sd": 2.2
+    },
+    "ewma": {
+     "mean": -7.62,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -8.7,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -11.12,
+     "sd": 1.47
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-hisp-2026-w36",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_race_hispanic",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, Hispanic/Latino registered voters only, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-04T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-02T14:00:00Z",
+   "resolve": "dashboard Friday value, Hispanic/Latino filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -35.8,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -36.02,
+     "sd": 1.88,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -35.77,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -36.5,
+     "sd": 1.24,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -36.5,
+     "sd": 1.24
+    },
+    "ewma": {
+     "mean": -35.77,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -35.8,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -36.02,
+     "sd": 1.88
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-hisp-2026-w37",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_race_hispanic",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, Hispanic/Latino registered voters only, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-11T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-09T14:00:00Z",
+   "resolve": "dashboard Friday value, Hispanic/Latino filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -35.8,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -36.05,
+     "sd": 2.05,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -35.77,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -36.5,
+     "sd": 1.24,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -36.5,
+     "sd": 1.24
+    },
+    "ewma": {
+     "mean": -35.77,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -35.8,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -36.05,
+     "sd": 2.05
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-hisp-2026-w38",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_race_hispanic",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, Hispanic/Latino registered voters only, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-18T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-16T14:00:00Z",
+   "resolve": "dashboard Friday value, Hispanic/Latino filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -35.8,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -36.09,
+     "sd": 2.21,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -35.77,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -36.5,
+     "sd": 1.24,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -36.5,
+     "sd": 1.24
+    },
+    "ewma": {
+     "mean": -35.77,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -35.8,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -36.09,
+     "sd": 2.21
+    }
+   }
+  },
+  {
+   "round_id": "civiqs-hisp-2026-w39",
+   "tracker": "civiqs",
+   "series": "civiqs_net_approval_race_hispanic",
+   "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, Hispanic/Latino registered voters only, as the dashboard shows it on Friday",
+   "unit": "net points (approve minus disapprove)",
+   "release_at": "2026-09-25T14:00:00Z",
+   "release_estimated": false,
+   "lock_at": "2026-09-23T14:00:00Z",
+   "resolve": "dashboard Friday value, Hispanic/Latino filter, from the daily archive",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": -35.8,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": -36.09,
+     "sd": 2.35,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": -35.77,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": -36.5,
+     "sd": 1.24,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": -36.5,
+     "sd": 1.24
+    },
+    "ewma": {
+     "mean": -35.77,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": -35.8,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": -36.09,
+     "sd": 2.35
+    }
+   }
+  },
+  {
    "round_id": "yougov-xtab-2026-09",
    "tracker": "yougov_xtab",
    "series": "yougov_xtab_approve_dem",
@@ -10110,6 +11093,336 @@
    },
    "n_forecasts": 0,
    "forecasts": {}
+  },
+  {
+   "round_id": "sce-2026-08-infl1y",
+   "tracker": "ny_fed_sce",
+   "series": "sce_inflation_1y",
+   "question": "NY Fed Survey of Consumer Expectations, produced by the Federal Reserve Bank of New York from its rotating panel of about 1,300 US household heads: the median one-year-ahead expected inflation rate for the August 2026 survey month. The July reading printed 3.6 percent (1-year) and 3.3 percent (3-year); the release date 2026-09-08 is announced on the bank's calendar.",
+   "unit": "percent, median expected inflation",
+   "release_at": "2026-09-08T15:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-06T15:00:00Z",
+   "resolve": "the August 2026 row of the frbny-sce-data.xlsx vintage archived under sources/sce/ on release day; the release date is preannounced on the NY Fed economic-indicators calendar, the hour (11:00 ET) is convention, hence release_estimated",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 3.63,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 3.72,
+     "sd": 1.82,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 3.57,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 3.24,
+     "sd": 1.0,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 3.24,
+     "sd": 1.0
+    },
+    "ewma": {
+     "mean": 3.57,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": 3.63,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 3.72,
+     "sd": 1.82
+    }
+   }
+  },
+  {
+   "round_id": "sce-2026-08-infl3y",
+   "tracker": "ny_fed_sce",
+   "series": "sce_inflation_3y",
+   "question": "NY Fed Survey of Consumer Expectations, produced by the Federal Reserve Bank of New York from its rotating panel of about 1,300 US household heads: the median three-year-ahead expected inflation rate for the August 2026 survey month. The July reading printed 3.6 percent (1-year) and 3.3 percent (3-year); the release date 2026-09-08 is announced on the bank's calendar.",
+   "unit": "percent, median expected inflation",
+   "release_at": "2026-09-08T15:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-06T15:00:00Z",
+   "resolve": "the August 2026 row of the frbny-sce-data.xlsx vintage archived under sources/sce/ on release day; the release date is preannounced on the NY Fed economic-indicators calendar, the hour (11:00 ET) is convention, hence release_estimated",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 3.26,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 3.32,
+     "sd": 1.82,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 3.22,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 2.98,
+     "sd": 1.0,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 2.98,
+     "sd": 1.0
+    },
+    "ewma": {
+     "mean": 3.22,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": 3.26,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 3.32,
+     "sd": 1.82
+    }
+   }
+  },
+  {
+   "round_id": "sce-2026-09-infl1y",
+   "tracker": "ny_fed_sce",
+   "series": "sce_inflation_1y",
+   "question": "NY Fed Survey of Consumer Expectations, produced by the Federal Reserve Bank of New York from its rotating panel of about 1,300 US household heads: the median one-year-ahead expected inflation rate for the September 2026 survey month. The release date 2026-10-07 is announced on the bank's calendar.",
+   "unit": "percent, median expected inflation",
+   "release_at": "2026-10-07T15:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-10-05T15:00:00Z",
+   "resolve": "the September 2026 row of the frbny-sce-data.xlsx vintage archived under sources/sce/ on release day; the release date is preannounced on the NY Fed economic-indicators calendar, the hour (11:00 ET) is convention, hence release_estimated",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 3.63,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 3.72,
+     "sd": 2.07,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 3.57,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 3.24,
+     "sd": 1.0,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 3.24,
+     "sd": 1.0
+    },
+    "ewma": {
+     "mean": 3.57,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": 3.63,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 3.72,
+     "sd": 2.07
+    }
+   }
+  },
+  {
+   "round_id": "sce-2026-09-infl3y",
+   "tracker": "ny_fed_sce",
+   "series": "sce_inflation_3y",
+   "question": "NY Fed Survey of Consumer Expectations, produced by the Federal Reserve Bank of New York from its rotating panel of about 1,300 US household heads: the median three-year-ahead expected inflation rate for the September 2026 survey month. The release date 2026-10-07 is announced on the bank's calendar.",
+   "unit": "percent, median expected inflation",
+   "release_at": "2026-10-07T15:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-10-05T15:00:00Z",
+   "resolve": "the September 2026 row of the frbny-sce-data.xlsx vintage archived under sources/sce/ on release day; the release date is preannounced on the NY Fed economic-indicators calendar, the hour (11:00 ET) is convention, hence release_estimated",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 3.26,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 3.32,
+     "sd": 2.07,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 3.22,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 2.98,
+     "sd": 1.0,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 2.98,
+     "sd": 1.0
+    },
+    "ewma": {
+     "mean": 3.22,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": 3.26,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 3.32,
+     "sd": 2.07
+    }
+   }
+  },
+  {
+   "round_id": "hh-2026-09-approval",
+   "tracker": "harvard_harris",
+   "series": "hh_trump_approval",
+   "question": "Harvard CAPS/Harris Poll, produced jointly by Harvard's Center for American Political Studies and The Harris Poll as a roughly monthly online survey of US registered voters: percent who approve (strongly or somewhat) of the job Donald J. Trump is doing as President, in the NEXT wave published after this round's lock. Harvard-Harris announces no calendar and skips some months, so the target is defined by publication order, not by a date: whatever wave's topline appears first after the lock is the one scored, whenever it lands. Recent waves printed 42, 43, 42 percent approve.",
+   "unit": "% approve",
+   "release_at": "2026-09-22T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-09-20T14:00:00Z",
+   "resolve": "the M3ALT strongly/somewhat approve net in the first topline PDF archived under sources/hhpoll/ whose production stamp is after lock_at; the series is dated by publication stamp, so this is the first series point after the frozen pre-lock history",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 42.0,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 42.27,
+     "sd": 2.21,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 42.24,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 42.33,
+     "sd": 1.0,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 42.33,
+     "sd": 1.0
+    },
+    "ewma": {
+     "mean": 42.24,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": 42.0,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 42.27,
+     "sd": 2.21
+    }
+   }
+  },
+  {
+   "round_id": "hh-2026-10-approval",
+   "tracker": "harvard_harris",
+   "series": "hh_trump_approval",
+   "question": "Harvard CAPS/Harris Poll, produced jointly by Harvard's Center for American Political Studies and The Harris Poll as a roughly monthly online survey of US registered voters: percent who approve (strongly or somewhat) of the job Donald J. Trump is doing as President, in the NEXT wave published after this round's lock. Harvard-Harris announces no calendar and skips some months, so the target is defined by publication order, not by a date: whatever wave's topline appears first after the lock is the one scored, whenever it lands. Recent waves printed 42, 43, 42 percent approve.",
+   "unit": "% approve",
+   "release_at": "2026-10-20T14:00:00Z",
+   "release_estimated": true,
+   "lock_at": "2026-10-18T14:00:00Z",
+   "resolve": "the M3ALT strongly/somewhat approve net in the first topline PDF archived under sources/hhpoll/ whose production stamp is after lock_at; the series is dated by publication stamp, so this is the first series point after the frozen pre-lock history",
+   "target_type": "continuous_normal",
+   "status": "open",
+   "baselines": {
+    "persistence": {
+     "mean": 42.0,
+     "sd": 1.5,
+     "method": "persistence"
+    },
+    "trend": {
+     "mean": 42.27,
+     "sd": 2.5,
+     "method": "trend_ols"
+    },
+    "ewma": {
+     "mean": 42.24,
+     "sd": 1.0,
+     "method": "ewma"
+    },
+    "climatology": {
+     "mean": 42.33,
+     "sd": 1.0,
+     "method": "climatology"
+    }
+   },
+   "scoreable": true,
+   "n_forecasts": 4,
+   "forecasts": {
+    "climatology": {
+     "mean": 42.33,
+     "sd": 1.0
+    },
+    "ewma": {
+     "mean": 42.24,
+     "sd": 1.0
+    },
+    "persistence": {
+     "mean": 42.0,
+     "sd": 1.5
+    },
+    "trend": {
+     "mean": 42.27,
+     "sd": 2.5
+    }
+   }
   }
  ],
  "entrants": [
@@ -10907,109 +12220,91 @@
   }
  ],
  "leaderboard": {
-  "resolved_rounds": 11,
+  "resolved_rounds": 13,
   "entries": [
    {
     "entrant": "claude-sonnet-web",
-    "rounds": 5,
-    "mean_crps": 1.24,
-    "mean_skill": 0.207
+    "rounds": 7,
+    "mean_crps": 1.008,
+    "mean_skill": 0.179
    },
    {
     "entrant": "claude-opus-5-web",
-    "rounds": 5,
-    "mean_crps": 1.437,
-    "mean_skill": 0.063
-   },
-   {
-    "entrant": "claude-fable",
-    "rounds": 9,
-    "mean_crps": 0.873,
-    "mean_skill": 0.027
-   },
-   {
-    "entrant": "gpt-5.6-sol",
-    "rounds": 9,
-    "mean_crps": 0.818,
-    "mean_skill": 0.004
-   },
-   {
-    "entrant": "persistence",
-    "rounds": 11,
-    "mean_crps": 1.418,
-    "mean_skill": 0.0
+    "rounds": 7,
+    "mean_crps": 1.136,
+    "mean_skill": 0.101
    },
    {
     "entrant": "claude-sonnet-web-superfc",
-    "rounds": 5,
-    "mean_crps": 1.268,
-    "mean_skill": -0.015
+    "rounds": 7,
+    "mean_crps": 1.033,
+    "mean_skill": 0.01
    },
    {
-    "entrant": "qwen-3.7",
-    "rounds": 9,
-    "mean_crps": 0.76,
-    "mean_skill": -0.023
+    "entrant": "persistence",
+    "rounds": 13,
+    "mean_crps": 1.274,
+    "mean_skill": 0.0
    },
    {
     "entrant": "gpt-5.6-terra-web",
-    "rounds": 5,
-    "mean_crps": 2.041,
-    "mean_skill": -0.03
+    "rounds": 7,
+    "mean_crps": 1.587,
+    "mean_skill": -0.005
    },
    {
-    "entrant": "claude-opus",
-    "rounds": 9,
-    "mean_crps": 0.838,
-    "mean_skill": -0.073
+    "entrant": "qwen-3.8-web",
+    "rounds": 8,
+    "mean_crps": 1.541,
+    "mean_skill": -0.033
    },
    {
-    "entrant": "grok",
-    "rounds": 10,
-    "mean_crps": 1.578,
-    "mean_skill": -0.083
-   },
-   {
-    "entrant": "claude-opus-5",
-    "rounds": 10,
-    "mean_crps": 1.499,
-    "mean_skill": -0.085
-   },
-   {
-    "entrant": "deepseek-flash",
-    "rounds": 10,
-    "mean_crps": 1.674,
-    "mean_skill": -0.09
-   },
-   {
-    "entrant": "gpt-5.6-luna-web-superfc",
-    "rounds": 5,
-    "mean_crps": 1.355,
-    "mean_skill": -0.092
+    "entrant": "claude-opus-5-web-superfc",
+    "rounds": 7,
+    "mean_crps": 1.429,
+    "mean_skill": -0.037
    },
    {
     "entrant": "gpt-5.6-luna-web",
-    "rounds": 5,
-    "mean_crps": 1.757,
-    "mean_skill": -0.093
+    "rounds": 7,
+    "mean_crps": 1.379,
+    "mean_skill": -0.039
    },
    {
-    "entrant": "gemini-pro",
-    "rounds": 10,
-    "mean_crps": 1.579,
-    "mean_skill": -0.095
+    "entrant": "gemini-pro-web",
+    "rounds": 7,
+    "mean_crps": 1.51,
+    "mean_skill": -0.057
    },
    {
-    "entrant": "deepseek-pro",
-    "rounds": 10,
-    "mean_crps": 1.771,
-    "mean_skill": -0.107
+    "entrant": "gpt-5.6-luna-web-superfc",
+    "rounds": 7,
+    "mean_crps": 1.107,
+    "mean_skill": -0.07
+   },
+   {
+    "entrant": "gemini-pro-web-superfc",
+    "rounds": 7,
+    "mean_crps": 1.763,
+    "mean_skill": -0.077
+   },
+   {
+    "entrant": "gemini-flash-web-superfc",
+    "rounds": 7,
+    "mean_crps": 1.737,
+    "mean_skill": -0.087
+   },
+   {
+    "entrant": "grok-web",
+    "rounds": 8,
+    "mean_crps": 1.536,
+    "mean_skill": -0.098
    },
    {
     "entrant": "ewma",
-    "rounds": 11,
-    "mean_crps": 1.073,
-    "mean_skill": -0.107
+    "rounds": 13,
+    "mean_crps": 0.987,
+    "mean_skill": -0.1
    },
    {
     "entrant": "claude-opus-5-news-superfc",
@@ -11018,22 +12313,16 @@
     "mean_skill": -0.11
    },
    {
-    "entrant": "gemini-pro-superfc",
-    "rounds": 5,
-    "mean_crps": 2.138,
-    "mean_skill": -0.117
+    "entrant": "gemini-pro",
+    "rounds": 12,
+    "mean_crps": 1.413,
+    "mean_skill": -0.115
    },
    {
-    "entrant": "glm",
-    "rounds": 9,
-    "mean_crps": 0.848,
-    "mean_skill": -0.127
-   },
-   {
-    "entrant": "claude-sonnet",
-    "rounds": 10,
-    "mean_crps": 1.365,
-    "mean_skill": -0.133
+    "entrant": "gemini-flash-web",
+    "rounds": 7,
+    "mean_crps": 1.78,
+    "mean_skill": -0.123
    },
    {
     "entrant": "gemini-pro-news",
@@ -11042,22 +12331,10 @@
     "mean_skill": -0.137
    },
    {
-    "entrant": "qwen-3.8-web",
-    "rounds": 6,
-    "mean_crps": 1.943,
-    "mean_skill": -0.144
-   },
-   {
-    "entrant": "claude-opus-5-web-superfc",
-    "rounds": 5,
-    "mean_crps": 1.854,
-    "mean_skill": -0.146
-   },
-   {
-    "entrant": "gpt-5.6-terra",
-    "rounds": 10,
-    "mean_crps": 1.884,
-    "mean_skill": -0.148
+    "entrant": "gpt-5.6-terra-web-superfc",
+    "rounds": 7,
+    "mean_crps": 1.687,
+    "mean_skill": -0.158
    },
    {
     "entrant": "qwen-3.8-news",
@@ -11072,22 +12349,10 @@
     "mean_skill": -0.164
    },
    {
-    "entrant": "gpt-5.6-terra-web-superfc",
-    "rounds": 5,
-    "mean_crps": 2.144,
-    "mean_skill": -0.164
-   },
-   {
-    "entrant": "claude-opus-5-superfc",
-    "rounds": 5,
-    "mean_crps": 1.721,
-    "mean_skill": -0.168
-   },
-   {
-    "entrant": "gemini-pro-web-superfc",
-    "rounds": 5,
-    "mean_crps": 2.308,
-    "mean_skill": -0.172
+    "entrant": "gemini-pro-superfc",
+    "rounds": 7,
+    "mean_crps": 1.708,
+    "mean_skill": -0.174
    },
    {
     "entrant": "kimi-news",
@@ -11096,16 +12361,10 @@
     "mean_skill": -0.176
    },
    {
-    "entrant": "gemini-flash",
-    "rounds": 10,
-    "mean_crps": 1.625,
-    "mean_skill": -0.178
-   },
-   {
-    "entrant": "qwen-3.8",
-    "rounds": 10,
-    "mean_crps": 1.708,
-    "mean_skill": -0.183
+    "entrant": "grok-web-superfc",
+    "rounds": 8,
+    "mean_crps": 1.6,
+    "mean_skill": -0.188
    },
    {
     "entrant": "gemini-flash-news-superfc",
@@ -11114,16 +12373,22 @@
     "mean_skill": -0.19
    },
    {
-    "entrant": "claude-sonnet-superfc",
-    "rounds": 5,
-    "mean_crps": 1.779,
+    "entrant": "qwen-3.8-web-superfc",
+    "rounds": 8,
+    "mean_crps": 1.303,
     "mean_skill": -0.194
    },
    {
-    "entrant": "grok-web",
-    "rounds": 6,
-    "mean_crps": 1.918,
-    "mean_skill": -0.194
+    "entrant": "deepseek-flash",
+    "rounds": 12,
+    "mean_crps": 1.532,
+    "mean_skill": -0.196
+   },
+   {
+    "entrant": "grok",
+    "rounds": 12,
+    "mean_crps": 1.456,
+    "mean_skill": -0.196
    },
    {
     "entrant": "deepseek-pro-news",
@@ -11132,16 +12397,22 @@
     "mean_skill": -0.199
    },
    {
-    "entrant": "gemini-pro-web",
-    "rounds": 5,
-    "mean_crps": 1.98,
+    "entrant": "deepseek-pro-web",
+    "rounds": 8,
+    "mean_crps": 1.824,
     "mean_skill": -0.201
    },
    {
-    "entrant": "gemini-flash-web-superfc",
-    "rounds": 5,
-    "mean_crps": 2.283,
+    "entrant": "claude-opus-5",
+    "rounds": 12,
+    "mean_crps": 1.396,
     "mean_skill": -0.211
+   },
+   {
+    "entrant": "qwen-3.8",
+    "rounds": 12,
+    "mean_crps": 1.533,
+    "mean_skill": -0.216
    },
    {
     "entrant": "gemini-pro-news-superfc",
@@ -11150,10 +12421,28 @@
     "mean_skill": -0.219
    },
    {
+    "entrant": "deepseek-pro",
+    "rounds": 12,
+    "mean_crps": 1.62,
+    "mean_skill": -0.225
+   },
+   {
     "entrant": "gpt-5.6-terra-news",
     "rounds": 5,
     "mean_crps": 2.367,
     "mean_skill": -0.235
+   },
+   {
+    "entrant": "qwen-3.7",
+    "rounds": 10,
+    "mean_crps": 0.835,
+    "mean_skill": -0.236
+   },
+   {
+    "entrant": "deepseek-pro-web-superfc",
+    "rounds": 8,
+    "mean_crps": 1.67,
+    "mean_skill": -0.237
    },
    {
     "entrant": "gemini-flash-news",
@@ -11166,12 +12455,6 @@
     "rounds": 5,
     "mean_crps": 2.514,
     "mean_skill": -0.243
-   },
-   {
-    "entrant": "gemini-flash-superfc",
-    "rounds": 5,
-    "mean_crps": 2.218,
-    "mean_skill": -0.251
    },
    {
     "entrant": "claude-sonnet-news-superfc",
@@ -11192,40 +12475,16 @@
     "mean_skill": -0.258
    },
    {
-    "entrant": "gpt-5.6-luna",
-    "rounds": 10,
-    "mean_crps": 1.915,
-    "mean_skill": -0.261
-   },
-   {
-    "entrant": "gemini-flash-web",
-    "rounds": 5,
-    "mean_crps": 2.346,
-    "mean_skill": -0.268
-   },
-   {
     "entrant": "claude-sonnet-news",
     "rounds": 5,
     "mean_crps": 2.181,
     "mean_skill": -0.272
    },
    {
-    "entrant": "qwen-3.8-web-superfc",
-    "rounds": 6,
-    "mean_crps": 1.584,
-    "mean_skill": -0.272
-   },
-   {
-    "entrant": "grok-superfc",
-    "rounds": 5,
-    "mean_crps": 2.057,
-    "mean_skill": -0.273
-   },
-   {
-    "entrant": "grok-web-superfc",
-    "rounds": 6,
-    "mean_crps": 1.985,
-    "mean_skill": -0.276
+    "entrant": "claude-opus-5-superfc",
+    "rounds": 7,
+    "mean_crps": 1.44,
+    "mean_skill": -0.274
    },
    {
     "entrant": "kimi-news-superfc",
@@ -11234,22 +12493,28 @@
     "mean_skill": -0.277
    },
    {
-    "entrant": "kimi",
-    "rounds": 5,
-    "mean_crps": 2.274,
-    "mean_skill": -0.296
+    "entrant": "gemini-flash",
+    "rounds": 12,
+    "mean_crps": 1.497,
+    "mean_skill": -0.279
    },
    {
-    "entrant": "deepseek-pro-superfc",
-    "rounds": 5,
-    "mean_crps": 2.207,
+    "entrant": "glm-web-superfc",
+    "rounds": 8,
+    "mean_crps": 1.756,
+    "mean_skill": -0.3
+   },
+   {
+    "entrant": "gpt-5.6-terra",
+    "rounds": 12,
+    "mean_crps": 1.739,
     "mean_skill": -0.311
    },
    {
-    "entrant": "glm-superfc",
-    "rounds": 5,
-    "mean_crps": 2.248,
-    "mean_skill": -0.333
+    "entrant": "claude-opus",
+    "rounds": 10,
+    "mean_crps": 0.924,
+    "mean_skill": -0.321
    },
    {
     "entrant": "glm-news",
@@ -11264,16 +12529,28 @@
     "mean_skill": -0.344
    },
    {
-    "entrant": "deepseek-flash-superfc",
-    "rounds": 5,
-    "mean_crps": 2.305,
-    "mean_skill": -0.348
+    "entrant": "gpt-5.6-luna",
+    "rounds": 12,
+    "mean_crps": 1.737,
+    "mean_skill": -0.346
    },
    {
-    "entrant": "deepseek-pro-web-superfc",
-    "rounds": 6,
-    "mean_crps": 2.084,
-    "mean_skill": -0.35
+    "entrant": "gemini-flash-superfc",
+    "rounds": 7,
+    "mean_crps": 1.805,
+    "mean_skill": -0.355
+   },
+   {
+    "entrant": "deepseek-flash-web-superfc",
+    "rounds": 8,
+    "mean_crps": 1.795,
+    "mean_skill": -0.356
+   },
+   {
+    "entrant": "claude-sonnet-superfc",
+    "rounds": 7,
+    "mean_crps": 1.514,
+    "mean_skill": -0.361
    },
    {
     "entrant": "gpt-5.6-luna-news-superfc",
@@ -11282,16 +12559,22 @@
     "mean_skill": -0.362
    },
    {
+    "entrant": "claude-fable",
+    "rounds": 10,
+    "mean_crps": 1.02,
+    "mean_skill": -0.365
+   },
+   {
+    "entrant": "claude-sonnet",
+    "rounds": 12,
+    "mean_crps": 1.339,
+    "mean_skill": -0.365
+   },
+   {
     "entrant": "qwen-3.8-news-superfc",
     "rounds": 3,
     "mean_crps": 0.713,
     "mean_skill": -0.365
-   },
-   {
-    "entrant": "deepseek-pro-web",
-    "rounds": 6,
-    "mean_crps": 2.32,
-    "mean_skill": -0.366
    },
    {
     "entrant": "deepseek-flash-news-superfc",
@@ -11300,16 +12583,10 @@
     "mean_skill": -0.368
    },
    {
-    "entrant": "kimi-superfc",
-    "rounds": 5,
-    "mean_crps": 2.223,
-    "mean_skill": -0.377
-   },
-   {
-    "entrant": "deepseek-flash-web-superfc",
-    "rounds": 6,
-    "mean_crps": 2.189,
-    "mean_skill": -0.38
+    "entrant": "grok-superfc",
+    "rounds": 7,
+    "mean_crps": 1.694,
+    "mean_skill": -0.379
    },
    {
     "entrant": "deepseek-pro-news-superfc",
@@ -11324,28 +12601,22 @@
     "mean_skill": -0.397
    },
    {
-    "entrant": "gpt-5.6-terra-superfc",
-    "rounds": 5,
-    "mean_crps": 2.697,
-    "mean_skill": -0.41
+    "entrant": "deepseek-pro-superfc",
+    "rounds": 7,
+    "mean_crps": 1.799,
+    "mean_skill": -0.402
    },
    {
-    "entrant": "trend",
-    "rounds": 11,
-    "mean_crps": 1.456,
-    "mean_skill": -0.428
+    "entrant": "gpt-5.6-sol",
+    "rounds": 10,
+    "mean_crps": 0.986,
+    "mean_skill": -0.419
    },
    {
-    "entrant": "gpt-5.6-luna-superfc",
-    "rounds": 5,
-    "mean_crps": 2.887,
-    "mean_skill": -0.45
-   },
-   {
-    "entrant": "qwen-3.8-superfc",
-    "rounds": 2,
-    "mean_crps": 1.153,
-    "mean_skill": -0.454
+    "entrant": "kimi-web",
+    "rounds": 7,
+    "mean_crps": 1.906,
+    "mean_skill": -0.434
    },
    {
     "entrant": "gpt-5.6-luna-news",
@@ -11354,214 +12625,256 @@
     "mean_skill": -0.456
    },
    {
-    "entrant": "glm-web-superfc",
-    "rounds": 6,
-    "mean_crps": 2.213,
-    "mean_skill": -0.464
-   },
-   {
-    "entrant": "kimi-web",
-    "rounds": 5,
-    "mean_crps": 2.486,
-    "mean_skill": -0.628
-   },
-   {
     "entrant": "kimi-web-superfc",
-    "rounds": 6,
-    "mean_crps": 1.893,
-    "mean_skill": -0.636
+    "rounds": 8,
+    "mean_crps": 1.531,
+    "mean_skill": -0.459
    },
    {
     "entrant": "glm-web",
-    "rounds": 6,
-    "mean_crps": 1.721,
-    "mean_skill": -0.679
+    "rounds": 8,
+    "mean_crps": 1.388,
+    "mean_skill": -0.463
    },
    {
     "entrant": "deepseek-flash-web",
+    "rounds": 8,
+    "mean_crps": 2.144,
+    "mean_skill": -0.474
+   },
+   {
+    "entrant": "kimi-superfc",
+    "rounds": 7,
+    "mean_crps": 1.828,
+    "mean_skill": -0.486
+   },
+   {
+    "entrant": "glm",
+    "rounds": 11,
+    "mean_crps": 0.968,
+    "mean_skill": -0.494
+   },
+   {
+    "entrant": "deepseek-flash-superfc",
+    "rounds": 7,
+    "mean_crps": 1.909,
+    "mean_skill": -0.511
+   },
+   {
+    "entrant": "gpt-5.6-terra-superfc",
+    "rounds": 7,
+    "mean_crps": 2.172,
+    "mean_skill": -0.521
+   },
+   {
+    "entrant": "gpt-5.6-luna-superfc",
+    "rounds": 7,
+    "mean_crps": 2.297,
+    "mean_skill": -0.525
+   },
+   {
+    "entrant": "kimi",
+    "rounds": 7,
+    "mean_crps": 1.924,
+    "mean_skill": -0.552
+   },
+   {
+    "entrant": "glm-superfc",
     "rounds": 6,
-    "mean_crps": 2.737,
-    "mean_skill": -0.71
+    "mean_crps": 2.092,
+    "mean_skill": -0.567
+   },
+   {
+    "entrant": "qwen-3.8-superfc",
+    "rounds": 3,
+    "mean_crps": 1.063,
+    "mean_skill": -0.585
+   },
+   {
+    "entrant": "trend",
+    "rounds": 13,
+    "mean_crps": 1.435,
+    "mean_skill": -0.633
    },
    {
     "entrant": "crowd",
-    "rounds": 11,
-    "mean_crps": 2.005,
-    "mean_skill": -0.712
+    "rounds": 13,
+    "mean_crps": 1.931,
+    "mean_skill": -0.939
    },
    {
     "entrant": "climatology",
-    "rounds": 11,
-    "mean_crps": 2.026,
-    "mean_skill": -1.202
+    "rounds": 13,
+    "mean_crps": 2.108,
+    "mean_skill": -1.685
    },
    {
     "entrant": "claude-opus-5-zeroshot-superfc",
-    "rounds": 5,
-    "mean_crps": 3.034,
-    "mean_skill": -1.536
+    "rounds": 7,
+    "mean_crps": 2.993,
+    "mean_skill": -2.537
    },
    {
     "entrant": "claude-opus-5-zeroshot",
-    "rounds": 10,
-    "mean_crps": 2.716,
-    "mean_skill": -1.717
+    "rounds": 12,
+    "mean_crps": 2.982,
+    "mean_skill": -2.764
    },
    {
     "entrant": "claude-sonnet-zeroshot-superfc",
-    "rounds": 5,
-    "mean_crps": 3.982,
-    "mean_skill": -1.748
-   },
-   {
-    "entrant": "kimi-zeroshot",
-    "rounds": 5,
-    "mean_crps": 4.216,
-    "mean_skill": -2.327
-   },
-   {
-    "entrant": "gpt-5.6-terra-zeroshot-superfc",
-    "rounds": 5,
-    "mean_crps": 4.416,
-    "mean_skill": -2.632
-   },
-   {
-    "entrant": "gpt-5.6-luna-zeroshot-superfc",
-    "rounds": 5,
-    "mean_crps": 4.792,
-    "mean_skill": -2.752
-   },
-   {
-    "entrant": "gemini-flash-zeroshot-superfc",
-    "rounds": 5,
-    "mean_crps": 4.972,
-    "mean_skill": -3.113
-   },
-   {
-    "entrant": "claude-opus-zeroshot",
-    "rounds": 9,
-    "mean_crps": 3.429,
-    "mean_skill": -3.271
-   },
-   {
-    "entrant": "kimi-zeroshot-superfc",
-    "rounds": 5,
-    "mean_crps": 5.19,
-    "mean_skill": -3.387
+    "rounds": 7,
+    "mean_crps": 4.305,
+    "mean_skill": -4.015
    },
    {
     "entrant": "claude-fable-zeroshot",
-    "rounds": 9,
-    "mean_crps": 3.309,
-    "mean_skill": -3.451
-   },
-   {
-    "entrant": "claude-sonnet-zeroshot",
     "rounds": 10,
-    "mean_crps": 4.185,
-    "mean_skill": -3.642
-   },
-   {
-    "entrant": "gpt-5.6-luna-zeroshot",
-    "rounds": 10,
-    "mean_crps": 4.335,
-    "mean_skill": -3.652
-   },
-   {
-    "entrant": "deepseek-flash-zeroshot-superfc",
-    "rounds": 5,
-    "mean_crps": 5.145,
-    "mean_skill": -3.753
+    "mean_crps": 3.69,
+    "mean_skill": -4.494
    },
    {
     "entrant": "gpt-5.6-sol-zeroshot",
-    "rounds": 9,
-    "mean_crps": 3.428,
-    "mean_skill": -3.775
+    "rounds": 10,
+    "mean_crps": 3.718,
+    "mean_skill": -4.621
    },
    {
-    "entrant": "gemini-pro-zeroshot-superfc",
-    "rounds": 5,
-    "mean_crps": 5.482,
-    "mean_skill": -3.881
+    "entrant": "claude-opus-zeroshot",
+    "rounds": 10,
+    "mean_crps": 3.976,
+    "mean_skill": -4.704
    },
    {
     "entrant": "gpt-5.6-terra-zeroshot",
-    "rounds": 10,
-    "mean_crps": 4.243,
-    "mean_skill": -3.991
+    "rounds": 12,
+    "mean_crps": 4.355,
+    "mean_skill": -4.872
    },
    {
-    "entrant": "grok-zeroshot-superfc",
-    "rounds": 5,
-    "mean_crps": 5.912,
-    "mean_skill": -4.39
+    "entrant": "gpt-5.6-luna-zeroshot",
+    "rounds": 12,
+    "mean_crps": 4.636,
+    "mean_skill": -5.015
    },
    {
-    "entrant": "deepseek-pro-zeroshot-superfc",
-    "rounds": 4,
-    "mean_crps": 6.615,
-    "mean_skill": -4.492
+    "entrant": "claude-sonnet-zeroshot",
+    "rounds": 12,
+    "mean_crps": 4.728,
+    "mean_skill": -5.46
    },
    {
-    "entrant": "qwen-3.8-zeroshot-superfc",
-    "rounds": 5,
-    "mean_crps": 5.966,
-    "mean_skill": -4.543
+    "entrant": "gpt-5.6-terra-zeroshot-superfc",
+    "rounds": 7,
+    "mean_crps": 5.203,
+    "mean_skill": -5.875
    },
    {
-    "entrant": "glm-zeroshot-superfc",
-    "rounds": 5,
-    "mean_crps": 6.083,
-    "mean_skill": -4.676
+    "entrant": "kimi-zeroshot",
+    "rounds": 7,
+    "mean_crps": 5.812,
+    "mean_skill": -7.23
    },
    {
     "entrant": "deepseek-flash-zeroshot",
-    "rounds": 10,
-    "mean_crps": 6.527,
-    "mean_skill": -4.966
+    "rounds": 12,
+    "mean_crps": 7.306,
+    "mean_skill": -7.873
    },
    {
-    "entrant": "gemini-flash-zeroshot",
-    "rounds": 10,
-    "mean_crps": 6.395,
-    "mean_skill": -5.631
+    "entrant": "deepseek-pro-zeroshot-superfc",
+    "rounds": 6,
+    "mean_crps": 7.123,
+    "mean_skill": -8.331
    },
    {
-    "entrant": "grok-zeroshot",
-    "rounds": 10,
-    "mean_crps": 6.877,
-    "mean_skill": -6.107
+    "entrant": "gpt-5.6-luna-zeroshot-superfc",
+    "rounds": 7,
+    "mean_crps": 6.675,
+    "mean_skill": -8.476
    },
    {
     "entrant": "qwen-3.7-zeroshot",
-    "rounds": 9,
-    "mean_crps": 5.609,
-    "mean_skill": -6.131
+    "rounds": 10,
+    "mean_crps": 6.53,
+    "mean_skill": -8.514
+   },
+   {
+    "entrant": "qwen-3.8-zeroshot-superfc",
+    "rounds": 7,
+    "mean_crps": 7.222,
+    "mean_skill": -9.146
+   },
+   {
+    "entrant": "gemini-flash-zeroshot",
+    "rounds": 12,
+    "mean_crps": 7.556,
+    "mean_skill": -9.18
+   },
+   {
+    "entrant": "kimi-zeroshot-superfc",
+    "rounds": 7,
+    "mean_crps": 7.186,
+    "mean_skill": -9.405
+   },
+   {
+    "entrant": "glm-zeroshot-superfc",
+    "rounds": 6,
+    "mean_crps": 7.864,
+    "mean_skill": -9.569
    },
    {
     "entrant": "gemini-pro-zeroshot",
-    "rounds": 10,
-    "mean_crps": 6.836,
-    "mean_skill": -6.274
+    "rounds": 12,
+    "mean_crps": 8.004,
+    "mean_skill": -9.883
+   },
+   {
+    "entrant": "gemini-pro-zeroshot-superfc",
+    "rounds": 7,
+    "mean_crps": 7.725,
+    "mean_skill": -10.447
+   },
+   {
+    "entrant": "deepseek-flash-zeroshot-superfc",
+    "rounds": 7,
+    "mean_crps": 7.694,
+    "mean_skill": -10.793
    },
    {
     "entrant": "glm-zeroshot",
-    "rounds": 10,
-    "mean_crps": 6.244,
-    "mean_skill": -6.347
-   },
-   {
-    "entrant": "deepseek-pro-zeroshot",
-    "rounds": 10,
-    "mean_crps": 7.164,
-    "mean_skill": -6.379
+    "rounds": 12,
+    "mean_crps": 7.961,
+    "mean_skill": -10.884
    },
    {
     "entrant": "qwen-3.8-zeroshot",
-    "rounds": 10,
-    "mean_crps": 6.665,
-    "mean_skill": -7.22
+    "rounds": 12,
+    "mean_crps": 7.982,
+    "mean_skill": -10.924
+   },
+   {
+    "entrant": "gemini-flash-zeroshot-superfc",
+    "rounds": 7,
+    "mean_crps": 7.878,
+    "mean_skill": -10.98
+   },
+   {
+    "entrant": "deepseek-pro-zeroshot",
+    "rounds": 12,
+    "mean_crps": 9.094,
+    "mean_skill": -11.678
+   },
+   {
+    "entrant": "grok-zeroshot",
+    "rounds": 12,
+    "mean_crps": 9.032,
+    "mean_skill": -11.822
+   },
+   {
+    "entrant": "grok-zeroshot-superfc",
+    "rounds": 7,
+    "mean_crps": 9.5,
+    "mean_skill": -13.877
    }
   ]
  },
@@ -27316,32 +28629,32 @@
     {
      "entrant": "crowd",
      "rounds": 397,
-     "mean_crps": 1.495,
-     "mean_skill": 0.074
+     "mean_crps": 1.5,
+     "mean_skill": 0.072
     },
     {
      "entrant": "ewma",
      "rounds": 397,
-     "mean_crps": 1.519,
-     "mean_skill": 0.059
+     "mean_crps": 1.526,
+     "mean_skill": 0.056
     },
     {
      "entrant": "persistence",
      "rounds": 397,
-     "mean_crps": 1.613,
+     "mean_crps": 1.616,
      "mean_skill": 0.0
     },
     {
      "entrant": "trend",
      "rounds": 397,
-     "mean_crps": 1.759,
-     "mean_skill": -0.09
+     "mean_crps": 1.77,
+     "mean_skill": -0.095
     },
     {
      "entrant": "climatology",
      "rounds": 397,
-     "mean_crps": 2.488,
-     "mean_skill": -0.542
+     "mean_crps": 2.494,
+     "mean_skill": -0.543
     }
    ],
    "spans": {
@@ -27349,95 +28662,95 @@
      {
       "entrant": "crowd",
       "rounds": 397,
-      "mean_crps": 1.495,
-      "mean_skill": 0.074
+      "mean_crps": 1.5,
+      "mean_skill": 0.072
      },
      {
       "entrant": "ewma",
       "rounds": 397,
-      "mean_crps": 1.519,
-      "mean_skill": 0.059
+      "mean_crps": 1.526,
+      "mean_skill": 0.056
      },
      {
       "entrant": "persistence",
       "rounds": 397,
-      "mean_crps": 1.613,
+      "mean_crps": 1.616,
       "mean_skill": 0.0
      },
      {
       "entrant": "trend",
       "rounds": 397,
-      "mean_crps": 1.759,
-      "mean_skill": -0.09
+      "mean_crps": 1.77,
+      "mean_skill": -0.095
      },
      {
       "entrant": "climatology",
       "rounds": 397,
-      "mean_crps": 2.488,
-      "mean_skill": -0.542
+      "mean_crps": 2.494,
+      "mean_skill": -0.543
      }
     ],
     "m6": [
      {
       "entrant": "ewma",
       "rounds": 100,
-      "mean_crps": 0.937,
-      "mean_skill": 0.195
+      "mean_crps": 0.946,
+      "mean_skill": 0.174
      },
      {
       "entrant": "crowd",
       "rounds": 100,
-      "mean_crps": 0.951,
-      "mean_skill": 0.183
+      "mean_crps": 0.956,
+      "mean_skill": 0.166
      },
      {
       "entrant": "trend",
       "rounds": 100,
-      "mean_crps": 1.038,
-      "mean_skill": 0.109
+      "mean_crps": 1.07,
+      "mean_skill": 0.066
      },
      {
       "entrant": "persistence",
       "rounds": 100,
-      "mean_crps": 1.165,
+      "mean_crps": 1.146,
       "mean_skill": 0.0
      },
      {
       "entrant": "climatology",
       "rounds": 100,
-      "mean_crps": 1.263,
-      "mean_skill": -0.084
+      "mean_crps": 1.269,
+      "mean_skill": -0.108
      }
     ],
     "d30": [
      {
       "entrant": "ewma",
       "rounds": 17,
-      "mean_crps": 1.063,
-      "mean_skill": 0.268
+      "mean_crps": 1.059,
+      "mean_skill": 0.25
      },
      {
       "entrant": "crowd",
       "rounds": 17,
-      "mean_crps": 1.113,
-      "mean_skill": 0.234
+      "mean_crps": 1.098,
+      "mean_skill": 0.223
      },
      {
       "entrant": "trend",
       "rounds": 17,
-      "mean_crps": 1.181,
-      "mean_skill": 0.188
+      "mean_crps": 1.188,
+      "mean_skill": 0.159
      },
      {
       "entrant": "climatology",
       "rounds": 17,
-      "mean_crps": 1.367,
-      "mean_skill": 0.059
+      "mean_crps": 1.359,
+      "mean_skill": 0.038
      },
      {
       "entrant": "persistence",
       "rounds": 17,
-      "mean_crps": 1.453,
+      "mean_crps": 1.413,
       "mean_skill": 0.0
      }
     ],
@@ -27445,8 +28758,8 @@
      {
       "entrant": "crowd",
       "rounds": 2,
-      "mean_crps": 0.522,
-      "mean_skill": 0.139
+      "mean_crps": 0.526,
+      "mean_skill": 0.134
      },
      {
       "entrant": "ewma",
@@ -27463,8 +28776,8 @@
      {
       "entrant": "climatology",
       "rounds": 2,
-      "mean_crps": 0.759,
-      "mean_skill": -0.25
+      "mean_crps": 0.809,
+      "mean_skill": -0.333
      },
      {
       "entrant": "trend",
@@ -27787,18 +29100,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.029,
+      "crowd": 0.026,
       "persistence": 0.0,
-      "ewma": -0.005,
-      "trend": -0.164,
-      "climatology": -0.775
+      "ewma": -0.009,
+      "trend": -0.166,
+      "climatology": -0.782
      },
      "crps": {
-      "crowd": 2.24,
-      "persistence": 2.307,
-      "ewma": 2.319,
+      "crowd": 2.241,
+      "persistence": 2.301,
+      "ewma": 2.323,
       "trend": 2.684,
-      "climatology": 4.094
+      "climatology": 4.102
      }
     },
     {
@@ -27806,24 +29119,24 @@
      "n": 185,
      "ranks": {
       "crowd": 1,
-      "ewma": 2,
-      "persistence": 3,
+      "persistence": 2,
+      "ewma": 3,
       "trend": 4,
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.034,
-      "ewma": 0.002,
+      "crowd": 0.033,
       "persistence": 0.0,
-      "trend": -0.163,
-      "climatology": -0.752
+      "ewma": 0.0,
+      "trend": -0.164,
+      "climatology": -0.754
      },
      "crps": {
-      "crowd": 2.152,
-      "ewma": 2.225,
+      "crowd": 2.154,
       "persistence": 2.228,
-      "trend": 2.591,
-      "climatology": 3.904
+      "ewma": 2.228,
+      "trend": 2.594,
+      "climatology": 3.909
      }
     },
     {
@@ -27837,18 +29150,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.042,
-      "ewma": 0.013,
+      "crowd": 0.041,
+      "ewma": 0.012,
       "persistence": 0.0,
-      "trend": -0.155,
-      "climatology": -0.723
+      "trend": -0.154,
+      "climatology": -0.725
      },
      "crps": {
       "crowd": 2.083,
-      "ewma": 2.145,
+      "ewma": 2.148,
       "persistence": 2.174,
-      "trend": 2.51,
-      "climatology": 3.745
+      "trend": 2.508,
+      "climatology": 3.749
      }
     },
     {
@@ -27862,18 +29175,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.048,
-      "ewma": 0.022,
+      "crowd": 0.049,
+      "ewma": 0.023,
       "persistence": 0.0,
-      "trend": -0.144,
-      "climatology": -0.697
+      "trend": -0.14,
+      "climatology": -0.692
      },
      "crps": {
-      "crowd": 2.005,
-      "ewma": 2.06,
-      "persistence": 2.106,
-      "trend": 2.409,
-      "climatology": 3.575
+      "crowd": 2.015,
+      "ewma": 2.071,
+      "persistence": 2.12,
+      "trend": 2.416,
+      "climatology": 3.587
      }
     },
     {
@@ -27887,18 +29200,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.046,
-      "ewma": 0.022,
+      "crowd": 0.047,
+      "ewma": 0.021,
       "persistence": 0.0,
-      "trend": -0.143,
-      "climatology": -0.693
+      "trend": -0.141,
+      "climatology": -0.692
      },
      "crps": {
-      "crowd": 1.941,
-      "ewma": 1.991,
-      "persistence": 2.035,
-      "trend": 2.326,
-      "climatology": 3.445
+      "crowd": 1.946,
+      "ewma": 1.998,
+      "persistence": 2.042,
+      "trend": 2.33,
+      "climatology": 3.455
      }
     },
     {
@@ -27912,18 +29225,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.049,
-      "ewma": 0.027,
+      "crowd": 0.051,
+      "ewma": 0.028,
       "persistence": 0.0,
-      "trend": -0.136,
-      "climatology": -0.682
+      "trend": -0.131,
+      "climatology": -0.677
      },
      "crps": {
-      "crowd": 1.883,
-      "ewma": 1.927,
-      "persistence": 1.979,
-      "trend": 2.249,
-      "climatology": 3.329
+      "crowd": 1.891,
+      "ewma": 1.936,
+      "persistence": 1.992,
+      "trend": 2.254,
+      "climatology": 3.34
      }
     },
     {
@@ -27937,18 +29250,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.049,
-      "ewma": 0.027,
+      "crowd": 0.051,
+      "ewma": 0.028,
       "persistence": 0.0,
-      "trend": -0.135,
-      "climatology": -0.667
+      "trend": -0.131,
+      "climatology": -0.661
      },
      "crps": {
-      "crowd": 1.826,
-      "ewma": 1.869,
-      "persistence": 1.92,
-      "trend": 2.179,
-      "climatology": 3.2
+      "crowd": 1.834,
+      "ewma": 1.878,
+      "persistence": 1.932,
+      "trend": 2.184,
+      "climatology": 3.209
      }
     },
     {
@@ -27962,18 +29275,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.046,
-      "ewma": 0.024,
+      "crowd": 0.048,
+      "ewma": 0.026,
       "persistence": 0.0,
-      "trend": -0.144,
-      "climatology": -0.669
+      "trend": -0.14,
+      "climatology": -0.663
      },
      "crps": {
-      "crowd": 1.77,
-      "ewma": 1.81,
-      "persistence": 1.855,
-      "trend": 2.122,
-      "climatology": 3.095
+      "crowd": 1.778,
+      "ewma": 1.818,
+      "persistence": 1.866,
+      "trend": 2.127,
+      "climatology": 3.103
      }
     },
     {
@@ -27987,18 +29300,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.05,
-      "ewma": 0.029,
+      "crowd": 0.052,
+      "ewma": 0.03,
       "persistence": 0.0,
-      "trend": -0.137,
-      "climatology": -0.649
+      "trend": -0.133,
+      "climatology": -0.643
      },
      "crps": {
-      "crowd": 1.729,
-      "ewma": 1.768,
-      "persistence": 1.821,
-      "trend": 2.071,
-      "climatology": 3.003
+      "crowd": 1.736,
+      "ewma": 1.776,
+      "persistence": 1.832,
+      "trend": 2.075,
+      "climatology": 3.01
      }
     },
     {
@@ -28012,18 +29325,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.05,
-      "ewma": 0.029,
+      "crowd": 0.052,
+      "ewma": 0.031,
       "persistence": 0.0,
-      "trend": -0.137,
-      "climatology": -0.648
+      "trend": -0.133,
+      "climatology": -0.641
      },
      "crps": {
-      "crowd": 1.684,
-      "ewma": 1.72,
-      "persistence": 1.773,
-      "trend": 2.016,
-      "climatology": 2.92
+      "crowd": 1.69,
+      "ewma": 1.728,
+      "persistence": 1.783,
+      "trend": 2.02,
+      "climatology": 2.926
      }
     },
     {
@@ -28037,18 +29350,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.053,
-      "ewma": 0.031,
+      "crowd": 0.054,
+      "ewma": 0.032,
       "persistence": 0.0,
-      "trend": -0.133,
-      "climatology": -0.628
+      "trend": -0.128,
+      "climatology": -0.622
      },
      "crps": {
-      "crowd": 1.658,
-      "ewma": 1.696,
-      "persistence": 1.75,
-      "trend": 1.982,
-      "climatology": 2.849
+      "crowd": 1.664,
+      "ewma": 1.703,
+      "persistence": 1.76,
+      "trend": 1.986,
+      "climatology": 2.854
      }
     },
     {
@@ -28062,18 +29375,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.056,
+      "crowd": 0.057,
       "ewma": 0.038,
       "persistence": 0.0,
-      "trend": -0.126,
-      "climatology": -0.617
+      "trend": -0.121,
+      "climatology": -0.612
      },
      "crps": {
-      "crowd": 1.623,
-      "ewma": 1.654,
-      "persistence": 1.719,
-      "trend": 1.936,
-      "climatology": 2.78
+      "crowd": 1.635,
+      "ewma": 1.668,
+      "persistence": 1.734,
+      "trend": 1.944,
+      "climatology": 2.795
      }
     },
     {
@@ -28087,18 +29400,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.059,
-      "ewma": 0.042,
+      "crowd": 0.058,
+      "ewma": 0.04,
       "persistence": 0.0,
-      "trend": -0.119,
-      "climatology": -0.604
+      "trend": -0.12,
+      "climatology": -0.607
      },
      "crps": {
-      "crowd": 1.6,
-      "ewma": 1.628,
-      "persistence": 1.699,
-      "trend": 1.901,
-      "climatology": 2.726
+      "crowd": 1.607,
+      "ewma": 1.637,
+      "persistence": 1.705,
+      "trend": 1.909,
+      "climatology": 2.74
      }
     },
     {
@@ -28112,18 +29425,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.056,
-      "ewma": 0.038,
+      "crowd": 0.054,
+      "ewma": 0.036,
       "persistence": 0.0,
-      "trend": -0.117,
-      "climatology": -0.607
+      "trend": -0.12,
+      "climatology": -0.609
      },
      "crps": {
-      "crowd": 1.578,
-      "ewma": 1.607,
-      "persistence": 1.671,
-      "trend": 1.866,
-      "climatology": 2.686
+      "crowd": 1.586,
+      "ewma": 1.617,
+      "persistence": 1.677,
+      "trend": 1.878,
+      "climatology": 2.697
      }
     },
     {
@@ -28137,18 +29450,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.059,
-      "ewma": 0.045,
+      "crowd": 0.058,
+      "ewma": 0.042,
       "persistence": 0.0,
-      "trend": -0.109,
+      "trend": -0.113,
       "climatology": -0.605
      },
      "crps": {
-      "crowd": 1.549,
-      "ewma": 1.573,
-      "persistence": 1.647,
-      "trend": 1.826,
-      "climatology": 2.643
+      "crowd": 1.556,
+      "ewma": 1.582,
+      "persistence": 1.652,
+      "trend": 1.838,
+      "climatology": 2.651
      }
     },
     {
@@ -28162,18 +29475,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.066,
-      "ewma": 0.048,
+      "crowd": 0.064,
+      "ewma": 0.046,
       "persistence": 0.0,
-      "trend": -0.102,
-      "climatology": -0.577
+      "trend": -0.105,
+      "climatology": -0.576
      },
      "crps": {
-      "crowd": 1.53,
-      "ewma": 1.559,
-      "persistence": 1.638,
-      "trend": 1.805,
-      "climatology": 2.583
+      "crowd": 1.537,
+      "ewma": 1.567,
+      "persistence": 1.643,
+      "trend": 1.816,
+      "climatology": 2.59
      }
     },
     {
@@ -28187,18 +29500,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.069,
-      "ewma": 0.052,
+      "crowd": 0.067,
+      "ewma": 0.05,
       "persistence": 0.0,
-      "trend": -0.096,
+      "trend": -0.1,
       "climatology": -0.556
      },
      "crps": {
-      "crowd": 1.514,
-      "ewma": 1.542,
-      "persistence": 1.626,
-      "trend": 1.782,
-      "climatology": 2.531
+      "crowd": 1.521,
+      "ewma": 1.55,
+      "persistence": 1.631,
+      "trend": 1.793,
+      "climatology": 2.537
      }
     },
     {
@@ -28212,18 +29525,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.074,
-      "ewma": 0.059,
+      "crowd": 0.072,
+      "ewma": 0.056,
       "persistence": 0.0,
-      "trend": -0.09,
-      "climatology": -0.542
+      "trend": -0.095,
+      "climatology": -0.543
      },
      "crps": {
-      "crowd": 1.495,
-      "ewma": 1.519,
-      "persistence": 1.613,
-      "trend": 1.759,
-      "climatology": 2.488
+      "crowd": 1.5,
+      "ewma": 1.526,
+      "persistence": 1.616,
+      "trend": 1.77,
+      "climatology": 2.494
      }
     }
    ],
@@ -28232,64 +29545,64 @@
      {
       "entrant": "crowd",
       "rounds": 140,
-      "mean_crps": 2.635,
-      "mean_skill": 0.015
+      "mean_crps": 2.633,
+      "mean_skill": 0.014
      },
      {
       "entrant": "persistence",
       "rounds": 140,
-      "mean_crps": 2.674,
+      "mean_crps": 2.669,
       "mean_skill": 0.0
      },
      {
       "entrant": "ewma",
       "rounds": 140,
-      "mean_crps": 2.69,
-      "mean_skill": -0.006
+      "mean_crps": 2.689,
+      "mean_skill": -0.007
      },
      {
       "entrant": "trend",
       "rounds": 140,
-      "mean_crps": 3.214,
-      "mean_skill": -0.202
+      "mean_crps": 3.215,
+      "mean_skill": -0.204
      },
      {
       "entrant": "climatology",
       "rounds": 140,
-      "mean_crps": 5.156,
-      "mean_skill": -0.928
+      "mean_crps": 5.153,
+      "mean_skill": -0.93
      }
     ],
     "yougov_approval": [
      {
       "entrant": "crowd",
       "rounds": 111,
-      "mean_crps": 1.038,
-      "mean_skill": 0.167
+      "mean_crps": 1.081,
+      "mean_skill": 0.172
      },
      {
       "entrant": "ewma",
       "rounds": 111,
-      "mean_crps": 1.042,
-      "mean_skill": 0.164
+      "mean_crps": 1.086,
+      "mean_skill": 0.167
      },
      {
       "entrant": "trend",
       "rounds": 111,
-      "mean_crps": 1.132,
-      "mean_skill": 0.091
-     },
-     {
-      "entrant": "persistence",
-      "rounds": 111,
-      "mean_crps": 1.245,
-      "mean_skill": 0.0
+      "mean_crps": 1.183,
+      "mean_skill": 0.093
      },
      {
       "entrant": "climatology",
       "rounds": 111,
-      "mean_crps": 1.247,
-      "mean_skill": -0.002
+      "mean_crps": 1.271,
+      "mean_skill": 0.026
+     },
+     {
+      "entrant": "persistence",
+      "rounds": 111,
+      "mean_crps": 1.305,
+      "mean_skill": 0.0
      }
     ],
     "mc_approval": [
@@ -28328,32 +29641,32 @@
      {
       "entrant": "crowd",
       "rounds": 68,
-      "mean_crps": 0.851,
-      "mean_skill": 0.166
+      "mean_crps": 0.819,
+      "mean_skill": 0.139
      },
      {
       "entrant": "ewma",
       "rounds": 68,
-      "mean_crps": 0.86,
-      "mean_skill": 0.157
+      "mean_crps": 0.834,
+      "mean_skill": 0.123
      },
      {
       "entrant": "climatology",
       "rounds": 68,
       "mean_crps": 0.892,
-      "mean_skill": 0.127
-     },
-     {
-      "entrant": "trend",
-      "rounds": 68,
-      "mean_crps": 0.983,
-      "mean_skill": 0.038
+      "mean_skill": 0.061
      },
      {
       "entrant": "persistence",
       "rounds": 68,
-      "mean_crps": 1.021,
+      "mean_crps": 0.95,
       "mean_skill": 0.0
+     },
+     {
+      "entrant": "trend",
+      "rounds": 68,
+      "mean_crps": 0.961,
+      "mean_skill": -0.011
      }
     ]
    }
@@ -36258,324 +37571,324 @@
  "charts": {
   "approval_avg": [
    {
-    "date": "2025-02-16",
-    "value": 49.62
+    "date": "2025-02-17",
+    "value": 49.72
    },
    {
-    "date": "2025-02-23",
-    "value": 49.48
+    "date": "2025-02-24",
+    "value": 49.38
    },
    {
-    "date": "2025-03-02",
-    "value": 49.1
+    "date": "2025-03-03",
+    "value": 49.04
    },
    {
-    "date": "2025-03-09",
-    "value": 48.43
+    "date": "2025-03-10",
+    "value": 48.3
    },
    {
-    "date": "2025-03-16",
-    "value": 48.08
+    "date": "2025-03-17",
+    "value": 48.11
    },
    {
-    "date": "2025-03-23",
-    "value": 48.16
+    "date": "2025-03-24",
+    "value": 48.09
    },
    {
-    "date": "2025-03-30",
-    "value": 47.88
+    "date": "2025-03-31",
+    "value": 47.87
    },
    {
-    "date": "2025-04-06",
-    "value": 46.81
+    "date": "2025-04-07",
+    "value": 46.65
    },
    {
-    "date": "2025-04-13",
+    "date": "2025-04-14",
     "value": 46.09
    },
    {
-    "date": "2025-04-20",
-    "value": 45.78
+    "date": "2025-04-21",
+    "value": 45.71
    },
    {
-    "date": "2025-04-27",
-    "value": 45.54
+    "date": "2025-04-28",
+    "value": 45.57
    },
    {
-    "date": "2025-05-04",
-    "value": 45.53
+    "date": "2025-05-05",
+    "value": 45.56
    },
    {
-    "date": "2025-05-11",
-    "value": 45.83
+    "date": "2025-05-12",
+    "value": 46.02
    },
    {
-    "date": "2025-05-18",
-    "value": 46.49
+    "date": "2025-05-19",
+    "value": 46.51
    },
    {
-    "date": "2025-05-25",
-    "value": 46.93
+    "date": "2025-05-26",
+    "value": 47.06
    },
    {
-    "date": "2025-06-01",
-    "value": 47.69
+    "date": "2025-06-02",
+    "value": 47.71
    },
    {
-    "date": "2025-06-08",
-    "value": 47.17
+    "date": "2025-06-09",
+    "value": 47.16
    },
    {
-    "date": "2025-06-15",
-    "value": 46.96
+    "date": "2025-06-16",
+    "value": 47.02
    },
    {
-    "date": "2025-06-22",
+    "date": "2025-06-23",
     "value": 46.81
    },
    {
-    "date": "2025-06-29",
-    "value": 46.55
+    "date": "2025-06-30",
+    "value": 46.57
    },
    {
-    "date": "2025-07-06",
-    "value": 46.48
+    "date": "2025-07-07",
+    "value": 46.03
    },
    {
-    "date": "2025-07-13",
-    "value": 45.59
-   },
-   {
-    "date": "2025-07-20",
-    "value": 45.08
-   },
-   {
-    "date": "2025-07-27",
-    "value": 45.0
-   },
-   {
-    "date": "2025-08-03",
-    "value": 45.16
-   },
-   {
-    "date": "2025-08-10",
-    "value": 44.79
-   },
-   {
-    "date": "2025-08-17",
-    "value": 45.25
-   },
-   {
-    "date": "2025-08-24",
+    "date": "2025-07-14",
     "value": 45.31
    },
    {
-    "date": "2025-08-31",
-    "value": 45.18
+    "date": "2025-07-21",
+    "value": 45.14
    },
    {
-    "date": "2025-09-07",
-    "value": 45.32
+    "date": "2025-07-28",
+    "value": 45.0
    },
    {
-    "date": "2025-09-14",
-    "value": 45.42
+    "date": "2025-08-04",
+    "value": 45.12
    },
    {
-    "date": "2025-09-21",
-    "value": 45.43
+    "date": "2025-08-11",
+    "value": 44.69
    },
    {
-    "date": "2025-09-28",
-    "value": 45.05
+    "date": "2025-08-18",
+    "value": 45.25
    },
    {
-    "date": "2025-10-05",
-    "value": 45.03
+    "date": "2025-08-25",
+    "value": 45.28
    },
    {
-    "date": "2025-10-12",
-    "value": 45.27
+    "date": "2025-09-01",
+    "value": 45.25
    },
    {
-    "date": "2025-10-19",
+    "date": "2025-09-08",
+    "value": 45.28
+   },
+   {
+    "date": "2025-09-15",
+    "value": 45.61
+   },
+   {
+    "date": "2025-09-22",
+    "value": 45.48
+   },
+   {
+    "date": "2025-09-29",
+    "value": 45.1
+   },
+   {
+    "date": "2025-10-06",
+    "value": 45.11
+   },
+   {
+    "date": "2025-10-13",
     "value": 45.21
    },
    {
-    "date": "2025-10-26",
-    "value": 44.48
+    "date": "2025-10-20",
+    "value": 45.09
    },
    {
-    "date": "2025-11-02",
-    "value": 43.78
+    "date": "2025-10-27",
+    "value": 44.36
    },
    {
-    "date": "2025-11-09",
-    "value": 42.91
+    "date": "2025-11-03",
+    "value": 43.61
    },
    {
-    "date": "2025-11-16",
-    "value": 42.57
+    "date": "2025-11-10",
+    "value": 42.76
    },
    {
-    "date": "2025-11-23",
-    "value": 42.73
+    "date": "2025-11-17",
+    "value": 42.55
    },
    {
-    "date": "2025-11-30",
-    "value": 42.67
+    "date": "2025-11-24",
+    "value": 42.71
    },
    {
-    "date": "2025-12-07",
-    "value": 43.48
-   },
-   {
-    "date": "2025-12-14",
-    "value": 43.66
-   },
-   {
-    "date": "2025-12-21",
-    "value": 43.43
-   },
-   {
-    "date": "2025-12-28",
-    "value": 43.46
-   },
-   {
-    "date": "2026-01-04",
-    "value": 42.95
-   },
-   {
-    "date": "2026-01-11",
-    "value": 43.18
-   },
-   {
-    "date": "2026-01-18",
-    "value": 43.02
-   },
-   {
-    "date": "2026-01-25",
-    "value": 43.09
-   },
-   {
-    "date": "2026-02-01",
-    "value": 42.56
-   },
-   {
-    "date": "2026-02-08",
-    "value": 42.12
-   },
-   {
-    "date": "2026-02-15",
-    "value": 42.29
-   },
-   {
-    "date": "2026-02-22",
+    "date": "2025-12-01",
     "value": 42.64
    },
    {
-    "date": "2026-03-01",
-    "value": 43.1
+    "date": "2025-12-08",
+    "value": 43.34
    },
    {
-    "date": "2026-03-08",
-    "value": 42.67
+    "date": "2025-12-15",
+    "value": 43.64
    },
    {
-    "date": "2026-03-15",
-    "value": 42.06
+    "date": "2025-12-22",
+    "value": 43.45
    },
    {
-    "date": "2026-03-22",
-    "value": 41.53
+    "date": "2025-12-29",
+    "value": 43.45
    },
    {
-    "date": "2026-03-29",
-    "value": 41.0
+    "date": "2026-01-05",
+    "value": 42.89
    },
    {
-    "date": "2026-04-05",
-    "value": 41.34
+    "date": "2026-01-12",
+    "value": 43.13
    },
    {
-    "date": "2026-04-12",
-    "value": 41.1
+    "date": "2026-01-19",
+    "value": 43.09
    },
    {
-    "date": "2026-04-19",
-    "value": 40.81
+    "date": "2026-01-26",
+    "value": 43.04
    },
    {
-    "date": "2026-04-26",
-    "value": 40.8
+    "date": "2026-02-02",
+    "value": 42.42
    },
    {
-    "date": "2026-05-03",
-    "value": 40.15
+    "date": "2026-02-09",
+    "value": 42.16
    },
    {
-    "date": "2026-05-10",
-    "value": 40.16
+    "date": "2026-02-16",
+    "value": 42.37
    },
    {
-    "date": "2026-05-17",
-    "value": 39.84
+    "date": "2026-02-23",
+    "value": 42.69
    },
    {
-    "date": "2026-05-24",
-    "value": 39.87
+    "date": "2026-03-02",
+    "value": 43.19
    },
    {
-    "date": "2026-05-31",
-    "value": 39.86
+    "date": "2026-03-09",
+    "value": 42.61
    },
    {
-    "date": "2026-06-07",
-    "value": 39.77
+    "date": "2026-03-16",
+    "value": 41.99
    },
    {
-    "date": "2026-06-14",
+    "date": "2026-03-23",
+    "value": 41.51
+   },
+   {
+    "date": "2026-03-30",
+    "value": 41.06
+   },
+   {
+    "date": "2026-04-06",
+    "value": 41.28
+   },
+   {
+    "date": "2026-04-13",
+    "value": 41.09
+   },
+   {
+    "date": "2026-04-20",
+    "value": 40.84
+   },
+   {
+    "date": "2026-04-27",
+    "value": 40.7
+   },
+   {
+    "date": "2026-05-04",
+    "value": 40.13
+   },
+   {
+    "date": "2026-05-11",
+    "value": 40.1
+   },
+   {
+    "date": "2026-05-18",
+    "value": 39.53
+   },
+   {
+    "date": "2026-05-25",
+    "value": 39.9
+   },
+   {
+    "date": "2026-06-01",
+    "value": 39.83
+   },
+   {
+    "date": "2026-06-08",
+    "value": 39.71
+   },
+   {
+    "date": "2026-06-15",
+    "value": 39.94
+   },
+   {
+    "date": "2026-06-22",
+    "value": 40.39
+   },
+   {
+    "date": "2026-06-29",
+    "value": 40.38
+   },
+   {
+    "date": "2026-07-06",
+    "value": 40.63
+   },
+   {
+    "date": "2026-07-13",
+    "value": 40.65
+   },
+   {
+    "date": "2026-07-20",
+    "value": 40.58
+   },
+   {
+    "date": "2026-07-27",
+    "value": 40.32
+   },
+   {
+    "date": "2026-08-03",
+    "value": 40.3
+   },
+   {
+    "date": "2026-08-10",
+    "value": 39.8
+   },
+   {
+    "date": "2026-08-17",
     "value": 39.89
    },
    {
-    "date": "2026-06-21",
-    "value": 40.25
-   },
-   {
-    "date": "2026-06-28",
-    "value": 40.48
-   },
-   {
-    "date": "2026-07-05",
-    "value": 40.48
-   },
-   {
-    "date": "2026-07-12",
-    "value": 40.73
-   },
-   {
-    "date": "2026-07-19",
-    "value": 40.56
-   },
-   {
-    "date": "2026-07-26",
-    "value": 40.29
-   },
-   {
-    "date": "2026-08-02",
-    "value": 40.26
-   },
-   {
-    "date": "2026-08-09",
-    "value": 39.79
-   },
-   {
-    "date": "2026-08-16",
-    "value": 40.06
-   },
-   {
-    "date": "2026-08-23",
-    "value": 39.7
+    "date": "2026-08-24",
+    "value": 39.87
    }
   ],
   "generic_margin": [
@@ -37091,7 +38404,7 @@
    },
    {
     "date": "2026-08-01",
-    "value": 51.0
+    "value": 51.7
    }
   ],
   "yougov_approval": [
@@ -37253,7 +38566,7 @@
    },
    {
     "date": "2025-06-28",
-    "value": 42.0
+    "value": 40.0
    },
    {
     "date": "2025-07-05",
@@ -37297,7 +38610,7 @@
    },
    {
     "date": "2025-08-31",
-    "value": 41.0
+    "value": 40.0
    },
    {
     "date": "2025-09-04",
@@ -37313,7 +38626,7 @@
    },
    {
     "date": "2025-09-13",
-    "value": 41.0
+    "value": 39.0
    },
    {
     "date": "2025-09-20",
@@ -37341,7 +38654,7 @@
    },
    {
     "date": "2025-10-25",
-    "value": 40.0
+    "value": 39.0
    },
    {
     "date": "2025-10-30",
@@ -37465,7 +38778,7 @@
    },
    {
     "date": "2026-03-28",
-    "value": 39.0
+    "value": 35.0
    },
    {
     "date": "2026-04-04",
@@ -37951,7 +39264,7 @@
    },
    {
     "date": "2026-08-01",
-    "value": 51.0
+    "value": 51.7
    }
   ],
   "yougov_approval": [
@@ -38466,10 +39779,6 @@
   ],
   "rasmussen_approval": [
    {
-    "date": "2026-08-14",
-    "value": 44.0
-   },
-   {
     "date": "2026-08-15",
     "value": 45.0
    },
@@ -38496,13 +39805,13 @@
    {
     "date": "2026-08-23",
     "value": 42.0
+   },
+   {
+    "date": "2026-08-24",
+    "value": 43.0
    }
   ],
   "rmg_approval": [
-   {
-    "date": "2026-06-14",
-    "value": 43.0
-   },
    {
     "date": "2026-06-19",
     "value": 43.0
@@ -38530,6 +39839,10 @@
    {
     "date": "2026-08-13",
     "value": 42.0
+   },
+   {
+    "date": "2026-08-21",
+    "value": 45.0
    }
   ],
   "ipsos_approval": [
@@ -38670,10 +39983,6 @@
   ],
   "civiqs_net_approval": [
    {
-    "date": "2026-07-03",
-    "value": -22.0
-   },
-   {
     "date": "2026-07-10",
     "value": -22.4
    },
@@ -38700,6 +40009,10 @@
    {
     "date": "2026-08-21",
     "value": -22.6
+   },
+   {
+    "date": "2026-08-28",
+    "value": -23.3
    }
   ],
   "civiqs_net_approval_rep": [
@@ -38738,10 +40051,6 @@
   ],
   "civiqs_net_econ_now": [
    {
-    "date": "2026-07-03",
-    "value": -31.1
-   },
-   {
     "date": "2026-07-10",
     "value": -30.0
    },
@@ -38768,13 +40077,13 @@
    {
     "date": "2026-08-21",
     "value": -32.5
+   },
+   {
+    "date": "2026-08-28",
+    "value": -31.3
    }
   ],
   "civiqs_net_econ_direction": [
-   {
-    "date": "2026-07-03",
-    "value": -31.8
-   },
    {
     "date": "2026-07-10",
     "value": -32.1
@@ -38802,13 +40111,13 @@
    {
     "date": "2026-08-21",
     "value": -38.4
+   },
+   {
+    "date": "2026-08-28",
+    "value": -37.9
    }
   ],
   "civiqs_net_family_finances": [
-   {
-    "date": "2026-07-03",
-    "value": -28.4
-   },
    {
     "date": "2026-07-10",
     "value": -27.7
@@ -38836,6 +40145,10 @@
    {
     "date": "2026-08-21",
     "value": -31.1
+   },
+   {
+    "date": "2026-08-28",
+    "value": -30.6
    }
   ],
   "civiqs_net_inflation_concern": [
@@ -39178,6 +40491,88 @@
     "value": 32.3
    }
   ],
+  "sce_inflation_1y": [
+   {
+    "date": "2025-12-01",
+    "value": 3.416846036911011
+   },
+   {
+    "date": "2026-01-01",
+    "value": 3.08764123916626
+   },
+   {
+    "date": "2026-02-01",
+    "value": 3.0
+   },
+   {
+    "date": "2026-03-01",
+    "value": 3.417398452758789
+   },
+   {
+    "date": "2026-04-01",
+    "value": 3.636756896972656
+   },
+   {
+    "date": "2026-05-01",
+    "value": 3.462475061416626
+   },
+   {
+    "date": "2026-06-01",
+    "value": 3.673457145690918
+   },
+   {
+    "date": "2026-07-01",
+    "value": 3.632116079330444
+   }
+  ],
+  "sce_inflation_3y": [
+   {
+    "date": "2025-12-01",
+    "value": 3.0
+   },
+   {
+    "date": "2026-01-01",
+    "value": 2.980843782424927
+   },
+   {
+    "date": "2026-02-01",
+    "value": 2.998202562332153
+   },
+   {
+    "date": "2026-03-01",
+    "value": 3.079425573348999
+   },
+   {
+    "date": "2026-04-01",
+    "value": 3.149212121963501
+   },
+   {
+    "date": "2026-05-01",
+    "value": 3.130484104156494
+   },
+   {
+    "date": "2026-06-01",
+    "value": 3.336173057556152
+   },
+   {
+    "date": "2026-07-01",
+    "value": 3.261532068252563
+   }
+  ],
+  "hh_trump_approval": [
+   {
+    "date": "2026-04-28",
+    "value": 42.0
+   },
+   {
+    "date": "2026-06-02",
+    "value": 43.0
+   },
+   {
+    "date": "2026-07-16",
+    "value": 42.0
+   }
+  ],
   "trends_tesla": [
    {
     "date": "2026-07-04",
@@ -39248,10 +40643,6 @@
   ],
   "trends_share_tesla": [
    {
-    "date": "2026-06-27",
-    "value": 8.28
-   },
-   {
     "date": "2026-07-04",
     "value": 10.56
    },
@@ -39278,13 +40669,13 @@
    {
     "date": "2026-08-15",
     "value": 9.09
+   },
+   {
+    "date": "2026-08-22",
+    "value": 9.38
    }
   ],
   "trends_share_iphone": [
-   {
-    "date": "2026-06-27",
-    "value": 42.01
-   },
    {
     "date": "2026-07-04",
     "value": 38.03
@@ -39312,13 +40703,13 @@
    {
     "date": "2026-08-15",
     "value": 40.91
+   },
+   {
+    "date": "2026-08-22",
+    "value": 40.62
    }
   ],
   "trends_share_samsung": [
-   {
-    "date": "2026-06-27",
-    "value": 17.16
-   },
    {
     "date": "2026-07-04",
     "value": 16.2
@@ -39346,13 +40737,13 @@
    {
     "date": "2026-08-15",
     "value": 13.64
+   },
+   {
+    "date": "2026-08-22",
+    "value": 12.5
    }
   ],
   "trends_share_netflix": [
-   {
-    "date": "2026-06-27",
-    "value": 16.57
-   },
    {
     "date": "2026-07-04",
     "value": 19.01
@@ -39380,13 +40771,13 @@
    {
     "date": "2026-08-15",
     "value": 17.42
+   },
+   {
+    "date": "2026-08-22",
+    "value": 16.41
    }
   ],
   "trends_share_disney": [
-   {
-    "date": "2026-06-27",
-    "value": 15.98
-   },
    {
     "date": "2026-07-04",
     "value": 16.2
@@ -39414,6 +40805,10 @@
    {
     "date": "2026-08-15",
     "value": 18.94
+   },
+   {
+    "date": "2026-08-22",
+    "value": 21.09
    }
   ],
   "civiqs_net_approval_dem": [
@@ -39656,10 +41051,6 @@
   ],
   "civiqs_net_approval_race_black": [
    {
-    "date": "2026-07-03",
-    "value": -82.0
-   },
-   {
     "date": "2026-07-10",
     "value": -81.9
    },
@@ -39686,13 +41077,13 @@
    {
     "date": "2026-08-21",
     "value": -81.3
+   },
+   {
+    "date": "2026-08-28",
+    "value": -82.2
    }
   ],
   "civiqs_net_approval_race_hispanic": [
-   {
-    "date": "2026-07-03",
-    "value": -36.6
-   },
    {
     "date": "2026-07-10",
     "value": -36.0
@@ -39720,6 +41111,10 @@
    {
     "date": "2026-08-21",
     "value": -34.3
+   },
+   {
+    "date": "2026-08-28",
+    "value": -35.8
    }
   ],
   "civiqs_net_approval_race_other": [
@@ -39758,10 +41153,6 @@
   ],
   "civiqs_net_approval_edu_noncollege": [
    {
-    "date": "2026-07-03",
-    "value": -14.7
-   },
-   {
     "date": "2026-07-10",
     "value": -14.6
    },
@@ -39788,13 +41179,13 @@
    {
     "date": "2026-08-21",
     "value": -14.1
+   },
+   {
+    "date": "2026-08-28",
+    "value": -14.8
    }
   ],
   "civiqs_net_approval_edu_college": [
-   {
-    "date": "2026-07-03",
-    "value": -27.7
-   },
    {
     "date": "2026-07-10",
     "value": -28.0
@@ -39822,13 +41213,13 @@
    {
     "date": "2026-08-21",
     "value": -31.2
+   },
+   {
+    "date": "2026-08-28",
+    "value": -31.1
    }
   ],
   "civiqs_net_approval_edu_postgrad": [
-   {
-    "date": "2026-07-03",
-    "value": -46.5
-   },
    {
     "date": "2026-07-10",
     "value": -46.9
@@ -39856,13 +41247,13 @@
    {
     "date": "2026-08-21",
     "value": -48.2
+   },
+   {
+    "date": "2026-08-28",
+    "value": -49.8
    }
   ],
   "civiqs_net_approval_male": [
-   {
-    "date": "2026-07-03",
-    "value": -9.4
-   },
    {
     "date": "2026-07-10",
     "value": -9.6
@@ -39890,13 +41281,13 @@
    {
     "date": "2026-08-21",
     "value": -10.8
+   },
+   {
+    "date": "2026-08-28",
+    "value": -11.7
    }
   ],
   "civiqs_net_approval_female": [
-   {
-    "date": "2026-07-03",
-    "value": -33.4
-   },
    {
     "date": "2026-07-10",
     "value": -33.5
@@ -39924,6 +41315,10 @@
    {
     "date": "2026-08-21",
     "value": -33.4
+   },
+   {
+    "date": "2026-08-28",
+    "value": -33.7
    }
   ],
   "yougov_xtab_approve_dem": [
@@ -40509,38 +41904,38 @@
   "sb_approval": {
    "source": "sb_approval",
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
-   "fetched_at": "2026-08-27T22:22:04Z",
-   "sha256": "14d98c1f0bc2061ff5a2515c6c149adc0baec605de714050aae68f75d5dcddc4",
-   "bytes": 1583086,
-   "file": "sources/sb_approval/2026-08-27.csv",
+   "fetched_at": "2026-08-28T22:24:32Z",
+   "sha256": "2a6ffca1e9d97ca162ba669e04f3b0867643842bdfe8bbafba388842dc83172a",
+   "bytes": 1585778,
+   "file": "sources/sb_approval/2026-08-28.csv",
    "note": "Silver Bulletin poll database, published as a Google Sheet"
   },
   "sb_generic": {
    "source": "sb_generic",
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
-   "fetched_at": "2026-08-27T22:22:04Z",
-   "sha256": "4f92054370b0f8e1f10038e3630e44e187cfa459d03be80ebee681a959b04c9d",
-   "bytes": 154536,
-   "file": "sources/sb_generic/2026-08-27.csv",
+   "fetched_at": "2026-08-28T22:24:32Z",
+   "sha256": "27e6894808788f2e76ad4aa078ac1f6ffa8e13ca97c0f728118cd8e3c186553b",
+   "bytes": 154505,
+   "file": "sources/sb_generic/2026-08-28.csv",
    "note": "Silver Bulletin generic-ballot database, published as a Google Sheet"
   },
   "umich": {
    "source": "umich",
    "url": "http://www.sca.isr.umich.edu/files/tbmics.csv",
-   "fetched_at": "2026-08-27T22:22:04Z",
-   "sha256": "81a6adb40258512e65bea575e6d85f499a0a577df4b00da0f2783054d2c684b5",
-   "bytes": 12207,
-   "file": "sources/umich/2026-08-27.csv",
+   "fetched_at": "2026-08-28T22:24:32Z",
+   "sha256": "9c3636a2159c1003f9985280f6287025f60661adf8574a69026fb50a0d748b64",
+   "bytes": 12225,
+   "file": "sources/umich/2026-08-28.csv",
    "note": "Surveys of Consumers, University of Michigan (sca.isr.umich.edu): tbmics.csv for finals and tbcics.csv for the current preliminary, newest reading 2026-08-01"
   },
   "aaii": {
    "source": "aaii",
    "url": "https://www.aaii.com/sentimentsurvey/sent_results",
-   "fetched_at": "2026-08-27T22:22:04Z",
-   "sha256": "a9aa0ea52f0b405669003ea8a1c692504fa97c127739421fba0eb13466699bd7",
+   "fetched_at": "2026-08-28T22:24:33Z",
+   "sha256": "a577d07157d17f0214d61cc9695cdd7652aafcfbab014a7611994c82b9c66815",
    "bytes": 46280,
-   "file": "sources/aaii/2026-08-27.html",
-   "note": "AAII sentiment survey results page, a ~22-week rolling window parsed against the response's own date 2026-08-27; the full 1987-present .xls is OLE2 and unreadable without a dependency"
+   "file": "sources/aaii/2026-08-28.html",
+   "note": "AAII sentiment survey results page, a ~22-week rolling window parsed against the response's own date 2026-08-28; the full 1987-present .xls is OLE2 and unreadable without a dependency"
   },
   "repo": "https://github.com/Social-Atoms/social-sim-arena"
  },
@@ -40749,6 +42144,30 @@
    "ok": false,
    "detail": "Success! Timestamp complete"
   },
+  "wiki-top10-2026-09-06": {
+   "round_id": "wiki-top10-2026-09-06",
+   "manifest": true,
+   "manifest_file": "stamps/wiki-top10-2026-09-06.json",
+   "manifest_sha256": "7e7eb2b1e3883a62ea1602592104a8152a1c4faa9a15bf8c9df388b641971686",
+   "proof": true,
+   "proof_file": "stamps/wiki-top10-2026-09-06.json.ots",
+   "bitcoin_attested": false,
+   "action": "upgraded",
+   "ok": false,
+   "detail": "Failed! Timestamp not complete"
+  },
+  "trends-basket-2026-09-05": {
+   "round_id": "trends-basket-2026-09-05",
+   "manifest": true,
+   "manifest_file": "stamps/trends-basket-2026-09-05.json",
+   "manifest_sha256": "97b7c71ed0293a85137d12f897fa02eee200adc8b7dea05b2d1ce503b7ac63b3",
+   "proof": true,
+   "proof_file": "stamps/trends-basket-2026-09-05.json.ots",
+   "bitcoin_attested": false,
+   "action": "upgraded",
+   "ok": false,
+   "detail": "Failed! Timestamp not complete"
+  },
   "esi-2026-08-26": {
    "round_id": "esi-2026-08-26",
    "manifest": true,
@@ -40795,7 +42214,7 @@
    "budget_fetch_days": 3,
    "budget_change_days": 12,
    "url": "https://www.aaii.com/sentimentsurvey/sent_results",
-   "file": "sources/aaii/2026-08-27.html"
+   "file": "sources/aaii/2026-08-28.html"
   },
   {
    "source": "civiqs",
@@ -40807,7 +42226,7 @@
    "url": null,
    "file": null,
    "trackers": 22,
-   "newest_snapshot": "2026-08-27"
+   "newest_snapshot": "2026-08-28"
   },
   {
    "source": "sb_approval",
@@ -40817,7 +42236,7 @@
    "budget_fetch_days": 2,
    "budget_change_days": 7,
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
-   "file": "sources/sb_approval/2026-08-27.csv"
+   "file": "sources/sb_approval/2026-08-28.csv"
   },
   {
    "source": "sb_generic",
@@ -40827,17 +42246,17 @@
    "budget_fetch_days": 2,
    "budget_change_days": 10,
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
-   "file": "sources/sb_generic/2026-08-27.csv"
+   "file": "sources/sb_generic/2026-08-28.csv"
   },
   {
    "source": "umich",
    "state": "ok",
    "fetched_days": -0.0,
-   "changed_days": 9.7,
+   "changed_days": 0.0,
    "budget_fetch_days": 3,
    "budget_change_days": 40,
    "url": "http://www.sca.isr.umich.edu/files/tbmics.csv",
-   "file": "sources/umich/2026-08-27.csv"
+   "file": "sources/umich/2026-08-28.csv"
   }
  ],
  "series_provenance": {
@@ -40878,6 +42297,9 @@
   "aaii_bull_bear_spread": "aaii",
   "cci_headline": "confboard",
   "esi_headline": "pentaesi",
+  "sce_inflation_1y": "sce",
+  "sce_inflation_3y": "sce",
+  "hh_trump_approval": "hhpoll",
   "trends_tesla": "trends",
   "trends_iphone": "trends",
   "trends_share_tesla": "trends_basket",
