@@ -22,7 +22,9 @@ from . import crosstab
 from .adapters import aaii as aaii_adapter
 from .adapters import civiqs as civiqs_adapter
 from .adapters import confboard as confboard_adapter
+from .adapters import hhpoll as hhpoll_adapter
 from .adapters import pentaesi as pentaesi_adapter
+from .adapters import sce as sce_adapter
 from .adapters import silverbulletin as sb
 from .adapters import trends as trends_adapter
 from .adapters import umich as umich_adapter
@@ -1082,6 +1084,73 @@ SERIES["esi_headline"] = {
 }
 
 
+_SCE_METHODOLOGY = (
+    "Survey of Consumer Expectations, Federal Reserve Bank of New York; "
+    "rotating internet panel of about 1,300 US household heads. Each "
+    "respondent assigns probabilities to inflation outcome bins; the "
+    "published number is the median across respondents of the density "
+    "means, in percent. Rows are dated by the reference month; the release "
+    "lands early the following month, on a date preannounced on the NY Fed "
+    "economic-indicators calendar. The workbook carries its own license "
+    "sheet granting a worldwide, royalty-free right to reproduce and "
+    "distribute the published data.")
+
+SERIES["sce_inflation_1y"] = {
+    "label": "NY Fed SCE 1-year inflation expectations",
+    "tracker": "ny_fed_sce",
+    "publisher": ("The Federal Reserve Bank of New York: a monthly internet "
+                  "survey of a rotating panel of about 1,300 US household "
+                  "heads, published by the bank as an official statistic "
+                  "with release dates announced months ahead."),
+    "source": "sce",
+    "sce": {"horizon": "1y"},
+    "unit": "percent, median expected inflation",
+    "cadence": ("monthly; released in the first ten days of the following "
+                "month, dates preannounced on the NY Fed CMD calendar"),
+    "question": ("NY Fed Survey of Consumer Expectations: median one-year-"
+                 "ahead expected inflation rate"),
+    "methodology": _SCE_METHODOLOGY,
+}
+
+SERIES["sce_inflation_3y"] = {
+    "label": "NY Fed SCE 3-year inflation expectations",
+    "tracker": "ny_fed_sce",
+    "publisher": SERIES["sce_inflation_1y"]["publisher"],
+    "source": "sce",
+    "sce": {"horizon": "3y"},
+    "unit": "percent, median expected inflation",
+    "cadence": SERIES["sce_inflation_1y"]["cadence"],
+    "question": ("NY Fed Survey of Consumer Expectations: median three-year-"
+                 "ahead expected inflation rate"),
+    "methodology": _SCE_METHODOLOGY,
+}
+
+SERIES["hh_trump_approval"] = {
+    "label": "Harvard-Harris Trump approval",
+    "tracker": "harvard_harris",
+    "publisher": ("Harvard CAPS and The Harris Poll, jointly: a roughly "
+                  "monthly online survey of US registered voters, published "
+                  "as PDF toplines with no preannounced calendar; some "
+                  "months are skipped."),
+    "source": "hhpoll",
+    "unit": "% approve",
+    "cadence": ("roughly monthly, no preannounced schedule; rows dated by "
+                "the day the topline was published, never the fielding day"),
+    "question": ("Harvard CAPS/Harris Poll: percent who approve (strongly "
+                 "or somewhat) of the job Donald J. Trump is doing as "
+                 "President, among surveyed US registered voters"),
+    "methodology": (
+        "Harvard CAPS/Harris Poll online survey, roughly 1,700-2,750 US "
+        "registered voters per wave, weighted to the US general adult "
+        "population; approve is the published strongly/somewhat net from "
+        "the topline PDF (question code M3ALT). Rows are dated by the "
+        "production stamp -- the day the number became public -- so a "
+        "late-published wave can never slide into history a forecaster "
+        "already locked against. The series reads only the committed "
+        "vintages under sources/hhpoll/; a new wave enters when a "
+        "maintainer fetches its PDF."),
+}
+
 # --- Google Trends: the market-research track -------------------------------
 #
 # The first two *behavioral* series in the registry: nobody was asked anything.
@@ -1246,10 +1315,26 @@ _trends_share("trends_share_disney", "Disney",
 # young echo the national line at 0.97+. But a profile scored jointly with the
 # energy score is exactly where a flat cell still carries information -- a
 # model that believes Democrats might move books real loss against one that
-# knows they will not -- so every cell is collected daily and none except
-# Republicans gets its own round. Labels are byte-exact from the dashboard's
+# knows they will not -- so every cell is collected daily whether or not it
+# also runs as its own round. Labels are byte-exact from the dashboard's
 # own demographics list (fetched 2026-08-18); a typo'd label is a hard error
 # in the adapter, never a silently-national series.
+#
+# Which cells *do* also stand alone as weekly scalar rounds is
+# `_STANDALONE_CELLS` below. Republicans and independents came first; four
+# more were added after a movement check on the archive as of 2026-08-26
+# (mean absolute week-over-week change of the Friday net over the trailing
+# 26 weeks, gate ~0.5 pts/wk, capped at the strongest movers):
+#
+#     kept:     men 0.92, adults 35-49 0.84, Hispanic/Latino 0.80,
+#               adults 50-64 0.77 -- the last also has the lowest correlation
+#               of weekly changes with the national series of any candidate
+#               (0.75, Republicans' company as a cut that moves on its own)
+#     cleared the gate, not kept: non-college 0.77 and White 0.76 echo the
+#               national line at 0.94+; 18-34 0.71, postgrad 0.65, other-race
+#               0.65, college 0.63, 65+ 0.59 and women 0.50 move less than
+#               every kept cell
+#     rejected: Black 0.29 and Democrats 0.09, floor-bound
 _PROFILE_CELLS = [
     # id suffix          axis          label                        short
     ("dem",              "party",      "Democrat",                  "Democrats"),
@@ -1269,6 +1354,14 @@ _PROFILE_CELLS = [
     ("female",           "gender",     "Female",                    "women"),
 ]
 
+# Cells that also run as their own single-number weekly rounds in
+# `questions/season0.json` ("rep" is registered above the loop, listed here so
+# the roster is complete in one place). Adding a cell here without adding its
+# rounds -- or the reverse -- makes the methodology text lie to entrants about
+# the question in front of them; the two change together.
+_STANDALONE_CELLS = ("rep", "ind", "male", "age_35_49", "age_50_64",
+                     "race_hispanic")
+
 for _sfx, _axis, _label, _short in _PROFILE_CELLS:
     SERIES[f"civiqs_net_approval_{_sfx}"] = {
         "label": f"Civiqs Trump net approval, {_short}",
@@ -1284,8 +1377,8 @@ for _sfx, _axis, _label, _short in _PROFILE_CELLS:
                      "(percent approve minus percent disapprove) among US "
                      f"registered voters, {_short} only, as the dashboard "
                      "shows it on Friday"),
-        # Two cells -- Republicans and Independents -- also carry their own
-        # single-number rounds, so the sentence about how a cell is scored is
+        # Some cells (`_STANDALONE_CELLS`) also carry their own single-number
+        # rounds, so the sentence about how a cell is scored is
         # written per cell rather than once for all sixteen. Saying "scored
         # jointly, not as its own round" on a cell that does have its own round
         # would tell an entrant something false about the question in front of
@@ -1295,7 +1388,7 @@ for _sfx, _axis, _label, _short in _PROFILE_CELLS:
             "One cell of the sixteen-cell population profile, scored jointly "
             "with the other cells"
             + (" and also asked as its own single-number round."
-               if _sfx in ("rep", "ind") else ", not as its own round.")),
+               if _sfx in _STANDALONE_CELLS else ", not as its own round.")),
         # No `survey` instrument: personas.weights_for cannot express a
         # subgroup-only population -- same refusal as civiqs_net_approval_rep.
     }
@@ -1558,6 +1651,16 @@ def build_all(sources=None):
     # release the moment the page shows one (write-once, see the adapter).
     if "confboard" in need and "confboard" not in src:
         src["confboard"] = confboard_adapter.history()
+    # One workbook download shared by both SCE horizons; write-once dated
+    # capture on success, newest archived vintage (with a loud warning) on
+    # fetch failure -- the confboard contract, on an xlsx.
+    if "sce" in need and "sce" not in src:
+        src["sce"] = sce_adapter.history()
+    # Harvard-Harris publishes no calendar and no derivable URL, so the
+    # archive is the source of truth and nothing here fetches on its own; a
+    # new wave is a maintainer passing hhpoll.fetch a URL.
+    if "hhpoll" in need and "hhpoll" not in src:
+        src["hhpoll"] = hhpoll_adapter.load()
     # One workbook download carries every wave of every subgroup, so all
     # sixteen crosstab cells share a single request the way the five basket
     # series share one Trends comparison. `src["yougov_xtab"]` holds *parsed*
@@ -1624,6 +1727,11 @@ def build_all(sources=None):
             out[sid] = list(src["pentaesi"])
         elif spec["source"] == "confboard":
             out[sid] = list(src["confboard"])
+        elif spec["source"] == "sce":
+            out[sid] = sce_adapter.to_series(src["sce"],
+                                             spec["sce"]["horizon"])
+        elif spec["source"] == "hhpoll":
+            out[sid] = hhpoll_adapter.to_series(src["hhpoll"])
         elif spec["source"] == "yougov_xtab":
             # Derived once for the whole roster, not once per cell. Sixteen
             # independent aggregations of one payload would be sixteen chances

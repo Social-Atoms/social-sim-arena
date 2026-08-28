@@ -32,10 +32,23 @@ both recorded here because they are easy to get wrong:
   could beat.
 
 The host is literally api-test.yougov.com, which is also the host the public
-tracker page uses. Treat it as fragile: archive every pull.
+tracker page uses. Treat it as fragile: every pull is archived as a dated
+vintage under sources/yougov_xtab/, and `waves()` reads the newest vintage
+rather than the network.
+
+Why the network is opt-in (SSA_YOUGOV_FETCH): YouGov's public-data license
+prohibits "bots, crawlers, or automated scripts to extract or copy the
+Licensed Data" without written permission, and a permission request is with
+their legal team. Until it is answered, a pull is a deliberate maintainer act
+-- set SSA_YOUGOV_FETCH=1 or call `pull()` -- never a side effect of the
+six-hourly refresh. The crosstab round aggregates a month of waves, so the
+archive only needs refreshing in the weeks before its lock, not four times a
+day.
 """
 import io
+import os
 import zipfile
+from datetime import datetime, timezone
 from xml.etree import ElementTree as ET
 
 import requests
@@ -78,6 +91,58 @@ def fetch(tracker="donald-trump-approval", timeout=60):
     if not r.content.startswith(b"PK"):
         raise ValueError("YouGov download did not return a workbook")
     return r.content
+
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ARCHIVE = os.path.join(ROOT, "sources", "yougov_xtab")
+
+
+def _utc_today():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def archive_path(day):
+    return os.path.join(ARCHIVE, f"{day}.xlsx")
+
+
+def archive(body, day=None):
+    """File one workbook under its capture day, write-once. Returns the path.
+
+    An existing vintage for the day is left untouched -- not compared, not
+    rewritten -- so nothing downstream of a morning capture can be changed by
+    an afternoon one.
+    """
+    if not isinstance(body, (bytes, bytearray)):
+        raise TypeError("archive takes the workbook body as bytes")
+    day = day or _utc_today()
+    path = archive_path(day)
+    if os.path.exists(path):
+        return path
+    os.makedirs(ARCHIVE, exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "wb") as f:
+        f.write(bytes(body))
+    os.replace(tmp, path)
+    return path
+
+
+def archived_days():
+    if not os.path.isdir(ARCHIVE):
+        return []
+    return sorted(f[:-5] for f in os.listdir(ARCHIVE)
+                  if f.endswith(".xlsx") and not f.startswith("."))
+
+
+def newest_archived():
+    days = archived_days()
+    return archive_path(days[-1]) if days else None
+
+
+def pull(tracker="donald-trump-approval"):
+    """Fetch, archive (write-once for today), and parse -- a maintainer act."""
+    body = fetch(tracker)
+    archive(body)
+    return parse(body)
 
 
 def _cells(sheet_xml):
@@ -145,7 +210,24 @@ def parse(blob):
 
 
 def waves(tracker="donald-trump-approval"):
-    return parse(fetch(tracker))
+    """Parsed waves from the newest archived vintage.
+
+    Fetches only when SSA_YOUGOV_FETCH is set and today has no vintage yet;
+    otherwise the committed archive is the source of truth (see the module
+    docstring for why the network is opt-in).
+    """
+    if os.environ.get("SSA_YOUGOV_FETCH") and not os.path.exists(
+            archive_path(_utc_today())):
+        return pull(tracker)
+    newest = newest_archived()
+    if newest is None:
+        raise RuntimeError(
+            "no YouGov crosstab vintage under sources/yougov_xtab/ and live "
+            "fetching is off; a maintainer bootstraps the archive with "
+            "yougov_xtab.pull() or by setting SSA_YOUGOV_FETCH=1 -- see the "
+            "module docstring for why this never happens on its own")
+    with open(newest, "rb") as f:
+        return parse(f.read())
 
 
 def profile(wave, measure="approve", cells=None):
