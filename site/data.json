@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-08-28T22:24:31Z",
+ "generated_at": "2026-08-29T07:07:56Z",
  "season": 0,
  "trackers": {
   "trump_approval_avg": {
@@ -4752,7 +4752,7 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 74,
+   "n_forecasts": 75,
    "forecasts": {
     "claude-opus-5-superfc": {
      "mean": 43.6,
@@ -4913,6 +4913,10 @@
     "glm-web-superfc": {
      "mean": 41.8,
      "sd": 2.0
+    },
+    "glm-web": {
+     "mean": 41.5,
+     "sd": 1.5
     },
     "glm-zeroshot-superfc": {
      "mean": 44.0,
@@ -8927,7 +8931,7 @@
    "lock_at": "2026-08-24T14:00:00Z",
    "resolve": "headline index in the release post on the publisher's feed, dated 2026-08-26",
    "target_type": "continuous_normal",
-   "status": "awaiting_resolution",
+   "status": "resolved",
    "history_source": "lock snapshot",
    "baselines": {
     "persistence": {
@@ -8952,6 +8956,13 @@
     }
    },
    "scoreable": true,
+   "resolution": {
+    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
+    "observed_date": "2026-08-26",
+    "resolved_at": "2026-08-29T07:07:35Z",
+    "series": "esi_headline",
+    "value": 31.0
+   },
    "n_forecasts": 28,
    "forecasts": {
     "claude-opus-5-web-superfc": {
@@ -9082,23 +9093,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 32.3,
+     "mean": 31.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 33.25,
-     "sd": 2.06,
+     "mean": 32.06,
+     "sd": 1.85,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 31.88,
-     "sd": 1.06,
+     "mean": 31.53,
+     "sd": 1.12,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 31.52,
-     "sd": 1.51,
+     "mean": 31.37,
+     "sd": 1.35,
      "method": "climatology"
     }
    },
@@ -9106,20 +9117,20 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "mean": 31.52,
-     "sd": 1.51
+     "mean": 31.37,
+     "sd": 1.35
     },
     "ewma": {
-     "mean": 31.88,
-     "sd": 1.06
+     "mean": 31.53,
+     "sd": 1.12
     },
     "persistence": {
-     "mean": 32.3,
+     "mean": 31.0,
      "sd": 1.5
     },
     "trend": {
-     "mean": 33.25,
-     "sd": 2.06
+     "mean": 32.06,
+     "sd": 1.85
     }
    }
   },
@@ -9137,23 +9148,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 32.3,
+     "mean": 31.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 33.25,
-     "sd": 2.3,
+     "mean": 32.11,
+     "sd": 2.13,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 31.88,
-     "sd": 1.06,
+     "mean": 31.53,
+     "sd": 1.12,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 31.52,
-     "sd": 1.51,
+     "mean": 31.37,
+     "sd": 1.35,
      "method": "climatology"
     }
    },
@@ -9161,20 +9172,20 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "mean": 31.52,
-     "sd": 1.51
+     "mean": 31.37,
+     "sd": 1.35
     },
     "ewma": {
-     "mean": 31.88,
-     "sd": 1.06
+     "mean": 31.53,
+     "sd": 1.12
     },
     "persistence": {
-     "mean": 32.3,
+     "mean": 31.0,
      "sd": 1.5
     },
     "trend": {
-     "mean": 33.25,
-     "sd": 2.3
+     "mean": 32.11,
+     "sd": 2.13
     }
    }
   },
@@ -12220,91 +12231,97 @@
   }
  ],
  "leaderboard": {
-  "resolved_rounds": 13,
+  "resolved_rounds": 14,
   "entries": [
    {
     "entrant": "claude-sonnet-web",
-    "rounds": 7,
-    "mean_crps": 1.008,
-    "mean_skill": 0.179
+    "rounds": 8,
+    "mean_crps": 0.957,
+    "mean_skill": 0.185
    },
    {
     "entrant": "claude-opus-5-web",
-    "rounds": 7,
-    "mean_crps": 1.136,
-    "mean_skill": 0.101
-   },
-   {
-    "entrant": "claude-sonnet-web-superfc",
-    "rounds": 7,
-    "mean_crps": 1.033,
-    "mean_skill": 0.01
-   },
-   {
-    "entrant": "persistence",
-    "rounds": 13,
-    "mean_crps": 1.274,
-    "mean_skill": 0.0
+    "rounds": 8,
+    "mean_crps": 1.063,
+    "mean_skill": 0.124
    },
    {
     "entrant": "gpt-5.6-terra-web",
-    "rounds": 7,
-    "mean_crps": 1.587,
-    "mean_skill": -0.005
+    "rounds": 8,
+    "mean_crps": 1.446,
+    "mean_skill": 0.047
+   },
+   {
+    "entrant": "claude-sonnet-web-superfc",
+    "rounds": 8,
+    "mean_crps": 0.979,
+    "mean_skill": 0.036
    },
    {
     "entrant": "qwen-3.8-web",
-    "rounds": 8,
-    "mean_crps": 1.541,
-    "mean_skill": -0.033
-   },
-   {
-    "entrant": "claude-opus-5-web-superfc",
-    "rounds": 7,
-    "mean_crps": 1.429,
-    "mean_skill": -0.037
-   },
-   {
-    "entrant": "gpt-5.6-luna-web",
-    "rounds": 7,
-    "mean_crps": 1.379,
-    "mean_skill": -0.039
+    "rounds": 9,
+    "mean_crps": 1.425,
+    "mean_skill": 0.011
    },
    {
     "entrant": "gemini-pro-web",
-    "rounds": 7,
-    "mean_crps": 1.51,
-    "mean_skill": -0.057
+    "rounds": 8,
+    "mean_crps": 1.373,
+    "mean_skill": 0.008
    },
    {
-    "entrant": "gpt-5.6-luna-web-superfc",
-    "rounds": 7,
-    "mean_crps": 1.107,
-    "mean_skill": -0.07
+    "entrant": "claude-opus-5-web-superfc",
+    "rounds": 8,
+    "mean_crps": 1.318,
+    "mean_skill": 0.004
    },
    {
-    "entrant": "gemini-pro-web-superfc",
-    "rounds": 7,
-    "mean_crps": 1.763,
-    "mean_skill": -0.077
+    "entrant": "persistence",
+    "rounds": 14,
+    "mean_crps": 1.238,
+    "mean_skill": 0.0
+   },
+   {
+    "entrant": "gpt-5.6-luna-web",
+    "rounds": 8,
+    "mean_crps": 1.282,
+    "mean_skill": -0.006
    },
    {
     "entrant": "gemini-flash-web-superfc",
-    "rounds": 7,
-    "mean_crps": 1.737,
-    "mean_skill": -0.087
+    "rounds": 8,
+    "mean_crps": 1.567,
+    "mean_skill": -0.012
+   },
+   {
+    "entrant": "gpt-5.6-luna-web-superfc",
+    "rounds": 8,
+    "mean_crps": 1.033,
+    "mean_skill": -0.02
    },
    {
     "entrant": "grok-web",
+    "rounds": 9,
+    "mean_crps": 1.416,
+    "mean_skill": -0.042
+   },
+   {
+    "entrant": "gemini-flash-web",
     "rounds": 8,
-    "mean_crps": 1.536,
-    "mean_skill": -0.098
+    "mean_crps": 1.612,
+    "mean_skill": -0.054
    },
    {
     "entrant": "ewma",
-    "rounds": 13,
-    "mean_crps": 0.987,
-    "mean_skill": -0.1
+    "rounds": 14,
+    "mean_crps": 0.954,
+    "mean_skill": -0.07
+   },
+   {
+    "entrant": "gpt-5.6-terra-web-superfc",
+    "rounds": 8,
+    "mean_crps": 1.526,
+    "mean_skill": -0.077
    },
    {
     "entrant": "claude-opus-5-news-superfc",
@@ -12319,10 +12336,22 @@
     "mean_skill": -0.115
    },
    {
-    "entrant": "gemini-flash-web",
-    "rounds": 7,
-    "mean_crps": 1.78,
-    "mean_skill": -0.123
+    "entrant": "grok-web-superfc",
+    "rounds": 9,
+    "mean_crps": 1.468,
+    "mean_skill": -0.116
+   },
+   {
+    "entrant": "gemini-pro-web-superfc",
+    "rounds": 8,
+    "mean_crps": 1.685,
+    "mean_skill": -0.127
+   },
+   {
+    "entrant": "qwen-3.8-web-superfc",
+    "rounds": 9,
+    "mean_crps": 1.215,
+    "mean_skill": -0.135
    },
    {
     "entrant": "gemini-pro-news",
@@ -12331,10 +12360,10 @@
     "mean_skill": -0.137
    },
    {
-    "entrant": "gpt-5.6-terra-web-superfc",
-    "rounds": 7,
-    "mean_crps": 1.687,
-    "mean_skill": -0.158
+    "entrant": "deepseek-pro-web",
+    "rounds": 9,
+    "mean_crps": 1.679,
+    "mean_skill": -0.142
    },
    {
     "entrant": "qwen-3.8-news",
@@ -12349,6 +12378,12 @@
     "mean_skill": -0.164
    },
    {
+    "entrant": "deepseek-pro-web-superfc",
+    "rounds": 9,
+    "mean_crps": 1.542,
+    "mean_skill": -0.173
+   },
+   {
     "entrant": "gemini-pro-superfc",
     "rounds": 7,
     "mean_crps": 1.708,
@@ -12361,22 +12396,10 @@
     "mean_skill": -0.176
    },
    {
-    "entrant": "grok-web-superfc",
-    "rounds": 8,
-    "mean_crps": 1.6,
-    "mean_skill": -0.188
-   },
-   {
     "entrant": "gemini-flash-news-superfc",
     "rounds": 5,
     "mean_crps": 2.192,
     "mean_skill": -0.19
-   },
-   {
-    "entrant": "qwen-3.8-web-superfc",
-    "rounds": 8,
-    "mean_crps": 1.303,
-    "mean_skill": -0.194
    },
    {
     "entrant": "deepseek-flash",
@@ -12397,16 +12420,16 @@
     "mean_skill": -0.199
    },
    {
-    "entrant": "deepseek-pro-web",
-    "rounds": 8,
-    "mean_crps": 1.824,
-    "mean_skill": -0.201
-   },
-   {
     "entrant": "claude-opus-5",
     "rounds": 12,
     "mean_crps": 1.396,
     "mean_skill": -0.211
+   },
+   {
+    "entrant": "glm-web-superfc",
+    "rounds": 9,
+    "mean_crps": 1.605,
+    "mean_skill": -0.212
    },
    {
     "entrant": "qwen-3.8",
@@ -12437,12 +12460,6 @@
     "rounds": 10,
     "mean_crps": 0.835,
     "mean_skill": -0.236
-   },
-   {
-    "entrant": "deepseek-pro-web-superfc",
-    "rounds": 8,
-    "mean_crps": 1.67,
-    "mean_skill": -0.237
    },
    {
     "entrant": "gemini-flash-news",
@@ -12481,6 +12498,12 @@
     "mean_skill": -0.272
    },
    {
+    "entrant": "deepseek-flash-web-superfc",
+    "rounds": 9,
+    "mean_crps": 1.649,
+    "mean_skill": -0.273
+   },
+   {
     "entrant": "claude-opus-5-superfc",
     "rounds": 7,
     "mean_crps": 1.44,
@@ -12499,12 +12522,6 @@
     "mean_skill": -0.279
    },
    {
-    "entrant": "glm-web-superfc",
-    "rounds": 8,
-    "mean_crps": 1.756,
-    "mean_skill": -0.3
-   },
-   {
     "entrant": "gpt-5.6-terra",
     "rounds": 12,
     "mean_crps": 1.739,
@@ -12514,6 +12531,12 @@
     "entrant": "claude-opus",
     "rounds": 10,
     "mean_crps": 0.924,
+    "mean_skill": -0.321
+   },
+   {
+    "entrant": "kimi-web",
+    "rounds": 8,
+    "mean_crps": 1.719,
     "mean_skill": -0.321
    },
    {
@@ -12541,12 +12564,6 @@
     "mean_skill": -0.355
    },
    {
-    "entrant": "deepseek-flash-web-superfc",
-    "rounds": 8,
-    "mean_crps": 1.795,
-    "mean_skill": -0.356
-   },
-   {
     "entrant": "claude-sonnet-superfc",
     "rounds": 7,
     "mean_crps": 1.514,
@@ -12557,6 +12574,12 @@
     "rounds": 5,
     "mean_crps": 2.572,
     "mean_skill": -0.362
+   },
+   {
+    "entrant": "glm-web",
+    "rounds": 9,
+    "mean_crps": 1.282,
+    "mean_skill": -0.363
    },
    {
     "entrant": "claude-fable",
@@ -12581,6 +12604,18 @@
     "rounds": 5,
     "mean_crps": 2.72,
     "mean_skill": -0.368
+   },
+   {
+    "entrant": "kimi-web-superfc",
+    "rounds": 9,
+    "mean_crps": 1.42,
+    "mean_skill": -0.373
+   },
+   {
+    "entrant": "deepseek-flash-web",
+    "rounds": 9,
+    "mean_crps": 1.955,
+    "mean_skill": -0.374
    },
    {
     "entrant": "grok-superfc",
@@ -12613,34 +12648,10 @@
     "mean_skill": -0.419
    },
    {
-    "entrant": "kimi-web",
-    "rounds": 7,
-    "mean_crps": 1.906,
-    "mean_skill": -0.434
-   },
-   {
     "entrant": "gpt-5.6-luna-news",
     "rounds": 5,
     "mean_crps": 2.73,
     "mean_skill": -0.456
-   },
-   {
-    "entrant": "kimi-web-superfc",
-    "rounds": 8,
-    "mean_crps": 1.531,
-    "mean_skill": -0.459
-   },
-   {
-    "entrant": "glm-web",
-    "rounds": 8,
-    "mean_crps": 1.388,
-    "mean_skill": -0.463
-   },
-   {
-    "entrant": "deepseek-flash-web",
-    "rounds": 8,
-    "mean_crps": 2.144,
-    "mean_skill": -0.474
    },
    {
     "entrant": "kimi-superfc",
@@ -12692,21 +12703,21 @@
    },
    {
     "entrant": "trend",
-    "rounds": 13,
-    "mean_crps": 1.435,
-    "mean_skill": -0.633
+    "rounds": 14,
+    "mean_crps": 1.424,
+    "mean_skill": -0.634
    },
    {
     "entrant": "crowd",
-    "rounds": 13,
-    "mean_crps": 1.931,
-    "mean_skill": -0.939
+    "rounds": 14,
+    "mean_crps": 1.829,
+    "mean_skill": -0.847
    },
    {
     "entrant": "climatology",
-    "rounds": 13,
-    "mean_crps": 2.108,
-    "mean_skill": -1.685
+    "rounds": 14,
+    "mean_crps": 1.988,
+    "mean_skill": -1.532
    },
    {
     "entrant": "claude-opus-5-zeroshot-superfc",
@@ -40459,10 +40470,6 @@
   ],
   "esi_headline": [
    {
-    "date": "2026-04-22",
-    "value": 28.9
-   },
-   {
     "date": "2026-05-20",
     "value": 30.6
    },
@@ -40489,6 +40496,10 @@
    {
     "date": "2026-08-12",
     "value": 32.3
+   },
+   {
+    "date": "2026-08-26",
+    "value": 31.0
    }
   ],
   "sce_inflation_1y": [
@@ -41904,38 +41915,38 @@
   "sb_approval": {
    "source": "sb_approval",
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
-   "fetched_at": "2026-08-28T22:24:32Z",
-   "sha256": "2a6ffca1e9d97ca162ba669e04f3b0867643842bdfe8bbafba388842dc83172a",
+   "fetched_at": "2026-08-29T07:07:58Z",
+   "sha256": "e2bc7a87a649900cee24abbf1b65f9cd2fa5f0de6ff49a6f5ba14b25fad352c0",
    "bytes": 1585778,
-   "file": "sources/sb_approval/2026-08-28.csv",
+   "file": "sources/sb_approval/2026-08-29.csv",
    "note": "Silver Bulletin poll database, published as a Google Sheet"
   },
   "sb_generic": {
    "source": "sb_generic",
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
-   "fetched_at": "2026-08-28T22:24:32Z",
-   "sha256": "27e6894808788f2e76ad4aa078ac1f6ffa8e13ca97c0f728118cd8e3c186553b",
+   "fetched_at": "2026-08-29T07:07:58Z",
+   "sha256": "f93029cc37200dfbd940c84da7402b0e5034c2968fb15ed80b15a6f58d856d39",
    "bytes": 154505,
-   "file": "sources/sb_generic/2026-08-28.csv",
+   "file": "sources/sb_generic/2026-08-29.csv",
    "note": "Silver Bulletin generic-ballot database, published as a Google Sheet"
   },
   "umich": {
    "source": "umich",
    "url": "http://www.sca.isr.umich.edu/files/tbmics.csv",
-   "fetched_at": "2026-08-28T22:24:32Z",
+   "fetched_at": "2026-08-29T07:07:59Z",
    "sha256": "9c3636a2159c1003f9985280f6287025f60661adf8574a69026fb50a0d748b64",
    "bytes": 12225,
-   "file": "sources/umich/2026-08-28.csv",
+   "file": "sources/umich/2026-08-29.csv",
    "note": "Surveys of Consumers, University of Michigan (sca.isr.umich.edu): tbmics.csv for finals and tbcics.csv for the current preliminary, newest reading 2026-08-01"
   },
   "aaii": {
    "source": "aaii",
    "url": "https://www.aaii.com/sentimentsurvey/sent_results",
-   "fetched_at": "2026-08-28T22:24:33Z",
+   "fetched_at": "2026-08-29T07:07:59Z",
    "sha256": "a577d07157d17f0214d61cc9695cdd7652aafcfbab014a7611994c82b9c66815",
    "bytes": 46280,
-   "file": "sources/aaii/2026-08-28.html",
-   "note": "AAII sentiment survey results page, a ~22-week rolling window parsed against the response's own date 2026-08-28; the full 1987-present .xls is OLE2 and unreadable without a dependency"
+   "file": "sources/aaii/2026-08-29.html",
+   "note": "AAII sentiment survey results page, a ~22-week rolling window parsed against the response's own date 2026-08-29; the full 1987-present .xls is OLE2 and unreadable without a dependency"
   },
   "repo": "https://github.com/Social-Atoms/social-sim-arena"
  },
@@ -42151,10 +42162,10 @@
    "manifest_sha256": "7e7eb2b1e3883a62ea1602592104a8152a1c4faa9a15bf8c9df388b641971686",
    "proof": true,
    "proof_file": "stamps/wiki-top10-2026-09-06.json.ots",
-   "bitcoin_attested": false,
+   "bitcoin_attested": true,
    "action": "upgraded",
    "ok": false,
-   "detail": "Failed! Timestamp not complete"
+   "detail": "Success! Timestamp complete"
   },
   "trends-basket-2026-09-05": {
    "round_id": "trends-basket-2026-09-05",
@@ -42163,10 +42174,10 @@
    "manifest_sha256": "97b7c71ed0293a85137d12f897fa02eee200adc8b7dea05b2d1ce503b7ac63b3",
    "proof": true,
    "proof_file": "stamps/trends-basket-2026-09-05.json.ots",
-   "bitcoin_attested": false,
+   "bitcoin_attested": true,
    "action": "upgraded",
    "ok": false,
-   "detail": "Failed! Timestamp not complete"
+   "detail": "Success! Timestamp complete"
   },
   "esi-2026-08-26": {
    "round_id": "esi-2026-08-26",
@@ -42214,13 +42225,13 @@
    "budget_fetch_days": 3,
    "budget_change_days": 12,
    "url": "https://www.aaii.com/sentimentsurvey/sent_results",
-   "file": "sources/aaii/2026-08-28.html"
+   "file": "sources/aaii/2026-08-29.html"
   },
   {
    "source": "civiqs",
    "state": "ok",
-   "fetched_days": 0.9,
-   "changed_days": 0.9,
+   "fetched_days": 1.3,
+   "changed_days": 1.3,
    "budget_fetch_days": 2,
    "budget_change_days": 4,
    "url": null,
@@ -42236,7 +42247,7 @@
    "budget_fetch_days": 2,
    "budget_change_days": 7,
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
-   "file": "sources/sb_approval/2026-08-28.csv"
+   "file": "sources/sb_approval/2026-08-29.csv"
   },
   {
    "source": "sb_generic",
@@ -42246,17 +42257,17 @@
    "budget_fetch_days": 2,
    "budget_change_days": 10,
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
-   "file": "sources/sb_generic/2026-08-28.csv"
+   "file": "sources/sb_generic/2026-08-29.csv"
   },
   {
    "source": "umich",
    "state": "ok",
    "fetched_days": -0.0,
-   "changed_days": 0.0,
+   "changed_days": 0.4,
    "budget_fetch_days": 3,
    "budget_change_days": 40,
    "url": "http://www.sca.isr.umich.edu/files/tbmics.csv",
-   "file": "sources/umich/2026-08-28.csv"
+   "file": "sources/umich/2026-08-29.csv"
   }
  ],
  "series_provenance": {
