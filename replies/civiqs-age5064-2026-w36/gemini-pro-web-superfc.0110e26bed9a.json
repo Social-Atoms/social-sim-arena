@@ -1,0 +1,15 @@
+{
+  "entrant": "gemini-pro-web-superfc",
+  "input_hash": "0110e26bed9a",
+  "logged_at": "2026-08-30T16:48:05Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt_sha256": "2264725724e1cc5f32afe28a01613cab62aaa102a918914390a9ecdbc8f2e859",
+  "reply": "1. **Outside view.** The series represents a smoothed daily estimate of Donald Trump's net job approval among adults aged 50-64. Historically over the past two months, week-to-week changes have averaged around 0.8 net points, with a maximum movement of 1.8 points. Recently, after a steep decline throughout July and early August (from -2.1 on June 26 down to -8.5 on August 14), the series has sharply stabilized. The last three readings have hovered within a narrow band of 0.2 points: -8.5, -8.7, and -8.5. A naive extrapolation based on this recent plateau would predict the number to remain stable, likely around -8.5 or -8.6.\n\n2. **Inside view.** National polling continues to reflect historically low numbers for Trump during his second term, with aggregate averages putting his net approval around -20 to -24, significantly weighed down by the ongoing conflict in Iran and economic concerns. Late August polling, such as an August 26 Reuters/Ipsos survey, hit a record low of 33% approval (a net of -32). Because Civiqs uses an MRP model that applies smoothing over a rolling panel, sudden shocks are dispersed, but sustained negative sentiment will exert a slow, downward gravitational pull. The 50-64 demographic is generally a stronger base for him compared to younger voters, keeping this specific subgroup's net approval well above the national average (around -8.5 compared to -24 nationally). Because the broader national mood worsened slightly in late August, this subgroup may experience a slight lagged dip, pushing the estimate down mildly to the -8.6 to -8.8 range.\n\n3. **Pre-mortem.** If this forecast ends up badly wrong, it is likely because the \"record low\" national polls from late August had a delayed impact that suddenly flushed into the smoothed MRP estimate this week, dragging the 50-64 age group down by 1.5 to 2 points to -10 or below. Alternatively, a Republican base-rallying effect against \"fake polls\" (as mentioned in his Truth Social post) could cause a mean-reverting bounce back to the -7.5 level. Increasing the standard deviation ensures we capture sudden structural shifts in the smoothing model.\n\n4. **Calibrate.** Given the recent stabilization (-8.5, -8.7, -8.5), the expected change is very small. To encompass the likelihood of both continued plateauing and a potential delayed drop reflecting broader national polls, setting a mean of -8.6 with a standard deviation of 0.7 covers a 1-SD range from -7.9 to -9.3. This safely covers two-thirds of the expected outcomes, matching the historical 0.8-point typical weekly movement.\n\n```json\n{\"mean\": -8.6, \"sd\": 0.7}\n```",
+  "round_id": "civiqs-age5064-2026-w36",
+  "usage": {
+    "input_tokens": 3022,
+    "output_tokens": 631,
+    "thinking_tokens": 2147
+  },
+  "via": "direct"
+}
