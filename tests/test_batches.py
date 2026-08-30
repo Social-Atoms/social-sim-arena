@@ -97,6 +97,45 @@ def test_the_real_season_splits_into_weekly_batches():
           f"({len(governed)}/{len(rounds)} rounds under batch rules)")
 
 
+def test_our_models_are_held_to_the_same_deadline_as_everyone_else():
+    """The buy window and the filed stamp anchor on the deadline, not the lock.
+
+    Anchored on the lock, a round locking Sunday would still be buyable all
+    week after the Monday deadline closed every external entrant out -- our own
+    models reading six days of news nobody else could use. Anchored on the
+    deadline, the window shuts when theirs does.
+    """
+    from ssa import harness, refresh
+    lock = "2026-09-20T14:00:00Z"                 # Sunday, horizon 6.1 days
+    due = batches.effective_deadline(lock)        # Monday 2026-09-14 12:00Z
+    r = {"round_id": "test", "lock_at": lock}
+
+    inside = due - timedelta(days=2, hours=12)    # in the 3d..2d window
+    after = due + timedelta(hours=1)              # deadline passed, lock has not
+    assert refresh.model_jobs_due(r, inside)
+    assert not refresh.model_jobs_due(r, after), \
+        "buying after the deadline would out-inform every external entrant"
+
+    stamped = f"filed={(due - timedelta(days=1)):%Y-%m-%dT%H:%MZ}, m"
+    assert harness.filed_in_window(stamped, lock)
+    stale = f"filed={(due - timedelta(days=9)):%Y-%m-%dT%H:%MZ}, m"
+    assert not harness.filed_in_window(stale, lock)
+    print("ok test_our_models_are_held_to_the_same_deadline_as_everyone_else")
+
+
+def test_pre_cutover_rounds_keep_the_window_they_were_bought_in():
+    """Anchoring moved; already-bought rounds must not notice."""
+    from ssa import harness, refresh
+    lock = "2026-08-28T14:00:00Z"
+    assert batches.effective_deadline(lock) == batches._parse(lock)
+    r = {"round_id": "old", "lock_at": lock}
+    inside = batches._parse(lock) - timedelta(days=2, hours=12)
+    assert refresh.model_jobs_due(r, inside)
+    stamped = f"filed={(batches._parse(lock) - timedelta(days=2)):%Y-%m-%dT%H:%MZ}, m"
+    assert harness.filed_in_window(stamped, lock)
+    print("ok test_pre_cutover_rounds_keep_the_window_they_were_bought_in")
+
+
 def test_the_validators_copy_of_the_calendar_never_drifts():
     """`tools/validate_submission.py` imports nothing, so it carries its own
     copy. A copy that disagrees with the module is worse than no copy: CI would
@@ -129,5 +168,7 @@ if __name__ == "__main__":
     test_horizon_is_between_zero_and_seven_days()
     test_one_batch_id_per_week()
     test_the_real_season_splits_into_weekly_batches()
+    test_our_models_are_held_to_the_same_deadline_as_everyone_else()
+    test_pre_cutover_rounds_keep_the_window_they_were_bought_in()
     test_the_validators_copy_of_the_calendar_never_drifts()
-    print("9 passed")
+    print("11 passed")

@@ -47,6 +47,7 @@ from datetime import datetime, timezone
 
 import requests
 
+from . import batches
 from . import replies
 
 # Reasoning depth is set as high as each provider allows, and the parameter is
@@ -2117,17 +2118,25 @@ def filed_in_window(notes, lock_at):
     own buy window. Files from before the stamp existed -- the era that bought
     drafts from listing day -- carry no stamp and return False, so they are
     replaced once, inside the window, where the input hash makes the
-    replacement free if nothing actually changed."""
+    replacement free if nothing actually changed.
+
+    The window is measured back from the round's *submission deadline*, not its
+    lock. Under the weekly batch calendar those differ by up to seven days, and
+    anchoring on the lock would let our own entrants keep buying after the
+    deadline every external entrant was held to. `batches.effective_deadline`
+    returns the lock itself for rounds that predate the cutover, so their
+    windows are unchanged and their filed stamps stay valid.
+    """
     m = re.search(r"filed=(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?Z)",
                   notes or "")
     if not m or not lock_at:
         return False
     try:
         filed = datetime.fromisoformat(m.group(1).replace("Z", "+00:00"))
-        lock = datetime.fromisoformat(lock_at.replace("Z", "+00:00"))
+        due = batches.effective_deadline(lock_at)
     except ValueError:
         return False
-    return (lock - filed).total_seconds() <= FILE_WINDOW_SECONDS
+    return (due - filed).total_seconds() <= FILE_WINDOW_SECONDS
 
 
 def _retrieve(entrant, r, history):

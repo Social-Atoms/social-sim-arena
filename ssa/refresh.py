@@ -478,27 +478,41 @@ def attach_ranking(row, r, obs):
     row["ranking"] = block
 
 
-# Stop re-filing this long before lock_at. A refresh writes to the working
-# tree, but the commit only lands minutes later; without the margin a run that
-# starts just before lock could push a file that the merge-time lock audit
-# then (correctly) rejects as late.
+# Stop re-filing this long before the round's submission deadline. A refresh
+# writes to the working tree, but the commit only lands minutes later; without
+# the margin a run that starts just before the deadline could push a file that
+# the merge-time audit then (correctly) rejects as late. The name is historical
+# -- it was the lock margin before deadline and lock came apart -- and is kept
+# so the environment and the workflows do not have to be renamed in the same
+# change that moves the anchor.
 LOCK_MARGIN_SECONDS = 30 * 60
 
 # One number, one forecast, bought at one fixed vantage point.
 #
 # Every entrant's forecast for a round is bought once, inside a window every
 # round shares: between SSA_FILE_WINDOW_DAYS and SSA_BUY_BY_DAYS before its
-# lock (3 to 2 days by default). A forecast stamped inside the window
-# (`harness.filed_stamp`) is final -- data arriving afterwards does not reopen
-# it -- so every entrant answers the same question from the same distance and
-# a round costs exactly one call per entrant per condition, ever.
+# **submission deadline** (3 to 2 days by default). A forecast stamped inside
+# the window (`harness.filed_stamp`) is final -- data arriving afterwards does
+# not reopen it -- so every entrant answers the same question from the same
+# distance and a round costs exactly one call per entrant per condition, ever.
+#
+# The anchor is the deadline rather than the lock because those are no longer
+# the same moment. Under the weekly batch calendar (`ssa/batches.py`) a round
+# locks 0 to 7 days after the deadline its entrants were held to, so anchoring
+# here on the lock would let our own models keep buying for a week after every
+# external entrant was closed out -- reading news they could not. For rounds
+# that predate the batch cutover `effective_deadline` returns the lock itself,
+# so their windows and their filed stamps are exactly as they were.
 #
 # The day-wide window spans ~4 six-hourly runs, and after it closes the runs
-# that remain up to the lock margin are failure insurance only: they buy a
-# forecast that is still missing and never rewrite one that exists. Drafts
-# from before a round's window (the era that bought from listing day) carry
-# no stamp and are replaced once, inside the window, where the input hash
-# makes the replacement free if nothing actually changed.
+# that remain up to the margin are failure insurance only: they buy a forecast
+# that is still missing and never rewrite one that exists. That insurance now
+# has to fit before the deadline instead of running up to `lock - 30min`,
+# which is the real cost of a common deadline and the reason the scheduled
+# cadence has to be healthy rather than merely eventual. Drafts from before a
+# round's window (the era that bought from listing day) carry no stamp and are
+# replaced once, inside the window, where the input hash makes the replacement
+# free if nothing actually changed.
 #
 # Baselines are exempt: they are free and the site shows them from listing.
 # Web retrieval is scoped to the same window by construction, since the query
@@ -509,8 +523,14 @@ BUY_BY_SECONDS = float(os.environ.get("SSA_BUY_BY_DAYS") or "2") * 86400
 
 
 def model_jobs_due(r, now):
-    """True while the round's buy window (plus its insurance tail) is open."""
-    left = (parse_iso(r["lock_at"]) - now).total_seconds()
+    """True while the round's buy window (plus its insurance tail) is open.
+
+    Measured back from the submission deadline, not the lock. Our own entrants
+    are held to the deadline every external entrant is held to, so the tail
+    that used to retry up to `lock - 30min` now stops `LOCK_MARGIN_SECONDS`
+    before the deadline instead.
+    """
+    left = (batches.effective_deadline(r["lock_at"]) - now).total_seconds()
     return LOCK_MARGIN_SECONDS <= left <= FILE_WINDOW_SECONDS
 
 
@@ -528,7 +548,7 @@ def job_still_due(r, path, now):
         return True
     if harness.filed_in_window(prev.get("notes"), r["lock_at"]):
         return False
-    left = (parse_iso(r["lock_at"]) - now).total_seconds()
+    left = (batches.effective_deadline(r["lock_at"]) - now).total_seconds()
     return left >= BUY_BY_SECONDS
 
 # Concurrent provider calls when filing forecasts. Each job is one call to one
