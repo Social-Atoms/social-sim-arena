@@ -18,7 +18,7 @@ from .adapters import aaii, silverbulletin, umich
 from . import health
 from . import provenance
 from . import stamps
-from . import average, backtest, baselines, envfile, harness, scoring, sharecard
+from . import average, backtest, baselines, batches, envfile, harness, scoring, sharecard
 from . import profile_round
 from . import ranking_round
 from . import series as series_registry
@@ -254,9 +254,16 @@ def update_lock_snapshot(r, hist, now):
     "existed at lock" from "labelled before lock"; only observation time can.
 
     So while a round is open every refresh overwrites its snapshot, and after
-    `lock_at` nothing touches it again. The last write before the lock is the
-    freeze, and it is a committed artifact rather than something recomputed
-    from data that has since changed underneath it.
+    `batches.freeze_at` nothing touches it again. The last write before that
+    moment is the freeze, and it is a committed artifact rather than something
+    recomputed from data that has since changed underneath it.
+
+    The freeze is the round's *submission deadline*, not its lock. Under the
+    weekly batch calendar those differ by up to seven days, and a null frozen
+    at the lock would read a week of series the entrants never saw while
+    serving as the denominator of their score. `batches.freeze_at` returns the
+    lock itself for rounds that predate the cutover, so their snapshots stay
+    exactly as they were written and already-published scores do not move.
 
     Empty history is never written over a snapshot that has some. A series
     missing from the map produces `hist == []`, which is a caller with an
@@ -265,7 +272,7 @@ def update_lock_snapshot(r, hist, now):
     a build that omitted `generic_ballot_margin` blanked that round's snapshot
     in one pass.
     """
-    if now >= parse_iso(r["lock_at"]):
+    if now >= batches.freeze_at(r["lock_at"]):
         return False                      # frozen; never rewritten
     if not hist and (read_lock_snapshot(r["round_id"]) or {}).get("history"):
         return False                      # never trade a real freeze for nothing
@@ -323,12 +330,24 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
                 row["resolution"] = resolved[r["round_id"]]
             out.append(row)
             continue
-        # Baselines are frozen at lock time: only history strictly before the
-        # lock date counts. Otherwise, once a release lands in the series, the
-        # persistence null would contain the outcome it is scored against.
-        lock_date = r["lock_at"][:10]
+        # Baselines are frozen where the entrants answered, and only history
+        # strictly before that date counts. Two reasons, and the second is why
+        # this is the batch deadline rather than the lock.
+        #
+        # Contamination: once a release lands in the series, a null built from
+        # it would contain the outcome it is scored against.
+        #
+        # Comparability: the headline metric divides the entrant's CRPS by this
+        # null's. Freezing the null at the lock while entrants answered at the
+        # batch deadline hands the denominator up to seven days of series the
+        # numerator never saw, and the size of that gift varies by round, so a
+        # season mean would partly measure the lock-day calendar. `batches`
+        # returns the lock itself for pre-cutover rounds, so rounds already
+        # scored keep the history they were scored against.
+        freeze = batches.freeze_at(r["lock_at"])
+        lock_date = freeze.strftime("%Y-%m-%d")
         live = [p for p in (series.get(r["series"]) or []) if p["date"] < lock_date]
-        if now < parse_iso(r["lock_at"]):
+        if now < freeze:
             # Still open: use live history and keep the snapshot current.
             hist = live
             update_lock_snapshot(r, live, now)

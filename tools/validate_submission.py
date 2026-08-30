@@ -27,7 +27,7 @@ import hashlib
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -52,6 +52,37 @@ WIKI_NAMESPACE_PREFIXES = (
     "Wikipedia_talk:", "Portal_talk:", "Help_talk:", "File_talk:",
     "Template_talk:", "Category_talk:", "Draft_talk:", "User_talk:",
 )
+
+
+# Mirrors ssa/batches.py, which owns the weekly submission calendar and the
+# reasoning behind it. Same duplication trade as the Wikipedia rule above: this
+# file imports nothing, so the copy is spelled out, kept tiny, and pinned by
+# `tests/test_batches.py`, which walks a year of hourly locks and fails if the
+# two ever disagree by a second.
+BATCH_WEEKDAY = 0                                          # Monday
+BATCH_HOUR_UTC = 12
+BATCH_FIRST_DEADLINE = datetime(2026, 9, 14, BATCH_HOUR_UTC, tzinfo=timezone.utc)
+
+
+def batch_deadline(lock_at):
+    """The last Monday 12:00Z strictly before `lock_at`."""
+    back = (lock_at.weekday() - BATCH_WEEKDAY) % 7
+    candidate = (lock_at - timedelta(days=back)).replace(
+        hour=BATCH_HOUR_UTC, minute=0, second=0, microsecond=0)
+    if candidate >= lock_at:
+        candidate -= timedelta(days=7)
+    return candidate
+
+
+def effective_deadline(lock_at):
+    """When a submission for this round must be in.
+
+    The batch deadline once the cutover applies, the round's own lock before
+    it. Rounds that closed under the per-round rule keep it: moving their
+    deadline now would invalidate forecasts already filed and scored.
+    """
+    due = batch_deadline(lock_at)
+    return due if due >= BATCH_FIRST_DEADLINE else lock_at
 
 
 def fail(msg):
@@ -317,7 +348,17 @@ def validate(path, now=None):
     check_answer_matches_round(rel, fc, rounds[fc["round_id"]])
     lock_at = datetime.strptime(rounds[fc["round_id"]]["lock_at"],
                                 "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-    if now >= lock_at:
+    # The deadline is the batch's, not the round's own lock. Season 0's rounds
+    # lock on six different weekdays, so a per-round deadline meant six
+    # deadlines to track and, worse, entrants answering the same question from
+    # up to seven days apart. `ssa.batches` holds the calendar and the dated
+    # cutover; rounds that predate it still validate against their own lock.
+    due = effective_deadline(lock_at)
+    if now >= due:
+        if due < lock_at:
+            fail(f"{rel}: batch batch-{due:%Y-%m-%d} closed at "
+                 f"{due:%Y-%m-%dT%H:%M:%SZ} (round locks "
+                 f"{rounds[fc['round_id']]['lock_at']}), submission is late")
         fail(f"{rel}: round locked at {rounds[fc['round_id']]['lock_at']}, submission is late")
 
     print(f"OK: {rel}")
