@@ -132,6 +132,107 @@ def test_it_cannot_publish():
     print("ok test_it_cannot_publish")
 
 
+def test_a_round_whose_deadline_has_passed_is_not_generated():
+    """A batch that has closed can no longer be answered, so proposing into it
+    proposes a question that would be listed, never filed against, and then
+    scored against a null nobody competed with. Before this check the generator
+    happily offered a whole batch of them on any run made after Monday noon."""
+    from datetime import timezone as tz
+    now = datetime(2026, 9, 14, 13, tzinfo=tz.utc)          # Monday, past 12:00Z
+    meta = {"source": "civiqs", "question": "Q", "unit": "u"}
+    # A Wednesday-publishing series: the next release is 2026-09-16, locking
+    # 09-14T14:00Z -- two days out, but governed by the deadline an hour ago.
+    h = weekly(30, start="2026-01-07")
+    for r in gen.candidates("civiqs_net_approval_ind", meta, h, 3, now):
+        assert gen.batches.deadline_for(r["lock_at"]) > now, r["round_id"]
+    assert not gen.publishable("2026-09-16T14:00:00Z", now)
+    assert gen.publishable("2026-09-23T14:00:00Z", now)
+    print("ok test_a_round_whose_deadline_has_passed_is_not_generated")
+
+
+def test_single_page_wikipedia_rounds_are_retired_not_unsupported():
+    """The distinction matters to whoever reads the refusal.
+
+    `unsupported_family` sends the next reader off to write the missing
+    template. These two need no template: somebody decided the question was the
+    wrong one to keep asking, and the reason travels with the refusal.
+    """
+    ok, why = gen.gate("wiki_views_trump", {"source": "wikipedia"}, weekly(40))
+    assert not ok and why["gate"] == "retired_template"
+    assert "top-10 ranking round" in why["detail"]
+    print("ok test_single_page_wikipedia_rounds_are_retired_not_unsupported")
+
+
+def _season():
+    with open(os.path.join(ROOT, "questions", "season0.json")) as fh:
+        s = json.load(fh)
+    return s["rounds"] if isinstance(s, dict) else s
+
+
+def test_the_wiki_week_phrase_matches_the_reviewed_wording():
+    from datetime import date
+    assert gen.week_phrase(date(2026, 8, 31), date(2026, 9, 6)) \
+        == "Mon Aug 31 - Sun Sep 6, 2026"
+    # A week across New Year states the year twice; stating it once would
+    # claim the Monday was in the following year.
+    assert gen.week_phrase(date(2026, 12, 28), date(2027, 1, 3)) \
+        == "Mon Dec 28, 2026 - Sun Jan 3, 2027"
+    print("ok test_the_wiki_week_phrase_matches_the_reviewed_wording")
+
+
+def test_wiki_top10_rolls_the_reviewed_contract_forward():
+    """Four future weeks, each inheriting the contract a human approved."""
+    now = datetime(2026, 8, 31, 21, tzinfo=timezone.utc)
+    rounds = _season()
+    out = gen.wiki_candidates(rounds, 4, now)
+    assert [r["round_id"] for r in out] == [
+        "wiki-top10-2026-09-27", "wiki-top10-2026-10-04",
+        "wiki-top10-2026-10-11", "wiki-top10-2026-10-18"]
+    tpl = max((r for r in rounds if r["round_id"].startswith("wiki-top10")),
+              key=lambda r: r["ranking"]["week_end"])
+    for r in out:
+        assert r["resolve"] == tpl["resolve"] and r["unit"] == tpl["unit"]
+        for k in ("kind", "length", "loss", "rbo_p", "project", "access",
+                  "exclusions"):
+            assert r["ranking"][k] == tpl["ranking"][k], k
+        # The lock is before the week begins, not release - 48h: the answer
+        # accumulates over the seven days after the lock, so a 48h lock would
+        # sit mid-window with three days of it already public.
+        assert r["lock_at"][:10] < r["ranking"]["week_start"]
+        assert r["question"].startswith(
+            "The ordered top-10 articles on the English Wikipedia")
+        gen.ranking_round.spec_for(r)
+    print("ok test_wiki_top10_rolls_the_reviewed_contract_forward")
+
+
+def test_wiki_generation_refuses_to_ask_something_nobody_reviewed():
+    """If the constant and the reviewed wording drift, every generated round
+    asks a question a human never approved. Generation raises instead."""
+    rounds = [dict(r) for r in _season() if r["round_id"].startswith("wiki-top10")]
+    rounds[-1]["question"] = rounds[-1]["question"].replace("top-10", "top-12")
+    try:
+        gen.wiki_candidates(rounds, 1, datetime(2026, 8, 31, tzinfo=timezone.utc))
+    except ValueError as e:
+        assert "no longer reproduces" in str(e), e
+    else:
+        raise AssertionError("drifted wording was generated anyway")
+    print("ok test_wiki_generation_refuses_to_ask_something_nobody_reviewed")
+
+
+def test_wiki_generation_refuses_two_different_spacings():
+    """Two lock/release spacings in one family means one of them is a typo, and
+    templating off the newest would propagate it silently."""
+    rounds = [dict(r) for r in _season() if r["round_id"].startswith("wiki-top10")]
+    rounds[0] = dict(rounds[0], lock_at="2026-08-27T14:00:00Z")
+    try:
+        gen.wiki_candidates(rounds, 1, datetime(2026, 8, 31, tzinfo=timezone.utc))
+    except ValueError as e:
+        assert "different" in str(e), e
+    else:
+        raise AssertionError("inconsistent spacings were templated from anyway")
+    print("ok test_wiki_generation_refuses_two_different_spacings")
+
+
 if __name__ == "__main__":
     test_ids_keep_the_pollster_apart()
     test_rights_gate_refuses_anything_not_explicitly_approved()
@@ -141,4 +242,10 @@ if __name__ == "__main__":
     test_generated_rounds_are_shaped_like_the_hand_written_ones()
     test_generation_is_deterministic()
     test_it_cannot_publish()
-    print("8 passed")
+    test_a_round_whose_deadline_has_passed_is_not_generated()
+    test_single_page_wikipedia_rounds_are_retired_not_unsupported()
+    test_the_wiki_week_phrase_matches_the_reviewed_wording()
+    test_wiki_top10_rolls_the_reviewed_contract_forward()
+    test_wiki_generation_refuses_to_ask_something_nobody_reviewed()
+    test_wiki_generation_refuses_two_different_spacings()
+    print("14 passed")

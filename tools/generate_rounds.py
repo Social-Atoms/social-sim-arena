@@ -53,6 +53,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 from ssa import batches                                    # noqa: E402
+from ssa import inventory                                  # noqa: E402
+from ssa import ranking_round                              # noqa: E402
 from ssa.series import SERIES                              # noqa: E402
 
 # Minimum observations before the baselines mean anything.
@@ -95,25 +97,20 @@ OFFLINE_UNAVAILABLE = ("pentaesi",)
 # calendar is extrapolation dressed as a schedule.
 MAX_WEEKS_AHEAD = 8
 
-# Rights state per source, maintained by hand from the per-URL licence audit.
+# Rights state per source, read from the source inventory.
+#
 # `approved` means we may retrieve it the way we do and publish derived values.
-# Anything not listed is treated as unresolved and generates nothing, so adding
-# an adapter cannot quietly add rounds.
-RIGHTS = {
-    "sb_approval": "approved",     # published sheet, already fetched for live rounds
-    "sb_generic": "approved",      # same sheet family
-    "civiqs": "approved",          # terms permit download/copy with notices kept
-    "umich": "approved",           # main site, public tables
-    "sce": "approved",             # licence grants reproduce/use/distribute
-    "aaii": "permission-needed",   # robots disallows /files/*, terms bar copying
-    "confboard": "permission-needed",   # terms bar extraction into a database
-    "umichparty": "permission-needed",  # archive site needs written consent
-    "yougov_xtab": "permission-needed",  # licence bars automated extraction
-    "pentaesi": "permission-needed",
-    "hhpoll": "approved",          # no terms published; manual retrieval only
-    "trends": "approved",
-    "wikipedia": "approved",
-}
+# Anything not listed there is treated as unresolved and generates nothing, so
+# adding an adapter cannot quietly add rounds.
+#
+# **This used to be a dict typed out here, and that was the bug.** The rights
+# decision was written down twice -- once as narrative in `docs/sources.md`,
+# once as this dict -- with nothing to keep them in step. They had already
+# drifted: `trends_basket` was missing here, so the gate read it as
+# `unresolved` and refused it, while three hand-written Trends basket rounds
+# ran live in `questions/season0.json`. `ssa/inventory.py` is now the one
+# table, it carries the evidence next to each state, and this is a view of it.
+RIGHTS = inventory.rights_table()
 
 # Resolution wording per source family. A generated round states how it will be
 # settled in the same words the hand-written rounds use, because the resolution
@@ -122,6 +119,26 @@ RESOLVE = {
     "sb_approval": "adjusted average at the release date",
     "sb_generic": "adjusted average at the release date",
     "civiqs": "dashboard Friday value, from the daily archive",
+}
+
+# Series this generator deliberately stops producing rounds for, and why.
+#
+# A retired template is not a failed gate. The source is fine, the rights are
+# fine, the history is fine -- somebody decided the *question* was the wrong
+# one to keep asking. Reporting that as `unsupported_family` would send the
+# next reader off to write the missing template, which is the opposite of what
+# is wanted, so it gets its own reason with the decision attached.
+RETIRED_TEMPLATES = {
+    "wiki_views_trump":
+        "issue #48 retires single-page weekly view totals in favour of the "
+        "top-10 ranking round. One article's weekly total is a level question "
+        "whose movement is dominated by whether that person was in the news, "
+        "and the ranking round asks the same attention question over a defined "
+        "universe with a top-weighted loss. The two hand-written rounds stay; "
+        "no more are generated.",
+    "wiki_views_taylor_swift":
+        "issue #48 retires single-page weekly view totals in favour of the "
+        "top-10 ranking round. See `wiki_views_trump`.",
 }
 
 # The pollster, not the file it arrives in. Every Silver Bulletin series is a
@@ -275,6 +292,10 @@ def gate(sid, meta, hist):
                        "measurement_noise": round(m, 3),
                        "detail": "all observed movement is measurement noise; "
                                  "no forecast can beat the last value"}
+    if sid in RETIRED_TEMPLATES:
+        return False, {"gate": "retired_template",
+                       "source": meta.get("source"),
+                       "detail": RETIRED_TEMPLATES[sid]}
     if meta.get("source") not in RESOLVE:
         return False, {"gate": "unsupported_family",
                        "source": meta.get("source"),
@@ -291,6 +312,25 @@ def round_id(sid, release):
     _, short, suffix = naming(sid)
     year, week, _ = release.isocalendar()
     return f"{short}-{year}-w{week:02d}-{suffix}"
+
+
+def publishable(lock, now):
+    """Whether a round locking at `lock` can still reach entrants.
+
+    A round belongs to the batch whose deadline is the last Monday 12:00Z
+    before its lock, and every entrant answers that batch by that one moment.
+    Once the deadline has passed there is no longer a way for anyone to file
+    against the round, so generating it produces a question that would be
+    listed, never answered, and then scored against a null nobody competed
+    with. `docs/submission-window.md` states the rule; this is where the
+    generator obeys it.
+
+    Note this is strictly tighter than "the release is in the future". The old
+    check let through rounds locking two days out whose deadline was already
+    hours in the past -- a whole batch of them on any run made after Monday
+    noon.
+    """
+    return batches.deadline_for(lock) > now
 
 
 def candidates(sid, meta, hist, weeks, now):
@@ -312,6 +352,8 @@ def candidates(sid, meta, hist, weeks, now):
         if (release - now).days > MAX_WEEKS_AHEAD * 7:
             break
         lock = release - timedelta(hours=48)
+        if not publishable(lock, now):
+            continue
         tracker, _, _ = naming(sid)
         out.append({
             "round_id": round_id(sid, release),
@@ -325,6 +367,162 @@ def candidates(sid, meta, hist, weeks, now):
             "resolve": RESOLVE[meta["source"]],
             "target_type": "continuous_normal",
         })
+    return out
+
+
+# --- the weekly Wikipedia top-10 ranking round -------------------------------
+#
+# The one generated family that does not come out of the series registry, and
+# it could not: the registry holds streams of (date, value) scalars, and this
+# round's observation is an ordered list of ten article titles drawn from six
+# million. `ssa/ranking_round.py` owns the contract; this only rolls the
+# calendar forward.
+#
+# **The template is the newest reviewed round, not a constant typed here.**
+# Every field a human settled -- the RBO parameter, the exclusion rule id, the
+# project and access slice, how long before the week the round locks and how
+# long after it resolves -- is read off the round they approved. A reviewer who
+# changes the contract carries that change forward by promoting one round, and
+# there is no second copy of the contract to drift out of step.
+#
+# What *is* a constant is the question wording, and it is checked against the
+# reviewed round on every run: `WIKI_QUESTION` is rebuilt for the template
+# round's own week and must reproduce that round's question exactly, or
+# generation raises. A generated round that reads differently from the
+# reviewed one is a different question wearing the same name -- and entrants
+# are graded on the wording, not on the round id.
+
+WIKI_SERIES = "wiki_top10_en"
+WIKI_KIND = "wiki_top10"
+
+# The wording spells the length out in words ("the ten article titles"), so it
+# is not a substitution away from working at another length. A round with a
+# different `length` needs its own reviewed sentence, and generation refuses
+# rather than interpolating one.
+WIKI_LENGTH = 10
+
+WIKI_QUESTION = (
+    "The ordered top-10 articles on the English Wikipedia by pageviews for the "
+    "week {week}. The seven daily top-1000 lists published by Wikimedia are "
+    "summed per article and ranked; Main_Page and every non-article namespace "
+    "(Special:, Wikipedia:, Portal:, Help:, File:, Template:, Category:, "
+    "Draft:, User:, Talk: and their _talk: variants) are excluded. Give the "
+    "ten article titles in order, rank 1 first.")
+
+
+def week_phrase(start, end):
+    """`Mon Aug 31 - Sun Sep 6, 2026`, the way the reviewed rounds write it.
+
+    The year is stated once at the end while the week stays inside one, and
+    twice when it does not. A week that straddles New Year would otherwise
+    read `Mon Dec 28 - Sun Jan 3, 2027` and quietly claim the Monday was in
+    2027, which is the kind of wrong that only shows up one week a year.
+    """
+    if start.year == end.year:
+        return (f"{start.strftime('%a %b')} {start.day} - "
+                f"{end.strftime('%a %b')} {end.day}, {end.year}")
+    return (f"{start.strftime('%a %b')} {start.day}, {start.year} - "
+            f"{end.strftime('%a %b')} {end.day}, {end.year}")
+
+
+def wiki_template(rounds):
+    """(newest reviewed wiki top-10 round, lock offset, release offset).
+
+    Offsets are measured from the ranking week's own boundaries -- lock from
+    midnight on `week_start`, release from midnight on `week_end` -- because
+    that is what the timing actually means here. Unlike a scalar round, this
+    one locks *before its week begins*: the answer is accumulated over the
+    seven days after the lock, so `release - 48h` would be a lock in the
+    middle of the window with three days of the answer already public.
+
+    Raises if the reviewed rounds disagree on those offsets. Two spacings in
+    the same family means one of them is a typo, and picking the newest would
+    propagate it silently.
+    """
+    got = [r for r in rounds
+           if ranking_round.is_ranking(r)
+           and (r.get("ranking") or {}).get("kind") == WIKI_KIND]
+    if not got:
+        raise ValueError(
+            "no reviewed wiki top-10 round to template from; this generator "
+            "extends an existing contract rather than inventing one")
+    offsets = set()
+    for r in got:
+        spec = r["ranking"]
+        start = datetime.strptime(spec["week_start"], "%Y-%m-%d").replace(
+            tzinfo=timezone.utc)
+        end = datetime.strptime(spec["week_end"], "%Y-%m-%d").replace(
+            tzinfo=timezone.utc)
+        lock = datetime.fromisoformat(r["lock_at"].replace("Z", "+00:00"))
+        rel = datetime.fromisoformat(r["release_at"].replace("Z", "+00:00"))
+        offsets.add((lock - start, rel - end))
+    if len(offsets) != 1:
+        raise ValueError(
+            f"the reviewed wiki top-10 rounds use {len(offsets)} different "
+            f"lock/release spacings: {sorted(map(str, offsets))}")
+    newest = max(got, key=lambda r: r["ranking"]["week_end"])
+    lock_off, rel_off = offsets.pop()
+    return newest, lock_off, rel_off
+
+
+def wiki_candidates(rounds, weeks, now):
+    """The next `weeks` weekly top-10 rounds, rolled off the reviewed contract."""
+    tpl, lock_off, rel_off = wiki_template(rounds)
+    spec = tpl["ranking"]
+    if spec.get("length") != WIKI_LENGTH:
+        raise ValueError(
+            f"{tpl['round_id']} ranks {spec.get('length')} items, but the "
+            f"reviewed wording is written for {WIKI_LENGTH}; a different "
+            "length needs its own reviewed sentence, not an interpolated one")
+
+    # The wording check. Rebuild the template round's own question from the
+    # constant above; if it does not come back identical, the constant and the
+    # reviewed round have drifted and every generated round would ask
+    # something a human never approved.
+    t_start = datetime.strptime(spec["week_start"], "%Y-%m-%d").date()
+    t_end = datetime.strptime(spec["week_end"], "%Y-%m-%d").date()
+    rebuilt = WIKI_QUESTION.format(week=week_phrase(t_start, t_end))
+    if rebuilt != tpl["question"]:
+        raise ValueError(
+            f"WIKI_QUESTION no longer reproduces {tpl['round_id']}'s wording; "
+            "the reviewed question changed and the template did not")
+
+    taken = {r["round_id"] for r in rounds}
+    out = []
+    start = t_start + timedelta(days=7)
+    while len(out) < weeks:
+        end = start + timedelta(days=6)
+        lock = datetime(start.year, start.month, start.day,
+                        tzinfo=timezone.utc) + lock_off
+        release = datetime(end.year, end.month, end.day,
+                           tzinfo=timezone.utc) + rel_off
+        wk_start, start = start, start + timedelta(days=7)
+        if lock <= now or not publishable(lock, now):
+            continue
+        if (release - now).days > MAX_WEEKS_AHEAD * 7:
+            break
+        r = {
+            "round_id": f"wiki-top10-{end.isoformat()}",
+            "tracker": tpl["tracker"],
+            "series": tpl.get("series") or WIKI_SERIES,
+            "question": WIKI_QUESTION.format(week=week_phrase(wk_start, end)),
+            "unit": tpl["unit"],
+            "release_at": release.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "release_estimated": tpl.get("release_estimated", False),
+            "lock_at": lock.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "resolve": tpl["resolve"],
+            "target_type": tpl["target_type"],
+            "ranking": dict(spec, week_start=wk_start.isoformat(),
+                            week_end=end.isoformat()),
+        }
+        # Validate through the module that will have to score it, at generation
+        # time rather than at listing time. A ranking round whose spec does not
+        # parse collects forecasts and then cannot be scored, which
+        # `ranking_round.spec_for` exists to make impossible.
+        ranking_round.spec_for(r)
+        if r["round_id"] in taken:
+            continue
+        out.append(r)
     return out
 
 
@@ -387,6 +585,12 @@ def main():
             r["_new_series"] = sid not in already
             made.append(r)
 
+    # The ranking family, which has no registry row to iterate over.
+    for r in wiki_candidates(rounds, args.weeks, now):
+        r["_sn"] = float("nan")     # a permutation has no signal-to-noise ratio
+        r["_new_series"] = False    # three reviewed rounds already ran on it
+        made.append(r)
+
     made.sort(key=lambda r: (r["lock_at"], r["round_id"]))
     by_batch = collections.defaultdict(list)
     for r in made:
@@ -401,14 +605,26 @@ def main():
 
     for b in sorted(by_batch):
         rr = by_batch[b]
-        print(f"── {b}  deadline {b[6:]} 12:00Z  ({len(rr)} rounds)")
+        # A batch is published a week before its deadline. Past that moment a
+        # round can still legally join it -- the deadline is what governs
+        # validity -- but entrants have already read the bundle, so anything
+        # added now arrives after the thing they were told to answer. Say so
+        # rather than letting a reviewer promote it and wonder why nobody
+        # filed.
+        lead = batches.published_at(rr[0]["lock_at"])
+        late = "  (publication lead passed)" if lead <= now else ""
+        print(f"── {b}  deadline {b[6:]} 12:00Z  ({len(rr)} rounds){late}")
         for r in rr:
             mark = "NEW " if r["_new_series"] else "    "
             sn = r.get("_sn", 0.0)
-            warn = "  low S/N" if sn < 1.0 else ""
+            # A ranking round's answer is a permutation, so `noise_floor` has
+            # nothing to measure and the column is blank rather than zero --
+            # zero is what the volatility gate refuses, and this is not that.
+            cell = "  -- " if sn != sn else f"{sn:5.2f}"
+            warn = "  low S/N" if sn == sn and sn < 1.0 else ""
             print(f"   {mark}{r['round_id']:<40} lock {r['lock_at'][:10]} "
                   f"h={batches.horizon_days(r['lock_at']):.1f}d "
-                  f"S/N={sn:5.2f}{warn}")
+                  f"S/N={cell}{warn}")
 
     if args.rejects:
         print("\nrefused:")

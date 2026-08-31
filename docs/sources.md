@@ -42,8 +42,18 @@ first print** and ignores every later revision. Say which it is.
 
 **Retroactive rescaling.** Google Trends returns *relative* values that change
 when the query window changes, so the same request answers differently at
-different times. That is not a revision policy to work around; it is
-unfixable, and it is why that source is rejected.
+different times. That is not a revision policy to work around.
+
+This paragraph used to end "and it is why that source is rejected", and that
+was overturned the same way §6 was. The rescaling is unfixable *at the
+endpoint*, and it is answered *at the archive*: `ssa/adapters/trends.py` fixes
+the request window as a module constant and writes every fetch to `trends/`, so
+a completed week's value is whatever the earliest snapshot containing it
+showed, forever. The resolution source is the archive, not the endpoint, which
+is the same move `civiqs` makes against nightly re-modelling. Delete the
+archive and the rejection is correct again — which is why the archive is
+committed and why nothing in the pipeline resolves a Trends round from a live
+request.
 
 Ask the publisher's own documentation, then verify by fetching two vintages.
 
@@ -342,3 +352,41 @@ bearing one and it did not survive: a system binary is not a Python dependency.
 The last sentence above is still the standing instruction for this source — it
 is why `umichparty.fetch_latest` refuses a non-PDF body outright and why nothing
 in the pipeline fetches it unasked.)*
+
+---
+
+## 7. The inventory: where a source's state is written down
+
+`ssa/inventory.py` holds one row per source — every adapter in this
+repository, every `source` key `ssa/series.py` registers, and every candidate
+that was surveyed and turned down — carrying:
+
+| field | what it answers |
+|---|---|
+| `state` | `integrated`, `permission-needed`, or `rejected` — this repository's relationship to the source |
+| `rights` | the publisher's terms: `approved`, `permission-needed`, `rejected`, `unresolved`. **Only `approved` generates rounds.** |
+| `role` | `target` (we ask questions about it) or `input` (an entrant reads it before answering). An input never becomes a round |
+| `evidence` | the robots rule, the licence sentence, the HTTP status, or the issue number. A label is not evidence |
+| `revisit` | for anything not integrated: the specific fact that would reopen it |
+
+**Why it is code and not this page.** The rights decision used to be written
+twice — narrated here, and typed as a `RIGHTS` dict inside
+`tools/generate_rounds.py` that the generation gate actually read. Nothing kept
+them in step and they had already drifted: `trends_basket` was missing from the
+dict, so the gate called it `unresolved` and refused to schedule anything on it
+while three hand-written Trends basket rounds ran live in
+`questions/season0.json`. The generator now reads
+`inventory.rights_table()`, `tests/test_inventory.py` fails if a registered
+source has no row, and this page points at that file rather than restating it.
+
+`state` and `rights` are deliberately separate. A source can be rights-approved
+and not integrated — approval says nothing about whether anyone wrote the
+template. And several sources are integrated while their rights sit at
+`permission-needed`: they are read from an archive a maintainer fetched by
+hand, which is exactly why the generator must not schedule new rounds on them.
+
+**A `rejected` row is not a closed door.** §6 above is a rejection that was
+reversed once somebody re-read its load-bearing argument, and the reversal was
+worth more than the original verdict. That is only possible when the verdict
+says what would change it, so every non-integrated row carries `revisit` and a
+test enforces it.
