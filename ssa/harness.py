@@ -2120,7 +2120,7 @@ def filed_in_window(notes, lock_at):
     replaced once, inside the window, where the input hash makes the
     replacement free if nothing actually changed.
 
-    The window is measured back from the round's *submission deadline*, not its
+    The window is measured back from the round's *batch deadline*, not its
     lock. Under the weekly batch calendar those differ by up to seven days, and
     anchoring on the lock would let our own entrants keep buying after the
     deadline every external entrant was held to. `batches.effective_deadline`

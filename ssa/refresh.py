@@ -258,7 +258,7 @@ def update_lock_snapshot(r, hist, now):
     moment is the freeze, and it is a committed artifact rather than something
     recomputed from data that has since changed underneath it.
 
-    The freeze is the round's *submission deadline*, not its lock. Under the
+    The freeze is the round's *batch deadline*, not its lock. Under the
     weekly batch calendar those differ by up to seven days, and a null frozen
     at the lock would read a week of series the entrants never saw while
     serving as the denominator of their score. `batches.freeze_at` returns the
@@ -478,7 +478,7 @@ def attach_ranking(row, r, obs):
     row["ranking"] = block
 
 
-# Stop re-filing this long before the round's submission deadline. A refresh
+# Stop re-filing this long before the round's batch deadline. A refresh
 # writes to the working tree, but the commit only lands minutes later; without
 # the margin a run that starts just before the deadline could push a file that
 # the merge-time audit then (correctly) rejects as late. The name is historical
@@ -491,7 +491,7 @@ LOCK_MARGIN_SECONDS = 30 * 60
 #
 # Every entrant's forecast for a round is bought once, inside a window every
 # round shares: between SSA_FILE_WINDOW_DAYS and SSA_BUY_BY_DAYS before its
-# **submission deadline** (3 to 2 days by default). A forecast stamped inside
+# **batch deadline** (3 to 2 days by default). A forecast stamped inside
 # the window (`harness.filed_stamp`) is final -- data arriving afterwards does
 # not reopen it -- so every entrant answers the same question from the same
 # distance and a round costs exactly one call per entrant per condition, ever.
@@ -525,7 +525,7 @@ BUY_BY_SECONDS = float(os.environ.get("SSA_BUY_BY_DAYS") or "2") * 86400
 def model_jobs_due(r, now):
     """True while the round's buy window (plus its insurance tail) is open.
 
-    Measured back from the submission deadline, not the lock. Our own entrants
+    Measured back from the batch deadline, not the lock. Our own entrants
     are held to the deadline every external entrant is held to, so the tail
     that used to retry up to `lock - 30min` now stops `LOCK_MARGIN_SECONDS`
     before the deadline instead.
