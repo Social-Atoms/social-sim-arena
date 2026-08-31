@@ -66,9 +66,11 @@ different aggregation rule that would need its own justification and its own
 tests. Left out rather than approximated.
 
 **The freeze is the same one, three times over.** History is filtered to
-`date < lock_at[:10]` before persistence is computed, exactly as
+`date < batches.freeze_at(...)` before persistence is computed, exactly as
 `refresh.build_rounds` does for a scalar round and `profile_round.frozen_history`
-does per cell. Both sources make that filter exact rather than approximate: a
+does per cell. "The same one" is load-bearing and was briefly false: when the
+weekly batch calendar moved the scalar freeze off `lock_at`, these two kept the
+old spelling, and their nulls read days of history their entrants never saw. Both sources make that filter exact rather than approximate: a
 Wikipedia week is dated by the Sunday it ends and its daily counts are final
 within two days, and a Trends week is dated by its Saturday and frozen at the
 value the earliest snapshot containing it showed. Neither can be relabelled into
@@ -77,6 +79,7 @@ monthly series.
 """
 from datetime import date, timedelta
 
+from . import batches
 from . import scoring
 from .adapters import trends as trends_adapter
 from .adapters import wikipedia as wikipedia_adapter
@@ -292,15 +295,20 @@ def _basket_observations(spec, fetch=False, now=None):
 # --- the freeze --------------------------------------------------------------
 
 def frozen_history(r, obs):
-    """The observations strictly before `lock_at`, oldest first.
+    """The observations strictly before the round's freeze, oldest first.
 
-    `refresh.build_rounds`' filter verbatim -- `p["date"] < r["lock_at"][:10]`,
-    a string comparison on ISO dates. Written here rather than inlined so a
+    `refresh.build_rounds`' filter, written here rather than inlined so a
     ranking round cannot drift away from the one rule: without it, the moment
     the measured week lands in the archive the persistence null would be the
     very list it is scored against.
+
+    The freeze is `batches.freeze_at`, not `lock_at` -- the same correction
+    `profile_round.frozen_history` needed. The two were one instant until the
+    weekly batch calendar separated them, and a null frozen at the lock reads
+    series its entrants could not. `freeze_at` returns the lock for rounds that
+    predate the cutover, so nothing already scored moves.
     """
-    lock_date = r["lock_at"][:10]
+    lock_date = batches.freeze_at(r["lock_at"]).strftime("%Y-%m-%d")
     return [o for o in (obs or []) if o["date"] < lock_date]
 
 

@@ -159,6 +159,42 @@ def test_the_validators_copy_of_the_calendar_never_drifts():
     print("ok test_the_validators_copy_of_the_calendar_never_drifts")
 
 
+def test_every_round_type_freezes_at_the_same_instant():
+    """Scalar, profile and ranking nulls must freeze together, or the headline
+    round type is scored against data its entrants never saw.
+
+    This is a regression test with a date on it. `refresh.build_rounds` moved to
+    the batch deadline; `profile_round.frozen_history` and
+    `ranking_round.frozen_history` kept `lock_at[:10]` through that change,
+    while both docstrings claimed to apply `build_rounds`' filter verbatim. The
+    three are pinned here so the next person to move one has to move all of
+    them.
+    """
+    from ssa import profile_round, ranking_round
+    lock = "2026-09-20T14:00:00Z"                  # Sunday, horizon 6.1 days
+    freeze = batches.freeze_at(lock).strftime("%Y-%m-%d")
+    assert freeze == "2026-09-14", freeze          # the deadline, not the lock
+
+    r = {"round_id": "t", "lock_at": lock, "cells": ["a_cell", "b_cell"]}
+    series = {c: [{"date": d, "value": 1.0} for d in
+                  ("2026-09-13", "2026-09-15", "2026-09-19")]
+              for c in ("a_cell", "b_cell")}
+    got = profile_round.frozen_history(r, series, cells=("a_cell", "b_cell"))
+    for cell, hist in got.items():
+        assert [p["date"] for p in hist] == ["2026-09-13"], \
+            f"{cell} froze at the lock, not the deadline: {hist}"
+
+    obs = [{"date": d, "items": []} for d in
+           ("2026-09-13", "2026-09-15", "2026-09-19")]
+    kept = ranking_round.frozen_history({"lock_at": lock}, obs)
+    assert [o["date"] for o in kept] == ["2026-09-13"], kept
+
+    # Pre-cutover rounds are untouched: freeze is still the lock.
+    old = "2026-08-28T14:00:00Z"
+    assert batches.freeze_at(old).strftime("%Y-%m-%d") == "2026-08-28"
+    print("ok test_every_round_type_freezes_at_the_same_instant")
+
+
 if __name__ == "__main__":
     test_deadline_is_the_monday_noon_before_the_lock()
     test_a_lock_on_the_deadline_falls_to_the_previous_batch()
@@ -171,4 +207,5 @@ if __name__ == "__main__":
     test_our_models_are_held_to_the_same_deadline_as_everyone_else()
     test_pre_cutover_rounds_keep_the_window_they_were_bought_in()
     test_the_validators_copy_of_the_calendar_never_drifts()
-    print("11 passed")
+    test_every_round_type_freezes_at_the_same_instant()
+    print("12 passed")
