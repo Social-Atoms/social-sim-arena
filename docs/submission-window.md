@@ -111,14 +111,25 @@ can run it on a bare checkout. `tests/test_batches.py` walks a year of hourly
 locks and fails if the two ever disagree by a second. Change the calendar in
 both, or the test will say so.
 
-### For #47 (participant onboarding)
+### Participant onboarding (#47), as built
 
 - The deadline shown to a participant is `effective_deadline`, never `lock_at`.
 - A bundle is a batch: one deadline, many rounds, mixed horizons.
-- `batch_of` is the natural bundle id.
-- Say plainly that early filing is allowed and that the deadline is shared, so
-  nobody believes waiting is an edge. It is not, and after this change it is
-  not scored as one either.
+- `batch_of` is the bundle id.
+- Early filing is allowed and the deadline is shared, so waiting is not an edge
+  and is not scored as one.
+
+`ssa/bundle.py` is the implementation and `docs/bundle-submission.md` the
+participant-facing contract. `tools/make_bundle.py` projects a batch out of the
+frozen season; `tools/validate_bundle.py` is the offline checker;
+`tools/accept_bundle.py` normalises an accepted response into the
+per-round forecast records the scorer already reads. Everything computes the
+deadline from this module, so there is no third copy of the calendar to drift.
+
+`build_bundle` **refuses a pre-cutover batch**. Those rounds each carried their
+own deadline, so there is no single moment to put in a bundle's `deadline`
+field, and publishing one would state a due date `tools/validate_submission.py`
+does not enforce.
 
 ### For #48 (question generation)
 

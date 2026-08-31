@@ -51,6 +51,37 @@ It contains `schema_version` and one typed `forecast`. `reasoning_trace` and
 - Every request is idempotent by entrant, round, and input hash.
 - The server's receipt time controls the lock. Client timestamps are ignored.
 
+The moment an endpoint's forecasts are due is the **batch deadline**, not the
+round's `lock_at` — see [`docs/submission-window.md`](submission-window.md).
+The call window above is the arena's buying schedule, not a participant-visible
+due date.
+
+## Contract test
+
+```bash
+python examples/agent-api/server.py
+python tools/probe_agent_api.py --base-url http://127.0.0.1:8787/v1
+```
+
+`tools/probe_agent_api.py` is the runnable contract test: standard library
+only, non-scored fixtures, files nothing. It checks the transport, **all three
+round shapes**, idempotency of a repeated `request_id`, and — when a key is
+configured — that a *wrong* bearer token is refused with 401 or 403. Probing
+one scalar fixture is how an endpoint passes today and fails on the first
+profile round of the season, after the deadline, which is why each shape is a
+separate verdict.
+
+A key is read from an environment variable named with `--key-env`, never from
+an argument: a key on the command line is in `ps` output, in shell history, and
+in the log of whoever pastes the command into an issue. Transient failures are
+retried; a 4xx is an answer and is never retried.
+
+`--entrant <id>` refuses to probe a registration whose
+`entrants/<id>.json` carries `"status": "revoked"`. Revocation stops both
+routes at once: the bundle intake refuses an upload before issuing a receipt,
+and the probe refuses to make the call. A revocation the arena does not honour
+is a revocation in name only.
+
 The browser's **Test connection** button sends the fixed non-scored fixture in
 `examples/agent-api/request.json`. It checks HTTPS, optional Bearer auth, the
 OpenAI response wrapper, decoded JSON, and a valid continuous forecast. Browser
