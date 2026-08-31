@@ -314,19 +314,37 @@ INVENTORY = {
         "state": REJECTED,
         "rights": APPROVED,
         "evidence": (
-            "Public domain, and the advance release workbooks are retrievable "
-            "and machine-readable -- see `tools/probe_marts.py` for the "
-            "measured feasibility run. It is rejected on what it asks, not on "
-            "how it is served: MARTS surveys *businesses* about their sales "
-            "receipts, so a simulated citizen structurally cannot answer it, "
-            "which is the objection issue #36 raised when the retail series "
-            "were first considered for the market-research board. Scoring it "
-            "would measure a model's macroeconomic nowcasting, a different "
-            "benchmark from the one this arena runs."),
+            "**Every mechanical gate passes, and it is refused anyway.** "
+            "`tools/probe_marts.py` measured 36 monthly advance releases "
+            "(2023-07 to 2026-06), and `sources/marts/probe.json` holds each "
+            "one's URL, sha256 and parsed values so the run is reproducible: "
+            "eight three-digit retail categories present in 36/36 with an "
+            "advance value in 36/36 and one label spelling each; the advance "
+            "differs from the next release's print for the same month in "
+            "280/280 pairs (mean 0.52%), so \"resolve from the archived "
+            "advance, never a revision\" is implementable *and* necessary; "
+            "mean absolute month-over-month movement 0.48% to 2.47%; public "
+            "domain, no key; 8:30 a.m. ET on a forward calendar Census "
+            "publishes. The refusal is about what it asks, not how it is "
+            "served: MARTS surveys *businesses* about sales receipts, so a "
+            "simulated citizen structurally cannot answer it -- the objection "
+            "issue #36 raised when the retail series were first considered. "
+            "Scoring it would measure macroeconomic nowcasting, a different "
+            "benchmark from the one this arena runs, and issue #48 lists "
+            "redesigning the taxonomy as a non-goal."),
         "revisit": (
-            "A decision that the arena scores establishment statistics "
-            "alongside public opinion. That is a taxonomy change, which "
-            "issue #48 lists as a non-goal."),
+            "A maintainer decision that the arena scores establishment "
+            "statistics alongside public opinion. Nothing else is missing: "
+            "the probe, the fixture and `tests/test_marts_probe.py` are the "
+            "integration work already done, and an adapter would be a day. "
+            "Two operational notes for whoever takes that decision. The "
+            "archive backfills late -- `rs2607.xlsx` was still 404 seventeen "
+            "days after the July 2026 release -- so a resolver must snapshot "
+            "`marts_current.xlsx` on release day and cite `rs{YY}{MM}.xlsx` "
+            "once it appears. And the release interval is not a fixed day of "
+            "the month; the 2025 shutdown moved it and the calendar has been "
+            "catching up since, so lock times come from the published "
+            "calendar, never from a rule."),
     },
     "acsi": {
         "publisher": "American Customer Satisfaction Index",
