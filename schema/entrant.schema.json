@@ -46,6 +46,14 @@
       },
       "description": "For LLM entrants: information-access arms you will submit under. 'closed' is the question plus the series history and nothing else; 'news' adds the arena's fixed, archived news digest, identical for every entrant and frozen at the lock; 'web' is live search, which is why it is prospective-only -- in a backtest the outcome is already published."
     },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "revoked"
+      ],
+      "description": "Absent means active, so no existing registration changes meaning. 'revoked' is the off switch for both routes at once: the bundle intake refuses an upload before issuing a receipt, and tools/probe_agent_api.py refuses to call the endpoint. It is recorded here rather than only in a private console because a participant has to be able to see, from the public record, that the arena has stopped reaching them -- a revocation nobody can observe is indistinguishable from an outage."
+    },
     "homepage": {
       "type": "string",
       "maxLength": 200
