@@ -113,6 +113,38 @@ both, or the test will say so.
 
 ### Participant onboarding (#47), as built
 
+## Producing the bundle
+
+```bash
+python tools/make_bundle.py --list                 # which batches exist
+python tools/make_bundle.py --batch batch-2026-09-14
+```
+
+One command, no network, no keys: `questions/season0.json` and the calendar
+above are the whole input. That matters more than it sounds -- if producing the
+bundle needed a live fetch, a source being down on a Monday would mean nobody
+could be given a question that week, for rounds that do not depend on that
+fetch at all.
+
+It reads **only reviewed rounds**. `tools/generate_rounds.py` proposes
+candidates into `questions/candidates/`; a human moves the accepted ones into
+the season file; the bundle is built from the season file. If the builder could
+reach into the candidate pile, generation would become publication.
+
+The payload is `schema/bundle.schema.json` (`schema_version` 1.0.0), closed like
+every schema here, and it carries all three shapes in one list -- scalar,
+16-cell profile, ordered list. `cells` and `items` appear **only on the shapes
+that have them**, matching `questions/season0.json`, where 82 of 89 rounds carry
+no `cells` key at all. An empty `cells: []` on a scalar round would assert that
+the round has zero cells rather than no cell concept, and `cells` is declared
+with `minItems: 2` precisely so that claim cannot be made. Consumers iterating a
+mixed batch use `q.get("cells", [])`; that is one call site, against a schema
+that stays honest about what each round is.
+
+Building a batch whose deadline predates the cutover is refused rather than
+served: those rounds have no common deadline to publish.
+
+
 - The deadline shown to a participant is `effective_deadline`, never `lock_at`.
 - A bundle is a batch: one deadline, many rounds, mixed horizons.
 - `batch_of` is the bundle id.
@@ -136,8 +168,13 @@ does not enforce.
 - A generated round joins the batch implied by its lock; nothing extra to set.
 - A round generated after its batch deadline has passed cannot be published
   into that batch — it belongs to the next one, or it is dropped.
+  `generate_rounds.publishable` is where that is enforced; before it existed
+  the generator offered a whole batch of unanswerable rounds on any run made
+  after Monday noon.
 - The publication lead is `deadline − 7d`, so a round must be frozen and
-  reviewed before then to appear in that bundle.
+  reviewed before then to appear in that bundle. The generator marks a batch
+  whose lead has passed rather than dropping it, because a round may still
+  legally join — it just arrives after entrants read the bundle.
 
 ### Still open
 

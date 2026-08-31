@@ -38,12 +38,23 @@ cannot be reproduced today. Conference Board CCI revises the prior month in
 every release (June 2026 printed 91.2 and later showed 92.2); Census MARTS
 revises the advance figure by about ±0.1pp and then rewrites years of it at the
 annual benchmark. Both are usable — **but only if the resolution rule pins the
-first print** and ignores every later revision. Say which it is.
+first print** and ignores every later revision. Say which it is. §8 measures
+what that looks like on MARTS across 36 releases.
 
 **Retroactive rescaling.** Google Trends returns *relative* values that change
 when the query window changes, so the same request answers differently at
-different times. That is not a revision policy to work around; it is
-unfixable, and it is why that source is rejected.
+different times. That is not a revision policy to work around.
+
+This paragraph used to end "and it is why that source is rejected", and that
+was overturned the same way §6 was. The rescaling is unfixable *at the
+endpoint*, and it is answered *at the archive*: `ssa/adapters/trends.py` fixes
+the request window as a module constant and writes every fetch to `trends/`, so
+a completed week's value is whatever the earliest snapshot containing it
+showed, forever. The resolution source is the archive, not the endpoint, which
+is the same move `civiqs` makes against nightly re-modelling. Delete the
+archive and the rejection is correct again — which is why the archive is
+committed and why nothing in the pipeline resolves a Trends round from a live
+request.
 
 Ask the publisher's own documentation, then verify by fetching two vintages.
 
@@ -342,3 +353,109 @@ bearing one and it did not survive: a system binary is not a Python dependency.
 The last sentence above is still the standing instruction for this source — it
 is why `umichparty.fetch_latest` refuses a non-PDF body outright and why nothing
 in the pipeline fetches it unasked.)*
+
+---
+
+## 7. The inventory: where a source's state is written down
+
+`ssa/inventory.py` holds one row per source — every adapter in this
+repository, every `source` key `ssa/series.py` registers, and every candidate
+that was surveyed and turned down — carrying:
+
+| field | what it answers |
+|---|---|
+| `state` | `integrated`, `permission-needed`, or `rejected` — this repository's relationship to the source |
+| `rights` | the publisher's terms: `approved`, `permission-needed`, `rejected`, `unresolved`. **Only `approved` generates rounds.** |
+| `role` | `target` (we ask questions about it) or `input` (an entrant reads it before answering). An input never becomes a round |
+| `evidence` | the robots rule, the licence sentence, the HTTP status, or the issue number. A label is not evidence |
+| `revisit` | for anything not integrated: the specific fact that would reopen it |
+
+**Why it is code and not this page.** The rights decision used to be written
+twice — narrated here, and typed as a `RIGHTS` dict inside
+`tools/generate_rounds.py` that the generation gate actually read. Nothing kept
+them in step and they had already drifted: `trends_basket` was missing from the
+dict, so the gate called it `unresolved` and refused to schedule anything on it
+while three hand-written Trends basket rounds ran live in
+`questions/season0.json`. The generator now reads
+`inventory.rights_table()`, `tests/test_inventory.py` fails if a registered
+source has no row, and this page points at that file rather than restating it.
+
+`state` and `rights` are deliberately separate. A source can be rights-approved
+and not integrated — approval says nothing about whether anyone wrote the
+template. And several sources are integrated while their rights sit at
+`permission-needed`: they are read from an archive a maintainer fetched by
+hand, which is exactly why the generator must not schedule new rounds on them.
+
+**A `rejected` row is not a closed door.** §6 above is a rejection that was
+reversed once somebody re-read its load-bearing argument, and the reversal was
+worth more than the original verdict. That is only possible when the verdict
+says what would change it, so every non-integrated row carries `revisit` and a
+test enforces it.
+
+---
+
+## 8. A no-go that passed every gate: Census MARTS retail
+
+**Status: measured, and declined.** `tools/probe_marts.py`,
+`sources/marts/probe.json`, `tests/test_marts_probe.py`.
+
+This is the opposite shape from §6. There the source was written off on an
+argument that did not survive re-reading; here every mechanical test passes and
+the answer is still no. Both are worth writing down, because "we checked and it
+works, and we are not doing it" is a verdict that decays into "nobody looked"
+within about two months unless the measurements are on disk.
+
+**What was measured**, over the 36 monthly advance releases from 2023-07 to
+2026-06, all fetched from census.gov and each recorded in the fixture with its
+URL, sha256 and byte length:
+
+| gate | result |
+|---|---|
+| §1.1 schedule | 8:30 a.m. ET, on a forward calendar Census publishes at [`retail/release_schedule.html`](https://www.census.gov/retail/release_schedule.html). **Not** a fixed day of the month — the 2025 shutdown moved it and the calendar has been catching up since |
+| §1.2 first print | the advance value differs from the next release's print for the same reference month in **280/280** (category, month) pairs, mean 0.52% of the advance. Two mechanisms: real source revision, and concurrent seasonal adjustment, which moves every SA value every month regardless. So pinning the first print is not only implementable, it is unavoidable |
+| §1.3 free | public domain, US government work, no key |
+| §1.4 movement | mean absolute month-over-month change of the advance print runs 0.48% (food & beverage) to 2.47% (gasoline stations) |
+| history | eight three-digit categories, present in 36/36 releases with an advance value in 36/36, one label spelling each |
+
+The archive is addressable by **reference month**, which is what makes a
+resolution rule possible at all:
+
+```
+https://www2.census.gov/retail/releases/historical/marts/rs{YY}{MM}.xlsx
+```
+
+`{YY}{MM}` is the advance month the release is about, not the day it was
+published, so a round can name the artifact that will settle it before that
+artifact exists. Nothing on any Census retail page links to that directory; it
+was found by walking `www2.census.gov/retail/`.
+
+**Why it is still a no.** MARTS surveys **businesses** about their sales
+receipts. A simulated citizen structurally cannot answer it — that is the
+objection issue #36 raised when the retail series were first considered for the
+market-research board, and no amount of clean plumbing addresses it. Scoring
+it would measure macroeconomic nowcasting, which is a different benchmark from
+the one this arena runs, and issue #48 lists redesigning the taxonomy as a
+non-goal. **This is a maintainer's call, not a finding**, and it is the only
+thing standing between the fixture above and a shipped round family.
+
+**Three traps recorded for whoever picks it up**, because each one fails
+quietly:
+
+- **Two of the 54 archived workbooks are strict OOXML** (`rs2501`, `rs2601`),
+  in the `purl.oclc.org` namespaces rather than the usual
+  `schemas.openxmlformats.org` ones. openpyxl 3.1.5 returns **zero sheets** for
+  those and raises nothing. `probe_marts` reads the namespace off the
+  document's own root element, which is also why it needs no new dependency.
+- **Three category rows wrap across two spreadsheet rows** (444, 448, 451): the
+  NAICS code on one, every number on the next. A row-at-a-time parser drops
+  exactly the categories a retail question would ask about.
+- **The archive backfills late.** `rs2607.xlsx` was still 404 seventeen days
+  after the July 2026 release, and `rs2605`/`rs2606` posted 28 and 29 days
+  after theirs. A resolver has to snapshot `marts_current.xlsx` on release day
+  and cite the permanent `rs{YY}{MM}.xlsx` once it appears.
+
+The workbooks themselves are not committed. §2.1 is right that a vintage
+rebuilt from parsed rows is our reading of the file rather than the file, so
+the fixture carries each body's sha256 and `probe_marts.py --verify`
+re-downloads and fails if any of them has moved. 1.2 MB of binaries is
+provenance for a series, and there is no series.

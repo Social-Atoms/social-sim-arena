@@ -39,6 +39,7 @@ open site/index.html
 
 ```
 questions/    the season: every round, its lock and release time, frozen up front
+              candidates/ proposals awaiting review; bundles/ the frozen weekly batch
 forecasts/    one file per entrant per round; the PR that adds it is the submission
 locks/        sha256 manifests written at lock time; the pre-registration record
 resolutions/  the published numbers rounds resolved against, with sources
