@@ -3,7 +3,7 @@
   python tools/make_bundle.py                          # the next open batch
   python tools/make_bundle.py --batch batch-2026-09-14
   python tools/make_bundle.py --list                   # which batches exist
-  python tools/make_bundle.py --out bundle.json
+  python tools/make_bundle.py --batch batch-2026-09-14 --out /tmp/bundle.json
 
 The bundle is a projection of `questions/season0.json`, not a second copy of
 it: nothing here can add, edit or reorder a round, and `--out` refuses to
@@ -25,6 +25,7 @@ sys.path.insert(0, ROOT)
 
 from ssa import batches                                        # noqa: E402
 from ssa import bundle as bundle_lib                           # noqa: E402
+from ssa import season as season_lib                           # noqa: E402
 
 SEASON = os.path.join(ROOT, "questions", "season0.json")
 
@@ -32,7 +33,7 @@ SEASON = os.path.join(ROOT, "questions", "season0.json")
 def load_rounds(path):
     with open(path, encoding="utf-8") as fh:
         data = json.load(fh)
-    return data["rounds"] if isinstance(data, dict) else data
+    return season_lib.require_valid(data)
 
 
 def main(argv=None):
@@ -45,7 +46,14 @@ def main(argv=None):
     ap.add_argument("--out", help="write here instead of stdout")
     args = ap.parse_args(argv)
 
-    rounds = load_rounds(args.rounds)
+    try:
+        rounds = load_rounds(args.rounds)
+    except (OSError, json.JSONDecodeError, ValueError) as err:
+        print(f"FAIL: reviewed round manifest is not publishable: {err}",
+              file=sys.stderr)
+        return 1
+    print(f"OK reviewed manifest: {len(rounds)} semantically valid rounds",
+          file=sys.stderr)
     if args.list:
         for batch_id in bundle_lib.batch_ids(rounds):
             members = [r for r in rounds
@@ -64,8 +72,13 @@ def main(argv=None):
 
     try:
         out = bundle_lib.build_bundle(rounds, args.batch)
+        repeated = bundle_lib.build_bundle(rounds, args.batch)
     except bundle_lib.BundleError as err:
         print(f"FAIL: [{err.code}] {err}", file=sys.stderr)
+        return 1
+    if bundle_lib.canonical(out) != bundle_lib.canonical(repeated):
+        print("FAIL: building the same reviewed batch twice produced different "
+              "bytes", file=sys.stderr)
         return 1
     problems = bundle_lib.check_bundle(out)
     if problems:
@@ -74,6 +87,8 @@ def main(argv=None):
         for line in problems:
             print("   ", line, file=sys.stderr)
         return 1
+    print(f"OK deterministic bundle: {out['batch_id']} "
+          f"sha256 {bundle_lib.sha256_of(out)}", file=sys.stderr)
 
     text = json.dumps(out, indent=2, sort_keys=True) + "\n"
     if not args.out:

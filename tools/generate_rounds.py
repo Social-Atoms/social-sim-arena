@@ -1,21 +1,21 @@
 """Generate the next weekly bundle of rounds from the registry. Never publishes.
 
   python tools/generate_rounds.py                    # candidates + review diff
-  python tools/generate_rounds.py --weeks 6          # the rest of the season
+  python tools/generate_rounds.py --through 2026-12-01  # the rest of season 0
   python tools/generate_rounds.py --write            # write the candidate file
 
 Rounds used to be hand-written, one JSON object at a time, which is why season 0
 runs out in late September: somebody wrote questions as far ahead as they had
-patience for. That is also why 23 registered series have never carried a round
-at all -- they arrive in the same download as series that do, cost nothing extra
-to fetch, and were simply never written up.
+patience for. That is also why registered series can be present without a safe
+question template or forward release calendar.
 
-This turns both into one command. It reads the registry, infers each series'
-publication weekday from its own observed history, applies the gates that
-`docs/sources.md` sets out, and emits candidates for review. **It never writes
-into `questions/season0.json`.** A human reads the diff and moves the ones they
-accept, which is the whole reason the frozen season file stays trustworthy: no
-round appears in it that a person did not put there.
+This turns both into one command. It reads the registry, applies the gates that
+`docs/sources.md` sets out, and emits candidates for review. A source date is
+used as a release date only when its adapter explicitly says that is what the
+date means. **It never writes into `questions/season0.json`.** A human reads the
+diff and moves the ones they accept, which is the whole reason the frozen
+season file stays trustworthy: no round appears in it that a person did not
+put there.
 
 **Every rejection carries a machine-readable reason.** A generator that silently
 drops a series is worse than one that never saw it, because nobody can tell the
@@ -33,14 +33,17 @@ the refusals with their evidence.
   every observed movement is measurement noise -- and *reports* the
   signal-to-noise ratio on every surviving candidate for the reviewer to
   judge. See `MIN_REAL_MOVEMENT` for why the line is not drawn tighter here.
-- `schedule`: the publication weekday has to be inferable from history, or a
-  release time would be a guess and the lock would be a guess with it.
+- `schedule`: the source must carry an explicit forward release contract. A
+  poll field midpoint is an observation label, not a publication date, even
+  when its weekday happens to be regular.
 
 **Determinism.** Same registry plus same archive gives byte-identical output:
 ids, wording, units, release and lock times, resolution rule and target type are
-all derived, none sampled. The release calendar comes from the modal weekday of
-the observed history rather than from a hand-typed constant, so a tracker that
-moves its publication day is followed rather than silently mis-scheduled.
+all derived, none sampled. Civiqs uses its registry-declared Friday sampling
+contract, whose adapter defines each date as the value displayed that day.
+Wikipedia rankings roll the reviewed week contract forward. Silver Bulletin
+dates are poll field midpoints, so those families are refused until a real
+forward publication calendar is integrated.
 """
 import argparse
 import collections
@@ -87,14 +90,10 @@ MIN_HISTORY = 12
 # it should be set against resolved rounds, not guessed here.
 MIN_REAL_MOVEMENT = 0.0
 
-# Sources with no committed archive, which therefore cannot be rebuilt from a
-# clean checkout. Their series are reported as refused rather than fetched:
-# generation has to be reproducible offline, and a source that only exists on
-# the network makes every run depend on that host being up today.
-OFFLINE_UNAVAILABLE = ("pentaesi",)
-
-# How far ahead a generated release may be scheduled. Beyond this the inferred
-# calendar is extrapolation dressed as a schedule.
+# How far ahead a generated release may be scheduled. Beyond this the declared
+# calendar is still an increasingly distant projection.  ``--through`` is the
+# explicit operator override for a reviewed season horizon; it is date-bounded
+# and still writes candidates only, never approved rounds.
 MAX_WEEKS_AHEAD = 8
 
 # Rights state per source, read from the source inventory.
@@ -120,6 +119,14 @@ RESOLVE = {
     "sb_generic": "adjusted average at the release date",
     "civiqs": "dashboard Friday value, from the daily archive",
 }
+
+# Explicit release contracts, not weekday patterns inferred from target data.
+# Civiqs' adapter documents its date as the value displayed on that day and
+# every registered Civiqs series asks it to sample Fridays (weekday 4).  The
+# season's current reviewed Civiqs rounds use 14:00Z; changing that time is a
+# reviewed calendar change, not something history can infer.
+CIVIQS_RELEASE_HOUR_UTC = 14
+FIELD_DATE_SOURCES = frozenset({"sb_approval", "sb_generic"})
 
 # Series this generator deliberately stops producing rounds for, and why.
 #
@@ -182,62 +189,74 @@ def load_history():
     clean checkout and cannot be made to depend on a source being reachable
     the day someone runs it.
     """
-    from ssa.adapters import silverbulletin as sb
+    from ssa.adapters import civiqs as civiqs_adapter
     src = {}
-    for key, folder in (("sb_approval", "sb_approval"), ("sb_generic", "sb_generic")):
-        d = os.path.join(ROOT, "sources", folder)
-        if not os.path.isdir(d):
-            continue
-        newest = sorted(f for f in os.listdir(d) if f.endswith(".csv"))
-        if newest:
-            with open(os.path.join(d, newest[-1])) as fh:
-                src[key] = sb.parse(fh.read())
-    # `build_all` fetches any source key it is not handed, and two of them go
-    # to the network unconditionally -- AAII, which has been 503 to the runner
-    # for days, and the ESI feed. Generation must not depend on a host being
-    # up, so both are rebuilt from what is committed.
+    # Only a family with both a generation template and a proved forward
+    # schedule needs history. Everything else is refused before a history or
+    # network call is considered. This is the load-bearing offline rule: the
+    # previous version called ``build_all`` over the entire registry, which
+    # fetched Conference Board, SCE, Civiqs, Trends and Wikipedia even though
+    # none of those source families could safely produce a scalar candidate. A
+    # supposedly deterministic command could therefore hang for 45 seconds or
+    # mutate today's archives.
     #
-    # AAII archives whole pages, and its rows carry no year: parsing needs the
-    # `asof` from the response that served them, which here is the archive's
-    # own filename. The adapter's `parse(text, asof)` takes exactly that pair.
-    from ssa.adapters import aaii as aaii_adapter
-    d = os.path.join(ROOT, "sources", "aaii")
-    if os.path.isdir(d):
-        pages = sorted(f for f in os.listdir(d) if f.endswith(".html"))
-        if pages:
-            with open(os.path.join(d, pages[-1])) as fh:
-                asof = datetime.strptime(pages[-1][:10], "%Y-%m-%d").date()
-                src["aaii"] = aaii_adapter.parse(fh.read(), asof)
-    # The ESI feed archives nothing, so it cannot be rebuilt offline at all,
-    # and `build_all` refuses to return a series that built to zero points --
-    # correctly, since a silently empty series is how unscoreable rounds reach
-    # the board. So those series are lifted out of the registry for the length
-    # of the build and reported as refused, rather than either fabricating
-    # history for them or making every generation run depend on a host we are
-    # not allowed to script against in the first place.
+    # Civiqs has one committed archive per registered series.  Build every
+    # override explicitly with ``fetch=False`` so ``build_all`` has no missing
+    # key it could interpret as permission to call the live dashboard.
     from ssa import series as registry
-    lifted = {sid: registry.SERIES.pop(sid)
-              for sid, m in list(registry.SERIES.items())
-              if m.get("source") in OFFLINE_UNAVAILABLE}
+    all_series = dict(registry.SERIES)
+    supported = {sid: meta for sid, meta in all_series.items()
+                 if meta.get("source") == "civiqs"}
+    src["civiqs"] = {}
+    for sid, meta in sorted(supported.items()):
+        if meta.get("source") != "civiqs":
+            continue
+        cfg = meta["civiqs"]
+        src["civiqs"][sid] = civiqs_adapter.as_displayed(
+            cfg["name"], cfg.get("filters"), choice=cfg.get("choice"),
+            net=cfg.get("net", False), weekday=cfg.get("weekday"), fetch=False)
+
+    for sid in tuple(registry.SERIES):
+        if sid not in supported:
+            registry.SERIES.pop(sid)
     try:
         built = registry.build_all(src)
     finally:
-        registry.SERIES.update(lifted)
-    return built, set(lifted)
+        # Restore both membership and insertion order.  Registry order is not
+        # part of generation (all output is sorted), but a read-only command
+        # must not leave a process-global registry rearranged for its caller.
+        registry.SERIES.clear()
+        registry.SERIES.update(all_series)
+    return built
 
 
-def modal_weekday(hist):
-    """The weekday this series actually publishes on, from its own history.
+def schedule_contract(sid, meta, hist):
+    """(``{weekday, hour}``, reason) from explicit source date semantics.
 
-    Modal rather than latest, so one delayed release does not move the whole
-    calendar, and inferred rather than declared, so a tracker that shifts its
-    publication day is followed instead of quietly mis-scheduled.
+    A regular pattern is not evidence that a date is a release date. Silver
+    Bulletin deliberately labels its series with poll field midpoints; using
+    their modal weekday previously generated Saturday Morning Consult releases
+    while the reviewed calendar said Wednesday. Refuse that family until a
+    publisher calendar exists rather than manufacturing a precise timestamp.
     """
-    days = [datetime.strptime(p["date"], "%Y-%m-%d").weekday() for p in hist[-26:]]
-    if not days:
-        return None
-    top, n = collections.Counter(days).most_common(1)[0]
-    return top if n >= max(3, len(days) // 3) else None
+    source = meta.get("source")
+    if source in FIELD_DATE_SOURCES:
+        return None, (
+            "Silver Bulletin series dates are poll field midpoints, not "
+            "publication dates; no forward publisher calendar is integrated")
+    if source != "civiqs":
+        return None, "no explicit forward release calendar is integrated"
+    weekday = (meta.get("civiqs") or {}).get("weekday")
+    if not isinstance(weekday, int) or not 0 <= weekday <= 6:
+        return None, "Civiqs registry row has no valid sampled weekday"
+    mismatched = [p.get("date") for p in hist[-26:]
+                  if datetime.strptime(p["date"], "%Y-%m-%d").weekday()
+                  != weekday]
+    if mismatched:
+        return None, (
+            f"Civiqs archive violates its registry weekday {weekday}; "
+            f"first mismatch {mismatched[0]}")
+    return {"weekday": weekday, "hour": CIVIQS_RELEASE_HOUR_UTC}, None
 
 
 def signal_to_noise(hist, source=None):
@@ -281,6 +300,19 @@ def gate(sid, meta, hist):
     if rights != "approved":
         return False, {"gate": "rights", "state": rights,
                        "source": meta.get("source")}
+    if sid in RETIRED_TEMPLATES:
+        return False, {"gate": "retired_template",
+                       "source": meta.get("source"),
+                       "detail": RETIRED_TEMPLATES[sid]}
+    if meta.get("source") not in RESOLVE:
+        return False, {"gate": "unsupported_family",
+                       "source": meta.get("source"),
+                       "detail": "this generator has no template for the family; "
+                                 "the source may still be fine by hand"}
+    _, schedule_reason = schedule_contract(sid, meta, hist)
+    if schedule_reason:
+        return False, {"gate": "schedule", "source": meta.get("source"),
+                       "detail": schedule_reason}
     if len(hist) < MIN_HISTORY:
         return False, {"gate": "history", "observations": len(hist),
                        "required": MIN_HISTORY}
@@ -292,18 +324,6 @@ def gate(sid, meta, hist):
                        "measurement_noise": round(m, 3),
                        "detail": "all observed movement is measurement noise; "
                                  "no forecast can beat the last value"}
-    if sid in RETIRED_TEMPLATES:
-        return False, {"gate": "retired_template",
-                       "source": meta.get("source"),
-                       "detail": RETIRED_TEMPLATES[sid]}
-    if meta.get("source") not in RESOLVE:
-        return False, {"gate": "unsupported_family",
-                       "source": meta.get("source"),
-                       "detail": "this generator has no template for the family; "
-                                 "the source may still be fine by hand"}
-    if modal_weekday(hist) is None:
-        return False, {"gate": "schedule",
-                       "detail": "publication weekday not inferable from history"}
     return True, None
 
 
@@ -333,23 +353,28 @@ def publishable(lock, now):
     return batches.deadline_for(lock) > now
 
 
-def candidates(sid, meta, hist, weeks, now):
-    """The next `weeks` releases of one series, as round objects."""
-    wd = modal_weekday(hist)
+def candidates(sid, meta, hist, weeks, now, through=None):
+    """The next releases, count-bounded or explicitly date-bounded."""
+    calendar, reason = schedule_contract(sid, meta, hist)
+    if reason:
+        raise ValueError(f"{sid}: no safe release schedule: {reason}")
+    wd = calendar["weekday"]
     last = datetime.strptime(hist[-1]["date"], "%Y-%m-%d").replace(
         tzinfo=timezone.utc)
-    hour = 14                                   # the season's settled convention
+    hour = calendar["hour"]
     out = []
     step = 7
     nxt = last + timedelta(days=step)
     while nxt.weekday() != wd:
         nxt += timedelta(days=1)
-    while len(out) < weeks:
+    while through is not None or len(out) < weeks:
         release = nxt.replace(hour=hour, minute=0, second=0, microsecond=0)
         nxt += timedelta(days=step)
+        if through is not None and release.date() > through:
+            break
         if release <= now:
             continue
-        if (release - now).days > MAX_WEEKS_AHEAD * 7:
+        if through is None and (release - now).days > MAX_WEEKS_AHEAD * 7:
             break
         lock = release - timedelta(hours=48)
         if not publishable(lock, now):
@@ -465,8 +490,8 @@ def wiki_template(rounds):
     return newest, lock_off, rel_off
 
 
-def wiki_candidates(rounds, weeks, now):
-    """The next `weeks` weekly top-10 rounds, rolled off the reviewed contract."""
+def wiki_candidates(rounds, weeks, now, through=None):
+    """Future top-10 rounds, count-bounded or explicitly date-bounded."""
     tpl, lock_off, rel_off = wiki_template(rounds)
     spec = tpl["ranking"]
     if spec.get("length") != WIKI_LENGTH:
@@ -490,16 +515,18 @@ def wiki_candidates(rounds, weeks, now):
     taken = {r["round_id"] for r in rounds}
     out = []
     start = t_start + timedelta(days=7)
-    while len(out) < weeks:
+    while through is not None or len(out) < weeks:
         end = start + timedelta(days=6)
         lock = datetime(start.year, start.month, start.day,
                         tzinfo=timezone.utc) + lock_off
         release = datetime(end.year, end.month, end.day,
                            tzinfo=timezone.utc) + rel_off
         wk_start, start = start, start + timedelta(days=7)
+        if through is not None and release.date() > through:
+            break
         if lock <= now or not publishable(lock, now):
             continue
-        if (release - now).days > MAX_WEEKS_AHEAD * 7:
+        if through is None and (release - now).days > MAX_WEEKS_AHEAD * 7:
             break
         r = {
             "round_id": f"wiki-top10-{end.isoformat()}",
@@ -528,8 +555,12 @@ def wiki_candidates(rounds, weeks, now):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--weeks", type=int, default=1,
-                    help="releases per series to generate (default 1)")
+    horizon = ap.add_mutually_exclusive_group()
+    horizon.add_argument("--weeks", type=int,
+                         help="releases per series to generate (default 1)")
+    horizon.add_argument("--through",
+                         help="generate candidates through this release date "
+                              "(YYYY-MM-DD), beyond the eight-week preview")
     ap.add_argument("--write", action="store_true",
                     help="write questions/candidates/<batch>.json")
     ap.add_argument("--rejects", action="store_true",
@@ -539,6 +570,14 @@ def main():
 
     now = (datetime.fromisoformat(args.now.replace("Z", "+00:00"))
            if args.now else datetime.now(timezone.utc))
+    weeks = args.weeks if args.weeks is not None else 1
+    if weeks < 1:
+        ap.error("--weeks must be at least 1")
+    try:
+        through = (datetime.strptime(args.through, "%Y-%m-%d").date()
+                   if args.through else None)
+    except ValueError:
+        ap.error("--through must be an ISO date (YYYY-MM-DD)")
 
     with open(os.path.join(ROOT, "questions", "season0.json")) as fh:
         season = json.load(fh)
@@ -558,23 +597,17 @@ def main():
         for c in r.get("cells") or []:
             already.add(c)
 
-    hist_by_series, offline_missing = load_history()
+    hist_by_series = load_history()
     made, refused = [], []
     for sid in sorted(SERIES):
         meta = SERIES[sid]
-        if sid in offline_missing:
-            refused.append((sid, {"gate": "offline_unavailable",
-                                  "source": meta.get("source"),
-                                  "detail": "no committed archive; cannot be "
-                                            "evaluated from a clean checkout"}))
-            continue
         hist = hist_by_series.get(sid) or []
         ok, why = gate(sid, meta, hist)
         if not ok:
             refused.append((sid, why))
             continue
         ratio, sig, noi = signal_to_noise(hist, meta.get("source"))
-        for r in candidates(sid, meta, hist, args.weeks, now):
+        for r in candidates(sid, meta, hist, weeks, now, through=through):
             r["_sn"] = ratio
             week = datetime.strptime(r["release_at"][:10],
                                      "%Y-%m-%d").isocalendar()[:2]
@@ -586,7 +619,7 @@ def main():
             made.append(r)
 
     # The ranking family, which has no registry row to iterate over.
-    for r in wiki_candidates(rounds, args.weeks, now):
+    for r in wiki_candidates(rounds, weeks, now, through=through):
         r["_sn"] = float("nan")     # a permutation has no signal-to-noise ratio
         r["_new_series"] = False    # three reviewed rounds already ran on it
         made.append(r)

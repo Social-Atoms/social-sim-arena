@@ -96,3 +96,7 @@ Full protocol figures and the teaser live in `assets/`.
 Prototype, season 0. Live rounds start Aug 11, 2026. The data refresh runs
 daily via GitHub Actions. Known gaps and open tasks are listed on the docs
 page.
+
+Maintainers: the offline candidate → human review → deterministic bundle →
+sandbox scoring procedure is documented in
+[`docs/weekly-pipeline.md`](docs/weekly-pipeline.md).

@@ -20,6 +20,9 @@ on:
       - ".github/workflows/questions.yml"
       - ".github/workflows/refresh.yml"
       - "questions/**"
+      - "examples/bundle/**"
+      - "docs/weekly-pipeline.md"
+      - "docs/bundle-submission.md"
       - "schema/**"
       - "sources/marts/**"
       - "ssa/**"
@@ -31,6 +34,9 @@ on:
       - ".github/workflows/questions.yml"
       - ".github/workflows/refresh.yml"
       - "questions/**"
+      - "examples/bundle/**"
+      - "docs/weekly-pipeline.md"
+      - "docs/bundle-submission.md"
       - "schema/**"
       - "ssa/**"
       - "tools/**"
@@ -49,11 +55,17 @@ jobs:
       - name: the generation gates
         run: PYTHONPATH=. python tests/test_generate_rounds.py
 
+      - name: the reviewed season is semantically publishable
+        run: PYTHONPATH=. python tools/validate_season.py
+
       - name: the source inventory is the only rights table
         run: PYTHONPATH=. python tests/test_inventory.py
 
       - name: the weekly bundle and its schema
         run: PYTHONPATH=. python tests/test_bundle.py
+
+      - name: the reviewed build and mixed-shape sandbox cycle
+        run: PYTHONPATH=. python tests/test_weekly_pipeline.py
 
       - name: the batch calendar, and the validator's copy of it
         run: PYTHONPATH=. python tests/test_batches.py
@@ -67,20 +79,8 @@ jobs:
       - name: the MARTS no-go is still reproducible
         run: PYTHONPATH=. python tests/test_marts_probe.py
 
-      - name: no duplicate round ids anywhere in the season
-        run: |
-          PYTHONPATH=. python - <<'PY'
-          import collections, json
-          s = json.load(open("questions/season0.json"))
-          rounds = s["rounds"] if isinstance(s, dict) else s
-          dupes = [k for k, n in collections.Counter(
-              r["round_id"] for r in rounds).items() if n > 1]
-          if dupes:
-              raise SystemExit(f"duplicate round ids in season0.json: {dupes}")
-          # A round id is also a directory name under forecasts/, so two rounds
-          # sharing one id would silently pool two questions' submissions.
-          print(f"{len(rounds)} rounds, all ids distinct")
-          PY
+      - name: semantic mutations and committed bundle determinism
+        run: PYTHONPATH=. python tests/test_season.py
 
       - name: every committed bundle still matches its schema
         run: |
