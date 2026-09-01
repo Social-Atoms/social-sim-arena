@@ -123,5 +123,5 @@ in the run log.
 
 Free. No account, no key, no rate limit worth planning around. A `.ots` proof is
 a few hundred bytes; a season of them is smaller than one poll CSV. The calendars
-aggregate everyone's submissions into one Merkle tree per block, so our thirteen
+aggregate everyone's submissions into one Merkle tree per block, so the arena's
 rounds cost the Bitcoin network nothing beyond what it was already doing.

@@ -13,13 +13,12 @@ participant's deadline** -- it is the arena's clock, 0 to 7 days later -- and a
 surface that shows it as one is showing a date that is both wrong and late.
 
 **Why all three answer shapes ride in one payload.** A real batch mixes them:
-`batch-2026-09-14` is 12 scalar rounds and one 16-cell profile, and other weeks
-carry a ranking. Splitting the reply by shape would mean three uploads, three
+`batch-2026-09-14` is 15 scalar rounds, one 16-cell profile, and one ranking.
+Splitting the reply by shape would mean three uploads, three
 receipts, and no single moment at which a participant's week is complete --
 and, worse, a partial upload would be indistinguishable from a deliberate
 abstention. So `normalise` takes one response and returns a verdict *per
-round*: eleven accepted and two refused is a normal, fully-described outcome,
-not an error.
+round: partial acceptance is a normal, fully-described outcome, not an error.
 
 **Why the shape rules are borrowed, not restated.** Everything a record must
 satisfy to survive CI already lives in `tools/validate_submission.py`, which is
@@ -383,8 +382,8 @@ def _notes_for(answer, response, batch_id):
     The stamp says which batch the record came from and hashes *this answer*,
     not the whole upload. Hashing the upload was the obvious first choice and
     it was wrong: revising one round would change the notes of every record in
-    the file, so a one-line correction rewrote thirteen forecasts and thirteen
-    canonical hashes. Per answer, an untouched round is byte-identical across
+    the file, so a one-line correction rewrote every forecast and canonical
+    hash. Per answer, an untouched round is byte-identical across
     re-uploads, which is what lets `file_records` tell a revision from a retry.
 
     The participant's own text is truncated rather than the stamp, because the

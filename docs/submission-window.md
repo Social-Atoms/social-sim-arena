@@ -55,13 +55,14 @@ so it is a property of the question, not a confound between competitors. For
 `batch-2026-09-14`:
 
 ```
-09-07 Mon 12:00Z   batch published (13 rounds)
+09-07 Mon 12:00Z   batch published (17 rounds)
 09-14 Mon 12:00Z   DEADLINE — everything above is due
 09-14 Mon 14:00Z   mc-2026-w38-approval        locks   +0.1d
 09-15 Tue 14:00Z   aaii-2026-09-17             locks   +1.1d
-09-16 Wed 14:00Z   civiqs ×7                   lock    +2.1d
+09-16 Wed 14:00Z   civiqs ×10                  lock    +2.1d
 09-16 Wed 22:00Z   civiqs-profile-2026-w38     locks   +2.4d
-09-20 Sun 14:00Z   hh + yougov ×3              lock    +6.1d
+09-18 Fri 14:00Z   wiki-top10-2026-09-27       locks   +4.1d
+09-20 Sun 14:00Z   hh + yougov ×2              lock    +6.1d
 ```
 
 Report it per round. "Skill against horizon" is a real result the old design
