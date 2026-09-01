@@ -94,8 +94,8 @@ normalise into the existing `forecasts/<round_id>/<entrant_id>.json` records —
 Route B is a different way to hand over a forecast, not a different kind of
 forecast, so nothing downstream of the intake learns that bundles exist. The
 receipt carries the arena's clock plus the bundle and response hashes; verdicts
-are per round, so eleven accepted and two refused is a fully described outcome
-rather than an error.
+are per round, so partial acceptance is a fully described outcome rather than
+an error.
 
 ### Route B (questionnaire) — questionnaire + commitment
 

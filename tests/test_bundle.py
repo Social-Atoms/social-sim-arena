@@ -75,9 +75,8 @@ def test_the_deadline_a_bundle_shows_is_never_a_rounds_own_lock():
     """The one rule the whole participant surface rests on.
 
     Season 0 locks on six weekdays; the deadline is one Monday. A bundle that
-    published `lock_at` as the due date would be telling twelve of thirteen
-    entrants they had days they do not have, and the validator would then
-    reject what it invited.
+    published `lock_at` as the due date would give participants days they do
+    not have, and the validator would then reject what it invited.
     """
     doc = bundle.build_bundle(season_rounds(), "batch-2026-09-14")
     assert doc["deadline"] == "2026-09-14T12:00:00Z", doc["deadline"]
@@ -95,9 +94,10 @@ def test_one_bundle_carries_the_whole_weeks_mixed_horizons():
     normalised away: it is a property of the question, not a head start.
     """
     doc = bundle.build_bundle(season_rounds(), "batch-2026-09-14")
-    assert len(doc["questions"]) == 13, len(doc["questions"])
+    assert len(doc["questions"]) == 17, len(doc["questions"])
     shapes = {q["target_type"] for q in doc["questions"]}
-    assert shapes == {"continuous_normal", "profile_energy"}, shapes
+    assert shapes == {
+        "continuous_normal", "profile_energy", "ranking_list"}, shapes
     horizons = [q["horizon_days"] for q in doc["questions"]]
     assert horizons == sorted(horizons), "questions are not in lock order"
     assert min(horizons) < 0.2 and max(horizons) > 6.0, horizons

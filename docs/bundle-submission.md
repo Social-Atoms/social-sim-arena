@@ -70,11 +70,11 @@ definition, because those are what the answer is scored against.
 
 ## The three answer shapes, in one payload
 
-A batch mixes them — `batch-2026-09-14` is 12 scalar rounds and one 16-cell
-profile — so one response carries all three. Which shape a question takes is
-fixed by its `target_type`; it is not a choice. A single number is not a weaker
-answer to a profile round, it is an answer to a different question, and the
-intake refuses it rather than reshaping it.
+A batch mixes them — `batch-2026-09-14` is 15 scalar rounds, one 16-cell
+profile, and one ranking round — so one response carries all three. Which shape
+a question takes is fixed by its `target_type`; it is not a choice. A single
+number is not a weaker answer to a profile round, it is an answer to a different
+question, and the intake refuses it rather than reshaping it.
 
 ```json
 {
@@ -89,7 +89,7 @@ intake refuses it rather than reshaping it.
      "profile": {"civiqs_net_approval_dem": {"mean": -78.0, "sd": 4.0},
                  "civiqs_net_approval_rep": {"mean": 74.0, "sd": 4.0}}},
 
-    {"round_id": "wiki-top10-2026-09-06",
+    {"round_id": "wiki-top10-2026-09-27",
      "ranking": ["Article_One", "Article_Two"]}
   ],
   "notes": "weekly model run, closed-book"
@@ -240,8 +240,8 @@ python tools/validate_submission.py forecasts/<round_id>/<entrant_id>.json
 ```
 
 Nothing is written without `--write`; the common use of this command is asking
-what *would* happen, and a read-only-looking invocation that files thirteen
-forecasts is one that files forecasts by accident.
+what *would* happen, and a read-only-looking invocation that files a whole
+batch is one that files forecasts by accident.
 
 Confirm the route with the maintainers before a scored entry. Registration
 acceptance is separate from technical validity: a payload can be perfect and

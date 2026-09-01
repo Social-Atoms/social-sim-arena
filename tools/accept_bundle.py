@@ -6,8 +6,8 @@
 
 Dry by default. Nothing is written unless `--write` is passed, because the
 common case for this command is a maintainer or a participant asking *what
-would happen*, and a tool whose read-only-looking invocation files thirteen
-forecasts is a tool that files forecasts by accident.
+would happen*, and a tool whose read-only-looking invocation files a whole
+batch is a tool that files forecasts by accident.
 
 What it produces is not a new record format. Each accepted answer becomes
 exactly one `forecasts/<round_id>/<entrant_id>.json` object matching

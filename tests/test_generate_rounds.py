@@ -3,7 +3,7 @@ import importlib.util
 import json
 import os
 from unittest import mock
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -269,10 +269,10 @@ def test_wiki_top10_rolls_the_reviewed_contract_forward():
     """Four future weeks, each inheriting the contract a human approved."""
     now = datetime(2026, 8, 31, 21, tzinfo=timezone.utc)
     rounds = _season()
-    out = gen.wiki_candidates(rounds, 4, now)
+    out = gen.wiki_candidates(rounds, 4, now, through=date(2026, 11, 17))
     assert [r["round_id"] for r in out] == [
-        "wiki-top10-2026-09-27", "wiki-top10-2026-10-04",
-        "wiki-top10-2026-10-11", "wiki-top10-2026-10-18"]
+        "wiki-top10-2026-10-25", "wiki-top10-2026-11-01",
+        "wiki-top10-2026-11-08", "wiki-top10-2026-11-15"]
     tpl = max((r for r in rounds if r["round_id"].startswith("wiki-top10")),
               key=lambda r: r["ranking"]["week_end"])
     for r in out:

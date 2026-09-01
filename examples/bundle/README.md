@@ -73,6 +73,6 @@ python tools/make_bundle.py --list
 python tools/make_bundle.py --batch batch-2026-09-14 --out /tmp/real.json
 ```
 
-`batch-2026-09-14` is 13 questions — 12 scalar and one 16-cell profile — with
-horizons from 0.1 to 6.1 days and a single deadline of 2026-09-14T12:00:00Z.
-The example entrant answers it unchanged, given anchors.
+`batch-2026-09-14` is 17 questions — 15 scalar, one 16-cell profile, and one
+ranking — with horizons from 0.1 to 6.1 days and a single deadline of
+2026-09-14T12:00:00Z. The example entrant answers it unchanged, given anchors.

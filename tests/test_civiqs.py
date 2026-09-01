@@ -493,7 +493,7 @@ def test_a_malformed_live_civiqs_page_does_not_use_the_archive(a):
 
 # --- the registry and the rounds that depend on it --------------------------
 
-def test_both_civiqs_rounds_name_a_registered_series():
+def test_civiqs_rounds_name_registered_series_with_matching_contracts():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     with open(os.path.join(root, "questions", "season0.json")) as f:
         season = json.load(f)
@@ -503,9 +503,15 @@ def test_both_civiqs_rounds_name_a_registered_series():
         assert r["series"] in series_registry.SERIES, r["round_id"]
         spec = series_registry.SERIES[r["series"]]
         assert spec["source"] == "civiqs"
-        assert "net" in spec["unit"] and "net" in r["unit"]
-        # Both rounds ask for a Friday value; the series has to be sampled on
-        # the same day or the resolver answers a different question.
+        if r["round_id"] == "civiqs-2026-w34-approval":
+            # This already-published legacy round abbreviated the otherwise
+            # identical registry unit before exact unit checks existed.
+            assert r["unit"] == "net points"
+            assert spec["unit"] == "net points (approve minus disapprove)"
+        else:
+            assert r["unit"] == spec["unit"], r["round_id"]
+        # Every reviewed Civiqs round asks for a Friday value; the series has
+        # to be sampled on the same day or the resolver answers another target.
         assert spec["civiqs"]["weekday"] == 4
         assert datetime.strptime(r["release_at"], "%Y-%m-%dT%H:%M:%SZ") \
             .weekday() == 4, r["round_id"]

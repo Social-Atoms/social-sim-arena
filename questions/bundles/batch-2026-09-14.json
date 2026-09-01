@@ -30,6 +30,18 @@
     {
       "horizon_days": 2.083,
       "lock_at": "2026-09-16T14:00:00Z",
+      "question": "Civiqs daily tracker: percent of US registered voters who describe themselves as angry about the way things are going in the United States, as the dashboard shows it on Friday",
+      "release_at": "2026-09-18T14:00:00Z",
+      "resolve": "dashboard Friday value, from the daily archive",
+      "round_id": "civiqs-2026-w38-angry-share",
+      "series": "civiqs_angry_share",
+      "target_type": "continuous_normal",
+      "tracker": "civiqs",
+      "unit": "percent"
+    },
+    {
+      "horizon_days": 2.083,
+      "lock_at": "2026-09-16T14:00:00Z",
       "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, as the dashboard shows it on Friday",
       "release_at": "2026-09-18T14:00:00Z",
       "resolve": "dashboard Friday value, from the daily archive",
@@ -38,6 +50,30 @@
       "target_type": "continuous_normal",
       "tracker": "civiqs",
       "unit": "net points (approve minus disapprove)"
+    },
+    {
+      "horizon_days": 2.083,
+      "lock_at": "2026-09-16T14:00:00Z",
+      "question": "Civiqs daily tracker: net direction of the nation's economy among US registered voters (getting better minus getting worse), as the dashboard shows it on Friday",
+      "release_at": "2026-09-18T14:00:00Z",
+      "resolve": "dashboard Friday value, from the daily archive",
+      "round_id": "civiqs-2026-w38-econ-direction",
+      "series": "civiqs_net_econ_direction",
+      "target_type": "continuous_normal",
+      "tracker": "civiqs",
+      "unit": "net points (better minus worse)"
+    },
+    {
+      "horizon_days": 2.083,
+      "lock_at": "2026-09-16T14:00:00Z",
+      "question": "Civiqs daily tracker: net change in the respondent's own family finances over the last year among US registered voters (gotten better minus gotten worse), as the dashboard shows it on Friday",
+      "release_at": "2026-09-18T14:00:00Z",
+      "resolve": "dashboard Friday value, from the daily archive",
+      "round_id": "civiqs-2026-w38-family-finances",
+      "series": "civiqs_net_family_finances",
+      "target_type": "continuous_normal",
+      "tracker": "civiqs",
+      "unit": "net points (better minus worse)"
     },
     {
       "horizon_days": 2.083,
@@ -140,6 +176,20 @@
       "target_type": "profile_energy",
       "tracker": "civiqs",
       "unit": "net points (approve minus disapprove)"
+    },
+    {
+      "exclusions": "main_page_and_namespaces_v1",
+      "horizon_days": 4.083,
+      "lock_at": "2026-09-18T14:00:00Z",
+      "question": "The ordered top-10 articles on the English Wikipedia by pageviews for the week Mon Sep 21 - Sun Sep 27, 2026. The seven daily top-1000 lists published by Wikimedia are summed per article and ranked; Main_Page and every non-article namespace (Special:, Wikipedia:, Portal:, Help:, File:, Template:, Category:, Draft:, User:, Talk: and their _talk: variants) are excluded. Give the ten article titles in order, rank 1 first.",
+      "ranking_length": 10,
+      "release_at": "2026-09-29T14:00:00Z",
+      "resolve": "Wikimedia daily top endpoint (top/en.wikipedia/all-access), the week's seven archived daily lists summed per article, exclusion rule main_page_and_namespaces_v1 applied, top 10 by weekly total, ties broken by title ascending. An article absent from a day's top-1000 contributes zero for that day.",
+      "round_id": "wiki-top10-2026-09-27",
+      "series": "wiki_top10_en",
+      "target_type": "ranking_list",
+      "tracker": "wikipedia",
+      "unit": "ordered list of 10 en.wikipedia article titles, canonical underscore form, rank 1 first"
     },
     {
       "horizon_days": 6.083,
