@@ -7,19 +7,20 @@ make the output citable rather than merely plausible:
 
 - **Post-cutoff only.** A model that memorized a release is not forecasting it.
   Every entrant is scored only on releases after its training cutoff plus a
-  margin (ssa/cutoffs.py), and the leaderboard window is the intersection of
-  those, since a mean CRPS over a different release set is not a comparable
-  number.
+  margin (ssa/cutoffs.py). The default preserves each model's full defensible
+  window; ``--common-window`` takes their intersection when aggregate scores
+  must be directly comparable over one release set. The output records both
+  the chosen window and cutoff-confidence policy.
 
 - **Every call is cached on disk**, keyed by the sha256 of (model id, exact
   prompt). Reruns cost nothing, an interrupted run resumes, and the cache is
   the audit trail: it holds the raw reply for every scored forecast, so the
   table can be regenerated from the repository without re-billing anyone.
 
-- **Failures are recorded, never mocked.** The live harness falls back to a
-  labeled placeholder when a provider call fails, which is right for keeping
-  the arena's pages populated and wrong for a paper number. Here a failure is
-  stored as a failure, excluded from scoring, and counted in the output.
+- **Failures are recorded, never mocked.** Production and backtest runs both
+  fail closed. The scalar harness exposes an explicit ``SSA_ALLOW_MOCK=1``
+  escape hatch for local pipeline work only; this runner never enables it. A
+  backtest failure is stored, excluded from scoring, and counted in the output.
 
 - **Identical prompt to the live arena.** The prompt is built by
   harness.build_prompt, so a backtest forecast and a live forecast differ only
@@ -445,7 +446,12 @@ def score(records, series_map, warmup=WARMUP):
         "per_series_trajectory": per_series_trajectory,
         "entrants": sorted(crps),
         "failures": failures,
-        "cutoffs": {e: cutoffs.describe(e) for e in entrants},
+        # An entrant suffix denotes an information condition, not different
+        # weights. Resolve it before describing the cutoff so `-zeroshot` arms
+        # do not appear to have an unknown boundary while their paired model
+        # is scored from a dated one.
+        "cutoffs": {e: cutoffs.describe(harness.resolve(e)[0])
+                    for e in entrants},
     }
 
 

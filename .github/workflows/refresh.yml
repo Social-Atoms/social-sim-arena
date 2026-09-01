@@ -1,10 +1,9 @@
 name: refresh-data
 # The arena's always-on agents. Every 6 hours this fetches the live series,
-# recomputes the baselines from strictly pre-lock history, asks each frontier
-# model for a forecast on every open round, and commits the result. The last
-# commit before a round's lock_at is the one that counts, so the cadence only
-# has to be comfortably faster than the 48-hour lock window -- GitHub's cron
-# is best-effort and can drift 5-20 minutes, which this tolerates by design.
+# recomputes baselines from history frozen at the participant deadline, buys
+# each frontier-model answer once in its pre-deadline window, and commits the
+# result. GitHub's cron is best-effort and can drift 5-20 minutes, so the window
+# spans several scheduled runs.
 on:
   schedule:
     - cron: "17 */6 * * *"   # every 6 hours
@@ -21,9 +20,9 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     env:
-      # Model entrants run only for the providers whose key is set; the rest
-      # file clearly-labeled MOCK forecasts. Add keys under
-      # Settings > Secrets and variables > Actions.
+      # Model entrants run only for providers whose key is set. Missing keys or
+      # failed calls are reported and file nothing: automation never enables
+      # the scalar-only mock escape hatch used for local development.
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -83,6 +82,8 @@ jobs:
       SSA_MAX_SPEND: ${{ vars.SSA_MAX_SPEND || '10' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -137,8 +138,8 @@ jobs:
         env:
           SSA_SKIP_FILING: "1"
       # always(): ssa.refresh exits non-zero when any entrant's provider call
-      # fails, but the forecasts that did succeed are already written and a
-      # round locks on a hard deadline. Commit what landed, and let the job
+      # fails, but the forecasts that did succeed are already written and the
+      # participant deadline is hard. Commit what landed, and let the job
       # still report failure so the cause gets fixed.
       - name: commit if changed
         if: always()
@@ -177,5 +178,10 @@ jobs:
           else
             git commit -m "data refresh $(date -u +%Y-%m-%dT%H:%MZ)"
             git -c rebase.autoStash=true pull --rebase origin main
+            # GITHUB_TOKEN pushes do not recursively trigger lock-audit.yml.
+            # Audit the rebased commit here, at its actual landing time, using
+            # the same executable as the push workflow. A late forecast makes
+            # this step fail and the unaudited commit is never pushed.
+            python tools/audit_landing.py HEAD^ HEAD
             git push
           fi

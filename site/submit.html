@@ -532,9 +532,9 @@ async function loadQuestions(){
       if(!response.ok) throw new Error('question data returned '+response.status);
       const data=await response.json();
       const now=Date.now();
-      questions=(data.rounds||[]).filter(round=>round.status==='open'&&Date.parse(round.lock_at)>now);
+      questions=(data.rounds||[]).filter(round=>round.status==='open'&&Date.parse(round.deadline||round.lock_at)>now);
     }
-    openQuestions=questions.sort((a,b)=>a.lock_at.localeCompare(b.lock_at)||a.round_id.localeCompare(b.round_id));
+    openQuestions=questions.sort((a,b)=>(a.deadline||a.lock_at).localeCompare(b.deadline||b.lock_at)||a.round_id.localeCompare(b.round_id));
     if(!humanManifest.length) humanManifest=openQuestions.filter(round=>boardForRound(round)===selectedHumanBoard).map(round=>round.round_id);
     else humanManifest=humanManifest.filter(roundId=>openQuestions.some(round=>round.round_id===roundId));
     questionLoadState='ready';

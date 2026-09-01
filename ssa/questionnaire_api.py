@@ -16,6 +16,8 @@ from typing import Any
 
 from jsonschema import Draft7Validator, FormatChecker
 
+from . import batches
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = ROOT / "site" / "data.json"
@@ -69,6 +71,13 @@ def _iso(value: datetime) -> str:
     return value.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _round_deadline(round_data: dict[str, Any]) -> datetime:
+    """Published deadline, or the canonical calendar for an older artifact."""
+    if round_data.get("deadline"):
+        return _parse_iso(round_data["deadline"])
+    return batches.effective_deadline(round_data["lock_at"])
+
+
 def normalize_target_type(value: Any) -> str:
     target_type = str(value or "continuous_normal")
     return {
@@ -115,9 +124,15 @@ def open_rounds(data: dict[str, Any], now: datetime | None = None
     rounds = [
         round_data for round_data in data.get("rounds", [])
         if round_data.get("status") == "open"
-        and _parse_iso(round_data["lock_at"]) > now
+        # `status` comes from a six-hourly artifact and can be stale. Enforce
+        # the published batch deadline again on the serving path; old artifacts
+        # without the new field are derived from the same canonical calendar.
+        and _round_deadline(round_data) > now
     ]
-    return sorted(rounds, key=lambda item: (item["lock_at"], item["round_id"]))
+    return sorted(
+        rounds,
+        key=lambda item: (_round_deadline(item), item["lock_at"],
+                          item["round_id"]))
 
 
 def build_manifest(data: dict[str, Any] | None = None,
@@ -137,6 +152,7 @@ def build_manifest(data: dict[str, Any] | None = None,
             "target_type": target_type,
             "unit": round_data.get("unit"),
             "release_at": round_data.get("release_at"),
+            "deadline": _iso(_round_deadline(round_data)),
             "lock_at": round_data["lock_at"],
             "resolution_rule": round_data.get("resolve"),
             # Season 0 stores a human-readable resolution rule but does not

@@ -4,6 +4,7 @@ Run: PYTHONPATH=. python tests/test_confboard.py
 """
 import os
 import sys
+from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -31,6 +32,30 @@ def test_the_whole_release_comes_out_of_one_paragraph():
         "present_situation": 114.9, "expectations": 74.7,
         "previous_month": "2026-06-01", "previous_value_restated": 92.2,
         "released_on": None}, got
+
+
+def test_missing_release_date_uses_the_utc_day_not_the_runner_timezone():
+    """One instant must infer one month on runners in every local timezone."""
+    # At this instant Los Angeles is still Dec 31 while UTC is Jan 1. The page
+    # has no Updated line, so the clock is the only source for the year. A
+    # December reading seen in UTC January belongs to the previous year.
+    instant = datetime(2027, 1, 1, 0, 30, tzinfo=timezone.utc)
+    los_angeles = instant.astimezone(timezone(timedelta(hours=-8)))
+    page = PAGE.replace("in July", "in December").replace(
+        "92.2 in June", "92.2 in November")
+    utc = confboard.parse(page, now=instant)
+    local_zone_value = confboard.parse(page, now=los_angeles)
+    assert utc["month"] == "2026-12-01", utc
+    assert local_zone_value["month"] == utc["month"]
+
+
+def test_naive_as_of_datetime_is_refused():
+    try:
+        confboard.parse(PAGE, now=datetime(2026, 8, 1, 0, 0))
+    except ValueError as e:
+        assert "timezone" in str(e)
+    else:
+        raise AssertionError("a timezone-free as-of value was accepted")
 
 
 # Three house styles in five years, all still published at the same URL. Each

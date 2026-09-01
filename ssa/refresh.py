@@ -1,7 +1,8 @@
 """Build site/data.json from live sources.
 
 Run:  python -m ssa.refresh
-Cron: .github/workflows/refresh.yml runs this daily and commits the result.
+Cron: .github/workflows/refresh.yml runs this every six hours and commits the
+result.
 
 Everything the entry page shows comes from this file: live tracker values
 (Silver Bulletin poll CSVs, Michigan's own table with FRED as fallback,
@@ -12,7 +13,7 @@ import concurrent.futures
 import threading
 import json
 import os
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from .adapters import aaii, silverbulletin, umich
 from . import health
@@ -159,7 +160,12 @@ def next_release_for(season, tracker, now):
 def round_status(r, resolved, now):
     if r["round_id"] in resolved:
         return "resolved"
-    if now < parse_iso(r["lock_at"]):
+    # `open` means a participant can still file. After the weekly-calendar
+    # cutover that closes at the batch deadline, up to seven days before the
+    # arena's internal lock. The old lock comparison left the site and
+    # questionnaire advertising rounds that every validator correctly rejected
+    # as late.
+    if now < batches.effective_deadline(r["lock_at"]):
         return "open"
     if now < parse_iso(r["release_at"]):
         return "locked"
@@ -291,9 +297,11 @@ def update_lock_snapshot(r, hist, now):
 
 
 def build_rounds(season, series, resolved, now, ranking_obs=None):
-    """Returns (rounds, history_by_round). The history is the strictly pre-lock
-    slice each round's baselines were computed from; the model harness
-    conditions on exactly the same data, so entrants and nulls see one series.
+    """Returns (rounds, history_by_round).
+
+    The history is the slice frozen at the effective participant deadline;
+    both baselines and the model harness condition on it, so entrants and nulls
+    see one series. For pre-cutover rounds that boundary remains ``lock_at``.
 
     `ranking_obs` is {round_id: the source's own history of ordered lists} for
     ranking rounds, which read a different kind of record than a scalar series
@@ -312,6 +320,7 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
         # infer a contract from the unit/question wording. Older definitions
         # predate target_type and are numeric distributions.
         row["target_type"] = r.get("target_type", "continuous_normal")
+        row["deadline"] = iso(batches.effective_deadline(r["lock_at"]))
         for k in ("cells", "options"):
             if k in r:
                 row[k] = list(r[k])
@@ -534,6 +543,19 @@ def model_jobs_due(r, now):
     return LOCK_MARGIN_SECONDS <= left <= FILE_WINDOW_SECONDS
 
 
+def information_asof(r):
+    """The fixed, already-observable boundary for shared context arms.
+
+    Model buying starts ``FILE_WINDOW_SECONDS`` before the participant
+    deadline. Freezing news at that window opening gives every entrant the
+    same complete corpus, including entrants retried by a later refresh. Using
+    the deadline (or the still-later lock) would request a future Wikipedia
+    revision and freeze whichever partial page happened to exist at call time.
+    """
+    due = batches.effective_deadline(r["lock_at"])
+    return iso(due - timedelta(seconds=FILE_WINDOW_SECONDS))
+
+
 def job_still_due(r, path, now):
     """Whether this one entrant-forecast still needs buying.
 
@@ -685,7 +707,7 @@ def nulls_for(r):
 
 
 def profile_history_for(r, series):
-    """{cell: frozen pre-lock history} for a profile round, else None."""
+    """{cell: history frozen at the effective deadline}, or None."""
     if not profile_round.is_profile(r):
         return None
     return profile_round.frozen_history(r, series)
@@ -736,11 +758,6 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
     Returns (files_written, failures). Failures are messages, never mocks: a
     placeholder filed on error is a green workflow hiding a wrong model name.
     """
-    """The hosted always-on agents: while a round is open, the refresh cron
-    keeps each baseline's and each frontier model's forecast file current;
-    the last commit before lock_at is the one that counts. Model forecasts
-    are real API output when a key is configured and clearly-labeled
-    deterministic MOCKs otherwise (see ssa/harness.py)."""
     written = 0
     failures = []
     jobs = []
@@ -779,7 +796,8 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
                 "round_id": r["round_id"],
                 "entrant": name,
                 **answer,
-                "notes": "auto-filed baseline (" + method + "), refreshed until lock",
+                "notes": ("auto-filed baseline (" + method
+                          + "), frozen at participant deadline"),
             }
             with open(path, "w") as f:
                 json.dump(body, f, indent=2)
@@ -816,8 +834,8 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
     prof_hist = {r["round_id"]: profile_history_for(r, series or {})
                  for r in rounds if profile_round.is_profile(r)}
 
-    # The same object for ranking rounds: the strictly pre-lock weeks the null
-    # was taken from, so an entrant sees exactly the history persistence saw.
+    # The same object for ranking rounds: weeks strictly before the effective
+    # deadline, so an entrant sees exactly the history persistence saw.
     rank_hist = {r["round_id"]:
                  ranking_round.frozen_history(r, (ranking_obs or {}).get(r["round_id"]))
                  for r in rounds if ranking_round.is_ranking(r)}
@@ -830,7 +848,7 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
                 # for_round reads the committed archive when it is there, so a
                 # CI run uses the corpus prepared and reviewed locally rather
                 # than re-fetching and hoping the pages still read the same.
-                news_cache[rid] = newsdigest.for_round(rid, r["lock_at"])
+                news_cache[rid] = newsdigest.for_round(rid, information_asof(r))
             return news_cache[rid]
 
     def run_job(job):
@@ -840,9 +858,9 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
             news = news_for(r) if context == "news" else None
             if context == "news" and not (news or {}).get("text") \
                     and not (news or {}).get("window_closed"):
-                # A round locking far out has a news window mostly in the
+                # A round due far out has a news window mostly in the
                 # future; the digest grows a day at a time and this job
-                # starts succeeding as the lock approaches. Not a failure:
+                # starts succeeding as the deadline approaches. Not a failure:
                 # nothing is wrong and nothing was spent -- an empty digest
                 # on a CLOSED window still falls through and fails loudly.
                 return 0
@@ -855,10 +873,10 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
                 ranking_history=rank_hist.get(r["round_id"]))
         except Exception as e:                     # noqa: BLE001 - collected
             # Collected rather than raised. Failing at the first bad provider
-            # would strand every other entrant's forecast unwritten, and rounds
-            # lock on a hard deadline. The successes land; main() reports every
-            # failure and exits non-zero, so a run is loudly broken without
-            # being silently incomplete.
+            # would strand every other entrant's forecast unwritten, and the
+            # participant deadline is hard. The successes land; main() reports
+            # every failure and exits non-zero, so a run is loudly broken
+            # without being silently incomplete.
             failures.append(f"{r['round_id']}/{entrant}: {e}")
             return 0
         with open(path, "w") as f:
@@ -1601,8 +1619,8 @@ def main():
     if filing_failures:
         # site/data.json and every successful forecast are already on disk, so
         # the workflow's commit step (which runs with if: always()) still lands
-        # them and a round does not miss its lock over one bad provider. The
-        # non-zero exit is what makes the failure impossible to ignore.
+        # them and a round does not miss its participant deadline over one bad
+        # provider. The non-zero exit makes the failure impossible to ignore.
         print(f"\n{len(filing_failures)} forecast(s) failed and were NOT filed:")
         for f in filing_failures:
             print("  -", f)

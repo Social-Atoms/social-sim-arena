@@ -92,7 +92,7 @@ intake refuses it rather than reshaping it.
     {"round_id": "wiki-top10-2026-09-06",
      "ranking": ["Article_One", "Article_Two"]}
   ],
-  "notes": "harness v2, temperature 0, closed-book"
+  "notes": "weekly model run, closed-book"
 }
 ```
 

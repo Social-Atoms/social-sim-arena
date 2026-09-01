@@ -12,6 +12,7 @@ from ssa.questionnaire_api import (
     IdempotencyConflict,
     SubmissionError,
     build_manifest,
+    open_rounds,
     store_submission,
     validate_submission,
 )
@@ -157,6 +158,7 @@ class QuestionnaireApiContracts(unittest.TestCase):
                          first["question"])
         self.assertEqual("Declared resolution rule for continuous-round",
                          first["resolution_rule"])
+        self.assertEqual("2026-09-01T00:00:00Z", first["deadline"])
         self.assertIsNone(first["resolution_source_url"])
         self.assertEqual(42, first["latest_public_reference"]["mean"])
         self.assertEqual("continuous_normal",
@@ -218,6 +220,15 @@ class QuestionnaireApiContracts(unittest.TestCase):
         envelope["submission"]["delivery"]["answers"].pop()
         with self.assertRaisesRegex(SubmissionError, "manifest exactly"):
             validate_submission(envelope, self.data, NOW)
+
+    def test_stale_open_status_cannot_outlive_the_batch_deadline(self):
+        future_lock = round_data(
+            "deadline-passed", "continuous_normal",
+            lock_at="2026-09-20T14:00:00Z", status="open")
+        after_deadline = datetime(2026, 9, 14, 12, 1, tzinfo=timezone.utc)
+        assert future_lock["lock_at"] > "2026-09-14T12:01:00Z"
+        # No `deadline` field: this is a stale pre-migration site artifact.
+        assert open_rounds({"rounds": [future_lock]}, after_deadline) == []
 
     def test_target_type_is_checked_against_the_live_round(self):
         envelope = agent_submission(self.data)

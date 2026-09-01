@@ -1,6 +1,7 @@
 """LLM entrant harness.
 
-Every frontier-model entrant runs through this module each refresh. Two modes:
+Every frontier-model entrant runs through this module each refresh. Production
+has one mode and fails closed:
 
 1. REAL: when an API key for the provider is present in the environment, the
    model is asked for a forecast through a uniform prompt and the reply is
@@ -8,10 +9,11 @@ Every frontier-model entrant runs through this module each refresh. Two modes:
    GitHub Actions secrets (Settings > Secrets > Actions) or any other deploy
    platform's secret store; nothing is ever committed.
 
-2. MOCK: when no key is configured (or the call fails), a deterministic
-   placeholder forecast is filed instead: persistence plus a small
-   model-specific offset, clearly labeled MOCK in the notes. This keeps the
-   entrant slots, pages, and scoring pipeline fully exercised.
+2. LOCAL MOCK (opt-in): setting ``SSA_ALLOW_MOCK=1`` lets the scalar path file a
+   deterministic, clearly labelled placeholder for local pipeline development.
+   Automation never sets it, and profile/ranking paths never mock because a
+   fabricated vector or list has no honest placeholder semantics. Missing keys
+   and failed calls otherwise raise and file nothing.
 
 Three wire protocols cover all thirteen entered models, so no vendor SDKs are
 needed:
@@ -447,9 +449,9 @@ def forget_dead_routes():
 
 # No output ceiling is imposed. Thinking tokens count against any cap, so at
 # max reasoning effort a small one truncates the reply before the model reaches
-# its JSON; that fails to parse and falls back to a labelled MOCK -- a silent
-# downgrade under a green workflow. OpenAI and Gemini are simply not sent a
-# limit, which leaves the model's own maximum in force.
+# its JSON; that fails parsing and leaves the forecast unfiled. OpenAI and
+# Gemini are simply not sent a limit, which leaves the model's own maximum in
+# force.
 #
 # Anthropic is the exception: max_tokens is a *required* field on the Messages
 # API, so the model's advertised maximum is sent instead. It is a cap, not a
@@ -1042,9 +1044,9 @@ def build_prompt(r, history, context=DEFAULT_CONTEXT,
                  elicitation=DEFAULT_ELICITATION, news=None, search=None):
     """The exact text an entrant sees.
 
-    `history` is the strictly pre-lock series the round's baselines were built
-    from, so entrants and nulls read the same data. `variant` selects how much
-    of it is shown; see VARIANTS.
+    `history` is the series frozen at the effective participant deadline, so
+    entrants and nulls read the same data. `variant` selects how much of it is
+    shown; see VARIANTS.
 
     Methodology and cadence come from the round when present and fall back to
     the series registry, so a round definition never has to restate them.
@@ -1135,9 +1137,9 @@ def build_profile_prompt(r, history_by_cell, context=DEFAULT_CONTEXT,
     profile round differs from a topline round in what is asked, not in how it
     is framed. Anything else would confound the round type with the prompt.
 
-    `history_by_cell` is {cell: pre-lock history}, the same strictly-pre-lock
-    slice the per-cell persistence null is built from, so entrants and nulls
-    read one series per cell.
+    `history_by_cell` is {cell: history frozen at the effective participant
+    deadline}, the same slice used by the per-cell persistence null, so entrants
+    and nulls read one series per cell.
     """
     from . import profile_round
     if context not in CONTEXT:
@@ -1219,8 +1221,8 @@ def build_ranking_prompt(r, history, context=DEFAULT_CONTEXT,
                          search=None, spec=None):
     """The exact text a ranking-round entrant sees.
 
-    `history` is the strictly pre-lock list history the round's persistence null
-    was taken from, so entrants and the null read one record. Same skeleton as
+    `history` is the list history frozen at the effective participant deadline,
+    the same record used by the round's persistence null. Same skeleton as
     `build_prompt` and `build_profile_prompt` for the reason stated there:
     anything else would confound the round type with the prompt.
     """
@@ -2072,7 +2074,7 @@ def _provider_text(entrant, prompt):
     return call_provider(entrant, prompt, via=sb["via"])
 
 
-# Model forecasts are bought only inside this window before a round's lock
+# Model forecasts are bought only inside this window before a round's deadline
 # (`refresh.model_jobs_due`; the rationale is written there). It is defined
 # here rather than in refresh because `_retrieve` needs it too and refresh
 # already imports harness.
@@ -2082,23 +2084,25 @@ FILE_WINDOW_SECONDS = float(os.environ.get("SSA_FILE_WINDOW_DAYS") or "3") * 864
 def _gathered_in_window(frozen, r):
     """True when a frozen corpus was gathered inside this round's own window.
 
-    Only then can it honestly be called "what the entrant saw at lock". Records
-    from before the window exist because the refresh once bought forecasts from
-    listing day; serving one at lock time would hand the entrant search results
-    up to weeks stale, so `_retrieve` supersedes it instead (the old record
-    stays in git history). A record whose timestamp is missing or unreadable is
-    treated as premature for the same reason.
+    Only then can it honestly be called "what the entrant saw in the common
+    pre-deadline filing window". Records from before the window exist because
+    the refresh once bought forecasts from listing day; serving one at the
+    deadline would hand the entrant search results up to weeks stale, so
+    `_retrieve` supersedes it instead (the old record stays in git history). A
+    record whose timestamp is missing or unreadable is treated as premature for
+    the same reason.
     """
     lock = r.get("lock_at")
     if not lock:               # test rounds carry no lock; nothing to judge
         return True
     asked = (frozen or {}).get("asked_at") or ""
     try:
-        lock_t = datetime.fromisoformat(lock.replace("Z", "+00:00"))
+        due = batches.effective_deadline(lock)
         asked_t = datetime.fromisoformat(asked.replace("Z", "+00:00"))
     except ValueError:
         return False
-    return (lock_t - asked_t).total_seconds() <= FILE_WINDOW_SECONDS
+    age = (due - asked_t).total_seconds()
+    return 0 <= age <= FILE_WINDOW_SECONDS
 
 
 def filed_stamp():
@@ -2136,21 +2140,23 @@ def filed_in_window(notes, lock_at):
         due = batches.effective_deadline(lock_at)
     except ValueError:
         return False
-    return (due - filed).total_seconds() <= FILE_WINDOW_SECONDS
+    age = (due - filed).total_seconds()
+    return 0 <= age <= FILE_WINDOW_SECONDS
 
 
 def _retrieve(entrant, r, history):
     """The web condition's first turn, run once per (round, entrant) and frozen.
 
     The frozen file *is* the cache. A round's corpus is part of what the
-    entrant was shown at lock time, so it is written once and read forever
-    after: the six-hourly refresh does not re-search, a rerun cannot get a
-    different corpus, and the forecast stays derivable from the repository.
+    entrant was shown when its forecast was bought in the fixed pre-deadline
+    window, so it is written once and read forever after: the six-hourly refresh
+    does not re-search, a rerun cannot get a different corpus, and the forecast
+    stays derivable from the repository.
     Without that, this would be the only arm in the arena that no one --
     including us -- could reproduce, because search results change by the
     minute. The one exception is a record gathered before the round's own
-    pre-lock window opened (`_gathered_in_window`): that is not the corpus at
-    lock, and it is re-gathered once the window opens.
+    pre-deadline window opened (`_gathered_in_window`): that is not a corpus from
+    the shared filing window, and it is re-gathered once the window opens.
     """
     from .adapters import search as search_adapter
     frozen = search_adapter.for_round(r["round_id"], entrant)
