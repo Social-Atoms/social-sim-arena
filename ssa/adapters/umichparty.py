@@ -85,6 +85,7 @@ import os
 import re
 import shutil
 import subprocess
+import tempfile
 
 import requests
 
@@ -311,6 +312,43 @@ def read_archived(path=None):
         return f.read(), path
 
 
+def archive(body, day):
+    """File one validated PDF under its stamp date, without overwriting.
+
+    Re-fetching the same bytes is idempotent. Different bytes under the same
+    document stamp are an upstream revision, and replacing the committed
+    vintage would change the historical source behind a lock, so that case is
+    a loud error. A temporary file plus an atomic hard link keeps two couriers
+    racing on the same date from overwriting one another.
+    """
+    if not isinstance(body, (bytes, bytearray)):
+        raise TypeError("archive takes the PDF body as bytes")
+    body = bytes(body)
+    os.makedirs(ARCHIVE, exist_ok=True)
+    path = archive_path(day)
+
+    fd, tmp = tempfile.mkstemp(prefix=f".{day}.", suffix=".tmp", dir=ARCHIVE)
+    try:
+        with os.fdopen(fd, "wb") as f:
+            f.write(body)
+        try:
+            os.link(tmp, path)
+        except FileExistsError:
+            with open(path, "rb") as f:
+                existing = f.read()
+            if existing != body:
+                raise RuntimeError(
+                    f"Michigan party vintage {day} already exists with "
+                    "different bytes; refusing to overwrite a committed "
+                    "source vintage")
+    finally:
+        try:
+            os.remove(tmp)
+        except FileNotFoundError:
+            pass
+    return path
+
+
 def load(path=None, min_rows=MIN_ROWS):
     """The newest archived vintage, parsed. The pipeline's entry point."""
     body, _ = read_archived(path)
@@ -347,12 +385,7 @@ def fetch_latest(docid=DOCID, timeout=TIMEOUT, url=None):
     text = to_text(body)
     rows = parse(text)
     day = stamp_date(text)
-    os.makedirs(ARCHIVE, exist_ok=True)
-    path = archive_path(day)
-    tmp = path + ".tmp"
-    with open(tmp, "wb") as f:
-        f.write(body)
-    os.replace(tmp, path)
+    path = archive(body, day)
     print(f"  umichparty  {len(body):>9,}B  stamped {day}  "
           f"{len(rows)} rows through {rows[-1]['date']}")
     return path

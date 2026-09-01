@@ -17,6 +17,8 @@ name: questions
 on:
   pull_request:
     paths:
+      - ".github/workflows/questions.yml"
+      - ".github/workflows/refresh.yml"
       - "questions/**"
       - "schema/**"
       - "sources/marts/**"
@@ -26,6 +28,8 @@ on:
   push:
     branches: [dev]
     paths:
+      - ".github/workflows/questions.yml"
+      - ".github/workflows/refresh.yml"
       - "questions/**"
       - "schema/**"
       - "ssa/**"
@@ -53,6 +57,9 @@ jobs:
 
       - name: the batch calendar, and the validator's copy of it
         run: PYTHONPATH=. python tests/test_batches.py
+
+      - name: workflow archive and trigger contracts
+        run: PYTHONPATH=. python tests/test_workflows.py
 
       - name: the ranking round contract
         run: PYTHONPATH=. python tests/test_ranking_round.py

@@ -1,13 +1,15 @@
-"""Archive the residential-only sources, from a residential connection.
+"""Archive the source snapshots that must survive outside a runner.
 
 Two upstreams cannot be fetched from GitHub Actions: Civiqs 403s every
 datacenter IP regardless of headers, and Google Trends throttles them hard.
-Both adapters already treat the committed archive as the source of truth --
-`civiqs/` and `trends/` hold dated snapshots, and a build serves the day's
-archive when one exists. So the fix is not a proxy but a courier: run the
-fetches from a home connection once a day, commit what arrived, push. The
-six-hourly refresh on Actions then reads the archive and never touches
-either host.
+Wikipedia's daily top lists are reachable there, but they are the resolution
+record for ranking rounds and therefore have the same durability requirement:
+the exact daily lists must be committed before a runner disappears. The three
+adapters treat the committed archive as the source of truth -- `civiqs/`,
+`trends/`, and `wikitop/` hold dated snapshots. So the fix is a courier: run
+the fetches from a home connection once a day, commit what arrived, push. The
+six-hourly refresh on Actions can then read the archive without depending on a
+live upstream at resolution time.
 
 Run it from any residential machine with the repo cloned:
 
@@ -52,12 +54,14 @@ import os
 import subprocess
 import sys
 import time
+from datetime import date, datetime, timedelta, timezone
 
 sys.path.insert(0, __file__.rsplit("/", 2)[0])
 
-from ssa import series as series_registry                       # noqa: E402
+from ssa import ranking_round, series as series_registry        # noqa: E402
 from ssa.adapters import civiqs as civiqs_adapter               # noqa: E402
 from ssa.adapters import trends as trends_adapter               # noqa: E402
+from ssa.adapters import wikipedia as wikipedia_adapter         # noqa: E402
 
 # Seconds between distinct Civiqs page fetches. The dashboard is a free
 # service being asked for ~22 pages; spacing is the whole cost of staying
@@ -163,14 +167,86 @@ def archive_trends_baskets():
     return ok, failed
 
 
+def wikipedia_days(round_def):
+    """Settled daily top lists needed by one Wikipedia ranking round.
+
+    The source history shown to an entrant is six weeks plus the target week.
+    Derive the exact same seven week ends as ``ranking_round.observations`` so
+    the courier cannot archive a subtly different horizon. Future and still
+    settling dates are filtered by ``archive_wikipedia`` against a pinned UTC
+    clock; they are expected absences, not failures.
+    """
+    if round_def.get("tracker") != "wikipedia" \
+            or not ranking_round.is_ranking(round_def):
+        return None
+    spec = ranking_round.spec_for(round_def)
+    if spec["kind"] != "wiki_top10":
+        return None
+    end = date.fromisoformat(spec["week_end"])
+    week_ends = [end - timedelta(days=7 * i)
+                 for i in range(ranking_round.HISTORY_WEEKS, -1, -1)]
+    days = {d for week_end in week_ends
+            for d in wikipedia_adapter.week_days(week_end)}
+    return spec, days
+
+
+def archive_wikipedia(now=None, season=None):
+    """Archive every settled Wikipedia day a live ranking round can consume.
+
+    Existing files are served without a request by ``top_snapshot``. A day
+    younger than Wikimedia's finality lag is deliberately skipped: filing a
+    partial count write-once would be worse than waiting for tomorrow's run.
+    """
+    now = now or datetime.now(timezone.utc)
+    if season is None:
+        season_path = os.path.join(__file__.rsplit("/", 2)[0],
+                                   "questions", "season0.json")
+        with open(season_path) as f:
+            season = json.load(f)
+
+    wanted = {}
+    failures = []
+    for r in season["rounds"]:
+        try:
+            found = wikipedia_days(r)
+        except Exception as e:                                  # noqa: BLE001
+            failures.append(
+                f"{r.get('round_id', '?')}: {type(e).__name__}: {str(e)[:120]}")
+            continue
+        if found is None:
+            continue
+        spec, days = found
+        key = (spec["project"], spec["access"])
+        wanted.setdefault(key, set()).update(days)
+
+    final_through = now.date() - timedelta(
+        days=wikipedia_adapter.TOP_FINAL_LAG_DAYS)
+    ok = 0
+    for (project, access), days in sorted(wanted.items()):
+        for day in sorted(d for d in days if d <= final_through):
+            try:
+                articles = wikipedia_adapter.top_snapshot(
+                    day, project, access, fetch=True, now=now)
+                if articles is None:
+                    raise RuntimeError("settled day returned no snapshot")
+                ok += 1
+            except Exception as e:                              # noqa: BLE001
+                failures.append(
+                    f"{project}/{access}/{day.isoformat()}: "
+                    f"{type(e).__name__}: {str(e)[:120]}")
+    return ok, failures
+
+
 def main():
     c_ok, c_fail = archive_civiqs()
     t_ok, t_fail = archive_trends()
     b_ok, b_fail = archive_trends_baskets()
-    for line in c_fail + t_fail + b_fail:
+    w_ok, w_fail = archive_wikipedia()
+    for line in c_fail + t_fail + b_fail + w_fail:
         print("FAIL", line, file=sys.stderr)
     print(f"archived: civiqs {c_ok} pages, trends {t_ok} queries, "
-          f"{b_ok} baskets; {len(c_fail) + len(t_fail) + len(b_fail)} failures")
+          f"{b_ok} baskets, wikipedia {w_ok} days; "
+          f"{len(c_fail) + len(t_fail) + len(b_fail) + len(w_fail)} failures")
 
     root = __file__.rsplit("/", 2)[0]
 
@@ -178,10 +254,10 @@ def main():
         return subprocess.run(["git", "-C", root, *args],
                               check=check, capture_output=True, text=True)
 
-    git("add", "-A", "civiqs", "trends")
+    git("add", "-A", "civiqs", "trends", "wikitop")
     if git("diff", "--cached", "--quiet", check=False).returncode == 0:
         print("nothing new to commit")
-        return 0 if not (c_fail or t_fail or b_fail) else 1
+        return 0 if not (c_fail or t_fail or b_fail or w_fail) else 1
     git("-c", "user.name=ssa-bot", "-c", "user.email=actions@github.com",
         "commit", "-m", "source archive (residential courier)\n\n"
         "Co-Authored-By: assassin808 "
@@ -191,11 +267,11 @@ def main():
     # GitHub left alone; one ordinary push later carries everything up.
     if os.environ.get("SSA_ARCHIVE_NO_PUSH"):
         print("committed locally (push disabled by SSA_ARCHIVE_NO_PUSH)")
-        return 0 if not (c_fail or t_fail or b_fail) else 1
+        return 0 if not (c_fail or t_fail or b_fail or w_fail) else 1
     git("-c", "rebase.autoStash=true", "pull", "--rebase")
     git("push")
     print("committed and pushed")
-    return 0 if not (c_fail or t_fail or b_fail) else 1
+    return 0 if not (c_fail or t_fail or b_fail or w_fail) else 1
 
 
 if __name__ == "__main__":

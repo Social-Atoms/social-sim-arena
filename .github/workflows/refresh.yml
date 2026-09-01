@@ -168,12 +168,12 @@ jobs:
           #            back. Unlike news, this corpus did not exist until a
           #            model asked for it, and the index will not return the
           #            same thing tomorrow.
-          git add -A forecasts site resolutions locks civiqs news stamps sources search replies
+          git add -A forecasts site resolutions locks civiqs trends wikitop news stamps sources search replies
           # ignore the generated_at stamp so no-op runs do not commit
           if git diff --cached --quiet -I '"generated_at"'; then
             echo "no substantive change"
             git reset --quiet
-            git checkout -- site forecasts resolutions locks civiqs news stamps sources search
+            git checkout -- site forecasts resolutions locks civiqs trends wikitop news stamps sources search replies
           else
             git commit -m "data refresh $(date -u +%Y-%m-%dT%H:%MZ)"
             git -c rebase.autoStash=true pull --rebase origin main
