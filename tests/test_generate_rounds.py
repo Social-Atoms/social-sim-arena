@@ -2,6 +2,7 @@
 import importlib.util
 import json
 import os
+import sys
 from unittest import mock
 from datetime import date, datetime, timezone
 
@@ -318,6 +319,91 @@ def test_wiki_generation_refuses_two_different_spacings():
     print("ok test_wiki_generation_refuses_two_different_spacings")
 
 
+def _generated(now="2026-09-01T12:00:00Z", weeks=8):
+    """Every candidate the tool actually prints, as (round_id, lock_at).
+
+    End to end on the real registry and the committed archive rather than a
+    fixture: both bugs below were in how the tool assembles its own output,
+    which a unit test of one function would have gone on missing.
+    """
+    import re
+    import subprocess
+    out = subprocess.run(
+        [sys.executable, os.path.join(ROOT, "tools", "generate_rounds.py"),
+         "--weeks", str(weeks), "--now", now],
+        capture_output=True, text=True, cwd=ROOT,
+        env={**os.environ, "PYTHONPATH": ROOT}).stdout
+    return re.findall(r"^\s+(?:NEW )?\s*(\S+)\s+lock (\d{4}-\d{2}-\d{2})",
+                      out, re.M)
+
+
+def test_it_refuses_to_generate_a_round_it_cannot_publish():
+    """A pre-cutover batch has no common deadline, so `ssa.bundle` will not
+    build it and its publication date has already passed -- only the in-house
+    harness could answer it. Fifteen such rounds were being generated."""
+    from ssa import batches
+    rows = _generated()
+    assert rows, "the generator printed nothing; the harness for this test broke"
+    for rid, lock in rows:
+        assert batches.governed_by_batch(lock + "T14:00:00Z"), \
+            f"{rid} lands in a batch that cannot be published"
+    print(f"ok test_it_refuses_to_generate_a_round_it_cannot_publish "
+          f"({len(rows)} candidates)")
+
+
+def test_a_profile_cell_is_not_regenerated_as_a_scalar_twin():
+    """Dedupe has to see `cells`, not only `series`.
+
+    A profile round names its cells in `cells` and carries an unrelated id in
+    `series`, so keying on `series` alone left the cells invisible: ten of
+    civiqs-profile-2026-w38's sixteen came back as standalone scalar rounds in
+    the same week, asking for the same number twice under two scoring rules.
+    The profile is the round that wants those cells -- the energy score is
+    where a floor-bound cell still carries information -- and a scalar twin
+    beside it is not a second question.
+    """
+    import datetime
+    import glob
+    import shutil
+    import subprocess
+    # Superseded files from an earlier run are left on disk on purpose (a
+    # reviewer may be mid-way through one), so clear them here or this test
+    # grades output the generator did not produce.
+    shutil.rmtree(os.path.join(ROOT, "questions", "candidates"), ignore_errors=True)
+    subprocess.run(
+        [sys.executable, os.path.join(ROOT, "tools", "generate_rounds.py"),
+         "--weeks", "8", "--write", "--now", "2026-09-01T12:00:00Z"],
+        capture_output=True, text=True, cwd=ROOT,
+        env={**os.environ, "PYTHONPATH": ROOT}, check=True)
+
+    with open(os.path.join(ROOT, "questions", "season0.json")) as fh:
+        season = json.load(fh)
+    season = season["rounds"] if isinstance(season, dict) else season
+    claimed = set()
+    for r in season:
+        wk = datetime.datetime.strptime(
+            r["release_at"][:10], "%Y-%m-%d").isocalendar()[:2]
+        for sid in [r.get("series")] + list(r.get("cells") or []):
+            if sid:
+                claimed.add((sid, wk))
+
+    clashes, n = [], 0
+    for path in glob.glob(os.path.join(ROOT, "questions", "candidates", "*.json")):
+        for c in json.load(open(path)):
+            n += 1
+            wk = datetime.datetime.strptime(
+                c["release_at"][:10], "%Y-%m-%d").isocalendar()[:2]
+            if (c["series"], wk) in claimed:
+                clashes.append(c["round_id"])
+    assert n, "no candidates were written"
+    assert not clashes, (
+        f"{len(clashes)} candidates duplicate a series already asked that "
+        f"week, cells included: {sorted(clashes)[:5]}")
+    print(f"ok test_a_profile_cell_is_not_regenerated_as_a_scalar_twin "
+          f"({n} candidates, none clashing with {len(claimed)} claimed "
+          f"series-weeks)")
+
+
 if __name__ == "__main__":
     test_ids_keep_the_pollster_apart()
     test_rights_gate_refuses_anything_not_explicitly_approved()
@@ -331,6 +417,8 @@ if __name__ == "__main__":
     test_real_archive_generation_is_offline_and_deterministic()
     test_an_explicit_date_covers_the_season_beyond_the_preview_cap()
     test_it_cannot_publish()
+    test_a_profile_cell_is_not_regenerated_as_a_scalar_twin()
+    test_it_refuses_to_generate_a_round_it_cannot_publish()
     test_a_round_whose_deadline_has_passed_is_not_generated()
     test_single_page_wikipedia_rounds_are_retired_not_unsupported()
     test_the_wiki_week_phrase_matches_the_reviewed_wording()

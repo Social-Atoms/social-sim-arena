@@ -259,6 +259,25 @@ def schedule_contract(sid, meta, hist):
     return {"weekday": weekday, "hour": CIVIQS_RELEASE_HOUR_UTC}, None
 
 
+def weekly_movement(hist, days=7, window=60):
+    """Mean absolute change over `days`, in the series' own units.
+
+    Reported next to the signal-to-noise ratio because that ratio is toothless
+    on a modelled source. `scoring.noise_floor` reads a smoothed series as
+    having no measurement noise at all -- three Civiqs cells come back with an
+    infinite ratio -- so a cell that moves 0.29 points a week passes a gate
+    meant to catch exactly that. Until the threshold is set properly (that is
+    metric-design work, and it should be set against resolved rounds rather
+    than guessed here), the honest move is to put the number a reviewer would
+    actually judge on in front of them.
+    """
+    v = [p["value"] for p in hist[-window:]]
+    if len(v) <= days:
+        return 0.0
+    return sum(abs(v[i] - v[i - days])
+               for i in range(days, len(v))) / (len(v) - days)
+
+
 def signal_to_noise(hist, source=None):
     """(ratio, real movement, measurement noise) for the object being scored.
 
@@ -377,6 +396,14 @@ def candidates(sid, meta, hist, weeks, now, through=None):
         if through is None and (release - now).days > MAX_WEEKS_AHEAD * 7:
             break
         lock = release - timedelta(hours=48)
+        # A round whose batch predates the cutover cannot be published. Its
+        # deadline is its own lock, `bundle` refuses to build a batch with no
+        # common deadline, and its publication date has already passed -- so
+        # only the in-house harness could ever answer it. Generating one wastes
+        # a reviewer's attention on a round that can never reach a
+        # participant, which is the failure this whole tool exists to stop.
+        if not batches.governed_by_batch(lock.strftime("%Y-%m-%dT%H:%M:%SZ")):
+            continue
         if not publishable(lock, now):
             continue
         tracker, _, _ = naming(sid)
@@ -587,10 +614,22 @@ def main():
     # rounds use their own id spellings -- `civiqs-male-2026-w38` where this
     # generator would say `civiqs-2026-w38-male` -- so an id check alone would
     # cheerfully emit a second question about the same number in the same week.
-    taken = {(r.get("series"), r["release_at"][:10]) for r in rounds}
-    taken |= {(r.get("series"),
-               datetime.strptime(r["release_at"][:10], "%Y-%m-%d")
-               .isocalendar()[:2]) for r in rounds}
+    # Every series a round already asks about in a given week, including the
+    # cells of a profile round. Keying on `series` alone missed those: a
+    # sixteen-cell profile names its cells in `cells` and carries an unrelated
+    # id in `series`, so ten of the sixteen came back as standalone scalar
+    # rounds in the same week, asking for the same number twice under two
+    # scoring rules. The profile is the round that wants them -- the energy
+    # score is where a floor-bound cell still carries information -- and a
+    # scalar twin beside it is not a second question, it is the same one.
+    def _claims(r):
+        yield r.get("series")
+        for c in r.get("cells") or []:
+            yield c
+    taken = {(sid, r["release_at"][:10]) for r in rounds for sid in _claims(r)}
+    taken |= {(sid, datetime.strptime(r["release_at"][:10], "%Y-%m-%d")
+               .isocalendar()[:2])
+              for r in rounds for sid in _claims(r)}
     already = set()
     for r in rounds:
         already.add(r.get("series"))
@@ -607,8 +646,10 @@ def main():
             refused.append((sid, why))
             continue
         ratio, sig, noi = signal_to_noise(hist, meta.get("source"))
+        move = weekly_movement(hist)
         for r in candidates(sid, meta, hist, weeks, now, through=through):
             r["_sn"] = ratio
+            r["_move"] = move
             week = datetime.strptime(r["release_at"][:10],
                                      "%Y-%m-%d").isocalendar()[:2]
             if (r["round_id"] in existing
@@ -654,10 +695,15 @@ def main():
             # nothing to measure and the column is blank rather than zero --
             # zero is what the volatility gate refuses, and this is not that.
             cell = "  -- " if sn != sn else f"{sn:5.2f}"
-            warn = "  low S/N" if sn == sn and sn < 1.0 else ""
+            mv = r.get("_move", 0.0)
+            # The movement figure, not the ratio, is what a reviewer can judge:
+            # noise_floor reads a modelled series as noiseless, so three Civiqs
+            # cells come back at infinity while moving a fifth of a point a
+            # week. Flag on the number that means something.
+            warn = "  barely moves" if mv < 0.5 else ""
             print(f"   {mark}{r['round_id']:<40} lock {r['lock_at'][:10]} "
                   f"h={batches.horizon_days(r['lock_at']):.1f}d "
-                  f"S/N={cell}{warn}")
+                  f"S/N={cell} wk={mv:5.2f}{warn}")
 
     if args.rejects:
         print("\nrefused:")
@@ -675,6 +721,17 @@ def main():
                 json.dump(clean, fh, indent=2, sort_keys=True)
                 fh.write("\n")
             print(f"\nwrote {os.path.relpath(path, ROOT)} ({len(clean)} rounds)")
+        stale = sorted(set(os.listdir(out_dir))
+                       - {f"{b}.json" for b in by_batch})
+        if stale:
+            # Superseded candidate files are not removed, because one may be
+            # half-reviewed and deleting a reviewer's working copy is worse
+            # than leaving it. But they are named: a stale file looks exactly
+            # like a fresh one, and a batch that no longer generates is
+            # usually a batch that turned out to be unpublishable.
+            print("\nnot written by this run, and possibly stale:")
+            for f in stale:
+                print(f"   questions/candidates/{f}")
         print("\nReview these, then move accepted rounds into "
               "questions/season0.json by hand. Nothing here publishes.")
 
