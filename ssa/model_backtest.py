@@ -242,8 +242,18 @@ def estimate_cost(tasks):
 
 # --- execution -------------------------------------------------------------
 
+def _assert_task_prospective(task, where):
+    _, context, _ = harness.resolve(task["entrant"])
+    harness.assert_prospective(context, where=where)
+
+
 def run_task(t, use_cache=True):
-    """One forecast. Returns a record; never raises for provider errors."""
+    """One forecast. Provider errors become records; unsafe tasks are refused."""
+    # Defense in depth: plan() refuses the prospective-only web condition, but
+    # task dicts are plain data and callers/tests can construct one directly or
+    # restore one from an old plan.  Refuse again before even consulting cache;
+    # a cached historical web answer was still gathered after its outcome.
+    _assert_task_prospective(t, "the model backtest executor")
     if use_cache:
         hit = cache_read(t["entrant"], t["prompt"])
         # A cached *failure* is not a result. Timeouts and proxy errors are
@@ -303,6 +313,7 @@ def replay(tasks):
     """
     records, missing = [], 0
     for t in tasks:
+        _assert_task_prospective(t, "the model backtest cache replay")
         hit = cache_read(t["entrant"], t["prompt"])
         if hit is None:
             missing += 1
@@ -348,6 +359,9 @@ def score(records, series_map, warmup=WARMUP):
     The paper should cite `matched`. A model that failed on the ten hardest
     weeks would otherwise post a better mean than one that answered them.
     """
+    for record in records:
+        _assert_task_prospective(record, "the model backtest scorer")
+
     ok = [r for r in records if r.get("topline")]
     keys = sorted({(r["series"], r["date"]) for r in ok})
     entrants = sorted({r["entrant"] for r in records})

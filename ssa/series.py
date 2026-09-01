@@ -40,6 +40,7 @@ from .adapters import yougov_xtab as yougov_xtab_adapter
 MICHIGAN_SOURCE = "not yet fetched"
 MICHIGAN_URL = umich_adapter.URL
 MICHIGAN_RAW = ""
+MICHIGAN_PRELIM_RAW = ""
 
 
 def michigan_history():
@@ -65,18 +66,33 @@ def michigan_history():
     this raises, and the run is loudly broken, which is the same rule
     `build_trackers` already follows for an empty VoteHub response.
 
-    Sets MICHIGAN_SOURCE, MICHIGAN_URL and MICHIGAN_RAW so the site can credit
-    the file that actually answered and ssa/provenance.py can archive it.
+    Sets MICHIGAN_SOURCE, MICHIGAN_URL, MICHIGAN_RAW and
+    MICHIGAN_PRELIM_RAW so the site can credit the files that actually
+    answered and ssa/provenance.py can archive both exact response bodies.
     """
-    global MICHIGAN_SOURCE, MICHIGAN_URL, MICHIGAN_RAW
-    MICHIGAN_RAW = umich_adapter.fetch_text()
-    finals = umich_adapter.parse(MICHIGAN_RAW)
-    prelim = umich_adapter.parse_prelim(umich_adapter.fetch_prelim_text())
+    global MICHIGAN_SOURCE, MICHIGAN_URL, MICHIGAN_RAW, MICHIGAN_PRELIM_RAW
+    finals_raw = umich_adapter.fetch_text()
+    prelim_raw = umich_adapter.fetch_prelim_text()
+    finals = umich_adapter.parse(finals_raw)
+    prelim = umich_adapter.parse_prelim(prelim_raw)
+    if not finals:
+        raise RuntimeError(
+            "Michigan finals table parsed to zero rows; refusing to publish "
+            "an incomplete source extraction")
+    if not prelim:
+        raise RuntimeError(
+            "Michigan preliminary table parsed to zero rows; refusing to "
+            "publish an incomplete source extraction")
     rows = umich_adapter.merge(finals, prelim)
     if not rows:
         raise RuntimeError(
             "Michigan tables parsed to zero rows; refusing to publish an empty "
             "series (check whether the files moved)")
+    # Publish globals only after both bodies pass their own parser.  A failed
+    # second request must not leave a plausible finals-only body for the
+    # provenance writer to archive as though it were the complete source.
+    MICHIGAN_RAW = finals_raw
+    MICHIGAN_PRELIM_RAW = prelim_raw
     MICHIGAN_URL = umich_adapter.URL
     newest = rows[-1]["date"]
     MICHIGAN_SOURCE = (
@@ -1615,52 +1631,73 @@ def survey(series_id):
     return SERIES[series_id].get("survey")
 
 
-def build_all(sources=None):
+def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
+              diagnostics=None):
     """Every registered series as [{date, value}] oldest first.
 
     `sources` lets callers inject already-fetched payloads (tests, or a run that
     wants one fetch shared across series).
+
+    The default remains fail-fast.  A refresh that already tried a source and
+    proved that neither the live body nor a validated same-source archive is
+    usable can pass its name in ``unavailable_sources`` and set
+    ``isolate_failures``.  Series backed by that source are then omitted while
+    independent sources continue.  Any later adapter/derivation error is
+    isolated at the source boundary too: all series from that source are
+    removed together, and the returned failure map tells the operator why.
+    No substitute source is selected.
     """
     src = dict(sources or {})
     need = {s["source"] for s in SERIES.values()}
-    if "sb_approval" in need and "sb_approval" not in src:
-        src["sb_approval"] = sb.fetch(sb.APPROVAL_URL)
-    if "sb_generic" in need and "sb_generic" not in src:
-        src["sb_generic"] = sb.fetch(sb.GENERIC_URL)
-    if "umich" in need and "umich" not in src:
-        src["umich"] = michigan_history()
+    unavailable = set(unavailable_sources or ())
+    if unavailable and not isolate_failures:
+        raise ValueError(
+            "unavailable_sources requires isolate_failures=True so omissions "
+            "cannot be mistaken for a complete series map")
+    failures = {}
+    diagnostic_rows = diagnostics if diagnostics is not None else []
+
+    def load(name, loader):
+        if name not in need or name in src or name in unavailable:
+            return
+        try:
+            src[name] = loader()
+        except Exception as error:                 # noqa: BLE001 - source boundary
+            if not isolate_failures:
+                raise
+            unavailable.add(name)
+            failures[name] = error
+
+    load("sb_approval", lambda: sb.fetch(sb.APPROVAL_URL))
+    load("sb_generic", lambda: sb.fetch(sb.GENERIC_URL))
+    load("umich", michigan_history)
     # One PDF conversion shared by all three party series. `umichparty.load()`
     # reads the newest vintage under `sources/umichparty/` and never the
     # network -- the addenda has been published exactly once, so nothing here
     # can be made to depend on it appearing again on schedule. Tests inject
     # parsed rows here and stay off both the disk and `pdftotext`.
-    if "umichparty" in need and "umichparty" not in src:
-        src["umichparty"] = umichparty_adapter.load()
+    load("umichparty", umichparty_adapter.load)
     # `src["aaii"]` holds *parsed* rows rather than the page body, because the
     # page's dates carry no year: parsing needs the `asof` from the response
     # that served it, and the two must never be separated (aaii.fetch_text
     # returns the pair, aaii.fetch keeps them together). Tests inject rows
     # here and stay off the network.
-    if "aaii" in need and "aaii" not in src:
-        src["aaii"] = aaii_adapter.fetch()
+    load("aaii", aaii_adapter.fetch)
     # The ESI feed returns parsed [{date, value}] rows directly; the fetch is
     # one paginated keyless request cycle, shared by every caller of the map.
-    if "pentaesi" in need and "pentaesi" not in src:
-        src["pentaesi"] = pentaesi_adapter.history()
+    load("pentaesi", pentaesi_adapter.history)
     # First prints from the committed archive; the fetch also captures a new
     # release the moment the page shows one (write-once, see the adapter).
-    if "confboard" in need and "confboard" not in src:
-        src["confboard"] = confboard_adapter.history()
+    load("confboard", lambda: confboard_adapter.history(
+        diagnostics=diagnostic_rows))
     # One workbook download shared by both SCE horizons; write-once dated
     # capture on success, newest archived vintage (with a loud warning) on
     # fetch failure -- the confboard contract, on an xlsx.
-    if "sce" in need and "sce" not in src:
-        src["sce"] = sce_adapter.history()
+    load("sce", lambda: sce_adapter.history(diagnostics=diagnostic_rows))
     # Harvard-Harris publishes no calendar and no derivable URL, so the
     # archive is the source of truth and nothing here fetches on its own; a
     # new wave is a maintainer passing hhpoll.fetch a URL.
-    if "hhpoll" in need and "hhpoll" not in src:
-        src["hhpoll"] = hhpoll_adapter.load()
+    load("hhpoll", hhpoll_adapter.load)
     # One workbook download carries every wave of every subgroup, so all
     # sixteen crosstab cells share a single request the way the five basket
     # series share one Trends comparison. `src["yougov_xtab"]` holds *parsed*
@@ -1668,8 +1705,7 @@ def build_all(sources=None):
     # makes -- so a test injects a handful of waves and stays off both the
     # network and the zip parser, and the monthly aggregation below is still
     # the code under test rather than something the fixture pre-computed.
-    if "yougov_xtab" in need and "yougov_xtab" not in src:
-        src["yougov_xtab"] = yougov_xtab_adapter.waves()
+    load("yougov_xtab", yougov_xtab_adapter.waves)
     # Civiqs is the one source with no single file to prefetch: every tracker
     # and every subgroup is its own ~2 MB page. So `src["civiqs"]` is not a
     # payload but a per-series override map -- `{series_id: [{date, value}]}` --
@@ -1678,8 +1714,7 @@ def build_all(sources=None):
     # fetches at most once per key per day when it does not. Registering more
     # Civiqs series therefore costs at most one request each per day, not one
     # per series per refresh.
-    if "civiqs" in need and "civiqs" not in src:
-        src["civiqs"] = {}
+    load("civiqs", dict)
     # Wikipedia is fetched once per *article*, not once per series or per
     # refresh of the map. `src["wikipedia"]` is a per-article override map --
     # {article: [{date, views}] daily rows} -- which tests inject to stay off
@@ -1687,20 +1722,17 @@ def build_all(sources=None):
     # over one article would cost one request. The rows are daily on purpose:
     # the Monday-Sunday aggregation is this repository's step, and injecting
     # pre-aggregated weeks would let a test pass without ever exercising it.
-    if "wikipedia" in need and "wikipedia" not in src:
-        src["wikipedia"] = {}
+    load("wikipedia", dict)
 
     # Trends works the same way as Civiqs and for the same reason: no single
     # file to prefetch, one archived request cycle per query per day, so the
     # override is a per-series map -- `{series_id: [{date, value}]}` -- and
     # anything not in it is built from (or fetched into) `trends/`.
-    if "trends" in need and "trends" not in src:
-        src["trends"] = {}
+    load("trends", dict)
 
     # The basket is one request serving five series: fetched (or read) once
     # here and shared, so registering all five costs what registering one does.
-    if "trends_basket" in need and "trends_basket" not in src:
-        src["trends_basket"] = {}
+    load("trends_basket", dict)
 
     out = {}
     # {measure: {cell label: monthly series}} -- the one derivation of the
@@ -1709,77 +1741,96 @@ def build_all(sources=None):
     # a caller has no business supplying a half-derived intermediate.
     xtab_monthly = {}
     for sid, spec in SERIES.items():
+        source = spec["source"]
+        if source in unavailable:
+            continue
         f = spec.get("filters") or {}
-        if spec["source"] == "umich":
-            out[sid] = list(src["umich"])
-        elif spec["source"] == "umichparty":
-            out[sid] = umichparty_adapter.to_series(
-                src["umichparty"], spec["umichparty"]["party"])
-        elif spec["source"] == "sb_approval":
-            recs = sb.approval_polls(rows=src["sb_approval"], **f)
-            out[sid] = sb.to_series(recs, spec["value"])
-        elif spec["source"] == "sb_generic":
-            recs = sb.generic_ballot_polls(rows=src["sb_generic"], **f)
-            out[sid] = sb.to_series(recs, spec["value"])
-        elif spec["source"] == "aaii":
-            out[sid] = aaii_adapter.to_series(src["aaii"], spec["value"])
-        elif spec["source"] == "pentaesi":
-            out[sid] = list(src["pentaesi"])
-        elif spec["source"] == "confboard":
-            out[sid] = list(src["confboard"])
-        elif spec["source"] == "sce":
-            out[sid] = sce_adapter.to_series(src["sce"],
-                                             spec["sce"]["horizon"])
-        elif spec["source"] == "hhpoll":
-            out[sid] = hhpoll_adapter.to_series(src["hhpoll"])
-        elif spec["source"] == "yougov_xtab":
-            # Derived once for the whole roster, not once per cell. Sixteen
-            # independent aggregations of one payload would be sixteen chances
-            # for the cells to disagree about which four waves September had,
-            # and a profile whose cells were averaged over different waves is
-            # not a profile of anything.
-            cfg = spec["yougov_xtab"]
-            m = cfg["measure"]
-            if m not in xtab_monthly:
-                xtab_monthly[m] = crosstab.monthly_cell_series(
-                    src["yougov_xtab"], yougov_xtab_adapter.SCORED_CELLS, m)
-            out[sid] = list(xtab_monthly[m][cfg["cell"]])
-        elif spec["source"] == "trends_basket":
-            cfg = spec["trends_basket"]
-            given = src["trends_basket"].get(sid)
-            if given is not None:
-                out[sid] = list(given)
+        try:
+            if source == "umich":
+                out[sid] = list(src["umich"])
+            elif source == "umichparty":
+                out[sid] = umichparty_adapter.to_series(
+                    src["umichparty"], spec["umichparty"]["party"])
+            elif source == "sb_approval":
+                recs = sb.approval_polls(rows=src["sb_approval"], **f)
+                out[sid] = sb.to_series(recs, spec["value"])
+            elif source == "sb_generic":
+                recs = sb.generic_ballot_polls(rows=src["sb_generic"], **f)
+                out[sid] = sb.to_series(recs, spec["value"])
+            elif source == "aaii":
+                out[sid] = aaii_adapter.to_series(src["aaii"], spec["value"])
+            elif source == "pentaesi":
+                out[sid] = list(src["pentaesi"])
+            elif source == "confboard":
+                out[sid] = list(src["confboard"])
+            elif source == "sce":
+                out[sid] = sce_adapter.to_series(src["sce"],
+                                                 spec["sce"]["horizon"])
+            elif source == "hhpoll":
+                out[sid] = hhpoll_adapter.to_series(src["hhpoll"])
+            elif source == "yougov_xtab":
+                # Derived once for the whole roster, not once per cell. Sixteen
+                # independent aggregations of one payload would be sixteen chances
+                # for the cells to disagree about which four waves September had,
+                # and a profile whose cells were averaged over different waves is
+                # not a profile of anything.
+                cfg = spec["yougov_xtab"]
+                m = cfg["measure"]
+                if m not in xtab_monthly:
+                    xtab_monthly[m] = crosstab.monthly_cell_series(
+                        src["yougov_xtab"], yougov_xtab_adapter.SCORED_CELLS, m)
+                out[sid] = list(xtab_monthly[m][cfg["cell"]])
+            elif source == "trends_basket":
+                cfg = spec["trends_basket"]
+                given = src["trends_basket"].get(sid)
+                if given is not None:
+                    out[sid] = list(given)
+                else:
+                    key = (tuple(cfg["basket"]),
+                           cfg.get("geo", trends_adapter.GEO))
+                    if key not in src["trends_basket"]:
+                        src["trends_basket"][key] = trends_adapter.basket_weeks(
+                            list(key[0]), key[1],
+                            diagnostics=diagnostic_rows)
+                    out[sid] = trends_adapter.share_series(
+                        src["trends_basket"][key], cfg["query"])
+            elif source == "civiqs":
+                cfg = spec["civiqs"]
+                given = src["civiqs"].get(sid)
+                out[sid] = list(given) if given is not None else \
+                    civiqs_adapter.as_displayed(
+                        cfg["name"], cfg.get("filters"),
+                        choice=cfg.get("choice"), net=cfg.get("net", False),
+                        weekday=cfg.get("weekday"),
+                        diagnostics=diagnostic_rows)
+            elif source == "wikipedia":
+                art = spec["wikipedia"]["article"]
+                if art not in src["wikipedia"]:
+                    src["wikipedia"][art] = wikipedia_adapter.fetch_daily(art)
+                out[sid] = wikipedia_adapter.weekly_series(
+                    art, daily=src["wikipedia"][art])
+            elif source == "trends":
+                cfg = spec["trends"]
+                given = src["trends"].get(sid)
+                out[sid] = list(given) if given is not None else \
+                    trends_adapter.as_archived(
+                        cfg["query"], cfg.get("geo", trends_adapter.GEO),
+                        diagnostics=diagnostic_rows)
             else:
-                key = (tuple(cfg["basket"]), cfg.get("geo", trends_adapter.GEO))
-                if key not in src["trends_basket"]:
-                    src["trends_basket"][key] = trends_adapter.basket_weeks(
-                        list(key[0]), key[1])
-                out[sid] = trends_adapter.share_series(
-                    src["trends_basket"][key], cfg["query"])
-        elif spec["source"] == "civiqs":
-            cfg = spec["civiqs"]
-            given = src["civiqs"].get(sid)
-            out[sid] = list(given) if given is not None else \
-                civiqs_adapter.as_displayed(
-                    cfg["name"], cfg.get("filters"),
-                    choice=cfg.get("choice"), net=cfg.get("net", False),
-                    weekday=cfg.get("weekday"))
-        elif spec["source"] == "wikipedia":
-            art = spec["wikipedia"]["article"]
-            if art not in src["wikipedia"]:
-                src["wikipedia"][art] = wikipedia_adapter.fetch_daily(art)
-            out[sid] = wikipedia_adapter.weekly_series(
-                art, daily=src["wikipedia"][art])
-        elif spec["source"] == "trends":
-            cfg = spec["trends"]
-            given = src["trends"].get(sid)
-            out[sid] = list(given) if given is not None else \
-                trends_adapter.as_archived(cfg["query"],
-                                           cfg.get("geo", trends_adapter.GEO))
-        else:
-            raise ValueError(f"{sid}: unknown source {spec['source']}")
-        if not out[sid]:
-            raise RuntimeError(
-                f"{sid} built to zero points -- refusing to publish an empty "
-                "series (check the filters against the upstream file)")
-    return out
+                raise ValueError(f"{sid}: unknown source {source}")
+            if not out[sid]:
+                raise RuntimeError(
+                    f"{sid} built to zero points -- refusing to publish an empty "
+                    "series (check the filters against the upstream file)")
+        except Exception as error:                 # noqa: BLE001 - source boundary
+            if not isolate_failures:
+                raise
+            failures.setdefault(source, error)
+            unavailable.add(source)
+            # A source is the atomic semantic unit.  If its third derivation
+            # proves malformed, keeping the first two would make the run look
+            # selectively healthy even though all came from one suspect body.
+            for built_sid, built_spec in SERIES.items():
+                if built_spec["source"] == source:
+                    out.pop(built_sid, None)
+    return (out, failures) if isolate_failures else out

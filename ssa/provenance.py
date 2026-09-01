@@ -68,6 +68,43 @@ def load_manifest():
         return {}
 
 
+def current(name, expected_url=None):
+    """Return ``(raw bytes, manifest row)`` for the last validated vintage.
+
+    This is the only fallback the reliability path permits: the exact same
+    source, from the committed provenance archive.  Callers must run the same
+    parser again before use.  A different publisher or a reconstructed body is
+    not a current vintage and does not belong here.
+    """
+    row = (load_manifest().get(name) or {}).copy()
+    if expected_url is not None and row.get("url") != expected_url:
+        raise RuntimeError(
+            f"{name}: manifest URL {row.get('url')!r} does not match the "
+            f"required same-source URL {expected_url!r}")
+    relative = row.get("file")
+    if not relative:
+        raise RuntimeError(f"{name}: no validated provenance vintage exists")
+    root = os.path.realpath(ROOT)
+    path = os.path.realpath(os.path.join(ROOT, relative))
+    if os.path.commonpath((root, path)) != root:
+        raise RuntimeError(f"{name}: provenance path escapes the repository")
+    try:
+        with open(path, "rb") as handle:
+            raw = handle.read()
+    except OSError as error:
+        raise RuntimeError(
+            f"{name}: validated provenance vintage is unavailable: {relative}") from error
+    expected = row.get("sha256")
+    actual = digest(raw)
+    if not expected or actual != expected:
+        raise RuntimeError(
+            f"{name}: archived vintage hash mismatch for {relative}; refusing "
+            "an artifact that is not the validated manifest body")
+    row["source"] = name
+    row["file"] = relative
+    return raw, row
+
+
 def save_manifest(m):
     os.makedirs(ARCHIVE, exist_ok=True)
     tmp = MANIFEST + ".tmp"

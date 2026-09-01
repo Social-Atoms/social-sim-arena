@@ -101,6 +101,22 @@ _CELL = re.compile(r"^([A-Z]+)(\d+)$")
 _YYYYMM = re.compile(r"^(19|20)\d{4}$")
 
 
+def _is_live_failure(exc):
+    """Only transport/status failures may use a same-source archive."""
+    if isinstance(exc, (requests.RequestException, TimeoutError,
+                        ConnectionError)):
+        return True
+    # Test/probe seams often raise RuntimeError instead of constructing a
+    # requests.HTTPError. Keep those recognizable without treating validation
+    # messages (not-an-xlsx, malformed workbook) as network failures.
+    msg = str(exc).lower()
+    return any(mark in msg for mark in (
+        "http 401", "401 unauthorized", "http 403", "403 forbidden",
+        "http 404", "404 not found", "http 429", "429 too many",
+        "rate-limit", "rate limit", "timeout", "timed out", "unreachable",
+        "connection", "sslerror", "sslzeroreturn"))
+
+
 def fetch_bytes(timeout=TIMEOUT, url=URL):
     """The workbook exactly as served, as bytes, for `archive` to file.
 
@@ -349,7 +365,7 @@ def load(path=None, min_rows=MIN_ROWS):
     return parse(body, min_rows=min_rows)
 
 
-def history(fetch=True, today=None):
+def history(fetch=True, today=None, diagnostics=None):
     """[{date, infl_1y, infl_3y}] oldest first. The pipeline's entry point.
 
     With fetch=True the live workbook is read, validated by a full parse
@@ -363,16 +379,22 @@ def history(fetch=True, today=None):
     takes the clock.
     """
     rows = None
+    live_error = None
     if fetch:
         try:
             body = fetch_bytes()
-            rows = parse(body)
-            archive(body)
         except Exception as e:                                  # noqa: BLE001
-            if newest_archived() is None:
+            if not _is_live_failure(e) or newest_archived() is None:
                 raise
+            live_error = e
             print(f"  sce: fetch failed ({type(e).__name__}: "
                   f"{str(e)[:120]}); serving the committed archive")
+        else:
+            # Only transport failures may degrade to the archive. A workbook
+            # that arrived but no longer satisfies the parser contract, or one
+            # we could not preserve, is unusable and must fail the refresh.
+            rows = parse(body)
+            archive(body)
     if rows is None:
         rows = load()
     stale = _month_index(today or _utc_today()) - _month_index(rows[-1]["date"])
@@ -382,6 +404,16 @@ def history(fetch=True, today=None):
             f"{stale} months behind today -- over the {MAX_STALE_MONTHS} "
             "allowed. A silently stale source is worse than no source: see "
             "ssa/adapters/fredcsv.py for what that cost once.")
+    if live_error is not None and diagnostics is not None:
+        path = newest_archived()
+        diagnostics.append({
+            "source": "sce",
+            "scope": "live",
+            "error": live_error,
+            "archive_evidence": (
+                f"{os.path.relpath(path, ROOT)} ({len(rows)} rows; newest "
+                f"reference month {rows[-1]['date']})"),
+        })
     return rows
 
 

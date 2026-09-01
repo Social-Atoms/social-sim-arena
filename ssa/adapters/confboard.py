@@ -274,11 +274,23 @@ def current(text=None, now=None):
     return parse(text if text is not None else fetch_text(), now=now)
 
 
+def _is_live_failure(exc):
+    """True for transport/status failures, never parser-contract failures."""
+    if isinstance(exc, (TimeoutError, ConnectionError,
+                        requests.RequestException)):
+        return True
+    msg = str(exc).lower()
+    return any(mark in msg for mark in (
+        "http 403", "403 forbidden", "http 429", "429 too many",
+        "rate-limit", "rate limit", "timeout", "timed out", "unreachable",
+        "connection", "sslerror", "sslzeroreturn"))
+
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ARCHIVE = os.path.join(ROOT, "sources", "confboard")
 
 
-def history(fetch=True, now=None):
+def history(fetch=True, now=None, diagnostics=None):
     """First prints from sources/confboard/, [{date, value}] oldest first.
 
     Rows are dated by the month measured (the "2026-08-01" label style
@@ -307,9 +319,22 @@ def history(fetch=True, now=None):
             month = rec["month"][:7] + "-01"
             if month not in rows:                 # earliest print per month wins
                 rows[month] = rec["value"]
+    live_error = None
     if fetch:
         try:
-            rec = current(now=now)
+            rec = current() if now is None else current(now=now)
+        except Exception as e:                                  # noqa: BLE001
+            # `current` remains the public seam used by probes and tests. Its
+            # parser errors are not archive-eligible; only recognizable
+            # transport/status failures degrade to a committed first print.
+            if not _is_live_failure(e) or not rows:
+                raise
+            live_error = e
+            print(f"  confboard: fetch failed ({type(e).__name__}: "
+                  f"{str(e)[:120]}); serving the committed archive")
+        else:
+            # Archiving is deliberately outside the fetch-error fallback. A
+            # failed evidence write is not an unreachable server.
             day = rec.get("released_on") or rec["month"][:7] + "-28"
             path = os.path.join(ARCHIVE, day + ".json")
             if not os.path.exists(path):
@@ -318,13 +343,18 @@ def history(fetch=True, now=None):
                 with open(path, "w") as f:
                     json.dump(rec, f, indent=1, sort_keys=True)
             rows.setdefault(rec["month"][:7] + "-01", rec["value"])
-        except Exception as e:                                  # noqa: BLE001
-            if not rows:
-                raise
-            print(f"  confboard: fetch failed ({type(e).__name__}: "
-                  f"{str(e)[:120]}); serving the committed archive")
     if not rows:
         raise RuntimeError(
             "no Conference Board history: sources/confboard/ is empty and the "
             "live page could not be read. Run tools/backfill_cci.py --execute.")
-    return [{"date": d, "value": rows[d]} for d in sorted(rows)]
+    out = [{"date": d, "value": rows[d]} for d in sorted(rows)]
+    if live_error is not None and diagnostics is not None:
+        diagnostics.append({
+            "source": "confboard",
+            "scope": "live",
+            "error": live_error,
+            "archive_evidence": (
+                f"{os.path.relpath(ARCHIVE, ROOT)} ({len(out)} first-print "
+                f"rows; newest {out[-1]['date']})"),
+        })
+    return out
