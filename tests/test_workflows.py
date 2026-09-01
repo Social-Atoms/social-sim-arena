@@ -23,6 +23,9 @@ def test_questions_workflow_triggers_on_its_own_contract_changes():
     assert body.count('- ".github/workflows/questions.yml"') == 2
     assert body.count('- ".github/workflows/refresh.yml"') == 2
     assert "PYTHONPATH=. python tests/test_workflows.py" in body
+    # This workflow is the only one that runs the agent-template contracts
+    # below, so a change to the template they guard has to start it.
+    assert body.count('- "templates/**"') == 2
 
 
 def test_refresh_commits_every_irreplaceable_archive():
