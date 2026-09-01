@@ -25,9 +25,9 @@ def number_cell(value):
     return f"<c><v>{value}</v></c>"
 
 
-def worksheet(approve):
+def worksheet(approve, wave_date="2026-08-31"):
     rows = [
-        ("Question text", "2026-08-31", True),
+        ("Question text", wave_date, True),
         ("Approve", approve, False),
         ("Disapprove", 0.5, False),
         ("Not sure", 0.1, False),
@@ -42,7 +42,7 @@ def worksheet(approve):
             + "".join(xml_rows) + "</sheetData></worksheet>").encode()
 
 
-def workbook(missing=None, unsafe=None):
+def workbook(missing=None, unsafe=None, malformed=None, shifted=None):
     """A minimal OOXML book whose part numbers run opposite its sheet order."""
     names = [yougov_xtab.TOPLINE] + list(yougov_xtab.SCORED_CELLS)
     n = len(names)
@@ -60,9 +60,13 @@ def workbook(missing=None, unsafe=None):
             relationships.append(
                 f'<Relationship Id="{rid}" Type="{yougov_xtab.WORKSHEET_REL}" '
                 f'Target="{target}"/>')
-        approve = round(0.20 + i / 100.0, 2)
-        expected[name] = round(approve * 100, 4)
-        parts[f"xl/worksheets/sheet{part_number}.xml"] = worksheet(approve)
+        approve = ("not-a-number" if name == malformed
+                   else round(0.20 + i / 100.0, 2))
+        expected[name] = (None if name == malformed
+                          else round(approve * 100, 4))
+        wave_date = "2026-09-01" if name == shifted else "2026-08-31"
+        parts[f"xl/worksheets/sheet{part_number}.xml"] = worksheet(
+            approve, wave_date)
 
     book = (f'<workbook xmlns="{MAIN}" xmlns:r="{OFFICE_REL}"><sheets>'
             + "".join(sheet_nodes) + "</sheets></workbook>").encode()
@@ -105,6 +109,24 @@ def test_a_relationship_cannot_escape_the_worksheet_directory():
         assert False, "an unsafe OOXML relationship target was read"
     except ValueError as e:
         assert "escapes xl/worksheets" in str(e), e
+
+
+def test_a_workbook_with_no_complete_wave_is_loud_not_empty():
+    blob, _ = workbook(malformed="Democrat")
+    try:
+        yougov_xtab.parse(blob)
+        assert False, "a workbook with no complete wave returned an empty list"
+    except RuntimeError as e:
+        assert "zero complete waves" in str(e), e
+
+
+def test_sheet_date_axes_must_match_before_cells_are_aligned():
+    blob, _ = workbook(shifted="Republican")
+    try:
+        yougov_xtab.parse(blob)
+        assert False, "values were aligned across different date axes"
+    except ValueError as e:
+        assert "date axis" in str(e) and "Republican" in str(e), e
 
 
 if __name__ == "__main__":

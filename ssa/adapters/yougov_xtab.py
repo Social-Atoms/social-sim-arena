@@ -253,6 +253,14 @@ def parse(blob):
             header = next(iter(rows))          # row 1 label is the question
             if question is None:
                 question, dates = header, rows[header]
+                nonempty_dates = [d for d in dates if d]
+                if len(nonempty_dates) != len(set(nonempty_dates)):
+                    raise ValueError(
+                        "YouGov workbook repeats a wave date on its first sheet")
+            elif header != question or rows[header] != dates:
+                raise ValueError(
+                    f"YouGov sheet {name!r} has a different question or date "
+                    "axis; cell values cannot be aligned by column")
             sheets[name] = {ROW_LABELS[k]: v for k, v in rows.items()
                             if k in ROW_LABELS}
 
@@ -281,6 +289,10 @@ def parse(blob):
         if complete and len(cells) == len(SCORED_CELLS) + 1:
             waves.append({"date": date, "question": question, "cells": cells})
     waves.sort(key=lambda w: w["date"])
+    if not waves:
+        raise RuntimeError(
+            "YouGov workbook produced zero complete waves; refusing to "
+            "publish an empty crosstab series")
     return waves
 
 
