@@ -120,7 +120,41 @@ def test_our_models_are_held_to_the_same_deadline_as_everyone_else():
     assert harness.filed_in_window(stamped, lock)
     stale = f"filed={(due - timedelta(days=9)):%Y-%m-%dT%H:%MZ}, m"
     assert not harness.filed_in_window(stale, lock)
+    future = f"filed={(due + timedelta(minutes=1)):%Y-%m-%dT%H:%MZ}, m"
+    assert not harness.filed_in_window(future, lock), \
+        "a post-deadline timestamp must not count as in the pre-deadline window"
+
+    # The web corpus must use the identical boundary. Before this regression,
+    # a valid corpus gathered 2.5 days before the deadline was measured against
+    # Sunday's later lock and rejected as eight days "too early".
+    gathered = {"asked_at": iso(due - timedelta(days=2, hours=12))}
+    assert harness._gathered_in_window(gathered, r)
+    gathered_after = {"asked_at": iso(due + timedelta(minutes=1))}
+    assert not harness._gathered_in_window(gathered_after, r)
+    asof = due - timedelta(seconds=harness.FILE_WINDOW_SECONDS)
+    assert refresh.information_asof(r) == iso(asof)
+    assert asof <= due - timedelta(days=2, hours=12), \
+        "the shared news corpus must already be complete when calls begin"
     print("ok test_our_models_are_held_to_the_same_deadline_as_everyone_else")
+
+
+def test_public_open_status_closes_at_the_participant_deadline():
+    """The site must not invite a submission its validator will reject."""
+    from ssa import refresh
+    r = {
+        "round_id": "sunday-round",
+        "lock_at": "2026-09-20T14:00:00Z",
+        "release_at": "2026-09-22T14:00:00Z",
+    }
+    before = datetime(2026, 9, 14, 11, 59, tzinfo=timezone.utc)
+    after = datetime(2026, 9, 14, 12, 1, tzinfo=timezone.utc)
+    assert refresh.round_status(r, {}, before) == "open"
+    assert refresh.round_status(r, {}, after) == "locked"
+    assert after >= batches.effective_deadline(r["lock_at"]), \
+        "the submission validator already considers this round late"
+    assert after < batches._parse(r["lock_at"]), \
+        "the old status check still considered this round open"
+    print("ok test_public_open_status_closes_at_the_participant_deadline")
 
 
 def test_pre_cutover_rounds_keep_the_window_they_were_bought_in():
@@ -205,7 +239,8 @@ if __name__ == "__main__":
     test_one_batch_id_per_week()
     test_the_real_season_splits_into_weekly_batches()
     test_our_models_are_held_to_the_same_deadline_as_everyone_else()
+    test_public_open_status_closes_at_the_participant_deadline()
     test_pre_cutover_rounds_keep_the_window_they_were_bought_in()
     test_the_validators_copy_of_the_calendar_never_drifts()
     test_every_round_type_freezes_at_the_same_instant()
-    print("12 passed")
+    print("13 passed")

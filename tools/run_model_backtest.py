@@ -8,11 +8,11 @@ estimate, and touches no provider. Nothing bills until --execute.
   python tools/run_model_backtest.py --execute --workers 6
   python tools/run_model_backtest.py --execute --entrants deepseek,qwen
 
-The window starts at the latest training cutoff across the entrants being
-scored (plus a margin), because that is the only stretch of history none of
-them could have memorized. Narrowing the entrant set widens the window, which
-is the whole reason --entrants exists: a run without the most recently trained
-model gets meaningfully more releases to score on.
+By default each entrant starts at its own training cutoff plus a margin, which
+uses all releases that model could not have memorized. ``--common-window``
+instead starts every entrant at the latest usable cutoff, making their aggregate
+scores directly comparable over one release set. Narrowing the entrant set can
+widen that common window.
 
 Re-running is free for anything already in cache/model_backtest/, so an
 interrupted run resumes and a rerun after adding one entrant only pays for that
@@ -58,8 +58,16 @@ def main():
     ap.add_argument("--start", help="override the first release date (ISO day)")
     ap.add_argument("--end", help="last release date (ISO day)")
     ap.add_argument("--margin-days", type=int, default=cutoffs.MARGIN_DAYS)
+    ap.add_argument(
+        "--minimum-cutoff-confidence",
+        choices=cutoffs.CONFIDENCE_LEVELS,
+        default=cutoffs.DEFAULT_MINIMUM_CONFIDENCE,
+        help="lowest cutoff evidence grade admitted (default: unknown, which "
+             "preserves the existing roster). Raising this is recorded in "
+             "the output's cutoff_policy")
     ap.add_argument("--on-unknown", default="raise",
-                    help="'raise', 'exclude', or an ISO day to assume")
+                    help="what to do with a missing or below-threshold cutoff: "
+                         "'raise', 'exclude', or an ISO day to assume")
     ap.add_argument("--limit", type=int,
                     help="cap releases per entrant (smoke test)")
     ap.add_argument("--common-window", action="store_true",
@@ -77,32 +85,58 @@ def main():
 
     print("cutoffs (per model; both conditions share one)")
     for m in sorted(set(models.values())):
-        print("  " + cutoffs.describe(m))
+        print("  " + cutoffs.describe(
+            m, args.margin_days, args.minimum_cutoff_confidence))
 
+    keep, untrusted_models = cutoffs.partition(
+        sorted(set(models.values())), args.margin_days,
+        args.minimum_cutoff_confidence)
+    assumed_start = None
+    if args.on_unknown not in ("raise", "exclude"):
+        try:
+            assumed_start = (
+                datetime.date.fromisoformat(args.on_unknown)
+                + datetime.timedelta(days=args.margin_days)).isoformat()
+        except (TypeError, ValueError):
+            sys.exit("--on-unknown must be 'raise', 'exclude', or an ISO day")
+    if untrusted_models and args.on_unknown == "raise":
+        sys.exit(
+            "cutoff evidence below policy for: "
+            f"{', '.join(untrusted_models)}. Pass --on-unknown exclude, "
+            "supply an ISO assumption, or explicitly lower "
+            "--minimum-cutoff-confidence.")
     if args.on_unknown == "exclude":
-        keep, dropped = cutoffs.partition(sorted(set(models.values())),
-                                          args.margin_days)
         entrants = [e for e in entrants if models[e] in keep]
-        if dropped:
-            print(f"\ndropped (no credible cutoff, so no defensible window): "
-                  f"{', '.join(dropped)}")
+        if untrusted_models:
+            print(f"\ndropped (no cutoff meeting "
+                  f"{args.minimum_cutoff_confidence!r}, so no defensible "
+                  "window): "
+                  f"{', '.join(untrusted_models)}")
         if not entrants:
             sys.exit("every entrant was dropped")
+        models = {e: models[e] for e in entrants}
 
     if args.start:
         start = args.start
     elif args.common_window:
         start = cutoffs.common_start(sorted(set(models.values())),
                                      args.margin_days,
-                                     on_unknown=args.on_unknown)
+                                     on_unknown=args.on_unknown,
+                                     minimum_confidence=
+                                     args.minimum_cutoff_confidence)
     else:
         # Each entrant on its own post-cutoff window by default. A shared
         # window is bounded by the most recently trained model and throws away
         # most of the history the older ones could legitimately be scored on.
         # Keyed by entrant id, but the cutoff belongs to the model: both
         # conditions of one model share its training boundary.
-        start = {e: cutoffs.usable_start(models[e], args.margin_days)
+        start = {e: cutoffs.usable_start(
+                    models[e], args.margin_days,
+                    args.minimum_cutoff_confidence)
                  for e in entrants}
+        for e, day in start.items():
+            if day is None:
+                start[e] = assumed_start
     if isinstance(start, dict):
         print("\nscoring window: each entrant from its own cutoff + margin")
     else:
@@ -208,6 +242,25 @@ def main():
     result = model_backtest.score(records, series_map)
     result["start"] = start
     result["entrants"] = entrants
+    result["cutoff_policy"] = {
+        "minimum_confidence": args.minimum_cutoff_confidence,
+        "margin_days": args.margin_days,
+        "on_untrusted": args.on_unknown,
+    }
+    # Preserve the human-readable field consumed by the existing site while
+    # also writing the actual machine-readable decision. Both information
+    # conditions resolve to the same model and therefore the same contract.
+    result["cutoffs"] = {
+        e: cutoffs.describe(models[e], args.margin_days,
+                            args.minimum_cutoff_confidence)
+        for e in entrants
+    }
+    result["cutoff_contracts"] = {
+        e: dict(cutoffs.contract(models[e], args.margin_days,
+                                 args.minimum_cutoff_confidence),
+                model=models[e])
+        for e in entrants
+    }
     result["calls"] = {"total": len(tasks), "made": made}
     if args.rescore:
         # A rescore made no calls; overwriting the count with 0 would erase the

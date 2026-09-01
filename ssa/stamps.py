@@ -1,4 +1,4 @@
-"""Proof that a forecast existed before the lock, that does not rest on us.
+"""Proof that a forecast set existed when submissions closed, without trust in us.
 
 Today the evidence is a SHA-256 in this repository's git history. A reader who
 trusts us needs nothing more; a reader who does not gets nothing, because we can
@@ -15,11 +15,11 @@ since the attestation is on a chain none of us controls.
 
 **What is stamped, and why it is not the forecasts themselves.** A round has
 thirty-four entrants; stamping each file would mean thirty-four submissions per
-round, and the object a skeptic actually needs is "all of them, at the lock, and
-nothing added later". So the unit is a *manifest*: one file per round listing
-every forecast's canonical hash plus the lock snapshot's, and the manifest is
-what gets stamped. One proof covers the round, and a forecast quietly edited
-afterwards no longer matches the hash the stamp covers.
+round, and the object a skeptic actually needs is "all of them when submissions
+closed, and nothing added later". So the unit is a *manifest*: one file per
+round listing every forecast's canonical hash plus the lock snapshot's, and the
+manifest is what gets stamped. One proof covers the round, and a forecast
+quietly edited afterwards no longer matches the hash the stamp covers.
 
 **The manifest is written once and never rewritten.** Rewriting it after the
 stamp would invalidate the proof, which is the one thing this file exists to
@@ -88,7 +88,7 @@ def proof_path(round_id):
 
 
 def build_manifest(round_id, lock_at, forecasts_dir=None, locks_dir=None):
-    """Everything a round fixed at its lock, as one hashable object.
+    """Everything fixed for a round at submission close, as one hashable object.
 
     Forecast hashes are canonical (the object), not file hashes: whitespace in
     a submitted file is not part of what was claimed, and two files differing
@@ -205,8 +205,8 @@ def ensure(round_id, lock_at, now=None):
 
     Called once per locked round per refresh. The manifest is built exactly
     once -- rebuilding it after the stamp would invalidate the proof -- so a
-    forecast that lands after the lock is *not* covered, which is the correct
-    outcome and is what `lock-audit.yml` independently rejects.
+    forecast that lands after the participant deadline is *not* covered, which
+    is the correct outcome and is what the landing audit independently rejects.
     """
     path = manifest_path(round_id)
     fresh = not os.path.exists(path)

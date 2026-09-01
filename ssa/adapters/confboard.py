@@ -41,6 +41,7 @@ import calendar
 import json
 import os
 import re
+from datetime import date, datetime, timezone
 
 import requests
 
@@ -134,7 +135,24 @@ def _flatten(html):
     return re.sub(r"\s+", " ", text).strip()
 
 
-def parse(text, year=None):
+def _utc_date(now=None):
+    """UTC calendar day for an as-of decision; ``now`` is a test seam.
+
+    A naive datetime has no defensible meaning here. Reject it instead of
+    silently interpreting it in whichever timezone happens to run the adapter.
+    """
+    if now is None:
+        now = datetime.now(timezone.utc)
+    if isinstance(now, datetime):
+        if now.tzinfo is None:
+            raise ValueError("Conference Board as-of datetime must carry a timezone")
+        return now.astimezone(timezone.utc).date()
+    if isinstance(now, date):
+        return now
+    raise TypeError("Conference Board as-of value must be a date or datetime")
+
+
+def parse(text, year=None, now=None):
     """Page HTML -> the release it is showing.
 
     {month, value, change, present_situation, expectations, previous_month,
@@ -148,7 +166,6 @@ def parse(text, year=None):
     Raises rather than returning a partial reading. A consumer confidence
     number with no month attached is not a data point.
     """
-    import datetime
     flat = _flatten(text)
     m = LEVEL.search(flat)
     if not m:
@@ -167,7 +184,12 @@ def parse(text, year=None):
         year = year or int(ryear)
     else:
         released_on = None
-    today = datetime.date.today()
+    # This fallback is a data decision: at the Dec/Jan boundary it chooses the
+    # year attached to a release. `date.today()` used the runner's local zone,
+    # so two machines reading the same page at the same instant could archive
+    # different months. Every other live adapter makes as-of decisions in UTC;
+    # this one now shares that invariant.
+    today = _utc_date(now)
     year = year or today.year
 
     # **The reporting month is the month after the one it compares itself to.**
@@ -248,15 +270,15 @@ def parse(text, year=None):
     return out
 
 
-def current(text=None):
-    return parse(text if text is not None else fetch_text())
+def current(text=None, now=None):
+    return parse(text if text is not None else fetch_text(), now=now)
 
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ARCHIVE = os.path.join(ROOT, "sources", "confboard")
 
 
-def history(fetch=True):
+def history(fetch=True, now=None):
     """First prints from sources/confboard/, [{date, value}] oldest first.
 
     Rows are dated by the month measured (the "2026-08-01" label style
@@ -287,7 +309,7 @@ def history(fetch=True):
                 rows[month] = rec["value"]
     if fetch:
         try:
-            rec = current()
+            rec = current(now=now)
             day = rec.get("released_on") or rec["month"][:7] + "-28"
             path = os.path.join(ARCHIVE, day + ".json")
             if not os.path.exists(path):

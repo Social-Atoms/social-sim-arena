@@ -98,9 +98,10 @@ bounded cost, and no loop that can run away.
 keyed by `sha256(query + settings)` and shared across entrants, so fifteen
 models issuing overlapping keywords cost one request each, not fifteen.
 `search/rounds/<round>/<entrant>.json` freezes what that entrant asked and
-received. The search happens once, at lock time, and every later refresh reads
-the file — which is the only reason a `web` forecast can be re-derived at all,
-since the index will not return the same thing tomorrow.
+received. The search happens once in the fixed filing window before the common
+participant deadline, and every later refresh reads the file — which is the
+only reason a `web` forecast can be re-derived at all, since the index will not
+return the same thing tomorrow.
 
 **The parameters are not settled.** `MAX_QUERIES`, `MAX_ROUNDS`,
 `RESULTS_PER_QUERY`, `SNIPPET_CHARS`, `SEARCH_DEPTH` and `DAYS` sit together at
@@ -175,12 +176,14 @@ rebuilds to the same string, because separating the axes must rename nothing.
 ## 3. The news corpus
 
 The `news` condition gives every entrant in a round the **same** corpus, built
-from the Wikipedia Current Events portal as those pages stood **at the round's
-lock**. Not a per-model search: one text, archived, reproducible.
+from the Wikipedia Current Events portal as those pages stood **when the common
+model-filing window opened**, three days before the participant deadline by
+default. Not a per-model search: one text, archived, reproducible, and already
+complete when calls begin.
 
-- **Window.** The seven days before the lock, up to but not including the lock
-  day — a page for the lock day is mid-write and would differ between an entrant
-  filed at 09:00 and one filed at 13:00.
+- **Window.** The seven days before that fixed information boundary, up to but
+  not including its day — a page for that day is mid-write and would differ
+  between an entrant filed at 09:00 and one filed at 13:00.
 - **Size.** Measured over 63 weekly lock dates from 2025-06-01 to 2026-08-12:
   median **20,185 characters, about 5,000 tokens**; range 10,583 to 30,708.
   Fourteen days at eight items a category ran to 47,291 characters (~11,800

@@ -245,7 +245,7 @@ footer .upd{margin-left:auto;}
   <div class="page" id="page-rounds">
     <div class="inner"><div class="col">
       <h2>Open rounds</h2>
-      <p class="lede">One round is one question about one scheduled release. Lock is normally release minus 48 hours. Agent questionnaires show the open rounds; Human Wisdom participants choose one board and answer only that board's frozen question set.</p>
+      <p class="lede">One round is one scheduled release. Open rounds share a weekly Monday 12:00Z participant deadline; the later release-minus-48h lock is the Arena's internal clock. Agent questionnaires show only rounds that can still be submitted.</p>
       <div id="rounds-list"></div>
       <div class="demo">
         <div class="dhead">RESOLVED ROUND REPLAY · DEMO DATA</div>
@@ -868,13 +868,13 @@ function renderBoard(mode){
 
 function roundsList(data){
   const el = document.getElementById('rounds-list');
-  const open = data.rounds.filter(r=>r.status==='open').sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
+  const open = data.rounds.filter(r=>r.status==='open'&&Date.parse(r.deadline||r.lock_at)>Date.now()).sort((a,b)=>(a.deadline||a.lock_at).localeCompare(b.deadline||b.lock_at));
   el.innerHTML = open.slice(0,6).map(r=>{
     const link = submissionLink('agent');
     return '<div class="vrow"><span class="live"></span><span class="id">'+esc(r.round_id)+'</span>'
       + '<span class="q">'+esc(r.question)
       + ' <span class="dim">· '+(r.n_forecasts||0)+' forecasts in</span></span>'
-      + '<span class="when">locks '+esc(fmtLocal(r.lock_at))+(r.release_estimated?' est.':'')+'</span>'
+      + '<span class="when">due '+esc(fmtLocal(r.deadline||r.lock_at))+'</span>'
       + '<a class="go" href="'+link+'" target="_blank" rel="noopener">Submit forecast</a></div>';
   }).join('') + '<div class="vrow"><span class="q" style="text-align:center;"><a href="leaderboard.html#rounds" style="color:var(--mut);text-decoration:none;">all '+data.rounds.length+' rounds →</a></span></div>';
   demoReplay();
@@ -976,10 +976,10 @@ function render(data){
   const lb = data.leaderboard || {};
 
   function meta(){
-    const openNow = data.rounds.filter(r=>r.status==='open' && new Date(r.lock_at) > Date.now()).sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
+    const openNow = data.rounds.filter(r=>r.status==='open'&&Date.parse(r.deadline||r.lock_at)>Date.now()).sort((a,b)=>(a.deadline||a.lock_at).localeCompare(b.deadline||b.lock_at));
     const nx = openNow[0];
     const parts = ['<b>season 0</b> starts Aug 11'];
-    if(nx) parts.push('next lock in <b>'+fmtCountdown(new Date(nx.lock_at)-Date.now())+'</b>');
+    if(nx) parts.push('next deadline in <b>'+fmtCountdown(new Date(nx.deadline||nx.lock_at)-Date.now())+'</b>');
     parts.push(openNow.length+' rounds open');
     parts.push((lb.resolved_rounds||0)+' resolved');
     document.getElementById('meta-line').innerHTML = parts.join(' &nbsp;·&nbsp; ');
@@ -991,7 +991,7 @@ function render(data){
   meta();
   clearInterval(window.__metaInt); window.__metaInt = setInterval(meta, 30000);
 
-  const openNow = data.rounds.filter(r=>r.status==='open').sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
+  const openNow = data.rounds.filter(r=>r.status==='open'&&Date.parse(r.deadline||r.lock_at)>Date.now()).sort((a,b)=>(a.deadline||a.lock_at).localeCompare(b.deadline||b.lock_at));
   const next = openNow[0];
   document.getElementById('btn-register-2').href = submissionLink('agent');
   if(next){

@@ -1,12 +1,12 @@
-"""A fixed news corpus, identical for every entrant, frozen at each lock.
+"""A fixed news corpus, identical for every entrant, frozen before each deadline.
 
 The third harness axis asks what *real-world information* is worth, separately
 from the series history. The obvious way to run it is to let each model search
 the web, and that is the wrong way: every model retrieves something different,
 nobody can audit afterwards what any of them read, and in a backtest the
 outcome has been published for months so search reads the answer. What the axis
-actually needs is one corpus, the same for everyone, provably fixed before the
-lock.
+actually needs is one corpus, the same for everyone, provably fixed when the
+common model-filing window opens before the participant deadline.
 
 **Why Wikipedia's Current Events Portal.** It is the only free source that
 satisfies all four requirements at once:
@@ -15,10 +15,11 @@ satisfies all four requirements at once:
   (`Portal:Current events/2026 August 10`), so "what was known by date D" is a
   page range rather than a query with a date filter to be trusted.
 - **Revision-addressable.** Every page carries full MediaWiki history, so the
-  digest is built from the revision that existed *at the lock*, not from the
-  page as it reads today. This is the same discipline as the lock snapshots in
-  `refresh`, and for the same reason: a page edited afterwards with hindsight
-  would leak the outcome backwards into a prompt that is supposed to predate it.
+  digest is built from the revision that existed when the filing window opened,
+  not from the page as it reads today. This is the same discipline as the lock
+  snapshots in `refresh`, and for the same reason: a page edited afterwards
+  with hindsight would leak the outcome backwards into a prompt that is
+  supposed to predate it.
 - **Curated and structured.** Human-edited, one line per event, grouped under
   stable headings ("Politics and elections", "Business and economy"), each with
   a source link. It is a news *summary*, not a scrape.
@@ -534,12 +535,12 @@ def day(d, asof, categories=CATEGORIES, use_archive=True):
     return body
 
 
-# One corpus per lock is read once per *entrant* in the live season and once
-# per (series, release, entrant) in the backtest -- tens of thousands of
-# rebuilds of the same fourteen files. The digest is a pure function of its
-# arguments, so remembering it inside a run costs a few tens of MB and turns
-# `model_backtest.plan` from minutes of file reads into seconds. Bounded, since
-# a long run touches hundreds of distinct locks.
+# One corpus per information boundary is read once per *entrant* in the live
+# season and once per (series, release, entrant) in the backtest -- tens of
+# thousands of rebuilds of the same fourteen files. The digest is a pure
+# function of its arguments, so remembering it inside a run costs a few tens of
+# MB and turns `model_backtest.plan` from minutes of file reads into seconds.
+# Bounded, since a long run touches hundreds of distinct boundaries.
 DIGEST_MEMO_MAX = 1024
 _digest_memo = {}
 _digest_lock = threading.Lock()
@@ -549,10 +550,11 @@ def digest(asof, days=DEFAULT_WINDOW_DAYS, max_items=DEFAULT_MAX_ITEMS,
            categories=CATEGORIES, use_archive=True):
     """The corpus every entrant sees for a round, as plain text.
 
-    `asof` is the round's lock time (ISO Z). Days run up to, and not including,
-    the lock day: a page for the lock day itself would be mid-write and would
-    differ between an entrant filed at 09:00 and one filed at 13:00, which
-    would make the condition unfair in a way nobody could see afterwards.
+    `asof` is the opening of the round's fixed pre-deadline filing window (ISO
+    Z). Days run up to, and not including, that boundary's day: a page for the
+    day itself would be mid-write and would differ between an entrant filed at
+    09:00 and one filed at 13:00, which would make the condition unfair in a way
+    nobody could see afterwards.
     """
     key = (asof, days, max_items, tuple(categories), use_archive)
     with _digest_lock:
@@ -601,15 +603,15 @@ def for_round(round_id, asof, days=DEFAULT_WINDOW_DAYS, now=None, **kw):
     revision id behind each day, so a reader can reconstruct any prompt without
     trusting either Wikipedia's current state or ours.
 
-    **A digest is only archived once its window has closed.** The window is the
-    fourteen days before the lock, so before the lock most of it has not
-    happened: pre-fetching a round that locks in ten days produced six days of
-    news out of fourteen, and archiving that would have been worse than not
-    caching at all -- `for_round` serves the archive whenever the asof matches,
-    so the round would have used the truncated copy at lock time instead of the
-    corpus that actually existed by then. Partial digests are therefore
-    computed and returned but never written, and a stored record that is
-    somehow incomplete is ignored and refetched.
+    **A digest is only archived once its information boundary has passed.**
+    Before the filing window opens some of its news days have not happened;
+    pre-fetching a future batch produces a partial news window, and archiving
+    that would have been worse than not caching at all --
+    `for_round` serves the archive whenever the asof matches, so the round would
+    have used the truncated copy instead of the corpus that actually existed
+    when filing opened. Partial digests are therefore computed and returned but
+    never written, and a stored record that is somehow incomplete is ignored
+    and refetched.
     """
     os.makedirs(ROUNDS, exist_ok=True)
     path = os.path.join(ROUNDS, f"{round_id}.json")

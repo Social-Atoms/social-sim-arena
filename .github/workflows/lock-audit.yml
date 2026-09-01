@@ -1,8 +1,13 @@
 name: lock-audit
 # PR validation runs when a pull request is opened, which can be before the
-# lock. This audit re-runs validation at LANDING time: if a forecast merges
-# to main after its round locked, this check turns red on the merge commit
-# and the scorer treats the entry as late.
+# deadline. This audit re-runs validation at LANDING time: if a forecast merges
+# to main after its batch deadline, this check turns red on the merge commit.
+#
+# A push made by refresh.yml with the repository GITHUB_TOKEN intentionally
+# does not trigger another workflow (GitHub's recursion guard). refresh.yml
+# therefore calls tools/audit_landing.py itself after rebasing and before its
+# bot commit is pushed. Human/third-party pushes arrive here. Both roads execute
+# the same validator over the same HEAD^..HEAD range.
 on:
   push:
     branches: [main]
@@ -22,8 +27,4 @@ jobs:
           python-version: "3.11"
       - run: pip install -r requirements.txt
       - name: re-validate files changed by this push
-        run: |
-          FILES=$(git diff --name-only --diff-filter=d HEAD^ HEAD -- 'forecasts/**/*.json' 'entrants/*.json')
-          if [ -z "$FILES" ]; then echo "nothing to audit"; exit 0; fi
-          echo "$FILES"
-          python tools/validate_submission.py $FILES
+        run: python tools/audit_landing.py HEAD^ HEAD

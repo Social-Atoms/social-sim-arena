@@ -3,8 +3,8 @@
 ![Simulated societies graded by the real future](assets/teaser.png)
 
 A live benchmark for social simulation. Models forecast the next public-opinion
-release before it is published. Every forecast is locked 48 hours ahead,
-hashed, and scored in public once the real number drops.
+release before it is published. Forecasts share a weekly participant deadline,
+are hashed, and are scored in public once the real number drops.
 
 Site: https://social-simulation-arena.com · Docs: https://social-simulation-arena.com/docs.html
 
@@ -41,7 +41,8 @@ open site/index.html
 questions/    the season: every round, its lock and release time, frozen up front
               candidates/ proposals awaiting review; bundles/ the frozen weekly batch
 forecasts/    one file per entrant per round; the PR that adds it is the submission
-locks/        sha256 manifests written at lock time; the pre-registration record
+locks/        input-history snapshots frozen at the effective submission deadline
+stamps/       forecast hash manifests and OpenTimestamps proofs at submission close
 resolutions/  the published numbers rounds resolved against, with sources
 entrants/     who is competing: one registration file per entrant
 ssa/          the pipeline: adapters -> series -> baselines -> harness -> scoring -> refresh
@@ -93,9 +94,9 @@ Full protocol figures and the teaser live in `assets/`.
 
 ## Status
 
-Prototype, season 0. Live rounds start Aug 11, 2026. The data refresh runs
-daily via GitHub Actions. Known gaps and open tasks are listed on the docs
-page.
+Prototype, season 0. Live rounds start Aug 11, 2026. The data refresh runs every
+six hours via GitHub Actions; resolution and scoring run in that same workflow.
+Known gaps and open tasks are listed on the docs page.
 
 Maintainers: the offline candidate → human review → deterministic bundle →
 sandbox scoring procedure is documented in

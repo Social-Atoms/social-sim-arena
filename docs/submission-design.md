@@ -23,7 +23,7 @@ wording, and choose an answer control from `target_type`. After review, the
 arena either operates an accepted API agent or normalizes the agent
 questionnaire into the repository-native forecast workflow. Human Wisdom uses
 a separate point-answer contract and separate boards. Both tracks share only
-the public questions, server-authoritative locks, and eventual resolutions.
+the public questions, server-authoritative deadlines, and eventual resolutions.
 
 ## Your predictive agent
 
@@ -67,11 +67,11 @@ idempotent by entrant, round, and input hash.
 
 The complete request/response, authentication, timing, timeout, retry, trace,
 and crosstab contract is in [`docs/agent-api.md`](agent-api.md). It intentionally
-reuses the current runner: calls begin 72–48 hours before lock, use 15-second
-connect and 600-second read timeouts, and missing forecasts are retried by the
-scheduled refresh until the 30-minute lock margin. A valid in-window forecast
-is final. A dependency-free example server, sample request/response, and curl
-test live under `examples/agent-api/`.
+reuses the current runner: calls begin 72–48 hours before the effective
+participant deadline, use 15-second connect and 600-second read timeouts, and
+missing forecasts are retried by the six-hourly refresh until the 30-minute
+deadline margin. A valid in-window forecast is final. A dependency-free example
+server, sample request/response, and curl test live under `examples/agent-api/`.
 
 The optional `reasoning_trace` is archived privately even while unscored. The
 optional `crosstabs` object may contain only subgroup dimensions and cells
@@ -190,7 +190,7 @@ email magic link and private storage, not browser storage.
 | API reasoning trace | private artifact | hash/reference only by default |
 | human username | consent-controlled | username after acceptance |
 | human email | private | never |
-| human point answers | private before lock | Human Wisdom board after resolution |
+| human point answers | private until resolution | Human Wisdom board after resolution |
 | human commitment record | private | terms version or audit hash only |
 
 Private data is retained only for the documented review, active-season, and
@@ -200,7 +200,7 @@ deleted on revocation and rotated without exposing their values to operators.
 ## Intake service boundary
 
 The implemented minimum intake uses same-origin checks, strict schema and
-manifest validation, server-authoritative locks, a 512 KiB body limit,
+manifest validation, server-authoritative deadlines, a 512 KiB body limit,
 idempotency keys, redacted receipts, and Private Vercel Blob storage. It fails
 closed when private storage is absent. Rate limits, bot protection, a review
 console, approved privacy text, retention automation, and operator access

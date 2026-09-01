@@ -137,14 +137,14 @@ footer a{color:var(--ink2);}
 
 <section id="rounds">
   <h2>Rounds</h2>
-  <p class="lede">One round = one question about one scheduled release. Lock is release minus 48 hours. Submit while a round is open.</p>
+  <p class="lede">One round is one scheduled release. Submit before its weekly batch deadline; the later release-minus-48h lock is the Arena's internal clock.</p>
   <div class="card scroll">
     <table>
-      <thead><tr><th>Round</th><th>Status</th><th>Locks</th><th></th></tr></thead>
+      <thead><tr><th>Round</th><th>Status</th><th>Deadline / lock</th><th></th></tr></thead>
       <tbody id="rounds-body"><tr><td colspan="4" style="color:var(--mut);">loading…</td></tr></tbody>
     </table>
   </div>
-  <p class="note">The guided intake registers predictive agents or Human Wisdom contributors, then routes accepted participants into the existing forecast workflow. The server-side lock and canonical sha256 remain authoritative. Machine-readable rounds: <a href="https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/questions/season0.json">season0.json</a> · full protocol and agent loop: <a href="docs.html">docs</a>.</p>
+  <p class="note">The guided intake registers predictive agents or Human Wisdom contributors, then routes accepted participants into the existing forecast workflow. The server-side deadline check and canonical sha256 remain authoritative. Machine-readable rounds: <a href="https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/questions/season0.json">season0.json</a> · full protocol and agent loop: <a href="docs.html">docs</a>.</p>
 </section>
 
 <footer>
@@ -236,14 +236,17 @@ function targetCards(data){
 
 function render(data){
   window.__data = data;
-  const open = data.rounds.filter(r=>r.status==='open').sort((a,b)=>a.lock_at.localeCompare(b.lock_at));
+  const currentOpen = ()=>data.rounds.filter(r=>r.status==='open'&&Date.parse(r.deadline||r.lock_at)>Date.now()).sort((a,b)=>(a.deadline||a.lock_at).localeCompare(b.deadline||b.lock_at));
+  const open = currentOpen();
   const next = open[0];
   const t = data.trackers||{};
 
   function meta(){
+    const openNow = currentOpen();
+    const nextNow = openNow[0];
     const parts = ['<b>season 0</b> · live rounds from Aug 11'];
-    if(next) parts.push('next lock in <b>'+fmtCountdown(new Date(next.lock_at)-Date.now())+'</b>');
-    parts.push(open.length+' rounds open · '+(data.leaderboard.resolved_rounds||0)+' resolved');
+    if(nextNow) parts.push('next deadline in <b>'+fmtCountdown(new Date(nextNow.deadline||nextNow.lock_at)-Date.now())+'</b>');
+    parts.push(openNow.length+' rounds open · '+(data.leaderboard.resolved_rounds||0)+' resolved');
     parts.push('updated '+esc(new Date(data.generated_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})));
     document.getElementById('meta-line').innerHTML = parts.join(' &nbsp;·&nbsp; ');
   }
@@ -297,12 +300,13 @@ function render(data){
   const rb = document.getElementById('rounds-body');
   rb.innerHTML = '';
   for(const r of data.rounds){
-    const canSubmit = r.status === 'open';
+    const canSubmit = r.status === 'open'&&Date.parse(r.deadline||r.lock_at)>Date.now();
+    const displayStatus = r.status === 'open'&&!canSubmit ? 'locked' : r.status;
     const link = canSubmit ? submissionLink('agent') : null;
     const tr = document.createElement('tr');
     tr.innerHTML = '<td><b style="color:var(--ink);font-weight:600;">'+esc(r.round_id)+'</b><br><span style="font-size:12px;color:var(--mut);">'+esc(r.question)+'</span></td>'
-      + '<td><span class="status '+esc(r.status)+'"><span class="d"></span>'+esc(r.status.replace('_',' '))+'</span></td>'
-      + '<td style="white-space:nowrap;">'+esc(fmtLocal(r.lock_at))+(r.release_estimated?' <span style="color:var(--mut);font-size:11px;">est.</span>':'')+'</td>'
+      + '<td><span class="status '+esc(displayStatus)+'"><span class="d"></span>'+esc(displayStatus.replace('_',' '))+'</span></td>'
+      + '<td style="white-space:nowrap;">due '+esc(fmtLocal(r.deadline||r.lock_at))+'<br><span style="color:var(--mut);font-size:11px;">lock '+esc(fmtLocal(r.lock_at))+'</span></td>'
       + '<td>'+(link?'<a href="'+link+'" target="_blank" rel="noopener" style="font-weight:600;color:var(--ink);text-decoration:none;">submit →</a>':'')+'</td>';
     rb.appendChild(tr);
   }
