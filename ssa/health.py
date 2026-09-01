@@ -55,6 +55,7 @@ BUDGETS = {
     "aaii": (3, 12),
 }
 DEFAULT_BUDGET = (3, 30)
+CIVIQS_WEEKLY_CHANGE_BUDGET_DAYS = 10
 
 
 def _age_days(stamp, now):
@@ -98,7 +99,26 @@ def civiqs_rows(now=None, archive=None):
     return out
 
 
-def check(now=None, manifest=None, budgets=None):
+def _civiqs_registered_change_budgets(default_days):
+    """Archive key -> freshness budget for every registered Civiqs series."""
+    # Local imports avoid making the lightweight manifest health module part
+    # of the series/adapters import graph at module load time.
+    from . import series as series_registry
+    from .adapters import civiqs
+    out = {}
+    for spec in series_registry.SERIES.values():
+        if spec.get("source") != "civiqs":
+            continue
+        cfg = spec["civiqs"]
+        key = civiqs.archive_key(cfg["name"], cfg.get("filters"))
+        out[key] = (CIVIQS_WEEKLY_CHANGE_BUDGET_DAYS
+                    if cfg["name"] == "describe_feeling_us" else
+                    default_days)
+    return out
+
+
+def check(now=None, manifest=None, budgets=None, civiqs_archive=None,
+          civiqs_change_budgets=None):
     """One row per source: how old, against what budget, and the verdict.
 
     `state` is one of:
@@ -137,20 +157,79 @@ def check(now=None, manifest=None, budgets=None):
     # Civiqs keeps its own archive rather than a manifest row; fold it in so a
     # single table answers "is anything rotting".
     try:
-        cq = civiqs_rows(now)
+        cq = civiqs_rows(now, civiqs_archive)
     except Exception:                              # noqa: BLE001
         cq = []
     if cq:
-        newest = max(r["newest_snapshot"] for r in cq)
-        age = _age_days(newest + "T00:00:00Z", now)
         mf, mc = (budgets or BUDGETS).get("civiqs", DEFAULT_BUDGET)
+        key_budgets = (dict(civiqs_change_budgets)
+                       if civiqs_change_budgets is not None else
+                       _civiqs_registered_change_budgets(mc))
+        by_key = {r["key"]: r for r in cq if r["key"] in key_budgets}
+        missing_keys = sorted(set(key_budgets) - set(by_key))
+        tracker_health = []
+        for key in sorted(by_key):
+            item = by_key[key]
+            fetch_age = _age_days(
+                item["newest_snapshot"] + "T00:00:00Z", now)
+            reading = item.get("newest_reading")
+            change_age = (_age_days(reading + "T00:00:00Z", now)
+                          if reading else None)
+            tracker_health.append({
+                "key": key,
+                "fetched_days": round(fetch_age, 1),
+                "changed_days": (None if change_age is None else
+                                 round(change_age, 1)),
+                "change_budget_days": key_budgets[key],
+                "newest_snapshot": item["newest_snapshot"],
+                "newest_reading": reading,
+            })
+        failing_keys = sorted(
+            item["key"] for item in tracker_health
+            if item["fetched_days"] > mf)
+        stale_keys = sorted(
+            item["key"] for item in tracker_health
+            if item["changed_days"] is None or
+            item["changed_days"] > item["change_budget_days"])
+        worst_fetch = max(
+            tracker_health, key=lambda item: item["fetched_days"],
+            default=None)
+        # Report the actual age/budget pair closest to (or furthest over) its
+        # limit.  Showing a weekly 7-day age against the daily 4-day budget
+        # would contradict the source state even when both are correct.
+        worst_change = max(
+            (item for item in tracker_health
+             if item["changed_days"] is not None),
+            key=lambda item: (item["changed_days"] /
+                              item["change_budget_days"]),
+            default=None)
         for r in rows:
             if r["source"] == "civiqs":
-                r.update({"fetched_days": round(age, 1),
-                          "changed_days": round(age, 1),
-                          "trackers": len(cq),
-                          "newest_snapshot": newest,
-                          "state": "failing" if age > mf else "ok"})
+                state = ("failing" if missing_keys or failing_keys else
+                         "stale" if stale_keys else "unknown"
+                         if not tracker_health else "ok")
+                r.update({"fetched_days": (
+                              worst_fetch["fetched_days"]
+                              if worst_fetch else None),
+                          "changed_days": (
+                              worst_change["changed_days"]
+                              if worst_change else None),
+                          "budget_change_days": (
+                              worst_change["change_budget_days"]
+                              if worst_change else mc),
+                          "trackers": len(key_budgets),
+                          "tracker_health": tracker_health,
+                          "newest_snapshot": max(
+                              (item["newest_snapshot"]
+                               for item in tracker_health), default=None),
+                          "newest_reading": max(
+                              (item["newest_reading"]
+                               for item in tracker_health
+                               if item["newest_reading"]), default=None),
+                          "stale_keys": stale_keys,
+                          "failing_keys": failing_keys,
+                          "missing_keys": missing_keys,
+                          "state": state})
     return rows
 
 

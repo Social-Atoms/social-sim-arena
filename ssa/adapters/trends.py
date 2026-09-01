@@ -131,6 +131,18 @@ _last_call = [0.0]
 _call_lock = threading.Lock()
 
 
+def _is_live_failure(exc):
+    """Recognize failures eligible for same-source archive degradation."""
+    if isinstance(exc, (TimeoutError, ConnectionError,
+                        requests.RequestException)):
+        return True
+    msg = str(exc).lower()
+    return any(mark in msg for mark in (
+        "http 403", "403 forbidden", "http 429", "429 too many",
+        "rate-limit", "rate limit", "timeout", "timed out", "unreachable",
+        "connection", "simulated outage", "sslerror", "sslzeroreturn"))
+
+
 # --- fetching ----------------------------------------------------------------
 
 def _get(session, url, params=None):
@@ -265,7 +277,27 @@ def parse_timeline(text):
     return out
 
 
-def fetch_timeline(query, geo=GEO):
+class _FetchAborted(Exception):
+    """Internal control flow after a diagnosed transport failure."""
+
+
+def _cycle_get(fetch_errors, *args, **kwargs):
+    """Call `_get`, distinguishing transport from response parsing.
+
+    The public fetchers still raise the original exception by default. The
+    archive-facing path supplies a list, in which case the same exception is
+    recorded and this private sentinel stops the rest of the request cycle.
+    """
+    try:
+        return _get(*args, **kwargs)
+    except Exception as e:                                      # noqa: BLE001
+        if fetch_errors is None:
+            raise
+        fetch_errors.append(e)
+        raise _FetchAborted from e
+
+
+def fetch_timeline(query, geo=GEO, _fetch_errors=None):
     """One full request cycle for one query, on a fresh session.
 
     Fresh because the NID cookie and the widget token are the unit the
@@ -275,16 +307,21 @@ def fetch_timeline(query, geo=GEO):
     session = requests.Session()
     session.headers.update({"User-Agent": UA,
                             "Accept-Language": "en-US,en;q=0.9"})
-    _get(session, HOME)                       # sets the NID cookie
-    req = {"comparisonItem": [{"keyword": query, "geo": geo, "time": WINDOW}],
-           "category": 0, "property": ""}
-    widgets = parse_widgets(_get(
-        session, EXPLORE,
-        {"hl": "en-US", "tz": "0", "req": json.dumps(req)}))
-    ts = timeseries_widget(widgets)
-    body = _get(session, MULTILINE,
-                {"hl": "en-US", "tz": "0",
-                 "req": json.dumps(ts["request"]), "token": ts["token"]})
+    try:
+        _cycle_get(_fetch_errors, session, HOME)        # sets the NID cookie
+        req = {"comparisonItem": [
+            {"keyword": query, "geo": geo, "time": WINDOW}],
+               "category": 0, "property": ""}
+        widgets = parse_widgets(_cycle_get(
+            _fetch_errors, session, EXPLORE,
+            {"hl": "en-US", "tz": "0", "req": json.dumps(req)}))
+        ts = timeseries_widget(widgets)
+        body = _cycle_get(
+            _fetch_errors, session, MULTILINE,
+            {"hl": "en-US", "tz": "0",
+             "req": json.dumps(ts["request"]), "token": ts["token"]})
+    except _FetchAborted:
+        return None
     return parse_timeline(body)
 
 
@@ -382,7 +419,7 @@ def write_snapshot(key, snap, day):
     return path
 
 
-def snapshot(query, geo=GEO, now=None, use_archive=True):
+def snapshot(query, geo=GEO, now=None, use_archive=True, _fetch_errors=None):
     """Today's snapshot for a key: read it, or fetch it and write it.
 
     Once a day's file exists the day is closed -- no vintage re-check, unlike
@@ -401,7 +438,10 @@ def snapshot(query, geo=GEO, now=None, use_archive=True):
         have = read_archive(key, today)
         if have:
             return have
-    snap = build_snapshot(fetch_timeline(query, geo), query, geo, fetched_at=now)
+    rows = fetch_timeline(query, geo, _fetch_errors=_fetch_errors)
+    if rows is None:
+        return None
+    snap = build_snapshot(rows, query, geo, fetched_at=now)
     if use_archive:
         write_snapshot(key, snap, today)
     return snap
@@ -409,7 +449,8 @@ def snapshot(query, geo=GEO, now=None, use_archive=True):
 
 # --- what a registered series reads ------------------------------------------
 
-def as_archived(query, geo=GEO, now=None, fetch=True, use_archive=True):
+def as_archived(query, geo=GEO, now=None, fetch=True, use_archive=True,
+                diagnostics=None):
     """The archive's own series: [{date, value}] oldest first.
 
     One point per *completed* week, dated by the week's last day (the
@@ -440,16 +481,25 @@ def as_archived(query, geo=GEO, now=None, fetch=True, use_archive=True):
     """
     now = now or datetime.now(timezone.utc)
     key = archive_key(query, geo)
+    live_errors = []
     if fetch:
         try:
-            snapshot(query, geo, now=now, use_archive=use_archive)
-        except Exception as e:                    # noqa: BLE001 - reported
+            snapshot(query, geo, now=now, use_archive=use_archive,
+                     _fetch_errors=live_errors)
+        except Exception as e:                                  # noqa: BLE001
+            # Compatibility for callers/tests replacing the public snapshot
+            # seam. Response/parser contract failures stay loud.
+            if not _is_live_failure(e):
+                raise
+            live_errors.append(e)
+        if live_errors:
+            e = live_errors[0]
             # The civiqs trade, for the same reason: a refresh that dies here
             # files nothing for any tracker, and rounds lock on a hard
             # deadline. Stale beats dark -- but only when there is an archive
             # to be stale from.
             if not archive_days(key):
-                raise
+                raise e
             print(f"  trends {key}: fetch failed ({type(e).__name__}: {e}); "
                   "serving the archive, which may be a day behind")
 
@@ -472,7 +522,19 @@ def as_archived(query, geo=GEO, now=None, fetch=True, use_archive=True):
         raise RuntimeError(
             f"Trends archive for {key} holds no completed weeks; refusing to "
             "publish an empty series")
-    return [{"date": d, "value": by_week[d]} for d in sorted(by_week)]
+    out = [{"date": d, "value": by_week[d]} for d in sorted(by_week)]
+    if live_errors and diagnostics is not None:
+        days = archive_days(key)
+        e = live_errors[0]
+        diagnostics.append({
+            "source": "trends",
+            "scope": key,
+            "error": e,
+            "archive_evidence": (
+                f"{os.path.relpath(archive_dir(key), ROOT)} ({len(days)} "
+                f"snapshots; newest {days[-1].isoformat()})"),
+        })
+    return out
 
 
 # --- the five-query comparison basket ----------------------------------------
@@ -592,7 +654,7 @@ def parse_basket_timeline(text, queries):
     return out
 
 
-def fetch_basket(queries, geo=GEO):
+def fetch_basket(queries, geo=GEO, _fetch_errors=None):
     """One full request cycle for one basket, on a fresh session.
 
     Three requests total for all five queries, against fifteen for five
@@ -603,17 +665,21 @@ def fetch_basket(queries, geo=GEO):
     session = requests.Session()
     session.headers.update({"User-Agent": UA,
                             "Accept-Language": "en-US,en;q=0.9"})
-    _get(session, HOME)                       # sets the NID cookie
-    req = {"comparisonItem": [{"keyword": q, "geo": geo, "time": WINDOW}
-                              for q in qs],
-           "category": 0, "property": ""}
-    widgets = parse_widgets(_get(
-        session, EXPLORE,
-        {"hl": "en-US", "tz": "0", "req": json.dumps(req)}))
-    ts = timeseries_widget(widgets)
-    body = _get(session, MULTILINE,
-                {"hl": "en-US", "tz": "0",
-                 "req": json.dumps(ts["request"]), "token": ts["token"]})
+    try:
+        _cycle_get(_fetch_errors, session, HOME)        # sets the NID cookie
+        req = {"comparisonItem": [
+            {"keyword": q, "geo": geo, "time": WINDOW} for q in qs],
+               "category": 0, "property": ""}
+        widgets = parse_widgets(_cycle_get(
+            _fetch_errors, session, EXPLORE,
+            {"hl": "en-US", "tz": "0", "req": json.dumps(req)}))
+        ts = timeseries_widget(widgets)
+        body = _cycle_get(
+            _fetch_errors, session, MULTILINE,
+            {"hl": "en-US", "tz": "0",
+             "req": json.dumps(ts["request"]), "token": ts["token"]})
+    except _FetchAborted:
+        return None
     return parse_basket_timeline(body, qs)
 
 
@@ -649,7 +715,8 @@ def build_basket_snapshot(rows, queries, geo, fetched_at):
     }
 
 
-def basket_snapshot(queries, geo=GEO, now=None, use_archive=True, fetch=True):
+def basket_snapshot(queries, geo=GEO, now=None, use_archive=True, fetch=True,
+                    _fetch_errors=None):
     """Today's basket snapshot: read it, or fetch it and write it.
 
     `snapshot`'s rule verbatim -- once today's file exists the day is closed --
@@ -665,14 +732,17 @@ def basket_snapshot(queries, geo=GEO, now=None, use_archive=True, fetch=True):
             return have
     if not fetch:
         return None
-    snap = build_basket_snapshot(fetch_basket(queries, geo), queries, geo,
-                                 fetched_at=now)
+    rows = fetch_basket(queries, geo, _fetch_errors=_fetch_errors)
+    if rows is None:
+        return None
+    snap = build_basket_snapshot(rows, queries, geo, fetched_at=now)
     if use_archive:
         write_snapshot(key, snap, today)
     return snap
 
 
-def basket_weeks(queries, geo=GEO, now=None, fetch=False, use_archive=True):
+def basket_weeks(queries, geo=GEO, now=None, fetch=False, use_archive=True,
+                 diagnostics=None):
     """The basket archive's own history: [{date, values}] oldest first.
 
     One entry per *completed* week, dated by the week's last day (the
@@ -689,16 +759,23 @@ def basket_weeks(queries, geo=GEO, now=None, fetch=False, use_archive=True):
     """
     qs = check_basket(queries)
     key = basket_key(qs, geo)
+    live_errors = []
     if fetch:
         try:
-            basket_snapshot(qs, geo, now=now, use_archive=use_archive)
-        except Exception as e:                    # noqa: BLE001 - reported
+            basket_snapshot(qs, geo, now=now, use_archive=use_archive,
+                            _fetch_errors=live_errors)
+        except Exception as e:                                  # noqa: BLE001
+            if not _is_live_failure(e):
+                raise
+            live_errors.append(e)
+        if live_errors:
+            e = live_errors[0]
             # The `as_archived` trade, for the same reason: a refresh that dies
             # here files nothing for any tracker, and rounds lock on a hard
             # deadline. Stale beats dark -- but only when there is an archive to
             # be stale from.
             if not archive_days(key):
-                raise
+                raise e
             print(f"  trends {key}: fetch failed ({type(e).__name__}: {e}); "
                   "serving the archive, which may be a day behind")
 
@@ -734,7 +811,19 @@ def basket_weeks(queries, geo=GEO, now=None, fetch=False, use_archive=True):
         raise RuntimeError(
             f"Trends basket archive for {key} holds no completed weeks; "
             "refusing to publish an empty history")
-    return [{"date": d, "values": by_week[d]} for d in sorted(by_week)]
+    out = [{"date": d, "values": by_week[d]} for d in sorted(by_week)]
+    if live_errors and diagnostics is not None:
+        days = archive_days(key)
+        e = live_errors[0]
+        diagnostics.append({
+            "source": "trends_basket",
+            "scope": key,
+            "error": e,
+            "archive_evidence": (
+                f"{os.path.relpath(archive_dir(key), ROOT)} ({len(days)} "
+                f"basket snapshots; newest {days[-1].isoformat()})"),
+        })
+    return out
 
 
 def share_series(weeks, query, places=2):

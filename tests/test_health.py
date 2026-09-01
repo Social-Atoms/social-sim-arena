@@ -2,8 +2,10 @@
 
 Run: python tests/test_health.py
 """
+import json
 import os
 import sys
+import tempfile
 from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -39,6 +41,69 @@ def test_a_source_that_answers_with_the_same_body_forever_is_stale():
     the numbers have not moved in a fortnight."""
     m = {"sb_approval": {"fetched_at": stamp(0.1), "changed_at": stamp(14)}}
     assert row(health.check(NOW, m), "sb_approval")["state"] == "stale"
+
+
+def test_civiqs_uses_the_upstream_reading_clock_not_the_snapshot_filename():
+    """A fresh HTTP-200 snapshot cannot wash a frozen model output green."""
+    now = datetime(2026, 9, 12, 12, tzinfo=timezone.utc)
+    with tempfile.TemporaryDirectory(prefix="ssa-civiqs-health-") as archive:
+        key = os.path.join(archive, "approve_president_trump_2025")
+        os.makedirs(key)
+        with open(os.path.join(key, "2026-09-12.json"), "w") as handle:
+            json.dump({"end_date": "2026-08-01"}, handle)
+        got = row(health.check(
+            now, manifest={}, budgets={"civiqs": (2, 4)},
+            civiqs_archive=archive,
+            civiqs_change_budgets={
+                "approve_president_trump_2025": 4,
+            }), "civiqs")
+    assert got["fetched_days"] == 0.5
+    assert got["changed_days"] == 42.5
+    assert got["newest_snapshot"] == "2026-09-12"
+    assert got["newest_reading"] == "2026-08-01"
+    assert got["state"] == "stale"
+
+
+def test_civiqs_fresh_weekly_key_cannot_hide_a_stale_daily_key():
+    now = datetime(2026, 9, 12, 12, tzinfo=timezone.utc)
+    key_budgets = {
+        "approve_president_trump_2025": 4,
+        "describe_feeling_us": 10,
+    }
+    with tempfile.TemporaryDirectory(prefix="ssa-civiqs-scoped-") as archive:
+        for key, reading in (
+                ("approve_president_trump_2025", "2026-08-01"),
+                ("describe_feeling_us", "2026-09-05")):
+            directory = os.path.join(archive, key)
+            os.makedirs(directory)
+            with open(os.path.join(directory, "2026-09-12.json"), "w") as handle:
+                json.dump({"end_date": reading}, handle)
+        got = row(health.check(
+            now, manifest={}, budgets={"civiqs": (2, 4)},
+            civiqs_archive=archive,
+            civiqs_change_budgets=key_budgets), "civiqs")
+    assert got["state"] == "stale"
+    assert got["stale_keys"] == ["approve_president_trump_2025"]
+    assert got["failing_keys"] == [] and got["missing_keys"] == []
+    assert got["changed_days"] == 42.5
+    assert got["budget_change_days"] == 4
+
+
+def test_civiqs_weekly_emotion_at_seven_days_is_not_stale():
+    now = datetime(2026, 9, 12, 12, tzinfo=timezone.utc)
+    with tempfile.TemporaryDirectory(prefix="ssa-civiqs-weekly-") as archive:
+        key = os.path.join(archive, "describe_feeling_us")
+        os.makedirs(key)
+        with open(os.path.join(key, "2026-09-12.json"), "w") as handle:
+            json.dump({"end_date": "2026-09-05"}, handle)
+        got = row(health.check(
+            now, manifest={}, budgets={"civiqs": (2, 4)},
+            civiqs_archive=archive,
+            civiqs_change_budgets={"describe_feeling_us": 10}), "civiqs")
+    assert got["state"] == "ok"
+    assert got["changed_days"] == 7.5
+    assert got["budget_change_days"] == 10
+    assert got["stale_keys"] == []
 
 
 def test_the_budget_is_per_source_because_staleness_means_different_things():

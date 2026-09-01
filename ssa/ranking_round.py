@@ -242,7 +242,7 @@ def question_universe(spec):
 
 # --- observations: the source's own history of lists -------------------------
 
-def observations(r, fetch=False, now=None, spec=None):
+def observations(r, fetch=False, now=None, spec=None, diagnostics=None):
     """[{date, items, ...}] oldest first: one completed week per entry.
 
     `date` is the week's last day, which is what makes the freeze below a plain
@@ -252,8 +252,10 @@ def observations(r, fetch=False, now=None, spec=None):
     """
     spec = spec or spec_for(r)
     if spec["kind"] == "wiki_top10":
-        return _wiki_observations(spec, fetch=fetch, now=now)
-    return _basket_observations(spec, fetch=fetch, now=now)
+        return _wiki_observations(
+            spec, fetch=fetch, now=now, diagnostics=diagnostics)
+    return _basket_observations(
+        spec, fetch=fetch, now=now, diagnostics=diagnostics)
 
 
 def _week_ends(spec, count=HISTORY_WEEKS):
@@ -262,29 +264,45 @@ def _week_ends(spec, count=HISTORY_WEEKS):
     return [end - timedelta(days=7 * i) for i in range(count, -1, -1)]
 
 
-def _wiki_observations(spec, fetch=False, now=None):
+def _wiki_observations(spec, fetch=False, now=None, diagnostics=None):
     out = []
     for end in _week_ends(spec):
         try:
             items, totals = wikipedia_adapter.weekly_top(
                 end, spec["length"], spec["exclusions"], spec["project"],
                 spec["access"], fetch=fetch, now=now)
-        except Exception:                     # noqa: BLE001 - see below
+        except Exception as error:            # noqa: BLE001 - see below
             # A week the archive does not hold all seven days of is simply not
             # history yet: before the round's own week it has not happened, and
             # before the archive began it never will. Skipped rather than
             # raised, because history is allowed to be short -- while
             # `resolution` below raises loudly for the one week that must be
             # there, with the adapter's own message naming the missing days.
+            # A not-yet-final target week normally reports only that archive
+            # days are missing; that is expected, not an outage.  Any other
+            # exception while fetch=True is a failed live attempt (HTTP,
+            # transport, or parser) and must survive even when six older
+            # archived weeks still make a useful history available.
+            expected_incomplete = str(error).startswith("week ending ") and \
+                " from the " in str(error) and " archive " in str(error)
+            if fetch and not expected_incomplete and diagnostics is not None:
+                diagnostics.append({
+                    "source": "ranking_wikitop",
+                    "scope": end.isoformat(),
+                    "error": error,
+                    "archive_evidence": (
+                        "same-source Wikimedia daily-top archive retained "
+                        "other complete weeks"),
+                })
             continue
         out.append({"date": end.isoformat(), "items": items,
                     "views": {t: totals[t] for t in items}})
     return out
 
 
-def _basket_observations(spec, fetch=False, now=None):
+def _basket_observations(spec, fetch=False, now=None, diagnostics=None):
     weeks = trends_adapter.basket_weeks(spec["items"], spec["geo"], now=now,
-                                        fetch=fetch)
+                                        fetch=fetch, diagnostics=diagnostics)
     keep = {d.isoformat() for d in _week_ends(spec)}
     return [{"date": w["date"],
              "items": trends_adapter.basket_order(w["values"], spec["items"]),

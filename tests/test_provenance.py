@@ -104,6 +104,28 @@ def test_unknown_source_has_no_staleness_rather_than_a_wrong_one():
         assert provenance.unchanged_since("never-fetched") is None
 
 
+def test_current_returns_only_the_manifest_body_and_rejects_tampering():
+    with Scratch():
+        body = b"a,b\n1,2\n"
+        provenance.record("x", "u", body,
+                          fetched_at="2026-08-15T02:00:00Z")
+        raw, row = provenance.current("x")
+        assert raw == body and row["source"] == "x"
+        try:
+            provenance.current("x", expected_url="different")
+            assert False, "a different upstream URL became a same-source archive"
+        except RuntimeError as error:
+            assert "does not match" in str(error), error
+        path = os.path.join(provenance.ROOT, row["file"])
+        with open(path, "ab") as handle:
+            handle.write(b"tampered")
+        try:
+            provenance.current("x")
+            assert False, "a non-manifest body became the source fallback"
+        except RuntimeError as error:
+            assert "hash mismatch" in str(error), error
+
+
 def test_the_adapters_can_fetch_and_parse_separately():
     """A vintage rebuilt from parsed rows is our reading of the file, not the
     file. Every upstream adapter has to expose the raw body for that reason."""

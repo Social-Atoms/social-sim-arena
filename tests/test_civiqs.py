@@ -454,20 +454,41 @@ def test_a_weekday_with_no_observations_raises_rather_than_returning_empty(a):
 @with_archive
 def test_a_failed_fetch_serves_the_archive_but_an_empty_archive_raises(a):
     def boom(url):
-        raise RuntimeError("SSLZeroReturnError")
+        raise TimeoutError()
     civiqs._get = boom
     try:
         civiqs.as_displayed(TRACKER, choice="Approve")
         assert False, "no archive and no network must raise"
-    except RuntimeError:
+    except TimeoutError:
         pass
     a.serve(page())
     civiqs.snapshot(TRACKER, now=at("2026-08-12"))
     civiqs._get = boom
     # A refresh that dies here files no forecasts for any tracker, and rounds
     # lock on a hard deadline -- so a dead source degrades to a stale series.
+    diagnostics = []
     assert len(civiqs.as_displayed(TRACKER, choice="Approve",
-                                   now=at("2026-08-13"))) > 0
+                                   now=at("2026-08-13"),
+                                   diagnostics=diagnostics)) > 0
+    assert diagnostics[0]["source"] == "civiqs"
+    assert diagnostics[0]["scope"] == civiqs.archive_key(TRACKER)
+    assert isinstance(diagnostics[0]["error"], TimeoutError)
+    assert str(diagnostics[0]["error"]) == ""
+    assert "1 snapshots" in diagnostics[0]["archive_evidence"]
+
+
+@with_archive
+def test_a_malformed_live_civiqs_page_does_not_use_the_archive(a):
+    a.serve(page())
+    civiqs.snapshot(TRACKER, now=at("2026-08-12"))
+    a.serve("<html><body>not a loader payload</body></html>")
+    try:
+        civiqs.as_displayed(TRACKER, choice="Approve",
+                            now=at("2026-08-13"), diagnostics=[])
+    except RuntimeError as e:
+        assert "no Civiqs tracker payload" in str(e), e
+    else:
+        raise AssertionError("a malformed live page used the archive")
 
 
 # --- the registry and the rounds that depend on it --------------------------

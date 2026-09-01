@@ -28,6 +28,10 @@ python -m ssa.refresh            # fetch live data, build site/data.json
 open site/index.html
 ```
 
+Each refresh also writes `site/operator.json`: finite source and
+entrant-round states, evidence, retry/deadline information, spend, and the
+required operator action. See [`docs/operator-status.md`](docs/operator-status.md).
+
 `ssa.refresh` hits real, keyless endpoints, all same-day or first-party:
 
 - Silver Bulletin poll CSVs (approval + generic ballot, updated same day)
