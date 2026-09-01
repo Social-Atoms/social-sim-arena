@@ -2,6 +2,7 @@
 import importlib.util
 import json
 import os
+from unittest import mock
 from datetime import datetime, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -34,6 +35,11 @@ def weekly(n, start="2026-01-07", step=7, base=40.0, wobble=1.0):
             for i in range(n)]
 
 
+def civiqs_meta(weekday=2):
+    return {"source": "civiqs", "question": "Q", "unit": "u",
+            "civiqs": {"weekday": weekday}}
+
+
 def test_ids_keep_the_pollster_apart():
     """Three houses asking the same question must not share one round id."""
     rel = datetime(2026, 9, 17, 14, tzinfo=timezone.utc)
@@ -56,7 +62,7 @@ def test_rights_gate_refuses_anything_not_explicitly_approved():
 
 
 def test_history_gate_refuses_a_series_too_short_to_baseline():
-    ok, why = gen.gate("x", {"source": "civiqs"}, weekly(5))
+    ok, why = gen.gate("x", civiqs_meta(), weekly(5))
     assert not ok and why["gate"] == "history"
     assert why["observations"] == 5 and why["required"] == gen.MIN_HISTORY
     print("ok test_history_gate_refuses_a_series_too_short_to_baseline")
@@ -70,29 +76,78 @@ def test_volatility_gate_refuses_only_pure_noise():
     which is the failure this test exists to prevent from creeping back.
     """
     flat = [{"date": d["date"], "value": 40.0} for d in weekly(40)]
-    ok, why = gen.gate("x", {"source": "civiqs"}, flat)
+    ok, why = gen.gate("x", civiqs_meta(), flat)
     assert not ok and why["gate"] == "volatility"
     assert why["real_movement"] == 0.0
-    ok, _ = gen.gate("x", {"source": "civiqs"}, weekly(40))
+    ok, _ = gen.gate("x", civiqs_meta(), weekly(40))
     assert ok
     print("ok test_volatility_gate_refuses_only_pure_noise")
 
 
-def test_schedule_is_inferred_from_history_not_declared():
-    """A tracker that moves its publication day is followed, not mis-scheduled."""
-    h = weekly(30, start="2026-01-07")            # Wednesdays
-    assert gen.modal_weekday(h) == 2
-    from datetime import date, timedelta
-    d0 = date.fromisoformat("2026-01-05")         # Mondays
-    h2 = [{"date": (d0 + timedelta(days=7 * i)).isoformat(), "value": 40.0 + i}
-          for i in range(30)]
-    assert gen.modal_weekday(h2) == 0
-    print("ok test_schedule_is_inferred_from_history_not_declared")
+def test_schedule_comes_from_source_semantics_not_a_modal_weekday():
+    """Regular target labels are not automatically publication dates."""
+    calendar, why = gen.schedule_contract("x", civiqs_meta(), weekly(30))
+    assert why is None and calendar == {"weekday": 2, "hour": 14}
+
+    # The registry says Wednesday, so a Monday-labelled archive is a contract
+    # violation, not evidence that publication moved to Monday.
+    monday_history = weekly(30, start="2026-01-05")
+    calendar, why = gen.schedule_contract("x", civiqs_meta(), monday_history)
+    assert calendar is None and "violates its registry weekday" in why
+    print("ok test_schedule_comes_from_source_semantics_not_a_modal_weekday")
+
+
+def test_silver_bulletin_field_midpoints_cannot_become_release_dates():
+    """Regression for the invented Saturday Morning Consult candidates."""
+    from ssa.adapters import silverbulletin as sb
+    from ssa.series import SERIES
+
+    directory = os.path.join(ROOT, "sources", "sb_approval")
+    latest = sorted(name for name in os.listdir(directory)
+                    if name.endswith(".csv"))[-1]
+    with open(os.path.join(directory, latest)) as fh:
+        rows = sb.parse(fh.read())
+    meta = SERIES["mc_approval"]
+    polls = sb.approval_polls(rows=rows, **meta["filters"])
+    history = sb.to_series(polls, meta["value"])
+    assert history[-1]["date"] == "2026-08-15"  # field midpoint, Saturday
+
+    ok, why = gen.gate("mc_approval", meta, history)
+    assert not ok and why["gate"] == "schedule", why
+    assert "field midpoints" in why["detail"]
+    try:
+        gen.candidates("mc_approval", meta, history, 1,
+                       datetime(2026, 9, 1, tzinfo=timezone.utc))
+    except ValueError as err:
+        assert "no safe release schedule" in str(err)
+    else:
+        raise AssertionError("a poll field midpoint became a release calendar")
+    print("ok test_silver_bulletin_field_midpoints_cannot_become_release_dates")
+
+
+def test_civiqs_candidate_matches_the_reviewed_family_calendar():
+    from ssa.series import SERIES
+    with open(os.path.join(ROOT, "questions", "season0.json")) as fh:
+        rounds = json.load(fh)["rounds"]
+    reviewed = [r for r in rounds if r["tracker"] == "civiqs"
+                and r["target_type"] == "continuous_normal"]
+    newest = max(reviewed, key=lambda r: r["release_at"])
+    expected = datetime.fromisoformat(newest["release_at"].replace("Z", "+00:00"))
+
+    meta = SERIES["civiqs_net_approval"]
+    history = gen.load_history()["civiqs_net_approval"]
+    out = gen.candidates("civiqs_net_approval", meta, history, 1,
+                         datetime(2026, 9, 1, tzinfo=timezone.utc))
+    release = datetime.fromisoformat(out[0]["release_at"].replace("Z", "+00:00"))
+    assert (release.weekday(), release.hour) == (expected.weekday(), expected.hour)
+    assert (release.weekday(), release.hour) == (4, 14)
+    print("ok test_civiqs_candidate_matches_the_reviewed_family_calendar")
 
 
 def test_generated_rounds_are_shaped_like_the_hand_written_ones():
     now = datetime(2026, 9, 14, 13, tzinfo=timezone.utc)
-    meta = {"source": "civiqs", "question": "Q", "unit": "net points"}
+    meta = civiqs_meta()
+    meta["unit"] = "net points"
     out = gen.candidates("civiqs_net_approval_ind", meta, weekly(40), 2, now)
     assert out, "generated nothing"
     with open(os.path.join(ROOT, "questions", "season0.json")) as fh:
@@ -112,11 +167,41 @@ def test_generated_rounds_are_shaped_like_the_hand_written_ones():
 
 def test_generation_is_deterministic():
     now = datetime(2026, 9, 14, 13, tzinfo=timezone.utc)
-    meta = {"source": "civiqs", "question": "Q", "unit": "u"}
+    meta = civiqs_meta()
     a = gen.candidates("civiqs_net_approval_ind", meta, weekly(40), 3, now)
     b = gen.candidates("civiqs_net_approval_ind", meta, weekly(40), 3, now)
     assert json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
     print("ok test_generation_is_deterministic")
+
+
+def test_real_archive_generation_is_offline_and_deterministic():
+    """The old implementation called build_all over unsupported families.
+
+    That reached Conference Board and Civiqs, hung on network timeouts, and
+    wrote today's source vintages during a command advertised as offline.
+    Make every requests call fatal and rebuild twice from the committed files.
+    """
+    with mock.patch("requests.get", side_effect=AssertionError("network call")):
+        first = gen.load_history()
+        second = gen.load_history()
+    assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
+    assert first and "civiqs_net_approval" in first
+    print("ok test_real_archive_generation_is_offline_and_deterministic")
+
+
+def test_an_explicit_date_covers_the_season_beyond_the_preview_cap():
+    from datetime import date
+    now = datetime(2026, 9, 14, 13, tzinfo=timezone.utc)
+    meta = civiqs_meta()
+    out = gen.candidates("civiqs_net_approval_ind", meta, weekly(30), 1, now,
+                         through=date(2026, 12, 1))
+    assert out, "the explicit season horizon produced nothing"
+    last = datetime.fromisoformat(out[-1]["release_at"].replace("Z", "+00:00"))
+    assert (last - now).days > gen.MAX_WEEKS_AHEAD * 7, last
+    assert last.date() <= date(2026, 12, 1)
+    assert all(datetime.fromisoformat(r["release_at"].replace("Z", "+00:00")).date()
+               <= date(2026, 12, 1) for r in out)
+    print("ok test_an_explicit_date_covers_the_season_beyond_the_preview_cap")
 
 
 def test_it_cannot_publish():
@@ -139,7 +224,7 @@ def test_a_round_whose_deadline_has_passed_is_not_generated():
     happily offered a whole batch of them on any run made after Monday noon."""
     from datetime import timezone as tz
     now = datetime(2026, 9, 14, 13, tzinfo=tz.utc)          # Monday, past 12:00Z
-    meta = {"source": "civiqs", "question": "Q", "unit": "u"}
+    meta = civiqs_meta()
     # A Wednesday-publishing series: the next release is 2026-09-16, locking
     # 09-14T14:00Z -- two days out, but governed by the deadline an hour ago.
     h = weekly(30, start="2026-01-07")
@@ -238,9 +323,13 @@ if __name__ == "__main__":
     test_rights_gate_refuses_anything_not_explicitly_approved()
     test_history_gate_refuses_a_series_too_short_to_baseline()
     test_volatility_gate_refuses_only_pure_noise()
-    test_schedule_is_inferred_from_history_not_declared()
+    test_schedule_comes_from_source_semantics_not_a_modal_weekday()
+    test_silver_bulletin_field_midpoints_cannot_become_release_dates()
+    test_civiqs_candidate_matches_the_reviewed_family_calendar()
     test_generated_rounds_are_shaped_like_the_hand_written_ones()
     test_generation_is_deterministic()
+    test_real_archive_generation_is_offline_and_deterministic()
+    test_an_explicit_date_covers_the_season_beyond_the_preview_cap()
     test_it_cannot_publish()
     test_a_round_whose_deadline_has_passed_is_not_generated()
     test_single_page_wikipedia_rounds_are_retired_not_unsupported()
@@ -248,4 +337,4 @@ if __name__ == "__main__":
     test_wiki_top10_rolls_the_reviewed_contract_forward()
     test_wiki_generation_refuses_to_ask_something_nobody_reviewed()
     test_wiki_generation_refuses_two_different_spacings()
-    print("14 passed")
+    print("18 passed")

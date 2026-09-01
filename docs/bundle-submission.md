@@ -180,6 +180,22 @@ landed on time.
 
 ## Try the whole path without entering the season
 
+For the maintainer's generated-batch → intake → resolution → scoring → status
+check, run:
+
+```bash
+PYTHONPATH=. python3 tools/run_sandbox_cycle.py
+```
+
+This generates the committed three-shape sandbox bundle from
+`examples/bundle/sandbox-rounds.json`, requires byte identity, sends that exact
+bundle through the current #47 CLI intake, resolves via the production
+shape-specific resolution functions, and scores the resulting records against
+the committed sandbox source artifact. Every write is temporary. See
+[`docs/weekly-pipeline.md`](weekly-pipeline.md) for the operator evidence.
+
+To inspect the participant-facing pieces individually:
+
 ```bash
 python examples/bundle/entrant.py \
     --bundle examples/bundle/sandbox-batch.json \
@@ -194,11 +210,12 @@ python tools/accept_bundle.py /tmp/response.json \
     --sandbox --write --out /tmp/sandbox-forecasts
 ```
 
-`examples/bundle/sandbox-batch.json` is a three-question rehearsal batch — one
-of each shape — whose rounds are not in the season and whose deadline is
-deliberately years out, so a rehearsal never turns into a demonstration of a
-late submission. `--sandbox` refuses to write into `forecasts/`: a rehearsal
-that can accidentally enter the season is not a rehearsal.
+`examples/bundle/sandbox-batch.json` is a generated three-question rehearsal
+batch — one of each shape — whose rounds are not in the season and whose
+deadline is deliberately years out, so a rehearsal never turns into a
+demonstration of a late submission. `--sandbox` refuses to write into
+`forecasts/`: a rehearsal that can accidentally enter the season is not a
+rehearsal.
 
 To see a real week instead:
 

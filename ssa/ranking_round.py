@@ -361,9 +361,11 @@ def resolution(r, obs=None, spec=None, fetch=False, now=None):
     """The true ordered list for the round's own week, or a raised explanation.
 
     Read from the same archive the history came from, at the week the round
-    names -- never from `obs`, so that a round whose week is missing gets the
-    adapter's precise complaint (which days are absent, which snapshot is
-    needed) instead of a generic "not found".
+    names. ``obs`` is an explicit dependency-injection seam for an offline
+    rehearsal: when supplied it must contain that exact completed week and is
+    normalized through the same round contract. Production callers omit it,
+    so a missing live week still gets the adapter's precise complaint (which
+    days are absent, which snapshot is needed).
 
     The one check that is not the adapter's: the answer must not be a week the
     frozen history already contained. That cannot happen if the locks are set
@@ -379,6 +381,20 @@ def resolution(r, obs=None, spec=None, fetch=False, now=None):
             f"{r.get('round_id')}: the measured week ends {week_end}, before "
             f"the lock at {r['lock_at'][:10]}; its answer existed when the "
             "round froze and cannot be scored")
+    if obs is not None:
+        got = next((row for row in obs if row.get("date") == week_end), None)
+        if got is None:
+            raise ValueError(
+                f"{r.get('round_id')}: injected archive has no completed week "
+                f"ending {week_end}")
+        items = normalize(got.get("items"), spec, where="resolution archive")
+        return {
+            "items": items,
+            "week_start": spec["week_start"],
+            "week_end": week_end,
+            "method": ("the explicitly supplied offline archive observation, "
+                       "validated by the production ranking resolver"),
+        }
     if spec["kind"] == "wiki_top10":
         items, totals = wikipedia_adapter.weekly_top(
             week_end, spec["length"], spec["exclusions"], spec["project"],

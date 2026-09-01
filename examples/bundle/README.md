@@ -4,6 +4,13 @@ A complete Route B rehearsal, standard library only, that never touches the
 season. Read [`docs/bundle-submission.md`](../../docs/bundle-submission.md) for
 the contract; this is the runnable version of it.
 
+Maintainers can run the generated bundle through intake, resolution, scoring
+and status in one command:
+
+```bash
+PYTHONPATH=. python3 tools/run_sandbox_cycle.py
+```
+
 ```bash
 # 1. answer the sandbox batch
 python examples/bundle/entrant.py \
@@ -25,8 +32,10 @@ python tools/accept_bundle.py /tmp/response.json \
 
 | file | |
 |---|---|
-| `sandbox-batch.json` | a three-question rehearsal batch: one scalar, one profile, one ranking |
+| `sandbox-rounds.json` | the three source round definitions; never part of the season |
+| `sandbox-batch.json` | their deterministic generated bundle: one scalar, one profile, one ranking |
 | `sandbox-anchors.json` | what the example entrant is told to centre on |
+| `sandbox-source-observations.json` | adapter-shaped scalar/profile series and ranking observation resolved by production functions |
 | `sandbox-response.json` | the answer bundle steps 1–2 produce, committed so the format can be read without running anything |
 | `entrant.py` | the client: bundle in, response bundle out |
 

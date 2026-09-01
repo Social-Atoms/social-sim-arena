@@ -98,6 +98,18 @@ INVENTORY = {
             "point is built from the dated snapshots under `civiqs/` rather "
             "than from the live page."),
     },
+    "certified_election_results": {
+        "publisher": "US state election authorities",
+        "adapter": None,
+        "role": TARGET,
+        "state": INTEGRATED,
+        "rights": APPROVED,
+        "evidence": (
+            "The Season 0 House-seat special resolves on official certified "
+            "results published by state election authorities. Those public "
+            "records are the final authority named in the reviewed round; AP "
+            "calls are explicitly provisional and never replace certification."),
+    },
     "umich": {
         "publisher": "University of Michigan Surveys of Consumers",
         "adapter": "ssa/adapters/umich.py",
