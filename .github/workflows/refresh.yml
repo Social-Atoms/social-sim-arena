@@ -22,7 +22,7 @@ jobs:
     env:
       # Model entrants run only for providers whose key is set. Missing keys or
       # failed calls are reported and file nothing: automation never enables
-      # the scalar-only SSA_ALLOW_MOCK escape hatch used for local development.
+      # the scalar-only mock escape hatch used for local development.
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
