@@ -354,6 +354,30 @@ def test_the_archive_is_read_and_never_the_network():
         shutil.rmtree(scratch, ignore_errors=True)
 
 
+def test_a_stamp_date_is_write_once_and_a_revision_is_loud():
+    """A same-day re-fetch is harmless only when it is the same document.
+    Replacing different bytes would silently revise the source behind a lock.
+    """
+    scratch = tempfile.mkdtemp(prefix="ssa-umichparty-write-once-")
+    saved = umichparty.ARCHIVE
+    umichparty.ARCHIVE = scratch
+    try:
+        original = b"%PDF-1.4\noriginal vintage"
+        path = umichparty.archive(original, "2026-08-14")
+        assert umichparty.archive(original, "2026-08-14") == path
+        try:
+            umichparty.archive(b"%PDF-1.4\nrevised vintage", "2026-08-14")
+            assert False, "different bytes overwrote a source vintage"
+        except RuntimeError as e:
+            assert "different bytes" in str(e) and "refusing" in str(e), e
+        with open(path, "rb") as f:
+            assert f.read() == original
+        assert not any(name.endswith(".tmp") for name in os.listdir(scratch))
+    finally:
+        umichparty.ARCHIVE = saved
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:
