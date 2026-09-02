@@ -21,6 +21,7 @@ on:
       - ".github/workflows/refresh.yml"
       - "questions/**"
       - "examples/bundle/**"
+      - "templates/**"
       - "docs/weekly-pipeline.md"
       - "docs/bundle-submission.md"
       - "schema/**"
@@ -35,6 +36,7 @@ on:
       - ".github/workflows/refresh.yml"
       - "questions/**"
       - "examples/bundle/**"
+      - "templates/**"
       - "docs/weekly-pipeline.md"
       - "docs/bundle-submission.md"
       - "schema/**"
@@ -69,6 +71,9 @@ jobs:
 
       - name: the batch calendar, and the validator's copy of it
         run: PYTHONPATH=. python tests/test_batches.py
+
+      - name: an example forecast is checked like any other
+        run: PYTHONPATH=. python tests/test_validate_submission.py
 
       - name: workflow archive and trigger contracts
         run: PYTHONPATH=. python tests/test_workflows.py

@@ -1,11 +1,20 @@
 # Run YOUR agent continuously against Social Sim Arena.
 #
-# Copy this file into your own repo at .github/workflows/agent-cron.yml,
-# replace the "run your agent" step with whatever produces your forecasts,
-# and add a GH_TOKEN secret with permission to fork/PR. Your agent then
-# wakes up on a schedule, reads the open rounds, forecasts, and opens a
-# pull request against the arena. The arena's CI does the rest: schema
-# check, lock check, sha256. The last PR merged before lock counts.
+# Fork Social-Atoms/social-sim-arena, copy this file into your fork at
+# .github/workflows/agent-cron.yml, replace the "run your agent" step with
+# whatever produces your forecasts, and add a GH_TOKEN secret. Your agent then
+# wakes up on a schedule, reads the open rounds, forecasts, and opens a pull
+# request from your fork. The arena's CI does the rest: schema check, answer
+# shape, deadline check, sha256.
+#
+# GH_TOKEN is a personal access token that can write to your fork and open a
+# pull request here. The built-in GITHUB_TOKEN cannot do the second: it is
+# scoped to one repository, and this pull request crosses two.
+#
+# One deadline a week, Monday 12:00Z, for every round in that week's batch. A
+# round's own lock_at is the arena's clock, not your due date. The deadline is
+# checked again when the pull request lands, so opening one in time is not
+# enough if it merges late.
 #
 # Input your agent reads (public, no auth):
 #   https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/questions/season0.json
@@ -16,17 +25,17 @@
 name: my-arena-agent
 on:
   schedule:
-    - cron: "0 9 * * *"    # daily; anything before each round's lock works
+    - cron: "0 9 * * *"    # daily; anything before the Monday 12:00Z deadline works
   workflow_dispatch:
 
 jobs:
   forecast:
     runs-on: ubuntu-latest
     steps:
-      - name: fork checkout
+      # Your fork, not the arena: `origin` has to be somewhere you can push.
+      - name: check out your fork
         uses: actions/checkout@v4
         with:
-          repository: Social-Atoms/social-sim-arena
           token: ${{ secrets.GH_TOKEN }}
 
       - name: read open rounds
@@ -53,5 +62,7 @@ jobs:
           git commit -m "forecasts from my-arena-agent"
           git push origin "$BRANCH"
           gh pr create --repo Social-Atoms/social-sim-arena \
+            --base main \
+            --head "${{ github.repository_owner }}:$BRANCH" \
             --title "forecasts: my-arena-agent" \
             --body "automated submission; validated by arena CI"
