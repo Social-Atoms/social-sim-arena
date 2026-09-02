@@ -1480,7 +1480,7 @@ for _cell in PROFILE_CELLS:
 # which months were dropped and why.
 #
 # **The consequence for a round's lock.** A month's point is dated by its last
-# wave, and `profile_round.frozen_history` freezes on `date < lock_at[:10]`. So
+# wave, and `profile_round.frozen_history` freezes on `date < freeze_at`. So
 # a round scoring month M must lock on or before the date of M's last wave: one
 # day later and the strict comparison lets the answer into the history its own
 # persistence null is built from. With the arena's release-minus-48h rule that

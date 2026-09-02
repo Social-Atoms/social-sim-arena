@@ -687,7 +687,7 @@ def test_resolution_reads_the_round_s_own_week_from_the_archive():
         assert got["index"] == BASKET_WEEKS["2026-08-15"]
 
 
-def test_resolution_refuses_a_missing_week_and_a_week_that_predates_the_lock():
+def test_resolution_refuses_a_missing_week_and_a_week_that_predates_the_freeze():
     with Archives():
         os.remove(wikipedia.top_archive_path(wikipedia.top_archive_key(),
                                              "2026-08-14"))
@@ -703,7 +703,7 @@ def test_resolution_refuses_a_missing_week_and_a_week_that_predates_the_lock():
         try:
             ranking_round.resolution(late)
         except ValueError as e:
-            assert "before the lock" in str(e), str(e)
+            assert "before the freeze" in str(e), str(e)
         else:
             raise AssertionError("a week that ended before the lock cannot be scored")
 

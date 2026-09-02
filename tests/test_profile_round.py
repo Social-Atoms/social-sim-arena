@@ -497,7 +497,7 @@ def test_resolution_refuses_a_hole_and_a_series_that_never_published():
     try:
         profile_round.resolution(ROUND, stale)
     except ValueError as e:
-        assert "predates the lock" in str(e), str(e)
+        assert "predates the freeze" in str(e), str(e)
     else:
         raise AssertionError("a stale series must not resolve")
 

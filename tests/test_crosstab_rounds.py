@@ -459,7 +459,7 @@ def test_a_september_with_three_waves_never_resolves():
     try:
         profile_round.resolution(ROUND, series, CELLS)
     except ValueError as e:
-        assert "predates the lock" in str(e), str(e)
+        assert "predates the freeze" in str(e), str(e)
     else:
         raise AssertionError("a three-wave September must not resolve")
 

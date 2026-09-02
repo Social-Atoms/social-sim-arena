@@ -394,10 +394,16 @@ def resolution(r, obs=None, spec=None, fetch=False, now=None):
     """
     spec = spec or spec_for(r)
     week_end = spec["week_end"]
-    if week_end < r["lock_at"][:10]:
+    # The boundary is the freeze, not the lock: `batches.freeze_at` is where
+    # this round's persistence null stops reading, and "existed when the round
+    # froze" is a claim about that instant. The two coincide before the batch
+    # cutover. After it the lock is up to seven days later, so anchoring here on
+    # the lock would refuse a week that began after entrants answered.
+    freeze_date = batches.freeze_at(r["lock_at"]).strftime("%Y-%m-%d")
+    if week_end < freeze_date:
         raise ValueError(
             f"{r.get('round_id')}: the measured week ends {week_end}, before "
-            f"the lock at {r['lock_at'][:10]}; its answer existed when the "
+            f"the freeze at {freeze_date}; its answer existed when the "
             "round froze and cannot be scored")
     if obs is not None:
         got = next((row for row in obs if row.get("date") == week_end), None)

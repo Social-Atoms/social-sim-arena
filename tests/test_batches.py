@@ -170,6 +170,67 @@ def test_pre_cutover_rounds_keep_the_window_they_were_bought_in():
     print("ok test_pre_cutover_rounds_keep_the_window_they_were_bought_in")
 
 
+def test_every_round_type_resolves_against_the_same_instant_it_froze():
+    """The twin of the freeze test, on the resolution side.
+
+    `test_every_round_type_freezes_at_the_same_instant` pins where each round
+    type stops *reading*. This pins where each one decides an outcome is new.
+    They have to be the same instant: a round that freezes Monday and refuses
+    any observation older than Wednesday's lock will refuse to resolve against
+    Tuesday's release -- the exact release its entrants were asked to forecast,
+    and one none of them could see when they answered.
+
+    This is a regression test with a date on it. `profile_round.frozen_history`
+    moved to `batches.freeze_at`; `profile_round.resolution` kept
+    `lock_at[:10]`, and `cell_outcome` raised "nothing has published since the
+    round froze" about a value published two days after the round froze.
+    `civiqs-profile-2026-w38` and `-w39` are both in that shape.
+    """
+    from ssa import profile_round, ranking_round
+
+    lock = "2026-09-16T14:00:00Z"                  # Wednesday
+    freeze = batches.freeze_at(lock)               # Monday 2026-09-14 12:00Z
+    assert freeze.strftime("%Y-%m-%d") < lock[:10], "fixture must straddle"
+    r = {"round_id": "profile-fixture", "lock_at": lock,
+         "release_at": "2026-09-18T14:00:00Z",
+         "cells": ["civiqs_net_approval_dem", "civiqs_net_approval_rep"]}
+
+    # Published Tuesday: after every entrant answered, before the round locked.
+    between = {"date": "2026-09-15", "value": -8.0}
+    series = {c: [{"date": "2026-09-07", "value": -9.0}, between]
+              for c in r["cells"]}
+    out = profile_round.resolution(r, series, cells=r["cells"])
+    assert out["values"]["civiqs_net_approval_dem"] == -8.0, \
+        "the release entrants were asked to forecast was refused as stale"
+
+    # And the refusal still fires for a value that predates the freeze.
+    stale = {c: [{"date": "2026-09-07", "value": -9.0}] for c in r["cells"]}
+    try:
+        profile_round.resolution(r, stale, cells=r["cells"])
+    except ValueError as e:
+        assert "predates the freeze" in str(e), str(e)
+    else:
+        raise AssertionError("a pre-freeze value must not resolve the round")
+
+    # The ranking guard reads the same boundary. Its measured week begins after
+    # the freeze and ends before the lock -- unreachable in season 0, where
+    # every wiki week starts days after its lock, but the guard should not be
+    # the thing that decides that.
+    rr = {"round_id": "ranking-fixture", "lock_at": lock}
+    spec = {"kind": "wiki_top10", "length": 3, "loss": "rbo", "rbo_p": 0.9,
+            "week_start": "2026-09-14", "week_end": "2026-09-15",
+            "closed_set": False, "project": "en.wikipedia",
+            "access": "all-access",
+            "exclusions": "main_page_and_namespaces_v1"}
+    assert spec["week_end"] < lock[:10] and \
+        spec["week_end"] >= freeze.strftime("%Y-%m-%d"), "fixture must straddle"
+    got = ranking_round.resolution(rr, spec=spec, obs=[
+        {"date": "2026-09-15", "items": ["a", "b", "c"]}])
+    assert got["week_end"] == "2026-09-15", \
+        "the guard refused a week that began after the round froze"
+    print("ok test_every_round_type_resolves_against_the_same_instant_it_froze")
+
+
 def test_the_validators_copy_of_the_calendar_never_drifts():
     """`tools/validate_submission.py` imports nothing, so it carries its own
     copy. A copy that disagrees with the module is worse than no copy: CI would
@@ -241,6 +302,7 @@ if __name__ == "__main__":
     test_our_models_are_held_to_the_same_deadline_as_everyone_else()
     test_public_open_status_closes_at_the_participant_deadline()
     test_pre_cutover_rounds_keep_the_window_they_were_bought_in()
+    test_every_round_type_resolves_against_the_same_instant_it_froze()
     test_the_validators_copy_of_the_calendar_never_drifts()
     test_every_round_type_freezes_at_the_same_instant()
-    print("13 passed")
+    print("14 passed")
