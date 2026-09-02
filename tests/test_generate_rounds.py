@@ -351,16 +351,23 @@ def test_it_refuses_to_generate_a_round_it_cannot_publish():
           f"({len(rows)} candidates)")
 
 
-def test_a_profile_cell_is_not_regenerated_as_a_scalar_twin():
-    """Dedupe has to see `cells`, not only `series`.
+def test_dedupe_is_per_board_not_per_series():
+    """A week's slot belongs to a board, not to a series name.
 
-    A profile round names its cells in `cells` and carries an unrelated id in
-    `series`, so keying on `series` alone left the cells invisible: ten of
-    civiqs-profile-2026-w38's sixteen came back as standalone scalar rounds in
-    the same week, asking for the same number twice under two scoring rules.
-    The profile is the round that wants those cells -- the energy score is
-    where a floor-bound cell still carries information -- and a scalar twin
-    beside it is not a second question.
+    Both directions, because this rule has been wrong in both:
+
+    - A generated scalar round must not duplicate a *scalar* round already
+      asking that series that week. Same board, same rule, same number: the
+      second one is not a second question.
+    - A generated scalar round must still be allowed beside a *profile* round
+      whose cells cover it. Those are two boards -- `build_leaderboard` scores
+      a CRPS in points, `build_profile_leaderboard` an energy score in
+      sixteen-dimensional points-space, and `refresh` keeps them apart because
+      averaging them answers nothing. The pair is the season's most direct
+      comparison: one number, elicited jointly and marginally.
+
+    Keyed on `series` alone, ten of civiqs-profile-2026-w38's cells came back
+    as scalar twins. Keyed on cells too, the comparison disappeared instead.
     """
     import datetime
     import glob
@@ -376,32 +383,38 @@ def test_a_profile_cell_is_not_regenerated_as_a_scalar_twin():
         capture_output=True, text=True, cwd=ROOT,
         env={**os.environ, "PYTHONPATH": ROOT}, check=True)
 
+    def week(d):
+        return datetime.datetime.strptime(d[:10], "%Y-%m-%d").isocalendar()[:2]
+
     with open(os.path.join(ROOT, "questions", "season0.json")) as fh:
         season = json.load(fh)
     season = season["rounds"] if isinstance(season, dict) else season
-    claimed = set()
+    scalar_claimed, cell_claimed = set(), set()
     for r in season:
-        wk = datetime.datetime.strptime(
-            r["release_at"][:10], "%Y-%m-%d").isocalendar()[:2]
-        for sid in [r.get("series")] + list(r.get("cells") or []):
-            if sid:
-                claimed.add((sid, wk))
+        wk = week(r["release_at"])
+        if r.get("cells"):
+            for c in r["cells"]:
+                cell_claimed.add((c, wk))
+        elif r.get("series"):
+            scalar_claimed.add((r["series"], wk))
 
-    clashes, n = [], 0
+    clashes, n, beside_profile = [], 0, 0
     for path in glob.glob(os.path.join(ROOT, "questions", "candidates", "*.json")):
         for c in json.load(open(path)):
             n += 1
-            wk = datetime.datetime.strptime(
-                c["release_at"][:10], "%Y-%m-%d").isocalendar()[:2]
-            if (c["series"], wk) in claimed:
+            key = (c["series"], week(c["release_at"]))
+            if key in scalar_claimed:
                 clashes.append(c["round_id"])
+            if key in cell_claimed:
+                beside_profile += 1
     assert n, "no candidates were written"
     assert not clashes, (
-        f"{len(clashes)} candidates duplicate a series already asked that "
-        f"week, cells included: {sorted(clashes)[:5]}")
-    print(f"ok test_a_profile_cell_is_not_regenerated_as_a_scalar_twin "
-          f"({n} candidates, none clashing with {len(claimed)} claimed "
-          f"series-weeks)")
+        f"{len(clashes)} candidates duplicate a scalar round already asking "
+        f"that series that week: {sorted(clashes)[:5]}")
+    assert cell_claimed, "fixture is stale: the season has no profile cells"
+    print(f"ok test_dedupe_is_per_board_not_per_series "
+          f"({n} candidates, 0 clashing with {len(scalar_claimed)} scalar "
+          f"series-weeks, {beside_profile} allowed beside a profile cell)")
 
 
 if __name__ == "__main__":
@@ -417,7 +430,7 @@ if __name__ == "__main__":
     test_real_archive_generation_is_offline_and_deterministic()
     test_an_explicit_date_covers_the_season_beyond_the_preview_cap()
     test_it_cannot_publish()
-    test_a_profile_cell_is_not_regenerated_as_a_scalar_twin()
+    test_dedupe_is_per_board_not_per_series()
     test_it_refuses_to_generate_a_round_it_cannot_publish()
     test_a_round_whose_deadline_has_passed_is_not_generated()
     test_single_page_wikipedia_rounds_are_retired_not_unsupported()

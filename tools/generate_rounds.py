@@ -623,9 +623,24 @@ def main():
     # score is where a floor-bound cell still carries information -- and a
     # scalar twin beside it is not a second question, it is the same one.
     def _claims(r):
-        yield r.get("series")
-        for c in r.get("cells") or []:
-            yield c
+        """What this round already asks *on the scalar board*.
+
+        A round carrying `cells` is a profile round: its answer is a vector,
+        `refresh.build_profile_leaderboard` scores it with the energy score,
+        and that board is kept apart from the scalar one on purpose -- a CRPS
+        is in points, an energy score is a distance in sixteen-dimensional
+        points-space, and no weighting of the two answers a question anyone
+        asked. So a profile cell does not occupy the scalar board's slot for
+        its series, and a scalar round on the same series in the same week is
+        not a duplicate. It is the season's most direct comparison: the same
+        number elicited jointly and marginally, scored on two boards where a
+        tenth of skill means the same thing.
+
+        This rule was written the other way round first, and it deleted that
+        comparison from ten of `civiqs-profile-2026-w38`'s sixteen cells.
+        """
+        if not r.get("cells"):
+            yield r.get("series")
     taken = {(sid, r["release_at"][:10]) for r in rounds for sid in _claims(r)}
     taken |= {(sid, datetime.strptime(r["release_at"][:10], "%Y-%m-%d")
                .isocalendar()[:2])
