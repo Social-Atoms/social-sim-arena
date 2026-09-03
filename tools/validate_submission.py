@@ -95,6 +95,38 @@ def fail(msg):
     sys.exit(1)
 
 
+# Set when `jsonschema` could not be imported, so the schema was never applied.
+# Both call sites below fall back to a handful of required-key checks, which
+# cannot see a closed schema's `additionalProperties: false`, a wrong type, or
+# a pattern. That is a reasonable convenience -- a participant on a laptop with
+# no virtualenv should get an answer rather than a traceback -- but it must
+# never print a bare `OK`. A false pass hours before a deadline is worse than
+# the traceback it was avoiding: CI runs the real schema and will reject the
+# file, and by then the batch may have closed.
+DEGRADED = False
+
+
+def note_schema_unchecked():
+    global DEGRADED
+    if not DEGRADED:
+        DEGRADED = True
+        print("WARNING: `jsonschema` is not installed, so the schema itself "
+              "was NOT checked.", file=sys.stderr)
+        print("         Only a few required keys were. Unknown fields, wrong "
+              "types and bad patterns", file=sys.stderr)
+        print("         will pass here and still be rejected by CI. Run "
+              "`pip install -r requirements.txt`", file=sys.stderr)
+        print("         and validate again before you rely on this result.",
+              file=sys.stderr)
+
+
+def ok(rel, extra=""):
+    """The one place a success line is printed, so it cannot claim too much."""
+    if DEGRADED:
+        extra = (extra + ", " if extra else "") + "SCHEMA NOT CHECKED"
+    print(f"OK{f' ({extra})' if extra else ''}: {rel}")
+
+
 def canonical_sha256(obj):
     blob = json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(blob).hexdigest()
@@ -113,6 +145,7 @@ def validate_entrant(path):
             schema = json.load(f)
         jsonschema.validate(e, schema)
     except ImportError:
+        note_schema_unchecked()
         for key in ("entrant_id", "name", "type", "method"):
             if key not in e:
                 fail(f"{rel}: missing required field '{key}'")
@@ -120,7 +153,7 @@ def validate_entrant(path):
         fail(f"{rel}: schema violation: {err}")
     if e["entrant_id"] + ".json" != os.path.basename(path):
         fail(f"{rel}: entrant_id '{e['entrant_id']}' does not match file name")
-    print(f"OK: {rel}")
+    ok(rel)
 
 
 def answer_blocks(fc):
@@ -322,6 +355,7 @@ def validate(path, now=None):
         jsonschema.validate(fc, schema)
     except ImportError:
         # minimal fallback when jsonschema is absent
+        note_schema_unchecked()
         for key in ("round_id", "entrant"):
             if key not in fc:
                 fail(f"{rel}: missing required field '{key}'")
@@ -371,7 +405,7 @@ def validate(path, now=None):
                      f"{rounds[fc['round_id']]['lock_at']}), submission is late")
             fail(f"{rel}: round locked at {rounds[fc['round_id']]['lock_at']}, submission is late")
 
-    print(f"OK{' (example, deadline not checked)' if is_example else ''}: {rel}")
+    ok(rel, "example, deadline not checked" if is_example else "")
     print(f"    sha256: {canonical_sha256(fc)}")
 
 

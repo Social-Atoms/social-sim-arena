@@ -109,8 +109,56 @@ def test_an_example_is_not_held_to_a_deadline():
     print("ok test_an_example_is_not_held_to_a_deadline")
 
 
+def test_a_missing_jsonschema_never_prints_a_bare_ok():
+    """The degraded path is a convenience; a false pass is not.
+
+    Without `jsonschema` the validator can only check a few required keys. It
+    cannot see `additionalProperties: false`, a wrong type, or a bad pattern --
+    so a file CI will reject reaches this code and finds nothing wrong. That is
+    acceptable only while the participant is told. Printing plain `OK` hours
+    before a batch deadline, for a file that is about to be rejected, is worse
+    than the traceback the fallback exists to avoid.
+    """
+    # `_example` so the deadline never decides the outcome: what is under test
+    # is the schema check, and a late-round refusal would pass this test while
+    # proving nothing about it.
+    extra = dict(GOOD, submitted_at="2020-01-01T00:00:00Z")
+    with FakeRepo() as repo:
+        ok, msg = repo.check("_example", "demo.json", extra)
+        assert not ok, "the real schema should refuse an unknown field"
+        assert "Additional properties" in msg or "additionalProperties" in msg
+
+    with FakeRepo() as repo:
+        real = repo.vs.__builtins__["__import__"] \
+            if isinstance(repo.vs.__builtins__, dict) \
+            else repo.vs.__builtins__.__import__
+
+        def blocked(name, *a, **k):
+            if name == "jsonschema" or name.startswith("jsonschema."):
+                raise ImportError("blocked for the test")
+            return real(name, *a, **k)
+
+        if isinstance(repo.vs.__builtins__, dict):
+            repo.vs.__builtins__["__import__"] = blocked
+        else:
+            repo.vs.__builtins__.__import__ = blocked
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            ok, msg = repo.check("_example", "demo.json", extra)
+
+    assert ok, "the fallback should still answer rather than crash"
+    assert "OK" in msg, msg
+    assert "SCHEMA NOT CHECKED" in msg, \
+        f"a degraded check reported a plain OK: {msg!r}"
+    warning = err.getvalue()
+    assert "jsonschema" in warning and "NOT checked" in warning, warning
+    assert "pip install" in warning, "the warning must say how to fix it"
+    print("ok test_a_missing_jsonschema_never_prints_a_bare_ok")
+
+
 if __name__ == "__main__":
     test_an_example_passes_the_checks_it_can_pass()
     test_an_example_directory_no_longer_skips_the_checks_it_can_fail()
     test_an_example_is_not_held_to_a_deadline()
-    print("3 passed")
+    test_a_missing_jsonschema_never_prints_a_bare_ok()
+    print("4 passed")
