@@ -1,0 +1,15 @@
+{
+  "entrant": "gemini-pro-web-superfc",
+  "input_hash": "a52df827e669",
+  "logged_at": "2026-09-03T21:01:57Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt_sha256": "665ce650c3d96569a8c7d9747ae8c5c138ca4fed263d99e8c8d990bfedc79f0b",
+  "reply": "1. Outside view. What is the base rate here? What has this series done historically, how much does it move between releases, and what would a naive extrapolation predict?\nThe historical values range from 33.0 to 39.0, centering around an average of 35.7. The week-to-week changes have a mean absolute difference of roughly 2.1 points, and occasional volatility can result in jumps of 3 to 5 points. Since the last two releases were exactly 36.0, a naive extrapolation would predict 36.0. \n\n2. Inside view. What is specific to this release -- events, timing, anything that would move this particular number away from the base rate? Say how much each is worth, in the unit of the series.\nThe polling has been notably stable over the last two weeks, consistently holding at 36.0%. There are no major search results reflecting earth-shattering domestic news from early September 2026 that would clearly shift opinions strongly in either direction. However, negative sentiment continues to track quite high, implying a solid ceiling on approval unless a significant unifying event takes place. Without such an event, we would expect only random polling variation around the recent plateau, perhaps worth a minor regression toward the overall average of ~35.7.\n\n3. Pre-mortem. Assume your answer turns out badly wrong. Write the most likely reason, then correct for it.\nIf the forecast is badly wrong, it is likely due to the inherent noise and sampling variance typical of this tracker, which has seen sudden shifts in recent months (e.g., dropping from 39 to 34 in late July). A smaller sample sub-demographic moving heavily could swing the number unexpectedly. To correct for this, I must ensure my standard deviation accurately reflects the empirical volatility of the tracker rather than overly relying on the recent two-week stability. \n\n4. Calibrate. Your sd should be wide enough that the true value falls inside one sd about two thirds of the time. Check it against how much this series actually moves between releases.\nThe standard deviation of week-to-week changes is roughly 2.5 points. To capture about two-thirds of the outcomes, a standard deviation around 2.0 is appropriate to account for both normal minor adjustments and the occasional larger sampling swing. \n\n```json\n{\"mean\": 35.9, \"sd\": 2.1}\n```",
+  "round_id": "yougov-2026-w37-approval",
+  "usage": {
+    "input_tokens": 2762,
+    "output_tokens": 517,
+    "thinking_tokens": 2551
+  },
+  "via": "direct"
+}
