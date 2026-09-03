@@ -1,3 +1,19 @@
+# Python 3.10 or newer. Three versions are in play here on purpose, and it is
+# worth knowing which is which before "fixing" any of them:
+#
+#   .python-version = 3.12   read by `@vercel/python` to pick the runtime for
+#                            `api/*.py`. It is a deployment artifact, pinned by
+#                            tests/test_questionnaire_api.py. Do not delete it.
+#   CI               = 3.11   .github/workflows/*.yml
+#   local            = yours  anything >= 3.10 runs the suite
+#
+# pyenv also obeys `.python-version`, which is the trap: with pyenv installed
+# but not 3.12, every bare `python` inside this repository fails with
+# "pyenv: version `3.12' is not installed" -- including
+# `tools/validate_submission.py`, the one command a participant is told to run
+# before submitting. Fix it locally with `pyenv install 3.12`, or call an
+# interpreter by path. Do not repoint the file; Vercel is reading it.
+
 requests>=2.28
 jsonschema>=4.0
 vercel>=0.5.0

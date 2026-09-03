@@ -57,6 +57,26 @@ REJECTED = "rejected"
 APPROVED = "approved"
 UNRESOLVED = "unresolved"
 
+# Retrieval and use are permitted; redistributing the retrieved bodies is not.
+# This is its own verdict rather than plain `approved` because the two differ in
+# what they permit *later*: an `approved` source stays approved if this
+# repository is ever made public, and one of these does not. The condition is
+# machine-checked -- `PUBLISH_BLOCKLIST` names the directories that must not
+# ship, and `tests/test_inventory.py` fails if a source carries this verdict
+# without its archive being on that list.
+APPROVED_NO_REDISTRIBUTION = "approved-no-redistribution"
+
+# Rights verdicts under which `tools/generate_rounds.py` may schedule a round.
+GENERATING_RIGHTS = (APPROVED, APPROVED_NO_REDISTRIBUTION)
+
+# Source archives that must never reach a public artifact. Keyed by source, so
+# the row and its blocklist entry cannot drift apart.
+PUBLISH_BLOCKLIST = {
+    "aaii": "sources/aaii",
+    "umichparty": "sources/umichparty",
+    "yougov_xtab": "sources/yougov_xtab",
+}
+
 INVENTORY = {
     # --- integrated targets -------------------------------------------------
     "sb_approval": {
@@ -237,85 +257,171 @@ INVENTORY = {
         "publisher": "YouGov",
         "adapter": "ssa/adapters/yougov_xtab.py",
         "role": TARGET,
-        "state": PERMISSION_NEEDED,
-        "rights": PERMISSION_NEEDED,
+        "state": INTEGRATED,
+        "rights": APPROVED_NO_REDISTRIBUTION,
         "evidence": (
-            "YouGov's public-data licence prohibits using \"bots, crawlers, or "
-            "automated scripts to extract or copy the Licensed Data\" without "
-            "written permission. A permission request is with their legal "
-            "team and unanswered. The network path is therefore opt-in "
-            "(`SSA_YOUGOV_FETCH`) and is a deliberate maintainer act, never a "
-            "side effect of the refresh; the sixteen registered cells are "
-            "built from the committed vintages a maintainer already pulled."),
-        "revisit": "Written permission from YouGov legal, or a licence change.",
+            "Read 2026-09-03 against https://yougov.com/en-us/about/terms/"
+            "public-data-license. The grant is CC BY-NC 4.0 and names our use "
+            "explicitly: \"Use, share, and adapt the Licensed Data for "
+            "non-commercial purposes (e.g. academic research, journalism, "
+            "critique ...)\". Three additional restrictions then apply "
+            "\"independent of the CC BY-NC 4.0 license ... to any use\", and "
+            "each was checked separately. (1) \"You may not use bots, "
+            "crawlers, or automated scripts to extract or copy the Licensed "
+            "Data without our express written permission\" -- satisfied: the "
+            "network path is opt-in (`SSA_YOUGOV_FETCH`), a deliberate "
+            "maintainer act, never a side effect of the refresh, and the "
+            "sixteen cells are built from vintages a maintainer pulled by "
+            "hand. (2) \"You may not incorporate the Licensed Data into any "
+            "dataset, database, or repository for commercial AI "
+            "applications, predictive analytics, or resale\" -- not reached: "
+            "the clause is scoped to commercial, and this arena is "
+            "non-commercial academic work. (3) \"You may not use the Licensed "
+            "Data to train, fine-tune, or develop artificial intelligence "
+            "(AI), machine learning (ML), or large language models (LLMs)\" "
+            "-- the maintainers' position, taken 2026-09-03 and recorded here "
+            "as a position rather than a reading of settled language: "
+            "evaluating a model against a published number is not training, "
+            "fine-tuning, or developing one. No weights are fitted, no "
+            "gradient touches this data, and it is never in a training "
+            "corpus; it is the answer key a finished model is graded against, "
+            "which is the same role a published exam plays. The narrower "
+            "reading -- that \"develop\" reaches benchmarking -- is available "
+            "to a reader, and if YouGov states it, this row goes to "
+            "`rejected` and the sixteen cells come out. The committed vintages "
+            "under `sources/yougov_xtab` are not republished either way: "
+            "PUBLISH_BLOCKLIST holds them, and any published figure carries "
+            "the licence's required attribution."),
+        "revisit": (
+            "YouGov reading \"develop\" to cover evaluation, a licence "
+            "change, or written permission that settles it either way; a "
+            "permission request has been with their legal team and "
+            "unanswered."),
     },
     "aaii": {
         "publisher": "American Association of Individual Investors",
         "adapter": "ssa/adapters/aaii.py",
         "role": TARGET,
-        "state": PERMISSION_NEEDED,
-        "rights": PERMISSION_NEEDED,
+        "state": INTEGRATED,
+        "rights": APPROVED_NO_REDISTRIBUTION,
         "evidence": (
-            "robots.txt disallows `/files/*`, which is where the sentiment "
-            "workbook lives, and the site terms bar copying. The host has "
-            "also been answering 503 to the runner, so generation reads the "
-            "committed HTML archive rather than the network."),
-        "revisit": "A robots rule or terms change, or written permission.",
+            "Read 2026-09-03 against https://www.aaii.com/privacy/tos. The "
+            "only restriction is on passing content on: \"No part of the "
+            "contents of the website or newsletter may be copied or forwarded "
+            "to anyone else\". The terms are silent on private analytical "
+            "use and silent on automated access, so deriving a number and "
+            "keeping it unpublished is not reached by them. The earlier "
+            "robots objection recorded here was about the wrong URL: "
+            "robots.txt line 74 disallows `/files/*`, which is the bulk "
+            "workbook at `/files/surveys/sentiment.xls`, and `aaii.XLS_URL` "
+            "names it but is never called. What the adapter actually fetches "
+            "is `/sentimentsurvey/sent_results`, which robots.txt allows -- "
+            "only `/sentimentsurvey/articlethankyouhubspot` is disallowed. "
+            "The archive under `sources/aaii` therefore stays private: it is "
+            "on PUBLISH_BLOCKLIST."),
+        "revisit": (
+            "A terms change reaching private use, a robots rule covering "
+            "`/sentimentsurvey/`, or a decision to publish `sources/aaii`, "
+            "which the copying clause forbids."),
     },
     "confboard": {
         "publisher": "The Conference Board",
-        "adapter": "ssa/adapters/confboard.py",
+        # Removed 2026-09-03 with the series, the archive and the backfill
+        # tool. Kept in the maintainers' local copy only; see `revisit`.
+        "adapter": None,
         "role": TARGET,
-        "state": PERMISSION_NEEDED,
-        "rights": PERMISSION_NEEDED,
+        "state": REJECTED,
+        "rights": REJECTED,
         "evidence": (
-            "Terms bar extraction into a database. Separately, the history is "
-            "not free: issue #36 priced the Data Central Consumer Confidence "
-            "Survey dataset at $2,370 and established there is no free mirror "
-            "(FRED's `CSCICP03USM665S` is the OECD amplitude-adjusted "
-            "composite, a different series in different units). The release "
-            "page itself is free and `confboard.parse` reads it, so the "
-            "blocker is history plus terms, not parsing."),
+            "Read 2026-09-03 against https://www.conference-board.org/"
+            "contact/terms-of-use, and it is the one source here whose terms "
+            "reach the use itself rather than the redistribution: \"You may "
+            "not reproduce, distribute ..., display, perform, create "
+            "derivative works of, sell, license, extract for use in a "
+            "database, or otherwise use any materials\". \"Extract for use in "
+            "a database\" is named as its own prohibited act, so keeping the "
+            "figures privately does not avoid it -- building the series *is* "
+            "the prohibited act, and this repository is a database of "
+            "extracted figures. No blocklist entry can fix that, which is why "
+            "this is `rejected` and not `approved-no-redistribution`. The "
+            "member licence that does permit a copy is for \"personal, "
+            "noncommercial purposes\" by employees of member organisations, "
+            "which is not what a public benchmark does with it. Separately "
+            "the history was never free: issue #36 priced the Data Central "
+            "Consumer Confidence Survey dataset at $2,370 and established "
+            "there is no free mirror (FRED's `CSCICP03USM665S` is the OECD "
+            "amplitude-adjusted composite, a different series in different "
+            "units)."),
         "revisit": (
-            "Permission for the release page, or the Internet Archive "
-            "backfill in `tools/backfill_cci.py` producing enough verified "
-            "first prints to baseline against."),
+            "Written permission from The Conference Board covering extraction "
+            "into this database, or a licence change. Membership alone does "
+            "not reach it -- the member grant is personal and noncommercial."),
     },
     "umichparty": {
         "publisher": "University of Michigan Surveys of Consumers",
         "adapter": "ssa/adapters/umichparty.py",
         "role": TARGET,
-        "state": PERMISSION_NEEDED,
-        "rights": PERMISSION_NEEDED,
+        "state": INTEGRATED,
+        "rights": APPROVED_NO_REDISTRIBUTION,
         "evidence": (
-            "The party cut lives only on the archive site "
-            "(`data.sca.isr.umich.edu`), whose terms need written consent. "
-            "The one timely artifact is a PDF addenda behind an opaque docid "
+            "Read 2026-09-03 against https://data.sca.isr.umich.edu/"
+            "agreement.php, and it is more permissive than this row used to "
+            "claim. The agreement grants use outright -- \"The data and "
+            "materials obtained from the website may be displayed, "
+            "reformatted, and printed for your organization's use\" -- and "
+            "reserves written consent for passing it on: \"You agree not to "
+            "reproduce, retransmit, distribute, sell, publish, or broadcast "
+            "the data and materials ... without the express written consent "
+            "of the University of Michigan\". So no consent is needed to "
+            "derive and score these three series; consent is needed to "
+            "republish the PDFs, which is why `sources/umichparty` is on "
+            "PUBLISH_BLOCKLIST. The earlier reading ('terms need written "
+            "consent', full stop) blocked three series for a restriction the "
+            "agreement puts only on redistribution. The one timely artifact "
+            "is still a PDF addenda behind an opaque docid "
             "(`fetchdoc.php?docid=81624`) that gives no way to derive next "
             "month's, so `umichparty.fetch_latest` never fetches on its own "
             "and the three series are built from PDFs a maintainer committed. "
-            "docs/sources.md §6 is the full history, including the reversal "
-            "of the original rejection."),
+            "docs/sources.md §6 is the full history."),
         "revisit": (
-            "Written consent, or the addenda gaining a non-PDF twin at a "
-            "derivable URL."),
+            "A change to the usage agreement's organization-use grant, or the "
+            "addenda gaining a non-PDF twin at a derivable URL."),
     },
     "pentaesi": {
         "publisher": "Penta-CivicScience",
-        "adapter": "ssa/adapters/pentaesi.py",
+        # Removed 2026-09-03 with the series. Kept in the maintainers' local
+        # copy only; see `revisit`.
+        "adapter": None,
         "role": TARGET,
-        "state": PERMISSION_NEEDED,
-        "rights": PERMISSION_NEEDED,
+        "state": REJECTED,
+        "rights": REJECTED,
         "evidence": (
-            "Biweekly Economic Sentiment Index, free, history back to 2013, "
-            "and the adapter parses it (issue #36, PR #34) -- but the source "
-            "archives nothing, so it cannot be rebuilt from a clean checkout "
-            "and the generator reports it as `offline_unavailable` before the "
-            "rights question is even reached. Both have to be answered before "
-            "it can carry a round."),
+            "Read 2026-09-03 against https://pentagroup.com/terms-of-use "
+            "(https://pentagroup.co/terms-of-use 301s there). Three clauses "
+            "each independently reach what this adapter does. \"You shall not "
+            "conduct, facilitate, authorize or permit any text or data mining "
+            "or web scraping in relation to the Websites\"; the banned methods "
+            "name \"any 'robot', 'bot', 'spider', 'scraper' or other "
+            "automated device, program, tool, algorithm, code, process or "
+            "methodology to access, obtain, copy, monitor or republish\", "
+            "which is `pentaesi.fetch` against `/wp-json/wp/v2/posts`; and "
+            "\"any automated analytical technique aimed at analysing text and "
+            "data in digital form to generate information which includes but "
+            "is not limited to patterns, trends and correlations\", which is "
+            "what the series and its baselines are. Reproduction is permitted "
+            "only \"for personal and non-commercial purposes\" and otherwise "
+            "\"you may not use any of the Content without prior written "
+            "authorization from Penta\". Unlike AAII and Michigan there is no "
+            "unpublished-use path here, so a blocklist entry would not help. "
+            "robots.txt is permissive (`Disallow: /secure/` only) but the "
+            "terms are not, and the terms govern. The separate engineering "
+            "objection from issue #36 still stands too: the source archives "
+            "nothing, so it cannot be rebuilt from a clean checkout."),
         "revisit": (
-            "Permission plus a committed archive of the release pages, so "
-            "generation and resolution stop depending on the host being up."),
+            "Written authorization from Penta covering automated retrieval "
+            "and analysis, which their terms require in writing; a committed "
+            "release-page archive would then still be needed before it could "
+            "carry a round."),
     },
 
     # --- rejected, with the fact that would reopen each ----------------------

@@ -21,9 +21,7 @@ Adding a tracker means adding a row here, and nothing else.
 from . import crosstab
 from .adapters import aaii as aaii_adapter
 from .adapters import civiqs as civiqs_adapter
-from .adapters import confboard as confboard_adapter
 from .adapters import hhpoll as hhpoll_adapter
-from .adapters import pentaesi as pentaesi_adapter
 from .adapters import sce as sce_adapter
 from .adapters import silverbulletin as sb
 from .adapters import trends as trends_adapter
@@ -1062,42 +1060,6 @@ SERIES["aaii_bull_bear_spread"] = {
 # the adapter's own write-once capture. Rows are dated by the month measured
 # (Michigan-style label dates), so the lock snapshot, not the date filter, is
 # what freezes this series for a round.
-SERIES["cci_headline"] = {
-    "label": "Conference Board Consumer Confidence Index",
-    "tracker": "conference_board",
-        "publisher": 'The Conference Board, a business membership and research organisation: a monthly survey of US households, published as an index. Each release restates the previous month; the arena scores the first print.',
-    "source": "confboard",
-    "unit": "index points (1985=100)",
-    "cadence": "monthly; released the last Tuesday of the month, 10:00 ET",
-    "question": ("Conference Board Consumer Confidence Index (1985=100), "
-                 "first print of the monthly release"),
-    "methodology": (
-        "monthly online survey of US households conducted for the Conference "
-        "Board (Toluna panel); the index is benchmarked to 1985=100. Each "
-        "release restates the previous month, so the series here pins the "
-        "first print of every release -- the number as the world first saw "
-        "it -- which is what a forecast locked before the release can "
-        "honestly be scored against."),
-}
-
-SERIES["esi_headline"] = {
-    "label": "Penta-CivicScience Economic Sentiment Index",
-    "tracker": "penta_esi",
-        "publisher": "Penta and CivicScience: a biweekly index built from CivicScience's continuously running online polling, published by Penta as a press release.",
-    "source": "pentaesi",
-    "unit": "index points",
-    "cadence": ("biweekly; released every other Wednesday, rows dated by "
-                "the release day"),
-    "question": ("Penta-CivicScience Economic Sentiment Index: the headline "
-                 "ESI reading published in the biweekly release"),
-    "methodology": (
-        "CivicScience online panel, published every other Wednesday by Penta "
-        "since 2013 (HPS-CivicScience before 2023). Five sub-indicators "
-        "averaged into a headline index; the arena tracks the headline only. "
-        "The series here starts where the release wording became "
-        "machine-stable (2022); respondents are a self-selected online panel, "
-        "not a probability sample."),
-}
 
 
 _SCE_METHODOLOGY = (
@@ -1683,16 +1645,9 @@ def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
     # returns the pair, aaii.fetch keeps them together). Tests inject rows
     # here and stay off the network.
     load("aaii", aaii_adapter.fetch)
-    # The ESI feed returns parsed [{date, value}] rows directly; the fetch is
-    # one paginated keyless request cycle, shared by every caller of the map.
-    load("pentaesi", pentaesi_adapter.history)
-    # First prints from the committed archive; the fetch also captures a new
-    # release the moment the page shows one (write-once, see the adapter).
-    load("confboard", lambda: confboard_adapter.history(
-        diagnostics=diagnostic_rows))
     # One workbook download shared by both SCE horizons; write-once dated
     # capture on success, newest archived vintage (with a loud warning) on
-    # fetch failure -- the confboard contract, on an xlsx.
+    # fetch failure: fetch what is there, never go dark when it is not.
     load("sce", lambda: sce_adapter.history(diagnostics=diagnostic_rows))
     # Harvard-Harris publishes no calendar and no derivable URL, so the
     # archive is the source of truth and nothing here fetches on its own; a
@@ -1759,10 +1714,6 @@ def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
                 out[sid] = sb.to_series(recs, spec["value"])
             elif source == "aaii":
                 out[sid] = aaii_adapter.to_series(src["aaii"], spec["value"])
-            elif source == "pentaesi":
-                out[sid] = list(src["pentaesi"])
-            elif source == "confboard":
-                out[sid] = list(src["confboard"])
             elif source == "sce":
                 out[sid] = sce_adapter.to_series(src["sce"],
                                                  spec["sce"]["horizon"])

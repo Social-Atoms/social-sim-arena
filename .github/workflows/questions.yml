@@ -54,44 +54,49 @@ jobs:
           python-version: "3.11"
       - run: pip install -r requirements.txt
 
-      - name: the generation gates
-        run: PYTHONPATH=. python tests/test_generate_rounds.py
+      # Every suite, discovered -- never a hand-written list. The list this
+      # replaced ran 14 of 51 suites, and the 37 it skipped included
+      # `test_scoring.py`. Two of the skipped suites were red on dev for days
+      # while this workflow reported success, which is worse than having no
+      # workflow: a green tick that does not mean the tests pass teaches
+      # everyone to stop reading it. A new suite is covered the moment it is
+      # committed, with nothing to remember.
+      #
+      # `tests/test_harness.py` and `tests/test_model_backtest.py` are
+      # gitignored at the maintainer's request, so they are not here to
+      # discover. That is intended, not a gap this should paper over.
+      - name: every test suite in the repository
+        run: |
+          set -uo pipefail
+          failed=""
+          count=0
+          for t in tests/test_*.py; do
+            count=$((count + 1))
+            if PYTHONPATH=. python "$t" > /tmp/suite.log 2>&1; then
+              echo "ok   $t"
+            else
+              echo "FAIL $t"
+              tail -25 /tmp/suite.log | sed 's/^/       /'
+              failed="$failed $t"
+            fi
+          done
+          echo
+          echo "$count suites discovered"
+          if [ -n "$failed" ]; then
+            echo "failing suites:$failed"
+            exit 1
+          fi
+          # A glob that silently matches nothing would report success having
+          # run no tests at all, which is the failure this whole step exists
+          # to stop. The floor is well under the current count so it does not
+          # need editing every time a suite is added or retired.
+          if [ "$count" -lt 40 ]; then
+            echo "only $count suites discovered; the glob is not seeing tests/"
+            exit 1
+          fi
 
       - name: the reviewed season is semantically publishable
         run: PYTHONPATH=. python tools/validate_season.py
-
-      - name: the source inventory is the only rights table
-        run: PYTHONPATH=. python tests/test_inventory.py
-
-      - name: the weekly bundle and its schema
-        run: PYTHONPATH=. python tests/test_bundle.py
-
-      - name: the reviewed build and mixed-shape sandbox cycle
-        run: PYTHONPATH=. python tests/test_weekly_pipeline.py
-
-      - name: the batch calendar, and the validator's copy of it
-        run: PYTHONPATH=. python tests/test_batches.py
-
-      - name: an example forecast is checked like any other
-        run: PYTHONPATH=. python tests/test_validate_submission.py
-
-      - name: workflow archive and trigger contracts
-        run: PYTHONPATH=. python tests/test_workflows.py
-
-      - name: the ranking round contract
-        run: PYTHONPATH=. python tests/test_ranking_round.py
-
-      - name: the MARTS no-go is still reproducible
-        run: PYTHONPATH=. python tests/test_marts_probe.py
-
-      - name: semantic mutations and committed bundle determinism
-        run: PYTHONPATH=. python tests/test_season.py
-
-      - name: who the arena will call, and what it refuses to call
-        run: PYTHONPATH=. python tests/test_participants.py
-
-      - name: the pages a participant actually reads still render
-        run: PYTHONPATH=. python tests/test_site_render.py
 
       - name: every committed bundle still matches its schema
         run: |

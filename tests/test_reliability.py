@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 
 from ssa import model_backtest, provenance, refresh, reliability
 from ssa import series as series_registry
-from ssa.adapters import civiqs, confboard, sce, silverbulletin
+from ssa.adapters import civiqs, sce, silverbulletin
 
 
 NOW = datetime(2026, 9, 12, 12, tzinfo=timezone.utc)
@@ -221,14 +221,23 @@ def test_registry_derivation_failure_removes_only_its_source_series():
     assert "zero points" in str(failures["aaii"])
 
 
-def test_main_registry_seam_marks_confboard_archive_fallback_degraded():
+def test_main_registry_seam_marks_sce_archive_fallback_degraded():
+    """A transport failure that the archive covers is degraded, never green.
+
+    The exemplar used to be the Conference Board, withdrawn on rights grounds
+    on 2026-09-03 (issue #68). The contract is the adapter's, not that source's:
+    fetch what is there, serve the committed archive when it is not, and say so.
+    The Civiqs test below walks the same seam through a different adapter --
+    two adapters, because a seam that only one of them exercises is a seam that
+    silently stops being checked when that one is removed.
+    """
     saved_series = series_registry.SERIES
-    saved_fetch = confboard.fetch_text
+    saved_fetch = sce.fetch_bytes
     series_registry.SERIES = {
-        "consumer_confidence": {"source": "confboard"},
+        "sce_1y": {"source": "sce", "sce": {"horizon": "1y"}},
     }
-    confboard.fetch_text = lambda: (_ for _ in ()).throw(
-        RuntimeError("Conference Board HTTP 403: runner blocked"))
+    sce.fetch_bytes = lambda *_a, **_k: (_ for _ in ()).throw(
+        RuntimeError("NY Fed HTTP 403: runner blocked"))
     status = reliability.RunStatus(NOW)
     try:
         built, failures, source_failures, diagnostics = \
@@ -237,10 +246,10 @@ def test_main_registry_seam_marks_confboard_archive_fallback_degraded():
                 next_deadline=DEADLINE, next_lock=LOCK)
     finally:
         series_registry.SERIES = saved_series
-        confboard.fetch_text = saved_fetch
-    assert built["consumer_confidence"] and failures == {}
-    assert source_failures == [] and diagnostics[0]["source"] == "confboard"
-    row = source_row(status.as_dict(), "confboard")
+        sce.fetch_bytes = saved_fetch
+    assert built["sce_1y"] and failures == {}
+    assert source_failures == [] and diagnostics[0]["source"] == "sce"
+    row = source_row(status.as_dict(), "sce")
     assert row["state"] == "stale" and row["alert"]
     assert "HTTP 403" in row["last_error"]
 
@@ -248,6 +257,7 @@ def test_main_registry_seam_marks_confboard_archive_fallback_degraded():
 def test_main_registry_seam_marks_civiqs_403_archive_fallback_degraded():
     saved_series = series_registry.SERIES
     saved_get, saved_payloads = civiqs._get, civiqs._payloads
+    saved_stale = civiqs._stale
     series_registry.SERIES = {
         "civiqs_net": {
             "source": "civiqs",
@@ -260,6 +270,13 @@ def test_main_registry_seam_marks_civiqs_403_archive_fallback_degraded():
     civiqs._payloads = {}
     civiqs._get = lambda *_a, **_k: (_ for _ in ()).throw(
         RuntimeError("Civiqs HTTP 403: runner blocked"))
+    # The archive doubles as the fetch cache, and `series.build_all` gives the
+    # adapter the wall clock rather than this test's NOW. So on any day the
+    # courier has already archived, `snapshot` serves today's file and returns
+    # without a request -- the 403 never happens and the assertions below check
+    # nothing. Declaring the cached vintage stale is what puts a live request
+    # back in the path, which is the situation this test is about.
+    civiqs._stale = lambda *_a, **_k: True
     status = reliability.RunStatus(NOW)
     try:
         built, failures, source_failures, diagnostics = \
@@ -269,6 +286,7 @@ def test_main_registry_seam_marks_civiqs_403_archive_fallback_degraded():
     finally:
         series_registry.SERIES = saved_series
         civiqs._get, civiqs._payloads = saved_get, saved_payloads
+        civiqs._stale = saved_stale
     assert built["civiqs_net"] and failures == {}
     assert source_failures == [] and diagnostics[0]["source"] == "civiqs"
     row = source_row(status.as_dict(), "civiqs")
@@ -282,8 +300,8 @@ def test_real_adapter_malformed_errors_are_terminal_at_the_registry_seam():
             f"{sce.URL} answered 31 bytes that are not an xlsx "
             "(starts b'<html>'); refusing the body"),
         RuntimeError(
-            "no Conference Board headline reading on the page: nothing is "
-            "printed against (1985=100)"),
+            "the SCE body is not a readable xlsx (BadZipFile); refusing to "
+            "parse whatever this is"),
         RuntimeError(
             "Google Trends explore response did not parse as JSON; the "
             "endpoint contract changed and this adapter needs revisiting"),
@@ -295,12 +313,17 @@ def test_real_adapter_malformed_errors_are_terminal_at_the_registry_seam():
     for error in actual_errors:
         assert reliability.terminal_error(error, source=True), error
 
-    saved_series, saved_current = series_registry.SERIES, confboard.current
+    # A body that arrived but is not the artifact we asked for is the case
+    # that must never reach the archive fallback: the request succeeded, so a
+    # transport-shaped retry would loop, and filing it would poison every later
+    # archive-first read. The exemplar was the Conference Board until it was
+    # withdrawn on rights grounds on 2026-09-03 (issue #68); here a 200 that is
+    # a login page rather than the workbook.
+    saved_series, saved_fetch = series_registry.SERIES, sce.fetch_bytes
     series_registry.SERIES = {
-        "consumer_confidence": {"source": "confboard"},
+        "sce_1y": {"source": "sce", "sce": {"horizon": "1y"}},
     }
-    confboard.current = lambda: confboard.parse(
-        "<html><body>HTTP 200 login page</body></html>")
+    sce.fetch_bytes = lambda *_a, **_k: b"<html><body>HTTP 200 login</body></html>"
     status = reliability.RunStatus(NOW)
     try:
         built, failures, source_failures, diagnostics = \
@@ -308,12 +331,12 @@ def test_real_adapter_malformed_errors_are_terminal_at_the_registry_seam():
                 [], [], [], {}, set(), status,
                 next_deadline=DEADLINE, next_lock=LOCK)
     finally:
-        series_registry.SERIES, confboard.current = saved_series, saved_current
-    assert built == {} and set(failures) == {"confboard"}
+        series_registry.SERIES, sce.fetch_bytes = saved_series, saved_fetch
+    assert built == {} and set(failures) == {"sce"}
     assert len(source_failures) == 1 and diagnostics == []
-    row = source_row(status.as_dict(), "confboard")
+    row = source_row(status.as_dict(), "sce")
     assert row["state"] == "unresolvable"
-    assert "no Conference Board headline" in row["last_error"]
+    assert "not a readable xlsx" in row["last_error"]
 
 
 def test_failed_generic_source_cannot_reappear_as_a_derived_margin():
