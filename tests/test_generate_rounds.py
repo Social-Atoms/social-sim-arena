@@ -4,7 +4,7 @@ import json
 import os
 import sys
 from unittest import mock
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -276,14 +276,28 @@ def test_the_wiki_week_phrase_matches_the_reviewed_wording():
 
 def test_wiki_top10_rolls_the_reviewed_contract_forward():
     """Four future weeks, each inheriting the contract a human approved."""
-    now = datetime(2026, 8, 31, 21, tzinfo=timezone.utc)
     rounds = _season()
-    out = gen.wiki_candidates(rounds, 4, now, through=date(2026, 11, 17))
-    assert [r["round_id"] for r in out] == [
-        "wiki-top10-2026-10-25", "wiki-top10-2026-11-01",
-        "wiki-top10-2026-11-08", "wiki-top10-2026-11-15"]
     tpl = max((r for r in rounds if r["round_id"].startswith("wiki-top10")),
               key=lambda r: r["ranking"]["week_end"])
+    last = date.fromisoformat(tpl["ranking"]["week_end"])
+    # `now` is anchored to the newest reviewed week rather than to a literal
+    # date. Fixed at one, this test goes empty the moment the family is
+    # promoted far enough that the next four weeks fall outside
+    # MAX_WEEKS_AHEAD -- which is a normal state for a season that is being
+    # extended, and says nothing about whether the roll-forward works.
+    now = datetime.combine(last - timedelta(days=6), datetime.min.time(),
+                           tzinfo=timezone.utc)
+    # Count-bounded, not date-bounded: with `through` set the loop runs to
+    # that date and ignores the count, so passing both would test neither.
+    out = gen.wiki_candidates(rounds, 4, now)
+    # Derived from the newest reviewed round rather than pinned: promoting a
+    # generated week makes it reviewed, and the next candidate moves on. A
+    # literal list here would go red every time this family is extended, which
+    # is the thing it exists to make routine.
+    last = date.fromisoformat(tpl["ranking"]["week_end"])
+    assert [r["round_id"] for r in out] == [
+        f"wiki-top10-{(last + timedelta(days=7 * (i + 1))).isoformat()}"
+        for i in range(4)], [r["round_id"] for r in out]
     for r in out:
         assert r["resolve"] == tpl["resolve"] and r["unit"] == tpl["unit"]
         for k in ("kind", "length", "loss", "rbo_p", "project", "access",
@@ -325,6 +339,94 @@ def test_wiki_generation_refuses_two_different_spacings():
     else:
         raise AssertionError("inconsistent spacings were templated from anyway")
     print("ok test_wiki_generation_refuses_two_different_spacings")
+
+
+def test_the_trends_basket_rolls_forward_and_keeps_its_shape():
+    """October's only non-Civiqs candidates, and its only profile round.
+
+    Every other candidate that month is a Civiqs scalar. Without this family
+    October asks one question shape, from one source, sixteen ways -- and the
+    sixteen approval cuts are 0.75-correlated, so it is close to one question.
+    """
+    rounds = _season()
+    tpl = max((r for r in rounds if r["round_id"].startswith("trends-basket")),
+              key=lambda r: r["release_at"])
+    last = date.fromisoformat(tpl["release_at"][:10])
+    # Anchored to the newest reviewed week, for the reason the wiki test above
+    # gives: a literal clock empties this test as soon as the family is
+    # promoted past MAX_WEEKS_AHEAD, which is a normal state and not a defect.
+    now = datetime.combine(last - timedelta(days=6), datetime.min.time(),
+                           tzinfo=timezone.utc)
+    out = gen.trends_candidates(rounds, 4, now)
+    assert [r["round_id"] for r in out] == [
+        f"trends-basket-{(last + timedelta(days=7 * (i + 1))).isoformat()}"
+        for i in range(4)], [r["round_id"] for r in out]
+    for r in out:
+        assert r["unit"] == tpl["unit"] and r["target_type"] == tpl["target_type"]
+        assert list(r["cells"]) == list(tpl["cells"])
+        # Locks before its week begins, like the ranking family: the shares
+        # accumulate over the seven days after the lock.
+        assert r["lock_at"][:10] < r["release_at"][:10]
+        assert gen.batches.governed_by_batch(r["lock_at"])
+        # The resolve rule names its own week, not the template's.
+        assert r["release_at"][:10] in r["resolve"]
+        assert tpl["release_at"][:10] not in r["resolve"]
+        gen.profile_round.cells_for(r)
+    print("ok test_the_trends_basket_rolls_forward_and_keeps_its_shape")
+
+
+def test_a_seasonal_note_is_never_carried_into_a_month_it_is_false_in():
+    """The reviewed rounds end with "September is Apple's announcement window,
+    the largest regular swing in this basket." It is a claim about September.
+
+    Repeating a question a human approved is what a template is for. Repeating
+    a seasonal hint into October is inventing a claim, and a wrong one -- so
+    generated rounds carry no note, and the constant is still required to
+    reproduce the reviewed wording when the note is supplied.
+    """
+    rounds = _season()
+    reviewed = [r for r in rounds if r["round_id"].startswith("trends-basket")]
+    assert reviewed, "fixture: no reviewed basket round"
+    # Some carry the note and some do not -- the originals were written by
+    # hand in September, the later weeks were rolled forward. What matters is
+    # that at least one reviewed round has it, so this test is still testing
+    # something, and that no generated round does.
+    assert any("Apple" in r["question"] for r in reviewed), \
+        "fixture: no reviewed round carries the seasonal note any more"
+    last = date.fromisoformat(max(r["release_at"][:10] for r in reviewed))
+    now = datetime.combine(last - timedelta(days=6), datetime.min.time(),
+                           tzinfo=timezone.utc)
+    for r in gen.trends_candidates(rounds, 4, now):
+        assert "Apple" not in r["question"], r["round_id"]
+        assert "September" not in r["question"], r["round_id"]
+        assert r["question"].startswith("Google Trends, United States:")
+        assert r["question"].endswith("The five shares add to 100.")
+    print("ok test_a_seasonal_note_is_never_carried_into_a_month_it_is_false_in")
+
+
+def test_trends_generation_refuses_drifted_wording_and_split_spacings():
+    rounds = [dict(r) for r in _season()
+              if r["round_id"].startswith("trends-basket")]
+    drifted = [dict(r) for r in rounds]
+    drifted[-1]["question"] = drifted[-1]["question"].replace(
+        "five-brand total", "six-brand total")
+    assert "six-brand" in drifted[-1]["question"], "fixture: nothing drifted"
+    try:
+        gen.trends_candidates(drifted, 1, datetime(2026, 9, 3, tzinfo=timezone.utc))
+    except ValueError as e:
+        assert "no longer reproduces" in str(e), e
+    else:
+        raise AssertionError("drifted wording was generated anyway")
+
+    split = [dict(r) for r in rounds]
+    split[0] = dict(split[0], lock_at="2026-08-27T14:00:00Z")
+    try:
+        gen.trends_candidates(split, 1, datetime(2026, 9, 3, tzinfo=timezone.utc))
+    except ValueError as e:
+        assert "different" in str(e), e
+    else:
+        raise AssertionError("inconsistent spacings were templated from anyway")
+    print("ok test_trends_generation_refuses_drifted_wording_and_split_spacings")
 
 
 def _generated(now="2026-09-01T12:00:00Z", weeks=8):
@@ -446,4 +548,7 @@ if __name__ == "__main__":
     test_wiki_top10_rolls_the_reviewed_contract_forward()
     test_wiki_generation_refuses_to_ask_something_nobody_reviewed()
     test_wiki_generation_refuses_two_different_spacings()
-    print("18 passed")
+    test_the_trends_basket_rolls_forward_and_keeps_its_shape()
+    test_a_seasonal_note_is_never_carried_into_a_month_it_is_false_in()
+    test_trends_generation_refuses_drifted_wording_and_split_spacings()
+    print("21 passed")
