@@ -7,7 +7,11 @@ name: hygiene
 on:
   pull_request:
   push:
-    branches: [main]
+    # dev as well as main. A commit pushed straight to dev was scanned by
+    # nothing: this ran on pull requests and on pushes to main, and a direct
+    # push to dev is neither. That is how the one commit message this check
+    # objects to today reached the tree in the first place.
+    branches: [main, dev]
 
 jobs:
   hygiene:
@@ -50,11 +54,39 @@ jobs:
             exit 1
           fi
 
+      # "New" means new to the repository, and this now says so. It runs on
+      # every push to main and dev, where a commit genuinely arrives, and on
+      # every pull request except a release merge into main.
+      #
+      # That exception is the point of this change. A dev -> main merge carries
+      # the whole accumulated backlog, so `origin/main..HEAD` is not the
+      # commits the pull request writes -- it is every commit written since the
+      # last release, each already scanned when it landed on dev. Scanned there
+      # and again here, one objection makes every future release merge red
+      # forever, and a check that is always red is a check nobody reads. It is
+      # already happening: `e2efe649` renamed some wording *to comply with this
+      # guard* and quoted the banned phrase in its message to explain why.
+      #
+      # Coverage goes up, not down. Before this, a direct push to dev was
+      # scanned by nothing at all.
       - name: no venue talk in new commit messages
-        if: github.event_name == 'pull_request'
+        if: >-
+          github.event_name == 'push' ||
+          github.base_ref != 'main' ||
+          github.head_ref != 'dev'
         run: |
+          set -e
           pats='ICLR|NeurIPS|camera-ready|rebuttal|submission deadline'
-          if git log --format=%B origin/${{ github.base_ref }}..HEAD | grep -inE "$pats"; then
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            range="origin/${{ github.base_ref }}..HEAD"
+          elif [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            # A new branch has no "before"; scan its tip alone rather than
+            # every commit that has ever existed.
+            range="-1 HEAD"
+          else
+            range="${{ github.event.before }}..${{ github.sha }}"
+          fi
+          if git log --format=%B $range | grep -inE "$pats"; then
             echo "venue talk in a commit message; keep it in the paper repo"
             exit 1
           fi
