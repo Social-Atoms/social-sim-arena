@@ -599,6 +599,121 @@ def trends_candidates(rounds, weeks, now, through=None):
     return out
 
 
+# --- the Civiqs sixteen-cell demographic profile ------------------------------
+#
+# The headline round type, and until this existed it had three instances: three
+# hand-written weeks in September and then nothing. The energy score over a
+# sixteen-dimensional vector is the thing this benchmark does that a scalar
+# board cannot, and it was scheduled to stop.
+#
+# Simpler to template than the Trends basket: the three reviewed rounds share
+# their cells, their unit and their resolve rule byte for byte, and their
+# questions differ only in the Friday they name.
+
+CIVIQS_PROFILE_SERIES = "civiqs_net_approval"
+CIVIQS_PROFILE_ID = "civiqs-profile-{year}-w{week:02d}"
+
+CIVIQS_PROFILE_QUESTION = (
+    "Civiqs daily tracker, Trump net approval among registered voters, full "
+    "16-cell demographic profile, {day} dashboard values")
+
+CIVIQS_PROFILE_CELLS = 16
+
+
+def _friday_phrase(d):
+    """`Friday Sep 11`, the way the reviewed rounds write it."""
+    return f"{d.strftime('%A %b')} {d.day}"
+
+
+def civiqs_profile_template(rounds):
+    """(newest reviewed profile round, lock offset from the release).
+
+    Raises when the reviewed rounds disagree on their cells, their spacing or
+    their wording. Sixteen cells is not a substitution away from working at
+    another width -- the question says "16-cell" in words -- so a different
+    vector needs its own reviewed sentence rather than an interpolated one.
+    """
+    # Every profile round on this series, whatever its width. Filtering to
+    # sixteen here would silently exclude a round somebody had narrowed, and
+    # keep templating the old width from its older siblings -- the family would
+    # drift without anything raising. Selected by series, then required to
+    # agree.
+    got = sorted((r for r in rounds
+                  if r.get("cells") and r.get("series") == CIVIQS_PROFILE_SERIES),
+                 key=lambda r: r["release_at"])
+    if not got:
+        raise ValueError(
+            "no reviewed Civiqs 16-cell profile round to template from; this "
+            "generator extends an existing contract rather than inventing one")
+    shapes = {(tuple(r["cells"]), r["unit"], r["resolve"]) for r in got}
+    if len(shapes) != 1:
+        raise ValueError(
+            f"the reviewed Civiqs profile rounds disagree on cells, unit or "
+            f"resolve rule across {len(shapes)} variants")
+    if len(got[-1]["cells"]) != CIVIQS_PROFILE_CELLS:
+        raise ValueError(
+            f"{got[-1]['round_id']} has {len(got[-1]['cells'])} cells, but the "
+            f"reviewed wording says {CIVIQS_PROFILE_CELLS} in words; a "
+            "different vector needs its own reviewed sentence, not an "
+            "interpolated one")
+    offsets = set()
+    for r in got:
+        rel = datetime.fromisoformat(r["release_at"].replace("Z", "+00:00"))
+        lock = datetime.fromisoformat(r["lock_at"].replace("Z", "+00:00"))
+        offsets.add(lock - rel)
+        rebuilt = CIVIQS_PROFILE_QUESTION.format(
+            day=_friday_phrase(rel.date()))
+        if rebuilt != r["question"]:
+            raise ValueError(
+                f"CIVIQS_PROFILE_QUESTION no longer reproduces "
+                f"{r['round_id']}'s wording; the reviewed question changed and "
+                "the template did not")
+    if len(offsets) != 1:
+        raise ValueError(
+            f"the reviewed Civiqs profile rounds use {len(offsets)} different "
+            f"lock spacings: {sorted(map(str, offsets))}")
+    return got[-1], offsets.pop()
+
+
+def civiqs_profile_candidates(rounds, weeks, now, through=None):
+    """Future 16-cell profile rounds, count-bounded or date-bounded."""
+    tpl, lock_off = civiqs_profile_template(rounds)
+    taken = {r["round_id"] for r in rounds}
+    rel = datetime.fromisoformat(tpl["release_at"].replace("Z", "+00:00"))
+    out = []
+    while through is not None or len(out) < weeks:
+        rel = rel + timedelta(days=7)
+        lock = rel + lock_off
+        if through is not None and rel.date() > through:
+            break
+        if lock <= now or not publishable(lock, now):
+            continue
+        if through is None and (rel - now).days > MAX_WEEKS_AHEAD * 7:
+            break
+        year, week = rel.date().isocalendar()[:2]
+        r = {
+            "round_id": CIVIQS_PROFILE_ID.format(year=year, week=week),
+            "tracker": tpl["tracker"],
+            "series": tpl["series"],
+            "cells": list(tpl["cells"]),
+            "question": CIVIQS_PROFILE_QUESTION.format(
+                day=_friday_phrase(rel.date())),
+            "unit": tpl["unit"],
+            "release_at": rel.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "release_estimated": tpl.get("release_estimated", False),
+            "lock_at": lock.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "resolve": tpl["resolve"],
+            "target_type": tpl["target_type"],
+        }
+        # Validate through the scorer at generation time, as the other two
+        # families do.
+        profile_round.cells_for(r)
+        if r["round_id"] in taken:
+            continue
+        out.append(r)
+    return out
+
+
 def week_phrase(start, end):
     """`Mon Aug 31 - Sun Sep 6, 2026`, the way the reviewed rounds write it.
 
@@ -810,6 +925,14 @@ def main():
                 continue
             r["_new_series"] = sid not in already
             made.append(r)
+
+    # The Civiqs 16-cell profile: the headline round type, which had three
+    # hand-written weeks and no way to continue.
+    for r in civiqs_profile_candidates(rounds, weeks, now, through=through):
+        r["_sn"] = float("nan")     # a 16-vector has no scalar S/N
+        r["_move"] = float("nan")
+        r["_new_series"] = False
+        made.append(r)
 
     # The Trends basket: a profile round with no registry row to iterate over,
     # for the same reason the ranking family has none -- its answer is a vector
