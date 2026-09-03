@@ -113,6 +113,12 @@ def test_the_candidate_job_never_promotes_anything():
         f"the candidate job touches the season file: {touching}"
     assert "--write" in body and "questions/candidates/" in body
     assert "gh pr create" in body, "candidates arrive as a pull request to read"
+    # A scheduled workflow runs only from the default branch. Anyone reading
+    # this file on `dev` and expecting Thursday to happen is about to lose a
+    # week, so the file has to say so.
+    assert "default branch" in body, \
+        "the job must say that `schedule:` fires only from the default branch"
+    assert "workflow_dispatch" in body, "and give a way to run it before then"
     assert "--base dev" in body, "never straight to main"
     # Offline and free: the generator holds no key and makes no request, so a
     # source being down cannot fail this job and this job cannot spend money.

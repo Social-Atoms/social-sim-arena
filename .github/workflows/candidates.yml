@@ -18,6 +18,12 @@ name: candidates
 # Offline and free: the generator reads committed archives, holds no key, and
 # makes no upstream request. A source being down cannot fail this job.
 
+# One thing about `schedule:` that is easy to lose a week to: GitHub runs it
+# only from the default branch. This file sitting on `dev` fires nothing, ever.
+# It starts working the day it reaches `main` -- until then, run it by hand from
+# the Actions tab (`workflow_dispatch`, below) or locally with
+# `PYTHONPATH=. python tools/generate_rounds.py --weeks 8 --write`.
+
 on:
   schedule:
     # Thursdays 06:00Z. The batch published on Monday closes the Monday after,
