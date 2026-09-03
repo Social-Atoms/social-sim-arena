@@ -145,8 +145,44 @@ def test_the_page_reads_only_keys_the_pipeline_publishes():
           f"({len(read)} keys read, all published)")
 
 
+def test_no_page_promises_a_date_it_cannot_know():
+    """A static page cannot know what happens next.
+
+    `site/docs.html` carried "(next: preliminary Aug 14, final Aug 28, both
+    10:00 ET)" beside a link to the very calendar that answers the question.
+    It was three weeks stale by the time anyone was pointed at the site, which
+    is the kind of wrong that makes a live benchmark read as abandoned.
+
+    This is a rule rather than a date check, so it cannot itself go stale: a
+    page may state a fixed event ("the midterm, Nov 3, 2026") or a fact about
+    the past ("live rounds from Aug 11"), and may not claim to know the next
+    occurrence of a recurring release. That belongs in `data.json`, which is
+    rebuilt every six hours, or behind the link.
+    """
+    import re
+    forward = re.compile(
+        r"(next:|next release|upcoming release|coming up)[^<.]{0,40}"
+        r"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2}",
+        re.IGNORECASE)
+    offenders = []
+    for name in sorted(os.listdir(os.path.join(ROOT, "site"))):
+        if not name.endswith(".html"):
+            continue
+        with open(os.path.join(ROOT, "site", name)) as fh:
+            body = fh.read()
+        for m in forward.finditer(body):
+            offenders.append(f"{name}: {m.group(0)[:70]}")
+    assert not offenders, (
+        "a page hard-codes the next occurrence of a recurring release, which "
+        "is wrong within a month of being written:\n  "
+        + "\n  ".join(offenders))
+    print(f"ok test_no_page_promises_a_date_it_cannot_know "
+          f"({len([n for n in os.listdir(os.path.join(ROOT, 'site')) if n.endswith('.html')])} pages)")
+
+
 if __name__ == "__main__":
     test_every_leaderboard_tab_renders_something_a_participant_can_read()
     test_the_landing_page_names_each_round_shape_and_the_right_deadline()
     test_the_page_reads_only_keys_the_pipeline_publishes()
-    print("3 passed")
+    test_no_page_promises_a_date_it_cannot_know()
+    print("4 passed")
