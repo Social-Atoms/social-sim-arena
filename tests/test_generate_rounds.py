@@ -111,7 +111,15 @@ def test_silver_bulletin_field_midpoints_cannot_become_release_dates():
     meta = SERIES["mc_approval"]
     polls = sb.approval_polls(rows=rows, **meta["filters"])
     history = sb.to_series(polls, meta["value"])
-    assert history[-1]["date"] == "2026-08-15"  # field midpoint, Saturday
+    # No literal date here. This reads the newest committed CSV, so the last
+    # point moves every time the archive grows -- it was pinned to 2026-08-15
+    # and went red the moment main's data refreshes were merged in. The
+    # behaviour under test is the refusal below, which does not move. Nor
+    # would a weekday assertion help: these midpoints have landed on Saturday
+    # twenty times running, which is exactly the disguise
+    # `test_schedule_comes_from_source_semantics_not_a_modal_weekday` exists
+    # for -- a modal weekday is not evidence of a publication calendar.
+    assert history, "fixture: mc_approval built no history from the newest CSV"
 
     ok, why = gen.gate("mc_approval", meta, history)
     assert not ok and why["gate"] == "schedule", why
