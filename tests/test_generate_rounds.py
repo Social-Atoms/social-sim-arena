@@ -429,6 +429,67 @@ def test_trends_generation_refuses_drifted_wording_and_split_spacings():
     print("ok test_trends_generation_refuses_drifted_wording_and_split_spacings")
 
 
+def test_the_headline_profile_round_no_longer_stops_in_september():
+    """Sixteen cells scored with the energy score is the thing this benchmark
+    does that a scalar board cannot, and it had three instances.
+
+    `civiqs-profile-2026-w37`, `-w38` and `-w39` were written by hand and
+    nothing continued them, so the headline round type was scheduled to stop on
+    2026-09-25 while the scalar board ran to December.
+    """
+    rounds = _season()
+    tpl = max((r for r in rounds if r["round_id"].startswith("civiqs-profile")),
+              key=lambda r: r["release_at"])
+    last = date.fromisoformat(tpl["release_at"][:10])
+    now = datetime.combine(last - timedelta(days=6), datetime.min.time(),
+                           tzinfo=timezone.utc)
+    out = gen.civiqs_profile_candidates(rounds, 4, now)
+    assert len(out) == 4, [r["round_id"] for r in out]
+    for i, r in enumerate(out):
+        rel = date.fromisoformat(r["release_at"][:10])
+        assert rel == last + timedelta(days=7 * (i + 1)), r["round_id"]
+        assert rel.strftime("%a") == "Fri", "the dashboard value is Friday's"
+        assert len(r["cells"]) == 16 and r["cells"] == tpl["cells"]
+        assert r["unit"] == tpl["unit"] and r["resolve"] == tpl["resolve"]
+        assert r["lock_at"][:10] < r["release_at"][:10]
+        assert gen.batches.governed_by_batch(r["lock_at"])
+        assert rel.strftime("%b %-d") in r["question"], r["question"]
+        gen.profile_round.cells_for(r)
+    print("ok test_the_headline_profile_round_no_longer_stops_in_september")
+
+
+def test_a_sixteen_cell_question_is_not_interpolated_to_another_width():
+    """The reviewed wording says "16-cell" in words, so it is not a
+    substitution away from working at another width. A different vector needs
+    its own reviewed sentence."""
+    rounds = [dict(r) for r in _season()
+              if r["round_id"].startswith("civiqs-profile")]
+    now = datetime(2026, 9, 3, tzinfo=timezone.utc)
+
+    narrowed = [dict(r) for r in rounds]
+    narrowed[-1] = dict(narrowed[-1], cells=narrowed[-1]["cells"][:8])
+    try:
+        gen.civiqs_profile_candidates(narrowed, 1, now)
+    except ValueError as e:
+        # Either it no longer looks like a member of the family, or the family
+        # disagrees with itself. Both are refusals; neither interpolates.
+        assert "no reviewed" in str(e) or "disagree" in str(e), e
+    else:
+        raise AssertionError("an 8-cell round was templated as 16")
+
+    drifted = [dict(r) for r in rounds]
+    drifted[-1] = dict(drifted[-1],
+                       question=drifted[-1]["question"].replace("16-cell",
+                                                                "17-cell"))
+    try:
+        gen.civiqs_profile_candidates(drifted, 1, now)
+    except ValueError as e:
+        assert "no longer reproduces" in str(e), e
+    else:
+        raise AssertionError("drifted wording was generated anyway")
+    print("ok test_a_sixteen_cell_question_is_not_interpolated_to_another_width")
+
+
 def _generated(now="2026-09-01T12:00:00Z", weeks=8):
     """Every candidate the tool actually prints, as (round_id, lock_at).
 
@@ -551,4 +612,6 @@ if __name__ == "__main__":
     test_the_trends_basket_rolls_forward_and_keeps_its_shape()
     test_a_seasonal_note_is_never_carried_into_a_month_it_is_false_in()
     test_trends_generation_refuses_drifted_wording_and_split_spacings()
-    print("21 passed")
+    test_the_headline_profile_round_no_longer_stops_in_september()
+    test_a_sixteen_cell_question_is_not_interpolated_to_another_width()
+    print("23 passed")
