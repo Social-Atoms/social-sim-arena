@@ -7,6 +7,52 @@ OpenAI-compatible chat-completions base URL; the arena reuses its existing
 request runner, response-text extraction, validation, and filing window. There
 is no arena SDK or long-running process for participants to install.
 
+## Registration
+
+A `route` block in `entrants/<entrant_id>.json` is what turns a rehearsed
+endpoint into one the season calls:
+
+```json
+"route": {
+  "kind": "agent_api",
+  "base_url": "https://api.acme.example/v1",
+  "auth": "bearer",
+  "model": "ssa-agent"
+}
+```
+
+`auth` and `model` are optional and default to `"bearer"` and `"ssa-agent"`.
+A registration with no `route` is unchanged in meaning: that entrant hands its
+forecasts over itself, which is what every registration written before this
+field did.
+
+**The credential is derived, never declared.** The arena reads the bearer token
+from `SSA_ENTRANT_KEY_<ENTRANT_ID>`, computed from the entrant id. There is no
+field naming it, and the schema refuses one: a registration that could name its
+own variable could name `ANTHROPIC_API_KEY`, and the arena would put our
+provider key in an `Authorization` header addressed to the `base_url` in the
+same file. It would equally let one participant ask to be called with another's
+credential.
+
+Three further rules follow from a registration being a public file:
+
+- **HTTPS only**, checked in the schema when the registration is opened as a
+  pull request and again in `ssa/participants.py` every time a token is about
+  to be sent.
+- **No standby.** Our own models fall back to OpenRouter when a route is
+  terminally down. A participant's endpoint is the only place their forecast
+  can come from; falling back would send their round to a vendor on our account
+  and file the reply under their name. A participant whose endpoint is down has
+  no forecast that round.
+- **No `SSA_BASE_` override.** That escape hatch exists for a self-hosted
+  gateway of ours. Applied to someone else's registration, an environment
+  variable would silently redirect their round to a host their public record
+  does not name.
+
+Until the key is installed the entrant is simply not on the roster: not called,
+and not failing the run every six hours. Onboarding is not a fault, and a red
+run every cycle through a week of it teaches everyone to ignore the colour.
+
 ## Endpoint and authentication
 
 The arena calls:
@@ -78,8 +124,11 @@ an argument: a key on the command line is in `ps` output, in shell history, and
 in the log of whoever pastes the command into an issue. Transient failures are
 retried; a 4xx is an answer and is never retried.
 
-`--entrant <id>` refuses to probe a registration whose
-`entrants/<id>.json` carries `"status": "revoked"`. Revocation stops both
+`--entrant <id>` reads the route from `entrants/<id>.json` — base URL and the
+derived credential variable — so the maintainer-side probe aims at the endpoint
+the season will actually call rather than at whatever was typed on the command
+line. `--base-url` becomes optional when it does. It also refuses to probe a
+registration whose `entrants/<id>.json` carries `"status": "revoked"`. Revocation stops both
 routes at once: the bundle intake refuses an upload before issuing a receipt,
 and the probe refuses to make the call. A revocation the arena does not honour
 is a revocation in name only.

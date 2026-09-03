@@ -50,6 +50,7 @@ from datetime import datetime, timezone
 import requests
 
 from . import batches
+from . import participants
 from . import replies
 
 # Reasoning depth is set as high as each provider allows, and the parameter is
@@ -323,6 +324,20 @@ def route(entrant, via=None):
     still apply on top of whichever route is chosen; they are the escape hatch
     for a self-hosted gateway and they stay the most specific thing there is.
     """
+    # A registered Route A participant is answered by their own endpoint, so
+    # the lookup happens before `resolve`, which only knows our models and
+    # would raise on their id. `via="participant"` is not selectable: their
+    # registration is the only thing that decides where they are reached.
+    seat = participants.route(entrant)
+    if seat is not None:
+        if via not in (None, "participant"):
+            raise ValueError(
+                f"{entrant} is a Route A participant; it is reached at the "
+                f"endpoint in its registration, not via {via!r}")
+        return seat
+    if via == "participant":
+        raise ValueError(f"{entrant} is not a registered Route A participant")
+
     model = resolve(entrant)[0]
     if via == "openrouter":
         if model not in OPENROUTER_MODELS:
@@ -343,7 +358,14 @@ def standby_route(entrant):
     There is one only when the model is in the OpenRouter table, the key is
     present, and the configured route is not already OpenRouter -- falling back
     from a host to itself is not a fallback.
+
+    Never for a Route A participant. Their endpoint is the only place their
+    forecast can come from; falling back would send their round to a vendor on
+    our account and file the reply under their name. A participant whose
+    endpoint is down has no forecast that round, and that is the honest result.
     """
+    if participants.is_participant(entrant):
+        return None
     model = resolve(entrant)[0]
     if model not in OPENROUTER_MODELS:
         return None
@@ -982,6 +1004,8 @@ def model_id(entrant, via=None):
     Accepts either a model key or a full entrant id; the condition suffix does
     not change which model answers, so both resolve to the same name.
     """
+    if participants.is_participant(entrant):
+        return route(entrant, via)["model"]
     model = resolve(entrant)[0]
     return (os.environ.get("SSA_MODEL_" + _env_suffix(model))
             or route(entrant, via)["model"])
@@ -1007,6 +1031,12 @@ def base_url(entrant, via=None):
     the configured gateway and invalidated their whole backtest cache, since
     `call_identity` (and therefore the cache key) contains the base URL.
     """
+    # No override for a participant. `SSA_BASE_<X>` is our escape hatch for a
+    # self-hosted gateway of our own; applied to someone else's registration it
+    # would let an environment variable silently send their round to a host
+    # their public record does not name.
+    if participants.is_participant(entrant):
+        return route(entrant, via)["base"].rstrip("/")
     model = resolve(entrant)[0]
     return (os.environ.get("SSA_BASE_" + _env_suffix(model))
             or route(entrant, via)["base"]).rstrip("/")
@@ -1022,6 +1052,12 @@ def has_key(entrant):
     configured. Reading the vendor's alone would report ready for an entrant
     that cannot be called, and not ready for one that can.
     """
+    if participants.is_participant(entrant):
+        # A participant's readiness is their registration plus their key, and
+        # `callable_now` is where both are decided. Reading the environment
+        # here would report an `auth: "none"` endpoint as unreachable (its
+        # `env` is the empty string) and a revoked one as ready.
+        return participants.callable_now(entrant)[0]
     if os.environ.get(route(entrant)["env"]):
         return True
     standby = standby_route(entrant)
@@ -2421,6 +2457,17 @@ def forecast(entrant, r, history=None, previous=None, context=None,
 
     So a run that dies, or a reply that does not parse, costs the tokens once.
     """
+    # A Route A participant is answered by their own endpoint under a
+    # different contract, so it dispatches before `resolve`, which knows only
+    # our models. Imported here rather than at module scope because
+    # `ssa.agent_api` reuses `_ask` and importing it at the top would be a
+    # cycle.
+    if participants.is_participant(entrant):
+        from . import agent_api
+        return agent_api.forecast(
+            entrant, r, history=history, previous=previous,
+            profile_history=profile_history, ranking_history=ranking_history)
+
     # The condition is carried by the entrant id, so a caller cannot file a
     # forecast under one entrant while prompting for another.
     _, ctx_of_id, eli_of_id = resolve(entrant)

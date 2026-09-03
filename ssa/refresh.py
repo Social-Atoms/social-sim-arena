@@ -22,6 +22,7 @@ from . import provenance
 from . import reliability
 from . import stamps
 from . import average, backtest, baselines, batches, envfile, harness, scoring, sharecard
+from . import participants
 from . import profile_round
 from . import ranking_round
 from . import series as series_registry
@@ -378,11 +379,25 @@ def elicitation_variants(value=None):
 
 
 def season_roster():
-    """(entrant_id, model, variant) for every condition this run will file."""
+    """(entrant_id, model, variant) for every condition this run will file.
+
+    Route A participants are appended last and only when they can actually be
+    called -- registered, not revoked, credential installed. A registration
+    that is missing its key is left out of the roster rather than queued and
+    failed every six hours: the entrant has not gone wrong, we have not
+    finished onboarding them, and a red run every cycle through a week of
+    onboarding trains everyone to ignore the colour.
+    """
     roster = [] if elicitation_only() else list(harness.season_entrants())
     want = elicitation_variants()
     if want:
         roster += list(harness.elicitation_entrants(variants=want))
+    for entrant in participants.registered():
+        if participants.callable_now(entrant)[0]:
+            # The model/context/elicitation slots are ours, not theirs: what
+            # generates a participant's answer is their business, and is
+            # recorded in their registration's `method`.
+            roster.append((entrant, "agent-api", "participant", "participant"))
     return roster
 
 
@@ -763,6 +778,12 @@ def price_jobs(jobs, hist_by_round, read_forecast, news_for, prof_hist=None,
     from . import model_backtest
     billable, usd = [], 0.0
     for r, entrant, path in jobs:
+        if participants.is_participant(entrant):
+            # A Route A call bills the participant's own provider, not ours,
+            # so it is genuinely $0 here. Named rather than reached by way of
+            # the KeyError below, so "free" is a statement about who pays and
+            # not a side effect of an id this module could not resolve.
+            continue
         try:
             model, ctx, eli = harness.resolve(entrant)
         except KeyError:
