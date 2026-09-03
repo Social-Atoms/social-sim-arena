@@ -454,25 +454,46 @@ def test_a_weekday_with_no_observations_raises_rather_than_returning_empty(a):
 @with_archive
 def test_a_failed_fetch_serves_the_archive_but_an_empty_archive_raises(a):
     def boom(url):
-        raise RuntimeError("SSLZeroReturnError")
+        raise TimeoutError()
     civiqs._get = boom
     try:
         civiqs.as_displayed(TRACKER, choice="Approve")
         assert False, "no archive and no network must raise"
-    except RuntimeError:
+    except TimeoutError:
         pass
     a.serve(page())
     civiqs.snapshot(TRACKER, now=at("2026-08-12"))
     civiqs._get = boom
     # A refresh that dies here files no forecasts for any tracker, and rounds
     # lock on a hard deadline -- so a dead source degrades to a stale series.
+    diagnostics = []
     assert len(civiqs.as_displayed(TRACKER, choice="Approve",
-                                   now=at("2026-08-13"))) > 0
+                                   now=at("2026-08-13"),
+                                   diagnostics=diagnostics)) > 0
+    assert diagnostics[0]["source"] == "civiqs"
+    assert diagnostics[0]["scope"] == civiqs.archive_key(TRACKER)
+    assert isinstance(diagnostics[0]["error"], TimeoutError)
+    assert str(diagnostics[0]["error"]) == ""
+    assert "1 snapshots" in diagnostics[0]["archive_evidence"]
+
+
+@with_archive
+def test_a_malformed_live_civiqs_page_does_not_use_the_archive(a):
+    a.serve(page())
+    civiqs.snapshot(TRACKER, now=at("2026-08-12"))
+    a.serve("<html><body>not a loader payload</body></html>")
+    try:
+        civiqs.as_displayed(TRACKER, choice="Approve",
+                            now=at("2026-08-13"), diagnostics=[])
+    except RuntimeError as e:
+        assert "no Civiqs tracker payload" in str(e), e
+    else:
+        raise AssertionError("a malformed live page used the archive")
 
 
 # --- the registry and the rounds that depend on it --------------------------
 
-def test_both_civiqs_rounds_name_a_registered_series():
+def test_civiqs_rounds_name_registered_series_with_matching_contracts():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     with open(os.path.join(root, "questions", "season0.json")) as f:
         season = json.load(f)
@@ -482,41 +503,103 @@ def test_both_civiqs_rounds_name_a_registered_series():
         assert r["series"] in series_registry.SERIES, r["round_id"]
         spec = series_registry.SERIES[r["series"]]
         assert spec["source"] == "civiqs"
-        assert "net" in spec["unit"] and "net" in r["unit"]
-        # Both rounds ask for a Friday value; the series has to be sampled on
-        # the same day or the resolver answers a different question.
+        if r["round_id"] == "civiqs-2026-w34-approval":
+            # This already-published legacy round abbreviated the otherwise
+            # identical registry unit before exact unit checks existed.
+            assert r["unit"] == "net points"
+            assert spec["unit"] == "net points (approve minus disapprove)"
+        else:
+            assert r["unit"] == spec["unit"], r["round_id"]
+        # Every reviewed Civiqs round asks for a Friday value; the series has
+        # to be sampled on the same day or the resolver answers another target.
         assert spec["civiqs"]["weekday"] == 4
         assert datetime.strptime(r["release_at"], "%Y-%m-%dT%H:%M:%SZ") \
             .weekday() == 4, r["round_id"]
 
 
 @with_archive
-def test_build_all_uses_the_adapter_and_accepts_an_injected_override(a):
+def test_build_all_accepts_fully_injected_civiqs_without_network(a):
+    # If a future registry entry is missing from `injected`, fail on the fetch
+    # assertion below without ever touching the live host.
+    a.serve(page())
     saved = series_registry.SERIES
     series_registry.SERIES = {k: v for k, v in saved.items()
                               if v["source"] == "civiqs"}
     try:
         given = [{"date": "2026-08-07", "value": -23.9}]
-        out = series_registry.build_all(sources={"civiqs": {
-            "civiqs_net_approval": given,
-            "civiqs_net_approval_rep": [{"date": "2026-08-07", "value": 70.2}],
-        }})
+        injected = {
+            sid: [{"date": "2026-08-07", "value": float(i)}]
+            for i, sid in enumerate(sorted(series_registry.SERIES), start=1)
+        }
+        injected["civiqs_net_approval"] = given
+        injected["civiqs_net_approval_rep"] = [
+            {"date": "2026-08-07", "value": 70.2}]
+        out = series_registry.build_all(sources={"civiqs": injected})
+        assert set(out) == set(series_registry.SERIES)
         assert out["civiqs_net_approval"] == given
         assert out["civiqs_net_approval"] is not given, "must not alias"
-        assert len(a.fetched) == 0, "an injected series must not fetch"
+        assert len(a.fetched) == 0, "fully injected Civiqs must not fetch"
 
         # An override that is empty is a caller bug, not a tracker that went
         # quiet, and publishing it would put a zero on the site.
+        invalid = dict(injected, civiqs_net_approval=[])
         try:
-            series_registry.build_all(sources={"civiqs": {
-                "civiqs_net_approval": [],
-                "civiqs_net_approval_rep": [{"date": "2026-08-07", "value": 1}],
-            }})
+            series_registry.build_all(sources={"civiqs": invalid})
             assert False, "an empty series must raise"
         except RuntimeError as e:
             assert "zero points" in str(e)
     finally:
         series_registry.SERIES = saved
+
+
+def test_build_all_passes_registered_civiqs_contracts_to_the_adapter():
+    saved_series = series_registry.SERIES
+    saved_adapter = series_registry.civiqs_adapter.as_displayed
+    wanted = {
+        "civiqs_angry_share",
+        "civiqs_net_approval_rep",
+        "civiqs_net_inflation_concern",
+    }
+    series_registry.SERIES = {
+        sid: spec for sid, spec in saved_series.items() if sid in wanted}
+    calls = {}
+    diagnostics = []
+
+    def local_adapter(name, filters=None, *, choice=None, net=False,
+                      weekday=None, diagnostics=None):
+        assert diagnostics is adapter_diagnostics
+        calls[name] = {
+            "filters": filters,
+            "choice": choice,
+            "net": net,
+            "weekday": weekday,
+            "diagnostics": diagnostics,
+        }
+        return [{"date": "2026-08-07", "value": float(len(calls))}]
+
+    series_registry.civiqs_adapter.as_displayed = local_adapter
+    try:
+        adapter_diagnostics = diagnostics
+        out = series_registry.build_all(
+            sources={"civiqs": {}}, diagnostics=diagnostics)
+    finally:
+        series_registry.civiqs_adapter.as_displayed = saved_adapter
+        series_registry.SERIES = saved_series
+
+    assert set(out) == wanted
+    assert calls["describe_feeling_us"] == {
+        "filters": None, "choice": "Angry", "net": False, "weekday": 4,
+        "diagnostics": diagnostics}
+    assert calls["approve_president_trump_2025"] == {
+        "filters": {"party": "Republican"}, "choice": None, "net": True,
+        "weekday": 4, "diagnostics": diagnostics}
+    assert calls["inflation_impact"] == {
+        "filters": None, "choice": None,
+        "net": {
+            "minuend": ["Very concerned", "Somewhat concerned"],
+            "subtrahend": ["Not concerned at all", "A little concerned"],
+        },
+        "weekday": 4, "diagnostics": diagnostics}
 
 
 def test_the_registered_series_carry_the_text_an_entrant_is_shown():

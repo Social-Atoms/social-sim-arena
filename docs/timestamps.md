@@ -45,9 +45,9 @@ network access.
 
 **A manifest, not each forecast.** A round has thirty-four entrants; stamping
 each would be thirty-four submissions per round, and the thing a skeptic needs is
-"all of them, at the lock, and nothing added later". So `stamps/<round_id>.json`
-lists every forecast's canonical hash plus the lock snapshot's, and *that file*
-is stamped. One proof covers the round.
+"all of them when submissions closed, and nothing added later". So
+`stamps/<round_id>.json` lists every forecast's canonical hash plus the lock
+snapshot's, and *that file* is stamped. One proof covers the round.
 
 ```json
 {
@@ -86,25 +86,28 @@ hand back the path to it. `ots upgrade` rewrites the `.ots` with that path.
 A proof that is never upgraded still verifies — against a calendar. That means
 trusting the calendar operators, which is better than trusting us and is not the
 point. Every refresh calls `upgrade` on each existing proof, so a round is
-calendar-attested within minutes of its lock and Bitcoin-attested by the next
-day. `site/data.json` carries `bitcoin_attested` per round so the difference is
-visible rather than assumed.
+calendar-attested within one refresh of submission close and Bitcoin-attested
+by the next day. `site/data.json` carries `bitcoin_attested` per round so the
+difference is visible rather than assumed.
 
 ## The honest limit
 
-**A stamp proves existence at stamp time, not at lock time.**
+**A stamp proves existence at stamp time, not at the participant deadline.**
 
-For rounds stamped as they lock — every round from here on — those are minutes
-apart and the claim is tight. For rounds that locked *before* this landed, the
-manifest was built afterwards, so the proof says "this existed on the day it was
-stamped" and the earlier date still rests on git history alone. Those rounds are
-not retroactively fixed and this file does not pretend otherwise; the manifests
-carry `built_at` so the gap is readable.
+For rounds stamped when submissions close — the weekly batch deadline after the
+cutover, and each round's own lock before the cutover — those are minutes apart
+and the claim is tight. For rounds that closed *before* this landed, the
+manifest was built afterwards, so the proof says "this existed on the day it
+was stamped" and the earlier date still rests on git history alone. Those
+rounds are not retroactively fixed and this file does not pretend otherwise;
+the manifests carry `built_at` so the gap is readable.
 
 A second limit worth stating: the manifest is built **once** and never rewritten,
 because rewriting it after the stamp would invalidate the proof. So a forecast
-that lands after the lock is *not* in the manifest — which is the correct
-outcome, and is independently rejected by `lock-audit.yml` at merge time.
+that lands after the deadline is *not* in the manifest — which is the correct
+outcome, and is independently rejected by the landing audit at merge/push time.
+Bot-authored refresh commits run the same audit before push, because GitHub does
+not recursively trigger workflows from `GITHUB_TOKEN` pushes.
 
 ## If the client is missing
 
@@ -120,5 +123,5 @@ in the run log.
 
 Free. No account, no key, no rate limit worth planning around. A `.ots` proof is
 a few hundred bytes; a season of them is smaller than one poll CSV. The calendars
-aggregate everyone's submissions into one Merkle tree per block, so our thirteen
+aggregate everyone's submissions into one Merkle tree per block, so the arena's
 rounds cost the Bitcoin network nothing beyond what it was already doing.

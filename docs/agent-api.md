@@ -38,18 +38,51 @@ The decoded response content conforms to
 It contains `schema_version` and one typed `forecast`. `reasoning_trace` and
 `crosstabs` are optional.
 
-## Call and lock policy
+## Call and deadline policy
 
-- The first call is due between 72 and 48 hours before `lock_at`.
+- The first call is due between 72 and 48 hours before the round's effective
+  participant deadline (the weekly batch deadline after the dated cutover;
+  `lock_at` for older rounds).
 - The current runner uses a 15-second connection timeout and a 600-second read
   timeout.
 - A valid forecast filed in that window is final and is never called again.
-- A missing or invalid forecast is retried by the existing scheduled refresh,
-  rather than a second retry service, until 30 minutes before the lock.
+- A missing or invalid forecast is retried by the existing six-hourly refresh,
+  rather than a second retry service, until 30 minutes before that deadline.
 - HTTP/authentication errors, timeouts, malformed JSON, and schema failures are
   recorded as failed attempts. They never create a forecast.
 - Every request is idempotent by entrant, round, and input hash.
-- The server's receipt time controls the lock. Client timestamps are ignored.
+- The server's receipt time controls the deadline. Client timestamps are ignored.
+
+The moment an endpoint's forecasts are due is the **batch deadline**, not the
+round's `lock_at` — see [`docs/submission-window.md`](submission-window.md).
+The call window above is the arena's buying schedule. It ends before the same
+participant-visible deadline applied to uploads and pull requests.
+
+## Contract test
+
+```bash
+python examples/agent-api/server.py
+python tools/probe_agent_api.py --base-url http://127.0.0.1:8787/v1
+```
+
+`tools/probe_agent_api.py` is the runnable contract test: standard library
+only, non-scored fixtures, files nothing. It checks the transport, **all three
+round shapes**, idempotency of a repeated `request_id`, and — when a key is
+configured — that a *wrong* bearer token is refused with 401 or 403. Probing
+one scalar fixture is how an endpoint passes today and fails on the first
+profile round of the season, after the deadline, which is why each shape is a
+separate verdict.
+
+A key is read from an environment variable named with `--key-env`, never from
+an argument: a key on the command line is in `ps` output, in shell history, and
+in the log of whoever pastes the command into an issue. Transient failures are
+retried; a 4xx is an answer and is never retried.
+
+`--entrant <id>` refuses to probe a registration whose
+`entrants/<id>.json` carries `"status": "revoked"`. Revocation stops both
+routes at once: the bundle intake refuses an upload before issuing a receipt,
+and the probe refuses to make the call. A revocation the arena does not honour
+is a revocation in name only.
 
 The browser's **Test connection** button sends the fixed non-scored fixture in
 `examples/agent-api/request.json`. It checks HTTPS, optional Bearer auth, the

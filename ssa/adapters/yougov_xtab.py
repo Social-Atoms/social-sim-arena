@@ -47,6 +47,7 @@ day.
 """
 import io
 import os
+import posixpath
 import zipfile
 from datetime import datetime, timezone
 from xml.etree import ElementTree as ET
@@ -54,6 +55,10 @@ from xml.etree import ElementTree as ET
 import requests
 
 NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
+REL_NS = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
+PACKAGE_REL_NS = "{http://schemas.openxmlformats.org/package/2006/relationships}"
+WORKSHEET_REL = ("http://schemas.openxmlformats.org/officeDocument/2006/"
+                 "relationships/worksheet")
 URL = "https://api-test.yougov.com/public-data/v5/us/trackers/{tracker}/download/"
 UA = "social-simulation-arena/1.0 (research benchmark; contact via repository)"
 
@@ -162,24 +167,102 @@ def _cells(sheet_xml):
     return out
 
 
+def _sheet_paths(z, book):
+    """Return ``[(sheet name, zip member)]`` from workbook relationships.
+
+    OOXML does not promise that the first ``<sheet>`` is ``sheet1.xml``. The
+    workbook names sheets through ``r:id`` and the companion relationships
+    file maps that id to the real part. Pairing by ordinal silently attaches a
+    subgroup's name to a different subgroup's values when Excel renumbers or
+    reorders parts, so every mapping is explicit and guarded here.
+    """
+    try:
+        rel_root = ET.fromstring(z.read("xl/_rels/workbook.xml.rels"))
+    except KeyError as e:
+        raise ValueError(
+            "YouGov workbook has no xl/_rels/workbook.xml.rels; sheet names "
+            "cannot be matched to worksheet data") from e
+
+    relationships = {}
+    for rel in rel_root.iter(PACKAGE_REL_NS + "Relationship"):
+        rid = rel.get("Id")
+        if not rid:
+            raise ValueError("YouGov workbook has a relationship without an Id")
+        if rid in relationships:
+            raise ValueError(
+                f"YouGov workbook repeats relationship id {rid!r}")
+        relationships[rid] = rel
+
+    out, names, targets = [], set(), set()
+    for sheet in book.iter(NS + "sheet"):
+        name = sheet.get("name")
+        rid = sheet.get(REL_NS + "id")
+        if not name or name in names:
+            raise ValueError(
+                f"YouGov workbook has a missing or repeated sheet name {name!r}")
+        names.add(name)
+        if not rid or rid not in relationships:
+            raise ValueError(
+                f"YouGov sheet {name!r} names missing relationship {rid!r}")
+        rel = relationships[rid]
+        if rel.get("Type") != WORKSHEET_REL:
+            raise ValueError(
+                f"YouGov sheet {name!r} relationship {rid!r} is not a worksheet")
+        if rel.get("TargetMode") == "External":
+            raise ValueError(
+                f"YouGov sheet {name!r} points to an external worksheet")
+        target = rel.get("Target") or ""
+        if not target or "\\" in target:
+            raise ValueError(
+                f"YouGov sheet {name!r} has an invalid worksheet target {target!r}")
+        if target.startswith("/"):
+            path = posixpath.normpath(target.lstrip("/"))
+        else:
+            path = posixpath.normpath(posixpath.join("xl", target))
+        if not path.startswith("xl/worksheets/") or path.endswith("/"):
+            raise ValueError(
+                f"YouGov sheet {name!r} target {target!r} escapes xl/worksheets")
+        if path in targets:
+            raise ValueError(
+                f"YouGov worksheet part {path!r} is assigned to more than one sheet")
+        if path not in z.namelist():
+            raise ValueError(
+                f"YouGov sheet {name!r} points to missing worksheet part {path!r}")
+        targets.add(path)
+        out.append((name, path))
+    if not out:
+        raise ValueError("YouGov workbook declares no sheets")
+    return out
+
+
 def parse(blob):
     """Workbook bytes -> [{date, question, cells: {label: {...}}}], oldest first.
 
     A wave is kept only when every scored cell reports it, so a profile is
     never scored with a hole in it.
     """
-    z = zipfile.ZipFile(io.BytesIO(blob))
-    book = ET.fromstring(z.read("xl/workbook.xml"))
-    names = [s.get("name") for s in book.iter(NS + "sheet")]
+    with zipfile.ZipFile(io.BytesIO(blob)) as z:
+        book = ET.fromstring(z.read("xl/workbook.xml"))
+        mapped = _sheet_paths(z, book)
 
-    sheets, question, dates = {}, None, None
-    for i, name in enumerate(names, start=1):
-        rows = _cells(z.read(f"xl/worksheets/sheet{i}.xml"))
-        header = next(iter(rows))              # row 1 label is the question
-        if question is None:
-            question, dates = header, rows[header]
-        sheets[name] = {ROW_LABELS[k]: v for k, v in rows.items()
-                        if k in ROW_LABELS}
+        sheets, question, dates = {}, None, None
+        for name, path in mapped:
+            rows = _cells(z.read(path))
+            if not rows:
+                raise ValueError(f"YouGov sheet {name!r} contains no rows")
+            header = next(iter(rows))          # row 1 label is the question
+            if question is None:
+                question, dates = header, rows[header]
+                nonempty_dates = [d for d in dates if d]
+                if len(nonempty_dates) != len(set(nonempty_dates)):
+                    raise ValueError(
+                        "YouGov workbook repeats a wave date on its first sheet")
+            elif header != question or rows[header] != dates:
+                raise ValueError(
+                    f"YouGov sheet {name!r} has a different question or date "
+                    "axis; cell values cannot be aligned by column")
+            sheets[name] = {ROW_LABELS[k]: v for k, v in rows.items()
+                            if k in ROW_LABELS}
 
     waves = []
     for j, date in enumerate(dates):
@@ -206,6 +289,10 @@ def parse(blob):
         if complete and len(cells) == len(SCORED_CELLS) + 1:
             waves.append({"date": date, "question": question, "cells": cells})
     waves.sort(key=lambda w: w["date"])
+    if not waves:
+        raise RuntimeError(
+            "YouGov workbook produced zero complete waves; refusing to "
+            "publish an empty crosstab series")
     return waves
 
 

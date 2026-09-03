@@ -1,8 +1,8 @@
 """Load provider credentials from a .env file for local runs.
 
 Python does not read .env on its own and this repo has no dependency that does,
-so without this a local run silently files MOCK forecasts while the keys sit
-unread on disk two directories up.
+so without this a local run reports missing credentials while usable keys sit
+unread on disk.
 
 Two deliberate choices:
 

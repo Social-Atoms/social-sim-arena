@@ -1,7 +1,8 @@
 """Build site/data.json from live sources.
 
 Run:  python -m ssa.refresh
-Cron: .github/workflows/refresh.yml runs this daily and commits the result.
+Cron: .github/workflows/refresh.yml runs this every six hours and commits the
+result.
 
 Everything the entry page shows comes from this file: live tracker values
 (Silver Bulletin poll CSVs, Michigan's own table with FRED as fallback,
@@ -12,13 +13,15 @@ import concurrent.futures
 import threading
 import json
 import os
-from datetime import date, datetime, timezone
+import re
+from datetime import date, datetime, timedelta, timezone
 
 from .adapters import aaii, silverbulletin, umich
 from . import health
 from . import provenance
+from . import reliability
 from . import stamps
-from . import average, backtest, baselines, envfile, harness, scoring, sharecard
+from . import average, backtest, baselines, batches, envfile, harness, scoring, sharecard
 from . import profile_round
 from . import ranking_round
 from . import series as series_registry
@@ -29,6 +32,7 @@ RESOLVED = os.path.join(ROOT, "resolutions", "resolved.json")
 FORECASTS = os.path.join(ROOT, "forecasts")
 ENTRANTS = os.path.join(ROOT, "entrants")
 OUT = os.path.join(ROOT, "site", "data.json")
+OPERATOR = os.path.join(ROOT, "site", "operator.json")
 LOCKS = os.path.join(ROOT, "locks")
 
 # How much history a lock snapshot keeps. The nulls need persistence (1 point),
@@ -37,6 +41,121 @@ LOCKS = os.path.join(ROOT, "locks")
 LOCK_SNAPSHOT_POINTS = 60
 
 UMICH_NEXT_RELEASE = "2026-08-14T14:00:00Z"  # preannounced; cron updates after each release
+UMICH_COMPOSITE_FORMAT = "ssa.umich.raw.v1"
+SB_MAX_OBSERVATION_AGE_DAYS = 21
+
+
+def encode_umich_composite(finals_raw, preliminary_raw):
+    """Canonical bytes containing both exact UMich response bodies.
+
+    Michigan's published series is the merge of two distinct official files.
+    A provenance vintage containing only ``tbmics.csv`` cannot safely recreate
+    a preliminary release.  Store both verbatim bodies, with their semantic
+    URLs, in one hash-covered envelope so one manifest row is still the atomic
+    source vintage.
+    """
+    if not isinstance(finals_raw, str) or not finals_raw.strip():
+        raise RuntimeError("umich: finals raw body is missing")
+    if not isinstance(preliminary_raw, str) or not preliminary_raw.strip():
+        raise RuntimeError("umich: preliminary raw body is missing")
+    document = {
+        "format": UMICH_COMPOSITE_FORMAT,
+        "parts": {
+            "finals": {"url": umich.URL, "body": finals_raw},
+            "preliminary": {
+                "url": umich.PRELIM_URL, "body": preliminary_raw,
+            },
+        },
+    }
+    return (json.dumps(document, ensure_ascii=False, sort_keys=True,
+                       separators=(",", ":")) + "\n").encode("utf-8")
+
+
+def parse_umich_composite(raw):
+    """Re-parse a hash-validated UMich composite through both live parsers."""
+    try:
+        if isinstance(raw, bytes):
+            raw = raw.decode("utf-8")
+        document = json.loads(raw)
+    except (UnicodeDecodeError, TypeError, ValueError) as error:
+        raise RuntimeError(
+            "umich: archived source is not a valid raw-body composite") from error
+    if not isinstance(document, dict) or document.get("format") != \
+            UMICH_COMPOSITE_FORMAT:
+        raise RuntimeError("umich: archived source has the wrong composite format")
+    parts = document.get("parts")
+    if not isinstance(parts, dict) or set(parts) != {"finals", "preliminary"}:
+        raise RuntimeError(
+            "umich: archived composite must contain finals and preliminary bodies")
+
+    def body(name, expected_url):
+        part = parts.get(name)
+        if not isinstance(part, dict) or set(part) != {"url", "body"}:
+            raise RuntimeError(f"umich: malformed {name} composite part")
+        if part.get("url") != expected_url:
+            raise RuntimeError(
+                f"umich: archived {name} URL {part.get('url')!r} does not "
+                f"match {expected_url!r}")
+        value = part.get("body")
+        if not isinstance(value, str) or not value.strip():
+            raise RuntimeError(f"umich: archived {name} raw body is missing")
+        return value
+
+    finals = umich.parse(body("finals", umich.URL))
+    preliminary = umich.parse_prelim(
+        body("preliminary", umich.PRELIM_URL))
+    if not finals:
+        raise RuntimeError("umich: archived finals body parsed to zero rows")
+    if not preliminary:
+        raise RuntimeError("umich: archived preliminary body parsed to zero rows")
+    rows = umich.merge(finals, preliminary)
+    if not rows:
+        raise RuntimeError("umich: archived composite parsed to zero rows")
+    return rows
+
+
+def validate_silverbulletin_rows(name, rows, *, today=None):
+    """Validate every registered derivation and the sheet's observation age.
+
+    Google can return an old but structurally valid published sheet with HTTP
+    200, and wrapper/timestamp bytes may change even while its poll rows stay
+    frozen.  Recording those bytes first resets the provenance change clock and
+    hides the outage.  The newest meaningful field end must therefore pass a
+    generous cadence guard before ``provenance.record`` is allowed to run.
+    """
+    if name not in {"sb_approval", "sb_generic"}:
+        raise ValueError(f"unknown Silver Bulletin source {name!r}")
+    record_builder = (silverbulletin.approval_polls
+                      if name == "sb_approval" else
+                      silverbulletin.generic_ballot_polls)
+    newest = None
+    for series_id, spec in series_registry.SERIES.items():
+        if spec["source"] != name:
+            continue
+        filters = spec.get("filters") or {}
+        records = record_builder(rows=rows, **filters)
+        built = silverbulletin.to_series(records, spec["value"])
+        if not built:
+            raise RuntimeError(
+                f"{series_id} built to zero points; refusing an incomplete "
+                "source extraction")
+        newest_for_series = max(record["end_date"] for record in records)
+        newest = max(newest, newest_for_series) if newest else newest_for_series
+    if newest is None:
+        raise RuntimeError(
+            f"{name} has no registered meaningful observations; refusing an "
+            "incomplete source extraction")
+    clock = today or datetime.now(timezone.utc).date()
+    if isinstance(clock, datetime):
+        clock = clock.date()
+    age = (clock - newest).days
+    if age > SB_MAX_OBSERVATION_AGE_DAYS:
+        raise RuntimeError(
+            f"{name} HTTP 200 but newest observation is {newest.isoformat()}, "
+            f"{age} days old: frozen page exceeds the "
+            f"{SB_MAX_OBSERVATION_AGE_DAYS}-day freshness limit; refusing to "
+            "archive changing wrapper bytes as a new release")
+    return rows
 
 
 def now_utc():
@@ -62,7 +181,9 @@ def poll_history(polls, key="value"):
     return [{"date": d, "value": by_date[d]} for d in sorted(by_date)]
 
 
-def build_series(approval, generic, umich, sources=None):
+def build_series(approval, generic, umich, sources=None, *,
+                 unavailable_sources=(), isolate_failures=False,
+                 source_diagnostics=None):
     """All target series used by rounds, as [{date, value}] oldest first.
 
     The registered trackers come from ssa/series.py, which is the single place
@@ -70,55 +191,72 @@ def build_series(approval, generic, umich, sources=None):
     here instead: it is not a published tracker but this pipeline's own weekly
     adjusted average, which the midterm special resolves against.
     """
-    out = dict(series_registry.build_all(sources))
-    anchor = generic[-1]["date"] if generic else date.today()
+    built = series_registry.build_all(
+        sources, unavailable_sources=unavailable_sources,
+        isolate_failures=isolate_failures,
+        diagnostics=source_diagnostics)
+    if isolate_failures:
+        out, source_failures = built
+    else:
+        out, source_failures = built, None
+    out = dict(out)
+    generic_available = bool(generic) and not (
+        isolate_failures and "sb_generic" in source_failures)
+    anchor = generic[-1]["date"] if generic_available else date.today()
     # weekly adjusted-average history for the midterm margin special
     margin_hist = []
     for weeks_back in range(12, -1, -1):
         asof = anchor.fromordinal(anchor.toordinal() - 7 * weeks_back)
-        val, _ = average.adjusted_average(generic, asof)
+        val, _ = average.adjusted_average(generic if generic_available else [], asof)
         if val is not None:
             margin_hist.append({"date": asof.isoformat(), "value": round(val, 2)})
-    out["generic_ballot_margin"] = margin_hist
-    return out
+    if margin_hist:
+        out["generic_ballot_margin"] = margin_hist
+    return (out, source_failures) if isolate_failures else out
 
 
-def build_trackers(approval, generic, series, next_umich_release=None):
-    if not approval or not generic:
-        raise RuntimeError("upstream returned no polls; refusing to build trackers from empty data")
+def build_trackers(approval, generic, series, next_umich_release=None,
+                   umich_source=None):
     # Anchor each average at its source's real freshness, not the wall clock.
     # Even a same-day source is behind the field dates it reports, so every
     # number is labelled with the date it is actually as of.
-    asof_app = approval[-1]["date"]
-    asof_gen = generic[-1]["date"]
-    app_avg, app_n = average.adjusted_average(approval, asof_app)
-    gen_avg, gen_n = average.adjusted_average(generic, asof_gen)
-    app_prev, _ = average.adjusted_average(approval, asof_app.fromordinal(asof_app.toordinal() - 30))
-    gen_prev, _ = average.adjusted_average(generic, asof_gen.fromordinal(asof_gen.toordinal() - 30))
-
     def latest(s):
         return s[-1] if s else None
 
     t = {}
-    t["trump_approval_avg"] = {
-        "label": "Trump approval, adjusted average",
-        "unit": "% approve",
-        "value": round(app_avg, 1),
-        "asof": asof_app.isoformat(),
-        "delta_30d": round(app_avg - app_prev, 1) if app_prev is not None else None,
-        "n_polls_window": app_n,
-        "source": "Silver Bulletin poll database, house-effect adjusted here, 21-day window",
-    }
-    t["generic_ballot_avg"] = {
-        "label": "2026 generic ballot, adjusted average",
-        "unit": "margin, Dem minus Rep",
-        "value": round(gen_avg, 1),
-        "asof": asof_gen.isoformat(),
-        "delta_30d": round(gen_avg - gen_prev, 1) if gen_prev is not None else None,
-        "n_polls_window": gen_n,
-        "source": "Silver Bulletin poll database, house-effect adjusted here, 21-day window",
-    }
-    yg = latest(series["yougov_approval"])
+    if approval:
+        asof_app = approval[-1]["date"]
+        app_avg, app_n = average.adjusted_average(approval, asof_app)
+        app_prev, _ = average.adjusted_average(
+            approval, asof_app.fromordinal(asof_app.toordinal() - 30))
+        t["trump_approval_avg"] = {
+            "label": "Trump approval, adjusted average",
+            "unit": "% approve",
+            "value": round(app_avg, 1),
+            "asof": asof_app.isoformat(),
+            "delta_30d": (round(app_avg - app_prev, 1)
+                          if app_prev is not None else None),
+            "n_polls_window": app_n,
+            "source": ("Silver Bulletin poll database, house-effect adjusted "
+                       "here, 21-day window"),
+        }
+    if generic:
+        asof_gen = generic[-1]["date"]
+        gen_avg, gen_n = average.adjusted_average(generic, asof_gen)
+        gen_prev, _ = average.adjusted_average(
+            generic, asof_gen.fromordinal(asof_gen.toordinal() - 30))
+        t["generic_ballot_avg"] = {
+            "label": "2026 generic ballot, adjusted average",
+            "unit": "margin, Dem minus Rep",
+            "value": round(gen_avg, 1),
+            "asof": asof_gen.isoformat(),
+            "delta_30d": (round(gen_avg - gen_prev, 1)
+                          if gen_prev is not None else None),
+            "n_polls_window": gen_n,
+            "source": ("Silver Bulletin poll database, house-effect adjusted "
+                       "here, 21-day window"),
+        }
+    yg = latest(series.get("yougov_approval") or [])
     if yg:
         t["yougov_approval"] = {
             "label": "Economist/YouGov, latest wave",
@@ -127,7 +265,7 @@ def build_trackers(approval, generic, series, next_umich_release=None):
             "asof": yg["date"],
             "source": "Silver Bulletin poll database (poll-level)",
         }
-    mc = latest(series["mc_approval"])
+    mc = latest(series.get("mc_approval") or [])
     if mc:
         t["mc_approval"] = {
             "label": "Morning Consult, latest wave",
@@ -136,7 +274,7 @@ def build_trackers(approval, generic, series, next_umich_release=None):
             "asof": mc["date"],
             "source": "Silver Bulletin poll database (poll-level)",
         }
-    um = latest(series["umich_sentiment"])
+    um = latest(series.get("umich_sentiment") or [])
     if um:
         t["umich_sentiment"] = {
             "label": "Michigan consumer sentiment",
@@ -144,7 +282,7 @@ def build_trackers(approval, generic, series, next_umich_release=None):
             "value": um["value"],
             "asof": um["date"],
             "next_release": next_umich_release or UMICH_NEXT_RELEASE,
-            "source": series_registry.MICHIGAN_SOURCE,
+            "source": umich_source or series_registry.MICHIGAN_SOURCE,
         }
     return t
 
@@ -159,7 +297,12 @@ def next_release_for(season, tracker, now):
 def round_status(r, resolved, now):
     if r["round_id"] in resolved:
         return "resolved"
-    if now < parse_iso(r["lock_at"]):
+    # `open` means a participant can still file. After the weekly-calendar
+    # cutover that closes at the batch deadline, up to seven days before the
+    # arena's internal lock. The old lock comparison left the site and
+    # questionnaire advertising rounds that every validator correctly rejected
+    # as late.
+    if now < batches.effective_deadline(r["lock_at"]):
         return "open"
     if now < parse_iso(r["release_at"]):
         return "locked"
@@ -254,9 +397,16 @@ def update_lock_snapshot(r, hist, now):
     "existed at lock" from "labelled before lock"; only observation time can.
 
     So while a round is open every refresh overwrites its snapshot, and after
-    `lock_at` nothing touches it again. The last write before the lock is the
-    freeze, and it is a committed artifact rather than something recomputed
-    from data that has since changed underneath it.
+    `batches.freeze_at` nothing touches it again. The last write before that
+    moment is the freeze, and it is a committed artifact rather than something
+    recomputed from data that has since changed underneath it.
+
+    The freeze is the round's *batch deadline*, not its lock. Under the
+    weekly batch calendar those differ by up to seven days, and a null frozen
+    at the lock would read a week of series the entrants never saw while
+    serving as the denominator of their score. `batches.freeze_at` returns the
+    lock itself for rounds that predate the cutover, so their snapshots stay
+    exactly as they were written and already-published scores do not move.
 
     Empty history is never written over a snapshot that has some. A series
     missing from the map produces `hist == []`, which is a caller with an
@@ -265,7 +415,7 @@ def update_lock_snapshot(r, hist, now):
     a build that omitted `generic_ballot_margin` blanked that round's snapshot
     in one pass.
     """
-    if now >= parse_iso(r["lock_at"]):
+    if now >= batches.freeze_at(r["lock_at"]):
         return False                      # frozen; never rewritten
     if not hist and (read_lock_snapshot(r["round_id"]) or {}).get("history"):
         return False                      # never trade a real freeze for nothing
@@ -284,9 +434,11 @@ def update_lock_snapshot(r, hist, now):
 
 
 def build_rounds(season, series, resolved, now, ranking_obs=None):
-    """Returns (rounds, history_by_round). The history is the strictly pre-lock
-    slice each round's baselines were computed from; the model harness
-    conditions on exactly the same data, so entrants and nulls see one series.
+    """Returns (rounds, history_by_round).
+
+    The history is the slice frozen at the effective participant deadline;
+    both baselines and the model harness condition on it, so entrants and nulls
+    see one series. For pre-cutover rounds that boundary remains ``lock_at``.
 
     `ranking_obs` is {round_id: the source's own history of ordered lists} for
     ranking rounds, which read a different kind of record than a scalar series
@@ -305,6 +457,7 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
         # infer a contract from the unit/question wording. Older definitions
         # predate target_type and are numeric distributions.
         row["target_type"] = r.get("target_type", "continuous_normal")
+        row["deadline"] = iso(batches.effective_deadline(r["lock_at"]))
         for k in ("cells", "options"):
             if k in r:
                 row[k] = list(r[k])
@@ -323,12 +476,24 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
                 row["resolution"] = resolved[r["round_id"]]
             out.append(row)
             continue
-        # Baselines are frozen at lock time: only history strictly before the
-        # lock date counts. Otherwise, once a release lands in the series, the
-        # persistence null would contain the outcome it is scored against.
-        lock_date = r["lock_at"][:10]
+        # Baselines are frozen where the entrants answered, and only history
+        # strictly before that date counts. Two reasons, and the second is why
+        # this is the batch deadline rather than the lock.
+        #
+        # Contamination: once a release lands in the series, a null built from
+        # it would contain the outcome it is scored against.
+        #
+        # Comparability: the headline metric divides the entrant's CRPS by this
+        # null's. Freezing the null at the lock while entrants answered at the
+        # batch deadline hands the denominator up to seven days of series the
+        # numerator never saw, and the size of that gift varies by round, so a
+        # season mean would partly measure the lock-day calendar. `batches`
+        # returns the lock itself for pre-cutover rounds, so rounds already
+        # scored keep the history they were scored against.
+        freeze = batches.freeze_at(r["lock_at"])
+        lock_date = freeze.strftime("%Y-%m-%d")
         live = [p for p in (series.get(r["series"]) or []) if p["date"] < lock_date]
-        if now < parse_iso(r["lock_at"]):
+        if now < freeze:
             # Still open: use live history and keep the snapshot current.
             hist = live
             update_lock_snapshot(r, live, now)
@@ -459,27 +624,41 @@ def attach_ranking(row, r, obs):
     row["ranking"] = block
 
 
-# Stop re-filing this long before lock_at. A refresh writes to the working
-# tree, but the commit only lands minutes later; without the margin a run that
-# starts just before lock could push a file that the merge-time lock audit
-# then (correctly) rejects as late.
+# Stop re-filing this long before the round's batch deadline. A refresh
+# writes to the working tree, but the commit only lands minutes later; without
+# the margin a run that starts just before the deadline could push a file that
+# the merge-time audit then (correctly) rejects as late. The name is historical
+# -- it was the lock margin before deadline and lock came apart -- and is kept
+# so the environment and the workflows do not have to be renamed in the same
+# change that moves the anchor.
 LOCK_MARGIN_SECONDS = 30 * 60
 
 # One number, one forecast, bought at one fixed vantage point.
 #
 # Every entrant's forecast for a round is bought once, inside a window every
 # round shares: between SSA_FILE_WINDOW_DAYS and SSA_BUY_BY_DAYS before its
-# lock (3 to 2 days by default). A forecast stamped inside the window
-# (`harness.filed_stamp`) is final -- data arriving afterwards does not reopen
-# it -- so every entrant answers the same question from the same distance and
-# a round costs exactly one call per entrant per condition, ever.
+# **batch deadline** (3 to 2 days by default). A forecast stamped inside
+# the window (`harness.filed_stamp`) is final -- data arriving afterwards does
+# not reopen it -- so every entrant answers the same question from the same
+# distance and a round costs exactly one call per entrant per condition, ever.
+#
+# The anchor is the deadline rather than the lock because those are no longer
+# the same moment. Under the weekly batch calendar (`ssa/batches.py`) a round
+# locks 0 to 7 days after the deadline its entrants were held to, so anchoring
+# here on the lock would let our own models keep buying for a week after every
+# external entrant was closed out -- reading news they could not. For rounds
+# that predate the batch cutover `effective_deadline` returns the lock itself,
+# so their windows and their filed stamps are exactly as they were.
 #
 # The day-wide window spans ~4 six-hourly runs, and after it closes the runs
-# that remain up to the lock margin are failure insurance only: they buy a
-# forecast that is still missing and never rewrite one that exists. Drafts
-# from before a round's window (the era that bought from listing day) carry
-# no stamp and are replaced once, inside the window, where the input hash
-# makes the replacement free if nothing actually changed.
+# that remain up to the margin are failure insurance only: they buy a forecast
+# that is still missing and never rewrite one that exists. That insurance now
+# has to fit before the deadline instead of running up to `lock - 30min`,
+# which is the real cost of a common deadline and the reason the scheduled
+# cadence has to be healthy rather than merely eventual. Drafts from before a
+# round's window (the era that bought from listing day) carry no stamp and are
+# replaced once, inside the window, where the input hash makes the replacement
+# free if nothing actually changed.
 #
 # Baselines are exempt: they are free and the site shows them from listing.
 # Web retrieval is scoped to the same window by construction, since the query
@@ -490,9 +669,28 @@ BUY_BY_SECONDS = float(os.environ.get("SSA_BUY_BY_DAYS") or "2") * 86400
 
 
 def model_jobs_due(r, now):
-    """True while the round's buy window (plus its insurance tail) is open."""
-    left = (parse_iso(r["lock_at"]) - now).total_seconds()
+    """True while the round's buy window (plus its insurance tail) is open.
+
+    Measured back from the batch deadline, not the lock. Our own entrants
+    are held to the deadline every external entrant is held to, so the tail
+    that used to retry up to `lock - 30min` now stops `LOCK_MARGIN_SECONDS`
+    before the deadline instead.
+    """
+    left = (batches.effective_deadline(r["lock_at"]) - now).total_seconds()
     return LOCK_MARGIN_SECONDS <= left <= FILE_WINDOW_SECONDS
+
+
+def information_asof(r):
+    """The fixed, already-observable boundary for shared context arms.
+
+    Model buying starts ``FILE_WINDOW_SECONDS`` before the participant
+    deadline. Freezing news at that window opening gives every entrant the
+    same complete corpus, including entrants retried by a later refresh. Using
+    the deadline (or the still-later lock) would request a future Wikipedia
+    revision and freeze whichever partial page happened to exist at call time.
+    """
+    due = batches.effective_deadline(r["lock_at"])
+    return iso(due - timedelta(seconds=FILE_WINDOW_SECONDS))
 
 
 def job_still_due(r, path, now):
@@ -509,7 +707,7 @@ def job_still_due(r, path, now):
         return True
     if harness.filed_in_window(prev.get("notes"), r["lock_at"]):
         return False
-    left = (parse_iso(r["lock_at"]) - now).total_seconds()
+    left = (batches.effective_deadline(r["lock_at"]) - now).total_seconds()
     return left >= BUY_BY_SECONDS
 
 # Concurrent provider calls when filing forecasts. Each job is one call to one
@@ -646,13 +844,23 @@ def nulls_for(r):
 
 
 def profile_history_for(r, series):
-    """{cell: frozen pre-lock history} for a profile round, else None."""
+    """{cell: history frozen at the effective deadline}, or None."""
     if not profile_round.is_profile(r):
         return None
     return profile_round.frozen_history(r, series)
 
 
-def ranking_observations(season, fetch=True):
+def ranking_source_name(round_):
+    """A ranking feed is not the scalar source with a similar brand name."""
+    kind = ((round_.get("ranking") or {}).get("kind") or "unknown")
+    return {
+        "wiki_top10": "ranking_wikitop",
+        "trends_basket": "ranking_trends_basket",
+    }.get(kind, f"ranking_{kind}")
+
+
+def ranking_observations(season, fetch=True, *, with_failures=False,
+                         with_degraded=False):
     """{round_id: the source's history of ordered lists} for every ranking round.
 
     The one place a ranking round touches its sources, and the only place that
@@ -666,18 +874,104 @@ def ranking_observations(season, fetch=True):
     round, which is the same treatment a scalar round with no series gets --
     and the alternative is one unreachable source stopping the whole refresh,
     with every other round's forecasts unfiled and its lock still coming.
+    ``with_failures`` additionally returns the semantic source, affected round,
+    and unusable error. ``with_degraded`` adds live-attempt errors for rounds
+    that still have useful same-source archive history.  Those rows remain
+    usable, but the operator source state must be stale/deadline-risk rather
+    than silently healthy.
     """
-    out = {}
+    if with_degraded and not with_failures:
+        raise ValueError("with_degraded requires with_failures")
+    out, failures, degraded = {}, [], []
     for r in (season or {}).get("rounds", []):
         if not ranking_round.is_ranking(r):
             continue
+        source = ranking_source_name(r)
+        diagnostics = []
         try:
-            out[r["round_id"]] = ranking_round.observations(r, fetch=fetch)
+            rows = ranking_round.observations(
+                r, fetch=fetch, diagnostics=diagnostics)
+            if not rows:
+                raise RuntimeError(
+                    "no complete pre-lock ranking observation is available")
+            out[r["round_id"]] = rows
+            if diagnostics:
+                degraded.append((source, r["round_id"], diagnostics))
         except Exception as e:                     # noqa: BLE001 - reported
             print(f"  ranking {r['round_id']}: no observations "
                   f"({type(e).__name__}: {e})")
             out[r["round_id"]] = []
-    return out
+            failures.append((source, r["round_id"], e))
+    if with_degraded:
+        return out, failures, degraded
+    return (out, failures) if with_failures else out
+
+
+def load_ranking_sources(season, run_status, *, fetch=True,
+                         next_deadline=None, next_lock=None):
+    """Load and account for ranking feeds without conflating their semantics."""
+    groups = {}
+    for definition in (season or {}).get("rounds", []):
+        if ranking_round.is_ranking(definition):
+            groups.setdefault(
+                ranking_source_name(definition), []).append(
+                    definition["round_id"])
+    for name in sorted(groups):
+        run_status.source_started(
+            name, route=f"ssa.ranking:{name}",
+            next_lock=next_lock, next_deadline=next_deadline)
+
+    observations, faults, degradations = ranking_observations(
+        season, fetch=fetch, with_failures=True, with_degraded=True)
+    faults_by_source = {}
+    for name, round_id, error in faults:
+        faults_by_source.setdefault(name, []).append((round_id, error))
+    degraded_by_source = {}
+    for name, round_id, diagnostics in degradations:
+        degraded_by_source.setdefault(name, []).append((round_id, diagnostics))
+
+    source_failures = []
+    for name, round_ids in sorted(groups.items()):
+        failed = faults_by_source.get(name) or []
+        degraded = degraded_by_source.get(name) or []
+        if failed:
+            combined = RuntimeError("; ".join(
+                f"{round_id}: {type(error).__name__}: {error}"
+                for round_id, error in failed))
+            run_status.source_failed(
+                name, combined, route=f"ssa.ranking:{name}",
+                next_lock=next_lock, next_deadline=next_deadline,
+                evidence="affected_rounds=" + ",".join(
+                    round_id for round_id, _error in failed)
+                + ("; degraded_archive_rounds=" + ",".join(
+                    round_id for round_id, _items in degraded)
+                   if degraded else ""))
+            source_failures.append((name, combined))
+        elif degraded:
+            messages, evidence = [], []
+            for round_id, items in degraded:
+                for item in items:
+                    error = item.get("error") if isinstance(item, dict) else item
+                    messages.append(
+                        f"{round_id}/{(item.get('scope') if isinstance(item, dict) else 'live')}: "
+                        f"{type(error).__name__}: {error}")
+                    if isinstance(item, dict) and item.get("archive_evidence"):
+                        evidence.append(str(item["archive_evidence"]))
+            run_status.source_degraded(
+                name, RuntimeError("; ".join(messages)),
+                route=f"ssa.ranking:{name}",
+                next_lock=next_lock, next_deadline=next_deadline,
+                archive_evidence=("; ".join(sorted(set(evidence))) or
+                                  "same-source ranking archive used"))
+        else:
+            weeks = sum(len(observations.get(round_id) or [])
+                        for round_id in round_ids)
+            run_status.source_succeeded(
+                name, route=f"ssa.ranking:{name}",
+                evidence=(f"{weeks} complete weekly observations across "
+                          f"{len(round_ids)} round(s)"),
+                next_lock=next_lock, next_deadline=next_deadline)
+    return observations, source_failures
 
 
 def read_forecast(path):
@@ -690,27 +984,107 @@ def read_forecast(path):
         return None
 
 
+def scoreable_forecast(forecast):
+    """False for a labelled local placeholder, whatever its valid shape.
+
+    ``SSA_ALLOW_MOCK=1`` remains useful for rendering a local site without
+    credentials.  It must never turn that placeholder into a leaderboard row
+    or a member of the crowd mixture: syntactic validity is not evidence that
+    an entrant answered.
+    """
+    return bool(forecast) and not (
+        (forecast.get("notes") or "").startswith("MOCK"))
+
+
 def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
-                            ranking_obs=None):
+                            ranking_obs=None, run_status=None):
     """Write every entrant's forecast for each open round.
 
     Returns (files_written, failures). Failures are messages, never mocks: a
     placeholder filed on error is a green workflow hiding a wrong model name.
     """
-    """The hosted always-on agents: while a round is open, the refresh cron
-    keeps each baseline's and each frontier model's forecast file current;
-    the last commit before lock_at is the one that counts. Model forecasts
-    are real API output when a key is configured and clearly-labeled
-    deterministic MOCKs otherwise (see ssa/harness.py)."""
     written = 0
     failures = []
     jobs = []
+    roster_cache = None
+
+    def roster():
+        nonlocal roster_cache
+        if roster_cache is None:
+            roster_cache = list(season_roster())
+        return roster_cache
+
+    def configured_route(entrant):
+        try:
+            return harness.route(entrant)
+        except Exception as exc:                    # surfaced by the job too
+            return f"unconfigured:{type(exc).__name__}"
+
+    def observed_route(entrant, forecast):
+        notes = (forecast or {}).get("notes") or ""
+        matched = re.search(r"(?:^|[,; ]+)via=([^,; ]+)", notes)
+        via = matched.group(1) if matched else None
+        if via:
+            try:
+                return harness.route(entrant, via=via)
+            except Exception:                       # route remains visible below
+                return via
+        return configured_route(entrant)
+
+    def record_existing(r, entrant, path, forecast):
+        if run_status is None or not scoreable_forecast(forecast):
+            return
+        run_status.entrant_queued(
+            r["round_id"], entrant, lock_at=r["lock_at"],
+            deadline=batches.effective_deadline(r["lock_at"]),
+            route=observed_route(entrant, forecast),
+            action="preserve the already-filed valid forecast")
+        run_status.entrant_succeeded(
+            r["round_id"], entrant,
+            route=observed_route(entrant, forecast),
+            artifact=os.path.relpath(path, ROOT))
+
     for r in rounds:
-        if r["status"] != "open" or not nulls_for(r):
+        if r["status"] != "open":
             continue
+        deadline = batches.effective_deadline(r["lock_at"])
+        # Batch deadlines can precede a round's lock by almost a week.  During
+        # that interval the public round still says "open", but filing is
+        # already closed.  Name every missing real answer as missed instead of
+        # letting it disappear from a jobs list whose due predicate is false.
+        if run_status is not None and now >= deadline:
+            rdir = os.path.join(FORECASTS, r["round_id"])
+            for entrant, _model, _ctx, _eli in roster():
+                path = os.path.join(rdir, entrant + ".json")
+                previous = read_forecast(path)
+                if previous is None or not scoreable_forecast(previous):
+                    run_status.entrant_missed(
+                        r["round_id"], entrant, lock_at=r["lock_at"],
+                        deadline=deadline, route=configured_route(entrant))
+                else:
+                    record_existing(r, entrant, path, previous)
         if (parse_iso(r["lock_at"]) - now).total_seconds() < LOCK_MARGIN_SECONDS:
             continue
         rdir = os.path.join(FORECASTS, r["round_id"])
+        if not nulls_for(r):
+            # A source failure removes only its series, which deliberately
+            # leaves the affected round without a persistence denominator.
+            # Hold those calls visibly; buying a model answer without the
+            # frozen input it is meant to see is not a useful partial result.
+            if run_status is not None and model_jobs_due(r, now):
+                for entrant, _model, _ctx, _eli in roster():
+                    path = os.path.join(rdir, entrant + ".json")
+                    previous = read_forecast(path)
+                    if scoreable_forecast(previous):
+                        record_existing(r, entrant, path, previous)
+                    else:
+                        run_status.entrant_queued(
+                            r["round_id"], entrant, lock_at=r["lock_at"],
+                            deadline=deadline, route=configured_route(entrant),
+                            next_retry=now + timedelta(hours=6),
+                            action=("hold until this round has a validated source "
+                                    "and persistence baseline; no provider call made"))
+            continue
         os.makedirs(rdir, exist_ok=True)
         for name, fc in nulls_for(r).items():
             path = os.path.join(rdir, name + ".json")
@@ -740,7 +1114,8 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
                 "round_id": r["round_id"],
                 "entrant": name,
                 **answer,
-                "notes": "auto-filed baseline (" + method + "), refreshed until lock",
+                "notes": ("auto-filed baseline (" + method
+                          + "), frozen at participant deadline"),
             }
             with open(path, "w") as f:
                 json.dump(body, f, indent=2)
@@ -753,9 +1128,10 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
         # Every model runs both conditions and they are filed as separate
         # entrants: same weights, different information, so their scores answer
         # different questions and belong on different leaderboard rows.
-        for entrant, _model, _ctx, _eli in season_roster():
+        for entrant, _model, _ctx, _eli in roster():
             path = os.path.join(rdir, entrant + ".json")
             if not job_still_due(r, path, now):
+                record_existing(r, entrant, path, read_forecast(path))
                 continue
             jobs.append((r, entrant, path))
 
@@ -777,8 +1153,8 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
     prof_hist = {r["round_id"]: profile_history_for(r, series or {})
                  for r in rounds if profile_round.is_profile(r)}
 
-    # The same object for ranking rounds: the strictly pre-lock weeks the null
-    # was taken from, so an entrant sees exactly the history persistence saw.
+    # The same object for ranking rounds: weeks strictly before the effective
+    # deadline, so an entrant sees exactly the history persistence saw.
     rank_hist = {r["round_id"]:
                  ranking_round.frozen_history(r, (ranking_obs or {}).get(r["round_id"]))
                  for r in rounds if ranking_round.is_ranking(r)}
@@ -791,21 +1167,28 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
                 # for_round reads the committed archive when it is there, so a
                 # CI run uses the corpus prepared and reviewed locally rather
                 # than re-fetching and hoping the pages still read the same.
-                news_cache[rid] = newsdigest.for_round(rid, r["lock_at"])
+                news_cache[rid] = newsdigest.for_round(rid, information_asof(r))
             return news_cache[rid]
 
     def run_job(job):
         r, entrant, path = job
+        if run_status is not None:
+            run_status.entrant_started(r["round_id"], entrant)
         try:
             _, context, _elicitation = harness.resolve(entrant)
             news = news_for(r) if context == "news" else None
             if context == "news" and not (news or {}).get("text") \
                     and not (news or {}).get("window_closed"):
-                # A round locking far out has a news window mostly in the
+                # A round due far out has a news window mostly in the
                 # future; the digest grows a day at a time and this job
-                # starts succeeding as the lock approaches. Not a failure:
+                # starts succeeding as the deadline approaches. Not a failure:
                 # nothing is wrong and nothing was spent -- an empty digest
                 # on a CLOSED window still falls through and fails loudly.
+                if run_status is not None:
+                    run_status.entrant_deferred(
+                        r["round_id"], entrant,
+                        next_retry=now + timedelta(hours=6),
+                        action="wait for the model-filing window to open")
                 return 0
             body = harness.forecast(
                 entrant, r,
@@ -816,20 +1199,50 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
                 ranking_history=rank_hist.get(r["round_id"]))
         except Exception as e:                     # noqa: BLE001 - collected
             # Collected rather than raised. Failing at the first bad provider
-            # would strand every other entrant's forecast unwritten, and rounds
-            # lock on a hard deadline. The successes land; main() reports every
-            # failure and exits non-zero, so a run is loudly broken without
-            # being silently incomplete.
+            # would strand every other entrant's forecast unwritten, and the
+            # participant deadline is hard. The successes land; main() reports
+            # every failure and exits non-zero, so a run is loudly broken
+            # without being silently incomplete.
             failures.append(f"{r['round_id']}/{entrant}: {e}")
+            if run_status is not None:
+                run_status.entrant_failed(r["round_id"], entrant, e)
             return 0
         with open(path, "w") as f:
             json.dump(body, f, indent=2)
             f.write("\n")
+        if run_status is not None:
+            if not scoreable_forecast(body):
+                run_status.entrant_failed(
+                    r["round_id"], entrant,
+                    "labelled MOCK artifact was filed for local rendering and "
+                    "is excluded from scoring")
+            else:
+                route = observed_route(entrant, body)
+                via = route.get("via") if isinstance(route, dict) else route
+                primary = configured_route(entrant)
+                primary_via = primary.get("via") if isinstance(primary, dict) else None
+                fallback_error = None
+                if via == "openrouter" and primary_via == "direct":
+                    fallback_error = (
+                        "configured direct route failed terminally; standby used")
+                run_status.entrant_succeeded(
+                    r["round_id"], entrant, route=route,
+                    artifact=os.path.relpath(path, ROOT),
+                    fallback_error=fallback_error)
         return 1
 
     if jobs:
         billable, usd = price_jobs(jobs, hist_by_round, read_forecast,
                                    news_for, prof_hist, rank_hist)
+        costs = {(r["round_id"], entrant): cost
+                 for r, entrant, _path, cost in billable}
+        if run_status is not None:
+            for r, entrant, _path in jobs:
+                run_status.entrant_queued(
+                    r["round_id"], entrant, lock_at=r["lock_at"],
+                    deadline=batches.effective_deadline(r["lock_at"]),
+                    route=configured_route(entrant),
+                    estimated_spend=costs.get((r["round_id"], entrant), 0.0))
         print(f"\nfiling: {len(jobs)} entrant-round(s), {len(jobs) - len(billable)} "
               f"already answered, {len(billable)} to call, est ${usd:.2f}")
         withheld = set()
@@ -842,6 +1255,10 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
             # partially-filled run is loud without being destructive.
             buy, tail, spent = affordable(billable, MAX_SPEND)
             withheld = {(j[0]["round_id"], j[1]) for j in tail}
+            if run_status is not None:
+                for r, entrant, _path, cost in tail:
+                    run_status.entrant_withheld(
+                        r["round_id"], entrant, estimated_spend=cost)
             for rid, entrant in sorted(withheld)[:12]:
                 failures.append(
                     f"{rid}/{entrant}: withheld by the spend ceiling")
@@ -900,6 +1317,8 @@ def count_forecasts(rounds):
                     try:
                         with open(os.path.join(rdir, fn)) as f:
                             fc = json.load(f)
+                        if not scoreable_forecast(fc):
+                            continue
                         if isinstance(fc.get("topline"), dict) and "mean" in fc["topline"]:
                             fcs[fc["entrant"]] = {"mean": fc["topline"]["mean"],
                                                   "sd": fc["topline"].get("sd", 2.0)}
@@ -939,6 +1358,8 @@ def build_leaderboard(rounds, resolved):
                 continue
             with open(os.path.join(rdir, fn)) as f:
                 fc = json.load(f)
+            if not scoreable_forecast(fc):
+                continue
             round_fcs.append(fc)
             c = scoring.crps_forecast(fc["topline"], outcome)
             e = entries.setdefault(fc["entrant"], {"crps": [], "skill": []})
@@ -1028,6 +1449,10 @@ def build_profile_leaderboard(rounds, resolved, series):
                 continue
             with open(os.path.join(rdir, fn)) as f:
                 fc = json.load(f)
+            if not scoreable_forecast(fc):
+                skipped.append((f"{r['round_id']}/{fn[:-5]}",
+                                "labelled MOCK excluded from scoring"))
+                continue
             try:
                 sc = profile_round.score_submission(fc, outcome, cells)
             except (ValueError, KeyError) as e:
@@ -1173,6 +1598,10 @@ def build_ranking_leaderboard(rounds, resolved, ranking_obs=None):
                 continue
             with open(os.path.join(rdir, fn)) as f:
                 fc = json.load(f)
+            if not scoreable_forecast(fc):
+                skipped.append((f"{r['round_id']}/{fn[:-5]}",
+                                "labelled MOCK excluded from scoring"))
+                continue
             try:
                 sc = ranking_round.score_submission(fc, outcome, spec)
             except (ValueError, KeyError) as e:
@@ -1291,67 +1720,329 @@ def load_model_backtest():
     }
 
 
+def next_operational_times(season, now):
+    """(next batch deadline, next round lock), both after ``now``.
+
+    They are computed once and attached to every source row.  A source outage
+    without the next moment it can hurt is an alert an operator cannot triage.
+    """
+    locks = [parse_iso(r["lock_at"]) for r in (season or {}).get("rounds", [])]
+    future_locks = sorted(t for t in locks if t > now)
+    future_deadlines = sorted({batches.effective_deadline(r["lock_at"])
+                               for r in (season or {}).get("rounds", [])
+                               if batches.effective_deadline(r["lock_at"]) > now})
+    return (future_deadlines[0] if future_deadlines else None,
+            future_locks[0] if future_locks else None)
+
+
+def run_source_tasks(tasks, run_status, *, next_deadline=None, next_lock=None):
+    """Run independent source loaders without discarding sibling successes.
+
+    A task is ``(name, route, loader[, same_source_archive])``.  ``loader``
+    validates before it archives and returns ``(value, evidence)``.  The
+    optional archive loader re-parses the exact manifest body for *that same
+    source*; it is marked stale/deadline-risk and is never treated as evidence
+    of a new release.  Every task runs even when an earlier one fails, so a 403
+    on one source cannot prevent another source's valid vintage from being
+    committed.
+    """
+    values, failures = {}, []
+    for task in tasks:
+        if len(task) == 3:
+            name, route, loader = task
+            archive = None
+        elif len(task) == 4:
+            name, route, loader, archive = task
+        else:
+            raise ValueError("source task must have 3 or 4 fields")
+        run_status.source_started(
+            name, route=route, next_lock=next_lock,
+            next_deadline=next_deadline)
+        try:
+            value, evidence = loader()
+        except Exception as exc:                       # noqa: BLE001 - isolated
+            if archive is not None:
+                try:
+                    value, evidence = archive()
+                except Exception as archive_error:     # noqa: BLE001 - reported together
+                    combined = RuntimeError(
+                        f"live attempt failed ({type(exc).__name__}: {exc}); "
+                        "no valid same-source archive was usable "
+                        f"({type(archive_error).__name__}: {archive_error})")
+                    run_status.source_failed(
+                        name, combined, route=route, next_lock=next_lock,
+                        next_deadline=next_deadline)
+                    failures.append((name, combined))
+                    continue
+                values[name] = value
+                run_status.source_degraded(
+                    name, exc, route=route, archive_evidence=evidence,
+                    next_lock=next_lock, next_deadline=next_deadline)
+                continue
+            run_status.source_failed(
+                name, exc, route=route, next_lock=next_lock,
+                next_deadline=next_deadline)
+            failures.append((name, exc))
+            continue
+        values[name] = value
+        run_status.source_succeeded(
+            name, route=route, evidence=evidence, next_lock=next_lock,
+            next_deadline=next_deadline)
+    return values, failures
+
+
+def build_and_account_registry_sources(
+        approval, generic, umich_rows, sources, unavailable_sources,
+        run_status, *, next_deadline=None, next_lock=None):
+    """Main's scalar-registry boundary, callable for fault-injection tests.
+
+    Adapters may keep serving a validated same-source archive after their live
+    request fails.  ``series.build_all`` collects those non-fatal diagnostics;
+    this seam preserves the resulting series but turns the semantic source
+    stale/deadline-risk.  A derivation that cannot return valid rows remains an
+    atomic source failure and removes only that source's series.
+    """
+    registry_sources = sorted(
+        {spec["source"] for spec in series_registry.SERIES.values()}
+        - {"sb_approval", "sb_generic", "umich", "aaii"})
+    for name in registry_sources:
+        run_status.source_started(
+            name, route=f"ssa.series:{name}",
+            next_lock=next_lock, next_deadline=next_deadline)
+
+    diagnostics = []
+    try:
+        series, registry_failures = build_series(
+            approval, generic, umich_rows, sources,
+            unavailable_sources=unavailable_sources,
+            isolate_failures=True, source_diagnostics=diagnostics)
+    except Exception as error:                     # noqa: BLE001 - persisted by caller
+        run_status.source_failed(
+            "series_registry", error, route="ssa.series.build_all",
+            next_lock=next_lock, next_deadline=next_deadline)
+        raise
+
+    by_source = {}
+    for item in diagnostics:
+        if not isinstance(item, dict):
+            item = {"source": "series_registry", "error": item,
+                    "archive_evidence": "same-source archive used"}
+        by_source.setdefault(item.get("source") or "series_registry", []).append(item)
+
+    new_failures = []
+    for name, error in sorted(registry_failures.items()):
+        route = f"ssa.series:{name}" if name in registry_sources else None
+        run_status.source_failed(
+            name, error, route=route, next_lock=next_lock,
+            next_deadline=next_deadline,
+            evidence="series derivation rejected this source atomically")
+        new_failures.append((name, error))
+
+    for name in registry_sources:
+        if name in registry_failures:
+            continue
+        count = sum(spec["source"] == name and sid in series
+                    for sid, spec in series_registry.SERIES.items())
+        degraded = by_source.get(name) or []
+        if degraded:
+            messages, evidence = [], []
+            for item in degraded:
+                error = item.get("error")
+                scope = item.get("scope") or "live"
+                messages.append(
+                    f"{scope}: {type(error).__name__}: "
+                    f"{reliability.error_text(error)}")
+                if item.get("archive_evidence"):
+                    evidence.append(str(item["archive_evidence"]))
+            run_status.source_degraded(
+                name, RuntimeError("; ".join(messages)),
+                route=f"ssa.series:{name}",
+                archive_evidence=("; ".join(sorted(set(evidence))) or
+                                  "same-source adapter archive used"),
+                next_lock=next_lock, next_deadline=next_deadline)
+        else:
+            run_status.source_succeeded(
+                name, route=f"ssa.series:{name}",
+                evidence=f"{count} validated non-empty series",
+                next_lock=next_lock, next_deadline=next_deadline)
+    return series, registry_failures, new_failures, diagnostics
+
+
+def print_operator_status(run_status):
+    print("\noperator:")
+    for line in run_status.summary():
+        print(" ", line)
+
+
+def _load_previous_operator():
+    try:
+        with open(OPERATOR) as handle:
+            return json.load(handle)
+    except (OSError, ValueError):
+        return None
+
+
 
 def main():
     # Local runs read keys from .env; in CI they arrive as Actions secrets
     # and no .env exists, so already-set variables always win.
     envfile.load()
     now = now_utc()
+    with open(QUESTIONS) as f:
+        season = json.load(f)
+    next_deadline, next_lock = next_operational_times(season, now)
+    run_status = reliability.RunStatus(now)
+    skip_filing = os.environ.get("SSA_SKIP_FILING") == "1"
+    if skip_filing:
+        run_status.carry_entrant_states(_load_previous_operator())
+
     # One fetch per upstream file, shared by the series registry and by the
     # averages below, so the site's headline numbers and its series can never
     # be built from different snapshots of the same source.
-    # Each upstream body is archived as it arrived, before anything parses it.
+    # A body becomes the current archive vintage only after its parser accepts
+    # it. A 200 carrying a login page or a shifted table is evidence of a
+    # failed attempt, not a safe replacement for yesterday's valid vintage.
     # Twenty-one of the registered series come out of one published Google
     # Sheet that is revised in place, so without a dated vintage a resolution
     # computed from it today cannot be rechecked tomorrow. See ssa/provenance.py.
-    sb_app_raw = silverbulletin.fetch_text(silverbulletin.APPROVAL_URL)
-    sb_gen_raw = silverbulletin.fetch_text(silverbulletin.GENERIC_URL)
-    prov = {
-        "sb_approval": provenance.record(
-            "sb_approval", silverbulletin.APPROVAL_URL, sb_app_raw,
-            note="Silver Bulletin poll database, published as a Google Sheet"),
-        "sb_generic": provenance.record(
-            "sb_generic", silverbulletin.GENERIC_URL, sb_gen_raw,
-            note="Silver Bulletin generic-ballot database, published as a Google Sheet"),
-    }
-    sources = {
-        "sb_approval": silverbulletin.parse(sb_app_raw),
-        "sb_generic": silverbulletin.parse(sb_gen_raw),
-        "umich": series_registry.michigan_history(),
-    }
-    prov["umich"] = provenance.record(
-        "umich", series_registry.MICHIGAN_URL,
-        series_registry.MICHIGAN_RAW or "",
-        note=series_registry.MICHIGAN_SOURCE)
+
+    def load_sb(name, url, note):
+        def load():
+            raw = silverbulletin.fetch_text(url)
+            rows = validate_silverbulletin_rows(
+                name, silverbulletin.parse(raw),
+                today=now.date())  # before manifest update
+            block = provenance.record(name, url, raw, note=note)
+            return {"rows": rows, "provenance": block}, \
+                f"{block['file']} sha256={block['sha256']}"
+        return load
+
+    def archive_sb(name, url):
+        def load():
+            raw, block = provenance.current(name, expected_url=url)
+            rows = validate_silverbulletin_rows(
+                name, silverbulletin.parse(raw.decode("utf-8")),
+                today=now.date())
+            return {"rows": rows, "provenance": block}, \
+                (f"same-source {block['file']} sha256={block['sha256']} "
+                 f"fetched_at={block.get('fetched_at')}")
+        return load
+
+    def load_umich():
+        rows = series_registry.michigan_history()
+        raw = encode_umich_composite(
+            series_registry.MICHIGAN_RAW,
+            series_registry.MICHIGAN_PRELIM_RAW)
+        block = provenance.record(
+            "umich", series_registry.MICHIGAN_URL,
+            raw, ext="json",
+            note=(series_registry.MICHIGAN_SOURCE + "; hash-covered canonical "
+                  f"raw composite of {umich.URL} and {umich.PRELIM_URL}"))
+        return {"rows": rows, "provenance": block}, \
+            f"{block['file']} sha256={block['sha256']}"
+
+    def archive_umich():
+        # Re-run both live parsers over the manifest-hashed envelope.  A legacy
+        # finals-only file, a missing preliminary response, or a modified byte
+        # is unsafe.  site/data.json is derived output, never source evidence.
+        raw, block = provenance.current(
+            "umich", expected_url=series_registry.MICHIGAN_URL)
+        rows = parse_umich_composite(raw)
+        return {"rows": rows, "provenance": block}, \
+            (f"same-source {block['file']} sha256={block['sha256']} contains "
+             "validated finals+preliminary raw responses")
+
     # AAII serves a ~22-week rolling window with no deeper machine-readable
     # history, so the committed vintages *are* the long history: each week the
     # window slides and the archive keeps the week that fell off. The body is
     # parsed with the asof from the response that carried it (the page's dates
     # have no year), and both go into `sources` so the registry never fetches
     # a second, different snapshot of the same page.
-    aaii_raw, aaii_asof = aaii.fetch_text()
-    prov["aaii"] = provenance.record(
-        "aaii", aaii.URL, aaii_raw, ext="html",
-        note=("AAII sentiment survey results page, a ~22-week rolling window "
-              f"parsed against the response's own date {aaii_asof}; the full "
-              "1987-present .xls is OLE2 and unreadable without a dependency"))
-    sources["aaii"] = aaii.parse(aaii_raw, aaii_asof)
+    def load_aaii():
+        raw, asof = aaii.fetch_text()
+        rows = aaii.parse(raw, asof)       # validate before manifest update
+        block = provenance.record(
+            "aaii", aaii.URL, raw, ext="html",
+            note=("AAII sentiment survey results page, a ~22-week rolling "
+                  f"window parsed against the response's own date {asof}; "
+                  "the full 1987-present .xls is OLE2 and unreadable without "
+                  "a dependency"))
+        return {"rows": rows, "provenance": block}, \
+            f"{block['file']} sha256={block['sha256']}"
+
+    def archive_aaii():
+        raw, block = provenance.current("aaii", expected_url=aaii.URL)
+        match = re.search(
+            r"parsed against the response's own date (\d{4}-\d{2}-\d{2})",
+            block.get("note") or "")
+        if not match:
+            raise RuntimeError(
+                "aaii: archived vintage has no response-date parsing anchor")
+        asof = date.fromisoformat(match.group(1))
+        rows = aaii.parse(raw.decode("utf-8"), asof)
+        return {"rows": rows, "provenance": block}, \
+            (f"same-source {block['file']} sha256={block['sha256']} "
+             f"parsed_asof={asof}")
+
+    loaded, source_failures = run_source_tasks([
+        ("sb_approval", silverbulletin.APPROVAL_URL,
+         load_sb("sb_approval", silverbulletin.APPROVAL_URL,
+                 "Silver Bulletin poll database, published as a Google Sheet"),
+         archive_sb("sb_approval", silverbulletin.APPROVAL_URL)),
+        ("sb_generic", silverbulletin.GENERIC_URL,
+         load_sb("sb_generic", silverbulletin.GENERIC_URL,
+                 "Silver Bulletin generic-ballot database, published as a Google Sheet"),
+         archive_sb("sb_generic", silverbulletin.GENERIC_URL)),
+        ("umich", series_registry.MICHIGAN_URL, load_umich, archive_umich),
+        ("aaii", aaii.URL, load_aaii, archive_aaii),
+    ], run_status, next_deadline=next_deadline, next_lock=next_lock)
+
+    # Every independent loader above has already run and every success is on
+    # disk.  A source with neither live data nor a validated same-source archive
+    # makes only its own series unavailable.  The registry below omits those
+    # series, so their rounds have no baseline and are held without a provider
+    # call; unrelated rounds still file.  The run remains red at the end.
+    unavailable_sources = {name for name, _error in source_failures}
+    sources = {name: block["rows"] for name, block in loaded.items()}
+    prov = {name: block["provenance"] for name, block in loaded.items()}
     for name, block in sorted(prov.items()):
         print(f"  {name:12s} {block['bytes']:>9,}B  sha {block['sha256'][:12]}")
-    # Every series now comes from a source that is days behind rather than
-    # weeks. VoteHub is gone: it was 41 days stale at the source and the only
-    # two trackers it still supplied, Congress and the Supreme Court, backed no
-    # round -- 16 backtest points is not worth a second, staler provenance.
-    approval = silverbulletin.approval_polls(rows=sources["sb_approval"])
-    generic = silverbulletin.generic_ballot_polls(rows=sources["sb_generic"])
-    umich = sources["umich"]
+    approval = (silverbulletin.approval_polls(rows=sources["sb_approval"])
+                if "sb_approval" in sources else [])
+    generic = (silverbulletin.generic_ballot_polls(rows=sources["sb_generic"])
+               if "sb_generic" in sources else [])
+    umich_rows = sources.get("umich") or []
+    try:
+        series, registry_failures, new_failures, _diagnostics = \
+            build_and_account_registry_sources(
+                approval, generic, umich_rows, sources,
+                unavailable_sources, run_status,
+                next_deadline=next_deadline, next_lock=next_lock)
+    except Exception as error:                     # noqa: BLE001 - persisted below
+        run_status.write(OPERATOR)
+        print_operator_status(run_status)
+        raise
+    source_failures.extend(new_failures)
+    unavailable_sources.update(registry_failures)
+    if "sb_approval" in registry_failures:
+        approval = []
+    if "sb_generic" in registry_failures:
+        generic = []
+    if "umich" in registry_failures:
+        umich_rows = []
 
-    with open(QUESTIONS) as f:
-        season = json.load(f)
-
-    series = build_series(approval, generic, umich, sources)
-    trackers = build_trackers(approval, generic, series,
-                              next_release_for(season, "umich_sentiment", now))
+    try:
+        trackers = build_trackers(
+            approval, generic, series,
+            next_release_for(season, "umich_sentiment", now),
+            umich_source=(prov.get("umich") or {}).get("note"))
+    except Exception as error:                     # noqa: BLE001 - persisted below
+        run_status.source_failed(
+            "series_registry", error, route="ssa.series.build_trackers",
+            next_lock=next_lock, next_deadline=next_deadline)
+        run_status.write(OPERATOR)
+        print_operator_status(run_status)
+        raise
     resolved = {}
     if os.path.exists(RESOLVED):
         with open(RESOLVED) as f:
@@ -1362,7 +2053,10 @@ def main():
     # network call happens inside `build_rounds` and so every consumer below --
     # the nulls, the prompts, the pricing pass and the board -- reads the
     # identical object.
-    ranking_obs = ranking_observations(season, fetch=True)
+    ranking_obs, ranking_source_failures = load_ranking_sources(
+        season, run_status, fetch=True, next_deadline=next_deadline,
+        next_lock=next_lock)
+    source_failures.extend(ranking_source_failures)
 
     rounds, hist_by_round = build_rounds(season, series, resolved, now,
                                          ranking_obs)
@@ -1381,14 +2075,14 @@ def main():
     # history is this shape.
     #
     # So the second pass rebuilds the site and files nothing.
-    if os.environ.get("SSA_SKIP_FILING") == "1":
+    if skip_filing:
         print("\nSSA_SKIP_FILING=1: rebuilding from what is on disk, "
               "calling no provider")
         filed, filing_failures = 0, []
     else:
-        filed, filing_failures = file_baseline_forecasts(rounds, hist_by_round,
-                                                         now, series,
-                                                         ranking_obs)
+        filed, filing_failures = file_baseline_forecasts(
+            rounds, hist_by_round, now, series, ranking_obs,
+            run_status=run_status)
     count_forecasts(rounds)
     stamped = stamp_locked_rounds(rounds)
 
@@ -1400,15 +2094,21 @@ def main():
     print("\nsources:")
     for line in health.report(source_health):
         print(line)
+    for health_row in source_health:
+        run_status.source_health(
+            health_row, next_lock=next_lock, next_deadline=next_deadline)
+    operator_status = run_status.write(OPERATOR)
+    print_operator_status(run_status)
     board = build_leaderboard(rounds, resolved)
     profile_board = build_profile_leaderboard(rounds, resolved, series)
     ranking_board = build_ranking_leaderboard(rounds, resolved, ranking_obs)
-    bt = backtest.run({
-        "umich_sentiment": series["umich_sentiment"],
-        "yougov_approval": series["yougov_approval"],
-        "mc_approval": series["mc_approval"],
-        "yougov_generic_margin": series["yougov_generic_margin"],
-    })
+    replay_series = {
+        name: series[name]
+        for name in ("umich_sentiment", "yougov_approval", "mc_approval",
+                     "yougov_generic_margin")
+        if name in series
+    }
+    bt = backtest.run(replay_series)
     real_mb = load_model_backtest()
     if real_mb:
         # A real run exists, so the placeholders below are skipped entirely.
@@ -1482,6 +2182,16 @@ def main():
     # the honest answer, and publishing it unaccompanied is the intended
     # behaviour rather than something to fill in.
 
+    charts = {}
+    if approval:
+        charts["approval_avg"] = average.weekly_series(approval, 80)
+    if generic:
+        charts["generic_margin"] = average.weekly_series(generic, 80)
+    for name in ("umich_sentiment", "yougov_approval", "mc_approval"):
+        if name in series:
+            charts[name] = (series[name][-48:]
+                            if name == "umich_sentiment" else series[name])
+
     data = {
         "generated_at": iso(now),
         "season": season["season"],
@@ -1502,13 +2212,7 @@ def main():
         # across the three sections.
         "ranking": ranking_board,
         "backtest": bt,
-        "charts": {
-            "approval_avg": average.weekly_series(approval, 80),
-            "generic_margin": average.weekly_series(generic, 80),
-            "umich_sentiment": series["umich_sentiment"][-48:],
-            "yougov_approval": series["yougov_approval"],
-            "mc_approval": series["mc_approval"],
-        },
+        "charts": charts,
         "series_tail": {k: v[-8:] for k, v in series.items()},
         # Which URL, fetched when, and where the saved raw body is -- per
         # upstream file, and per series through its `source` key. A page can
@@ -1524,6 +2228,11 @@ def main():
         # content moved, and the budget each is judged against. A page that
         # renders a number should be able to say how old it is.
         "source_health": source_health,
+        # Finite source and entrant-round states with the evidence and action
+        # an operator needs.  Also written to site/operator.json so a source
+        # failure that prevents data.json from rebuilding still leaves a
+        # machine-readable incident record.
+        "operator_status": operator_status,
         "series_provenance": {
             sid: prov.get(spec["source"], {}).get("source", spec["source"])
             for sid, spec in series_registry.SERIES.items()
@@ -1541,9 +2250,11 @@ def main():
     print("forecast files filed:", filed,
           "| models with a key:", keyed or "none")
     print("approval polls:", len(approval), "| generic:", len(generic),
-          "| umich points:", len(umich))
-    print("approval avg:", trackers["trump_approval_avg"]["value"],
-          "| generic margin:", trackers["generic_ballot_avg"]["value"])
+          "| umich points:", len(umich_rows))
+    print("approval avg:",
+          (trackers.get("trump_approval_avg") or {}).get("value", "unavailable"),
+          "| generic margin:",
+          (trackers.get("generic_ballot_avg") or {}).get("value", "unavailable"))
 
     # A fallback that nobody sees is the failure this design exists to avoid:
     # the site renders, the leaderboard updates, and four entrants have quietly
@@ -1559,18 +2270,30 @@ def main():
               "and the standby's own input hash, so the run after the account "
               "is fixed re-asks the vendor and upgrades them automatically.")
 
+    if source_failures:
+        print(f"\n{len(source_failures)} source(s) failed; affected rounds were "
+              "held and unrelated forecasts were preserved:")
+        for name, error in source_failures:
+            print(f"  - {name}: {type(error).__name__}: {error}")
+
     if filing_failures:
         # site/data.json and every successful forecast are already on disk, so
         # the workflow's commit step (which runs with if: always()) still lands
-        # them and a round does not miss its lock over one bad provider. The
-        # non-zero exit is what makes the failure impossible to ignore.
+        # them and a round does not miss its participant deadline over one bad
+        # provider. The non-zero exit makes the failure impossible to ignore.
         print(f"\n{len(filing_failures)} forecast(s) failed and were NOT filed:")
         for f in filing_failures:
             print("  -", f)
+    if source_failures or filing_failures:
+        details = []
+        if source_failures:
+            details.append(f"{len(source_failures)} source(s)")
+        if filing_failures:
+            details.append(f"{len(filing_failures)} entrant forecast(s)")
         raise SystemExit(
-            f"{len(filing_failures)} entrant forecast(s) failed. Nothing was "
-            "mocked; fix the cause and re-run. Set SSA_ALLOW_MOCK=1 only for "
-            "local work without keys.")
+            " and ".join(details) + " failed. Affected rounds were held; "
+            "successful source vintages and forecasts were kept. Nothing was "
+            "silently substituted or mocked for scoring.")
 
 
 if __name__ == "__main__":

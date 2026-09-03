@@ -125,6 +125,14 @@ namespace is not activated). All six provider keys are configured.
 Cutoffs live in `ssa/cutoffs.py`, keyed by **entrant, not model id** — changing
 a model without revisiting its cutoff silently dates the window from the old
 model's boundary. `MARGIN_DAYS = 30` pushes every window past the stated date.
+`confidence` is enforced by the backtest contract, not just displayed. A
+confirmatory run can combine `--minimum-cutoff-confidence declared` with
+`--on-unknown exclude` to omit lower-evidence entrants from both the scoring
+window and the table; without an explicit handling choice the runner stops
+instead of silently changing the roster. The default is deliberately `unknown`,
+which admits every previously dated row and therefore leaves the current
+entrant roster, call plan, and provider cost unchanged. Each run records the
+selected policy and the per-model trust decision in its output.
 
 ### Baselines and reference forecasters (5 + 1)
 

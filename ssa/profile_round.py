@@ -32,8 +32,8 @@ answer.
 **Resolution and the freeze.** The outcome is each cell's own series value as
 of the round's release date, read from the same archive every other round on
 that source resolves from -- no hand-typed numbers. The baselines see only
-history strictly before `lock_at`, the identical filter `refresh.build_rounds`
-applies to scalar rounds, applied sixteen times. Both halves fail loud rather
+history strictly before the round's freeze (`batches.freeze_at`), the identical
+filter `refresh.build_rounds` applies to scalar rounds, applied sixteen times. Both halves fail loud rather
 than guess: a cell with no post-lock release refuses the whole round rather
 than resolving fifteen cells and quietly dropping one, because a profile with a
 hole is not a profile.
@@ -51,6 +51,7 @@ publishes about where its number came from; that now comes from
 crediting Civiqs for a YouGov number is exactly the failure
 `ssa/provenance.py` exists to prevent.
 """
+from . import batches
 from . import baselines, scoring
 from . import series as series_registry
 
@@ -100,17 +101,24 @@ def labels_for(cells):
 # --- the freeze ------------------------------------------------------------
 
 def frozen_history(r, series, cells=None):
-    """{cell: history strictly before `lock_at`}, oldest first.
+    """{cell: history strictly before the round's freeze}, oldest first.
 
-    The same filter `refresh.build_rounds` applies to a scalar round --
-    `p["date"] < r["lock_at"][:10]`, a string comparison on ISO dates -- run
-    once per cell. It is written here rather than inlined so that the sixteen
-    cells cannot drift away from the one rule: without it, the moment a release
-    lands in a cell's series the per-cell persistence null would contain the
-    very value it is scored against.
+    The same filter `refresh.build_rounds` applies to a scalar round, run once
+    per cell. It is written here rather than inlined so that the sixteen cells
+    cannot drift away from the one rule: without it, the moment a release lands
+    in a cell's series the per-cell persistence null would contain the very
+    value it is scored against.
+
+    The freeze is `batches.freeze_at`, not `lock_at`. Those were the same
+    instant until the weekly batch calendar separated them, and this function
+    kept the old spelling through that change -- so every per-cell null on the
+    round type this module calls the headline one was reading up to seven days
+    of series its entrants never saw, which is precisely the bias
+    `ssa/batches.py` exists to remove. `freeze_at` returns the lock itself for
+    rounds that predate the cutover, so nothing already scored moves.
     """
     cells = cells or cells_for(r)
-    lock_date = r["lock_at"][:10]
+    lock_date = batches.freeze_at(r["lock_at"]).strftime("%Y-%m-%d")
     return {c: [p for p in (series.get(c) or []) if p["date"] < lock_date]
             for c in cells}
 
@@ -155,7 +163,7 @@ def profile_baselines(r, series, cells=None):
 
 # --- resolution ------------------------------------------------------------
 
-def cell_outcome(points, release_date, lock_date, cell):
+def cell_outcome(points, release_date, freeze_date, cell):
     """One cell's value as of the release date. Raises rather than guesses.
 
     Two refusals, both of which would otherwise produce a resolution that looks
@@ -163,19 +171,26 @@ def cell_outcome(points, release_date, lock_date, cell):
 
     - no observation at or before the release date: the archive has not caught
       up, and resolving on a later value would answer a different question;
-    - the newest observation predates the lock: nothing has published since the
-      round froze, so there is no release to score. Resolving anyway would hand
-      the persistence null the exact value it forecast and score every entrant
-      against a number that existed before they were asked.
+    - the newest observation predates the freeze: nothing has published since
+      the round froze, so there is no release to score. Resolving anyway would
+      hand the persistence null the exact value it forecast and score every
+      entrant against a number that existed before they were asked.
+
+    The boundary is the freeze, not the lock. Those were the same instant under
+    the per-round rule and are up to seven days apart under the weekly batch
+    calendar. Anchored on the lock, a value published after entrants answered
+    but before the round locked was refused as "nothing has published since the
+    round froze" -- while it was in fact exactly the release being scored, and
+    unknown to every entrant when they submitted.
     """
     got = [p for p in points if p["date"] <= release_date]
     if not got:
         raise ValueError(f"{cell}: no observation at or before {release_date}")
     last = got[-1]
-    if last["date"] < lock_date:
+    if last["date"] < freeze_date:
         raise ValueError(
-            f"{cell}: newest observation {last['date']} predates the lock "
-            f"{lock_date}; nothing has published since the round froze")
+            f"{cell}: newest observation {last['date']} predates the freeze "
+            f"{freeze_date}; nothing has published since the round froze")
     return last
 
 
@@ -218,11 +233,12 @@ def resolution(r, series, cells=None):
     would reward the entrant with no view on the cell that went missing.
     """
     cells = cells or cells_for(r)
-    release_date, lock_date = r["release_at"][:10], r["lock_at"][:10]
+    release_date = r["release_at"][:10]
+    freeze_date = batches.freeze_at(r["lock_at"]).strftime("%Y-%m-%d")
     values, dates, missing = {}, {}, []
     for c in cells:
         try:
-            p = cell_outcome(series.get(c) or [], release_date, lock_date, c)
+            p = cell_outcome(series.get(c) or [], release_date, freeze_date, c)
         except ValueError as e:
             missing.append(str(e))
             continue

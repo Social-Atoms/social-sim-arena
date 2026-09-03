@@ -72,14 +72,19 @@ def pre_lock_history(r, series):
 
     Falls back to the date filter only for rounds that locked before snapshots
     existed; that path cannot tell a monthly value's label date from its
-    publication date, which is the whole reason snapshots exist.
+    publication date, which is the whole reason snapshots exist. The filter is
+    `batches.freeze_at`, which returns the lock itself for exactly those
+    pre-cutover rounds -- so the documented path is unchanged, and a
+    post-cutover round that somehow lost its snapshot falls back to the
+    boundary its null actually used rather than one up to a week later.
     """
-    from . import refresh
+    from . import batches, refresh
     snap = refresh.read_lock_snapshot(r["round_id"])
     if snap and snap.get("history"):
         return snap["history"]
+    freeze_date = batches.freeze_at(r["lock_at"]).strftime("%Y-%m-%d")
     return [p for p in (series.get(r["series"]) or [])
-            if p["date"] < r["lock_at"][:10]]
+            if p["date"] < freeze_date]
 
 
 def candidate(r, series):

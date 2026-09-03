@@ -66,9 +66,11 @@ different aggregation rule that would need its own justification and its own
 tests. Left out rather than approximated.
 
 **The freeze is the same one, three times over.** History is filtered to
-`date < lock_at[:10]` before persistence is computed, exactly as
+`date < batches.freeze_at(...)` before persistence is computed, exactly as
 `refresh.build_rounds` does for a scalar round and `profile_round.frozen_history`
-does per cell. Both sources make that filter exact rather than approximate: a
+does per cell. "The same one" is load-bearing and was briefly false: when the
+weekly batch calendar moved the scalar freeze off `lock_at`, these two kept the
+old spelling, and their nulls read days of history their entrants never saw. Both sources make that filter exact rather than approximate: a
 Wikipedia week is dated by the Sunday it ends and its daily counts are final
 within two days, and a Trends week is dated by its Saturday and frozen at the
 value the earliest snapshot containing it showed. Neither can be relabelled into
@@ -77,6 +79,7 @@ monthly series.
 """
 from datetime import date, timedelta
 
+from . import batches
 from . import scoring
 from .adapters import trends as trends_adapter
 from .adapters import wikipedia as wikipedia_adapter
@@ -239,7 +242,7 @@ def question_universe(spec):
 
 # --- observations: the source's own history of lists -------------------------
 
-def observations(r, fetch=False, now=None, spec=None):
+def observations(r, fetch=False, now=None, spec=None, diagnostics=None):
     """[{date, items, ...}] oldest first: one completed week per entry.
 
     `date` is the week's last day, which is what makes the freeze below a plain
@@ -249,8 +252,10 @@ def observations(r, fetch=False, now=None, spec=None):
     """
     spec = spec or spec_for(r)
     if spec["kind"] == "wiki_top10":
-        return _wiki_observations(spec, fetch=fetch, now=now)
-    return _basket_observations(spec, fetch=fetch, now=now)
+        return _wiki_observations(
+            spec, fetch=fetch, now=now, diagnostics=diagnostics)
+    return _basket_observations(
+        spec, fetch=fetch, now=now, diagnostics=diagnostics)
 
 
 def _week_ends(spec, count=HISTORY_WEEKS):
@@ -259,29 +264,45 @@ def _week_ends(spec, count=HISTORY_WEEKS):
     return [end - timedelta(days=7 * i) for i in range(count, -1, -1)]
 
 
-def _wiki_observations(spec, fetch=False, now=None):
+def _wiki_observations(spec, fetch=False, now=None, diagnostics=None):
     out = []
     for end in _week_ends(spec):
         try:
             items, totals = wikipedia_adapter.weekly_top(
                 end, spec["length"], spec["exclusions"], spec["project"],
                 spec["access"], fetch=fetch, now=now)
-        except Exception:                     # noqa: BLE001 - see below
+        except Exception as error:            # noqa: BLE001 - see below
             # A week the archive does not hold all seven days of is simply not
             # history yet: before the round's own week it has not happened, and
             # before the archive began it never will. Skipped rather than
             # raised, because history is allowed to be short -- while
             # `resolution` below raises loudly for the one week that must be
             # there, with the adapter's own message naming the missing days.
+            # A not-yet-final target week normally reports only that archive
+            # days are missing; that is expected, not an outage.  Any other
+            # exception while fetch=True is a failed live attempt (HTTP,
+            # transport, or parser) and must survive even when six older
+            # archived weeks still make a useful history available.
+            expected_incomplete = str(error).startswith("week ending ") and \
+                " from the " in str(error) and " archive " in str(error)
+            if fetch and not expected_incomplete and diagnostics is not None:
+                diagnostics.append({
+                    "source": "ranking_wikitop",
+                    "scope": end.isoformat(),
+                    "error": error,
+                    "archive_evidence": (
+                        "same-source Wikimedia daily-top archive retained "
+                        "other complete weeks"),
+                })
             continue
         out.append({"date": end.isoformat(), "items": items,
                     "views": {t: totals[t] for t in items}})
     return out
 
 
-def _basket_observations(spec, fetch=False, now=None):
+def _basket_observations(spec, fetch=False, now=None, diagnostics=None):
     weeks = trends_adapter.basket_weeks(spec["items"], spec["geo"], now=now,
-                                        fetch=fetch)
+                                        fetch=fetch, diagnostics=diagnostics)
     keep = {d.isoformat() for d in _week_ends(spec)}
     return [{"date": w["date"],
              "items": trends_adapter.basket_order(w["values"], spec["items"]),
@@ -292,15 +313,20 @@ def _basket_observations(spec, fetch=False, now=None):
 # --- the freeze --------------------------------------------------------------
 
 def frozen_history(r, obs):
-    """The observations strictly before `lock_at`, oldest first.
+    """The observations strictly before the round's freeze, oldest first.
 
-    `refresh.build_rounds`' filter verbatim -- `p["date"] < r["lock_at"][:10]`,
-    a string comparison on ISO dates. Written here rather than inlined so a
+    `refresh.build_rounds`' filter, written here rather than inlined so a
     ranking round cannot drift away from the one rule: without it, the moment
     the measured week lands in the archive the persistence null would be the
     very list it is scored against.
+
+    The freeze is `batches.freeze_at`, not `lock_at` -- the same correction
+    `profile_round.frozen_history` needed. The two were one instant until the
+    weekly batch calendar separated them, and a null frozen at the lock reads
+    series its entrants could not. `freeze_at` returns the lock for rounds that
+    predate the cutover, so nothing already scored moves.
     """
-    lock_date = r["lock_at"][:10]
+    lock_date = batches.freeze_at(r["lock_at"]).strftime("%Y-%m-%d")
     return [o for o in (obs or []) if o["date"] < lock_date]
 
 
@@ -353,9 +379,11 @@ def resolution(r, obs=None, spec=None, fetch=False, now=None):
     """The true ordered list for the round's own week, or a raised explanation.
 
     Read from the same archive the history came from, at the week the round
-    names -- never from `obs`, so that a round whose week is missing gets the
-    adapter's precise complaint (which days are absent, which snapshot is
-    needed) instead of a generic "not found".
+    names. ``obs`` is an explicit dependency-injection seam for an offline
+    rehearsal: when supplied it must contain that exact completed week and is
+    normalized through the same round contract. Production callers omit it,
+    so a missing live week still gets the adapter's precise complaint (which
+    days are absent, which snapshot is needed).
 
     The one check that is not the adapter's: the answer must not be a week the
     frozen history already contained. That cannot happen if the locks are set
@@ -366,11 +394,31 @@ def resolution(r, obs=None, spec=None, fetch=False, now=None):
     """
     spec = spec or spec_for(r)
     week_end = spec["week_end"]
-    if week_end < r["lock_at"][:10]:
+    # The boundary is the freeze, not the lock: `batches.freeze_at` is where
+    # this round's persistence null stops reading, and "existed when the round
+    # froze" is a claim about that instant. The two coincide before the batch
+    # cutover. After it the lock is up to seven days later, so anchoring here on
+    # the lock would refuse a week that began after entrants answered.
+    freeze_date = batches.freeze_at(r["lock_at"]).strftime("%Y-%m-%d")
+    if week_end < freeze_date:
         raise ValueError(
             f"{r.get('round_id')}: the measured week ends {week_end}, before "
-            f"the lock at {r['lock_at'][:10]}; its answer existed when the "
+            f"the freeze at {freeze_date}; its answer existed when the "
             "round froze and cannot be scored")
+    if obs is not None:
+        got = next((row for row in obs if row.get("date") == week_end), None)
+        if got is None:
+            raise ValueError(
+                f"{r.get('round_id')}: injected archive has no completed week "
+                f"ending {week_end}")
+        items = normalize(got.get("items"), spec, where="resolution archive")
+        return {
+            "items": items,
+            "week_start": spec["week_start"],
+            "week_end": week_end,
+            "method": ("the explicitly supplied offline archive observation, "
+                       "validated by the production ranking resolver"),
+        }
     if spec["kind"] == "wiki_top10":
         items, totals = wikipedia_adapter.weekly_top(
             week_end, spec["length"], spec["exclusions"], spec["project"],

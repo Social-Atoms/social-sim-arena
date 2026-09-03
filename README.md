@@ -3,8 +3,8 @@
 ![Simulated societies graded by the real future](assets/teaser.png)
 
 A live benchmark for social simulation. Models forecast the next public-opinion
-release before it is published. Every forecast is locked 48 hours ahead,
-hashed, and scored in public once the real number drops.
+release before it is published. Forecasts share a weekly participant deadline,
+are hashed, and are scored in public once the real number drops.
 
 Site: https://social-simulation-arena.com · Docs: https://social-simulation-arena.com/docs.html
 
@@ -28,6 +28,10 @@ python -m ssa.refresh            # fetch live data, build site/data.json
 open site/index.html
 ```
 
+Each refresh also writes `site/operator.json`: finite source and
+entrant-round states, evidence, retry/deadline information, spend, and the
+required operator action. See [`docs/operator-status.md`](docs/operator-status.md).
+
 `ssa.refresh` hits real, keyless endpoints, all same-day or first-party:
 
 - Silver Bulletin poll CSVs (approval + generic ballot, updated same day)
@@ -39,8 +43,10 @@ open site/index.html
 
 ```
 questions/    the season: every round, its lock and release time, frozen up front
+              candidates/ proposals awaiting review; bundles/ the frozen weekly batch
 forecasts/    one file per entrant per round; the PR that adds it is the submission
-locks/        sha256 manifests written at lock time; the pre-registration record
+locks/        input-history snapshots frozen at the effective participant deadline
+stamps/       forecast hash manifests and OpenTimestamps proofs at submission close
 resolutions/  the published numbers rounds resolved against, with sources
 entrants/     who is competing: one registration file per entrant
 ssa/          the pipeline: adapters -> series -> baselines -> harness -> scoring -> refresh
@@ -54,21 +60,32 @@ backtest/     committed evidence of the model backtest (runs/*.jsonl)
 
 ## Submitting a forecast
 
-The guided predictive-agent and Human Wisdom intake is described in
-[`docs/submission-design.md`](docs/submission-design.md). Its questionnaire
-route can be completed in `site/submit.html` or through the shared
-[`questionnaire submission API`](docs/questionnaire-api.md); both validate the
-same live manifest and write only to private storage. The repository-native
-path below remains the operational fallback until production storage and the
-review workflow are activated.
+Start at [`docs/participant-quickstart.md`](docs/participant-quickstart.md).
 
-1. Read the open rounds: `questions/season0.json` (machine readable, also
-   rendered on the site).
-2. Add one file: `forecasts/<round_id>/<entrant>.json` matching
-   `schema/forecast.schema.json`. Distributions, not points: every target
-   needs a mean and an sd.
-3. Open a pull request before the round's `lock_at`. CI validates the schema
-   and the deadline, and prints the canonical sha256 your entry is cited by.
+**One deadline a week: Monday 12:00Z.** Every round due at that moment is
+published together, a week ahead, as one bundle. A round's own `lock_at`
+(`release − 48h`) is the arena's clock and falls 0 to 7 days later; it is never
+a participant's deadline. See [`docs/submission-window.md`](docs/submission-window.md).
+
+Two routes, one registration:
+
+- **We call you** — an HTTPS OpenAI-compatible endpoint, contract in
+  [`docs/agent-api.md`](docs/agent-api.md). Rehearse with
+  `python examples/agent-api/server.py` and
+  `python tools/probe_agent_api.py --base-url http://127.0.0.1:8787/v1`.
+- **You upload a bundle** — one JSON file of answers for the week, contract in
+  [`docs/bundle-submission.md`](docs/bundle-submission.md). Rehearse with
+  `examples/bundle/`, check it with `python tools/validate_bundle.py`.
+
+Both end at the same record: one `forecasts/<round_id>/<entrant>.json` matching
+`schema/forecast.schema.json`, scored identically. Distributions, not points:
+every target needs a mean and an sd, or ordered quantiles including `0.5`.
+Adding that file by pull request still works and remains the recovery path; CI
+validates the schema and the batch deadline and prints the canonical sha256
+your entry is cited by.
+
+The guided intake, Human Wisdom, and the retention design are in
+[`docs/submission-design.md`](docs/submission-design.md).
 
 Baselines (persistence, trend, poll-average snapshot, human panel) run in
 every round. The headline metric is skill: `1 - CRPS(you) / CRPS(persistence)`.
@@ -81,6 +98,10 @@ Full protocol figures and the teaser live in `assets/`.
 
 ## Status
 
-Prototype, season 0. Live rounds start Aug 11, 2026. The data refresh runs
-daily via GitHub Actions. Known gaps and open tasks are listed on the docs
-page.
+Prototype, season 0. Live rounds start Aug 11, 2026. The data refresh runs every
+six hours via GitHub Actions; resolution and scoring run in that same workflow.
+Known gaps and open tasks are listed on the docs page.
+
+Maintainers: the offline candidate → human review → deterministic bundle →
+sandbox scoring procedure is documented in
+[`docs/weekly-pipeline.md`](docs/weekly-pipeline.md).

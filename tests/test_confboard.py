@@ -4,6 +4,7 @@ Run: PYTHONPATH=. python tests/test_confboard.py
 """
 import os
 import sys
+from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -31,6 +32,30 @@ def test_the_whole_release_comes_out_of_one_paragraph():
         "present_situation": 114.9, "expectations": 74.7,
         "previous_month": "2026-06-01", "previous_value_restated": 92.2,
         "released_on": None}, got
+
+
+def test_missing_release_date_uses_the_utc_day_not_the_runner_timezone():
+    """One instant must infer one month on runners in every local timezone."""
+    # At this instant Los Angeles is still Dec 31 while UTC is Jan 1. The page
+    # has no Updated line, so the clock is the only source for the year. A
+    # December reading seen in UTC January belongs to the previous year.
+    instant = datetime(2027, 1, 1, 0, 30, tzinfo=timezone.utc)
+    los_angeles = instant.astimezone(timezone(timedelta(hours=-8)))
+    page = PAGE.replace("in July", "in December").replace(
+        "92.2 in June", "92.2 in November")
+    utc = confboard.parse(page, now=instant)
+    local_zone_value = confboard.parse(page, now=los_angeles)
+    assert utc["month"] == "2026-12-01", utc
+    assert local_zone_value["month"] == utc["month"]
+
+
+def test_naive_as_of_datetime_is_refused():
+    try:
+        confboard.parse(PAGE, now=datetime(2026, 8, 1, 0, 0))
+    except ValueError as e:
+        assert "timezone" in str(e)
+    else:
+        raise AssertionError("a timezone-free as-of value was accepted")
 
 
 # Three house styles in five years, all still published at the same URL. Each
@@ -179,6 +204,67 @@ def test_history_with_an_empty_archive_refuses_to_invent_a_series():
         assert "backfill_cci" in str(e), e
     finally:
         confboard.ARCHIVE = saved
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def test_history_reports_a_live_failure_when_its_archive_serves():
+    import json
+    import shutil
+    import tempfile
+    d = tempfile.mkdtemp(prefix="ssa-cci-")
+    saved_archive, saved_current = confboard.ARCHIVE, confboard.current
+    confboard.ARCHIVE = d
+
+    def refused():
+        raise RuntimeError("403 Forbidden")
+
+    confboard.current = refused
+    try:
+        with open(f"{d}/2026-07-28.json", "w") as f:
+            json.dump({"month": "2026-07-01", "value": 90.8}, f)
+        diagnostics, failure = [], RuntimeError("403 Forbidden")
+        confboard.current = lambda: (_ for _ in ()).throw(failure)
+        assert confboard.history(diagnostics=diagnostics)[-1]["value"] == 90.8
+        assert diagnostics == [{
+            "source": "confboard",
+            "scope": "live",
+            "error": failure,
+            "archive_evidence": (
+                f"{confboard.os.path.relpath(d, confboard.ROOT)} "
+                "(1 first-print rows; newest 2026-07-01)"),
+        }]
+
+        timeout = TimeoutError()
+        confboard.current = lambda: (_ for _ in ()).throw(timeout)
+        diagnostics = []
+        assert confboard.history(diagnostics=diagnostics)[-1]["value"] == 90.8
+        assert diagnostics[0]["error"] is timeout
+    finally:
+        confboard.ARCHIVE, confboard.current = saved_archive, saved_current
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def test_history_does_not_hide_a_malformed_live_release_behind_the_archive():
+    import json
+    import shutil
+    import tempfile
+    d = tempfile.mkdtemp(prefix="ssa-cci-")
+    saved_archive, saved_current = confboard.ARCHIVE, confboard.current
+    confboard.ARCHIVE = d
+    confboard.current = lambda: confboard.parse("<html>malformed release</html>")
+    try:
+        with open(f"{d}/2026-07-28.json", "w") as f:
+            json.dump({"month": "2026-07-01", "value": 90.8}, f)
+        diagnostics = []
+        try:
+            confboard.history(diagnostics=diagnostics)
+        except RuntimeError as e:
+            assert "Conference Board headline" in str(e), e
+        else:
+            raise AssertionError("a malformed live release used the archive")
+        assert diagnostics == []
+    finally:
+        confboard.ARCHIVE, confboard.current = saved_archive, saved_current
         shutil.rmtree(d, ignore_errors=True)
 
 

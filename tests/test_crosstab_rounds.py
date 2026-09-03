@@ -366,9 +366,18 @@ def test_the_lock_excludes_the_month_the_round_scores():
         assert hist[c][-1]["date"] == "2026-08-31", c
         assert not any(p["date"][:7] == "2026-09" for p in hist[c]), c
 
-    # and the same round with one more day of slack does leak, which is why
-    # the release is pinned to the last wave plus exactly 48 hours
-    late = dict(ROUND, lock_at="2026-09-29T14:00:00Z")
+    # The fixture must actually be able to leak, or this test proves nothing.
+    # It takes a whole batch to do it now: the freeze is the Monday deadline
+    # (`batches.freeze_at`), so nudging a lock by a day no longer moves what
+    # the null sees -- 09-29 and 09-30 both still freeze at 09-28. That is a
+    # stronger guarantee than the one this test was written for, where a
+    # one-day slip in a release estimate silently fed the null another wave.
+    same = dict(ROUND, lock_at="2026-09-30T14:00:00Z")
+    unmoved = profile_round.frozen_history(same, series, CELLS)
+    assert unmoved[CELLS[0]][-1]["date"] == "2026-08-31", \
+        "a day of slack must not move the freeze under the batch calendar"
+
+    late = dict(ROUND, lock_at="2026-10-06T14:00:00Z")     # the next batch
     leaked = profile_round.frozen_history(late, series, CELLS)
     assert leaked[CELLS[0]][-1]["date"] == "2026-09-28", \
         "this fixture must actually be able to leak, or the test proves nothing"
@@ -450,7 +459,7 @@ def test_a_september_with_three_waves_never_resolves():
     try:
         profile_round.resolution(ROUND, series, CELLS)
     except ValueError as e:
-        assert "predates the lock" in str(e), str(e)
+        assert "predates the freeze" in str(e), str(e)
     else:
         raise AssertionError("a three-wave September must not resolve")
 

@@ -281,11 +281,65 @@ def test_history_serves_the_archive_when_the_fetch_fails():
     sce.fetch_bytes = refused
     try:
         sce.archive(full_history(), day="2026-08-20")
-        rows = sce.history(fetch=True, today="2026-08-26")
+        diagnostics = []
+        rows = sce.history(fetch=True, today="2026-08-26",
+                           diagnostics=diagnostics)
         assert rows[-1] == {"date": "2026-07-01", "infl_1y": 3.3,
                             "infl_3y": 3.1}, rows[-1]
+        assert diagnostics[0]["source"] == "sce"
+        assert diagnostics[0]["scope"] == "live"
+        assert isinstance(diagnostics[0]["error"], RuntimeError)
+        assert str(diagnostics[0]["error"]) == "403 Forbidden"
+        assert "2026-08-20.xlsx" in diagnostics[0]["archive_evidence"]
+        assert "newest reference month 2026-07-01" in \
+            diagnostics[0]["archive_evidence"]
     finally:
         sce.ARCHIVE, sce.fetch_bytes = saved_archive, saved_fetch
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def test_history_does_not_hide_a_malformed_live_workbook_behind_the_archive():
+    d = tempfile.mkdtemp(prefix="ssa-sce-")
+    saved_archive, saved_fetch = sce.ARCHIVE, sce.fetch_bytes
+    sce.ARCHIVE = d
+    sce.fetch_bytes = lambda *a, **k: b"<html>not an xlsx</html>"
+    try:
+        sce.archive(full_history(), day="2026-08-20")
+        try:
+            sce.history(fetch=True, today="2026-08-26", diagnostics=[])
+        except RuntimeError as e:
+            assert "not a readable xlsx" in str(e), e
+        else:
+            raise AssertionError("a malformed live workbook used the archive")
+    finally:
+        sce.ARCHIVE, sce.fetch_bytes = saved_archive, saved_fetch
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def test_http_200_html_from_requests_cannot_hide_behind_the_archive():
+    """Exercise the production request -> magic validation -> history seam."""
+    d = tempfile.mkdtemp(prefix="ssa-sce-")
+    saved_archive, saved_get = sce.ARCHIVE, sce.requests.get
+    sce.ARCHIVE = d
+
+    class HtmlResponse:
+        content = b"<html>NY Fed access interstitial</html>"
+
+        @staticmethod
+        def raise_for_status():
+            return None
+
+    sce.requests.get = lambda *_a, **_k: HtmlResponse()
+    try:
+        sce.archive(full_history(), day="2026-08-20")
+        try:
+            sce.history(fetch=True, today="2026-08-26", diagnostics=[])
+        except RuntimeError as error:
+            assert "not an xlsx" in str(error), error
+        else:
+            raise AssertionError("HTTP 200 HTML was hidden by the SCE archive")
+    finally:
+        sce.ARCHIVE, sce.requests.get = saved_archive, saved_get
         shutil.rmtree(d, ignore_errors=True)
 
 

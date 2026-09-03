@@ -16,6 +16,11 @@ Checks, in order:
    the commit that lands after the lock fails loudly.
 6. Prints the canonical sha256, which the leaderboard and the paper cite.
 
+A `forecasts/_*/` directory holds examples, not submissions. Two of the checks
+above cannot apply to one: the directory half of 2, because `_` is not legal in
+a round_id, and 5, because an example names a round that has already locked.
+Every other check runs. An example is the file a new entrant copies.
+
 Canonical form: JSON with sorted keys and separators (',', ':'), UTF-8.
 
 This file imports nothing from `ssa/`, deliberately: CI runs it on a bare
@@ -27,7 +32,7 @@ import hashlib
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -52,6 +57,37 @@ WIKI_NAMESPACE_PREFIXES = (
     "Wikipedia_talk:", "Portal_talk:", "Help_talk:", "File_talk:",
     "Template_talk:", "Category_talk:", "Draft_talk:", "User_talk:",
 )
+
+
+# Mirrors ssa/batches.py, which owns the weekly submission calendar and the
+# reasoning behind it. Same duplication trade as the Wikipedia rule above: this
+# file imports nothing, so the copy is spelled out, kept tiny, and pinned by
+# `tests/test_batches.py`, which walks a year of hourly locks and fails if the
+# two ever disagree by a second.
+BATCH_WEEKDAY = 0                                          # Monday
+BATCH_HOUR_UTC = 12
+BATCH_FIRST_DEADLINE = datetime(2026, 9, 14, BATCH_HOUR_UTC, tzinfo=timezone.utc)
+
+
+def batch_deadline(lock_at):
+    """The last Monday 12:00Z strictly before `lock_at`."""
+    back = (lock_at.weekday() - BATCH_WEEKDAY) % 7
+    candidate = (lock_at - timedelta(days=back)).replace(
+        hour=BATCH_HOUR_UTC, minute=0, second=0, microsecond=0)
+    if candidate >= lock_at:
+        candidate -= timedelta(days=7)
+    return candidate
+
+
+def effective_deadline(lock_at):
+    """When a submission for this round must be in.
+
+    The batch deadline once the cutover applies, the round's own lock before
+    it. Rounds that closed under the per-round rule keep it: moving their
+    deadline now would invalidate forecasts already filed and scored.
+    """
+    due = batch_deadline(lock_at)
+    return due if due >= BATCH_FIRST_DEADLINE else lock_at
 
 
 def fail(msg):
@@ -266,9 +302,12 @@ def validate(path, now=None):
     if len(parts) != 3 or parts[0] != "forecasts":
         fail(f"{rel}: forecasts live at forecasts/<round_id>/<entrant>.json, registrations at entrants/<entrant_id>.json")
     round_dir, fname = parts[1], parts[2]
-    if round_dir.startswith("_"):
-        print(f"OK (example dir, skipped lock check): {rel}")
-        return
+    # An example directory is a template, not a submission. Two checks cannot
+    # apply to it: `_example` is not a legal round_id, so the directory can
+    # never match, and the round it names has already locked, so it is always
+    # past its deadline. Every other check applies, because an example is the
+    # file a new entrant copies.
+    is_example = round_dir.startswith("_")
 
     with open(path) as f:
         try:
@@ -304,7 +343,7 @@ def validate(path, now=None):
     for label, t in answer_blocks(fc):
         check_quantiles(rel, label, t)
 
-    if fc["round_id"] != round_dir:
+    if not is_example and fc["round_id"] != round_dir:
         fail(f"{rel}: round_id '{fc['round_id']}' does not match directory '{round_dir}'")
     if fc["entrant"] + ".json" != fname:
         fail(f"{rel}: entrant '{fc['entrant']}' does not match file name '{fname}'")
@@ -315,12 +354,24 @@ def validate(path, now=None):
     if fc["round_id"] not in rounds:
         fail(f"{rel}: unknown round '{fc['round_id']}'")
     check_answer_matches_round(rel, fc, rounds[fc["round_id"]])
-    lock_at = datetime.strptime(rounds[fc["round_id"]]["lock_at"],
-                                "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-    if now >= lock_at:
-        fail(f"{rel}: round locked at {rounds[fc['round_id']]['lock_at']}, submission is late")
+    if not is_example:
+        lock_at = datetime.strptime(rounds[fc["round_id"]]["lock_at"],
+                                    "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        # The deadline is the batch's, not the round's own lock. Season 0's
+        # rounds lock on six different weekdays, so a per-round deadline meant
+        # six deadlines to track and, worse, entrants answering the same
+        # question from up to seven days apart. `ssa.batches` holds the
+        # calendar and the dated cutover; rounds that predate it still
+        # validate against their own lock.
+        due = effective_deadline(lock_at)
+        if now >= due:
+            if due < lock_at:
+                fail(f"{rel}: batch batch-{due:%Y-%m-%d} closed at "
+                     f"{due:%Y-%m-%dT%H:%M:%SZ} (round locks "
+                     f"{rounds[fc['round_id']]['lock_at']}), submission is late")
+            fail(f"{rel}: round locked at {rounds[fc['round_id']]['lock_at']}, submission is late")
 
-    print(f"OK: {rel}")
+    print(f"OK{' (example, deadline not checked)' if is_example else ''}: {rel}")
     print(f"    sha256: {canonical_sha256(fc)}")
 
 

@@ -15,7 +15,8 @@ GET /api/v1/questionnaire
 ```
 
 Each object in `questions` includes the complete `question`, `round_id`,
-`board_id`, `target_type`, `unit`, `release_at`, `lock_at`, human-readable
+`board_id`, `target_type`, `unit`, `release_at`, participant `deadline`, the
+Arena's internal `lock_at`, human-readable
 `resolution_rule`, optional `resolution_source_url`, latest public reference,
 and any `options`, `cells`, `profile`, or `ranking` metadata. It also contains:
 
@@ -27,7 +28,8 @@ and any `options`, `cells`, `profile`, or `ranking` metadata. It also contains:
 ```
 
 The manifest is authoritative at submission time. Clients should fetch it
-immediately before answering and must not cache it across a lock deadline.
+immediately before answering and must not cache it across the participant
+deadline.
 
 ## 2. Build the submission
 
@@ -121,7 +123,7 @@ A valid request returns `201 Created`:
 
 Retry the same body with the same `Idempotency-Key`; it returns the same ID and
 sets `idempotent_replay` to `true`. Reusing the key with a different body is a
-`409` conflict. Schema, manifest, type, or lock failures return `422` with
+`409` conflict. Schema, manifest, type, or deadline failures return `422` with
 field-level details. The maximum request size is 512 KiB.
 
 ## Storage and privacy

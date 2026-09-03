@@ -518,7 +518,8 @@ def write_snapshot(key, snap, day):
     return path
 
 
-def snapshot(name, filters=None, now=None, use_archive=True):
+def snapshot(name, filters=None, now=None, use_archive=True,
+             _fetch_errors=None):
     """Today's snapshot for a key: read it, or fetch it and write it.
 
     The first refresh of a day fetches; the other three read the file. A later
@@ -537,7 +538,14 @@ def snapshot(name, filters=None, now=None, use_archive=True):
     if have and not _stale(have, now):
         return have
     url = tracker_url(name, filters)
-    payload = parse_payload(_page(key, url, now), url)
+    try:
+        html = _page(key, url, now)
+    except Exception as e:                                      # noqa: BLE001
+        if _fetch_errors is None:
+            raise
+        _fetch_errors.append(e)
+        return have
+    payload = parse_payload(html, url)
     if filters and not filters_applied(payload):
         raise RuntimeError(
             f"Civiqs ignored the subgroup filter {filters!r} on {name} and "
@@ -566,6 +574,18 @@ def snapshot(name, filters=None, now=None, use_archive=True):
 RECHECK_SECONDS = 3 * 3600
 
 
+def _is_live_failure(exc):
+    """Recognize failures eligible for same-source archive degradation."""
+    if isinstance(exc, (TimeoutError, ConnectionError,
+                        requests.RequestException)):
+        return True
+    msg = str(exc).lower()
+    return any(mark in msg for mark in (
+        "http 403", "403 forbidden", "http 429", "429 too many",
+        "rate-limit", "rate limit", "timeout", "timed out", "unreachable",
+        "connection", "simulated outage", "sslerror", "sslzeroreturn"))
+
+
 def _stale(snap, now):
     """True when today's stored snapshot is behind and worth one re-check.
 
@@ -586,7 +606,7 @@ def _stale(snap, now):
 # --- what a registered series actually reads --------------------------------
 
 def as_displayed(name, filters=None, choice=None, net=False, weekday=None,
-                 now=None, fetch=True, use_archive=True):
+                 now=None, fetch=True, use_archive=True, diagnostics=None):
     """The archive's own series: [{date, value}] oldest first, in points.
 
     `date` is the day we (or, before the archive began, Civiqs) would have shown
@@ -620,17 +640,26 @@ def as_displayed(name, filters=None, choice=None, net=False, weekday=None,
     """
     now = now or datetime.now(timezone.utc)
     key = archive_key(name, filters)
+    live_errors = []
     if fetch:
         try:
-            snapshot(name, filters, now=now, use_archive=use_archive)
-        except Exception as e:                     # noqa: BLE001 - reported
+            snapshot(name, filters, now=now, use_archive=use_archive,
+                     _fetch_errors=live_errors)
+        except Exception as e:                                  # noqa: BLE001
+            # Compatibility for callers/tests replacing the public snapshot
+            # seam. Parser-contract errors stay loud.
+            if not _is_live_failure(e):
+                raise
+            live_errors.append(e)
+        if live_errors:
+            e = live_errors[0]
             # Same trade as series.michigan_history: take the extra day when the
             # source is there, never go dark when it is not. An archive that
             # stops one day short is a stale series; a refresh that dies here
             # files no forecasts at all for any tracker, and rounds lock on a
             # hard deadline.
             if not archive_days(key):
-                raise
+                raise e
             print(f"  civiqs {key}: fetch failed ({type(e).__name__}: {e}); "
                   "serving the archive, which is now a day behind")
 
@@ -679,6 +708,17 @@ def as_displayed(name, filters=None, choice=None, net=False, weekday=None,
         raise RuntimeError(
             f"Civiqs series {key} built to zero points -- refusing to publish "
             "an empty series (check the weekday filter against the archive)")
+    if live_errors and diagnostics is not None:
+        days = archive_days(key)
+        e = live_errors[0]
+        diagnostics.append({
+            "source": "civiqs",
+            "scope": key,
+            "error": e,
+            "archive_evidence": (
+                f"{os.path.relpath(archive_dir(key), ROOT)} ({len(days)} "
+                f"snapshots; newest {days[-1].isoformat()})"),
+        })
     return out
 
 

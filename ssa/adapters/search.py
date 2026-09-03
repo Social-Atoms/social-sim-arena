@@ -38,9 +38,10 @@ forecast can be re-derived at all. Search results change minute to minute, so
 without the archive this arm would be the single non-reproducible part of a
 repository whose headline claim is reproducibility.
 
-**The search happens at lock time and is frozen there.** Not at scoring time,
-not lazily -- the corpus is part of what the entrant was shown, and it is
-committed alongside the forecast for the same reason `locks/` exists.
+**The search happens in the fixed filing window before the participant
+deadline and is frozen there.** Not at scoring time, not lazily -- the corpus
+is part of what the entrant was shown, and it is committed alongside the
+forecast for the same reason `locks/` exists.
 
 **This arm cannot be backtested and the code refuses to try.** A search run
 today over a 2025 release retrieves the published answer.
@@ -253,7 +254,8 @@ def record_round(round_id, entrant, queries, records, now=None):
     """What this entrant asked and received, frozen next to its forecast.
 
     Written once and never rewritten: the corpus is part of what the entrant
-    was shown at lock time, and a file that moves afterwards proves nothing.
+    was shown when its forecast was bought in the fixed pre-deadline window,
+    and a file that moves afterwards proves nothing.
     """
     path = round_path(round_id, entrant)
     if os.path.exists(path):

@@ -1,0 +1,58 @@
+{
+  "batch_id": "batch-2028-01-03",
+  "deadline": "2028-01-03T12:00:00Z",
+  "published_at": "2027-12-27T12:00:00Z",
+  "questions": [
+    {
+      "horizon_days": 2.083,
+      "lock_at": "2028-01-05T14:00:00Z",
+      "question": "Sandbox tracker: net job approval (percent approve minus percent disapprove) among US registered voters, as the dashboard shows it on Friday 2028-01-07. This round is a rehearsal and is never placed in the season.",
+      "release_at": "2028-01-07T14:00:00Z",
+      "resolve": "the scalar value in the committed sandbox source artifact",
+      "round_id": "sandbox-approval-2028-w01",
+      "series": "sandbox_net_approval",
+      "target_type": "continuous_normal",
+      "tracker": "sandbox_tracker",
+      "unit": "net points (approve minus disapprove)"
+    },
+    {
+      "cells": [
+        "sandbox_net_approval_dem",
+        "sandbox_net_approval_rep",
+        "sandbox_net_approval_ind",
+        "sandbox_net_approval_all"
+      ],
+      "horizon_days": 2.417,
+      "lock_at": "2028-01-05T22:00:00Z",
+      "question": "Sandbox tracker: net job approval in each of four party groups on 2028-01-07, as one joint profile. Every cell is required -- the energy score is a norm over the whole vector, so a profile with a hole has no score. This round is a rehearsal and is never placed in the season.",
+      "release_at": "2028-01-07T22:00:00Z",
+      "resolve": "the four-cell vector in the committed sandbox source artifact",
+      "round_id": "sandbox-profile-2028-w01",
+      "series": "sandbox_net_approval_dem",
+      "target_type": "profile_energy",
+      "tracker": "sandbox_tracker",
+      "unit": "net points (approve minus disapprove), per cell"
+    },
+    {
+      "horizon_days": 5.083,
+      "items": [
+        "economy",
+        "health_care",
+        "immigration",
+        "climate",
+        "education"
+      ],
+      "lock_at": "2028-01-08T14:00:00Z",
+      "question": "Sandbox tracker: the five sandbox topics in order of the attention they take in the week Sun Jan 9 - Sat Jan 15, 2028, rank 1 first. The basket is fixed, so the answer is a permutation of exactly these five. This round is a rehearsal and is never placed in the season.",
+      "ranking_length": 5,
+      "release_at": "2028-01-17T14:00:00Z",
+      "resolve": "the ordered list in the committed sandbox source artifact",
+      "round_id": "sandbox-ranking-2028-w01",
+      "series": "sandbox_top5",
+      "target_type": "ranking_list",
+      "tracker": "sandbox_tracker",
+      "unit": "ordered list of 5 sandbox topics, rank 1 first"
+    }
+  ],
+  "schema_version": "1.0.0"
+}

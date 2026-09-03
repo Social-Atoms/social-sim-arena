@@ -262,8 +262,68 @@ def test_no_archive_and_no_network_raises_but_a_stale_archive_serves(w):
     trends._get = boom
     # A refresh that dies here files no forecasts for any tracker, and rounds
     # lock on a hard deadline -- so a dead source degrades to a stale series.
-    got = trends.as_archived("Tesla", now=at("2026-08-18"))
+    diagnostics = []
+    got = trends.as_archived("Tesla", now=at("2026-08-18"),
+                             diagnostics=diagnostics)
     assert got[-1]["date"] == "2026-08-15"
+    assert diagnostics[0]["source"] == "trends"
+    assert diagnostics[0]["scope"] == trends.archive_key("Tesla")
+    assert isinstance(diagnostics[0]["error"], RuntimeError)
+    assert str(diagnostics[0]["error"]) == "simulated outage"
+    assert "1 snapshots" in diagnostics[0]["archive_evidence"]
+
+
+@with_wire
+def test_a_malformed_live_trends_response_does_not_use_the_archive(w):
+    trends.snapshot("Tesla", now=at("2026-08-17"))
+    w.serve(multiline="<html>captcha wall</html>")
+    try:
+        trends.as_archived("Tesla", now=at("2026-08-18"), diagnostics=[])
+    except RuntimeError as e:
+        assert "contract changed" in str(e), e
+    else:
+        raise AssertionError("a malformed live response used the archive")
+
+
+@with_wire
+def test_basket_live_failure_reports_the_archive_and_bad_rows_stay_loud(w):
+    queries = ["Tesla", "iPhone"]
+    rows = [
+        {"week_start": "2026-08-09", "week_end": "2026-08-15",
+         "values": {"Tesla": 70, "iPhone": 88}, "partial": False},
+    ]
+    snap = trends.build_basket_snapshot(rows, queries, "US", at("2026-08-17"))
+    key = trends.basket_key(queries)
+    trends.write_snapshot(key, snap, at("2026-08-17").date())
+    def refused(*a, **k):
+        raise RuntimeError("HTTP 429")
+
+    trends._get = refused
+    diagnostics = []
+    got = trends.basket_weeks(queries, now=at("2026-08-18"), fetch=True,
+                              diagnostics=diagnostics)
+    assert got == [{"date": "2026-08-15",
+                    "values": {"Tesla": 70, "iPhone": 88}}]
+    assert diagnostics[0]["source"] == "trends_basket"
+    assert diagnostics[0]["scope"] == key
+    assert isinstance(diagnostics[0]["error"], RuntimeError)
+    assert str(diagnostics[0]["error"]) == "HTTP 429"
+    assert "1 basket snapshots" in diagnostics[0]["archive_evidence"]
+
+    w.serve(multiline=")]}'\n" + json.dumps(
+        {"default": {"timelineData": []}}))
+    try:
+        trends.basket_weeks(queries, now=at("2026-08-19"), fetch=True,
+                            diagnostics=[])
+    except RuntimeError as e:
+        assert "empty basket timeline" in str(e), e
+    else:
+        raise AssertionError("bad live basket rows used the archive")
+
+
+def test_empty_builtin_transport_errors_are_archive_eligible():
+    assert trends._is_live_failure(TimeoutError())
+    assert trends._is_live_failure(ConnectionError())
 
 
 @with_wire

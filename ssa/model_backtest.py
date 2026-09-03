@@ -7,19 +7,20 @@ make the output citable rather than merely plausible:
 
 - **Post-cutoff only.** A model that memorized a release is not forecasting it.
   Every entrant is scored only on releases after its training cutoff plus a
-  margin (ssa/cutoffs.py), and the leaderboard window is the intersection of
-  those, since a mean CRPS over a different release set is not a comparable
-  number.
+  margin (ssa/cutoffs.py). The default preserves each model's full defensible
+  window; ``--common-window`` takes their intersection when aggregate scores
+  must be directly comparable over one release set. The output records both
+  the chosen window and cutoff-confidence policy.
 
 - **Every call is cached on disk**, keyed by the sha256 of (model id, exact
   prompt). Reruns cost nothing, an interrupted run resumes, and the cache is
   the audit trail: it holds the raw reply for every scored forecast, so the
   table can be regenerated from the repository without re-billing anyone.
 
-- **Failures are recorded, never mocked.** The live harness falls back to a
-  labeled placeholder when a provider call fails, which is right for keeping
-  the arena's pages populated and wrong for a paper number. Here a failure is
-  stored as a failure, excluded from scoring, and counted in the output.
+- **Failures are recorded, never mocked.** Production and backtest runs both
+  fail closed. The scalar harness exposes an explicit ``SSA_ALLOW_MOCK=1``
+  escape hatch for local pipeline work only; this runner never enables it. A
+  backtest failure is stored, excluded from scoring, and counted in the output.
 
 - **Identical prompt to the live arena.** The prompt is built by
   harness.build_prompt, so a backtest forecast and a live forecast differ only
@@ -241,8 +242,18 @@ def estimate_cost(tasks):
 
 # --- execution -------------------------------------------------------------
 
+def _assert_task_prospective(task, where):
+    _, context, _ = harness.resolve(task["entrant"])
+    harness.assert_prospective(context, where=where)
+
+
 def run_task(t, use_cache=True):
-    """One forecast. Returns a record; never raises for provider errors."""
+    """One forecast. Provider errors become records; unsafe tasks are refused."""
+    # Defense in depth: plan() refuses the prospective-only web condition, but
+    # task dicts are plain data and callers/tests can construct one directly or
+    # restore one from an old plan.  Refuse again before even consulting cache;
+    # a cached historical web answer was still gathered after its outcome.
+    _assert_task_prospective(t, "the model backtest executor")
     if use_cache:
         hit = cache_read(t["entrant"], t["prompt"])
         # A cached *failure* is not a result. Timeouts and proxy errors are
@@ -302,6 +313,7 @@ def replay(tasks):
     """
     records, missing = [], 0
     for t in tasks:
+        _assert_task_prospective(t, "the model backtest cache replay")
         hit = cache_read(t["entrant"], t["prompt"])
         if hit is None:
             missing += 1
@@ -347,6 +359,9 @@ def score(records, series_map, warmup=WARMUP):
     The paper should cite `matched`. A model that failed on the ten hardest
     weeks would otherwise post a better mean than one that answered them.
     """
+    for record in records:
+        _assert_task_prospective(record, "the model backtest scorer")
+
     ok = [r for r in records if r.get("topline")]
     keys = sorted({(r["series"], r["date"]) for r in ok})
     entrants = sorted({r["entrant"] for r in records})
@@ -445,7 +460,12 @@ def score(records, series_map, warmup=WARMUP):
         "per_series_trajectory": per_series_trajectory,
         "entrants": sorted(crps),
         "failures": failures,
-        "cutoffs": {e: cutoffs.describe(e) for e in entrants},
+        # An entrant suffix denotes an information condition, not different
+        # weights. Resolve it before describing the cutoff so `-zeroshot` arms
+        # do not appear to have an unknown boundary while their paired model
+        # is scored from a dated one.
+        "cutoffs": {e: cutoffs.describe(harness.resolve(e)[0])
+                    for e in entrants},
     }
 
 

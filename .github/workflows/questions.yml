@@ -1,0 +1,100 @@
+name: questions
+
+# The generation and publication path, checked on every PR that touches it.
+#
+# These gates are the whole reason a generated round is safe to review: a
+# source whose rights are unresolved generates nothing, a series too short to
+# baseline generates nothing, a series whose every movement is measurement
+# noise generates nothing, a schedule that cannot be inferred generates
+# nothing, and a round whose batch deadline has passed generates nothing. Each
+# one is a test, and none of them ran anywhere before this file existed --
+# `validate.yml` only looks at submitted forecasts.
+#
+# Everything here is offline. No key, no provider, no upstream fetch: the
+# generator reads committed archives and the bundle reads the season file, so
+# a source being down cannot fail this job and this job cannot spend money.
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/questions.yml"
+      - ".github/workflows/refresh.yml"
+      - "questions/**"
+      - "examples/bundle/**"
+      - "templates/**"
+      - "docs/weekly-pipeline.md"
+      - "docs/bundle-submission.md"
+      - "schema/**"
+      - "sources/marts/**"
+      - "ssa/**"
+      - "tools/**"
+      - "tests/**"
+  push:
+    branches: [dev]
+    paths:
+      - ".github/workflows/questions.yml"
+      - ".github/workflows/refresh.yml"
+      - "questions/**"
+      - "examples/bundle/**"
+      - "templates/**"
+      - "docs/weekly-pipeline.md"
+      - "docs/bundle-submission.md"
+      - "schema/**"
+      - "ssa/**"
+      - "tools/**"
+      - "tests/**"
+
+jobs:
+  questions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+
+      - name: the generation gates
+        run: PYTHONPATH=. python tests/test_generate_rounds.py
+
+      - name: the reviewed season is semantically publishable
+        run: PYTHONPATH=. python tools/validate_season.py
+
+      - name: the source inventory is the only rights table
+        run: PYTHONPATH=. python tests/test_inventory.py
+
+      - name: the weekly bundle and its schema
+        run: PYTHONPATH=. python tests/test_bundle.py
+
+      - name: the reviewed build and mixed-shape sandbox cycle
+        run: PYTHONPATH=. python tests/test_weekly_pipeline.py
+
+      - name: the batch calendar, and the validator's copy of it
+        run: PYTHONPATH=. python tests/test_batches.py
+
+      - name: an example forecast is checked like any other
+        run: PYTHONPATH=. python tests/test_validate_submission.py
+
+      - name: workflow archive and trigger contracts
+        run: PYTHONPATH=. python tests/test_workflows.py
+
+      - name: the ranking round contract
+        run: PYTHONPATH=. python tests/test_ranking_round.py
+
+      - name: the MARTS no-go is still reproducible
+        run: PYTHONPATH=. python tests/test_marts_probe.py
+
+      - name: semantic mutations and committed bundle determinism
+        run: PYTHONPATH=. python tests/test_season.py
+
+      - name: every committed bundle still matches its schema
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import glob, json, jsonschema
+          schema = json.load(open("schema/bundle.schema.json"))
+          paths = sorted(glob.glob("questions/bundles/*.json"))
+          for p in paths:
+              jsonschema.validate(json.load(open(p)), schema)
+              print(f"ok {p}")
+          print(f"{len(paths)} bundles validated")
+          PY
