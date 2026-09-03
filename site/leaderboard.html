@@ -138,6 +138,17 @@ footer a{color:var(--ink2);}
   <div class="tgrid" id="target-cards"></div>
 </section>
 
+<section id="freshness">
+  <h2>Source freshness</h2>
+  <p class="lede">Every number above comes from a file we fetched and kept. This is how old each source is right now, against the interval it is judged by — so a figure can be checked rather than trusted.</p>
+  <div class="card scroll">
+    <table>
+      <thead><tr><th>Source</th><th>State</th><th class="num">Last fetched</th><th class="num">Last changed</th><th class="num">Budget</th><th>Evidence</th></tr></thead>
+      <tbody id="health-body"><tr><td colspan="6" style="color:var(--mut);">loading…</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
 <section id="rounds">
   <h2>Rounds</h2>
   <p class="lede">One round is one scheduled release. Submit before its weekly batch deadline; the later release-minus-48h lock is the Arena's internal clock.</p>
@@ -350,6 +361,48 @@ function render(data){
   renderBoard('bt');
 
   targetCards(data);
+
+  // `source_health` has been published for weeks and rendered nowhere, while
+  // `refresh.py`'s own comment beside it says "a page that renders a number
+  // should be able to say how old it is". This is that page.
+  const hb = document.getElementById('health-body');
+  const health = data.source_health || [];
+  const age = d => (typeof d === 'number')
+    ? (d < 1 ? (Math.max(0, d) * 24).toFixed(0) + 'h' : d.toFixed(1) + 'd')
+    : '·';
+  hb.innerHTML = health.map(h => {
+    // A source is late against whichever budget it has actually exceeded;
+    // showing "ok" beside a number that has not moved in three times its
+    // change budget is the failure this table exists to prevent.
+    const overFetch = typeof h.fetched_days === 'number'
+      && typeof h.budget_fetch_days === 'number'
+      && h.fetched_days > h.budget_fetch_days;
+    const overChange = typeof h.changed_days === 'number'
+      && typeof h.budget_change_days === 'number'
+      && h.changed_days > h.budget_change_days;
+    // The displayed word is computed, not copied. `state` is the pipeline's
+    // own summary and can say "ok" beside a figure that has not moved in three
+    // times its change budget; a table whose colour disagrees with its text is
+    // worse than no table, because the text is what gets read and quoted.
+    const late = overFetch || overChange;
+    const state = late
+      ? (overChange ? 'not moved' : 'not fetched')
+      : (h.state || 'ok');
+    const bad = late || (h.state && h.state !== 'ok');
+    const link = h.file
+      ? '<a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/'
+        + esc(h.file) + '" target="_blank" rel="noopener">' + esc(h.file) + '</a>'
+      : (h.newest_snapshot
+         ? esc((h.trackers || 0) + ' archived trackers, newest ' + h.newest_snapshot)
+         : '<span style="color:var(--mut);">·</span>');
+    return '<tr><td><b style="color:var(--ink);font-weight:600;">' + esc(h.source) + '</b></td>'
+      + '<td><span class="status ' + (bad ? 'locked' : 'resolved') + '">'
+      + '<span class="d"></span>' + esc(state) + '</span></td>'
+      + '<td class="num"' + (overFetch ? ' style="color:var(--warn,#8a5a00);font-weight:600;"' : '') + '>' + age(h.fetched_days) + '</td>'
+      + '<td class="num"' + (overChange ? ' style="color:var(--warn,#8a5a00);font-weight:600;"' : '') + '>' + age(h.changed_days) + '</td>'
+      + '<td class="num" style="color:var(--mut);">' + esc((h.budget_fetch_days ?? '·') + ' / ' + (h.budget_change_days ?? '·')) + 'd</td>'
+      + '<td style="font-size:11.5px;">' + link + '</td></tr>';
+  }).join('') || '<tr><td colspan="6" style="color:var(--mut);">no source health in this payload</td></tr>';
 
   const rb = document.getElementById('rounds-body');
   rb.innerHTML = '';

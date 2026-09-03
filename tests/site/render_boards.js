@@ -58,6 +58,32 @@ for (const [id, wantHead, label] of TABS) {
   out.push({label, head, rows, empty, text: text.slice(0, 100), note: note.slice(0, 60)});
 }
 
+// Source freshness: published since the reliability work landed, rendered
+// nowhere until now. A row per source, and a late source must not read "ok".
+const healthRows = (els['health-body'].innerHTML.match(/<tr>/g) || []).length;
+const expectHealth = (data.source_health || []).length;
+if (expectHealth && healthRows !== expectHealth) {
+  problems.push(`source freshness: ${expectHealth} sources published, `
+    + `${healthRows} rows rendered`);
+}
+if (expectHealth && !/last fetched|Last fetched/i.test(html)) {
+  problems.push('the freshness table has no column saying when a source was '
+    + 'last fetched');
+}
+for (const h of data.source_health || []) {
+  const over = (typeof h.changed_days === 'number'
+    && typeof h.budget_change_days === 'number'
+    && h.changed_days > h.budget_change_days);
+  if (over) {
+    const row = els['health-body'].innerHTML.split('<tr>')
+      .find(c => c.includes('>' + h.source + '<')) || '';
+    if (/>ok</.test(row)) {
+      problems.push(`${h.source} has not moved in ${h.changed_days}d against a `
+        + `${h.budget_change_days}d budget and the table says "ok"`);
+    }
+  }
+}
+
 const roundRows = (els['rounds-body'].children || []).length;
 if (!roundRows) problems.push('rounds table rendered no rows');
 const meta = els['meta-line'].innerHTML;
@@ -67,6 +93,7 @@ for (const r of out) {
   console.log(`${r.label.padEnd(20)} col5=${r.head.padEnd(7)} rows=${String(r.rows).padEnd(4)}`
     + (r.empty ? ` EMPTY -> ${r.text}` : ` note="${r.note}…"`));
 }
+console.log(`source freshness: ${healthRows} rows`);
 console.log(`rounds table: ${roundRows} rows`);
 console.log(`meta: ${meta.replace(/<[^>]*>/g, '')}`);
 
