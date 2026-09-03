@@ -113,6 +113,34 @@ for (const h of data.source_health || []) {
   }
 }
 
+// Per-round results. A resolved round carries the outcome and every
+// entrant's answer, and for a long time no page rendered either -- the board
+// showed an aggregate and asked to be taken on trust.
+const roundHtml = (els['rounds-body'].children || []).map(c => c.innerHTML);
+const resolved = (data.rounds || []).filter(
+  r => r.resolution && typeof r.resolution.value === 'number');
+const withResult = roundHtml.filter(h => h.includes('class="result"')).length;
+if (resolved.length && withResult !== resolved.length) {
+  problems.push(`${resolved.length} rounds published an outcome, `
+    + `${withResult} show it`);
+}
+for (const r of resolved) {
+  const row = roundHtml.find(h => h.includes(r.round_id));
+  if (!row) continue;
+  const n = Object.values(r.forecasts || {})
+    .filter(f => f && typeof f.mean === 'number').length;
+  if (n && !/<tbody>/.test(row)) {
+    problems.push(`${r.round_id} has ${n} scalar forecasts and renders no table`);
+  }
+  // A corrected resolution must stay visible. One round here was first
+  // resolved against a number that was public before its own lock; hiding
+  // that the correction happened would be the wrong way to look clean.
+  if (r.resolution.corrected && !/corrected/.test(row)) {
+    problems.push(`${r.round_id} was corrected and the page does not say so`);
+  }
+}
+console.log(`per-round results: ${withResult}/${resolved.length} resolved rounds`);
+
 const roundRows = (els['rounds-body'].children || []).length;
 if (!roundRows) problems.push('rounds table rendered no rows');
 const meta = els['meta-line'].innerHTML;
