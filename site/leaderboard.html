@@ -9,6 +9,7 @@
 <title>Leaderboard · Social Simulation Arena</title>
 <meta name="description" content="The live benchmark for social simulation. Simulators and agents forecast real public opinion before it is published. Locked, hashed, scored in public.">
 <style>
+.shape{display:inline-block;border:1px solid var(--line,#e0e0e0);border-radius:999px;padding:0 7px;margin-left:7px;font-size:10.5px;font-weight:700;color:var(--mut);vertical-align:1px;white-space:nowrap;}
 :root{
   color-scheme: light;
   --bg:#ffffff; --ink:#1d1d1b; --ink2:#6f6e69; --mut:#9a9891;
@@ -120,10 +121,12 @@ footer a{color:var(--ink2);}
   <div class="tabs" role="tablist">
     <button id="tab-bt" class="on">Backtest</button>
     <button id="tab-live">Season 0</button>
+    <button id="tab-profile">Population profile</button>
+    <button id="tab-ranking">Ranking</button>
   </div>
   <div class="card scroll">
     <table>
-      <thead><tr><th>#</th><th>Entrant</th><th>Type</th><th class="num">Skill</th><th class="num">CRPS</th><th class="num">Rounds</th></tr></thead>
+      <thead><tr><th>#</th><th>Entrant</th><th>Type</th><th class="num">Skill</th><th class="num" id="lb-loss-head">CRPS</th><th class="num">Rounds</th></tr></thead>
       <tbody id="lb-body"><tr><td colspan="6" style="color:var(--mut);">loading…</td></tr></tbody>
     </table>
   </div>
@@ -260,19 +263,68 @@ function render(data){
 
   const nameOf = {}, typeOf = {};
   (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; });
-  function boardRow(id, s, rank){
+  // The third number is a CRPS in points on the scalar boards, an energy score
+  // in cell-space on the profile board, and a rank-distance on the ranking
+  // board. They are not comparable, which is why the column is relabelled
+  // rather than shared. Skill is comparable: `scoring.profile_skill` and
+  // `ranking_round.ranking_skill` are the scalar expression verbatim, so a
+  // tenth of skill means the same thing on all four tabs.
+  function boardRow(id, s, rank, lossKey){
     const ref = id==='persistence' ? '<span class="ref-chip">reference</span>' : '';
+    const loss = s && s[lossKey||'mean_crps'];
     return '<tr><td class="num">'+(rank||'·')+'</td>'
       + '<td><b style="color:var(--ink);font-weight:600;">'+esc((nameOf[id]||id).split(' (')[0])+'</b>'+ref+'</td>'
       + '<td class="type">'+esc(typeOf[id]||'baseline')+'</td>'
       + '<td class="num">'+(s ? ((s.mean_skill>0?'+':'')+(s.mean_skill*100).toFixed(1)+'%') : '<span style="color:var(--mut);">pending</span>')+'</td>'
-      + '<td class="num">'+(s ? s.mean_crps.toFixed(2) : '·')+'</td>'
+      + '<td class="num">'+(typeof loss==='number' ? loss.toFixed(2) : '·')+'</td>'
       + '<td class="num">'+(s ? s.rounds : 0)+'</td></tr>';
   }
+
+  // When a shaped board has no scored rounds yet, say which round fills it and
+  // when. "pending" on its own reads as broken, and the participant who was
+  // asked to answer a profile round has no way to tell whether it is scored at
+  // all.
+  function nextOfShape(pred){
+    const up = (data.rounds||[]).filter(r => pred(r) && r.status !== 'resolved')
+      .sort((a,b) => (a.release_at||'').localeCompare(b.release_at||''));
+    return up[0] || null;
+  }
+  function emptyBoard(label, pred){
+    const nx = nextOfShape(pred);
+    const when = nx ? (' The first one resolves with <b>'+esc(nx.round_id)
+      + '</b> on '+esc((nx.release_at||'').slice(0,10))+'.') : '';
+    return '<tr><td colspan="6" style="color:var(--mut);">No '+label
+      + ' round has resolved yet, so there is nothing to rank.' + when
+      + ' Forecasts for these rounds are being collected now.</td></tr>';
+  }
   const body = document.getElementById('lb-body');
+  const head = document.getElementById('lb-loss-head');
   function renderBoard(mode){
-    document.getElementById('tab-bt').classList.toggle('on', mode==='bt');
-    document.getElementById('tab-live').classList.toggle('on', mode==='live');
+    for(const t of ['bt','live','profile','ranking'])
+      document.getElementById('tab-'+t).classList.toggle('on', mode===t);
+    if(mode==='profile' || mode==='ranking'){
+      // `matched` holds only entrants who answered *every* scored round of
+      // this shape, and is the table the docs tell people to cite: a model
+      // that sat out the hard weeks cannot flatter itself with an average over
+      // the easy ones. `board` is shown only when nothing is matched yet.
+      const src = (mode==='profile' ? data.profile : data.ranking) || {};
+      const rows = (src.matched && src.matched.length) ? src.matched
+                                                       : (src.board || []);
+      const lossKey = mode==='profile' ? 'mean_energy' : 'mean_loss';
+      head.textContent = mode==='profile' ? 'Energy' : 'Loss';
+      const pred = mode==='profile'
+        ? (r => (r.cells && r.cells.length) || r.target_type === 'profile_energy')
+        : (r => r.target_type === 'ranking_list' || /wiki-top10|ranking/.test(r.round_id));
+      body.innerHTML = rows.map((e,i)=>boardRow(e.entrant, e, i+1, lossKey)).join('')
+        || emptyBoard(mode==='profile' ? 'population profile' : 'ranking', pred);
+      const matched = (src.matched && src.matched.length)
+        ? ' Showing the matched table: entrants who answered every scored round.'
+        : '';
+      document.getElementById('lb-note').textContent =
+        (src.note || '') + matched;
+      return;
+    }
+    head.textContent = 'CRPS';
     if(mode==='bt'){
       const entries = (data.backtest&&data.backtest.overall)||[];
       body.innerHTML = entries.map((e,i)=>boardRow(e.entrant, e, i+1)).join('')
@@ -293,6 +345,8 @@ function render(data){
   }
   document.getElementById('tab-bt').onclick = ()=>renderBoard('bt');
   document.getElementById('tab-live').onclick = ()=>renderBoard('live');
+  document.getElementById('tab-profile').onclick = ()=>renderBoard('profile');
+  document.getElementById('tab-ranking').onclick = ()=>renderBoard('ranking');
   renderBoard('bt');
 
   targetCards(data);
@@ -304,7 +358,13 @@ function render(data){
     const displayStatus = r.status === 'open'&&!canSubmit ? 'locked' : r.status;
     const link = canSubmit ? submissionLink('agent') : null;
     const tr = document.createElement('tr');
-    tr.innerHTML = '<td><b style="color:var(--ink);font-weight:600;">'+esc(r.round_id)+'</b><br><span style="font-size:12px;color:var(--mut);">'+esc(r.question)+'</span></td>'
+    const kind = r.target_type || ((r.cells&&r.cells.length) ? 'profile_energy' : 'continuous_normal');
+    // Three answer shapes share this table. A row that does not say which one
+    // it wants reads as "one number", and two of the three are not.
+    const shape = kind==='profile_energy'
+      ? '<span class="shape">profile · '+((r.cells||[]).length)+' cells</span>'
+      : kind==='ranking_list' ? '<span class="shape">ranking · ordered list</span>' : '';
+    tr.innerHTML = '<td><b style="color:var(--ink);font-weight:600;">'+esc(r.round_id)+'</b>'+shape+'<br><span style="font-size:12px;color:var(--mut);">'+esc(r.question)+'</span></td>'
       + '<td><span class="status '+esc(displayStatus)+'"><span class="d"></span>'+esc(displayStatus.replace('_',' '))+'</span></td>'
       + '<td style="white-space:nowrap;">due '+esc(fmtLocal(r.deadline||r.lock_at))+'<br><span style="color:var(--mut);font-size:11px;">lock '+esc(fmtLocal(r.lock_at))+'</span></td>'
       + '<td>'+(link?'<a href="'+link+'" target="_blank" rel="noopener" style="font-weight:600;color:var(--ink);text-decoration:none;">submit →</a>':'')+'</td>';
