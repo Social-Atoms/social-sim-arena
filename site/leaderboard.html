@@ -138,6 +138,18 @@ footer a{color:var(--ink2);}
   <div class="tgrid" id="target-cards"></div>
 </section>
 
+<section id="batches">
+  <h2>The weekly calendar</h2>
+  <p class="lede">Everything in a batch shares one deadline, Monday 12:00Z, whatever weekday each round's own release happens to be. The batch is published a week ahead, so there is always a full week to work on the open one.</p>
+  <div class="card scroll">
+    <table>
+      <thead><tr><th>Batch</th><th>Deadline</th><th class="num">Questions</th><th>Shapes</th><th class="num">Horizon</th><th>Status</th></tr></thead>
+      <tbody id="batch-body"><tr><td colspan="6" style="color:var(--mut);">loading…</td></tr></tbody>
+    </table>
+  </div>
+  <p class="note">Horizon is the gap between the deadline you answer by and the round's own lock, 0 to 7 days. It is a property of the question, not a head start: every entrant answers the same batch at the same moment.</p>
+</section>
+
 <section id="freshness">
   <h2>Source freshness</h2>
   <p class="lede">Every number above comes from a file we fetched and kept. This is how old each source is right now, against the interval it is judged by — so a figure can be checked rather than trusted.</p>
@@ -361,6 +373,71 @@ function render(data){
   renderBoard('bt');
 
   targetCards(data);
+
+  // The whole benchmark is organised into weekly batches and the site had
+  // nowhere to see one. A participant could read the rule in the docs and
+  // still not know what is in the open batch, or that another is a week away.
+  const bb = document.getElementById('batch-body');
+  const byBatch = new Map();
+  for (const r of data.rounds || []) {
+    // Grouped by the published `batch_id`, not by `deadline`. A pre-cutover
+    // round's deadline is its own lock, so grouping on it invented one batch
+    // per round -- six of them in a week, each with a single question. Those
+    // rounds carry `batch_id: null` and belong on no weekly calendar.
+    if (!r.batch_id) continue;
+    if (!byBatch.has(r.batch_id)) byBatch.set(r.batch_id, []);
+    byBatch.get(r.batch_id).push(r);
+  }
+  const nowMs = Date.now();
+  const dueOf = rs => rs[0].deadline;
+  const all = [...byBatch.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  // Two closed batches for context, then everything ahead. A calendar that
+  // shows the whole season pushes the open one off the first screen.
+  const aheadCount = all.filter(([, rs]) => Date.parse(dueOf(rs)) > nowMs).length;
+  const batchRows = all.slice(Math.max(0, all.length - aheadCount - 2));
+  // "Open" is the batch that has been handed over and has not closed. Before
+  // its publication date it exists but nobody has it yet, which is a different
+  // thing to tell a participant than "you may answer this now".
+  const openId = (batchRows.find(([, rs]) =>
+    Date.parse(dueOf(rs)) > nowMs
+    && (!rs[0].published_at || Date.parse(rs[0].published_at) <= nowMs)) || [null])[0];
+  bb.innerHTML = batchRows.map(([batchId, rs]) => {
+    const due = dueOf(rs);
+    const shapes = {};
+    for (const r of rs) {
+      const k = r.target_type || 'continuous_normal';
+      shapes[k] = (shapes[k] || 0) + 1;
+    }
+    const label = {continuous_normal: 'scalar', profile_energy: 'profile',
+                   ranking_list: 'ranking'};
+    const chips = Object.entries(shapes)
+      .sort((a, b) => b[1] - a[1])
+      .map(([k, n]) => '<span class="shape">' + esc((label[k] || k) + ' · ' + n) + '</span>')
+      .join(' ');
+    const hs = rs.map(r => (typeof r.horizon_days === 'number')
+      ? r.horizon_days
+      : (Date.parse(r.lock_at) - Date.parse(due)) / 86400000)
+      .filter(h => isFinite(h));
+    const horizon = hs.length
+      ? (Math.min(...hs).toFixed(1) + '–' + Math.max(...hs).toFixed(1) + 'd')
+      : '·';
+    const ms = Date.parse(due) - nowMs;
+    const isOpen = batchId === openId;
+    const pub = rs[0].published_at;
+    const state = ms <= 0 ? 'closed'
+      : isOpen ? 'open now'
+      : 'publishes ' + (pub ? fmtLocal(pub) : fmtLocal(due));
+    const when = isOpen ? 'in ' + fmtCountdown(ms) : fmtLocal(due);
+    return '<tr' + (isOpen ? ' style="background:var(--soft,#f6f6f4);"' : '') + '>'
+      + '<td><b style="color:var(--ink);font-weight:600;">'
+      + esc(batchId) + '</b></td>'
+      + '<td style="white-space:nowrap;">' + esc(when) + '</td>'
+      + '<td class="num">' + rs.length + '</td>'
+      + '<td>' + chips + '</td>'
+      + '<td class="num" style="color:var(--mut);">' + esc(horizon) + '</td>'
+      + '<td><span class="status ' + (isOpen ? 'open' : ms > 0 ? 'awaiting_resolution' : 'resolved')
+      + '"><span class="d"></span>' + esc(state) + '</span></td></tr>';
+  }).join('') || '<tr><td colspan="6" style="color:var(--mut);">no batched rounds in this payload — every round here predates the weekly calendar</td></tr>';
 
   // `source_health` has been published for weeks and rendered nowhere, while
   // `refresh.py`'s own comment beside it says "a page that renders a number

@@ -58,6 +58,35 @@ for (const [id, wantHead, label] of TABS) {
   out.push({label, head, rows, empty, text: text.slice(0, 100), note: note.slice(0, 60)});
 }
 
+// The weekly calendar. One row per real batch and not one more: grouping by
+// `deadline` instead of `batch_id` invented a batch per pre-cutover round --
+// six single-question weeks that no participant is ever handed.
+const batchIds = new Set((data.rounds || []).map(r => r.batch_id).filter(Boolean));
+const batchBody = els['batch-body'].innerHTML;
+const batchRows = batchBody.split('</tr>').filter(r => r.trim()).length;
+if (batchIds.size) {
+  if (batchRows > batchIds.size) {
+    problems.push(`the calendar shows ${batchRows} batches; the payload names `
+      + `${batchIds.size}. Grouping is inventing batches.`);
+  }
+  for (const m of batchBody.matchAll(/batch-(\d{4}-\d{2}-\d{2})/g)) {
+    if (!batchIds.has('batch-' + m[1])) {
+      problems.push(`the calendar shows batch-${m[1]}, which no round claims`);
+    }
+  }
+  // A round with no batch_id predates the weekly calendar and belongs on no
+  // week; if any of their ids reach the table, the null is being ignored.
+  const unbatched = (data.rounds || []).filter(r => !r.batch_id);
+  for (const r of unbatched.slice(0, 40)) {
+    if (batchBody.includes(r.round_id)) {
+      problems.push(`${r.round_id} has no batch_id and is on the calendar`);
+    }
+  }
+} else if (!/predates the weekly calendar/.test(batchBody)) {
+  problems.push('no round carries a batch_id and the calendar does not say so');
+}
+console.log(`weekly calendar: ${batchIds.size} batches, ${batchRows} rows`);
+
 // Source freshness: published since the reliability work landed, rendered
 // nowhere until now. A row per source, and a late source must not read "ok".
 const healthRows = (els['health-body'].innerHTML.match(/<tr>/g) || []).length;

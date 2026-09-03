@@ -473,6 +473,21 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
         # predate target_type and are numeric distributions.
         row["target_type"] = r.get("target_type", "continuous_normal")
         row["deadline"] = iso(batches.effective_deadline(r["lock_at"]))
+        # The batch this round belongs to, and when that batch is handed over,
+        # or null for a round that predates the weekly calendar. Published
+        # rather than derived in the browser: a page that recomputes "which
+        # Monday" owns a second copy of `ssa/batches.py`, and the two would
+        # drift the first time the calendar moved. Null is load-bearing -- a
+        # pre-cutover round's deadline is its own lock, so grouping those by
+        # deadline invents one batch per round.
+        if batches.governed_by_batch(r["lock_at"]):
+            row["batch_id"] = batches.batch_of(r["lock_at"])
+            row["published_at"] = iso(batches.published_at(r["lock_at"]))
+            row["horizon_days"] = round(batches.horizon_days(r["lock_at"]), 3)
+        else:
+            row["batch_id"] = None
+            row["published_at"] = None
+            row["horizon_days"] = None
         for k in ("cells", "options"):
             if k in r:
                 row[k] = list(r[k])
