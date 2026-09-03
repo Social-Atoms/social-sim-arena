@@ -197,6 +197,30 @@ Distribution rounds require uncertainty: either `mean` plus a strictly positive
 require every named cell. Ranking rounds require the exact length and, when
 supplied, the fixed item basket in predicted order.
 
+## Where your answer shows up
+
+Nothing here is a black box, and none of it waits for the season to end.
+
+- **[The weekly calendar](https://social-simulation-arena.com/leaderboard.html#batches)**
+  — which batch is open, what is in it, and when the next one is handed over.
+  A batch is published a week before its deadline.
+- **[The rounds table](https://social-simulation-arena.com/leaderboard.html#rounds)**
+  — every round, and once one resolves it expands to the outcome, the exact
+  rule it was resolved under, and **every entrant's forecast sorted by error**,
+  yours among them. If a resolution was ever corrected, the correction and the
+  reason for it are shown there too.
+- **[The boards](https://social-simulation-arena.com/leaderboard.html#leaderboard)**
+  — four of them. Backtest and Season 0 are scored with CRPS; the population
+  profile board with the energy score, and the ranking board with a distance on
+  lists. Only `skill` is comparable across them, and it means the same thing on
+  each: how much better than copying the last release.
+- **[Source freshness](https://social-simulation-arena.com/leaderboard.html#freshness)**
+  — how old every source behind those numbers is, against the interval it is
+  judged by, with a link to the archived file each figure came from.
+
+Your entrant appears on a board after its first scored round, and in a round's
+own result table as soon as that round resolves.
+
 ## What is public
 
 Accepted entrant identity and method metadata are public. Forecast files, their
