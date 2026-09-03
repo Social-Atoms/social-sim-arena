@@ -54,38 +54,55 @@ jobs:
             exit 1
           fi
 
-      # "New" means new to the repository, and this now says so. It runs on
-      # every push to main and dev, where a commit genuinely arrives, and on
-      # every pull request except a release merge into main.
+      # "New" means new to the repository, and this now says so.
       #
-      # That exception is the point of this change. A dev -> main merge carries
-      # the whole accumulated backlog, so `origin/main..HEAD` is not the
-      # commits the pull request writes -- it is every commit written since the
-      # last release, each already scanned when it landed on dev. Scanned there
-      # and again here, one objection makes every future release merge red
-      # forever, and a check that is always red is a check nobody reads. It is
-      # already happening: `e2efe649` renamed some wording *to comply with this
-      # guard* and quoted the banned phrase in its message to explain why.
+      # It runs on every push to main and dev, where a commit genuinely
+      # arrives, and on every pull request -- but a pull request scans only the
+      # commits that are not already on dev. That one exclusion is the whole
+      # change, and it is a statement about what "new" means rather than about
+      # which branch is which:
       #
-      # Coverage goes up, not down. Before this, a direct push to dev was
-      # scanned by nothing at all.
+      #   - a feature pull request (into dev, or straight into main as several
+      #     older ones did) carries commits that are on no long-lived branch
+      #     yet, so nothing is excluded and everything is scanned;
+      #   - a release merge carries the whole backlog since the last release,
+      #     every commit of which was scanned when it landed on dev. Scanned
+      #     there and again here, one objection makes every future release
+      #     merge red forever, and a check that is always red is a check nobody
+      #     reads.
+      #
+      # That is not hypothetical: `e2efe649` renamed some wording *to comply
+      # with this guard* and quoted the banned phrase in its message to explain
+      # why. Branch names cannot tell these cases apart -- this release merge
+      # comes from `merge-dev-...` rather than from `dev`, because the archive
+      # collisions had to be resolved somewhere -- but reachability can.
+      #
+      # Coverage goes up. Before this, a direct push to dev was scanned by
+      # nothing at all: the workflow ran on pull requests and on pushes to
+      # main, and a push to dev is neither. That is how the objectionable
+      # message got in.
       - name: no venue talk in new commit messages
-        if: >-
-          github.event_name == 'push' ||
-          github.base_ref != 'main' ||
-          github.head_ref != 'dev'
         run: |
           set -e
+          git fetch -q --no-tags origin dev main || true
           pats='ICLR|NeurIPS|camera-ready|rebuttal|submission deadline'
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             range="origin/${{ github.base_ref }}..HEAD"
+            # Anything already on dev was scanned when it landed there.
+            if git rev-parse --verify -q refs/remotes/origin/dev >/dev/null; then
+              range="$range ^refs/remotes/origin/dev"
+            fi
           elif [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
             # A new branch has no "before"; scan its tip alone rather than
             # every commit that has ever existed.
             range="-1 HEAD"
           else
+            # A push: exactly the commits it introduced. No dev exclusion here
+            # -- on a push to dev they are on dev by definition, and excluding
+            # them would scan nothing at all.
             range="${{ github.event.before }}..${{ github.sha }}"
           fi
+          echo "scanning $range"
           if git log --format=%B $range | grep -inE "$pats"; then
             echo "venue talk in a commit message; keep it in the paper repo"
             exit 1
