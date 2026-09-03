@@ -248,6 +248,7 @@ def test_main_registry_seam_marks_confboard_archive_fallback_degraded():
 def test_main_registry_seam_marks_civiqs_403_archive_fallback_degraded():
     saved_series = series_registry.SERIES
     saved_get, saved_payloads = civiqs._get, civiqs._payloads
+    saved_stale = civiqs._stale
     series_registry.SERIES = {
         "civiqs_net": {
             "source": "civiqs",
@@ -260,6 +261,13 @@ def test_main_registry_seam_marks_civiqs_403_archive_fallback_degraded():
     civiqs._payloads = {}
     civiqs._get = lambda *_a, **_k: (_ for _ in ()).throw(
         RuntimeError("Civiqs HTTP 403: runner blocked"))
+    # The archive doubles as the fetch cache, and `series.build_all` gives the
+    # adapter the wall clock rather than this test's NOW. So on any day the
+    # courier has already archived, `snapshot` serves today's file and returns
+    # without a request -- the 403 never happens and the assertions below check
+    # nothing. Declaring the cached vintage stale is what puts a live request
+    # back in the path, which is the situation this test is about.
+    civiqs._stale = lambda *_a, **_k: True
     status = reliability.RunStatus(NOW)
     try:
         built, failures, source_failures, diagnostics = \
@@ -269,6 +277,7 @@ def test_main_registry_seam_marks_civiqs_403_archive_fallback_degraded():
     finally:
         series_registry.SERIES = saved_series
         civiqs._get, civiqs._payloads = saved_get, saved_payloads
+        civiqs._stale = saved_stale
     assert built["civiqs_net"] and failures == {}
     assert source_failures == [] and diagnostics[0]["source"] == "civiqs"
     row = source_row(status.as_dict(), "civiqs")
