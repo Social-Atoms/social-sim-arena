@@ -1375,6 +1375,58 @@ def load_entrants():
     return out
 
 
+# What `site/index.html` and `site/leaderboard.html` read from every round
+# without checking first. A hole in any of them renders as the literal word
+# "undefined" on a public page.
+#
+# Checked here rather than only in the tests because the tests run against the
+# committed `site/data.json` while the live one is rebuilt every six hours by
+# the cron and never passes through them. A missing field would reach a
+# participant before it reached CI.
+SITE_ROUND_FIELDS = ("round_id", "question", "lock_at", "release_at",
+                     "status", "target_type", "deadline", "series")
+
+# Present or absent, but never the wrong shape when present.
+SITE_ROUND_TYPES = {
+    "cells": list, "forecasts": dict, "resolution": dict,
+    "baselines": dict, "n_forecasts": int, "batch_id": (str, type(None)),
+    "published_at": (str, type(None)),
+    "horizon_days": (float, int, type(None)),
+}
+
+
+def assert_site_contract(rounds):
+    """Refuse to publish a round the site cannot render.
+
+    `site/data.json` is a public artifact read by two pages that were written
+    against it. This is the seam where the two agree, and it is checked on the
+    way out: failing the run is recoverable, and a page telling a participant
+    the answer is `undefined` is not.
+    """
+    problems = []
+    for r in rounds:
+        rid = r.get("round_id") or "<no round_id>"
+        for k in SITE_ROUND_FIELDS:
+            if r.get(k) in (None, ""):
+                problems.append(f"{rid}: {k} is missing; the site renders it "
+                                "unconditionally")
+        for k, want in SITE_ROUND_TYPES.items():
+            if k in r and r[k] is not None and not isinstance(r[k], want):
+                problems.append(f"{rid}: {k} is {type(r[k]).__name__}, "
+                                f"expected {want}")
+        res = r.get("resolution")
+        if isinstance(res, dict) and "value" in res:
+            if not isinstance(res["value"], (int, float)) \
+                    and not isinstance(res["value"], (list, dict)):
+                problems.append(f"{rid}: resolution.value is "
+                                f"{type(res['value']).__name__}")
+    if problems:
+        raise RuntimeError(
+            f"{len(problems)} round(s) would render broken on the site:\n  "
+            + "\n  ".join(problems[:12])
+            + ("\n  ..." if len(problems) > 12 else ""))
+
+
 def build_leaderboard(rounds, resolved):
     """Real scores only. Empty until rounds resolve."""
     entries = {}
@@ -2274,6 +2326,8 @@ def main():
             for sid, spec in series_registry.SERIES.items()
         },
     }
+    # Last gate before a public artifact. See `assert_site_contract`.
+    assert_site_contract(data["rounds"])
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w") as f:
         json.dump(data, f, indent=1)
