@@ -87,6 +87,12 @@ jobs:
       - name: semantic mutations and committed bundle determinism
         run: PYTHONPATH=. python tests/test_season.py
 
+      - name: who the arena will call, and what it refuses to call
+        run: PYTHONPATH=. python tests/test_participants.py
+
+      - name: the pages a participant actually reads still render
+        run: PYTHONPATH=. python tests/test_site_render.py
+
       - name: every committed bundle still matches its schema
         run: |
           PYTHONPATH=. python - <<'PY'

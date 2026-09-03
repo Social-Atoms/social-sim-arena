@@ -107,6 +107,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .vrow .go{color:var(--link);font-weight:700;font-size:13.5px;text-decoration:none;white-space:nowrap;}
 .vrow .go:hover{text-decoration:underline;}
 .vrow .when{color:var(--mut);font-size:11.5px;white-space:nowrap;}
+.shape{display:inline-block;border:1px solid var(--line,#e0e0e0);border-radius:999px;padding:0 7px;margin-right:6px;font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--mut);vertical-align:1px;white-space:nowrap;}
 .svrow{display:flex;gap:14px;padding:12px 2px;border-bottom:1px solid #eeede9;align-items:flex-start;}
 .svrow:last-child{border-bottom:none;}
 .svrow .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:3px;background:var(--ink);color:#fff;font-size:11px;font-weight:700;flex:0 0 auto;margin-top:1px;}
@@ -866,13 +867,29 @@ function renderBoard(mode){
     'Arena score over '+(SPANLABEL[mode]||mode)+' · '+n+' scored release'+(n===1?'':'s')+' per entrant. 0 is copying the last release; 100 is a perfect oracle. Live rounds join the window as they resolve, starting Aug 14; the Nov 3 midterm exam is the finale. Pending entrants show after their first scored release.';
 }
 
+// What a round asks for, in three words. Without it the front page presents a
+// sixteen-cell profile and a top-ten ranking as if each wanted one number, and
+// a participant finds out otherwise only after opening the bundle.
+const SHAPE = {
+  profile_energy: ['profile', c => c + ' cells'],
+  ranking_list:   ['ranking', () => 'ordered list'],
+};
+function shapeChip(r){
+  const kind = r.target_type
+    || ((r.cells && r.cells.length) ? 'profile_energy' : 'continuous_normal');
+  const spec = SHAPE[kind];
+  if(!spec) return '';
+  const detail = spec[1]((r.cells || []).length);
+  return '<span class="shape" title="'+esc(detail)+'">'+esc(spec[0])+'</span>';
+}
+
 function roundsList(data){
   const el = document.getElementById('rounds-list');
   const open = data.rounds.filter(r=>r.status==='open'&&Date.parse(r.deadline||r.lock_at)>Date.now()).sort((a,b)=>(a.deadline||a.lock_at).localeCompare(b.deadline||b.lock_at));
   el.innerHTML = open.slice(0,6).map(r=>{
     const link = submissionLink('agent');
     return '<div class="vrow"><span class="live"></span><span class="id">'+esc(r.round_id)+'</span>'
-      + '<span class="q">'+esc(r.question)
+      + '<span class="q">'+shapeChip(r)+esc(r.question)
       + ' <span class="dim">· '+(r.n_forecasts||0)+' forecasts in</span></span>'
       + '<span class="when">due '+esc(fmtLocal(r.deadline||r.lock_at))+'</span>'
       + '<a class="go" href="'+link+'" target="_blank" rel="noopener">Submit forecast</a></div>';
@@ -1012,9 +1029,13 @@ function examRounds(data){
   const mids = data.rounds.filter(r=>r.round_id.indexOf('midterm-')===0);
   el.innerHTML = mids.map(r=>{
     const link = submissionLink('agent');
+    // `due`, not `locks`. These two rounds lock 2026-10-30T22:00Z, whose batch
+    // deadline is the Monday four days earlier -- so the label that was here
+    // told a participant they had until Friday when they were closed out on
+    // Monday. Every other list on this page already reads `deadline || lock_at`.
     return '<div class="vrow"><span class="live"></span><span class="id">'+esc(r.round_id)+'</span>'
-      + '<span class="q">'+esc(r.question)+' <span class="dim">· '+(r.n_forecasts||0)+' forecasts locked in</span></span>'
-      + '<span class="when">locks '+esc(fmtLocal(r.lock_at))+'</span>'
+      + '<span class="q">'+shapeChip(r)+esc(r.question)+' <span class="dim">· '+(r.n_forecasts||0)+' forecasts locked in</span></span>'
+      + '<span class="when">due '+esc(fmtLocal(r.deadline||r.lock_at))+'</span>'
       + '<a class="go" href="'+link+'" target="_blank" rel="noopener">Submit forecast</a></div>';
   }).join('');
   const first = mids[0];
