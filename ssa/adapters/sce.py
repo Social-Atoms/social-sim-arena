@@ -9,8 +9,7 @@ the "Inflation expectations" sheet: the median one-year-ahead and median
 three-year-ahead expected inflation rates.
 
 **The NY Fed 403s generic clients.** A request without a desktop-browser
-User-Agent is refused, so every request here sends one -- the same contract as
-the Conference Board adapter.
+User-Agent is refused, so every request here sends one.
 
 **The workbook is parsed with the stdlib, deliberately.** The repository's
 dependencies are frozen at requests/jsonschema/pillow, and an xlsx is a zip of
@@ -22,7 +21,7 @@ columns must fail loudly, not serve the 25th percentile as the median).
 
 **Date convention: rows are dated by the reference month, first of the month**
 ("2026-07-01" for the July 2026 survey), the same label-date convention the
-Michigan and Conference Board series use. Column A carries the month as a
+Michigan series uses. Column A carries the month as a
 YYYYMM integer (201306, ..., 202607) and that is all the workbook says; the
 release *day* lives on the CMD calendar, not in the file. As with every
 monthly label-dated series, `date < lock_at` cannot freeze this series -- a
@@ -38,10 +37,9 @@ a day wins; a re-fetch on the same day never rewrites the file, so a vintage a
 resolution cites can never change under it.
 
 **Serving is archive-first on failure, fail-loud on staleness.** A fetch
-failure serves the newest committed vintage with a printed warning, the same
-tradeoff the Conference Board adapter makes: a monthly series with years of
-committed history must not take a whole refresh down because one request
-timed out. But whatever answered -- network or archive -- `history` raises if
+failure serves the newest committed vintage with a printed warning: a monthly
+series with years of committed history must not take a whole refresh down
+because one request timed out. But whatever answered -- network or archive -- `history` raises if
 its newest reference month trails today by more than MAX_STALE_MONTHS. A
 silently stale source is worse than no source (see ssa/adapters/fredcsv.py for
 what that cost once), and a warning on the fallback path does not cover a

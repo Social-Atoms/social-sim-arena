@@ -3,7 +3,7 @@ import copy
 import json
 import os
 
-from ssa import bundle, season
+from ssa import bundle, inventory, season
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -97,24 +97,64 @@ def test_a_release_edit_cannot_disguise_the_same_ranking_week():
     assert "duplicate target" in got, got
 
 
+def _round_from_a_blocked_source(rounds, rid="blocked-2026-10-07", week=5):
+    """Attach a new round to a source the inventory refuses, and return its id.
+
+    Since 2026-09-03 every *registered* source is approved, so a blocked round
+    cannot be found in the season file any more -- it has to be built. The
+    series is registered only for the duration of the test, pointed at a source
+    that is `rejected` in the real inventory, so what is exercised is the
+    validator's own lookup rather than a stubbed verdict.
+    """
+    template = copy.deepcopy(next(
+        r for r in rounds if r.get("target_type") == "continuous_normal"
+        and r.get("series")))
+    template.update(round_id=rid, series="blocked_series",
+                    lock_at=f"2026-10-{week:02d}T14:00:00Z",
+                    release_at=f"2026-10-{week + 2:02d}T14:00:00Z")
+    rounds.append(template)
+    return rid
+
+
 def test_one_more_round_from_an_unapproved_source_fails():
-    def break_it(rounds):
-        extra = copy.deepcopy(next(r for r in rounds
-                                   if r["round_id"] == "esi-2026-09-23"))
-        extra.update(round_id="esi-2026-10-07",
-                     lock_at="2026-10-05T14:00:00Z",
-                     release_at="2026-10-07T14:00:00Z")
-        rounds.append(extra)
-    got = one_problem(break_it)
-    assert "source 'pentaesi' rights are 'permission-needed'" in got, got
+    """Adding an adapter, or reviving a withdrawn one, must not add rounds."""
+    source = next(k for k, r in inventory.INVENTORY.items()
+                  if r["rights"] == inventory.REJECTED)
+    season.SERIES["blocked_series"] = {"source": source}
+    try:
+        got = one_problem(_round_from_a_blocked_source)
+    finally:
+        del season.SERIES["blocked_series"]
+    assert f"source {source!r} rights are 'rejected'" in got, got
 
 
 def test_grandfathering_is_exact_not_a_source_wide_bypass():
-    document = reviewed()
-    existing = next(r for r in document["rounds"]
-                    if r["round_id"] == "esi-2026-09-23")
-    assert existing["round_id"] in season.GRANDFATHERED_RIGHTS
-    assert "rights" not in "\n".join(season.validate_document(document))
+    """The exception list is empty, so this checks the mechanism, not a member.
+
+    An id on the list exempts that one round. A second round from the same
+    source still fails -- which is the whole reason the list is keyed by round
+    id rather than by source, and the property that would be lost if somebody
+    ever 'simplified' it into a source-wide allow.
+    """
+    assert season.GRANDFATHERED_RIGHTS == frozenset(), \
+        "a new exception was added; extend this test to cover it"
+    source = next(k for k, r in inventory.INVENTORY.items()
+                  if r["rights"] == inventory.REJECTED)
+    season.SERIES["blocked_series"] = {"source": source}
+    exempt, second = "blocked-exempt", "blocked-second"
+    real = season.GRANDFATHERED_RIGHTS
+    season.GRANDFATHERED_RIGHTS = frozenset({exempt})
+    try:
+        def add_both(rounds):
+            _round_from_a_blocked_source(rounds, exempt, week=5)
+            _round_from_a_blocked_source(rounds, second, week=12)
+        got = one_problem(add_both)
+    finally:
+        season.GRANDFATHERED_RIGHTS = real
+        del season.SERIES["blocked_series"]
+    assert f"{second}: source {source!r} rights" in got, got
+    assert f"{exempt}: source" not in got, \
+        f"the exempt round was refused anyway: {got}"
 
 
 def test_election_specials_are_audited_against_certified_results():

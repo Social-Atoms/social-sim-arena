@@ -59,7 +59,7 @@ Every row always contains `attempts`, `last_error`, `next_retry`, `next_lock`,
   preliminary bodies plus both URLs. Archive fallback re-runs both live
   parsers; a legacy finals-only file, missing preliminary part, or tampered
   byte is rejected. Derived `site/data.json` is never source evidence.
-- Scalar adapters that own archives (Conference Board, SCE, Civiqs and Trends)
+- Scalar adapters that own archives (SCE, Civiqs and Trends)
   return transport diagnostics alongside usable archive rows. The registry
   keeps those rows but records the source as `stale`/`deadline_risk`; malformed
   live payloads remain loud and cannot hide behind an older parse. Civiqs

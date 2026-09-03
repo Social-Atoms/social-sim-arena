@@ -53,12 +53,32 @@ def test_ids_keep_the_pollster_apart():
 
 
 def test_rights_gate_refuses_anything_not_explicitly_approved():
-    """Adding an adapter must not quietly add rounds."""
+    """Adding an adapter must not quietly add rounds.
+
+    The blocked source is read out of the inventory rather than named here: as
+    of 2026-09-03 every source that is still registered is approved, so a
+    literal name in this test would be a source that no longer exists, and the
+    test would be asserting against a typo instead of against the gate.
+    """
+    from ssa import inventory
     h = weekly(40)
-    ok, why = gen.gate("x", {"source": "aaii"}, h)
-    assert not ok and why["gate"] == "rights" and why["state"] == "permission-needed"
+    blocked = sorted(k for k, r in inventory.INVENTORY.items()
+                     if r["rights"] not in inventory.GENERATING_RIGHTS)
+    assert blocked, "no blocked source left to test the rights gate with"
+    for source in blocked:
+        ok, why = gen.gate("x", {"source": source}, h)
+        assert not ok and why["gate"] == "rights", (source, ok, why)
+        assert why["state"] == inventory.INVENTORY[source]["rights"], source
     ok, why = gen.gate("x", {"source": "a-source-nobody-reviewed"}, h)
     assert not ok and why["gate"] == "rights" and why["state"] == "unresolved"
+    # And the conditional approval really does open the gate, or the three
+    # sources it covers would be blocked by a verdict that says they are not.
+    conditional = [k for k, r in inventory.INVENTORY.items()
+                   if r["rights"] == inventory.APPROVED_NO_REDISTRIBUTION]
+    assert conditional
+    for source in conditional:
+        ok, why = gen.gate("x", {"source": source}, h)
+        assert ok or why["gate"] != "rights", (source, why)
     print("ok test_rights_gate_refuses_anything_not_explicitly_approved")
 
 

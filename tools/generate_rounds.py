@@ -318,7 +318,11 @@ def signal_to_noise(hist, source=None):
 def gate(sid, meta, hist):
     """(ok, reason) -- reason is machine-readable and carries its evidence."""
     rights = RIGHTS.get(meta.get("source"), "unresolved")
-    if rights != "approved":
+    # Two verdicts open this gate, and the difference is about publishing the
+    # retrieved bodies rather than about scheduling: see
+    # `inventory.GENERATING_RIGHTS`. Compared against the inventory's own tuple
+    # so adding a third verdict cannot silently leave this line behind.
+    if rights not in inventory.GENERATING_RIGHTS:
         return False, {"gate": "rights", "state": rights,
                        "source": meta.get("source")}
     if sid in RETIRED_TEMPLATES:

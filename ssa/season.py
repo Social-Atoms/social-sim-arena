@@ -37,20 +37,24 @@ RANKING_KIND_SOURCE = {
     "trends_basket": "trends_basket",
 }
 
-# These rounds were already hand-reviewed and frozen before the source
-# inventory acquired a rights gate.  Grandfathering is by exact round id, not
-# source: it preserves the published season while ensuring that one more round
-# from any permission-needed source fails.  Removing an exception after the
-# round is retired is safe; adding one is a visible policy decision in code.
-GRANDFATHERED_RIGHTS = frozenset({
-    "aaii-2026-08-27", "aaii-2026-09-03", "aaii-2026-09-10",
-    "aaii-2026-09-17", "aaii-2026-09-24",
-    "cci-2026-08",
-    "esi-2026-08-26", "esi-2026-09-09", "esi-2026-09-23",
-    "umich-party-2026-09-dem", "umich-party-2026-09-ind",
-    "umich-party-2026-09-rep",
-    "yougov-xtab-2026-09",
-})
+# Rounds hand-reviewed and frozen before the source inventory acquired a rights
+# gate.  Grandfathering is by exact round id, not source: it preserves the
+# published season while ensuring that one more round from a blocked source
+# still fails.  Adding an exception is a visible policy decision in code;
+# removing one once its round is retired, or once its source is decided, is
+# safe.
+#
+# Empty since 2026-09-03, when issue #68 read all five blocked sources' terms
+# and decided every one of them.  Three came back approved on condition their
+# retrieved bodies stay unpublished (AAII, Michigan's party cut, the YouGov
+# crosstabs), so their rounds now pass the gate on their own merits rather than
+# on an exception.  The other two were withdrawn -- The Conference Board bars
+# extraction into a database whether or not anything is republished, and Penta
+# bars automated retrieval and automated analysis -- and their rounds went with
+# them.  Nothing is left to grandfather, and an empty set is the honest way to
+# say that: the mechanism stays, so the next frozen round from an undecided
+# source is a one-line, reviewable addition.
+GRANDFATHERED_RIGHTS = frozenset()
 
 # A resolution must name a stable observation, not merely contain prose.  The
 # accepted anchors are the actual forms used by the reviewed season: a dated
@@ -278,7 +282,8 @@ def validate_document(document):
             continue
 
         state = rights.get(source, inventory.UNRESOLVED)
-        if state != inventory.APPROVED and rid not in GRANDFATHERED_RIGHTS:
+        if state not in inventory.GENERATING_RIGHTS and \
+                rid not in GRANDFATHERED_RIGHTS:
             problems.append(
                 f"{rid}: source {source!r} rights are {state!r}; only approved "
                 "sources may be published")

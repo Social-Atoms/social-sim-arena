@@ -15,8 +15,9 @@ gen = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gen)
 
 STATES = {inventory.INTEGRATED, inventory.PERMISSION_NEEDED, inventory.REJECTED}
-RIGHTS = {inventory.APPROVED, inventory.PERMISSION_NEEDED,
-          inventory.REJECTED, inventory.UNRESOLVED}
+RIGHTS = {inventory.APPROVED, inventory.APPROVED_NO_REDISTRIBUTION,
+          inventory.PERMISSION_NEEDED, inventory.REJECTED,
+          inventory.UNRESOLVED}
 
 
 def test_every_registered_source_is_audited():
@@ -78,7 +79,7 @@ def test_only_approved_sources_can_generate():
             for i in range(40)]
     for key, row in sorted(inventory.INVENTORY.items()):
         ok, why = gen.gate("x", {"source": key}, hist)
-        if row["rights"] != inventory.APPROVED:
+        if row["rights"] not in inventory.GENERATING_RIGHTS:
             assert not ok and why["gate"] == "rights", key
             assert why["state"] == row["rights"], key
         else:
@@ -86,6 +87,52 @@ def test_only_approved_sources_can_generate():
             # further down for history, volatility, template or schedule.
             assert ok or why["gate"] != "rights", (key, why)
     print("ok test_only_approved_sources_can_generate")
+
+
+def test_a_conditional_approval_names_the_archive_it_must_not_publish():
+    """`approved-no-redistribution` is a promise about what does not ship.
+
+    A promise kept only in prose is one refactor from being broken silently, so
+    the verdict has to point at the directory it is about. Both directions are
+    checked: a row carrying the verdict without a blocklist entry, and a
+    blocklist entry for a source that no longer carries the verdict -- the
+    second is how a stale entry would come to protect nothing while looking
+    like it protects something.
+    """
+    conditional = {k for k, r in inventory.INVENTORY.items()
+                   if r["rights"] == inventory.APPROVED_NO_REDISTRIBUTION}
+    listed = set(inventory.PUBLISH_BLOCKLIST)
+    assert conditional == listed, (
+        f"rows carrying the verdict but not on the blocklist: "
+        f"{sorted(conditional - listed)}; blocklist entries whose row no "
+        f"longer carries it: {sorted(listed - conditional)}")
+    for source, path in sorted(inventory.PUBLISH_BLOCKLIST.items()):
+        assert os.path.isdir(os.path.join(ROOT, path)), \
+            f"{source}: blocklist names {path}, which does not exist"
+    print("ok test_a_conditional_approval_names_the_archive_it_must_not_publish")
+
+
+def test_the_blocked_archives_are_not_reachable_from_the_published_site():
+    """`site/` is what Vercel serves, so anything under it is public.
+
+    The three conditionally-approved sources are approved *because* their
+    bodies stay unpublished. Copying one into `site/` -- or letting a build
+    step do it -- would revoke the verdict without editing the row that grants
+    it, so the check is on the served directory rather than on intent.
+    """
+    site = os.path.join(ROOT, "site")
+    served = set()
+    for base, _dirs, files in os.walk(site):
+        for f in files:
+            served.add(os.path.relpath(os.path.join(base, f), site))
+    for source, path in sorted(inventory.PUBLISH_BLOCKLIST.items()):
+        leaked = sorted(n for n in served if n.startswith(os.path.basename(path)))
+        assert not leaked, f"{source}: {path} bodies are inside site/: {leaked}"
+        bodies = os.listdir(os.path.join(ROOT, path))
+        for b in bodies:
+            assert b not in served, \
+                f"{source}: {b} from {path} is served by site/"
+    print("ok test_the_blocked_archives_are_not_reachable_from_the_published_site")
 
 
 def test_inputs_are_never_targets():
@@ -105,5 +152,7 @@ if __name__ == "__main__":
     test_states_and_rights_are_from_the_declared_vocabularies()
     test_every_row_carries_evidence_and_every_rejection_carries_a_way_back()
     test_only_approved_sources_can_generate()
+    test_a_conditional_approval_names_the_archive_it_must_not_publish()
+    test_the_blocked_archives_are_not_reachable_from_the_published_site()
     test_inputs_are_never_targets()
-    print("6 passed")
+    print("8 passed")

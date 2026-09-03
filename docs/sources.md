@@ -365,7 +365,7 @@ that was surveyed and turned down — carrying:
 | field | what it answers |
 |---|---|
 | `state` | `integrated`, `permission-needed`, or `rejected` — this repository's relationship to the source |
-| `rights` | the publisher's terms: `approved`, `permission-needed`, `rejected`, `unresolved`. **Only `approved` generates rounds.** |
+| `rights` | the publisher's terms: `approved`, `approved-no-redistribution`, `permission-needed`, `rejected`, `unresolved`. **Only the two approved verdicts generate rounds** (`inventory.GENERATING_RIGHTS`); see §9 for why the second exists |
 | `role` | `target` (we ask questions about it) or `input` (an entrant reads it before answering). An input never becomes a round |
 | `evidence` | the robots rule, the licence sentence, the HTTP status, or the issue number. A label is not evidence |
 | `revisit` | for anything not integrated: the specific fact that would reopen it |
@@ -459,3 +459,61 @@ rebuilt from parsed rows is our reading of the file rather than the file, so
 the fixture carries each body's sha256 and `probe_marts.py --verify`
 re-downloads and fails if any of them has moved. 1.2 MB of binaries is
 provenance for a series, and there is no series.
+
+---
+
+## 9. A worked withdrawal: two sources whose terms bar the use itself
+
+§6 is a rejection that was reversed by re-reading its own argument. This is the
+opposite case, recorded because the reasoning is the part worth reusing: on
+2026-09-03 all five sources that had been sitting at `permission-needed` were
+decided at once (issue #68), and the question that split them was **not** "are
+we allowed to publish this" but **"what exactly does the clause restrict."**
+
+Three of the five restrict *passing the data on*. That is a condition this
+repository can meet and keep meeting, so they were approved on it:
+
+| source | the operative clause | why it is satisfied |
+|---|---|---|
+| AAII | "No part of the contents ... may be copied or **forwarded to anyone else**" | silent on private analysis and on automated access; the bodies stay unpublished |
+| Michigan, party cut | data "may be displayed, reformatted, and printed for **your organization's use**"; written consent is reserved for "reproduce, retransmit, distribute, sell, publish, or broadcast" | organizational use is granted outright — this row had previously been read as needing consent for *any* use, which blocked three series for a restriction the agreement does not make |
+| YouGov crosstabs | CC BY-NC 4.0, naming "academic research"; plus a bar on bots and on training AI | the fetch is a deliberate manual act, not a refresh side effect; and evaluating a finished model against a published number is not training, fine-tuning or developing one — a maintainer position, recorded as one |
+
+They carry `rights: approved-no-redistribution`, and the condition is enforced
+rather than promised: `inventory.PUBLISH_BLOCKLIST` names each archive
+directory and `tests/test_inventory.py` fails if a row carries that verdict
+without a blocklist entry, or if any of those bodies turns up under `site/`.
+
+**Two restrict the use itself, and no amount of not-publishing helps.**
+
+- **The Conference Board** bars "extract for use in a database" as its own
+  prohibited act, in a list alongside reproduce and distribute. Building the
+  series *is* the named act; keeping the result private does not avoid it. The
+  member licence that does permit a copy is for "personal, noncommercial
+  purposes" by employees of member organisations, which is not a public
+  benchmark.
+- **Penta-CivicScience** bars "any text or data mining or web scraping",
+  names "any 'robot', 'bot', 'spider', 'scraper' ... to access, obtain, copy,
+  monitor or republish", and separately bars "any automated analytical
+  technique aimed at analysing text and data in digital form to generate
+  information which includes ... patterns, trends and correlations". The
+  adapter fetched `/wp-json/wp/v2/posts` on a schedule and the pipeline
+  computed trends from it. Three clauses, each sufficient on its own.
+
+Both were withdrawn the same day: the series left `ssa/series.py`, the four
+rounds left `questions/season0.json` (two of them already resolved and scored,
+which is a real cost and was accepted rather than argued away), the 24 archived
+Conference Board bodies left `sources/`, and both adapters, their tests, the
+CCI backfill tool and its workflow left with them. `ssa/inventory.py` keeps
+both rows at `rights: rejected` with the clauses quoted and a `revisit` naming
+the written permission that would reopen each. A reader who notices that the
+most famous US consumer-confidence index is missing should find that row rather
+than assume an oversight.
+
+**The transferable rule.** A terms-of-use clause is not one thing. Sort it into
+*retrieval* (how you may fetch), *use* (what you may compute), and
+*redistribution* (what you may pass on) before deciding, because a source can
+be fully open on two of those and closed on the third — and only the third is a
+condition a repository can hold itself to. Reading "the terms are restrictive"
+as a single verdict is what left three usable sources blocked and two
+unusable ones scheduled.
