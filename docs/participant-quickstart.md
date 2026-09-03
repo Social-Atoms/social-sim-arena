@@ -126,9 +126,49 @@ line is in `ps` output, in shell history, and in the log of whoever pastes the
 command into an issue.
 
 Your production endpoint must use HTTPS and follow
-[`docs/agent-api.md`](agent-api.md). Do not commit or email an API key. The
-maintainers must accept the registration and arrange the approved credential
-path and server-side probe before the endpoint becomes active; the local probe
+[`docs/agent-api.md`](agent-api.md).
+
+### Registering the endpoint
+
+Add a `route` block to your `entrants/<entrant_id>.json`:
+
+```json
+{
+  "entrant_id": "acme-forecast",
+  "name": "Acme Forecast",
+  "type": "firm",
+  "method": "One or two sentences: what generates the forecasts.",
+  "route": {
+    "kind": "agent_api",
+    "base_url": "https://api.acme.example/v1"
+  }
+}
+```
+
+`auth` defaults to `"bearer"`; set it to `"none"` only if your endpoint
+authenticates by allow-listing our egress instead. `model` is optional and
+defaults to `ssa-agent`.
+
+**There is no field for your API key, and there will not be one.** Send it to
+the maintainers out of band. The arena reads it from
+`SSA_ENTRANT_KEY_<ENTRANT_ID>` — derived from your id, never named in the
+registration, because a file that could name its own variable could name one
+of ours and have the arena send our provider key to the address in the same
+file.
+
+Once the key is installed, the maintainers run the same probe against your
+registration rather than against a URL somebody typed:
+
+```bash
+python tools/probe_agent_api.py --entrant <entrant_id>
+```
+
+A registration without a key is not called and does not fail the run; it is
+simply not yet on the roster. `"status": "revoked"` stops the call at the point
+of dialling, not only in the probe.
+
+Do not commit or email an API key. The maintainers must accept the registration
+and arrange the credential before the endpoint becomes active; the local probe
 is a rehearsal, and the server-side one is authoritative.
 
 ## The operational fallback

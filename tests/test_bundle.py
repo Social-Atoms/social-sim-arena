@@ -93,8 +93,17 @@ def test_one_bundle_carries_the_whole_weeks_mixed_horizons():
     That spread is why the horizon is reported per question rather than
     normalised away: it is a property of the question, not a head start.
     """
-    doc = bundle.build_bundle(season_rounds(), "batch-2026-09-14")
-    assert len(doc["questions"]) == 17, len(doc["questions"])
+    rounds = season_rounds()
+    doc = bundle.build_bundle(rounds, "batch-2026-09-14")
+    # Counted from the season rather than pinned. A literal here goes red the
+    # week a round is promoted into this batch, which is a normal thing to do
+    # and not a bundle defect; what has to hold is that the bundle carries
+    # every round of the batch and nothing else.
+    expected = {r["round_id"] for r in rounds
+                if batches.batch_of(r["lock_at"]) == "batch-2026-09-14"}
+    assert {q["round_id"] for q in doc["questions"]} == expected, (
+        sorted(expected ^ {q["round_id"] for q in doc["questions"]}))
+    assert len(doc["questions"]) == len(expected)
     shapes = {q["target_type"] for q in doc["questions"]}
     assert shapes == {
         "continuous_normal", "profile_energy", "ranking_list"}, shapes

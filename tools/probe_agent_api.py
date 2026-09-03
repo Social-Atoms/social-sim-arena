@@ -40,6 +40,7 @@ Exit status is 0 only when every selected check passed.
 import argparse
 import json
 import os
+import re
 import socket
 import sys
 import time
@@ -50,6 +51,9 @@ from urllib.parse import urlparse
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SCHEMA_VERSION = "ssa-agent-api-v1"
+# Mirrors ssa/participants.KEY_ENV_PREFIX. This file imports nothing from
+# ssa/ on purpose: a participant runs it from a bare checkout.
+KEY_ENV_PREFIX = "SSA_ENTRANT_KEY_"
 
 # What the arena's own runner uses (`ssa.harness.TIMEOUT`). Quoted here so a
 # participant sizing their endpoint reads one number, not two.
@@ -285,8 +289,10 @@ def probe(base_url, key=None, timeout=30.0, retries=2, shapes=None):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--base-url", required=True,
-                    help="OpenAI-compatible base, e.g. https://host/v1")
+    ap.add_argument("--base-url",
+                    help="OpenAI-compatible base, e.g. https://host/v1. "
+                         "Optional when --entrant names a registration that "
+                         "carries a route.")
     ap.add_argument("--key-env",
                     help="NAME of the environment variable holding the bearer "
                          "token. Never pass the token itself.")
@@ -300,9 +306,11 @@ def main(argv=None):
                     choices=["scalar", "profile", "ranking"],
                     help="probe only this shape (repeatable)")
     ap.add_argument("--entrant",
-                    help="refuse to probe if entrants/<id>.json is revoked")
+                    help="read the route from entrants/<id>.json, and refuse "
+                         "to probe a revoked registration")
     args = ap.parse_args(argv)
 
+    key = None
     if args.entrant:
         entrant = load_entrant(args.entrant)
         if entrant is None:
@@ -315,8 +323,33 @@ def main(argv=None):
                   "revocation is that the arena stops reaching the endpoint.",
                   file=sys.stderr)
             return 1
+        # With a registered route this is the *maintainer-side* probe: same
+        # checks, but aimed by the registration rather than by whatever the
+        # operator typed. A probe that passes against a URL nobody registered
+        # says nothing about the endpoint the season will actually call.
+        spec = entrant.get("route") or {}
+        if spec.get("base_url") and not args.base_url:
+            args.base_url = spec["base_url"]
+            derived = KEY_ENV_PREFIX + re.sub(
+                r"[^A-Z0-9]", "_", args.entrant.upper())
+            if spec.get("auth", "bearer") == "bearer" and not args.key_env:
+                # The variable name is derived from the id, never read from the
+                # registration -- see ssa/participants.py. Naming it on the
+                # command line stays possible for a rehearsal against a
+                # throwaway key, but the default is the one the arena will use.
+                args.key_env = derived
+                if not os.environ.get(derived):
+                    print(f"FAIL: ${derived} is not set. That is the variable "
+                          f"the arena reads for '{args.entrant}'; probing with "
+                          "a different key tests a credential the season will "
+                          "not send.", file=sys.stderr)
+                    return 1
 
-    key = None
+    if not args.base_url:
+        print("FAIL: pass --base-url, or --entrant naming a registration that "
+              "carries a route", file=sys.stderr)
+        return 1
+
     if args.key_env:
         key = os.environ.get(args.key_env)
         if not key:

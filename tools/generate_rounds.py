@@ -49,6 +49,7 @@ import argparse
 import collections
 import json
 import os
+import re
 import sys
 from datetime import datetime, timedelta, timezone
 
@@ -57,6 +58,7 @@ sys.path.insert(0, ROOT)
 
 from ssa import batches                                    # noqa: E402
 from ssa import inventory                                  # noqa: E402
+from ssa import profile_round                             # noqa: E402
 from ssa import ranking_round                              # noqa: E402
 from ssa.series import SERIES                              # noqa: E402
 
@@ -462,6 +464,141 @@ WIKI_QUESTION = (
     "ten article titles in order, rank 1 first.")
 
 
+# --- the Google Trends brand basket ----------------------------------------
+#
+# A weekly five-cell profile round. Templated from the reviewed rounds for the
+# same reason the wiki family is: the season already runs three of these, so
+# generation extends a reviewed contract rather than inventing one. It matters
+# more here than anywhere else in October, because every other candidate that
+# month is a Civiqs scalar -- without this the month has one answer shape.
+
+TRENDS_KIND = "trends_basket"
+TRENDS_CELLS = ("trends_share_tesla", "trends_share_iphone",
+                "trends_share_samsung", "trends_share_netflix",
+                "trends_share_disney")
+
+# The invariant half of the reviewed wording. The reviewed rounds append one
+# more sentence -- "September is Apple's announcement window, the largest
+# regular swing in this basket" -- which is a claim about September and is
+# false in October. `trends_template` proves this constant reproduces the
+# reviewed rounds *with* that note supplied, and generated rounds carry no note
+# at all: a template may repeat a question a human approved, and may not invent
+# a seasonal hint nobody reviewed.
+TRENDS_QUESTION = (
+    "Google Trends, United States: the share of weekly search interest taken "
+    "by each of Tesla, iPhone, Samsung, Netflix and Disney for the week "
+    "{week}. All five are measured in one comparison request, so their weekly "
+    "indices sit on a single shared scale; forecast each brand's percentage of "
+    "the five-brand total. The five shares add to 100.")
+
+TRENDS_REVIEWED_NOTE = (
+    " September is Apple's announcement window, the largest regular swing in "
+    "this basket.")
+
+
+def trends_template(rounds):
+    """(newest reviewed basket round, lock offset, release offset).
+
+    Offsets are measured from the measured week's own boundaries, as with the
+    wiki family: this round also locks before its week begins, so a spacing
+    expressed from `release_at` would be meaningless the moment the week moved.
+
+    Raises when the reviewed rounds disagree, when the basket changes, or when
+    `TRENDS_QUESTION` no longer rebuilds the wording a human approved. Each of
+    those would otherwise generate a question nobody reviewed under a name that
+    says it was.
+    """
+    got = sorted((r for r in rounds
+                  if r.get("cells") and tuple(r["cells"]) == TRENDS_CELLS),
+                 key=lambda r: r["release_at"])
+    if not got:
+        raise ValueError(
+            "no reviewed Google Trends basket round to template from; this "
+            "generator extends an existing contract rather than inventing one")
+    offsets = set()
+    for r in got:
+        end = datetime.strptime(r["release_at"][:10], "%Y-%m-%d").replace(
+            tzinfo=timezone.utc)
+        start = end - timedelta(days=6)
+        lock = datetime.fromisoformat(r["lock_at"].replace("Z", "+00:00"))
+        rel = datetime.fromisoformat(r["release_at"].replace("Z", "+00:00"))
+        offsets.add((lock - start, rel - end))
+        # The invariant sentence has to reproduce exactly; a reviewed round
+        # may then append editorial context for its own week, and a
+        # rolled-forward one appends nothing. Checking for equality with the
+        # note attached would make the family unable to extend itself: the
+        # moment a generated week is promoted it becomes a reviewed round with
+        # no note, and the equality would fail against the very rounds this
+        # produced. Checking the prefix keeps the property that matters --
+        # nothing is generated whose question a human did not approve -- and
+        # drops only the claim that every week carries the same aside.
+        rebuilt = TRENDS_QUESTION.format(
+            week=week_phrase(start.date(), end.date()))
+        if not r["question"].startswith(rebuilt):
+            raise ValueError(
+                f"TRENDS_QUESTION no longer reproduces {r['round_id']}'s "
+                "wording; the reviewed question changed and the template did "
+                "not")
+        trailing = r["question"][len(rebuilt):]
+        if trailing and not trailing.startswith(" "):
+            raise ValueError(
+                f"{r['round_id']} continues the reviewed sentence without a "
+                "break; the template would generate a question that reads as "
+                "a fragment of it")
+    if len(offsets) != 1:
+        raise ValueError(
+            f"the reviewed Trends basket rounds use {len(offsets)} different "
+            f"lock/release spacings: {sorted(map(str, offsets))}")
+    lock_off, rel_off = offsets.pop()
+    return got[-1], lock_off, rel_off
+
+
+def trends_candidates(rounds, weeks, now, through=None):
+    """Future basket rounds, count-bounded or explicitly date-bounded."""
+    tpl, lock_off, rel_off = trends_template(rounds)
+    taken = {r["round_id"] for r in rounds}
+    end = datetime.strptime(tpl["release_at"][:10], "%Y-%m-%d").date()
+    out = []
+    start = end - timedelta(days=6) + timedelta(days=7)
+    while through is not None or len(out) < weeks:
+        wk_end = start + timedelta(days=6)
+        lock = datetime(start.year, start.month, start.day,
+                        tzinfo=timezone.utc) + lock_off
+        release = datetime(wk_end.year, wk_end.month, wk_end.day,
+                           tzinfo=timezone.utc) + rel_off
+        wk_start, start = start, start + timedelta(days=7)
+        if through is not None and release.date() > through:
+            break
+        if lock <= now or not publishable(lock, now):
+            continue
+        if through is None and (release - now).days > MAX_WEEKS_AHEAD * 7:
+            break
+        r = {
+            "round_id": f"trends-basket-{wk_end.isoformat()}",
+            "tracker": tpl["tracker"],
+            "profile_noun": tpl.get("profile_noun", "brand"),
+            "series": tpl["series"],
+            "cells": list(TRENDS_CELLS),
+            "question": TRENDS_QUESTION.format(
+                week=week_phrase(wk_start, wk_end)),
+            "unit": tpl["unit"],
+            "release_at": release.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "release_estimated": tpl.get("release_estimated", False),
+            "lock_at": lock.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "resolve": re.sub(r"\d{4}-\d{2}-\d{2}", wk_end.isoformat(),
+                              tpl["resolve"]),
+            "target_type": tpl["target_type"],
+        }
+        # Validate through the module that will have to score it, at generation
+        # time rather than at listing time -- the same reason the wiki family
+        # calls `ranking_round.spec_for` here.
+        profile_round.cells_for(r)
+        if r["round_id"] in taken:
+            continue
+        out.append(r)
+    return out
+
+
 def week_phrase(start, end):
     """`Mon Aug 31 - Sun Sep 6, 2026`, the way the reviewed rounds write it.
 
@@ -673,6 +810,15 @@ def main():
                 continue
             r["_new_series"] = sid not in already
             made.append(r)
+
+    # The Trends basket: a profile round with no registry row to iterate over,
+    # for the same reason the ranking family has none -- its answer is a vector
+    # over five series rather than one of them.
+    for r in trends_candidates(rounds, weeks, now, through=through):
+        r["_sn"] = float("nan")     # a share vector has no scalar S/N
+        r["_move"] = float("nan")
+        r["_new_series"] = False
+        made.append(r)
 
     # The ranking family, which has no registry row to iterate over.
     for r in wiki_candidates(rounds, weeks, now, through=through):
