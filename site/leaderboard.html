@@ -9,6 +9,19 @@
 <title>Leaderboard · Social Simulation Arena</title>
 <meta name="description" content="The live benchmark for social simulation. Simulators and agents forecast real public opinion before it is published. Locked, hashed, scored in public.">
 <style>
+details.result{margin-top:6px;}
+details.result>summary{cursor:pointer;font-size:11.5px;color:var(--mut);list-style:none;}
+details.result>summary::-webkit-details-marker{display:none;}
+details.result>summary:before{content:'▸ ';}
+details.result[open]>summary:before{content:'▾ ';}
+details.result>summary:hover{color:var(--ink);}
+.result-in{margin:8px 0 4px;padding:9px 11px;background:var(--soft,#f6f6f4);border-radius:4px;}
+.result-in .out{font-size:12.5px;color:var(--ink);margin-bottom:6px;}
+.result-in .how{font-size:11px;color:var(--mut);margin-bottom:8px;}
+.result-in .corr{font-size:11px;color:var(--warn,#8a5a00);margin-bottom:8px;}
+.result-in table{font-size:11.5px;}
+.result-in td,.result-in th{padding:2px 8px 2px 0;border:0;}
+
 .shape{display:inline-block;border:1px solid var(--line,#e0e0e0);border-radius:999px;padding:0 7px;margin-left:7px;font-size:10.5px;font-weight:700;color:var(--mut);vertical-align:1px;white-space:nowrap;}
 :root{
   color-scheme: light;
@@ -481,6 +494,45 @@ function render(data){
       + '<td style="font-size:11.5px;">' + link + '</td></tr>';
   }).join('') || '<tr><td colspan="6" style="color:var(--mut);">no source health in this payload</td></tr>';
 
+  // 23 rounds have resolved, each carrying the outcome, how it was resolved,
+  // and every entrant's answer -- and no page rendered any of it. A benchmark
+  // that shows only an aggregate asks to be taken on trust; this is the part a
+  // participant can check, and the part that makes a rank mean something.
+  function resultBlock(r){
+    const res = r.resolution, fcs = r.forecasts;
+    if(!res || typeof res.value !== 'number') return '';
+    const rows = Object.entries(fcs || {})
+      // Scalar answers only. A profile answer is a vector and a ranking is a
+      // list; showing either against one number would invent a comparison.
+      .filter(([, f]) => f && typeof f.mean === 'number')
+      .map(([name, f]) => ({name, mean: f.mean, sd: f.sd,
+                            err: Math.abs(f.mean - res.value)}))
+      .sort((a, b) => a.err - b.err);
+    const body = rows.map(e =>
+      '<tr><td>'+esc((nameOf[e.name]||e.name).split(' (')[0])+'</td>'
+      + '<td class="num">'+e.mean.toFixed(1)+(typeof e.sd==='number'?' ± '+e.sd.toFixed(1):'')+'</td>'
+      + '<td class="num" style="color:var(--mut);">'+e.err.toFixed(1)+'</td></tr>').join('');
+    // A corrected resolution is shown, not hidden. One of these rounds was
+    // first resolved against a number published before its own lock; the
+    // record of that being caught is worth more than a clean-looking table.
+    const corr = res.corrected
+      ? '<div class="corr"><b>corrected</b> '+esc(res.corrected.at ? res.corrected.at.slice(0,10) : '')
+        + (res.corrected.replaces && typeof res.corrected.replaces.value === 'number'
+           ? ' · was '+res.corrected.replaces.value : '')
+        + ' — '+esc(res.corrected.why || '')+'</div>'
+      : '';
+    return '<details class="result"><summary>'+rows.length+' forecast'
+      + (rows.length===1?'':'s') + ' · outcome '+esc(res.value)
+      + '</summary><div class="result-in">'
+      + '<div class="out"><b>'+esc(res.value)+'</b>'+esc(r.unit?' '+r.unit:'')
+      + (res.observed_date ? ' · observed '+esc(res.observed_date) : '')+'</div>'
+      + (res.method ? '<div class="how">'+esc(res.method)+'</div>' : '')
+      + corr
+      + (body ? '<table><thead><tr><th>Entrant</th><th class="num">Forecast</th><th class="num">Error</th></tr></thead><tbody>'+body+'</tbody></table>'
+              : '<div class="how">answers for this shape are not a single number; see the '+esc(r.target_type==='ranking_list'?'ranking':'profile')+' board</div>')
+      + '</div></details>';
+  }
+
   const rb = document.getElementById('rounds-body');
   rb.innerHTML = '';
   for(const r of data.rounds){
@@ -494,7 +546,7 @@ function render(data){
     const shape = kind==='profile_energy'
       ? '<span class="shape">profile · '+((r.cells||[]).length)+' cells</span>'
       : kind==='ranking_list' ? '<span class="shape">ranking · ordered list</span>' : '';
-    tr.innerHTML = '<td><b style="color:var(--ink);font-weight:600;">'+esc(r.round_id)+'</b>'+shape+'<br><span style="font-size:12px;color:var(--mut);">'+esc(r.question)+'</span></td>'
+    tr.innerHTML = '<td><b style="color:var(--ink);font-weight:600;">'+esc(r.round_id)+'</b>'+shape+'<br><span style="font-size:12px;color:var(--mut);">'+esc(r.question)+'</span>'+resultBlock(r)+'</td>'
       + '<td><span class="status '+esc(displayStatus)+'"><span class="d"></span>'+esc(displayStatus.replace('_',' '))+'</span></td>'
       + '<td style="white-space:nowrap;">due '+esc(fmtLocal(r.deadline||r.lock_at))+'<br><span style="color:var(--mut);font-size:11px;">lock '+esc(fmtLocal(r.lock_at))+'</span></td>'
       + '<td>'+(link?'<a href="'+link+'" target="_blank" rel="noopener" style="font-weight:600;color:var(--ink);text-decoration:none;">submit →</a>':'')+'</td>';
