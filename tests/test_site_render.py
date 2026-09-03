@@ -224,10 +224,62 @@ def test_every_link_the_docs_send_a_participant_to_exists():
           f"({len(refs)} site anchors, all present)")
 
 
+def test_the_publish_gate_covers_every_field_a_page_reads_unguarded():
+    """`refresh.assert_site_contract` and the pages have to agree.
+
+    The gate exists because the live `site/data.json` is rebuilt every six
+    hours and never passes through these tests -- a hole would reach a
+    participant as the word "undefined" before it reached CI. That only works
+    while the gate knows about every field a page reads without checking
+    first, and a page can gain one at any time.
+
+    A read counts as guarded when it is followed by `&&`, `||`, `?`, or sits
+    inside `typeof`; anything else is unguarded and belongs in the contract.
+    """
+    import re
+    from ssa import refresh
+
+    covered = set(refresh.SITE_ROUND_FIELDS) | set(refresh.SITE_ROUND_TYPES)
+    # `r` is also the loop variable for things that are not rounds -- chart
+    # points, DOM rects, entrant rows. Only names a round actually has can be
+    # a contract violation.
+    known = covered | {"series", "tracker", "resolve", "scoreable",
+                       "release_estimated", "history_source"}
+
+    unguarded = {}
+    for page in ("index.html", "leaderboard.html"):
+        with open(os.path.join(ROOT, "site", page)) as fh:
+            body = fh.read()
+        # A comparison cannot render, so `r.x === y` is safe whatever `x` is;
+        # `&&`, `||` and `?` are the ordinary guards; `)` ends an argument
+        # list that is usually a guard of its own.
+        for m in re.finditer(
+                r"\br\.([a-z_]+)\b(\s*(?:===|!==|==|!=|&&|\|\||\?|\)))?",
+                body):
+            field, guard = m.group(1), m.group(2)
+            if field not in known or guard:
+                continue
+            start = max(0, m.start() - 12)
+            if "typeof" in body[start:m.start()]:
+                continue
+            if field not in covered:
+                unguarded.setdefault(field, page)
+
+    assert not unguarded, (
+        "a page reads these round fields without checking, and the publish "
+        "gate does not require them:\n  "
+        + "\n  ".join(f"{k} (in {v})" for k, v in sorted(unguarded.items()))
+        + "\nAdd them to refresh.SITE_ROUND_FIELDS, or guard the read.")
+    print(f"ok test_the_publish_gate_covers_every_field_a_page_reads_unguarded "
+          f"({len(refresh.SITE_ROUND_FIELDS)} required, "
+          f"{len(refresh.SITE_ROUND_TYPES)} type-checked)")
+
+
 if __name__ == "__main__":
     test_every_leaderboard_tab_renders_something_a_participant_can_read()
     test_the_landing_page_names_each_round_shape_and_the_right_deadline()
     test_the_page_reads_only_keys_the_pipeline_publishes()
     test_no_page_promises_a_date_it_cannot_know()
     test_every_link_the_docs_send_a_participant_to_exists()
-    print("5 passed")
+    test_the_publish_gate_covers_every_field_a_page_reads_unguarded()
+    print("6 passed")

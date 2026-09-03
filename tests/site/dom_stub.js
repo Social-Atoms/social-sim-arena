@@ -117,4 +117,35 @@ function installGlobals(extra) {
   return {els, document, window: win};
 }
 
-module.exports = {node, makeDom, installGlobals, escapeHtml};
+// Values that mean a render went wrong and are visible to whoever opens the
+// page. `null` is matched on a word boundary: the pages legitimately say
+// "the statistical nulls", and a substring match calls that a bug.
+const LEAK = [
+  [/\bundefined\b/g, 'undefined'],
+  [/\bNaN\b/g, 'NaN'],
+  [/\bnull\b/g, 'null'],
+  [/\[object Object\]/g, '[object Object]'],
+  [/Invalid Date/g, 'Invalid Date'],
+];
+
+function leaks(els) {
+  let all = '';
+  for (const el of Object.values(els)) {
+    all += (el.innerHTML || '') + ' ';
+    for (const c of el.children || []) all += (c.innerHTML || '') + ' ';
+  }
+  const found = [];
+  for (const [re, name] of LEAK) {
+    for (const m of all.matchAll(re)) {
+      const i = m.index;
+      found.push({
+        what: name,
+        near: all.slice(Math.max(0, i - 70), i + 40)
+                 .replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
+      });
+    }
+  }
+  return found;
+}
+
+module.exports = {node, makeDom, installGlobals, escapeHtml, leaks};

@@ -4,7 +4,7 @@
 // state that names no round.
 const fs = require('fs');
 const path = require('path');
-const {installGlobals} = require('./dom_stub.js');
+const {installGlobals, leaks} = require('./dom_stub.js');
 
 const root = path.resolve(__dirname, '..', '..');
 const dataPath = process.argv[2] || path.join(root, 'site', 'data.json');
@@ -153,6 +153,12 @@ for (const r of out) {
 console.log(`source freshness: ${healthRows} rows`);
 console.log(`rounds table: ${roundRows} rows`);
 console.log(`meta: ${meta.replace(/<[^>]*>/g, '')}`);
+
+// A rendered `undefined` or `NaN` is a bug the reader sees before anyone else
+// does, and it survives every check that only counts rows.
+for (const leak of leaks(els)) {
+  problems.push(`rendered "${leak.what}": …${leak.near}…`);
+}
 
 if (problems.length) {
   console.error('\n' + problems.length + ' problem(s):');
