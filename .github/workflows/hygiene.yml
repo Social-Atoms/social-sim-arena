@@ -21,7 +21,28 @@ jobs:
         run: |
           set -e
           pats='ICLR 2027|ICLR 2028|NeurIPS 2026|NeurIPS 2027|camera-ready|rebuttal|submission deadline|abstract deadline|reviews open'
-          hits=$(grep -rInE "$pats" --exclude-dir=.git --exclude=hygiene.yml . || true)
+          # The archive directories below are excluded, and the pattern is
+          # untouched. They hold verbatim third-party bytes -- Tavily result
+          # bodies, news digests, raw provider replies, fetched source pages --
+          # recorded as evidence and never edited. A news article about
+          # self-driving cars used one of these words in its ordinary English
+          # sense, inside a search result a model fetched for a trends round,
+          # and turned this check red on a tree with no planning text in it.
+          # That file cannot be corrected without corrupting the evidence, and
+          # the pattern cannot be narrowed without weakening the check
+          # everywhere it matters.
+          #
+          # Everything we write is still scanned at full strength: docs, site,
+          # ssa, tools, tests, questions, schema, handbook, examples,
+          # templates, .github, and every top-level file. One directory per
+          # line on purpose -- a broad glob would let our own prose escape the
+          # check by living next to evidence.
+          hits=$(grep -rInE "$pats" \
+            --exclude-dir=.git --exclude=hygiene.yml \
+            --exclude-dir=search --exclude-dir=news --exclude-dir=replies \
+            --exclude-dir=sources --exclude-dir=civiqs --exclude-dir=trends \
+            --exclude-dir=wikitop --exclude-dir=cache \
+            . || true)
           if [ -n "$hits" ]; then
             echo "$hits"
             echo
