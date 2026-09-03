@@ -180,9 +180,54 @@ def test_no_page_promises_a_date_it_cannot_know():
           f"({len([n for n in os.listdir(os.path.join(ROOT, 'site')) if n.endswith('.html')])} pages)")
 
 
+def test_every_link_the_docs_send_a_participant_to_exists():
+    """A doc that points at a section which is not there is worse than one that
+    points nowhere: the reader assumes they misread the page.
+
+    The quickstart now tells a participant where their answer shows up -- the
+    calendar, the rounds table, the four boards, source freshness -- and those
+    are four anchors on one page that a later edit can rename without anything
+    noticing.
+    """
+    import re
+    refs = set()
+    docs = os.path.join(ROOT, "docs")
+    for name in sorted(os.listdir(docs)):
+        if not name.endswith(".md"):
+            continue
+        with open(os.path.join(docs, name)) as fh:
+            body = fh.read()
+        for m in re.finditer(
+                r"social-simulation-arena\.com/([a-z]+\.html)#([A-Za-z0-9_-]+)",
+                body):
+            refs.add((m.group(1), m.group(2), name))
+        # Relative links between the docs themselves rot the same way.
+        for m in re.finditer(r"\]\((?!https?:)([a-zA-Z0-9_./-]+\.md)\)", body):
+            target = os.path.normpath(os.path.join(docs, m.group(1)))
+            assert os.path.exists(target), \
+                f"{name} links to {m.group(1)}, which does not exist"
+
+    missing = []
+    for page, anchor, src in sorted(refs):
+        path = os.path.join(ROOT, "site", page)
+        if not os.path.exists(path):
+            missing.append(f"{src} -> {page} (no such page)")
+            continue
+        with open(path) as fh:
+            html = fh.read()
+        if f'id="{anchor}"' not in html:
+            missing.append(f"{src} -> {page}#{anchor} (no such section)")
+    assert not missing, "docs point at sections that do not exist:\n  " + \
+        "\n  ".join(missing)
+    assert refs, "no doc sends a participant to the site at all"
+    print(f"ok test_every_link_the_docs_send_a_participant_to_exists "
+          f"({len(refs)} site anchors, all present)")
+
+
 if __name__ == "__main__":
     test_every_leaderboard_tab_renders_something_a_participant_can_read()
     test_the_landing_page_names_each_round_shape_and_the_right_deadline()
     test_the_page_reads_only_keys_the_pipeline_publishes()
     test_no_page_promises_a_date_it_cannot_know()
-    print("4 passed")
+    test_every_link_the_docs_send_a_participant_to_exists()
+    print("5 passed")

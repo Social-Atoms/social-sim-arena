@@ -247,6 +247,15 @@ Confirm the route with the maintainers before a scored entry. Registration
 acceptance is separate from technical validity: a payload can be perfect and
 still not be admitted.
 
+## Seeing the result
+
+A round's outcome, the rule it resolved under, and every entrant's answer
+sorted by error are on the
+[rounds table](https://social-simulation-arena.com/leaderboard.html#rounds) as
+soon as it resolves — no waiting for the end of the season, and no need to take
+a rank on trust. `docs/participant-quickstart.md` lists the four boards and
+what each one measures.
+
 ## Privacy and retention
 
 Public: your entrant id, name, method, forecast files, their canonical hashes,
