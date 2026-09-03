@@ -63,6 +63,64 @@ def test_residential_courier_stages_all_three_source_archives():
         assert path in line, (path, line)
 
 
+def test_the_candidate_job_can_see_a_batch_it_just_created():
+    """A new batch is a new *file*, and `git diff` does not see untracked ones.
+
+    The first version of this job asked `git diff --quiet` and would have
+    reported "nothing new" every Thursday while the generator wrote a hundred
+    candidates beside it -- a cron that silently does nothing, which is worse
+    than no cron because nobody goes looking for it.
+    """
+    body = text(".github/workflows/candidates.yml")
+    assert "git add -A questions/candidates/" in body, \
+        "the job must stage before it asks what changed"
+    # Every `git diff` that is a command rather than prose, wherever it sits in
+    # the line. Two near misses while writing this check are the reason it is
+    # spelled out: `command_with` returns the first matching line, which is the
+    # comment explaining the trap, and the real invocation is `if git diff ...`,
+    # so a `startswith("git diff")` reads neither.
+    import re
+    invocations = []
+    for line in body.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        for m in re.finditer(r"git diff[^;|&\n]*", stripped):
+            invocations.append(m.group(0).strip())
+    assert invocations, "the job no longer checks whether anything changed"
+    for cmd in invocations:
+        assert "--cached" in cmd, \
+            f"`{cmd}` cannot see a newly created batch file"
+    print("ok test_the_candidate_job_can_see_a_batch_it_just_created")
+
+
+def test_the_candidate_job_never_promotes_anything():
+    """Drafting is automated; promotion is not, and that is the whole design.
+
+    A round is contamination-proof because a person froze it in a commit before
+    the answer existed. A job that wrote `questions/season0.json` would keep the
+    schedule and lose the property.
+    """
+    body = text(".github/workflows/candidates.yml")
+    # Commands, not prose. The job's own comments explain that it refuses to
+    # touch the season file, and a check that scans the whole text cannot tell
+    # the explanation from the act -- the same mistake as reading `git diff`
+    # out of a comment above.
+    commands = [ln.strip() for ln in body.splitlines()
+                if ln.strip() and not ln.strip().startswith("#")]
+    touching = [c for c in commands if "season0.json" in c]
+    assert not touching, \
+        f"the candidate job touches the season file: {touching}"
+    assert "--write" in body and "questions/candidates/" in body
+    assert "gh pr create" in body, "candidates arrive as a pull request to read"
+    assert "--base dev" in body, "never straight to main"
+    # Offline and free: the generator holds no key and makes no request, so a
+    # source being down cannot fail this job and this job cannot spend money.
+    for bad in ("API_KEY", "secrets.", "OPENAI", "ANTHROPIC"):
+        assert bad not in body, f"the candidate job references {bad}"
+    print("ok test_the_candidate_job_never_promotes_anything")
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for test in tests:

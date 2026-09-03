@@ -1,0 +1,105 @@
+name: candidates
+
+# Draft next week's candidate rounds, and open a pull request with them.
+#
+# The generator has been able to roll three families forward indefinitely --
+# Civiqs, wiki top-10, and the Trends brand basket -- and nothing ever ran it.
+# Candidates only appeared when somebody remembered to type
+# `tools/generate_rounds.py --write` locally, so a thin month looked like a
+# missing task when it was a missing cron. This is the cron.
+#
+# What it does NOT do, deliberately: promote anything. `generate_rounds.py`
+# writes `questions/candidates/<batch>.json` and refuses to touch
+# `questions/season0.json` -- a reviewed round is frozen by the commit that
+# adds it, and a question nobody read is not a reviewed question. This opens a
+# pull request; a person still decides what goes in the season, which is the
+# step that makes a round contamination-proof rather than merely scheduled.
+#
+# Offline and free: the generator reads committed archives, holds no key, and
+# makes no upstream request. A source being down cannot fail this job.
+
+on:
+  schedule:
+    # Thursdays 06:00Z. The batch published on Monday closes the Monday after,
+    # so a Thursday draft leaves four days to review before publication and
+    # eleven before anything is due.
+    - cron: "0 6 * * 4"
+  workflow_dispatch:
+    inputs:
+      weeks:
+        description: "How many weeks ahead to draft"
+        default: "8"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dev
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements.txt
+
+      - name: draft the candidates
+        run: |
+          set -e
+          PYTHONPATH=. python tools/generate_rounds.py \
+            --weeks "${{ github.event.inputs.weeks || 8 }}" --write \
+            | tee /tmp/candidates.txt
+
+      - name: is there anything new
+        id: diff
+        run: |
+          # `git status`, not `git diff`. A new batch is a new *file*, and
+          # `git diff` does not see untracked ones -- so the first version of
+          # this step reported "nothing new" every week while the generator was
+          # writing a hundred candidates beside it. `git add -A` first, then
+          # ask the index.
+          git add -A questions/candidates/
+          if git diff --cached --quiet -- questions/candidates/; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "no new candidates; the families are already drafted this far ahead"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            git diff --cached --stat -- questions/candidates/
+          fi
+
+      - name: write the review body
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          set -e
+          # The listing is the review: every candidate with its schedule, its
+          # signal-to-noise and its weekly movement, and every refusal with the
+          # gate that produced it. Carried into the pull request so a reviewer
+          # reads it without checking the branch out.
+          {
+            cat .github/candidates-pr-body.md
+            echo '```'
+            sed -n '1,120p' /tmp/candidates.txt
+            echo '```'
+          } > /tmp/pr-body.md
+
+      - name: open the pull request
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          BRANCH="candidates/$(date -u +%Y-%m-%d)"
+          git config user.name ssa-bot
+          git config user.email actions@github.com
+          # Already staged by the step above.
+          git checkout -b "$BRANCH"
+          git commit -m "Draft candidate rounds for the weeks ahead"
+          git push origin "$BRANCH"
+          gh pr create --base dev --head "$BRANCH" \
+            --title "Candidate rounds, $(date -u +%Y-%m-%d)" \
+            --body-file /tmp/pr-body.md
