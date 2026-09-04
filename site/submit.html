@@ -6,14 +6,14 @@
 <link rel="icon" type="image/svg+xml" href="logo.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>Submit · Social Simulation Arena</title>
-<meta name="description" content="Submit a predictive agent or contribute human wisdom to Social Simulation Arena.">
+<title>Add your agent · Social Simulation Arena</title>
+<meta name="description" content="Test your forecasting endpoint against the Arena contract, then register it for the weekly batch.">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700;800&display=swap');
 :root{
   color-scheme:light;--bg:#fff;--ink:#111110;--ink2:#4f4e49;--mut:#96948d;
   --line:#e0e0e0;--soft:#f6f6f4;--accent:#15803d;--accent-ink:#0a6a30;
-  --link:#0000ee;--warn:#8a5a00;--secret:#7c3aed;
+  --link:#0000ee;--warn:#8a5a00;--bad:#9c2f28;
   --sans:"Inconsolata",ui-monospace,SFMono-Regular,Menlo,-apple-system,sans-serif;
 }
 *{box-sizing:border-box}
@@ -43,718 +43,372 @@ nav.top a:hover{color:var(--link)}
 
 .shell{max-width:1180px;margin:0 auto;padding:24px 20px 44px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:34px}
 .maincol,.rail{min-width:0}.eyebrow{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--mut)}
-.intro h2{margin:3px 0 7px;color:var(--ink);font-size:23px;line-height:1.2}.intro p{margin:0;max-width:760px;font-size:14px}
-.notice{border:1px solid #d6eadc;background:#f4fbf6;border-radius:4px;padding:10px 12px;margin:16px 0;color:var(--accent-ink);font-size:12.5px}.notice b{color:var(--accent-ink)}
+.intro h2{margin:3px 0 7px;color:var(--ink);font-size:23px;line-height:1.2}.intro p{margin:0 0 18px;max-width:760px;font-size:14px}
 
-.tracktabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px;background:#f5f5f5;border:1px solid var(--line);border-radius:4px;padding:2px;margin:18px 0 20px;max-width:560px}
-.tracktabs button{border:0;background:transparent;border-radius:3px;padding:9px 16px;color:var(--ink2);font-weight:700}.tracktabs button.on{background:#fff;color:var(--ink);outline:1px solid var(--line)}
-.track{display:none}.track.on{display:block}
 .panel{border:1px solid var(--line);border-radius:4px;background:#fff;margin-bottom:14px}
 .panelhead{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:12px}
 .panelhead .mark{width:28px;height:28px;border-radius:4px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex:0 0 auto}
-.panelhead .mark.human{background:var(--accent)}
 .panelhead h3{margin:0;color:var(--ink);font-size:16px}.panelhead p{margin:2px 0 0;font-size:12.5px;color:var(--mut)}
-.panelbody{padding:16px}.section-title{margin:4px 0 11px;color:var(--ink);font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.panelbody{padding:16px}
+
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.steps li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:11px;align-items:start}
+.steps .n{width:24px;height:24px;border-radius:50%;background:var(--soft);border:1px solid var(--line);color:var(--ink);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.steps b{color:var(--ink)}.steps p{margin:0;font-size:13.5px}.steps code{background:var(--soft);border-radius:3px;padding:1px 5px;color:var(--accent-ink);font-size:12.5px}
+.shapes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:12px}
+.shape{border:1px solid var(--line);border-radius:4px;padding:10px 11px}.shape b{display:block;color:var(--ink);font-size:13px;margin-bottom:2px}.shape span{font-size:12px;color:var(--mut)}.shape code{display:block;margin-top:6px;font-size:11.5px;color:var(--accent-ink);white-space:pre-wrap}
+details.contract{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+details.contract summary{cursor:pointer;color:var(--accent-ink);font-weight:700;font-size:13px}
+.codelabel{margin:12px 0 5px;font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--mut)}
+pre.code{margin:0;background:#151514;color:#e8e7e2;border-radius:4px;padding:12px 13px;font:11.5px/1.45 var(--sans);white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto;max-height:340px}
+
 .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}.field{min-width:0}.field.full{grid-column:1/-1}
-.field label,.legend{display:flex;align-items:center;gap:7px;margin:0 0 5px;color:var(--ink);font-size:12.5px;font-weight:700}.req{color:var(--accent-ink)}
+.field label{display:flex;align-items:center;gap:7px;margin:0 0 5px;color:var(--ink);font-size:12.5px;font-weight:700}.req{color:var(--accent-ink)}
 .field small{display:block;margin-top:4px;color:var(--mut);font-size:11.5px}
 input{width:100%;border:1px solid #cfcec9;border-radius:4px;background:#fff;color:var(--ink);padding:9px 10px;outline:none}
 input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(21,128,61,.09)}input::placeholder{color:#aaa8a1}
 .privacy{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:3px;padding:1px 6px;font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);background:#fff}
-.privacy.public{border-color:#b8dbc4;color:var(--accent-ink);background:#f4fbf6}.privacy.private{border-color:#e4d2ab;color:var(--warn);background:#fffaf0}.privacy.secret{border-color:#d8c9f5;color:var(--secret);background:#faf7ff}
+.privacy.public{border-color:#b8dbc4;color:var(--accent-ink);background:#f4fbf6}.privacy.secret{border-color:#d8c9f5;color:#7c3aed;background:#faf7ff}
+.actions{display:flex;justify-content:flex-start;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);border-radius:4px;padding:8px 18px;background:#fff;color:var(--ink);font-weight:700;text-decoration:none;display:inline-block}.btn:hover{border-color:var(--ink)}
+.btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}.btn:disabled,.btn[aria-disabled="true"]{opacity:.45;cursor:not-allowed;pointer-events:none}
+.status{font-size:12px;color:var(--mut)}.status.testing{color:var(--warn)}.status.good{color:var(--accent-ink);font-weight:800}.status.bad{color:var(--bad);font-weight:800}
 
-.custom-select{position:relative}.select-trigger{width:100%;min-height:41px;border:1px solid #cfcec9;border-radius:4px;background:#fff;color:var(--ink);padding:8px 10px;display:flex;align-items:center;justify-content:space-between;text-align:left;outline:none}
-.select-trigger.placeholder{color:#aaa8a1}.select-trigger:hover{border-color:#aaa8a1}.select-trigger:focus,.select-trigger[aria-expanded="true"]{border-color:var(--accent);box-shadow:0 0 0 2px rgba(21,128,61,.09)}
-.select-trigger.invalid{border-color:#a12820;box-shadow:0 0 0 2px rgba(161,40,32,.08)}.chevron{font-size:16px;color:var(--mut);transition:transform .15s}.select-trigger[aria-expanded="true"] .chevron{transform:rotate(180deg)}
-.select-menu{position:absolute;z-index:15;top:calc(100% + 5px);left:0;right:0;border:1px solid var(--ink);border-radius:4px;background:#fff;padding:3px;box-shadow:0 10px 28px rgba(17,17,16,.12)}.select-menu[hidden]{display:none}
-.select-option{width:100%;border:0;border-radius:3px;background:#fff;color:var(--ink2);padding:9px 10px;text-align:left}.select-option:hover,.select-option.focused{background:var(--soft);color:var(--ink)}.select-option[aria-selected="true"]{background:var(--ink);color:#fff}.field .select-error{display:none;color:#a12820!important}.field .custom-select.invalid + .select-error{display:block}
+.results{display:grid;gap:8px}
+.result{display:grid;grid-template-columns:22px minmax(0,1fr);gap:9px;align-items:start;font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:4px}
+.result .ic{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;background:#c9c8c2;margin-top:1px}
+.result.good .ic{background:var(--accent)}.result.bad .ic{background:var(--bad)}.result b{color:var(--ink)}.result span{display:block;color:var(--mut);font-size:12px}
+.empty{border:1px dashed #c9c8c2;border-radius:4px;padding:26px 16px;color:var(--mut);text-align:center;font-size:13px}
 
-.methodchoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}.methodchoice{position:relative;display:block;border:1px solid var(--line);border-radius:4px;padding:14px;cursor:pointer;background:#fff;min-height:92px}.methodchoice:hover{border-color:#aaa8a1}.methodchoice:has(input:checked){border-color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}
-.methodchoice input{position:absolute;opacity:0;pointer-events:none}.methodchoice b{display:block;color:var(--ink);font-size:14px;margin-bottom:3px}.methodchoice span{display:block;color:var(--mut);font-size:12px}.methodpanel{display:none;border-top:1px solid var(--line);padding-top:16px}.methodpanel.on{display:block}
-.questionnaire-route-panel{display:none}.questionnaire-route-panel.on{display:block}.api-guide{border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:4px;background:var(--soft);padding:14px}.api-guide h4{margin:0 0 5px;color:var(--ink);font-size:14px}.api-guide p{margin:0 0 10px;font-size:12px}.api-endpoint{display:grid;grid-template-columns:54px minmax(0,1fr);gap:6px 10px;align-items:start;margin:9px 0}.api-endpoint b{color:var(--accent-ink);font-size:11px}.api-endpoint code,.api-guide pre{font:11px/1.5 var(--sans);color:var(--ink);overflow-wrap:anywhere}.api-guide pre{margin:10px 0 0;padding:10px;background:#fff;border:1px solid var(--line);border-radius:3px;white-space:pre-wrap}.api-links{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:11.5px;font-weight:700}.api-links a{color:var(--link)}
-.probe-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}.probe-status{font-size:11.5px;color:var(--mut)}.probe-status.testing{color:var(--warn)}.probe-status.good{color:var(--accent-ink);font-weight:800}.probe-status.bad{color:#9c2f28;font-weight:800}
-.board-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:10px 0 16px}.board-card{border:1px solid var(--line);border-radius:4px;background:#fff;padding:12px;text-align:left;color:var(--ink2);min-height:88px}.board-card:hover{border-color:#aaa8a1}.board-card.on{border-color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}.board-card b{display:block;color:var(--ink);font-size:13px}.board-card span{display:block;margin-top:3px;color:var(--mut);font-size:11px}.board-card em{display:inline-block;margin-top:7px;color:var(--accent-ink);font-size:10px;font-style:normal;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
-.context-row{margin-top:7px;padding:7px 8px;border-left:2px solid #cbd5cb;background:#f7faf7;color:var(--ink2);font-size:10.5px}.draft-status{margin-right:auto;color:var(--mut);font-size:11px}.draft-status.good{color:var(--accent-ink)}
-.questionnaire-intro{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:11px}.questionnaire-intro b{color:var(--ink)}.questionnaire-intro p{margin:2px 0 0;color:var(--mut);font-size:12px}.question-count{white-space:nowrap;border:1px solid var(--line);border-radius:3px;padding:2px 7px;color:var(--mut);font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.question-overview-toggle{background:#fff;cursor:pointer}.question-overview-toggle:hover,.question-overview-toggle[aria-expanded="true"]{border-color:var(--ink);color:var(--ink)}
-.question-list{display:grid;gap:10px}.question-state{border:1px dashed #c9c8c2;border-radius:4px;padding:16px;color:var(--mut);text-align:center}.question-state.bad{border-color:#e4c2bf;background:#fff7f6;color:#9c2f28}
-.question-card{border:1px solid var(--line);border-radius:4px;background:#fff;overflow:hidden}.question-card[hidden]{display:none}.question-head{padding:12px 13px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px}.question-number{width:27px;height:27px;border-radius:3px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}.question-card h4{margin:0;color:var(--ink);font-size:13.5px;line-height:1.42}.question-card h4:focus{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}.question-meta{display:flex;gap:6px 12px;flex-wrap:wrap;margin-top:5px;color:var(--mut);font-size:10.5px}.question-type{color:var(--accent-ink);font-weight:800;text-transform:uppercase;letter-spacing:.04em}.answer-preset{padding:12px 13px;background:#fbfbfa}.answer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.answer-grid.one{grid-template-columns:1fr}.answer-field label{display:block;margin:0 0 4px;color:var(--ink);font-size:11.5px;font-weight:700}.answer-field small{display:block;margin-top:4px;color:var(--mut);font-size:10.5px}.choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.choice-answer{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:4px;padding:8px 9px;background:#fff;color:var(--ink2);cursor:pointer}.choice-answer:has(input:checked){border-color:var(--ink);box-shadow:inset 3px 0 0 var(--accent)}.choice-answer input{width:auto;margin:0}.unsupported-type{border-left:3px solid #a12820;background:#fff7f6;padding:9px 10px;color:#9c2f28;font-size:11.5px}
-.question-index-panel{border:1px solid var(--line);border-radius:4px;background:var(--soft);padding:11px 12px;margin:-1px 0 11px}.question-index-panel[hidden]{display:none}.question-index-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:9px;color:var(--ink);font-size:11.5px}.question-index-head span{color:var(--mut)}.question-index-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:6px}.question-index-button{position:relative;min-height:34px;border:1px solid var(--line);border-radius:3px;background:#fff;color:var(--ink2);font-weight:700}.question-index-button:hover{border-color:var(--ink)}.question-index-button.answered{border-color:#90c9a2;color:var(--accent-ink);background:#f4fbf6}.question-index-button.current{border-color:var(--ink);background:var(--ink);color:#fff;box-shadow:inset 0 -3px 0 var(--accent)}
-.question-step-nav{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;margin-top:11px}.question-step-nav[hidden]{display:none}.step-progress{display:flex;align-items:center;justify-content:center;gap:8px;color:var(--mut);font-size:11.5px;text-align:center}.step-progress:before{content:"";width:34px;height:2px;background:var(--accent)}
-.ranking-list{display:grid;gap:7px}.ranking-row{display:grid;grid-template-columns:29px minmax(0,1fr);align-items:center;gap:8px}.ranking-row .rank{width:29px;height:29px;border:1px solid var(--line);border-radius:3px;background:#fff;color:var(--mut);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}.ranking-help{display:block;margin-top:8px;color:var(--mut);font-size:10.5px}.profile-answer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.profile-answer{border:1px solid var(--line);border-radius:4px;background:#fff;padding:9px}.profile-answer b{display:block;margin-bottom:6px;color:var(--ink);font-size:11px;overflow-wrap:anywhere}.profile-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.profile-fields label{display:block;color:var(--mut);font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}.profile-fields input{margin-top:3px;padding:7px 8px}
-.commitment{background:var(--soft);border-left:3px solid var(--accent);padding:12px 13px;color:var(--ink2);font-size:12.5px}.checkline{display:flex;align-items:flex-start;gap:9px;color:var(--ink2);font-size:12.5px}.checkline input{width:auto;margin-top:4px;flex:0 0 auto}.consent{border-top:1px solid var(--line);margin-top:18px;padding-top:15px}
-.actions{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:18px}.btn{border:1px solid var(--line);border-radius:4px;padding:8px 18px;background:#fff;color:var(--ink);font-weight:700;text-decoration:none}.btn:hover{border-color:var(--ink)}.btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}.btn.dark:hover{opacity:.86}.btn:disabled{cursor:not-allowed;opacity:.42}.btn:disabled:hover{border-color:var(--line)}
-.review{display:none;margin-top:16px}.review.on{display:block}.packet{background:#151514;color:#e8e7e2;border-radius:4px;padding:13px;max-height:290px;overflow:auto;font:11.5px/1.45 var(--sans);white-space:pre-wrap;overflow-wrap:anywhere}.packet:empty{display:none}.receipt{margin-bottom:8px;border:1px solid #b8dbc4;background:#f4fbf6;border-radius:4px;padding:11px 12px;color:var(--accent-ink)}.receipt.bad{border-color:#e4c2bf;background:#fff7f6;color:#9c2f28}
+.regnote{background:var(--soft);border-left:3px solid var(--accent);padding:11px 13px;font-size:12.5px;margin-bottom:12px}
+.regnote b{color:var(--ink)}
+.copyrow{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
 
-.railbox{border-top:2px solid var(--ink);padding:12px 2px 16px;margin-bottom:18px}.railbox h3{margin:0 0 8px;color:var(--ink);font-size:14px}.railbox p{margin:0 0 8px;font-size:12px;color:var(--mut)}.railbox ol{padding-left:18px;margin:0;color:var(--ink2);font-size:12px}.railbox li{margin:7px 0}.railrow{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #eeede9;padding:7px 0;font-size:11.5px}.railrow:last-child{border-bottom:0}.railrow b{color:var(--ink);text-align:right}
+.railbox{border-top:2px solid var(--ink);padding:12px 2px 16px;margin-bottom:18px}.railbox h3{margin:0 0 8px;color:var(--ink);font-size:14px}.railbox p{margin:0 0 8px;font-size:12px;color:var(--mut)}
+.railbox dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:12.5px}.railbox dt{color:var(--mut);font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;align-self:baseline}.railbox dd{margin:0;color:var(--ink);font-weight:700}
+.railbox dd.tick{color:var(--bad)}.railbox ul{padding-left:18px;margin:0;font-size:12.5px}.railbox li{margin:5px 0}.railbox a{color:var(--ink2)}
 footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:var(--mut);display:flex;gap:14px;flex-wrap:wrap}footer a{color:var(--ink2);text-decoration:none}footer .right{margin-left:auto}
 @media(max-width:900px){.shell{grid-template-columns:1fr}.rail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.railbox{margin:0}}
-@media(max-width:650px){nav.top .in{height:auto;min-height:50px;flex-wrap:wrap;padding:8px 12px}nav.top .brand{width:100%;margin-right:0}nav.top .right{display:none}nav.top a.item{padding:6px 10px}.bar{padding:11px 12px}.bar h1{font-size:18px}.bar p{font-size:12.5px}.shell{padding:18px 12px 32px;gap:24px}.tracktabs,.formgrid,.methodchoices,.answer-grid,.choice-grid,.profile-answer-grid,.board-grid{grid-template-columns:1fr}.rail{display:block}.railbox{margin-bottom:18px}.actions .btn{width:100%}}
+@media(max-width:650px){nav.top .in{height:auto;min-height:50px;flex-wrap:wrap;padding:8px 12px}nav.top .brand{width:100%;margin-right:0}nav.top .right{display:none}nav.top a.item{padding:6px 10px}.bar{padding:11px 12px}.bar h1{font-size:18px}.bar p{font-size:12.5px}.shell{padding:18px 12px 32px;gap:24px}.formgrid,.shapes{grid-template-columns:1fr}.rail{grid-template-columns:1fr}}
 </style>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 <nav class="top"><div class="in">
   <a class="brand" href="index.html#live"><span class="dot"></span>Social Simulation Arena <span class="by">by MIT</span></a>
-  <a class="item" href="index.html#live">Live</a><a class="item" href="index.html#rounds">Rounds</a><a class="item on" href="submit.html">Submit</a><a class="item" href="leaderboard.html">Leaderboard</a>
+  <a class="item" href="index.html#live">Live</a><a class="item" href="leaderboard.html">Leaderboard</a><a class="item on" href="submit.html">Submit</a>
   <div class="right"><a href="docs.html">Docs</a><a href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a></div>
 </div></nav>
 
 <div class="bar"><div class="copy">
-  <h1><img src="logo.svg" alt="" style="height:.92em;width:auto;vertical-align:-.1em;margin-right:.5em">Submit to the arena</h1>
-  <span class="badge"><span class="d"></span>INTAKE BETA</span>
-  <p>One-page intake for predictive agents and human wisdom.</p>
+  <h1><img src="logo.svg" alt="" style="height:.92em;width:auto;vertical-align:-.1em;margin-right:.5em">Add your agent</h1>
+  <span class="badge"><span class="d"></span>AGENTS ONLY</span>
+  <p>Test your endpoint against the contract below, then register it for the weekly batch.</p>
 </div></div>
 
 <div class="shell">
 <main class="maincol">
-  <header class="intro"><div class="eyebrow">Submission intake · Issue #42</div><h2>Choose your submission.</h2><p>Register a predictive agent through an OpenAI-compatible endpoint or a signed questionnaire, or contribute your own human judgment.</p></header>
-  <div class="notice"><b>Private intake.</b> Questionnaire submissions are validated against the live manifest and sent to the Arena's private submission store. The optional agent connection test sends one non-scored request only to the endpoint you enter. Human drafts stay on this device and never include the contact email.</div>
+  <header class="intro"><div class="eyebrow">How it works</div><h2>We call you. You return a distribution.</h2>
+  <p>One HTTPS endpoint, one request per question, one JSON answer. There is no form to fill in and no human track: every entry on the board is a forecaster that answered the same batch by the same deadline.</p></header>
 
-  <div class="tracktabs" role="tablist" aria-label="Submission track">
-    <button type="button" class="on" data-track="agent" role="tab" aria-selected="true" aria-controls="track-agent">Your predictive agent</button>
-    <button type="button" data-track="human" role="tab" aria-selected="false" aria-controls="track-human">Human wisdom</button>
+  <div class="panel">
+    <div class="panelbody">
+      <ol class="steps">
+        <li><span class="n">1</span><p><b>We POST each question to your exact URL.</b> The payload carries the question wording, its <code>target_type</code>, unit, resolution rule, the series history every entrant sees, and the lock time. If you set an API key we send it as a Bearer token. The endpoint must be reachable over public HTTPS and speak OpenAI-style <code>/chat/completions</code>; we call it once per round, 72 to 48 hours before the batch deadline.</p></li>
+        <li><span class="n">2</span><p><b>You do your own research.</b> A raw endpoint is a self-contained forecaster: the Arena builds no prompt and runs no search for you. Whatever your agent reads before it answers is your choice, and it is the thing being measured.</p></li>
+        <li><span class="n">3</span><p><b>You return a distribution, in the shape the question asks for.</b> A point guess is refused by the validator; an interval is the whole answer.</p></li>
+      </ol>
+      <div class="shapes">
+        <div class="shape"><b>Topline</b><span>one number with an honest interval · scored by CRPS</span><code>"forecast": {"mean": 41.2, "sd": 1.4}</code></div>
+        <div class="shape"><b>Population</b><span>every declared cell at once, all or none · energy score</span><code>"profile": {"&lt;cell id&gt;": {"mean": …, "sd": …}, …}</code></div>
+        <div class="shape"><b>Ranking</b><span>the items in predicted order · distance on lists</span><code>"ranking": ["Item_A", "Item_B", …]</code></div>
+      </div>
+      <details class="contract">
+        <summary>View the full test payload and expected response</summary>
+        <div class="codelabel">Request — what we POST to your endpoint</div>
+<pre class="code" id="contract-request">POST https://api.example.com/v1/chat/completions
+Authorization: Bearer &lt;your API key&gt;   (only sent if you provide one)
+Content-Type: application/json
+
+{
+  "model": "ssa-agent",
+  "messages": [{"role": "user", "content": "{\"schema_version\":\"ssa-agent-api-v1\",\"request_id\":\"browser-contract-test\",\"round\":{\"round_id\":\"ssa-contract-test\",\"board_id\":\"topline\",\"target_type\":\"continuous_normal\",\"question\":\"Non-scored contract test: return a normal forecast centered on 50.\",\"unit\":\"points\",\"lock_at\":\"2099-01-01T00:00:00Z\",\"context\":{\"persistence\":50}},\"optional_crosstabs\":[]}"}]
+}</pre>
+        <p style="font-size:12px;margin:8px 0 0;">The message content is the Arena request as a JSON string. On a live round <code>context</code> carries the frozen series history and <code>round</code> the real question; a population round lists its cells and a ranking round its universe. The full contract is in <a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/agent-api.md">docs/agent-api.md</a>.</p>
+        <div class="codelabel">Response — what your endpoint returns</div>
+<pre class="code" id="contract-response">200 OK
+{
+  "choices": [{"message": {"role": "assistant", "content":
+    "{\"schema_version\":\"ssa-agent-api-v1\",\"forecast\":{\"mean\":50.0,\"sd\":5.0},\"reasoning_trace\":\"optional, archived with the forecast\",\"crosstabs\":{}}"
+  }}]
+}</pre>
+      </details>
+    </div>
   </div>
 
-  <section class="track on" id="track-agent" role="tabpanel">
-    <form id="agent-form" novalidate>
-      <div class="panel">
-        <div class="panelhead"><span class="mark">A</span><div><h3>Your predictive agent</h3><p>For startups, research groups, institutions, and individual researchers.</p></div></div>
-        <div class="panelbody">
-          <div id="agent-profile-fields">
-          <div class="section-title">Participant</div>
-          <div class="formgrid">
-            <div class="field">
-              <label id="participant-type-label">Participant type <span class="req">*</span></label>
-              <div class="custom-select" id="participant-type-picker">
-                <button id="participant-type-button" class="select-trigger placeholder" type="button" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-required="true" aria-invalid="false" aria-controls="participant-type-options" aria-labelledby="participant-type-label participant-type-value"><span id="participant-type-value">Choose participant type</span><span class="chevron" aria-hidden="true">⌄</span></button>
-                <div class="select-menu" id="participant-type-options" role="listbox" aria-labelledby="participant-type-label" hidden>
-                  <button class="select-option" type="button" role="option" aria-selected="false" data-value="startup">Startup</button>
-                  <button class="select-option" type="button" role="option" aria-selected="false" data-value="research_group">Research group</button>
-                  <button class="select-option" type="button" role="option" aria-selected="false" data-value="institution">Institution</button>
-                  <button class="select-option" type="button" role="option" aria-selected="false" data-value="individual_researcher">Individual researcher</button>
-                </div>
-                <input type="hidden" id="participant-type" name="participant_type">
-              </div>
-              <small class="select-error">Choose a participant type.</small>
-            </div>
-            <div class="field"><label for="organization-name">Organization name <span class="req">*</span> <span class="privacy public">publish with consent</span></label><input id="organization-name" name="organization_name" required autocomplete="organization" placeholder="Organization or research group"></div>
-            <div class="field"><label for="product-name">Product / agent name <span class="req">*</span> <span class="privacy public">publish with consent</span></label><input id="product-name" name="product_name" required placeholder="Predictive agent name"></div>
-            <div class="field"><label for="contact-name">Primary contact name <span class="req">*</span> <span class="privacy private">private</span></label><input id="contact-name" name="contact_name" required autocomplete="name" placeholder="Full name"></div>
-            <div class="field"><label for="contact-email">Contact email <span class="req">*</span> <span class="privacy private">private</span></label><input id="contact-email" name="contact_email" type="email" required autocomplete="email" placeholder="name@example.org"></div>
-          </div>
-          </div>
-
-          <div class="section-title" style="margin-top:22px">Submission method</div>
-          <div class="methodchoices" role="radiogroup" aria-label="Predictive agent submission method">
-            <label class="methodchoice"><input type="radio" name="delivery_method" value="openai_compatible_api" checked><b>OpenAI-compatible API</b><span>Provide an endpoint the arena can call. A key is optional and remains secret.</span></label>
-            <label class="methodchoice"><input type="radio" name="delivery_method" value="questionnaire_commitment"><b>Questionnaire + commitment</b><span>Answer every open Arena question using its preset format, then sign the commitment.</span></label>
-          </div>
-
-          <div class="methodpanel on" id="method-api">
-            <div class="formgrid">
-              <div class="field full"><label for="api-url">OpenAI-compatible URL <span class="req">*</span> <span class="privacy private">private</span></label><input id="api-url" name="openai_compatible_url" type="url" pattern="https://.*" required placeholder="https://api.example.org/v1"><small>HTTPS endpoint implementing the OpenAI-compatible interface used by the arena.</small></div>
-              <div class="field full"><label for="api-key">API key (optional) <span class="privacy secret">secret</span></label><input id="api-key" name="api_key" type="password" autocomplete="new-password" placeholder="Leave blank when authentication is not required"><small>The key is never included in the redacted review packet.</small></div>
-            </div>
-            <div class="probe-row"><button class="btn" id="api-test" type="button">Test connection</button><span class="probe-status" id="api-test-status" role="status" aria-live="polite">Run the non-scored contract test before submitting.</span></div>
-          </div>
-
-          <div class="methodpanel" id="method-questionnaire">
-            <div class="section-title">Questionnaire delivery</div>
-            <div class="methodchoices" role="radiogroup" aria-label="Agent questionnaire delivery">
-              <label class="methodchoice"><input type="radio" name="agent_questionnaire_mode" value="arena_api"><b>Submit via Arena API</b><span>POST identity, answers, consent, and commitment as one validated JSON request.</span></label>
-              <label class="methodchoice"><input type="radio" name="agent_questionnaire_mode" value="manual_form" checked><b>Fill in this form</b><span>Use the same live manifest and answer presets directly in this page.</span></label>
-            </div>
-            <div class="questionnaire-route-panel" id="agent-questionnaire-api">
-              <div class="api-guide"><h4>Programmatic questionnaire submission</h4><p>Your client supplies all participant information and answers in the POST body. This is an Arena intake endpoint; it is different from the OpenAI-compatible agent endpoint above.</p><div class="api-endpoint"><b>GET</b><code>/api/v1/questionnaire</code><b>POST</b><code>/api/v1/questionnaire-submissions</code></div><p>Read each question's <code>answer_schema.agent</code>, answer every currently open round, include <code>commitment.accepted: true</code>, and send a unique <code>Idempotency-Key</code> header.</p><div class="api-links"><a href="/api/v1/questionnaire" target="_blank" rel="noopener">View live manifest ↗</a><a href="docs.html#questionnaire-api">API format and examples →</a></div></div>
-            </div>
-            <div class="questionnaire-route-panel on" id="agent-questionnaire-manual">
-              <div class="questionnaire-intro"><div><b>Open Arena questions</b><p>These are the complete live question texts. Answer controls follow each declared target type.</p></div><span class="question-count" id="agent-question-count">loading</span></div>
-              <div class="question-list" id="agent-questionnaire" data-questionnaire="agent" aria-live="polite"><div class="question-state">Loading open questions…</div></div>
-              <div class="commitment" style="margin-top:14px"><label class="checkline"><input id="commitment-accept" name="commitment_accept" type="checkbox" disabled required><span><b>Participant commitment.</b> I am authorized to submit this agent; the information above is accurate; and I agree that accepted runs may be evaluated, locked, hashed, scored, and reported under the arena protocol.</span></label></div>
-            </div>
-          </div>
-
-          <div class="consent" id="agent-browser-consent"><label class="checkline"><input id="agent-publication-consent" name="publication_consent" type="checkbox"><span>I confirm that, if this submission is accepted, the arena may publish the <b>Organization name</b> and <b>Product / agent name</b> entered above.</span></label></div>
-          <div class="actions" id="agent-actions"><button class="btn dark" id="agent-submit" type="submit">Submit</button></div>
-          <div class="review" id="agent-review" aria-live="polite"><div class="receipt" id="agent-receipt"><b>Submission result.</b></div><pre class="packet" id="agent-packet"></pre></div>
+  <form id="agent-form" novalidate>
+  <div class="panel" id="test-panel">
+    <div class="panelhead"><span class="mark">A</span><div><h3>Test your endpoint</h3><p>One non-scored request, sent from this browser to the URL you enter and nowhere else. Pass it to unlock registration.</p></div></div>
+    <div class="panelbody">
+      <div class="formgrid">
+        <div class="field full">
+          <label for="api-url">Forecast endpoint base URL <span class="req">*</span> <span class="privacy public">public</span></label>
+          <input id="api-url" name="openai_compatible_url" type="url" pattern="https://.*" required placeholder="https://api.example.com/v1" autocomplete="url">
+          <small>We POST to <code>&lt;base&gt;/chat/completions</code>. Must be public HTTPS; the URL goes into your public registration file.</small>
         </div>
-      </div>
-    </form>
-  </section>
-
-  <section class="track" id="track-human" role="tabpanel" hidden>
-    <form id="human-form" novalidate>
-      <div class="panel">
-        <div class="panelhead"><span class="mark human">H</span><div><h3>Human wisdom</h3><p>Humanity's last glory.</p></div></div>
-        <div class="panelbody">
-          <div class="section-title">Questionnaire delivery</div>
-          <div class="methodchoices" role="radiogroup" aria-label="Human questionnaire delivery">
-            <label class="methodchoice"><input type="radio" name="human_questionnaire_mode" value="arena_api"><b>Submit via Arena API</b><span>POST your username, email, answers, consent, and commitment as JSON.</span></label>
-            <label class="methodchoice"><input type="radio" name="human_questionnaire_mode" value="manual_form" checked><b>Fill in this form</b><span>Answer one question at a time, skip freely, and submit when ready.</span></label>
-          </div>
-          <div class="questionnaire-route-panel" id="human-questionnaire-api">
-            <div class="api-guide"><h4>Programmatic Human Wisdom submission</h4><p>Your client supplies identity and one selected board's complete answer set. Human binary events use <code>{"choice":"Yes"}</code> or <code>{"choice":"No"}</code>, not a probability.</p><div class="api-endpoint"><b>GET</b><code>/api/v1/questionnaire</code><b>POST</b><code>/api/v1/questionnaire-submissions</code></div><p>Use <code>answer_schema.human</code>, copy the selected board's current round IDs into <code>round_manifest</code>, sign the commitment, and send a unique <code>Idempotency-Key</code>.</p><div class="api-links"><a href="/api/v1/questionnaire" target="_blank" rel="noopener">View live manifest ↗</a><a href="docs.html#questionnaire-api">API format and examples →</a></div></div>
-          </div>
-          <div class="questionnaire-route-panel on" id="human-questionnaire-manual">
-            <div class="formgrid">
-              <div class="field"><label for="username">Username <span class="req">*</span> <span class="privacy public">publish with consent</span></label><input id="username" name="username" required autocomplete="username" placeholder="Public username"></div>
-              <div class="field"><label for="human-email">Contact email <span class="req">*</span> <span class="privacy private">private</span></label><input id="human-email" name="contact_email" type="email" required autocomplete="email" placeholder="name@example.org"></div>
-            </div>
-            <div class="section-title" style="margin-top:22px">Choose one Human Wisdom board</div>
-            <div class="board-grid" id="human-board-picker" role="tablist" aria-label="Human Wisdom board">
-              <button class="board-card on" type="button" data-board="topline" role="tab" aria-selected="true"><b>Topline</b><span>Point estimates and Yes / No choices.</span><em data-board-count="topline">loading</em></button>
-              <button class="board-card" type="button" data-board="profile" role="tab" aria-selected="false"><b>Population Profile</b><span>One point estimate for each declared group.</span><em data-board-count="profile">loading</em></button>
-              <button class="board-card" type="button" data-board="ranking" role="tab" aria-selected="false"><b>Ranking</b><span>Put the declared items in order.</span><em data-board-count="ranking">loading</em></button>
-            </div>
-            <div class="questionnaire-intro"><div><b id="human-board-title">Topline questions</b><p>Next may skip an unanswered question. Use All questions to preview and jump by number; all answers are required only when you submit.</p></div><button class="question-count question-overview-toggle" id="human-question-count" type="button" aria-expanded="false" aria-controls="human-question-index" disabled>loading</button></div>
-            <div class="question-index-panel" id="human-question-index" hidden></div>
-            <div class="question-list" id="human-questionnaire" data-questionnaire="human" aria-live="polite"><div class="question-state">Loading open questions…</div></div>
-            <div class="question-step-nav" id="human-question-nav" aria-label="Question navigation" hidden><button class="btn" id="human-previous" type="button">Previous</button><span class="step-progress" id="human-step-status" role="status" aria-live="polite"></span><button class="btn dark" id="human-next" type="button">Next</button></div>
-            <div class="commitment" style="margin-top:14px"><label class="checkline"><input id="human-commitment-accept" name="human_commitment_accept" type="checkbox" required><span><b>Participant commitment.</b> I am making this submission myself; the information above is accurate; and I agree that accepted answers may be evaluated, locked, hashed, scored, and reported under the arena protocol.</span></label></div>
-            <div class="consent"><label class="checkline"><input id="human-publication-consent" name="publication_consent" type="checkbox"><span>I confirm that, if this submission is accepted, the arena may publish my <b>username</b> with the Human Wisdom entry.</span></label></div>
-            <div class="actions" id="human-actions"><span class="draft-status" id="human-draft-status" role="status" aria-live="polite">Draft not saved.</span><button class="btn" id="human-save" type="button">Save draft</button><button class="btn dark" id="human-submit" type="submit" disabled>Submit</button></div>
-            <div class="review" id="human-review" aria-live="polite"><div class="receipt" id="human-receipt"><b>Submission result.</b></div><pre class="packet" id="human-packet"></pre></div>
+        <div class="field">
+          <label for="api-key">API key <span class="privacy secret">secret · optional</span></label>
+          <input id="api-key" name="api_key" type="password" placeholder="Sent as Bearer token if provided" autocomplete="off">
+          <small>Used only for this test. It never enters the registration; you hand it to the maintainers out of band.</small>
+        </div>
+        <div class="field">
+          <label for="entrant-id">Entrant id <span class="req">*</span> <span class="privacy public">public</span></label>
+          <input id="entrant-id" name="entrant_id" type="text" required pattern="[a-z0-9][a-z0-9_.-]{1,47}" placeholder="acme-forecast" autocomplete="off" spellcheck="false">
+          <small>Lower-case, stable, and the name of every forecast file you will ever score under.</small>
+        </div>
+        <div class="field">
+          <label for="entrant-name">Display name <span class="req">*</span></label>
+          <input id="entrant-name" name="name" type="text" required maxlength="80" placeholder="Acme Forecast">
+        </div>
+        <div class="field">
+          <label>Type <span class="req">*</span></label>
+          <div style="display:flex;gap:14px;padding:9px 0 0;font-size:13px;color:var(--ink)">
+            <label style="margin:0;font-weight:600;gap:6px"><input type="radio" name="entrant_type" value="firm" checked style="width:auto"> firm or research group</label>
+            <label style="margin:0;font-weight:600;gap:6px"><input type="radio" name="entrant_type" value="llm" style="width:auto"> a single model</label>
           </div>
         </div>
+        <div class="field">
+          <label for="entrant-contact">Contact <span class="privacy public">public</span></label>
+          <input id="entrant-contact" name="contact" type="text" maxlength="120" placeholder="email or GitHub handle" autocomplete="email">
+          <small>Used only to reach you about your entry.</small>
+        </div>
+        <div class="field full">
+          <label for="entrant-method">Method <span class="req">*</span></label>
+          <input id="entrant-method" name="method" type="text" required maxlength="300" placeholder="One or two sentences: what generates the forecasts.">
+        </div>
       </div>
-    </form>
-  </section>
+      <div class="actions">
+        <button class="btn dark" id="api-test" type="button">Test endpoint</button>
+        <span class="status" id="api-test-status" role="status" aria-live="polite">Run the non-scored contract test before registering.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panelhead"><span class="mark">B</span><div><h3>Test results</h3><p>What the Arena's own runner will check, in the order it checks it.</p></div></div>
+    <div class="panelbody"><div class="results" id="test-results"><div class="empty">Run a test to see results here.</div></div></div>
+  </div>
+
+  <div class="panel">
+    <div class="panelhead"><span class="mark">C</span><div><h3>Register</h3><p>A registration is a public file in the repository: <code>entrants/&lt;entrant_id&gt;.json</code>. Nothing here is transmitted until you open it as a pull request.</p></div></div>
+    <div class="panelbody">
+      <div class="regnote"><b>There is no field for your API key, and there will not be one.</b> The Arena reads it from an environment variable derived from your entrant id. Send the key to the maintainers out of band after the pull request is open; a registration without a key is not called and does not fail the run, it is simply not yet on the roster.</div>
+      <div class="codelabel">entrants/<span id="reg-filename">&lt;entrant_id&gt;</span>.json</div>
+      <pre class="code" id="reg-json">{ … fill in the form above … }</pre>
+      <div class="copyrow">
+        <a class="btn dark" id="reg-open" href="#" target="_blank" rel="noopener" aria-disabled="true">Register on GitHub</a>
+        <button class="btn" id="reg-copy" type="button" disabled>Copy JSON</button>
+        <span class="status" id="reg-status">Pass the endpoint test to unlock registration.</span>
+      </div>
+      <p style="font-size:12px;margin:12px 0 0;">The browser test is a rehearsal. Before your endpoint is called for real the maintainers run <code>python tools/probe_agent_api.py --entrant &lt;entrant_id&gt;</code> against the registration itself: transport, all three shapes, idempotency, and that a wrong key is refused.</p>
+    </div>
+  </div>
+  </form>
+
+  <div class="panel" id="route-b">
+    <div class="panelhead"><span class="mark" style="background:var(--accent)">↑</span><div><h3>No endpoint? Upload the week's answers instead.</h3><p>Route B: the same questions, the same deadline, the same scoring, handed over as one file.</p></div></div>
+    <div class="panelbody">
+      <ol class="steps">
+        <li><span class="n">1</span><p><b>Take the open batch.</b> <a href="leaderboard.html#batches">The open batch</a> is published a week before its Monday 12:00 UTC deadline as one JSON bundle; each question carries its answer shape.</p></li>
+        <li><span class="n">2</span><p><b>Answer every question in a bundle response.</b> The file names the batch, your entrant id, and one distribution per question in the shapes above. <code>python tools/validate_bundle.py</code> checks it offline.</p></li>
+        <li><span class="n">3</span><p><b>Upload before the deadline.</b> <code>POST /api/v1/bundle-submissions</code> with <code>Authorization: Bearer &lt;upload token&gt;</code> returns a receipt with the file's sha256; an identical re-upload returns the same receipt. The token is issued with your registration, separately from any endpoint key.</p></li>
+      </ol>
+      <p style="font-size:12.5px;margin:12px 0 0;">Either route may attach optional private audit material: a redacted reasoning summary, a tool-call log, or a trace URL. It is kept for good-faith review, never scored, and should never contain secrets.</p>
+      <div class="actions"><a class="btn" href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/bundle-submission.md">Bundle contract →</a><a class="btn" href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/participant-quickstart.md">Participant quickstart →</a></div>
+    </div>
+  </div>
 </main>
 
 <aside class="rail">
-  <div class="railbox"><h3>Two agent routes</h3><ol><li><b>OpenAI-compatible API</b><br>Provide a URL and, only if needed, a key.</li><li><b>Questionnaire + commitment</b><br>Answer the open Arena questions and sign the commitment.</li></ol></div>
-  <div class="railbox"><h3>Human answer presets</h3><div class="railrow"><span>Continuous</span><b>One point estimate</b></div><div class="railrow"><span>Profile</span><b>One value per cell</b></div><div class="railrow"><span>Ranking</span><b>One field per rank</b></div><div class="railrow"><span>Binary</span><b>Yes / No choice</b></div><div class="railrow"><span>Multiple choice</span><b>One listed option</b></div></div>
-  <div class="railbox"><h3>Publication boundary</h3><div class="railrow"><span>Agent public</span><b>Organization + product name</b></div><div class="railrow"><span>Human public</span><b>Username</b></div><div class="railrow"><span>Always private</span><b>Email + API key</b></div><p style="margin-top:9px">Names are published only when the corresponding checkbox is confirmed and the submission is accepted.</p></div>
-  <div class="railbox"><h3>Intake behavior</h3><p>The agent endpoint test runs from this browser and may require CORS. Questionnaire packets are validated against current locks and stored privately; Human drafts stay on this device without email.</p><a href="docs.html#questionnaire-api">Read the API protocol →</a></div>
+  <div class="railbox">
+    <h3>The calendar</h3>
+    <dl id="calendar"><dt>Released</dt><dd id="cal-released">…</dd><dt>Deadline</dt><dd id="cal-deadline">…</dd><dt>Results begin</dt><dd id="cal-results">…</dd><dt id="cal-tick-label">Closes in</dt><dd class="tick" id="cal-tick">…</dd></dl>
+    <p style="margin-top:10px">Every week: released Monday, answers due the next Monday 12:00 UTC. Results begin as each question's release drops and the board updates as they resolve.</p>
+  </div>
+  <div class="railbox">
+    <h3>What gets scored</h3>
+    <ul>
+      <li><b>Topline</b> · CRPS against the released number.</li>
+      <li><b>Population</b> · energy score over the whole cell vector, split into level and structure.</li>
+      <li><b>Ranking</b> · distance between your order and the published list.</li>
+    </ul>
+    <p style="margin-top:8px">Skill is measured against copying the last release. Season scores are the only ones on the board; single rounds publish raw losses.</p>
+  </div>
+  <div class="railbox">
+    <h3>Read next</h3>
+    <ul>
+      <li><a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/participant-quickstart.md">Participant quickstart</a></li>
+      <li><a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/agent-api.md">Agent API contract</a></li>
+      <li><a href="https://github.com/Social-Atoms/social-sim-arena/tree/main/examples/agent-api">Starter server (no dependencies)</a></li>
+      <li><a href="docs.html#scoring">Scoring</a></li>
+    </ul>
+  </div>
 </aside>
 </div>
 
-<footer><span><b>Social Simulation Arena</b> by MIT</span><a href="leaderboard.html">targets</a><a href="docs.html">docs</a><a href="https://github.com/Social-Atoms/social-sim-arena">github</a><span class="right">questionnaire intake beta</span></footer>
+<footer><b>Social Simulation Arena</b> · built at MIT <span class="right"><a href="docs.html">docs</a> · <a href="https://github.com/Social-Atoms/social-sim-arena">github</a></span></footer>
 
 <script>
 const byId = id => document.getElementById(id);
-const trackButtons = [...document.querySelectorAll('[data-track]')];
-function activateTrack(name){
-  if(!['agent','human'].includes(name)) name='agent';
-  trackButtons.forEach(button => { const active=button.dataset.track===name; button.classList.toggle('on',active); button.setAttribute('aria-selected',String(active)); });
-  document.querySelectorAll('.track').forEach(track => { const active=track.id==='track-'+name; track.classList.toggle('on',active); track.hidden=!active; });
-  if(location.hash!=='#'+name) history.replaceState(null,'','#'+name);
-}
-trackButtons.forEach(button => button.addEventListener('click',()=>activateTrack(button.dataset.track)));
-window.addEventListener('hashchange',()=>activateTrack(location.hash.slice(1)));
+const REPO = 'https://github.com/Social-Atoms/social-sim-arena';
+let apiProbePassed = false;
 
-const picker=byId('participant-type-picker');
-const trigger=byId('participant-type-button');
-const menu=byId('participant-type-options');
-const selectValue=byId('participant-type');
-const valueLabel=byId('participant-type-value');
-const options=[...menu.querySelectorAll('[role="option"]')];
-let focusedIndex=0;
-function paintFocus(){ options.forEach((option,index)=>option.classList.toggle('focused',index===focusedIndex)); }
-function openPicker(index){ menu.hidden=false; trigger.setAttribute('aria-expanded','true'); focusedIndex=Math.max(0,index); paintFocus(); options[focusedIndex].focus(); }
-function closePicker(returnFocus=false){ menu.hidden=true; trigger.setAttribute('aria-expanded','false'); options.forEach(option=>option.classList.remove('focused')); if(returnFocus) trigger.focus(); }
-function chooseOption(option){
-  options.forEach(item=>item.setAttribute('aria-selected',String(item===option)));
-  selectValue.value=option.dataset.value; valueLabel.textContent=option.textContent; trigger.classList.remove('placeholder','invalid'); trigger.setAttribute('aria-invalid','false'); picker.classList.remove('invalid'); closePicker(true);
+// --- the calendar: read from the published data, never recomputed here -----
+const utcDay = iso => { const d = new Date(iso); return d.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', timeZone:'UTC'}); };
+const utcTime = iso => new Date(iso).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', timeZone:'UTC'}) + ' UTC';
+function fmtTick(ms){
+  if (ms <= 0) return 'closed';
+  const s = Math.floor(ms/1000), d = Math.floor(s/86400), h = Math.floor(s%86400/3600), m = Math.floor(s%3600/60), sec = s%60;
+  return d > 0 ? d+'d '+h+'h '+m+'m' : h+'h '+m+'m '+sec+'s';
 }
-trigger.addEventListener('click',()=>menu.hidden?openPicker(Math.max(0,options.findIndex(option=>option.getAttribute('aria-selected')==='true'))):closePicker());
-trigger.addEventListener('keydown',event=>{
-  if(['Enter',' ','ArrowDown','ArrowUp'].includes(event.key)){ event.preventDefault(); const selected=options.findIndex(option=>option.getAttribute('aria-selected')==='true'); openPicker(selected<0?0:selected); }
-});
-options.forEach((option,index)=>{
-  option.addEventListener('click',()=>chooseOption(option));
-  option.addEventListener('keydown',event=>{
-    if(event.key==='ArrowDown'||event.key==='ArrowUp'){ event.preventDefault(); focusedIndex=(index+(event.key==='ArrowDown'?1:-1)+options.length)%options.length; paintFocus(); options[focusedIndex].focus(); }
-    if(event.key==='Home'||event.key==='End'){ event.preventDefault(); focusedIndex=event.key==='Home'?0:options.length-1; paintFocus(); options[focusedIndex].focus(); }
-    if(event.key==='Enter'||event.key===' '){ event.preventDefault(); chooseOption(option); }
-    if(event.key==='Escape'||event.key==='Tab'){ if(event.key==='Escape') event.preventDefault(); closePicker(event.key==='Escape'); }
-  });
-});
-document.addEventListener('click',event=>{ if(!picker.contains(event.target)) closePicker(); });
+async function loadCalendar(){
+  let data;
+  try {
+    let r = await fetch('data.json', {cache:'no-store'});
+    if (!r.ok) r = await fetch('https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/site/data.json', {cache:'no-store'});
+    data = await r.json();
+  } catch (e) { byId('cal-tick').textContent = 'unavailable'; return; }
+  const now = Date.now();
+  const batches = new Map();
+  for (const r of data.rounds || []) {
+    if (!r.batch_id) continue;
+    if (!batches.has(r.batch_id)) batches.set(r.batch_id, r);
+  }
+  // The participant deadline, never the lock: `deadline` is what every
+  // entrant answers by, and the lock is the arena's internal clock.
+  const dueOf = r => r.deadline || r.lock_at;
+  const ahead = [...batches.values()].filter(r => Date.parse(dueOf(r)) > now).sort((a,b) => dueOf(a).localeCompare(dueOf(b)));
+  const open = ahead.find(r => !r.published_at || Date.parse(r.published_at) <= now) || ahead[0];
+  if (!open) { byId('cal-tick').textContent = 'no open batch'; return; }
+  const rs = (data.rounds || []).filter(r => r.batch_id === open.batch_id);
+  const firstRelease = rs.map(r => r.release_at).sort()[0];
+  byId('cal-released').textContent = open.published_at ? utcDay(open.published_at)+' · '+utcTime(open.published_at) : '—';
+  byId('cal-deadline').textContent = utcDay(dueOf(open))+' · '+utcTime(dueOf(open));
+  byId('cal-results').textContent = firstRelease ? utcDay(firstRelease)+' · '+utcTime(firstRelease) : '—';
+  const published = !open.published_at || Date.parse(open.published_at) <= now;
+  const target = published ? Date.parse(dueOf(open)) : Date.parse(open.published_at);
+  byId('cal-tick-label').textContent = published ? 'Closes in' : 'Opens in';
+  const tick = () => { byId('cal-tick').textContent = fmtTick(target - Date.now()); };
+  tick(); setInterval(tick, 1000);
+}
+loadCalendar();
 
-const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const typeLabels={continuous_normal:'Continuous',profile_energy:'Population profile',ranking_list:'Ordered ranking',binary_probability:'Yes / No',multiple_choice:'Multiple choice',short_answer:'Short answer'};
-const boardTitles={topline:'Topline questions',profile:'Population Profile questions',ranking:'Ranking questions'};
-const HUMAN_DRAFT_KEY='ssa-human-board-draft-v1';
-let openQuestions=[];
-let questionLoadState='loading';
-let selectedHumanBoard='topline';
-let humanManifest=[];
-let savedHumanDraft=null;
-let humanQuestionIndex=0;
-let apiProbePassed=false;
-let agentQuestionnaireMode='manual_form';
-let humanQuestionnaireMode='manual_form';
-const submissionAttempts={agent:null,human:null};
-
-try{
-  savedHumanDraft=JSON.parse(localStorage.getItem(HUMAN_DRAFT_KEY)||'null');
-  if(savedHumanDraft&&['topline','profile','ranking'].includes(savedHumanDraft.board_id)){
-    selectedHumanBoard=savedHumanDraft.board_id;
-    humanManifest=Array.isArray(savedHumanDraft.round_manifest)?savedHumanDraft.round_manifest:[];
-    humanQuestionIndex=Math.max(0,Number(savedHumanDraft.current_question_index)||0);
-    byId('username').value=savedHumanDraft.username||'';
-    byId('human-publication-consent').checked=Boolean(savedHumanDraft.publication_consent);
-    byId('human-commitment-accept').checked=Boolean(savedHumanDraft.commitment_accepted);
-    byId('human-draft-status').textContent='Saved draft found on this device.';
-    byId('human-draft-status').classList.add('good');
-  }
-}catch(error){ savedHumanDraft=null; }
-
-function normalizeTargetType(value){
-  const type=String(value||'continuous_normal');
-  if(type==='continuous'||type==='numeric') return 'continuous_normal';
-  if(type==='binary') return 'binary_probability';
-  return type;
-}
-function boardForRound(round){
-  const type=normalizeTargetType(round.target_type);
-  if(type==='profile_energy') return 'profile';
-  if(type==='ranking_list') return 'ranking';
-  return 'topline';
-}
-function questionsForTrack(track){
-  if(track==='agent') return openQuestions;
-  const boardQuestions=openQuestions.filter(round=>boardForRound(round)===selectedHumanBoard);
-  return humanManifest.length?boardQuestions.filter(round=>humanManifest.includes(round.round_id)):boardQuestions;
-}
-function contextForRound(round){
-  const persistence=round.baselines?.persistence;
-  const bits=[];
-  if(Number.isFinite(persistence?.mean)) bits.push(`Latest published value: ${persistence.mean} ${round.unit||''}`.trim());
-  if(Array.isArray(persistence?.items)) bits.push(`Persistence order: ${persistence.items.join(' › ')}`);
-  if(round.resolve) bits.push(`Resolution rule: ${round.resolve}`);
-  if(round.release_at) bits.push(`Resolves ${new Date(round.release_at).toLocaleString()}`);
-  return bits.length?`<div class="context-row">${bits.map(escapeHtml).join(' · ')}</div>`:'';
-}
-function answerPreset(track,round,index,disabled){
-  const type=normalizeTargetType(round.target_type);
-  const prefix=`${track}-q${index}`;
-  const off=disabled?' disabled':'';
-  if(type==='continuous_normal'&&track==='human') return `<div class="answer-grid one"><div class="answer-field"><label for="${prefix}-value">Your answer <span class="req">*</span></label><input id="${prefix}-value" data-answer-field="value" type="number" step="any" inputmode="decimal" required${off} placeholder="In ${escapeHtml(round.unit)}"><small>One point estimate. Human Wisdom does not ask you to invent uncertainty.</small></div></div>`;
-  if(type==='continuous_normal') return `<div class="answer-grid">
-    <div class="answer-field"><label for="${prefix}-mean">Expected value <span class="req">*</span></label><input id="${prefix}-mean" data-answer-field="mean" type="number" step="any" inputmode="decimal" required${off} placeholder="In ${escapeHtml(round.unit)}"><small>The center of your forecast distribution.</small></div>
-    <div class="answer-field"><label for="${prefix}-sd">Uncertainty (SD) <span class="req">*</span></label><input id="${prefix}-sd" data-answer-field="sd" type="number" min="0.01" max="50" step="any" inputmode="decimal" required${off} placeholder="Must be greater than 0"><small>Standard deviation in the same unit.</small></div>
-  </div>`;
-  if(type==='binary_probability'&&track==='human') return `<div class="choice-grid"><label class="choice-answer"><input type="radio" name="${prefix}-choice" data-answer-field="choice" value="Yes" required${off}><span>Yes</span></label><label class="choice-answer"><input type="radio" name="${prefix}-choice" data-answer-field="choice" value="No"${off}><span>No</span></label></div>`;
-  if(type==='binary_probability') return `<div class="answer-grid one"><div class="answer-field"><label for="${prefix}-probability">Probability of Yes (%) <span class="req">*</span></label><input id="${prefix}-probability" data-answer-field="probability" type="number" min="0" max="100" step="1" inputmode="decimal" required${off} placeholder="0–100"><small>Enter a calibrated probability, not a Yes/No guess.</small></div></div>`;
-  if(type==='multiple_choice'&&Array.isArray(round.options)&&round.options.length){
-    return `<div class="choice-grid">${round.options.map((option,optionIndex)=>`<label class="choice-answer"><input type="radio" name="${prefix}-choice" data-answer-field="choice" value="${escapeHtml(option)}"${optionIndex===0?' required':''}${off}><span>${escapeHtml(option)}</span></label>`).join('')}</div>`;
-  }
-  if(type==='short_answer') return `<div class="answer-grid one"><div class="answer-field"><label for="${prefix}-text">Short answer <span class="req">*</span></label><input id="${prefix}-text" data-answer-field="text" type="text" maxlength="300" required${off} placeholder="One concise line"><small>This response is archived but remains unscored until a rule is declared.</small></div></div>`;
-  if(type==='ranking_list'){
-    const ranking=round.ranking||{};
-    const length=Number(ranking.length)||0;
-    if(length<2) return `<div class="unsupported-type" data-unsupported>Ranking metadata is incomplete, so a safe ordered-list preset cannot be rendered.</div>`;
-    const allowed=Array.isArray(ranking.items)?ranking.items:[];
-    return `<div class="ranking-list">${Array.from({length},(_,rank)=>`<label class="ranking-row"><span class="rank">${rank+1}</span><input data-answer-field="ranking-item" type="text" maxlength="256" required${off} placeholder="${allowed[rank]?escapeHtml(allowed[rank]):'Rank '+(rank+1)+' item'}" aria-label="Rank ${rank+1}"></label>`).join('')}</div><small class="ranking-help">${allowed.length?'Use each declared item once: '+escapeHtml(allowed.join(', ')):'Enter one canonical Wikipedia article title per rank. Duplicate items are rejected.'}</small>`;
-  }
-  if(type==='profile_energy'){
-    const cells=Array.isArray(round.cells)?round.cells:(round.profile?.cells||[]);
-    const labels=round.profile?.labels||{};
-    if(!cells.length) return `<div class="unsupported-type" data-unsupported>Profile cell metadata is missing, so a complete profile preset cannot be rendered.</div>`;
-    if(track==='human') return `<div class="profile-answer-grid">${cells.map(cell=>`<div class="profile-answer" data-profile-cell="${escapeHtml(cell)}"><b>${escapeHtml(labels[cell]||cell)}</b><div class="profile-fields" style="grid-template-columns:1fr"><label>Point estimate<input data-answer-field="profile-value" type="number" step="any" inputmode="decimal" required${off} aria-label="${escapeHtml(labels[cell]||cell)} point estimate"></label></div></div>`).join('')}</div>`;
-    return `<div class="profile-answer-grid">${cells.map(cell=>`<div class="profile-answer" data-profile-cell="${escapeHtml(cell)}"><b>${escapeHtml(labels[cell]||cell)}</b><div class="profile-fields"><label>Expected value<input data-answer-field="profile-mean" type="number" step="any" inputmode="decimal" required${off} aria-label="${escapeHtml(labels[cell]||cell)} expected value"></label><label>SD<input data-answer-field="profile-sd" type="number" min="0.01" max="50" step="any" inputmode="decimal" required${off} aria-label="${escapeHtml(labels[cell]||cell)} standard deviation"></label></div></div>`).join('')}</div>`;
-  }
-  return `<div class="unsupported-type" data-unsupported>Question type “${escapeHtml(type)}” does not yet have a safe answer preset. Submission is disabled until a renderer is defined.</div>`;
-}
-function restoreHumanInputs(){
-  if(!savedHumanDraft||savedHumanDraft.board_id!==selectedHumanBoard) return;
-  const inputs=[...byId('human-questionnaire').querySelectorAll('input')];
-  (savedHumanDraft.inputs||[]).forEach((saved,index)=>{
-    const input=inputs[index];
-    if(!input) return;
-    if(input.type==='radio'||input.type==='checkbox') input.checked=Boolean(saved.checked);
-    else input.value=saved.value||'';
-  });
-}
-function validateRankingCard(card){
-  if(card.dataset.targetType!=='ranking_list') return true;
-  const inputs=[...card.querySelectorAll('[data-answer-field="ranking-item"]')];
-  inputs.forEach(input=>input.setCustomValidity(''));
-  const values=inputs.map(input=>input.value.trim());
-  if(values.some(value=>!value)) return true;
-  const round=openQuestions.find(item=>item.round_id===card.dataset.roundId);
-  const allowed=round?.ranking?.items||[];
-  const canonical=allowed.length?values.map(value=>allowed.find(item=>item.toLowerCase()===value.toLowerCase())||value):values;
-  const duplicate=canonical.find((value,index)=>canonical.indexOf(value)!==index);
-  const invalid=allowed.length&&canonical.find(value=>!allowed.includes(value));
-  if(!duplicate&&!invalid) return true;
-  const badValue=duplicate||invalid;
-  const message=duplicate?`Each ranked item must appear once; “${duplicate}” is repeated.`:`“${invalid}” is not in this round's declared basket.`;
-  inputs.find(input=>input.value.trim().toLowerCase()===badValue.toLowerCase()).setCustomValidity(message);
-  return false;
-}
-function answerCardComplete(card){
-  if(card.querySelector('[data-unsupported]')) return false;
-  const fields=[...card.querySelectorAll('[data-answer-field]')];
-  if(!fields.length) return false;
-  const radios=fields.filter(input=>input.type==='radio');
-  if(radios.length&&!radios.some(input=>input.checked)) return false;
-  return fields.filter(input=>input.type!=='radio').every(input=>String(input.value).trim()!=='');
-}
-function renderHumanQuestionIndex(cards){
-  const panel=byId('human-question-index');
-  const answered=cards.filter(answerCardComplete).length;
-  panel.innerHTML=`<div class="question-index-head"><b>All questions</b><span>${answered} of ${cards.length} answered</span></div><div class="question-index-grid" role="navigation" aria-label="Jump to a Human Wisdom question">${cards.map((card,index)=>{
-    const complete=answerCardComplete(card);
-    const current=index===humanQuestionIndex;
-    const state=current?'current question':(complete?'answered':'unanswered');
-    return `<button class="question-index-button${complete?' answered':''}${current?' current':''}" type="button" data-question-index="${index}" aria-label="Question ${index+1}, ${state}"${current?' aria-current="step"':''}>${index+1}</button>`;
-  }).join('')}</div>`;
-}
-function updateHumanQuestionStep(focus=false){
-  const cards=[...byId('human-questionnaire').querySelectorAll('[data-answer-card]')];
-  const nav=byId('human-question-nav');
-  if(!cards.length){
-    nav.hidden=true;
-    byId('human-question-index').hidden=true;
-    byId('human-question-count').disabled=true;
-    byId('human-question-count').setAttribute('aria-expanded','false');
-    byId('human-submit').disabled=true;
-    return;
-  }
-  humanQuestionIndex=Math.min(Math.max(0,humanQuestionIndex),cards.length-1);
-  cards.forEach((card,index)=>{
-    const active=index===humanQuestionIndex;
-    card.hidden=!active;
-    card.setAttribute('aria-hidden',String(!active));
-  });
-  nav.hidden=false;
-  byId('human-question-count').disabled=false;
-  byId('human-previous').disabled=humanQuestionIndex===0;
-  byId('human-next').hidden=humanQuestionIndex===cards.length-1;
-  byId('human-step-status').textContent=humanQuestionIndex===cards.length-1
-    ?`Question ${humanQuestionIndex+1} of ${cards.length} · final question`
-    :`Question ${humanQuestionIndex+1} of ${cards.length}`;
-  byId('human-question-count').textContent=`${humanQuestionIndex+1} of ${cards.length} · All questions`;
-  renderHumanQuestionIndex(cards);
-  byId('human-submit').disabled=humanQuestionnaireMode!=='manual_form'||questionLoadState!=='ready'||humanQuestionIndex!==cards.length-1||Boolean(byId('human-questionnaire').querySelector('[data-unsupported]'));
-  if(focus) cards[humanQuestionIndex].querySelector('h4')?.focus();
-}
-function renderBoardPicker(){
-  document.querySelectorAll('[data-board]').forEach(button=>{
-    const active=button.dataset.board===selectedHumanBoard;
-    button.classList.toggle('on',active);
-    button.setAttribute('aria-selected',String(active));
-  });
-  document.querySelectorAll('[data-board-count]').forEach(label=>{
-    const count=openQuestions.filter(round=>boardForRound(round)===label.dataset.boardCount).length;
-    label.textContent=`${count} open`;
-  });
-  byId('human-board-title').textContent=boardTitles[selectedHumanBoard];
-}
-function renderQuestionnaire(track){
-  const container=byId(track+'-questionnaire');
-  const count=byId(track+'-question-count');
-  if(questionLoadState==='failed'){
-    count.textContent='unavailable';
-    container.innerHTML='<div class="question-state bad">Live questions could not be loaded. Refresh the page before submitting.</div>';
-    if(track==='human') updateHumanQuestionStep();
-    return;
-  }
-  if(questionLoadState==='loading') return;
-  const questions=questionsForTrack(track);
-  count.textContent=questions.length+' open';
-  if(!questions.length){
-    container.innerHTML=`<div class="question-state">No ${track==='human'?escapeHtml(boardTitles[selectedHumanBoard]):'Arena'} questions are currently open.</div>`;
-    if(track==='human') updateHumanQuestionStep();
-    return;
-  }
-  const agentDisabled=track==='agent'&&document.querySelector('input[name="delivery_method"]:checked')?.value!=='questionnaire_commitment';
-  container.innerHTML=questions.map((round,index)=>{
-    const type=normalizeTargetType(round.target_type);
-    const lock=new Date(round.lock_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-    return `<article class="question-card" data-answer-card data-round-id="${escapeHtml(round.round_id)}" data-target-type="${escapeHtml(type)}">
-      <div class="question-head"><span class="question-number">${index+1}</span><div><h4 tabindex="-1">${escapeHtml(round.question)}</h4><div class="question-meta"><span>${escapeHtml(round.round_id)}</span><span>Unit: ${escapeHtml(round.unit)}</span><span>Locks ${escapeHtml(lock)}</span><span class="question-type">${escapeHtml(typeLabels[type]||type)}</span></div>${contextForRound(round)}</div></div>
-      <div class="answer-preset">${answerPreset(track,round,index,agentDisabled)}</div>
-    </article>`;
-  }).join('');
-  if(track==='human'){
-    restoreHumanInputs();
-    updateHumanQuestionStep();
-  }
-}
-function syncQuestionnaireDisabled(track,disabled){
-  byId(track+'-questionnaire').querySelectorAll('input').forEach(input=>{input.disabled=disabled;});
-}
-function questionnaireReady(track){
-  const container=byId(track+'-questionnaire');
-  if(questionLoadState!=='ready'||!questionsForTrack(track).length||container.querySelector('[data-unsupported]')){
-    container.scrollIntoView({behavior:'smooth',block:'center'});
-    return false;
-  }
-  const cards=[...container.querySelectorAll('[data-answer-card]')];
-  for(const card of cards.filter(card=>card.dataset.targetType==='ranking_list')) if(!validateRankingCard(card)){
-    if(track==='human'){
-      humanQuestionIndex=cards.indexOf(card);
-      updateHumanQuestionStep(true);
-    }
-    card.querySelector(':invalid')?.reportValidity();
-    return false;
-  }
-  return true;
-}
-function collectAnswers(track){
-  return [...byId(track+'-questionnaire').querySelectorAll('[data-answer-card]')].map(card=>{
-    const type=card.dataset.targetType;
-    let response;
-    if(type==='continuous_normal') response=track==='human'
-      ?{value:Number(card.querySelector('[data-answer-field="value"]').value)}
-      :{mean:Number(card.querySelector('[data-answer-field="mean"]').value),sd:Number(card.querySelector('[data-answer-field="sd"]').value)};
-    if(type==='binary_probability') response=track==='human'
-      ?{choice:card.querySelector('[data-answer-field="choice"]:checked').value}
-      :{probability:Number(card.querySelector('[data-answer-field="probability"]').value)/100};
-    if(type==='multiple_choice') response={choice:card.querySelector('[data-answer-field="choice"]:checked').value};
-    if(type==='short_answer') response={text:card.querySelector('[data-answer-field="text"]').value.trim()};
-    if(type==='ranking_list'){
-      const round=openQuestions.find(item=>item.round_id===card.dataset.roundId);
-      const allowed=round?.ranking?.items||[];
-      response={ranking:[...card.querySelectorAll('[data-answer-field="ranking-item"]')].map(input=>{const value=input.value.trim();return allowed.find(item=>item.toLowerCase()===value.toLowerCase())||value;})};
-    }
-    if(type==='profile_energy') response=track==='human'
-      ?{profile:Object.fromEntries([...card.querySelectorAll('[data-profile-cell]')].map(cell=>[cell.dataset.profileCell,Number(cell.querySelector('[data-answer-field="profile-value"]').value)]))}
-      :{profile:Object.fromEntries([...card.querySelectorAll('[data-profile-cell]')].map(cell=>[cell.dataset.profileCell,{mean:Number(cell.querySelector('[data-answer-field="profile-mean"]').value),sd:Number(cell.querySelector('[data-answer-field="profile-sd"]').value)}]))};
-    return {round_id:card.dataset.roundId,target_type:type,response};
-  });
-}
-async function loadQuestions(){
-  try{
-    let questions;
-    try{
-      const response=await fetch('/api/v1/questionnaire',{cache:'no-store'});
-      if(!response.ok) throw new Error('manifest returned '+response.status);
-      const manifest=await response.json();
-      if(manifest.schema_version!=='ssa-questionnaire-manifest-v1'||!Array.isArray(manifest.questions)) throw new Error('invalid manifest');
-      questions=manifest.questions.map(round=>({...round,resolve:round.resolution_rule,baselines:round.latest_public_reference?{persistence:round.latest_public_reference}:null}));
-    }catch(manifestError){
-      const response=await fetch('data.json',{cache:'no-store'});
-      if(!response.ok) throw new Error('question data returned '+response.status);
-      const data=await response.json();
-      const now=Date.now();
-      questions=(data.rounds||[]).filter(round=>round.status==='open'&&Date.parse(round.deadline||round.lock_at)>now);
-    }
-    openQuestions=questions.sort((a,b)=>(a.deadline||a.lock_at).localeCompare(b.deadline||b.lock_at)||a.round_id.localeCompare(b.round_id));
-    if(!humanManifest.length) humanManifest=openQuestions.filter(round=>boardForRound(round)===selectedHumanBoard).map(round=>round.round_id);
-    else humanManifest=humanManifest.filter(roundId=>openQuestions.some(round=>round.round_id===roundId));
-    questionLoadState='ready';
-  }catch(error){
-    questionLoadState='failed';
-  }
-  renderBoardPicker();renderQuestionnaire('agent');renderQuestionnaire('human');
-  setMethod(document.querySelector('input[name="delivery_method"]:checked').value);
-  setHumanQuestionnaireMode(document.querySelector('input[name="human_questionnaire_mode"]:checked').value);
-}
-
-document.querySelectorAll('[data-board]').forEach(button=>button.addEventListener('click',()=>{
-  selectedHumanBoard=button.dataset.board;
-  humanManifest=openQuestions.filter(round=>boardForRound(round)===selectedHumanBoard).map(round=>round.round_id);
-  savedHumanDraft=null;
-  humanQuestionIndex=0;
-  renderBoardPicker();renderQuestionnaire('human');
-  byId('human-draft-status').textContent='Draft not saved.';
-  byId('human-draft-status').classList.remove('good');
-}));
-
-byId('human-previous').addEventListener('click',()=>{
-  if(humanQuestionIndex===0) return;
-  humanQuestionIndex-=1;
-  updateHumanQuestionStep(true);
-});
-byId('human-next').addEventListener('click',()=>{
-  const cards=[...byId('human-questionnaire').querySelectorAll('[data-answer-card]')];
-  if(!cards[humanQuestionIndex]) return;
-  humanQuestionIndex=Math.min(humanQuestionIndex+1,cards.length-1);
-  updateHumanQuestionStep(true);
-});
-byId('human-question-count').addEventListener('click',()=>{
-  const panel=byId('human-question-index');
-  const open=panel.hidden;
-  panel.hidden=!open;
-  byId('human-question-count').setAttribute('aria-expanded',String(open));
-});
-byId('human-question-index').addEventListener('click',event=>{
-  const button=event.target.closest('[data-question-index]');
-  if(!button) return;
-  humanQuestionIndex=Number(button.dataset.questionIndex);
-  byId('human-question-index').hidden=true;
-  byId('human-question-count').setAttribute('aria-expanded','false');
-  updateHumanQuestionStep(true);
-});
-byId('human-questionnaire').addEventListener('input',()=>renderHumanQuestionIndex([...byId('human-questionnaire').querySelectorAll('[data-answer-card]')]));
-byId('human-questionnaire').addEventListener('change',()=>renderHumanQuestionIndex([...byId('human-questionnaire').querySelectorAll('[data-answer-card]')]));
-
-byId('human-save').addEventListener('click',()=>{
-  const inputs=[...byId('human-questionnaire').querySelectorAll('input')].map(input=>({value:input.value,checked:input.checked}));
-  const draft={draft_version:3,board_id:selectedHumanBoard,round_manifest:[...humanManifest],current_question_index:humanQuestionIndex,username:byId('username').value.trim(),commitment_accepted:byId('human-commitment-accept').checked,publication_consent:byId('human-publication-consent').checked,inputs};
-  try{
-    localStorage.setItem(HUMAN_DRAFT_KEY,JSON.stringify(draft));
-    savedHumanDraft=draft;
-    byId('human-draft-status').textContent='Saved on this device. Email was not stored.';
-    byId('human-draft-status').classList.add('good');
-  }catch(error){
-    byId('human-draft-status').textContent='This browser blocked local draft storage.';
-    byId('human-draft-status').classList.remove('good');
-  }
-});
-
-const methodInputs=[...document.querySelectorAll('input[name="delivery_method"]')];
-const agentQuestionnaireInputs=[...document.querySelectorAll('input[name="agent_questionnaire_mode"]')];
-const humanQuestionnaireInputs=[...document.querySelectorAll('input[name="human_questionnaire_mode"]')];
-function setAgentQuestionnaireMode(mode){
-  agentQuestionnaireMode=mode==='arena_api'?'arena_api':'manual_form';
-  const programmatic=agentQuestionnaireMode==='arena_api';
-  const questionnaire=document.querySelector('input[name="delivery_method"]:checked')?.value==='questionnaire_commitment';
-  byId('agent-questionnaire-api').classList.toggle('on',programmatic);
-  byId('agent-questionnaire-manual').classList.toggle('on',!programmatic);
-  byId('agent-profile-fields').hidden=questionnaire&&programmatic;
-  byId('agent-browser-consent').hidden=questionnaire&&programmatic;
-  byId('agent-actions').hidden=questionnaire&&programmatic;
-  byId('commitment-accept').disabled=!questionnaire||programmatic;
-  syncQuestionnaireDisabled('agent',!questionnaire||programmatic);
-  byId('agent-submit').disabled=questionnaire&&!programmatic&&(questionLoadState!=='ready'||!openQuestions.length||Boolean(byId('agent-questionnaire').querySelector('[data-unsupported]')));
-}
-function setHumanQuestionnaireMode(mode){
-  humanQuestionnaireMode=mode==='arena_api'?'arena_api':'manual_form';
-  const programmatic=humanQuestionnaireMode==='arena_api';
-  byId('human-questionnaire-api').classList.toggle('on',programmatic);
-  byId('human-questionnaire-manual').classList.toggle('on',!programmatic);
-  byId('human-questionnaire-manual').querySelectorAll('input').forEach(input=>{input.disabled=programmatic;});
-  if(!programmatic) updateHumanQuestionStep();
-}
-function setMethod(method){
-  const api=method==='openai_compatible_api';
-  byId('method-api').classList.toggle('on',api); byId('method-questionnaire').classList.toggle('on',!api);
-  byId('api-url').disabled=!api; byId('api-key').disabled=!api; byId('api-test').disabled=!api;
-  agentQuestionnaireInputs.forEach(input=>{input.disabled=api;});
-  setAgentQuestionnaireMode(agentQuestionnaireInputs.find(input=>input.checked)?.value||'manual_form');
-}
-methodInputs.forEach(input=>input.addEventListener('change',()=>setMethod(input.value)));
-agentQuestionnaireInputs.forEach(input=>input.addEventListener('change',()=>setAgentQuestionnaireMode(input.value)));
-humanQuestionnaireInputs.forEach(input=>input.addEventListener('change',()=>setHumanQuestionnaireMode(input.value)));
-setMethod('openai_compatible_api');
-setHumanQuestionnaireMode('manual_form');
-
-function resetApiProbe(){
-  apiProbePassed=false;
-  byId('api-test-status').className='probe-status';
-  byId('api-test-status').textContent='Run the non-scored contract test before submitting.';
-}
-byId('api-url').addEventListener('input',resetApiProbe);
-byId('api-key').addEventListener('input',resetApiProbe);
+// --- the endpoint test: the same fixture the starter kit and the CLI use ----
 function chatCompletionUrl(value){
-  const url=new URL(value);
-  if(url.protocol!=='https:') throw new Error('URL must use HTTPS.');
-  url.pathname=url.pathname.replace(/\/$/,'');
-  if(!url.pathname.endsWith('/chat/completions')) url.pathname+='/chat/completions';
+  const url = new URL(value);
+  if (url.protocol !== 'https:') throw new Error('URL must use HTTPS.');
+  url.pathname = url.pathname.replace(/\/$/, '');
+  if (!url.pathname.endsWith('/chat/completions')) url.pathname += '/chat/completions';
   return url.toString();
 }
 function responseText(data){
-  return data?.choices?.[0]?.message?.content||data?.choices?.[0]?.text||data?.output?.choices?.[0]?.message?.content||data?.output?.text||data?.text;
+  return data?.choices?.[0]?.message?.content || data?.choices?.[0]?.text || data?.output?.choices?.[0]?.message?.content || data?.output?.text || data?.text;
 }
 function parseAgentContent(text){
-  const clean=String(text||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');
-  const body=JSON.parse(clean);
-  if(body.schema_version!=='ssa-agent-api-v1') throw new Error('Response must declare schema_version ssa-agent-api-v1.');
-  if(!Number.isFinite(body.forecast?.mean)||!Number.isFinite(body.forecast?.sd)||body.forecast.sd<=0) throw new Error('Test forecast must contain numeric mean and positive sd.');
+  const clean = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  const body = JSON.parse(clean);
+  if (body.schema_version !== 'ssa-agent-api-v1') throw new Error('Response must declare schema_version ssa-agent-api-v1.');
+  if (!Number.isFinite(body.forecast?.mean) || !Number.isFinite(body.forecast?.sd) || body.forecast.sd <= 0) throw new Error('Test forecast must contain numeric mean and positive sd.');
   return body;
 }
-byId('api-test').addEventListener('click',async()=>{
-  const urlInput=byId('api-url');
-  if(!urlInput.checkValidity()){ urlInput.reportValidity(); return; }
-  const button=byId('api-test');
-  const status=byId('api-test-status');
-  const controller=new AbortController();
-  const timeout=setTimeout(()=>controller.abort(),60000);
-  button.disabled=true;status.className='probe-status testing';status.textContent='Testing the endpoint…';
-  const fixture={schema_version:'ssa-agent-api-v1',request_id:'browser-contract-test',round:{round_id:'ssa-contract-test',board_id:'topline',target_type:'continuous_normal',question:'Non-scored contract test: return a normal forecast centered on 50.',unit:'points',lock_at:'2099-01-01T00:00:00Z',context:{persistence:50}},optional_crosstabs:[]};
-  try{
-    const headers={'Content-Type':'application/json'};
-    const key=byId('api-key').value;
-    if(key) headers.Authorization='Bearer '+key;
-    const response=await fetch(chatCompletionUrl(urlInput.value),{method:'POST',headers,body:JSON.stringify({model:'ssa-agent',messages:[{role:'user',content:JSON.stringify(fixture)}]}),signal:controller.signal});
-    if(response.status===401||response.status===403) throw new Error('Authentication failed.');
-    if(!response.ok) throw new Error(`Endpoint returned HTTP ${response.status}.`);
-    const data=await response.json();
-    parseAgentContent(responseText(data));
-    apiProbePassed=true;status.className='probe-status good';status.textContent='Connection passed. Production activation will repeat this test server-side.';
-  }catch(error){
-    apiProbePassed=false;status.className='probe-status bad';
-    status.textContent=error.name==='AbortError'?'Request timed out after 60 seconds.':`${error.message} Browser tests also require endpoint CORS.`;
-  }finally{
-    clearTimeout(timeout);button.disabled=false;
+const FIXTURE = {schema_version:'ssa-agent-api-v1', request_id:'browser-contract-test', round:{round_id:'ssa-contract-test', board_id:'topline', target_type:'continuous_normal', question:'Non-scored contract test: return a normal forecast centered on 50.', unit:'points', lock_at:'2099-01-01T00:00:00Z', context:{persistence:50}}, optional_crosstabs:[]};
+
+const results = [];
+function paintResults(){
+  const box = byId('test-results');
+  box.innerHTML = results.length ? results.map(r =>
+    '<div class="result '+r.state+'"><span class="ic">'+(r.state==='good'?'✓':r.state==='bad'?'✕':'…')+'</span><div><b>'+r.title+'</b><span>'+r.detail+'</span></div></div>').join('')
+    : '<div class="empty">Run a test to see results here.</div>';
+}
+function step(title, detail, state){ results.push({title, detail, state}); paintResults(); return results[results.length-1]; }
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+byId('api-test').addEventListener('click', async () => {
+  const urlInput = byId('api-url');
+  if (!urlInput.checkValidity()) { urlInput.reportValidity(); return; }
+  const button = byId('api-test'), status = byId('api-test-status');
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000);
+  results.length = 0; paintResults();
+  button.disabled = true; status.className = 'status testing'; status.textContent = 'Testing the endpoint…';
+  apiProbePassed = false; syncRegistration();
+  const started = performance.now();
+  try {
+    const target = chatCompletionUrl(urlInput.value);
+    step('HTTPS endpoint', esc(target), 'good');
+    const headers = {'Content-Type':'application/json'};
+    const key = byId('api-key').value;
+    if (key) headers.Authorization = 'Bearer ' + key;
+    const s2 = step('Transport', 'POST /chat/completions with the contract fixture'+(key?' and a Bearer token':'')+'…', 'wait');
+    const response = await fetch(target, {method:'POST', headers, body:JSON.stringify({model:'ssa-agent', messages:[{role:'user', content:JSON.stringify(FIXTURE)}]}), signal:controller.signal});
+    const ms = Math.round(performance.now() - started);
+    if (response.status === 401 || response.status === 403) throw new Error('Authentication failed (HTTP '+response.status+').');
+    if (!response.ok) throw new Error('Endpoint returned HTTP '+response.status+'.');
+    s2.state = 'good'; s2.detail = 'HTTP '+response.status+' in '+ms+' ms'; paintResults();
+    const data = await response.json();
+    const s3 = step('Response shape', 'choices[0].message.content is JSON declaring ssa-agent-api-v1…', 'wait');
+    const body = parseAgentContent(responseText(data));
+    s3.state = 'good'; s3.detail = 'forecast mean '+body.forecast.mean+', sd '+body.forecast.sd+(body.reasoning_trace?' · reasoning_trace present':''); paintResults();
+    apiProbePassed = true;
+    status.className = 'status good'; status.textContent = 'Passed. The server-side probe repeats this before your endpoint is called for real.';
+  } catch (error) {
+    const last = results[results.length-1];
+    if (last && last.state === 'wait') { last.state = 'bad'; last.detail = esc(error.message); }
+    else step('Failed', esc(error.message), 'bad');
+    if (error.name === 'AbortError') { last.detail = 'Request timed out after 60 seconds.'; }
+    else if (error instanceof TypeError) { step('Reachability', 'The browser could not complete the request. A browser test also needs CORS on your endpoint; the CLI probe does not: <code>python tools/probe_agent_api.py --base-url '+esc(urlInput.value)+'</code>', 'bad'); }
+    paintResults();
+    status.className = 'status bad'; status.textContent = 'Not passed.';
+  } finally {
+    clearTimeout(timeout); button.disabled = false; syncRegistration();
   }
 });
 
-function showPacket(kind,packet){
-  byId(kind+'-receipt').textContent='Review packet generated locally. Nothing was transmitted; API credentials are redacted.';
-  byId(kind+'-packet').textContent=JSON.stringify(packet,null,2);
-  const review=byId(kind+'-review');review.classList.add('on');review.scrollIntoView({behavior:'smooth',block:'nearest'});
+// --- the registration file, built here and opened as a pull request there --
+function registration(){
+  const id = byId('entrant-id').value.trim();
+  const type = (document.querySelector('input[name="entrant_type"]:checked') || {}).value || 'firm';
+  const reg = {entrant_id: id, name: byId('entrant-name').value.trim(), type, method: byId('entrant-method').value.trim()};
+  const contact = byId('entrant-contact').value.trim();
+  if (contact) reg.contact = contact;
+  let base = byId('api-url').value.trim();
+  try { const u = new URL(base); u.pathname = u.pathname.replace(/\/chat\/completions\/?$/, '').replace(/\/$/, ''); base = u.toString().replace(/\/$/, ''); } catch (e) {}
+  reg.route = {kind:'agent_api', base_url: base};
+  return reg;
 }
-function submissionKey(track,packet){
-  const serialized=JSON.stringify(packet);
-  if(submissionAttempts[track]?.serialized===serialized) return submissionAttempts[track].key;
-  const key=globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  submissionAttempts[track]={serialized,key};
-  return key;
+function syncRegistration(){
+  const reg = registration();
+  const json = JSON.stringify(reg, null, 2) + '\n';
+  byId('reg-filename').textContent = reg.entrant_id || '<entrant_id>';
+  byId('reg-json').textContent = json;
+  const idOk = /^[a-z0-9][a-z0-9_.-]{1,47}$/.test(reg.entrant_id);
+  const ready = apiProbePassed && idOk && reg.name && reg.method && /^https:\/\//.test(reg.route.base_url);
+  const open = byId('reg-open');
+  open.setAttribute('aria-disabled', ready ? 'false' : 'true');
+  open.href = ready ? REPO+'/new/dev?filename='+encodeURIComponent('entrants/'+reg.entrant_id+'.json')+'&value='+encodeURIComponent(json) : '#';
+  byId('reg-copy').disabled = !ready;
+  byId('reg-status').textContent = !apiProbePassed ? 'Pass the endpoint test to unlock registration.'
+    : !idOk ? 'Entrant id: lower-case letters, digits, . _ -, 2 to 48 characters.'
+    : !ready ? 'Fill in name and method.'
+    : 'Opens GitHub with the file prefilled; open it as a pull request against dev.';
 }
-async function transmitQuestionnaire(track,packet){
-  const review=byId(track+'-review');
-  const receipt=byId(track+'-receipt');
-  const output=byId(track+'-packet');
-  review.classList.add('on');receipt.className='receipt';receipt.textContent='Submitting to the Arena private intake…';output.textContent='';
-  review.scrollIntoView({behavior:'smooth',block:'nearest'});
-  try{
-    const response=await fetch('/api/v1/questionnaire-submissions',{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':submissionKey(track,packet)},body:JSON.stringify({track,submission:packet})});
-    const body=await response.json().catch(()=>({error:{message:`The server returned HTTP ${response.status}.`}}));
-    if(!response.ok){const error=new Error(body.error?.message||`Submission failed with HTTP ${response.status}.`);error.status=response.status;error.details=body.error?.details||[];throw error;}
-    receipt.textContent=`Accepted into private review as ${body.submission_id}. Save the receipt hash below; publication consent will be applied only if the submission is accepted.`;
-    output.textContent=JSON.stringify(body,null,2);
-    if(track==='human') try{localStorage.removeItem(HUMAN_DRAFT_KEY);}catch(error){}
-  }catch(error){
-    receipt.className='receipt bad';
-    receipt.textContent=error.status===503?`Storage did not accept this submission: ${error.message} Press Submit again; an unchanged submission cannot be entered twice.`:`Submission was not accepted: ${error.message}`;
-    output.textContent=error.details?.length?JSON.stringify({details:error.details},null,2):'';
-  }
-}
-byId('agent-form').addEventListener('submit',async event=>{
-  event.preventDefault();
-  if(!selectValue.value){ picker.classList.add('invalid'); trigger.classList.add('invalid'); trigger.setAttribute('aria-invalid','true'); trigger.focus(); return; }
-  const method=methodInputs.find(input=>input.checked).value;
-  if(method==='questionnaire_commitment'&&agentQuestionnaireMode==='arena_api') return;
-  if(method==='questionnaire_commitment'&&!questionnaireReady('agent')) return;
-  if(method==='openai_compatible_api'&&!apiProbePassed){ byId('api-test-status').className='probe-status bad';byId('api-test-status').textContent='Pass the connection test before submitting.';byId('api-test').focus();return; }
-  if(!event.currentTarget.checkValidity()){ event.currentTarget.reportValidity(); return; }
-  const packet={
-    participant_type:selectValue.value,organization_name:byId('organization-name').value.trim(),product_name:byId('product-name').value.trim(),
-    contact:{name:byId('contact-name').value.trim(),email:byId('contact-email').value.trim()},
-    publication_consent:{accepted:byId('agent-publication-consent').checked,fields:['organization_name','product_name'],terms_version:'ssa-publication-v1'},
-    delivery:method==='openai_compatible_api'
-      ?{method,endpoint:byId('api-url').value.trim(),credential_supplied:Boolean(byId('api-key').value),contract_version:'ssa-agent-api-v1',probe_status:'passed'}
-      :{method,answers:collectAnswers('agent'),commitment:{accepted:true,terms_version:'ssa-participant-v1'}}
-  };
-  if(method==='questionnaire_commitment') await transmitQuestionnaire('agent',packet);
-  else showPacket('agent',packet);
+for (const id of ['api-url','entrant-id','entrant-name','entrant-contact','entrant-method']) byId(id).addEventListener('input', syncRegistration);
+for (const r of document.querySelectorAll('input[name="entrant_type"]')) r.addEventListener('change', syncRegistration);
+byId('reg-copy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(byId('reg-json').textContent); byId('reg-status').textContent = 'Copied.'; } catch (e) { byId('reg-status').textContent = 'Copy failed; select the text above.'; }
 });
-byId('human-form').addEventListener('submit',async event=>{
-  event.preventDefault();
-  if(humanQuestionnaireMode==='arena_api') return;
-  const cards=[...byId('human-questionnaire').querySelectorAll('[data-answer-card]')];
-  const incomplete=cards.findIndex(card=>!answerCardComplete(card));
-  if(incomplete>=0){
-    humanQuestionIndex=incomplete;
-    updateHumanQuestionStep(true);
-    byId('human-step-status').textContent=`Question ${incomplete+1} of ${cards.length} · answer required before submission`;
-    cards[incomplete].querySelector(':invalid')?.reportValidity();
-    return;
-  }
-  if(!questionnaireReady('human')) return; if(!event.currentTarget.checkValidity()){ event.currentTarget.reportValidity(); return; }
-  const packet={submission_version:1,board_id:selectedHumanBoard,round_manifest:[...humanManifest],username:byId('username').value.trim(),contact_email:byId('human-email').value.trim(),answers:collectAnswers('human'),commitment:{accepted:true,terms_version:'ssa-participant-v1'},publication_consent:{accepted:byId('human-publication-consent').checked,field:'username',terms_version:'ssa-publication-v1'}};
-  await transmitQuestionnaire('human',packet);
-});
-
-activateTrack(location.hash.slice(1));
-loadQuestions();
+byId('agent-form').addEventListener('submit', e => e.preventDefault());
+syncRegistration();
 </script>
 </body>
 </html>

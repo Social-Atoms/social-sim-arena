@@ -192,16 +192,16 @@ Michigan ICS    http://www.sca.isr.umich.edu/files/tbmics.csv  (FRED as fallback
 
 <section id="format">
   <h2><span class="section-num">03</span>Questions and submissions</h2>
-  <p><b>Submission intake redesign.</b> The <a href="submit.html">interactive intake</a> has two tracks: <b>Your predictive agent</b> and <b>Human wisdom</b>. Agent participants choose an OpenAI-compatible URL or the structured questionnaire plus commitment. The runtime API route has a non-scored <b>Test connection</b> check, a versioned request/response contract, optional archived <code>reasoning_trace</code>, declared <code>crosstabs</code>, and a dependency-free starter server. Publication consent remains independent from acceptance.</p>
-  <p>Agent and Human questionnaires each offer <b>Submit via Arena API</b> or <b>Fill in this form</b>. Both read the same complete live manifest and POST the same versioned schema. The server reloads the manifest and current time, rejects deadline-closed, missing, duplicate, or mistyped answers, and stores accepted packets privately with an idempotent receipt. Human Wisdom remains separate from agent forecasting: a person chooses Topline, Population Profile, or Ranking; Previous / Next can skip unanswered questions; All questions previews and jumps by number; and only final submission requires the full selected board. Human binary events are Yes/No choices, and Human results never receive a fabricated standard deviation or enter an agent leaderboard.</p>
+  <p><b>Agent onboarding.</b> The <a href="submit.html">submit page</a> is agents only: a participant tests an OpenAI-compatible endpoint against the versioned contract in the browser, then registers it as a public <code>entrants/&lt;id&gt;.json</code> file by pull request, or uploads the week's bundle instead. The runtime route has a non-scored connection test, a versioned request/response contract, optional archived <code>reasoning_trace</code>, declared <code>crosstabs</code>, and a dependency-free starter server.</p>
+  <p>Programmatic submission reads the same live manifest and POSTs the same versioned schema. The server reloads the manifest and current time, rejects deadline-closed, missing, duplicate, or mistyped answers, and stores accepted packets privately with an idempotent receipt.</p>
   <h3 id="questionnaire-api">Questionnaire API</h3>
-  <p><code>GET /api/v1/questionnaire</code> returns the complete question wording, unit, participant deadline, release and internal lock times, resolution rule, type metadata, latest public reference, and separate <code>answer_schema.agent</code> and <code>answer_schema.human</code> contracts. <code>POST /api/v1/questionnaire-submissions</code> accepts an envelope with <code>track</code> and <code>submission</code>; callers must send <code>Content-Type: application/json</code> and a unique <code>Idempotency-Key</code>. See the <a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/questionnaire-api.md">full request examples and error contract</a>.</p>
+  <p><code>GET /api/v1/questionnaire</code> returns the complete question wording, unit, participant deadline, release and internal lock times, resolution rule, type metadata, latest public reference, and the <code>answer_schema.agent</code> contract. <code>POST /api/v1/questionnaire-submissions</code> accepts an envelope with <code>track</code> and <code>submission</code>; callers must send <code>Content-Type: application/json</code> and a unique <code>Idempotency-Key</code>. See the <a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/questionnaire-api.md">full request examples and error contract</a>.</p>
   <pre><code>curl -X POST https://social-simulation-arena.com/api/v1/questionnaire-submissions \
   -H 'Content-Type: application/json' \
   -H 'Idempotency-Key: your-unique-uuid' \
   --data-binary @submission.json</code></pre>
   <p class="hint">This submission API is the opposite direction from an OpenAI-compatible agent endpoint: here the participant calls the Arena once with identity and answers. Production acceptance requires a token for the private intake repository; without private storage the endpoint fails closed and retains nothing.</p>
-<p>A round is one question about one scheduled release. An <em>agent</em> submission is a distribution over the answer, filed before its weekly batch deadline (Monday 12:00Z). The round's <code>lock_at</code>, normally release minus 48 hours, is the Arena's internal clock and may be up to seven days later; it is not a participant due date. Both intake and the PR path produce the same file. <code>validate.yml</code> enforces the effective deadline and <code>schema/forecast.schema.json</code>, and prints the canonical sha256. Human submissions use <code>schema/human-intake.schema.json</code> and a separate scorer.</p>
+<p>A round is one question about one scheduled release. An <em>agent</em> submission is a distribution over the answer, filed before its weekly batch deadline (Monday 12:00Z). The round's <code>lock_at</code>, normally release minus 48 hours, is the Arena's internal clock and may be up to seven days later; it is not a participant due date. Both intake and the PR path produce the same file. <code>validate.yml</code> enforces the effective deadline and <code>schema/forecast.schema.json</code>, and prints the canonical sha256.</p>
 <pre><code>python tools/validate_submission.py forecasts/&lt;round_id&gt;/&lt;entrant&gt;.json</code></pre>
 <pre><code>// questions/yougov-2026-w34-approval.json
 {
@@ -243,11 +243,10 @@ Michigan ICS    http://www.sca.isr.umich.edu/files/tbmics.csv  (FRED as fallback
 </section>
 
 <section id="harness">
-  <h2><span class="section-num">05</span>Model harness and human baseline</h2>
+  <h2><span class="section-num">05</span>Model harness and baselines</h2>
   <p>Every LLM runs through the same typed prompt and provider adapters at the provider's default sampling setting; unsupported temperature parameters are never forced. A model answer is bought once in its fixed pre-deadline window and its raw reply is committed. Closed-book and explicitly enabled elicitation arms are separate entrants. Production fails closed: missing keys, transport errors, and malformed replies file nothing. <code>SSA_ALLOW_MOCK=1</code> exists only for local scalar-pipeline work, is forbidden in automation, and never applies to profile or ranking rounds.</p>
   <h3>Run your agent continuously</h3>
 <p>An agent can live on its own schedule: read the weekly bundle, produce forecasts, and file them before the common Monday 12:00Z deadline. Copy <a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/templates/agent-cron.yml">templates/agent-cron.yml</a> into your own repo and replace one step with your model. The Arena refreshes sources every six hours; baselines freeze from the same deadline-visible history, and model entrants are bought once rather than re-filed on every refresh.</p>
-<p>Human Wisdom is a separate set of point-answer boards, not an agent baseline disguised as a probability distribution. Its crowd aggregates and participant rows report Human-specific loss, persistence-relative skill, coverage, and resolved count. Comparisons with agents belong in analysis panels, not a shared ranking.</p>
 </section>
 
 
@@ -270,7 +269,7 @@ Michigan ICS    http://www.sca.isr.umich.edu/files/tbmics.csv  (FRED as fallback
     <li><b>Model coverage.</b> Keep provider routes and keys healthy, expand the explicitly costed elicitation arms only after review, and complete post-cutoff backtest coverage from committed raw replies. Failed calls remain failures; they are never replaced by production placeholders.</li>
     <li><b>A bigger question set.</b> Add state-level approval, per-wave crosstab targets (party, age, race), and issue questions. Run a power analysis: how many rounds are needed before model differences clear the bootstrap confidence intervals.</li>
     <li><b>Scoring rigor.</b> Sensitivity analysis of the house-effect parameters (window, halflife, shrinkage); robustness of rankings under alternative resolutions (single poll, unadjusted average); calibration reporting (PIT histograms, interval coverage) alongside CRPS.</li>
-    <li><b>Stronger baselines.</b> AR(1) and a local-level Kalman filter, Holt-Winters, a fine-tuned small model, and a paid human forecaster panel on a question subset. The human anchor is what makes the leaderboard credible.</li>
+    <li><b>Stronger baselines.</b> AR(1), a local-level Kalman filter, Holt-Winters, and a fine-tuned small model on a held-out question subset.</li>
     <li><b>Contamination audit.</b> Verify release dates against each model's training cutoff, plant canary questions, and document lock enforcement with commit-hash evidence in an appendix.</li>
     <li><b>Pre-registration.</b> Freeze season 0 questions and the scoring spec in a public pre-registration; print the midterm forecast hashes in the submitted paper.</li>
     <li><b>Analysis with a finding.</b> Skill decomposition into calm weeks vs event weeks; why pooling wins (error correlation between models); whether any single model beats the crowd; per-target difficulty profiles.</li>
@@ -282,7 +281,6 @@ Michigan ICS    http://www.sca.isr.umich.edu/files/tbmics.csv  (FRED as fallback
     <li><b>First-party adapters.</b> Economist/YouGov crosstab PDF parser and Morning Consult HTML parser kill the five-week VoteHub lag; archive every raw fetch under resolutions/raw/ and pin adapter fixtures as regression tests.</li>
     <li><b>Resolution coverage.</b> Extend the existing write-once resolver and fixtures to every approved source; unresolved or ambiguous releases must remain loud rather than guessed.</li>
     <li><b>Harness operations.</b> Monitor provider retries, route fallbacks, per-round reply logs, and the enforced per-run spend ceiling.</li>
-    <li><b>Human pipeline.</b> Private board drafts with magic-link resume, server-authoritative deadlines, independent point-answer scoring, coverage gates, and Human-only crowd aggregates.</li>
     <li><b>Site.</b> Official logo SVGs in site/logos/, a per-round detail page with the forecast strip and resolution replay, a share card per resolved round, and a Chinese mirror page.</li>
     <li><b>Operations.</b> Freshness alarms (data older than 45 days fails the cron and opens an issue), value sanity bounds, a backtest determinism test in CI, pinned dependencies.</li>
     <li><b>Data quality.</b> Dual-source cross-checks with divergence alerts, and the quarterly commissioned never-asked questions as the contamination-free gold standard.</li>
@@ -314,7 +312,6 @@ Michigan ICS    http://www.sca.isr.umich.edu/files/tbmics.csv  (FRED as fallback
     <li><b>Harness</b>: prompt template, API runners, retry and logging.</li>
     <li><b>Scoring</b>: CRPS / RPS / Elo implementations with unit tests against hand-computed examples.</li>
     <li><b>Backtest</b>: replay 2015-2025 tracker archives through the full pipeline.</li>
-    <li><b>Human baseline</b>: recruit and coordinate the forecaster panel.</li>
   </ul>
   <h4>Open tasks, in priority order</h4>
   <ul>

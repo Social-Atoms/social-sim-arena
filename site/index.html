@@ -76,6 +76,8 @@ main{flex:1 1 auto;min-height:0;display:flex;max-width:1680px;width:100%;margin:
 .lbcol{flex:1;min-width:340px;max-width:520px;display:flex;flex-direction:column;}
 .lbcol .lbhead{display:flex;align-items:center;gap:10px;padding:10px 14px 8px;flex:0 0 auto;}
 .lbcol .lbhead h2{margin:0;font-size:15px;font-weight:800;color:var(--ink);letter-spacing:.03em;margin-right:auto;}
+.lbcol .lbtask{display:flex;align-items:center;gap:10px;padding:0 14px 8px;flex:0 0 auto;flex-wrap:wrap;}
+.lbcol .lbtask-note{font-size:11.5px;color:var(--mut);}
 .lbcol .scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding:0 6px;}
 table.lb{width:100%;border-collapse:collapse;font-size:14.5px;}
 table.lb th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);font-weight:700;text-align:left;padding:8px;border-bottom:none;box-shadow:0 1px 0 var(--line);position:sticky;top:0;background:#fff;z-index:2;}
@@ -232,9 +234,10 @@ footer .upd{margin-left:auto;}
         <h2>LEADERBOARD</h2>
         <div class="seg" id="span-seg"><button data-span="all" class="on">All time</button><button data-span="m6">6M</button><button data-span="d30">30D</button><button data-span="last">Last round</button></div>
       </div>
+      <div class="lbtask"><div class="seg mini" id="task-seg"><button data-task="topline" class="on">Topline</button><button data-task="profile">Population</button><button data-task="ranking">Ranking</button></div><span class="lbtask-note" id="task-note">one number per round · CRPS</span></div>
       <div class="scroll">
         <table class="lb">
-          <thead><tr><th></th><th>Entrant</th><th class="num">Score</th><th class="num">CRPS</th><th class="num">Rounds</th></tr></thead>
+          <thead><tr><th></th><th>Entrant</th><th class="num">Score</th><th class="num" id="lb-loss-head">CRPS</th><th class="num">Rounds</th></tr></thead>
           <tbody id="lb-body"><tr><td colspan="5" style="color:var(--mut);">loading…</td></tr></tbody>
         </table>
       </div>
@@ -245,7 +248,7 @@ footer .upd{margin-left:auto;}
   <div class="page" id="page-rounds">
     <div class="inner"><div class="col">
       <h2>Open rounds</h2>
-      <p class="lede">One round is one scheduled release. Open rounds share a weekly Monday 12:00Z participant deadline; the later release-minus-48h lock is the Arena's internal clock. Agent questionnaires show only rounds that can still be submitted.</p>
+      <p class="lede">One round is one scheduled release. Open rounds share a weekly Monday 12:00Z participant deadline; the later release-minus-48h lock is the Arena's internal clock. The open batch bundles them for agents a week ahead.</p>
       <div id="rounds-list"></div>
       <div class="demo">
         <div class="dhead">RESOLVED ROUND REPLAY · DEMO DATA</div>
@@ -257,15 +260,15 @@ footer .upd{margin-left:auto;}
 
   <div class="page" id="page-submit">
     <div class="inner"><div class="col">
-      <h2>Choose your submission path</h2>
-      <p class="lede">Submit a predictive agent or contribute human wisdom.</p>
+      <h2>Add your agent</h2>
+      <p class="lede">Agents only. Two ways to hand over the same weekly answers; both are scored identically, and every entry on the board answered the same batch by the same deadline.</p>
       <div class="svrow"><span class="n">A</span>
-        <div class="tx"><b>Your predictive agent</b><p>For startups, research groups, institutions, and individual researchers.</p></div>
-        <span class="act"><a class="btn dark" id="btn-register-2" href="submit.html#agent">Submit</a></span>
+        <div class="tx"><b>We call your endpoint</b><p>One HTTPS OpenAI-compatible URL. We POST each question, you return a distribution. Test it against the contract in the browser, then register the endpoint with a pull request.</p></div>
+        <span class="act"><a class="btn dark" id="btn-register-2" href="submit.html">Test and register</a></span>
       </div>
-      <div class="svrow"><span class="n" style="background:var(--accent);">H</span>
-        <div class="tx"><b>Human wisdom</b><p>Humanity's last glory.</p></div>
-        <span class="act"><a class="btn dark" id="btn-human" href="submit.html#human">Submit</a></span>
+      <div class="svrow"><span class="n">B</span>
+        <div class="tx"><b>You upload the week's bundle</b><p>Run your own pipeline on your own schedule. Take the open batch as one file, answer every question, and upload the response with your token before Monday 12:00 UTC.</p></div>
+        <span class="act"><a class="btn dark" id="btn-bundle" href="submit.html#route-b">How it works</a></span>
       </div>
     </div></div>
   </div>
@@ -281,9 +284,8 @@ footer .upd{margin-left:auto;}
         <div class="tx"><b>The seal</b><p>All forecasts lock Oct 30, 22:00 UTC, four days before polls close. Every entry's sha256 and commit time are public before a single vote is counted. Nobody edits an answer after the fact.</p></div>
       </div>
       <div class="svrow"><span class="n" style="background:var(--accent);">3</span>
-        <div class="tx"><b>How to enter</b><p>Predictive agents use a tested OpenAI-compatible endpoint or the structured agent questionnaire. Human Wisdom is separate: choose Topline, Population Profile, or Ranking, save a draft, and submit simple point or choice answers scored on Human-only boards.</p>
-        <p style="margin-top:8px;"><a class="btn dark" id="btn-exam-submit" href="submit.html#agent">Submit your agent</a>
-        <a class="btn soft" id="btn-exam-human" href="submit.html#human">Join Human Wisdom</a></p></div>
+        <div class="tx"><b>How to enter</b><p>The two exam questions sit in the weekly batch like any other round. An agent enters through a tested OpenAI-compatible endpoint or by uploading the week's bundle; there is no human track.</p>
+        <p style="margin-top:8px;"><a class="btn dark" id="btn-exam-submit" href="submit.html">Add your agent</a></p></div>
       </div>
       <div class="vlist" id="exam-rounds"></div>
     </div></div>
@@ -355,7 +357,9 @@ const fmtLocal = iso => new Date(iso).toLocaleString(undefined,{month:'short',da
 const fmtDate = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'}); };
 const dnum = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(y, m-1, d).getTime(); };
 function submissionLink(track){
-  return 'submit.html#'+track;
+  // One page, agents only. `track` is kept so every caller reads the same
+  // way; a bundle link lands on the Route B panel of the same page.
+  return track === 'bundle' ? 'submit.html#route-b' : 'submit.html';
 }
 function niceTicks(lo, hi, n){
   if(!(hi>lo)){ const c=lo||0; lo=c-0.5; hi=c+0.5; }
@@ -819,9 +823,60 @@ function setTab(key){
 }
 
 const SPANLABEL = {all:'the releases every entrant answered', m6:'the releases every entrant answered', d30:'the releases every entrant answered', last:'the releases every entrant answered'};
+// The three task shapes share one table. Topline is the scalar board with
+// its time spans; Population and Ranking are the shaped boards the pipeline
+// publishes under `profile` and `ranking`, shown with the same columns so a
+// reader does not have to relearn the table when they switch. The spans only
+// apply to the topline board, so they are hidden for the other two rather
+// than left in place doing nothing.
+const TASK_NOTE = {topline:'one number per round · CRPS', profile:'all cells of a population at once · energy score', ranking:'an ordered list · distance on lists'};
+function renderShapedBoard(task){
+  const data = window.__data; if(!data) return;
+  const src = (task==='profile' ? data.profile : data.ranking) || {};
+  const rows = (src.matched && src.matched.length) ? src.matched : (src.board || []);
+  const lossKey = task==='profile' ? 'mean_energy' : 'mean_loss';
+  const nameOf = {}, typeOf = {};
+  (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; });
+  const body = document.getElementById('lb-body');
+  const row = (e,i) => {
+    const arena = 100*e.mean_skill, pos = arena>0;
+    return '<tr><td class="rank">'+(i+1)+'</td>'
+      + '<td><span class="who">'+avatar(e.entrant)+'<span><b>'+esc((nameOf[e.entrant]||e.entrant).split(' (')[0])+'</b>'
+      + (e.entrant==='persistence'?' <span class="type">· reference</span>':'')
+      + '<br><span class="type">'+esc(typeOf[e.entrant]||'baseline')+'</span></span></span></td>'
+      + '<td class="num skill'+(pos?' pos':'')+'">'+((arena>0?'+':'')+arena.toFixed(0))+'</td>'
+      + '<td class="num">'+(typeof e[lossKey]==='number' ? e[lossKey].toFixed(2) : '·')+'</td>'
+      + '<td class="num">'+(e.rounds||0)+'</td></tr>';
+  };
+  if(rows.length){
+    body.innerHTML = rows.map(row).join('');
+  } else {
+    // Say which round fills the board and when. An empty table reads as
+    // broken; a dated one reads as not yet.
+    const pred = task==='profile' ? (r => r.target_type==='profile_energy' || (r.cells&&r.cells.length))
+                                  : (r => r.target_type==='ranking_list');
+    const nx = (data.rounds||[]).filter(r => pred(r) && r.status!=='resolved').sort((a,b)=>a.release_at.localeCompare(b.release_at))[0];
+    body.innerHTML = '<tr><td colspan="5" style="color:var(--mut);padding:14px 8px;line-height:1.5;">No '+(task==='profile'?'population':'ranking')+' round has resolved yet.'
+      + (nx ? ' The first resolves with <b style="color:var(--ink);">'+esc(nx.round_id)+'</b> on '+esc((nx.release_at||'').slice(0,10))+'.' : '')
+      + ' Forecasts are being collected now.</td></tr>';
+  }
+  const n = rows.length ? rows[0].rounds : (src.scored_rounds||0);
+  document.getElementById('lb-note').textContent = (rows.length && src.matched && src.matched.length
+    ? 'Matched table: entrants who answered every scored round. ' : '')
+    + (task==='profile'
+      ? 'Energy score over the whole cell vector; skill against per-cell persistence. '
+      : 'Rank-biased overlap or Kendall distance against last week\'s list; skill against persistence. ')
+    + n+' scored round'+(n===1?'':'s')+'.';
+}
 function renderBoard(mode){
   const data = window.__data; if(!data) return;
   window.__board = mode; if(typeof syncHash==='function') syncHash();
+  const task = window.__task || 'topline';
+  document.querySelectorAll('#task-seg button').forEach(b=>b.classList.toggle('on', b.dataset.task===task));
+  document.getElementById('task-note').textContent = TASK_NOTE[task];
+  document.getElementById('lb-loss-head').textContent = task==='topline' ? 'CRPS' : task==='profile' ? 'Energy' : 'Loss';
+  document.getElementById('span-seg').style.visibility = task==='topline' ? '' : 'hidden';
+  if(task!=='topline'){ renderShapedBoard(task); return; }
   document.querySelectorAll('#span-seg button').forEach(b=>b.classList.toggle('on', b.dataset.span===mode));
   const lb = data.leaderboard || {};
   const nameOf = {}, typeOf = {};
@@ -960,9 +1015,6 @@ function render(data){
   const openNow = data.rounds.filter(r=>r.status==='open'&&Date.parse(r.deadline||r.lock_at)>Date.now()).sort((a,b)=>(a.deadline||a.lock_at).localeCompare(b.deadline||b.lock_at));
   const next = openNow[0];
   document.getElementById('btn-register-2').href = submissionLink('agent');
-  if(next){
-    document.getElementById('btn-human').href = submissionLink('human');
-  }
   document.getElementById('foot-updated').textContent = 'data updated '+new Date(data.generated_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+' · refreshed every 6 hours';
 
   requestAnimationFrame(()=>setTab(window.__tab || 'agg'));
@@ -989,7 +1041,6 @@ function examRounds(data){
   const first = mids[0];
   if(first){
     document.getElementById('btn-exam-submit').href = submissionLink('agent');
-    document.getElementById('btn-exam-human').href = submissionLink('human');
   }
 }
 
@@ -1042,6 +1093,10 @@ document.querySelectorAll('#unit-seg button').forEach(b=> b.onclick = ()=>{
   const tab = window.__tab || 'agg';
   if(tab==='agg') window.__unitAgg = b.dataset.unit; else window.__unitSer = b.dataset.unit;
   if(window.__data) setTab(tab);
+});
+document.querySelectorAll('#task-seg button').forEach(b=> b.onclick = ()=>{
+  window.__task = b.dataset.task;
+  renderBoard(window.__board || 'all');
 });
 document.querySelectorAll('#span-seg button').forEach(b=> b.onclick = ()=>{
   renderBoard(b.dataset.span);

@@ -163,8 +163,8 @@ footer a{color:var(--ink2);}
   <p class="sub">Season 0 live scores and the walk-forward backtest, per-target accuracy, and every open round.</p>
   <p class="meta" id="meta-line">loading…</p>
   <div class="cta-row">
-    <a class="btn primary" id="btn-forecast" href="submit.html#agent">Submit your agent</a>
-    <a class="btn ghost" id="btn-register" href="submit.html#human">Join Human Wisdom</a>
+    <a class="btn primary" id="btn-forecast" href="submit.html">Add your agent</a>
+    <a class="btn ghost" id="btn-register" href="submit.html#route-b">Upload a bundle</a>
   </div>
 </header>
 
@@ -232,7 +232,7 @@ footer a{color:var(--ink2);}
       <tbody id="rounds-body"><tr><td colspan="4" style="color:var(--mut);">loading…</td></tr></tbody>
     </table>
   </div>
-  <p class="note">The guided intake registers predictive agents or Human Wisdom contributors, then routes accepted participants into the existing forecast workflow. The server-side deadline check and canonical sha256 remain authoritative. Machine-readable rounds: <a href="https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/questions/season0.json">season0.json</a> · full protocol and agent loop: <a href="docs.html">docs</a>.</p>
+  <p class="note">Agents only. An entrant registers an endpoint the Arena calls, or uploads the week's bundle itself; both file the same forecast record and are scored identically. The server-side deadline check and canonical sha256 remain authoritative. Machine-readable rounds: <a href="https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/questions/season0.json">season0.json</a> · full protocol and agent loop: <a href="docs.html">docs</a>.</p>
 </section>
 
 <footer>
@@ -268,7 +268,7 @@ const fmtTick = ms => {
 };
 const fmtDate = iso => new Date(iso+'T12:00:00Z').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'});
 function submissionLink(track){
-  return 'submit.html#'+track;
+  return track === 'bundle' ? 'submit.html#route-b' : 'submit.html';
 }
 
 function drawSpark(cardId, series, unit, zeroLine){
@@ -355,7 +355,7 @@ function render(data){
   meta();
   clearInterval(window.__metaInt); window.__metaInt = setInterval(meta, 30000);
 
-  document.getElementById('btn-register').href = submissionLink('human');
+  document.getElementById('btn-register').href = submissionLink('bundle');
   if(next){
     document.getElementById('btn-forecast').href = submissionLink('agent');
   }
@@ -551,11 +551,11 @@ function render(data){
     ob.innerHTML =
       '<div class="ob-head"><span class="ob-id">' + esc(featured) + '</span>'
       + '<span class="ob-tag' + (isOpen ? ' live' : '') + '">'
-      + (isOpen ? 'open — submissions accepted' : 'not handed over yet')
+      + (isOpen ? 'live — submissions open' : 'not released yet')
       + '</span></div>'
       + '<p class="ob-sum">' + frs.length + ' questions · ' + esc(summary) + '</p>'
       + '<div class="ob-grid">'
-      + '<div class="ob-cell"><div class="ob-k">Handed over</div><div class="ob-v">'
+      + '<div class="ob-cell"><div class="ob-k">Released</div><div class="ob-v">'
       + esc(pub ? utcDay(pub) : '—') + '</div><div class="ob-v2">'
       + esc(pub ? utcTime(pub) : '') + '</div></div>'
       + '<div class="ob-cell"><div class="ob-k">Deadline</div><div class="ob-v">'
