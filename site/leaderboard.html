@@ -22,6 +22,47 @@ details.result>summary:hover{color:var(--ink);}
 .result-in table{font-size:11.5px;}
 .result-in td,.result-in th{padding:2px 8px 2px 0;border:0;}
 
+/* The open batch, and what is in it. A visitor's first question is "what is
+   being asked right now, and by when" -- which the calendar table answered
+   only by being read row by row. */
+h3.sub{margin:24px 0 8px;font-size:13px;font-weight:650;color:var(--ink);letter-spacing:-.005em;}
+.openb{padding:20px 22px 0;overflow:hidden;}
+.ob-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:11px;}
+.ob-id{font-size:19px;font-weight:650;color:var(--ink);letter-spacing:-.022em;}
+.ob-tag{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;border-radius:999px;padding:2px 10px;border:1px solid var(--line);color:var(--mut);white-space:nowrap;}
+.ob-tag.live{border-color:var(--ink);color:var(--ink);}
+.ob-tag.live:before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ink);margin-right:6px;vertical-align:1px;animation:pulse 2.4s infinite;}
+.ob-sum{font-size:13px;color:var(--mut);margin:5px 0 16px;}
+.ob-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--grid);border-top:1px solid var(--grid);margin:0 -22px;}
+.ob-cell{background:#fff;padding:13px 22px 15px;}
+.ob-k{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);font-weight:600;margin-bottom:4px;}
+.ob-v{font-size:15px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.35;}
+.ob-v2{font-size:11.5px;color:var(--mut);font-variant-numeric:tabular-nums;}
+.ob-cell.now .ob-v{font-size:20px;letter-spacing:-.02em;}
+
+.facets{display:grid;grid-template-columns:1.35fr 1fr 1fr 1fr;gap:1px;background:var(--grid);overflow:hidden;}
+.fc{background:#fff;padding:15px 18px 17px;min-width:0;}
+.fc h4{margin:0 0 11px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);font-weight:600;}
+.frow{display:flex;align-items:center;gap:9px;margin-bottom:8px;}
+.frow:last-child{margin-bottom:0;}
+.fname{flex:0 0 82px;width:82px;font-size:11.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fbar{flex:1 1 auto;min-width:10px;height:5px;border-radius:999px;background:var(--grid);}
+.fbar i{display:block;height:5px;border-radius:999px;background:var(--s1);}
+.fn{flex:0 0 auto;min-width:17px;text-align:right;font-size:11.5px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;}
+/* The task-form column gets a drawing rather than a bar. The three shapes are
+   three different questions, not more or less of one thing, and a bar chart
+   over them invites a comparison that means nothing. */
+.shrow{display:flex;align-items:flex-start;gap:11px;padding:8px 0;border-bottom:1px solid var(--grid);}
+.shrow:first-of-type{padding-top:0;}
+.shrow:last-child{border-bottom:0;padding-bottom:0;}
+.shrow .g{flex:0 0 40px;width:40px;color:var(--s1);margin-top:3px;}
+.shrow .g svg{display:block;width:40px;height:16px;}
+.shrow .t{flex:1 1 auto;min-width:0;}
+.shrow .t b{display:block;font-size:12.5px;font-weight:600;color:var(--ink);}
+.shrow .t span{display:block;font-size:11px;color:var(--mut);line-height:1.45;}
+.shrow .c{flex:0 0 auto;font-size:12.5px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;margin-top:1px;}
+@media(max-width:860px){.ob-grid{grid-template-columns:repeat(2,1fr);}.facets{grid-template-columns:1fr 1fr;}}
+@media(max-width:560px){.ob-grid{grid-template-columns:1fr;}.facets{grid-template-columns:1fr;}.fname{flex-basis:70px;width:70px;}}
 .shape{display:inline-block;border:1px solid var(--line,#e0e0e0);border-radius:999px;padding:0 7px;margin-left:7px;font-size:10.5px;font-weight:700;color:var(--mut);vertical-align:1px;white-space:nowrap;}
 :root{
   color-scheme: light;
@@ -152,8 +193,16 @@ footer a{color:var(--ink2);}
 </section>
 
 <section id="batches">
-  <h2>The weekly calendar</h2>
-  <p class="lede">Everything in a batch shares one deadline, Monday 12:00Z, whatever weekday each round's own release happens to be. The batch is published a week ahead, so there is always a full week to work on the open one.</p>
+  <h2>The open batch</h2>
+  <p class="lede">Everything in a batch shares one deadline, Monday 12:00Z, whatever weekday each round's own release happens to be. The batch is handed over a week ahead, so there is always a full week to work on the open one.</p>
+
+  <div class="card openb" id="open-batch"><p class="ob-sum">loading…</p></div>
+
+  <h3 class="sub">What is in it</h3>
+  <div class="card facets" id="batch-facets"></div>
+  <p class="note">Task form is what shape the answer takes and fixes how it is scored. Subject is what the question is about. A batch mixes both on purpose: a forecaster good at approval levels is not automatically good at guessing what the country will look up.</p>
+
+  <h3 class="sub">Every batch</h3>
   <div class="card scroll">
     <table>
       <thead><tr><th>Batch</th><th>Deadline</th><th class="num">Questions</th><th>Shapes</th><th class="num">Horizon</th><th>Status</th></tr></thead>
@@ -203,6 +252,20 @@ const fmtCountdown = ms => {
   return (d>0?d+'d ':'')+h+'h '+m+'m';
 };
 const fmtLocal = iso => new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+// The batch calendar is defined in UTC and the docs quote it in UTC, so the
+// open-batch card states UTC rather than the reader's zone. A deadline shown
+// in two zones on two pages is a deadline somebody will miss by an hour.
+const utcDay = iso => new Date(iso).toLocaleDateString('en-GB',{timeZone:'UTC',weekday:'short',month:'short',day:'numeric'});
+const utcTime = iso => new Date(iso).toLocaleTimeString('en-GB',{timeZone:'UTC',hour:'2-digit',minute:'2-digit',hour12:false})+' UTC';
+// Seconds appear only inside the last day. A week-long countdown ticking by
+// the second is motion that carries no information.
+const fmtTick = ms => {
+  if(ms<=0) return 'closed';
+  const d=Math.floor(ms/86400000), h=Math.floor(ms%86400000/3600000),
+        m=Math.floor(ms%3600000/60000), sec=Math.floor(ms%60000/1000);
+  const p2 = n => String(n).padStart(2,'0');
+  return d>0 ? d+'d '+h+'h '+p2(m)+'m' : h+'h '+p2(m)+'m '+p2(sec)+'s';
+};
 const fmtDate = iso => new Date(iso+'T12:00:00Z').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'});
 function submissionLink(track){
   return 'submit.html#'+track;
@@ -414,6 +477,143 @@ function render(data){
   const openId = (batchRows.find(([, rs]) =>
     Date.parse(dueOf(rs)) > nowMs
     && (!rs[0].published_at || Date.parse(rs[0].published_at) <= nowMs)) || [null])[0];
+  // ---- the open batch, stated once and plainly -------------------------
+  // A visitor's first two questions are "what is being asked" and "by when".
+  // Both were answerable only by reading the calendar table row by row, and
+  // the second one needs a clock rather than a date.
+  const SHAPES = [
+    ['continuous_normal', 'Topline', 'CRPS',
+     'One number with an honest interval: a mean and an sd, or quantiles. A point guess is refused.',
+     '<svg viewBox="0 0 40 16" aria-hidden="true"><path d="M1 14.4C8.5 14.4 10 2.2 20 2.2s11.5 12.2 19 12.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'],
+    ['profile_energy', 'Population', 'energy score',
+     'Every declared cell of a population at once, scored as one vector. All cells or none.',
+     '<svg viewBox="0 0 40 16" aria-hidden="true">' +
+     [0,1,2,3,4,5,6,7].map(i => [4.5,11.5].map(y =>
+       '<circle cx="' + (2.6 + i * 5) + '" cy="' + y + '" r="1.75" fill="currentColor"/>').join('')).join('') +
+     '</svg>'],
+    ['ranking_list', 'Ranking', 'distance on lists',
+     'The items in predicted order. A claim about rank, which no level can stand in for.',
+     '<svg viewBox="0 0 40 16" aria-hidden="true">' +
+     [[34,0.6],[26,4.4],[19,8.2],[12,12]].map(([w,y]) =>
+       '<rect x="0" y="' + y + '" width="' + w + '" height="2.6" rx="1.3" fill="currentColor"/>').join('') +
+     '</svg>']
+  ];
+  const DOMAIN_LABEL = {'public-opinion':'Public opinion', 'consumer':'Consumer sentiment',
+                        'attention':'Attention', 'elections':'Elections',
+                        // Not a subject: a round whose series the taxonomy has
+                        // never seen. Shown rather than dropped, so a gap is
+                        // visible on the page instead of silently thinning a
+                        // count somebody reads as the batch's real shape.
+                        'unplaced':'Unclassified'};
+  const DOMAIN_ORDER = ['public-opinion','consumer','attention','elections','unplaced'];
+  const TRACKER_LABEL = {civiqs:'Civiqs', economist_yougov:'Economist/YouGov',
+    morning_consult:'Morning Consult', google_trends:'Google Trends',
+    wikipedia:'Wikipedia', aaii:'AAII', umich_sentiment:'Michigan',
+    umich_party:'Michigan by party', ny_fed_sce:'NY Fed SCE',
+    harvard_harris:'Harvard Harris', midterm_special:'Midterms',
+    yougov_xtab:'YouGov crosstab'};
+
+  const bars = items => {
+    const max = Math.max(1, ...items.map(x => x[1]));
+    return items.map(([name, n]) =>
+      '<div class="frow"><span class="fname" title="' + esc(name) + '">' + esc(name) + '</span>'
+      + '<span class="fbar"><i style="width:' + (n / max * 100).toFixed(1) + '%"></i></span>'
+      + '<span class="fn">' + n + '</span></div>').join('');
+  };
+  const tally = (rs, key) => {
+    const m = new Map();
+    for (const r of rs) m.set(r[key], (m.get(r[key]) || 0) + 1);
+    return m;
+  };
+
+  // The batch to feature: the open one, or the next one to be handed over.
+  const featured = openId
+    || (batchRows.find(([, rs]) => Date.parse(dueOf(rs)) > nowMs) || [null])[0];
+  const ob = document.getElementById('open-batch');
+  const fx = document.getElementById('batch-facets');
+  const frs = featured ? byBatch.get(featured) : null;
+
+  if (!frs) {
+    ob.innerHTML = '<p class="ob-sum">No batch is open. Every round in this '
+      + 'payload predates the weekly calendar.</p>';
+    fx.style.display = 'none';
+  } else {
+    const due = dueOf(frs);
+    const pub = frs[0].published_at;
+    const isOpen = featured === openId;
+    const firstRelease = frs.map(r => r.release_at).filter(Boolean).sort()[0];
+    const shapeCount = tally(frs, 'target_type');
+    const summary = SHAPES
+      .filter(([k]) => shapeCount.get(k))
+      .map(([k, name]) => shapeCount.get(k) + ' ' + name.toLowerCase())
+      .join(' · ');
+
+    ob.innerHTML =
+      '<div class="ob-head"><span class="ob-id">' + esc(featured) + '</span>'
+      + '<span class="ob-tag' + (isOpen ? ' live' : '') + '">'
+      + (isOpen ? 'open — submissions accepted' : 'not handed over yet')
+      + '</span></div>'
+      + '<p class="ob-sum">' + frs.length + ' questions · ' + esc(summary) + '</p>'
+      + '<div class="ob-grid">'
+      + '<div class="ob-cell"><div class="ob-k">Handed over</div><div class="ob-v">'
+      + esc(pub ? utcDay(pub) : '—') + '</div><div class="ob-v2">'
+      + esc(pub ? utcTime(pub) : '') + '</div></div>'
+      + '<div class="ob-cell"><div class="ob-k">Deadline</div><div class="ob-v">'
+      + esc(utcDay(due)) + '</div><div class="ob-v2">' + esc(utcTime(due)) + '</div></div>'
+      + '<div class="ob-cell"><div class="ob-k">Results begin</div><div class="ob-v">'
+      + esc(firstRelease ? utcDay(firstRelease) : '—') + '</div><div class="ob-v2">'
+      + esc(firstRelease ? utcTime(firstRelease) : '') + '</div></div>'
+      + '<div class="ob-cell now"><div class="ob-k">'
+      + (isOpen ? 'Closes in' : 'Opens in') + '</div><div class="ob-v" id="ob-tick">…</div>'
+      + '<div class="ob-v2">' + (isOpen ? 'then nothing more is accepted' : 'published a week ahead')
+      + '</div></div></div>';
+
+    // One clock, ticking, rather than a date the reader has to subtract from.
+    const target = Date.parse(isOpen ? due : (pub || due));
+    const tick = () => {
+      const el = document.getElementById('ob-tick');
+      if (!el) return;
+      el.textContent = fmtTick(target - Date.now());
+    };
+    tick();
+    setInterval(tick, 1000);
+
+    // Resolution buckets are named by date rather than by "within N days": a
+    // reader planning a week wants the day, not the arithmetic.
+    const dueMs = Date.parse(due);
+    const buckets = [7, 14, 28].map(d => [dueMs + d * 86400000, 0]);
+    let later = 0;
+    for (const r of frs) {
+      const t = Date.parse(r.release_at);
+      const hit = buckets.find(b => t <= b[0]);
+      if (hit) hit[1]++; else later++;
+    }
+    const resolveRows = buckets
+      .filter(b => b[1])
+      .map(([ms, n]) => ['by ' + utcDay(new Date(ms).toISOString()).replace(/^\w+ /, ''), n])
+      .concat(later ? [['later', later]] : []);
+
+    fx.style.display = '';
+    fx.innerHTML =
+      '<div class="fc"><h4>Task form</h4>'
+      + SHAPES.filter(([k]) => shapeCount.get(k)).map(([k, name, metric, blurb, svg]) =>
+          '<div class="shrow"><span class="g">' + svg + '</span>'
+          + '<span class="t"><b>' + esc(name) + '</b><span>' + esc(blurb)
+          + ' Scored by ' + esc(metric) + '.</span></span>'
+          + '<span class="c">' + shapeCount.get(k) + '</span></div>').join('')
+      + '</div>'
+      + '<div class="fc"><h4>Subject</h4>'
+      + bars(DOMAIN_ORDER.filter(d => tally(frs, 'domain').get(d))
+              .map(d => [DOMAIN_LABEL[d] || d, tally(frs, 'domain').get(d)]))
+      + '</div>'
+      + '<div class="fc"><h4>Results begin</h4>' + bars(resolveRows) + '</div>'
+      + '<div class="fc"><h4>Source</h4>'
+      + bars([...tally(frs, 'tracker').entries()]
+              .sort((a, b) => b[1] - a[1])
+              .map(([t, n]) => [TRACKER_LABEL[t] || t, n]))
+      + '</div>';
+  }
+
   bb.innerHTML = batchRows.map(([batchId, rs]) => {
     const due = dueOf(rs);
     const shapes = {};
@@ -421,7 +621,9 @@ function render(data){
       const k = r.target_type || 'continuous_normal';
       shapes[k] = (shapes[k] || 0) + 1;
     }
-    const label = {continuous_normal: 'scalar', profile_energy: 'profile',
+    // The same three words the card above uses. Two names for one shape on
+    // one page is a reader wondering whether they are two different things.
+    const label = {continuous_normal: 'topline', profile_energy: 'population',
                    ranking_list: 'ranking'};
     const chips = Object.entries(shapes)
       .sort((a, b) => b[1] - a[1])
@@ -439,8 +641,11 @@ function render(data){
     const pub = rs[0].published_at;
     const state = ms <= 0 ? 'closed'
       : isOpen ? 'open now'
-      : 'publishes ' + (pub ? fmtLocal(pub) : fmtLocal(due));
-    const when = isOpen ? 'in ' + fmtCountdown(ms) : fmtLocal(due);
+      : 'hands over ' + (pub ? utcDay(pub) : utcDay(due));
+    // UTC, like the card above and like every deadline in the docs. The table
+    // used the reader's zone, which put 05:00 next to a rule that says 12:00.
+    const when = isOpen ? 'in ' + fmtCountdown(ms)
+      : utcDay(due) + ' · ' + utcTime(due);
     return '<tr' + (isOpen ? ' style="background:var(--soft,#f6f6f4);"' : '') + '>'
       + '<td><b style="color:var(--ink);font-weight:600;">'
       + esc(batchId) + '</b></td>'

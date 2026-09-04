@@ -187,7 +187,6 @@ footer .upd{margin-left:auto;}
     <button class="ptab on" data-page="live">Live</button>
     <button class="ptab" data-page="rounds">Rounds</button>
     <button class="ptab" data-page="submit">Submit</button>
-    <button class="ptab" data-page="agents">Agents</button>
     <div class="right">
       <a class="item" href="docs.html">Docs</a>
       <a class="item" href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a>
@@ -290,13 +289,6 @@ footer .upd{margin-left:auto;}
     </div></div>
   </div>
 
-  <div class="page" id="page-agents">
-    <div class="inner"><div class="col">
-      <h2>Agents</h2>
-      <p class="lede">Baselines run in every round. Submitted agents join them on the board.</p>
-      <div id="entrants-list"></div>
-    </div></div>
-  </div>
 
 </main>
 
@@ -898,49 +890,6 @@ function roundsList(data){
 }
 
 const AG_PAGE = 10;
-function entrantsList(data){
-  const el = document.getElementById('entrants-list');
-  const ents = data.entrants||[];
-  const f = window.__af || 'all';
-  const pg = window.__ap || 1;
-  const regLink = submissionLink('agent');
-
-  const match = e => f==='all' ? true
-    : f==='baseline' ? e.type==='baseline'
-    : f==='human' ? e.type==='human'
-    : vendorOf(e.entrant_id)===f;
-  const list = ents.filter(match);
-  const pages = Math.max(1, Math.ceil(list.length/AG_PAGE));
-  const page = Math.min(pg, pages);
-  const slice = list.slice((page-1)*AG_PAGE, page*AG_PAGE);
-
-  const keys = ['all'];
-  VENDORS.forEach(([,k])=>{ if(ents.some(e=>vendorOf(e.entrant_id)===k)) keys.push(k); });
-  if(ents.some(e=>e.type==='baseline')) keys.push('baseline');
-  if(ents.some(e=>e.type==='human')) keys.push('human');
-  const cnt = k => k==='all'?ents.length:ents.filter(e=>k==='baseline'?e.type==='baseline':k==='human'?e.type==='human':vendorOf(e.entrant_id)===k).length;
-  const chipLabel = k => k==='all'?'All':k==='baseline'?'Baselines':k==='human'?'Human':vendorName(k);
-  const chips = '<div class="fchips">'+keys.map(k=>
-    '<button class="'+(f===k?'on':'')+'" onclick="window.__af=\''+k+'\';window.__ap=1;entrantsList(window.__data)">'+chipLabel(k)+' <span>'+cnt(k)+'</span></button>').join('')+'</div>';
-
-  const cta = '<div class="erow cta" style="align-items:center;"><span class="av" style="background:var(--accent);color:#fff;">+</span>'
-    + '<span class="tx"><b>Create your own</b></span>'
-    + '<a class="go" href="'+regLink+'" target="_blank" rel="noopener">Register</a></div>';
-
-  const pager = pages>1 ? '<div class="pager">'
-    + '<button '+(page<=1?'disabled':'')+' onclick="window.__ap='+(page-1)+';entrantsList(window.__data)">&#8592;</button>'
-    + '<span>'+page+' / '+pages+'</span>'
-    + '<button '+(page>=pages?'disabled':'')+' onclick="window.__ap='+(page+1)+';entrantsList(window.__data)">&#8594;</button></div>' : '';
-
-  el.innerHTML = cta + chips + slice.map(e=>{
-    const v = vendorOf(e.entrant_id);
-    const cond = condTag(e.name)==='zs' ? ' · zero-shot' : (condTag(e.name)==='r10' ? ' · recent-10' : '');
-    return '<div class="erow">'+avatar(e.entrant_id)
-      + '<span class="tx"><b>'+esc(e.name.split(' (')[0])+'</b><span class="type">'+esc(e.type)+(v?' · '+esc(vendorName(v)):'')+cond+'</span>'
-      + '<p>'+esc(e.method||'')+'</p></span></div>';
-  }).join('') + pager;
-  if(typeof syncHash==='function') syncHash();
-}
 
 function noiseFloorJS(vals){
   // Measurement noise per release from the series' own history: for a level
@@ -1020,7 +969,6 @@ function render(data){
   applyHash();
   renderBoard(window.__board || 'all');
   roundsList(data);
-  entrantsList(data);
   examRounds(data);
 }
 
@@ -1045,7 +993,7 @@ function examRounds(data){
   }
 }
 
-const PAGES=['live','rounds','submit','agents','exam'];
+const PAGES=['live','rounds','submit','exam'];
 function showPage(k){
   PAGES.forEach(pg=>{
     document.getElementById('page-'+pg).classList.toggle('on', pg===k);
@@ -1065,24 +1013,19 @@ function syncHash(){
   if(pg === 'live'){
     const tab = window.__tab || 'agg', span = window.__board || 'all';
     if(tab !== 'agg' || span !== 'all') h = 'live/' + tab + '/' + span;
-  } else if(pg === 'agents'){
-    const f = window.__af || 'all';
-    if(f !== 'all') h = 'agents/' + f;
   }
   history.replaceState(null, '', '#' + h);
 }
 function applyHash(){
   const parts = (location.hash || '').slice(1).split('/');
-  const pg = ['live','rounds','submit','agents','exam'].includes(parts[0]) ? parts[0] : null;
+  const pg = ['live','rounds','submit','exam'].includes(parts[0]) ? parts[0] : null;
   if(!pg) return;
   if(pg === 'live'){
     if(CHART_KEYS.includes(parts[1])) window.__tab = parts[1];
     if(SPAN_KEYS.includes(parts[2])) window.__board = parts[2];
   }
-  if(pg === 'agents' && parts[1]) { window.__af = parts[1]; window.__ap = 1; }
   showPage(pg);
   if(pg === 'live' && window.__data){ setTab(window.__tab || 'agg'); renderBoard(window.__board || 'all'); }
-  if(pg === 'agents' && window.__data) entrantsList(window.__data);
 }
 window.addEventListener('hashchange', applyHash);
 
