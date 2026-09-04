@@ -36,6 +36,11 @@ def test_questions_workflow_triggers_on_its_own_contract_changes():
     # This workflow is the only one that runs the agent-template contracts
     # below, so a change to the template they guard has to start it.
     assert body.count('- "templates/**"') == 2
+    # The bundle endpoint's deployment is asserted in tests/test_bundle_api.py,
+    # which never runs on a pull request that changes only those files unless
+    # they are listed here.
+    assert body.count('- "api/**"') == 2
+    assert body.count('- "vercel.json"') == 2
 
 
 def test_ci_runs_every_suite_that_exists():

@@ -10,7 +10,7 @@ import jsonschema
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from ssa import agent_api, batches, harness, participants, refresh  # noqa: E402
+from ssa import agent_api, batches, bundle_api, harness, participants, refresh  # noqa: E402
 
 REG = {
     "entrant_id": "acme-forecast",
@@ -356,17 +356,24 @@ def test_a_registration_without_a_route_is_unchanged():
         assert participants.registered() == []
     schema = json.load(open(os.path.join(ROOT, "schema",
                                          "entrant.schema.json")))
-    live = 0
+    live = []
     directory = os.path.join(ROOT, "entrants")
     for name in sorted(os.listdir(directory)):
         if not name.endswith(".json"):
             continue
         with open(os.path.join(directory, name)) as fh:
             jsonschema.validate(json.load(fh), schema)
-        live += 1
+        live.append(name[:-5])
     assert live, "no registrations found to re-validate"
+    # `key_env` folds `-` and `.` to `_`, and ids use both. Two ids sharing a
+    # variable would send one entrant's token to the other's endpoint, and let
+    # one upload token file as either.
+    for derive in (participants.key_env, bundle_api.upload_key_env):
+        names = [derive(entrant) for entrant in live]
+        assert len(set(names)) == len(names), sorted(
+            n for n in names if names.count(n) > 1)
     print(f"ok test_a_registration_without_a_route_is_unchanged "
-          f"({live} committed registrations still validate)")
+          f"({len(live)} committed registrations still validate)")
 
 
 if __name__ == "__main__":
