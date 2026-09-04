@@ -106,6 +106,37 @@ Tuesday, or a gap between entries that is not within eight days. The second
 kind is what refuses the issue-specific YouGov items the pollster asks only
 some weeks.
 
+Entry day is checked against the pollster, not only against the sheet.
+Each row of the sheet carries the wave's topline PDF in its `url` column. On
+2026-09-04 those eight URLs were fetched by hand, one HEAD and one GET each;
+nothing in this repository fetches them, and nothing should. All eight
+returned 200. `Last-Modified` is the CDN's own record of when the file went
+up; `/CreationDate` is the stamp the tables were written with, in UTC here:
+
+| entered | Last-Modified | /CreationDate |
+|---|---|---|
+| 07-14 Tue | Tue 07-14 13:00Z | Mon 07-13 22:35Z |
+| 07-21 Tue | Tue 07-21 13:09Z | Tue 07-21 12:59Z |
+| 07-28 Tue | Tue 07-28 13:00Z | Mon 07-27 23:25Z |
+| 08-04 Tue | Tue 08-04 12:56Z | Mon 08-03 21:17Z |
+| 08-11 Tue | Tue 08-11 13:02Z | Tue 08-11 12:58Z |
+| 08-18 Tue | Fri 08-21 12:37Z | Wed 08-19 01:02Z |
+| 08-25 Tue | Tue 08-25 13:11Z | Mon 08-24 23:28Z |
+| 09-01 Tue | Tue 09-01 13:08Z | Mon 08-31 22:24Z |
+
+Seven of the eight went up on the Tuesday the sheet entered them, within a
+quarter hour of 13:00Z. The eighth is not a slip in the calendar but a
+replaced file: the 08-18 wave's PDF was re-uploaded on the Friday, and its own
+stamp is Tuesday evening in the pollster's time zone, 01:02Z on the Wednesday.
+So the entry day is the publication day, on evidence that does not come from
+the sheet.
+
+This is also the check the lock depends on. The round locks Monday 14:00Z and
+the wave is published the next day, so the answer cannot be public when
+entrants file. The tightest of the eight is the 08-04 wave, whose tables were
+written 08-03 21:17Z, seven hours after that round would have locked and
+sixteen before it went up.
+
 The other five houses cannot carry a locked round and stay refused: Morning
 Consult's waves enter on mixed weekdays, weeks late and sometimes two at once;
 Ipsos is ad hoc; Rasmussen is a daily tracker whose number is public on its
