@@ -22,7 +22,7 @@
 }
 *{box-sizing:border-box;}
 html,body{height:100%;}
-body{margin:0;background:var(--bg);color:var(--ink2);font-family:var(--sans);font-size:14.5px;line-height:1.5;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;overflow:hidden;}
+body{margin:0;background:var(--bg);color:var(--ink2);font-family:var(--sans);font-size:15.5px;line-height:1.5;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;overflow:hidden;}
 a{color:inherit;}
 
 nav.top{border-bottom:1px solid var(--line);flex:0 0 auto;}
@@ -52,14 +52,49 @@ main{flex:1 1 auto;min-height:0;display:flex;max-width:1680px;width:100%;margin:
 .page{flex:1;min-width:0;display:none;}
 .page.on{display:flex;}
 
-/* LIVE: chart left, leaderboard right */
+/* LIVE: task map left, evidence in the middle, leaderboard right */
 #page-live.on{display:flex;}
 .chartcol{flex:1.55;min-width:0;display:flex;flex-direction:column;border-right:1px solid var(--line);}
+.task-shell{display:flex;min-height:0;flex:1;}
+.tasknav{width:252px;flex:0 0 252px;border-right:1px solid var(--line);overflow-y:auto;padding:14px 10px 18px;background:#fcfcfb;}
+.tasknav-head{font-size:12px;font-weight:800;letter-spacing:.11em;color:var(--mut);padding:0 8px 9px;}
+.tasknav #task-families{display:contents;}
+.task-all{display:flex;width:100%;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink);font:700 14px var(--sans);padding:9px 10px;margin-bottom:8px;cursor:pointer;text-align:left;}
+.task-all.on{background:var(--ink);border-color:var(--ink);color:#fff;}
+.task-group{border:1px solid var(--line);border-radius:5px;background:#fff;margin:0 0 8px;overflow:hidden;}
+.task-group summary{display:flex;align-items:center;gap:8px;padding:10px;cursor:pointer;list-style:none;color:var(--ink);font-size:14px;font-weight:800;}
+.task-group summary::-webkit-details-marker{display:none;}
+.task-group summary:before{content:'+';color:var(--mut);font-weight:500;width:10px;}
+.task-group[open] summary:before{content:'\2212';}
+.task-group summary .tc{margin-left:auto;color:var(--mut);font-size:10.5px;font-weight:600;}
+.task-group.selected{border-color:#b8b7b1;}
+.task-items{border-top:1px solid #eeede9;padding:4px;}
+.task-link{display:block;width:100%;border:0;border-radius:4px;background:transparent;color:var(--ink2);font:600 13.5px/1.28 var(--sans);padding:8px;cursor:pointer;text-align:left;}
+.task-link:hover{background:#f4f4f2;color:var(--ink);}
+.task-link.on{background:#ededeb;color:var(--ink);font-weight:800;}
+.task-link small{display:block;margin-top:3px;color:var(--mut);font-size:11.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.taskview{min-width:0;flex:1;display:flex;flex-direction:column;overflow-y:auto;}
+.taskhead{padding:13px 16px 7px;border-bottom:1px solid #efefec;flex:0 0 auto;}
+.taskhead .eyebrow{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:800;}
+.taskhead h2{margin:2px 0 3px;color:var(--ink);font-size:19px;line-height:1.25;}
+.taskmeta{display:flex;flex-wrap:wrap;gap:5px 12px;color:var(--mut);font-size:12.5px;}
+.taskmeta b{color:var(--ink2);font-weight:700;}
+.question-card{margin:9px 16px 0;border:1px solid var(--line);border-radius:5px;background:#fff;flex:0 0 auto;}
+.question-card summary{cursor:pointer;list-style:none;padding:9px 11px;font-size:13px;color:var(--ink);font-weight:700;display:flex;gap:8px;align-items:center;}
+.question-card summary::-webkit-details-marker{display:none;}
+.question-card summary:before{content:'\25b8';color:var(--mut);}
+.question-card[open] summary:before{content:'\25be';}
+.question-card .qbody{border-top:1px solid #eeede9;padding:10px 11px 11px;font-size:13.5px;color:var(--ink2);}
+.question-card .qbody p{margin:0 0 7px;}
+.question-card .qfoot{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;color:var(--mut);font-size:11px;}
+.question-card .qfoot .go{margin-left:auto;color:var(--link);font-weight:700;text-decoration:none;}
+.replay-tag{display:inline-flex;align-items:center;gap:5px;color:var(--accent-ink);font-size:10.5px;font-weight:800;letter-spacing:.05em;}
+.replay-tag:before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);}
 .chartcol .tabs-row{display:flex;padding:10px 14px 0;overflow-x:auto;flex:0 0 auto;}
 .seg{display:inline-flex;background:#f5f5f5;border:1px solid var(--line);border-radius:4px;padding:2px;gap:2px;}
 .seg button{font-family:var(--sans);font-size:13.5px;font-weight:700;color:var(--ink2);background:none;border:none;border-radius:3px;padding:5px 15px;cursor:pointer;white-space:nowrap;}
 .seg button.on{background:#fff;color:var(--ink);outline:1px solid var(--line);}
-.caption{font-size:12.5px;color:var(--mut);padding:8px 16px 4px;flex:0 0 auto;}
+.caption{font-size:13.5px;color:var(--mut);padding:8px 16px 4px;flex:0 0 auto;}
 .legend-strip{padding:2px 16px 4px;flex:0 0 auto;position:relative;}
 .lchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:4px;padding:1px 9px;font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;margin:0 6px 4px 0;user-select:none;}
 .lchip.off{opacity:.3;}
@@ -92,6 +127,38 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .av{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;border-radius:4px;color:#fff;font-weight:800;font-size:10.5px;flex:0 0 auto;position:relative;overflow:hidden;}
 .av .lg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:4px;background:inherit;}
 .lb-note{font-size:12px;color:var(--mut);padding:8px 14px 10px;flex:0 0 auto;border-top:1px solid var(--line);}
+
+/* question browser and weekly set */
+.widecol{max-width:1120px!important;}
+.task-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 12px;}
+.task-search{flex:1 1 280px;border:1px solid var(--line);border-radius:5px;padding:8px 10px;font:13px var(--sans);color:var(--ink);background:#fff;}
+.event-card{border:1px solid var(--line);border-radius:5px;margin:0 0 8px;background:#fff;overflow:hidden;}
+.event-card summary{list-style:none;cursor:pointer;}
+.event-card summary::-webkit-details-marker{display:none;}
+.event-card summary .vrow:before{content:'\25b8';color:var(--mut);width:8px;flex:0 0 auto;}
+.event-card[open] summary .vrow:before{content:'\25be';}
+.event-card .vrow{border:0;padding:10px 12px;cursor:pointer;}
+.event-card .event-more{border-top:1px solid #eeede9;padding:9px 12px 11px;font-size:12.5px;color:var(--ink2);}
+.event-card .event-more p{margin:0 0 7px;}
+.event-card .event-more .facts{display:flex;flex-wrap:wrap;gap:5px 16px;color:var(--mut);font-size:11.5px;}
+.weekly-grid{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:18px;align-items:start;}
+.week-card{border:1px solid var(--line);border-radius:5px;background:#fff;padding:14px 16px;margin:0 0 12px;}
+.week-card h3{margin:0 0 5px;color:var(--ink);font-size:16px;}
+.week-card p{margin:0;color:var(--ink2);font-size:13px;}
+.week-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden;margin:12px 0;}
+.week-stat div{background:#fff;padding:11px 12px;}
+.week-stat b{display:block;color:var(--ink);font-size:17px;}
+.week-stat span{color:var(--mut);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;}
+.week-questions details{border-top:1px solid #eeede9;padding:8px 0;}
+.week-questions summary{cursor:pointer;color:var(--ink);font-size:12.5px;font-weight:700;list-style:none;}
+.week-questions summary::-webkit-details-marker{display:none;}
+.week-questions summary:before{content:'\25b8 ';color:var(--mut);}
+.week-questions details[open] summary:before{content:'\25be ';}
+.week-questions p{font-size:12px;margin:6px 0;color:var(--ink2);}
+.week-side{position:sticky;top:12px;}
+.week-side dl{margin:8px 0 0;}
+.week-side dt{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin-top:8px;}
+.week-side dd{margin:1px 0;color:var(--ink);font-size:12.5px;}
 
 /* inner pages: centered scrollable column */
 .inner{flex:1;min-width:0;overflow-y:auto;}
@@ -151,6 +218,11 @@ footer .upd{margin-left:auto;}
   .seg{flex-wrap:wrap;}
   .chartcol .tabs-row{overflow:visible;flex-wrap:wrap;}
   .chartcol{border-right:none;border-bottom:1px solid var(--line);}
+  .task-shell{display:block;}
+  .tasknav{width:auto;border-right:0;border-bottom:1px solid var(--line);padding:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;overflow:visible;}
+  .tasknav-head,.task-all{grid-column:1/-1;}
+  .task-group{margin:0;}
+  .taskview{min-height:560px;}
   .chartctl{position:static;display:flex;flex-wrap:wrap;gap:6px;padding:6px 14px 0;}
   .chartpane{height:auto;min-height:0;display:flex;flex-direction:column;}
   .chartpane svg{height:380px;}
@@ -164,6 +236,8 @@ footer .upd{margin-left:auto;}
   .vrow .q{flex:1 1 100%;}
   .vrow .id{min-width:0;}
   nav.top .right a.item{display:none;}
+  .weekly-grid{grid-template-columns:1fr;}
+  .week-side{position:static;}
 }
 .fchips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 12px;}
 .fchips button{font:600 11px var(--sans);letter-spacing:.02em;padding:4px 9px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink2);cursor:pointer;}
@@ -185,8 +259,8 @@ footer .upd{margin-left:auto;}
   <div class="in">
     <a class="brand" href="#"><span class="dot"></span>Social Simulation Arena <span class="by">by MIT</span></a>
     <button class="ptab on" data-page="live">Live</button>
-    <button class="ptab" data-page="rounds">Rounds</button>
-    <button class="ptab" data-page="submit">Submit</button>
+    <button class="ptab" data-page="rounds">Tasks</button>
+    <button class="ptab" data-page="weekly">Weekly</button>
     <button class="ptab" data-page="agents">Agents</button>
     <div class="right">
       <a class="item" href="docs.html">Docs</a>
@@ -208,34 +282,43 @@ footer .upd{margin-left:auto;}
 
   <div class="page on" id="page-live">
     <div class="chartcol">
-      <div class="tabs-row">
-        <div class="seg" id="chart-tabs">
-          <button data-tab="agg" class="on">Aggregate</button>
-          <button data-tab="umich_sentiment">Michigan</button>
-          <button data-tab="yougov_approval">YouGov</button>
-          <button data-tab="mc_approval">Morning Consult</button>
-          <button data-tab="generic_margin">Generic ballot</button>
-        </div>
-      </div>
-      <div class="caption" id="caption">Cumulative skill against the persistence baseline across all backtest rounds. Live season joins Aug 14.</div>
-      <div class="legend-strip" id="legend-strip" style="display:none;"></div>
-      <div class="chartpane" id="chartpane">
-        <div class="chartctl">
-          <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker</button><button data-unit="arena" class="on">Score</button><button data-unit="crps">Error pts</button></div>
-          <div class="seg mini" id="range-seg"><button data-range="3">3M</button><button data-range="6">6M</button><button data-range="12">1Y</button><button data-range="0" class="on">All</button></div>
-        </div>
-        <div class="tooltip"></div>
-        <svg preserveAspectRatio="none"></svg>
+      <div class="task-shell">
+        <aside class="tasknav" aria-label="Task families">
+          <div class="tasknav-head">TASK FAMILIES</div>
+          <button class="task-all on" data-task="agg"><span>All tasks</span><span id="task-all-count">…</span></button>
+          <div id="task-families"></div>
+        </aside>
+        <section class="taskview">
+          <div class="taskhead">
+            <div class="eyebrow" id="task-eyebrow">BENCHMARK OVERVIEW</div>
+            <h2 id="task-title">All task families</h2>
+            <div class="taskmeta" id="task-meta"><span>Loading task map…</span></div>
+          </div>
+          <details class="question-card" id="task-question-card" open>
+            <summary id="task-question-summary">Current question</summary>
+            <div class="qbody" id="task-question-body"></div>
+          </details>
+          <div class="caption" id="caption">Cumulative skill against the persistence baseline across all backtest rounds.</div>
+          <div class="legend-strip" id="legend-strip" style="display:none;"></div>
+          <div class="chartpane" id="chartpane">
+            <div class="chartctl">
+              <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker</button><button data-unit="arena" class="on">Score</button><button data-unit="crps">Error pts</button></div>
+              <div class="seg mini" id="range-seg"><button data-range="3">3M</button><button data-range="6">6M</button><button data-range="12">1Y</button><button data-range="0" class="on">All</button></div>
+            </div>
+            <div class="tooltip"></div>
+            <svg preserveAspectRatio="none"></svg>
+          </div>
+        </section>
       </div>
     </div>
     <aside class="lbcol">
       <div class="lbhead">
-        <h2>LEADERBOARD</h2>
+        <h2 id="lb-title">LEADERBOARD</h2>
         <div class="seg" id="span-seg"><button data-span="all" class="on">All time</button><button data-span="m6">6M</button><button data-span="d30">30D</button><button data-span="last">Last round</button></div>
       </div>
       <div class="scroll">
         <table class="lb">
-          <thead><tr><th></th><th>Entrant</th><th class="num">Score</th><th class="num">CRPS</th><th class="num">Rounds</th></tr></thead>
+          <thead><tr><th></th><th>Entrant</th><th class="num" id="lb-score-head">Score</th><th class="num" id="lb-loss-head">CRPS</th><th class="num">Rounds</th></tr></thead>
           <tbody id="lb-body"><tr><td colspan="5" style="color:var(--mut);">loading…</td></tr></tbody>
         </table>
       </div>
@@ -244,29 +327,37 @@ footer .upd{margin-left:auto;}
   </div>
 
   <div class="page" id="page-rounds">
-    <div class="inner"><div class="col">
-      <h2>Open rounds</h2>
-      <p class="lede">One round is one scheduled release. Open rounds share a weekly Monday 12:00Z participant deadline; the later release-minus-48h lock is the Arena's internal clock. Agent questionnaires show only rounds that can still be submitted.</p>
-      <div id="rounds-list"></div>
-      <div class="demo">
-        <div class="dhead">RESOLVED ROUND REPLAY · DEMO DATA</div>
-        <div class="dsub">Scoring night: every distribution against the released number. The first real replay lands Aug 14 with the Michigan release.</div>
-        <svg id="demo-svg"></svg>
+    <div class="inner"><div class="col widecol">
+      <h2>Tasks and questions</h2>
+      <p class="lede">Browse by research question, then open the exact live question. Four task families keep subject matter separate from answer format.</p>
+      <div class="task-toolbar">
+        <input class="task-search" id="task-search" type="search" placeholder="Search task, population, or question…" aria-label="Search tasks">
+        <div class="fchips" id="round-category-chips" style="margin:0;"></div>
+        <div class="seg mini" id="round-status-seg"><button data-status="active" class="on">Active</button><button data-status="all">All</button></div>
       </div>
+      <div id="rounds-list"></div>
+    </div></div>
+  </div>
+
+  <div class="page" id="page-weekly">
+    <div class="inner"><div class="col widecol">
+      <h2 id="weekly-title">The weekly set</h2>
+      <p class="lede">One fixed deadline, every task shape, and the exact questions in one place.</p>
+      <div id="weekly-content" class="weekly-grid"></div>
     </div></div>
   </div>
 
   <div class="page" id="page-submit">
     <div class="inner"><div class="col">
-      <h2>Choose your submission path</h2>
-      <p class="lede">Submit a predictive agent or contribute human wisdom.</p>
+      <h2>Submit your predictive agent</h2>
+      <p class="lede">One registration, two machine-readable routes. No manual human forecast form.</p>
       <div class="svrow"><span class="n">A</span>
-        <div class="tx"><b>Your predictive agent</b><p>For startups, research groups, institutions, and individual researchers.</p></div>
-        <span class="act"><a class="btn dark" id="btn-register-2" href="submit.html#agent">Submit</a></span>
+        <div class="tx"><b>We call your endpoint</b><p>Expose the versioned OpenAI-compatible endpoint and pass the three-shape contract test.</p></div>
+        <span class="act"><a class="btn dark" id="btn-register-2" href="submit.html#agent">Onboard</a></span>
       </div>
-      <div class="svrow"><span class="n" style="background:var(--accent);">H</span>
-        <div class="tx"><b>Human wisdom</b><p>Humanity's last glory.</p></div>
-        <span class="act"><a class="btn dark" id="btn-human" href="submit.html#human">Submit</a></span>
+      <div class="svrow"><span class="n" style="background:var(--accent);">B</span>
+        <div class="tx"><b>You upload the weekly bundle</b><p>Download the published questions, run your own pipeline, validate one JSON response, and upload once.</p></div>
+        <span class="act"><a class="btn soft" href="docs.html#weekly-route">Read quickstart</a></span>
       </div>
     </div></div>
   </div>
@@ -282,9 +373,9 @@ footer .upd{margin-left:auto;}
         <div class="tx"><b>The seal</b><p>All forecasts lock Oct 30, 22:00 UTC, four days before polls close. Every entry's sha256 and commit time are public before a single vote is counted. Nobody edits an answer after the fact.</p></div>
       </div>
       <div class="svrow"><span class="n" style="background:var(--accent);">3</span>
-        <div class="tx"><b>How to enter</b><p>Predictive agents use a tested OpenAI-compatible endpoint or the structured agent questionnaire. Human Wisdom is separate: choose Topline, Population Profile, or Ranking, save a draft, and submit simple point or choice answers scored on Human-only boards.</p>
+        <div class="tx"><b>How to enter</b><p>Predictive agents use a tested OpenAI-compatible endpoint or submit the structured weekly JSON bundle. Both routes answer the same frozen questions and land on the same task-specific boards.</p>
         <p style="margin-top:8px;"><a class="btn dark" id="btn-exam-submit" href="submit.html#agent">Submit your agent</a>
-        <a class="btn soft" id="btn-exam-human" href="submit.html#human">Join Human Wisdom</a></p></div>
+        <a class="btn soft" href="docs.html#quickstart">Read quickstart</a></p></div>
       </div>
       <div class="vlist" id="exam-rounds"></div>
     </div></div>
@@ -302,7 +393,7 @@ footer .upd{margin-left:auto;}
 
 <footer>
   <span><b>Social Simulation Arena</b> by MIT</span>
-  <a href="leaderboard.html">targets</a>
+  <a href="#rounds">tasks</a>
   <a href="docs.html">docs</a>
   <a href="https://github.com/Social-Atoms/social-sim-arena">github</a>
   <a href="/opinion-arena.html">background</a>
@@ -362,9 +453,70 @@ const fmtCountdown = ms => {
 const fmtLocal = iso => new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 const fmtDate = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'}); };
 const dnum = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(y, m-1, d).getTime(); };
+const FIRST_WEEKLY_DEADLINE = Date.UTC(2026,8,14,12);
+function deadlineOf(r){
+  if(r.deadline) return r.deadline;
+  const lock = new Date(r.lock_at), day = lock.getUTCDay();
+  let back = (day + 6) % 7;
+  let candidate = Date.UTC(lock.getUTCFullYear(),lock.getUTCMonth(),lock.getUTCDate()-back,12);
+  if(candidate >= lock.getTime()) candidate -= 7*86400000;
+  return candidate >= FIRST_WEEKLY_DEADLINE ? new Date(candidate).toISOString() : r.lock_at;
+}
 function submissionLink(track){
   return 'submit.html#'+track;
 }
+
+/* Subject first, answer shape second. The four groups are the public task map;
+   each task then names its population and its own scoring shape. */
+const TASK_GROUPS = [
+  {id:'opinion', label:'Public opinion', short:'approval + elections'},
+  {id:'sentiment', label:'Sentiment & expectations', short:'consumers + investors'},
+  {id:'population', label:'Population profiles', short:'subgroups jointly'},
+  {id:'attention', label:'Collective attention', short:'search + reading ranks'},
+];
+const CIVIQS_PROFILE_CELLS = [
+  'civiqs_net_approval_dem','civiqs_net_approval_ind','civiqs_net_approval_rep',
+  'civiqs_net_approval_age_18_34','civiqs_net_approval_age_35_49','civiqs_net_approval_age_50_64','civiqs_net_approval_age_65_up',
+  'civiqs_net_approval_race_white','civiqs_net_approval_race_black','civiqs_net_approval_race_hispanic','civiqs_net_approval_race_other',
+  'civiqs_net_approval_edu_college','civiqs_net_approval_edu_noncollege','civiqs_net_approval_edu_postgrad',
+  'civiqs_net_approval_male','civiqs_net_approval_female'
+];
+const CIVIQS_SUBGROUP_CELLS = [
+  'civiqs_net_approval_rep','civiqs_net_approval_ind','civiqs_net_approval_male',
+  'civiqs_net_approval_age_35_49','civiqs_net_approval_age_50_64','civiqs_net_approval_race_hispanic'
+];
+const YOUGOV_PROFILE_CELLS = [
+  'yougov_xtab_approve_dem','yougov_xtab_approve_ind','yougov_xtab_approve_rep',
+  'yougov_xtab_approve_age_under_30','yougov_xtab_approve_age_30_44','yougov_xtab_approve_age_45_64','yougov_xtab_approve_age_65_up',
+  'yougov_xtab_approve_race_white','yougov_xtab_approve_race_black','yougov_xtab_approve_race_hispanic',
+  'yougov_xtab_approve_male','yougov_xtab_approve_female',
+  'yougov_xtab_approve_edu_hs_or_less','yougov_xtab_approve_edu_some_college','yougov_xtab_approve_edu_college_grad','yougov_xtab_approve_edu_postgrad'
+];
+const TREND_CELLS = ['trends_share_tesla','trends_share_iphone','trends_share_samsung','trends_share_netflix','trends_share_disney'];
+const TASKS = {
+  agg:{label:'All task families', group:null, population:'All measured populations', cadence:'weekly + release calendar', shape:'three task shapes'},
+  yougov_approval:{label:'Economist / YouGov approval',group:'opinion',population:'US adult citizens',cadence:'weekly',shape:'topline distribution',chart:'yougov_approval',unit:'%',tracker:'yougov_approval',per:'yougov_approval',srcName:'YouGov',srcUrl:'https://yougov.com/en-us/topics/topic/The_Economist_YouGov_polls',match:r=>r.series==='yougov_approval'},
+  mc_approval:{label:'Morning Consult approval',group:'opinion',population:'US registered voters',cadence:'weekly',shape:'topline distribution',chart:'mc_approval',unit:'%',tracker:'mc_approval',per:'mc_approval',srcName:'Morning Consult',srcUrl:'https://pro.morningconsult.com/trackers/donald-trump-congress-policy-republicans-polling',match:r=>r.series==='mc_approval'},
+  civiqs_approval:{label:'Civiqs approval',group:'opinion',population:'US registered voters',cadence:'weekly snapshot',shape:'topline distribution',chart:'civiqs_net_approval',unit:' pts',zero:true,per:'civiqs_net_approval',srcName:'Civiqs',srcUrl:'https://civiqs.com/results/approve_president_trump_2025',match:r=>r.series==='civiqs_net_approval' && (r.target_type||'continuous_normal')==='continuous_normal'},
+  hh_approval:{label:'Harvard / Harris approval',group:'opinion',population:'US registered voters',cadence:'roughly monthly',shape:'topline distribution',chart:'hh_trump_approval',unit:'%',srcName:'Harvard CAPS / Harris Poll',srcUrl:'https://harvardharrispoll.com/',match:r=>r.series==='hh_trump_approval'},
+  generic_margin:{label:'Generic ballot & midterm',group:'opinion',population:'US voters',cadence:'weekly + election',shape:'topline distribution',chart:'generic_margin',unit:' pts',zero:true,tracker:'generic_ballot_avg',per:'yougov_generic_margin',srcName:'Silver Bulletin',srcUrl:'https://www.natesilver.net/p/generic-ballot-average-2026-nate-silver-bulletin-congress-polls',match:r=>['yougov_generic_margin','generic_ballot_margin','house_seats'].includes(r.series)},
+  umich_sentiment:{label:'Michigan consumer sentiment',group:'sentiment',population:'US consumers',cadence:'twice monthly',shape:'topline distribution',chart:'umich_sentiment',unit:'',tracker:'umich_sentiment',per:'umich_sentiment',srcName:'University of Michigan',srcUrl:'https://www.sca.isr.umich.edu/',match:r=>r.series==='umich_sentiment'},
+  sce_inflation:{label:'Household inflation expectations',group:'sentiment',population:'US household heads',cadence:'monthly',shape:'topline distribution',chart:'sce_inflation_1y',unit:'%',srcName:'New York Fed SCE',srcUrl:'https://www.newyorkfed.org/microeconomics/sce',match:r=>/^sce_inflation_/.test(r.series)},
+  aaii_sentiment:{label:'Investor sentiment',group:'sentiment',population:'AAII members',cadence:'weekly',shape:'topline distribution',chart:'aaii_bull_bear_spread',unit:' pts',zero:true,srcName:'AAII',srcUrl:'https://www.aaii.com/sentimentsurvey',match:r=>r.series==='aaii_bull_bear_spread'},
+  civiqs_profile:{label:'Civiqs 16-cell profile',group:'population',population:'US registered voters · 16 cells jointly',cadence:'weekly',shape:'population profile',kind:'profile',cells:CIVIQS_PROFILE_CELLS,unit:' net pts',srcName:'Civiqs',srcUrl:'https://civiqs.com/results/approve_president_trump_2025',match:r=>r.target_type==='profile_energy' && r.series==='civiqs_net_approval'},
+  civiqs_subgroups:{label:'Civiqs subgroup toplines',group:'population',population:'Six registered-voter subgroups',cadence:'weekly',shape:'one distribution per subgroup',kind:'profile',cells:CIVIQS_SUBGROUP_CELLS,unit:' net pts',srcName:'Civiqs',srcUrl:'https://civiqs.com/results/approve_president_trump_2025',match:r=>(r.target_type||'continuous_normal')==='continuous_normal' && /^civiqs_net_approval_(?!$)/.test(r.series)},
+  yougov_profile:{label:'YouGov measured crosstabs',group:'population',population:'US registered voters · 16 cells',cadence:'weekly wave',shape:'population profile',kind:'profile',cells:YOUGOV_PROFILE_CELLS,unit:'%',srcName:'Economist / YouGov',srcUrl:'https://yougov.com/en-us/topics/topic/The_Economist_YouGov_polls',match:r=>r.target_type==='profile_energy' && /^yougov_xtab_/.test(r.series)},
+  umich_party:{label:'Sentiment by party',group:'population',population:'US consumers · 3 party groups',cadence:'monthly',shape:'subgroup toplines',kind:'profile',cells:['umich_party_dem','umich_party_ind','umich_party_rep'],unit:' index',srcName:'University of Michigan',srcUrl:'https://www.sca.isr.umich.edu/',match:r=>/^umich_party_/.test(r.series)},
+  trends_basket:{label:'Brand search-interest mix',group:'attention',population:'US Google searches · 5 brands',cadence:'weekly',shape:'share profile',kind:'profile',cells:TREND_CELLS,unit:'%',srcName:'Google Trends',srcUrl:'https://trends.google.com/trends/',match:r=>r.series==='trends_share_iphone'},
+  wiki_top10:{label:'Wikipedia weekly top 10',group:'attention',population:'English Wikipedia readers',cadence:'weekly',shape:'ordered ranking',kind:'ranking',srcName:'Wikimedia',srcUrl:'https://pageviews.wmcloud.org/topviews/',match:r=>r.series==='wiki_top10_en'},
+  search_interest:{label:'Search interest levels',group:'attention',population:'US Google searches',cadence:'weekly',shape:'topline distribution',chart:'trends_iphone',unit:'',srcName:'Google Trends',srcUrl:'https://trends.google.com/trends/',match:r=>/^trends_(iphone|tesla)$/.test(r.series)},
+  wiki_views:{label:'Wikipedia pageviews',group:'attention',population:'English Wikipedia readers',cadence:'weekly',shape:'topline distribution',chart:'wiki_views_trump',unit:'k',srcName:'Wikimedia',srcUrl:'https://pageviews.wmcloud.org/',match:r=>/^wiki_views_/.test(r.series)},
+};
+function taskRounds(task, data){ return !task || !task.match ? [] : (data.rounds||[]).filter(task.match); }
+function taskKeyForRound(r){ return Object.keys(TASKS).find(k=>k!=='agg' && TASKS[k].match && TASKS[k].match(r)) || 'agg'; }
+function taskForRound(r){ return TASKS[taskKeyForRound(r)] || TASKS.agg; }
+function pointsFor(data, key){ return ((data.charts||{})[key] || (data.series_tail||{})[key] || []).filter(p=>p && typeof p.value==='number'); }
+function cellLabel(key){ return String(key).replace(/^(civiqs_net_approval_|yougov_xtab_approve_|trends_share_|umich_party_)/,'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); }
 function niceTicks(lo, hi, n){
   if(!(hi>lo)){ const c=lo||0; lo=c-0.5; hi=c+0.5; }
   const span=hi-lo, raw=span/(n-1), mag=Math.pow(10,Math.floor(Math.log10(raw)));
@@ -628,15 +780,15 @@ function aggChart(traj, nameOf, unit){
 }
 
 function seriesChart(key, data){
-  const d = TABDEFS[key];
+  const d = TASKS[key];
   const svg = clearChart(), tip = pane().querySelector('.tooltip');
-  let series = (data.charts||{})[d.chart];
+  let series = pointsFor(data, d.chart);
   if(!series || series.length<2){ svg.style.display='none'; return; }
   const pw = pane().clientWidth, ph = pane().clientHeight;
   if(pw < 80 || ph < 80){ svg.style.display='none'; return; }
   if(!window.__hidden){ window.__hidden = defaultHidden(window.__data); }
-  const upcoming = (data.rounds||[]).filter(r =>
-    r.series === d.rseries && r.forecasts && Object.keys(r.forecasts).length &&
+  const upcoming = taskRounds(d,data).filter(r =>
+    r.forecasts && Object.keys(r.forecasts).length &&
     (r.status==='open' || r.status==='locked'));
   const hidden = coerceUnknown(upcoming.flatMap(r=>Object.keys(r.forecasts)));
   const W = pw-8, small = W < 640, H = ph-6, P = {t:36,r:70,b:26,l:14};
@@ -726,115 +878,187 @@ function seriesChart(key, data){
   renderLegend([...allIds].sort(), nameOf, 'forecasts for the next releases · click to toggle');
 }
 
-function demoReplay(){
-  const svg = document.getElementById('demo-svg');
-  if(!svg || svg.dataset.done) return;
-  const box = svg.parentElement.getBoundingClientRect();
-  const W = Math.max(box.width-30, 300);
-  const rows = [['crowd',49.3,1.2],['gpt-5.5',50.4,1.6],['claude-opus',48.6,1.4],['persistence',49.5,1.5],['trend',48.1,2.2]];
-  const outcome = 49.1, RH = 30, PL = 118, PR = 86, H = rows.length*RH+30;
-  let lo=1e9, hi=-1e9;
-  rows.forEach(([,m,s])=>{lo=Math.min(lo,m-2.3*s);hi=Math.max(hi,m+2.3*s);});
-  const X = v => PL + (v-lo)/(hi-lo)*(W-PL-PR);
-  let g = '';
-  rows.forEach(([id,m,s],i)=>{
-    const y = 20+i*RH, c = colorOf(id);
-    g += `<text x="${PL-10}" y="${y+4}" font-size="12" font-weight="600" fill="#4f4e49" text-anchor="end">${id}</text>`;
-    g += `<line x1="${X(m-2*s)}" x2="${X(m+2*s)}" y1="${y}" y2="${y}" stroke="${c}" stroke-width="1.4" opacity=".55"/>`;
-    g += `<rect x="${X(m-s)}" y="${y-4.5}" width="${X(m+s)-X(m-s)}" height="9" rx="3" fill="${c}" opacity=".3"/>`;
-    g += `<circle cx="${X(m)}" cy="${y}" r="4" fill="${c}" stroke="#fff" stroke-width="1.4"/>`;
-    g += `<text x="${W-PR+10}" y="${y+4}" font-size="11.5" fill="#96948d">off by ${Math.abs(m-outcome).toFixed(1)}</text>`;
-  });
-  g += `<line x1="${X(outcome)}" x2="${X(outcome)}" y1="6" y2="${H-16}" stroke="#15803d" stroke-width="2"/>`;
-  g += `<text x="${X(outcome)}" y="${H-2}" font-size="11.5" font-weight="800" fill="#0a6a30" text-anchor="middle">released ${outcome}</text>`;
-  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.setAttribute('height',H);
-  svg.innerHTML = g; svg.dataset.done = '1';
+function renderTaskNav(data,key){
+  const host = document.getElementById('task-families');
+  document.getElementById('task-all-count').textContent = (data.rounds||[]).length;
+  const activeGroup = (TASKS[key]||TASKS.agg).group;
+  host.innerHTML = TASK_GROUPS.map(g=>{
+    const keys = Object.keys(TASKS).filter(k=>TASKS[k].group===g.id);
+    const count = keys.reduce((n,k)=>n+taskRounds(TASKS[k],data).length,0);
+    return '<details class="task-group'+(activeGroup===g.id?' selected':'')+'" '+(activeGroup===g.id?'open':'')+'>'
+      +'<summary><span>'+esc(g.label)+'</span><span class="tc">'+count+'</span></summary><div class="task-items">'
+      +keys.map(k=>'<button class="task-link'+(k===key?' on':'')+'" data-task="'+k+'">'+esc(TASKS[k].label)
+        +'<small>'+esc(TASKS[k].population)+'</small></button>').join('')+'</div></details>';
+  }).join('');
+  document.querySelector('.task-all').classList.toggle('on',key==='agg');
+  host.querySelectorAll('[data-task]').forEach(b=>b.onclick=()=>{ setTab(b.dataset.task); renderBoard(window.__board||'all'); });
 }
 
-const TABDEFS = {
-  agg: {},
-  umich_sentiment: { chart:'umich_sentiment', unit:'', label:'Michigan consumer sentiment', tracker:'umich_sentiment', per:'umich_sentiment', rseries:'umich_sentiment', srcName:'sca.isr.umich.edu', srcUrl:'https://www.sca.isr.umich.edu/' },
-  yougov_approval: { chart:'yougov_approval', unit:'%', label:'Economist/YouGov Trump approval', tracker:'yougov_approval', per:'yougov_approval', rseries:'yougov_approval', srcName:'yougov.com', srcUrl:'https://yougov.com/en-us/topics/topic/The_Economist_YouGov_polls' },
-  mc_approval: { chart:'mc_approval', unit:'%', label:'Morning Consult Trump approval', tracker:'mc_approval', per:'mc_approval', rseries:'mc_approval', srcName:'morningconsult.com', srcUrl:'https://pro.morningconsult.com/trackers/donald-trump-congress-policy-republicans-polling' },
-  generic_margin: { chart:'generic_margin', unit:'', zero:true, label:'2026 generic ballot margin, Dem minus Rep', tracker:'generic_ballot_avg', per:'yougov_generic_margin', rseries:'yougov_generic_margin', srcName:'Silver Bulletin', srcUrl:'https://www.natesilver.net/p/generic-ballot-average-2026-nate-silver-bulletin-congress-polls' },
-};
+function renderTaskHeader(data,key){
+  const d = TASKS[key]||TASKS.agg;
+  const group = TASK_GROUPS.find(g=>g.id===d.group);
+  document.getElementById('task-eyebrow').textContent = group ? group.label : 'Benchmark overview';
+  document.getElementById('task-title').textContent = d.label;
+  const rs = taskRounds(d,data).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
+  const active = rs.filter(r=>r.status==='open' && Date.parse(deadlineOf(r))>Date.now());
+  document.getElementById('task-meta').innerHTML = '<span><b>Population</b> '+esc(d.population)+'</span><span><b>Cadence</b> '+esc(d.cadence)+'</span><span><b>Answer</b> '+esc(d.shape)+'</span><span><b>Rounds</b> '+rs.length+'</span>';
+  const card = document.getElementById('task-question-card');
+  if(key==='agg'){ card.style.display='none'; return; }
+  card.style.display='';
+  const r = active[0] || rs.slice(-1)[0];
+  if(!r){
+    document.getElementById('task-question-summary').textContent='No scheduled question yet';
+    document.getElementById('task-question-body').innerHTML='<p>This registered task has historical data but no reviewed Season 0 round.</p>';
+    return;
+  }
+  const due=deadlineOf(r), state=active.includes(r)?'OPEN':'LATEST';
+  document.getElementById('task-question-summary').innerHTML='<span class="replay-tag">'+state+'</span><span>'+esc(r.round_id)+'</span><span style="margin-left:auto;color:var(--mut);font-weight:500;">due '+esc(fmtLocal(due))+'</span>';
+  document.getElementById('task-question-body').innerHTML='<p>'+esc(r.question)+'</p><div class="qfoot">'
+    +'<span>'+shapeChip(r)+(r.target_type==='profile_energy'?(r.cells||[]).length+' cells':r.target_type==='ranking_list'?'ordered list':'predictive distribution')+'</span>'
+    +'<span>releases '+esc(fmtLocal(r.release_at))+'</span><span>'+esc(r.n_forecasts||0)+' forecasts filed</span>'
+    +'<a class="go" href="#rounds">view every question →</a></div>';
+}
+
+function alignedVectors(data,cells){
+  const maps=cells.map(c=>new Map(pointsFor(data,c).map(p=>[p.date,p.value])));
+  if(!maps.length) return [];
+  return [...maps[0].keys()].filter(dt=>maps.every(m=>m.has(dt))).sort().map(dt=>({date:dt,values:maps.map(m=>m.get(dt))}));
+}
+const avg = xs => xs.length ? xs.reduce((a,b)=>a+b,0)/xs.length : 0;
+const rmse = (a,b) => Math.sqrt(avg(a.map((x,i)=>(x-b[i])**2)));
+function replayRows(vectors, ranked){
+  if(vectors.length<4) return [];
+  const names=['persistence','ewma','trend','climatology'], errs={persistence:[],ewma:[],trend:[],climatology:[]};
+  const loss = ranked ? ((a,b)=>{
+    let bad=0,n=0; const pos=new Map(b.map((x,i)=>[x,i]));
+    for(let i=0;i<a.length;i++) for(let j=i+1;j<a.length;j++){n++; if(pos.get(a[i])>pos.get(a[j])) bad++;}
+    return n?bad/n:0;
+  }) : rmse;
+  const order = vals => vals.map((v,i)=>[i,v]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  for(let i=3;i<vectors.length;i++){
+    const hist=vectors.slice(0,i), truth=vectors[i].values;
+    const pred={
+      persistence:hist[i-1].values,
+      ewma:truth.map((_,j)=>{let v=hist[0].values[j]; for(let k=1;k<hist.length;k++)v=.55*hist[k].values[j]+.45*v; return v;}),
+      trend:truth.map((_,j)=>{
+        const start=Math.max(1,hist.length-3);
+        const changes=hist.slice(start).map((v,k)=>v.values[j]-hist[start+k-1].values[j]);
+        return hist[i-1].values[j]+avg(changes);
+      }),
+      climatology:truth.map((_,j)=>avg(hist.map(v=>v.values[j])))
+    };
+    names.forEach(n=>errs[n].push(loss(ranked?order(pred[n]):pred[n],ranked?order(truth):truth)));
+  }
+  const base=avg(errs.persistence);
+  return names.map(n=>({entrant:n,rounds:errs[n].length,mean_crps:avg(errs[n]),mean_skill:base?1-avg(errs[n])/base:0,baseline:true})).sort((a,b)=>a.mean_crps-b.mean_crps);
+}
+function scalarReplay(d,data){
+  const pts=pointsFor(data,d.chart); if(pts.length<5)return [];
+  return replayRows(pts.map(p=>({date:p.date,values:[p.value]})),false);
+}
+function profileReplay(d,data){ return replayRows(alignedVectors(data,d.cells||[]),false); }
+function rankingReplay(d,data){ return d.cells ? replayRows(alignedVectors(data,d.cells),true) : []; }
+
+function profileChart(d,data){
+  const svg=clearChart(), rows=(d.cells||[]).map(c=>{
+    const ps=pointsFor(data,c); return ps.length?{key:c,value:ps[ps.length-1].value,prev:ps.length>1?ps[ps.length-2].value:null,date:ps[ps.length-1].date}:null;
+  }).filter(Boolean);
+  renderLegend([],{},'');
+  if(!rows.length){svg.innerHTML='<text x="50%" y="48%" text-anchor="middle" fill="#96948d" font-size="13">No profile history is published yet</text>';return;}
+  const W=Math.max(pane().clientWidth-8,360),H=Math.max(250,rows.length*21+48),P={t:18,r:45,b:25,l:132};
+  const vals=rows.flatMap(r=>r.prev==null?[r.value]:[r.value,r.prev]); let lo=Math.min(...vals),hi=Math.max(...vals); if(lo>0)lo=0; if(hi<0)hi=0; const span=hi-lo||1;
+  const X=v=>P.l+(v-lo)/span*(W-P.l-P.r), RH=(H-P.t-P.b)/rows.length;
+  let g='<rect x="'+P.l+'" y="'+P.t+'" width="'+(W-P.l-P.r)+'" height="'+(H-P.t-P.b)+'" fill="none" stroke="#e0e0e0"/>';
+  if(lo<0&&hi>0)g+='<line x1="'+X(0)+'" x2="'+X(0)+'" y1="'+P.t+'" y2="'+(H-P.b)+'" stroke="#96948d" stroke-dasharray="2 4"/>';
+  rows.forEach((r,i)=>{const y=P.t+(i+.5)*RH,base=X(0),x=X(r.value),c=r.value>=0?'#15803d':'#8b897f';
+    g+='<text x="'+(P.l-8)+'" y="'+(y+3.5)+'" font-size="10.5" fill="#4f4e49" text-anchor="end">'+esc(cellLabel(r.key))+'</text>';
+    g+='<rect x="'+Math.min(base,x)+'" y="'+(y-4)+'" width="'+Math.max(1,Math.abs(x-base))+'" height="8" rx="2" fill="'+c+'" opacity=".72"/>';
+    if(r.prev!=null)g+='<circle cx="'+X(r.prev)+'" cy="'+y+'" r="2.2" fill="#fff" stroke="#111110" stroke-width="1"/>';
+    g+='<text x="'+(x+(r.value>=0?5:-5))+'" y="'+(y+3.5)+'" font-size="10" font-weight="700" fill="#111110" text-anchor="'+(r.value>=0?'start':'end')+'">'+r.value+'</text>';
+  });
+  g+='<text x="'+P.l+'" y="'+(H-6)+'" font-size="10.5" fill="#96948d">bars = latest · dots = previous · '+fmtDate(rows[0].date)+'</text>';
+  svg.setAttribute('viewBox','0 0 '+W+' '+H); svg.innerHTML=g;
+}
+function rankingChart(d,data){
+  const svg=clearChart(); renderLegend([],{},''); const r=taskRounds(d,data).slice(-1)[0];
+  svg.setAttribute('viewBox','0 0 700 300');
+  svg.innerHTML='<rect x="24" y="28" width="652" height="220" rx="5" fill="#fafaf8" stroke="#e0e0e0"/>'
+    +'<text x="350" y="105" text-anchor="middle" fill="#111110" font-size="18" font-weight="700">The list is the forecast</text>'
+    +'<text x="350" y="137" text-anchor="middle" fill="#4f4e49" font-size="13">Predict ten article titles in order. Rank-biased overlap scores the whole list.</text>'
+    +'<text x="350" y="170" text-anchor="middle" fill="#96948d" font-size="12">No historical Wikipedia list archive is published in data.json yet.</text>'
+    +'<text x="350" y="195" text-anchor="middle" fill="#0a6a30" font-size="12" font-weight="700">'+esc(r?'First live round: '+r.round_id:'No scheduled round')+'</text>';
+}
 
 function setTab(key){
-  window.__tab = key; if(typeof syncHash==='function') syncHash();
-  window.__tab = key;
-  document.querySelectorAll('#chart-tabs button').forEach(b=>b.classList.toggle('on', b.dataset.tab===key));
-  const data = window.__data; if(!data) return;
-  const nameOf = {}; (data.entrants||[]).forEach(e => nameOf[e.entrant_id]=e.name);
-  const unitSeg = document.getElementById('unit-seg');
-  const bt = data.backtest || {};
-  // The legend lists what the chart in front of you can draw, taken from the
-  // trajectory it is drawing. Listing the full roster instead offers chips
-  // that toggle nothing -- `crowd`, for one, is not scored in the model
-  // backtest at all.
-  const roster = ['climatology','trend','ewma']
-    .concat(bt.model_entrants || bt.mock_models || []).concat(['crowd']);
-  const legendFor = traj => !traj || !traj.length ? [] : roster.filter(s =>
-    traj.some(t => (t.skills && t.skills[s] != null) || (t.crps && t.crps[s] != null)));
-  // Every tab opens on skill, so a tracker tab answers the same question the
-  // aggregate does -- who forecast this well -- for one tracker. Opening on
-  // the tracker's own level instead put the model curves behind a control you
-  // had to find first, which reads as "this tab has no model data" when it
-  // has six months of it. The level view, with the forecast dots for the next
-  // release, is one click away. Two separate memories, so moving between tabs
-  // does not silently change what the other was showing.
-  let unit = key==='agg' ? (window.__unitAgg || 'arena') : (window.__unitSer || 'arena');
-  if(unit==='skill') unit = 'arena';
-  unitSeg.style.display='';
-  unitSeg.querySelector('[data-unit="level"]').style.display = key==='agg' ? 'none' : '';
-  unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.unit===unit));
-
+  if(!TASKS[key])key='agg'; window.__tab=key; if(typeof syncHash==='function')syncHash();
+  const data=window.__data;if(!data)return; const d=TASKS[key],bt=data.backtest||{},nameOf={};
+  (data.entrants||[]).forEach(e=>nameOf[e.entrant_id]=e.name);
+  renderTaskNav(data,key); renderTaskHeader(data,key);
+  const unitSeg=document.getElementById('unit-seg'),rangeSeg=document.getElementById('range-seg');
+  const roster=['climatology','trend','ewma'].concat(bt.model_entrants||bt.mock_models||[]).concat(['crowd']);
+  const legendFor=traj=>!traj||!traj.length?[]:roster.filter(s=>traj.some(t=>(t.skills&&t.skills[s]!=null)||(t.crps&&t.crps[s]!=null)));
   if(key==='agg'){
-    document.getElementById('caption').textContent = unit==='crps'
-      ? 'Average forecast error (CRPS, in points), lower is better. Measured on the releases every entrant answered, each model scored only after its own training cutoff. Five leading models shown; click the legend for the rest.'
-      : unit==='arena'
-      ? 'Arena score: 0 is copying the last release, 100 is a perfect oracle. Cumulative over the releases every entrant answered. r10 saw the last ten values, zs saw none. Five leading models shown; click the legend for the rest.'
-      : 'Cumulative skill vs the persistence baseline, higher is better. Measured on the releases every entrant answered, each model scored only after its own training cutoff. r10 saw the last ten values, zs saw none. Five leading models shown; click the legend for the rest.';
-    aggChart(bt.trajectory, nameOf, unit);
-    renderLegend(legendFor(bt.trajectory), nameOf, 'click to toggle');
-    return;
+    unitSeg.style.display='';rangeSeg.style.display='';unitSeg.querySelector('[data-unit="level"]').style.display='none';
+    const unit=window.__unitAgg||'arena';unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.unit===unit));
+    document.getElementById('caption').textContent=unit==='crps'?'Model backtest · average CRPS, lower is better.':'Model backtest · Arena score over every matched historical release. 0 is persistence; 100 is a perfect oracle.';
+    aggChart(bt.trajectory,nameOf,unit);renderLegend(legendFor(bt.trajectory),nameOf,'click to compare entrants');return;
   }
-
-  const d = TABDEFS[key];
-  const tr = (data.trackers||{})[d.tracker]||{};
-  const per = (bt.per_series||{})[d.per];
-  const top = per && per[0] ? ' · best model here: '+(nameOf[per[0].entrant]||per[0].entrant).split(' (')[0]+' '+(per[0].mean_skill>0?'+':'')+(per[0].mean_skill*100).toFixed(1)+'%' : '';
-  // Per-tracker model curves. The tracker's own line answers "what is this
-  // number doing"; this answers "who forecast it well", which until now was
-  // visible only as one name in the caption even though the backtest measures
-  // it per series.
-  const psTraj = (bt.per_series_trajectory||{})[d.per];
-  if(unit!=='level' && psTraj && psTraj.length>1){
-    document.getElementById('caption').innerHTML =
-      esc(d.label)+' · '+(unit==='crps' ? 'average forecast error on this tracker alone (CRPS, in points), lower is better'
-                                        : unit==='arena' ? 'arena score on this tracker alone: 0 is copying the last release, 100 is a perfect oracle'
-                                        : 'cumulative skill on this tracker alone vs persistence, higher is better')
-      +' · '+psTraj[psTraj.length-1].n+' releases, each model over the part of them that falls after its own training cutoff, so a line begins where its model becomes eligible'
-      +' · latest '+esc(tr.value!=null?tr.value:'n/a')+esc(d.unit||'')+' as of '+esc(tr.asof||'n/a')+', the tracker itself is under <b>Tracker</b>'
-      +' · data source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener" style="color:var(--link);text-decoration:none;font-weight:600;">'+esc(d.srcName)+'</a>';
-    aggChart(psTraj, nameOf, unit);
-    renderLegend(legendFor(psTraj), nameOf, 'click to toggle');
-    return;
+  if(d.kind==='profile'){
+    unitSeg.style.display='none';rangeSeg.style.display='none';
+    document.getElementById('caption').innerHTML='<span class="replay-tag">LATEST PROFILE</span> · every bar is a measured population cell, not a model estimate · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
+    profileChart(d,data);return;
   }
-  document.getElementById('caption').innerHTML =
-    esc(d.label)+' · latest '+esc(tr.value!=null?tr.value:'n/a')+esc(d.unit||'')+', as of '+esc(tr.asof||'n/a')+esc(top)
-    +' · dots: forecasts for the next releases · data source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener" style="color:var(--link);text-decoration:none;font-weight:600;">'+esc(d.srcName)+'</a>';
-  seriesChart(key, data);
+  if(d.kind==='ranking'){
+    unitSeg.style.display='none';rangeSeg.style.display='none';
+    document.getElementById('caption').innerHTML='<span class="replay-tag">RANKING TASK</span> · the exact question and scoring object are shown before any leaderboard number';rankingChart(d,data);return;
+  }
+  const psTraj=(bt.per_series_trajectory||{})[d.per],hasModel=psTraj&&psTraj.length>1;
+  let unit=hasModel?(window.__unitSer||'arena'):'level'; unitSeg.style.display='';rangeSeg.style.display='';
+  unitSeg.querySelector('[data-unit="level"]').style.display='';unitSeg.querySelector('[data-unit="arena"]').style.display=hasModel?'':'none';unitSeg.querySelector('[data-unit="crps"]').style.display=hasModel?'':'none';
+  unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.unit===unit));
+  if(unit!=='level'&&hasModel){
+    document.getElementById('caption').innerHTML='<span class="replay-tag">MODEL BACKTEST</span> · '+esc(d.label)+' · '+psTraj[psTraj.length-1].n+' matched releases · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
+    aggChart(psTraj,nameOf,unit);renderLegend(legendFor(psTraj),nameOf,'historical forecasts');return;
+  }
+  const pts=pointsFor(data,d.chart),last=pts.slice(-1)[0];
+  document.getElementById('caption').innerHTML='<span class="replay-tag">OBSERVED HISTORY</span> · '+esc(d.label)+(last?' · latest '+last.value+esc(d.unit||'')+' on '+fmtDate(last.date):'')+' · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
+  seriesChart(key,data);
 }
 
 const SPANLABEL = {all:'the releases every entrant answered', m6:'the releases every entrant answered', d30:'the releases every entrant answered', last:'the releases every entrant answered'};
 function renderBoard(mode){
   const data = window.__data; if(!data) return;
   window.__board = mode; if(typeof syncHash==='function') syncHash();
+  const key=window.__tab||'agg',d=TASKS[key]||TASKS.agg, span=document.getElementById('span-seg');
+  span.style.display=key==='agg'?'':'none';
   document.querySelectorAll('#span-seg button').forEach(b=>b.classList.toggle('on', b.dataset.span===mode));
-  const lb = data.leaderboard || {};
   const nameOf = {}, typeOf = {};
   (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; });
   const btMap = {}; ((data.backtest&&data.backtest.overall)||[]).forEach(e=>btMap[e.entrant]=e);
+  let entries=[],metricKey='mean_crps',metricLabel='CRPS',title='LEADERBOARD',note='',appendPending=false,replay=false;
+  if(key==='agg'){
+    const spans=(data.backtest&&data.backtest.spans)||{};
+    entries=spans[mode]||(data.backtest&&data.backtest.overall)||[];appendPending=true;
+    title='ALL-TASK MODEL BACKTEST';
+    note='Walk-forward model replay on matched historical releases. Arena score 0 is persistence and 100 is a perfect oracle.';
+  }else if(d.kind==='profile'){
+    const live=((data.profile||{}).matched||[]).length?(data.profile||{}).matched:(data.profile||{}).board||[];
+    if(live.length){entries=live;metricKey='mean_energy';metricLabel='Energy';title='PROFILE LEADERBOARD';note=(data.profile||{}).note||'';}
+    else{entries=profileReplay(d,data);metricLabel='Profile RMSE';title='BASELINE REPLAY';replay=true;note='Historical walk-forward replay over aligned population snapshots. Baselines only; this is context while Season 0 profile rounds await resolution, not a live model rank.';}
+  }else if(d.kind==='ranking'){
+    const live=((data.ranking||{}).matched||[]).length?(data.ranking||{}).matched:(data.ranking||{}).board||[];
+    if(live.length){entries=live;metricKey='mean_loss';metricLabel='Loss';title='RANKING LEADERBOARD';note=(data.ranking||{}).note||'';}
+    else{entries=rankingReplay(d,data);metricLabel='Rank loss';title='BASELINE REPLAY';replay=true;note='A ranking replay needs archived historical lists. The UI does not invent one when the published payload has none.';}
+  }else{
+    const model=(data.backtest&&data.backtest.per_series&&data.backtest.per_series[d.per])||[];
+    const base=(data.backtest&&data.backtest.baseline_replay&&data.backtest.baseline_replay.per_series&&data.backtest.baseline_replay.per_series[d.per])||[];
+    entries=model.length?model:(base.length?base:scalarReplay(d,data));
+    title=model.length?'TASK MODEL BACKTEST':'BASELINE REPLAY'; replay=!model.length;
+    note=model.length?'Model walk-forward replay for this task only; every forecast is after its own training cutoff.':'A small walk-forward baseline replay from the task history currently published to the site. It is not a Season 0 model result.';
+  }
+  document.getElementById('lb-title').textContent=title;
+  document.getElementById('lb-score-head').textContent=replay?'Skill':'Score';
+  document.getElementById('lb-loss-head').textContent=metricLabel;
   function row(id, s, rank, ref){
     const arena = s ? 100*s.mean_skill : null;
     const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0)) : '<span class="pend">···</span>';
@@ -849,22 +1073,22 @@ function renderBoard(mode){
       + (id==='persistence'?' <span class="type">· reference</span>':'')
       + '<br><span class="type">'+esc(typeOf[id]||'baseline')+mockTag+'</span></span></span></td>'
       + '<td class="num skill'+(pos?' pos':'')+'">'+skillTxt+subSkill+refLine+'</td>'
-      + '<td class="num">'+(s ? s.mean_crps.toFixed(2) : '·')+'</td>'
+      + '<td class="num">'+(s && typeof s[metricKey]==='number' ? s[metricKey].toFixed(metricLabel==='Loss'||metricLabel==='Rank loss'?3:2) : '·')+'</td>'
       + '<td class="num">'+(s ? s.rounds : 0)+'</td></tr>';
   }
   const body = document.getElementById('lb-body');
-  const spans = (data.backtest && data.backtest.spans) || {};
-  const entries = spans[mode] || (data.backtest&&data.backtest.overall) || [];
   window.__perRow = entries.find(e=>e.entrant==='persistence') || null;
   const seen = new Set(entries.map(e=>e.entrant));
-  const orderT = {llm:0, human:1, baseline:2};
-  const rest = (data.entrants||[]).filter(e=>!seen.has(e.entrant_id))
-    .sort((a,b)=>(orderT[a.type]??3)-(orderT[b.type]??3) || a.name.localeCompare(b.name));
-  body.innerHTML = (entries.map((e,i)=>row(e.entrant, e, i+1)).join('')
-    + rest.map(e=>row(e.entrant_id, null, null)).join('')) || '<tr><td colspan="5">…</td></tr>';
-  const n = entries.length ? entries[0].rounds : 0;
-  document.getElementById('lb-note').textContent =
-    'Arena score over '+(SPANLABEL[mode]||mode)+' · '+n+' scored release'+(n===1?'':'s')+' per entrant. 0 is copying the last release; 100 is a perfect oracle. Live rounds join the window as they resolve, starting Aug 14; the Nov 3 midterm exam is the finale. Pending entrants show after their first scored release.';
+  const orderT = {llm:0, baseline:1};
+  const rest = appendPending ? (data.entrants||[]).filter(e=>e.type!=='human'&&!seen.has(e.entrant_id))
+    .sort((a,b)=>(orderT[a.type]??3)-(orderT[b.type]??3) || a.name.localeCompare(b.name))
+    : [];
+  body.innerHTML = entries.map((e,i)=>row(e.entrant,e,i+1)).join('')+rest.map(e=>row(e.entrant_id,null,null)).join('');
+  if(!body.innerHTML){
+    const nx=taskRounds(d,data).filter(r=>r.status!=='resolved').sort((a,b)=>a.release_at.localeCompare(b.release_at))[0];
+    body.innerHTML='<tr><td colspan="5" style="padding:18px;color:var(--mut);">No defensible historical replay is available for this task.'+(nx?' The first live result is '+esc(nx.round_id)+' on '+esc(fmtDate(nx.release_at))+'.':'')+'</td></tr>';
+  }
+  document.getElementById('lb-note').textContent=note;
 }
 
 // What a round asks for, in three words. Without it the front page presents a
@@ -885,29 +1109,54 @@ function shapeChip(r){
 
 function roundsList(data){
   const el = document.getElementById('rounds-list');
-  const open = data.rounds.filter(r=>r.status==='open'&&Date.parse(r.deadline||r.lock_at)>Date.now()).sort((a,b)=>(a.deadline||a.lock_at).localeCompare(b.deadline||b.lock_at));
-  el.innerHTML = open.slice(0,6).map(r=>{
-    const link = submissionLink('agent');
-    return '<div class="vrow"><span class="live"></span><span class="id">'+esc(r.round_id)+'</span>'
-      + '<span class="q">'+shapeChip(r)+esc(r.question)
-      + ' <span class="dim">· '+(r.n_forecasts||0)+' forecasts in</span></span>'
-      + '<span class="when">due '+esc(fmtLocal(r.deadline||r.lock_at))+'</span>'
-      + '<a class="go" href="'+link+'" target="_blank" rel="noopener">Submit forecast</a></div>';
-  }).join('') + '<div class="vrow"><span class="q" style="text-align:center;"><a href="leaderboard.html#rounds" style="color:var(--mut);text-decoration:none;">all '+data.rounds.length+' rounds →</a></span></div>';
-  demoReplay();
+  const cat=window.__roundCategory||'all',status=window.__roundStatus||'active',query=(window.__roundQuery||'').toLowerCase();
+  const chips=document.getElementById('round-category-chips');
+  chips.innerHTML=[['all','All']].concat(TASK_GROUPS.map(g=>[g.id,g.label])).map(([k,n])=>'<button data-cat="'+k+'" class="'+(cat===k?'on':'')+'">'+esc(n)+'</button>').join('');
+  chips.querySelectorAll('button').forEach(b=>b.onclick=()=>{window.__roundCategory=b.dataset.cat;roundsList(data);});
+  document.querySelectorAll('#round-status-seg button').forEach(b=>b.classList.toggle('on',b.dataset.status===status));
+  const rows=(data.rounds||[]).filter(r=>{
+    const t=taskForRound(r),active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
+    if(status==='active'&&!active)return false;
+    if(cat!=='all'&&t.group!==cat)return false;
+    const hay=(r.round_id+' '+r.question+' '+t.label+' '+t.population).toLowerCase();
+    return !query||hay.includes(query);
+  }).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b))).slice(0,40);
+  el.innerHTML=rows.map(r=>{
+    const t=taskForRound(r),g=TASK_GROUPS.find(x=>x.id===t.group),active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
+    return '<details class="event-card"><summary><div class="vrow"><span class="'+(active?'live':'')+'"></span>'
+      +'<span class="id">'+esc(r.round_id)+'</span><span class="q">'+shapeChip(r)+'<b>'+esc(t.label)+'</b>'
+      +'<span class="dim"> · '+esc(t.population)+'</span></span><span class="when">'+(active?'due ':'released ')+esc(fmtLocal(active?deadlineOf(r):r.release_at))+'</span></div></summary>'
+      +'<div class="event-more"><p>'+esc(r.question)+'</p><div class="facts"><span>'+esc(g?g.label:'Task')+'</span><span>'+esc(t.population)+'</span><span>release '+esc(fmtLocal(r.release_at))+'</span><span>'+esc(r.n_forecasts||0)+' forecasts</span><a class="go" href="#live/'+taskKeyForRound(r)+'/all">open task →</a></div></div></details>';
+  }).join('')||'<div class="week-card"><h3>No matching questions</h3><p>Try another task family, status, or search term.</p></div>';
+}
+
+function renderWeekly(data){
+  const host=document.getElementById('weekly-content');
+  const eligible=(data.rounds||[]).filter(r=>r.status==='open'&&Date.parse(deadlineOf(r))>=FIRST_WEEKLY_DEADLINE&&Date.parse(deadlineOf(r))>Date.now());
+  if(!eligible.length){host.innerHTML='<div class="week-card"><h3>No weekly batch is open</h3><p>The next reviewed batch will appear here with one participant deadline.</p></div>';return;}
+  const due=eligible.map(deadlineOf).sort()[0],batch=eligible.filter(r=>deadlineOf(r)===due),batchId='batch-'+due.slice(0,10);
+  const cats=TASK_GROUPS.map(g=>({label:g.label,n:batch.filter(r=>taskForRound(r).group===g.id).length})).filter(x=>x.n);
+  const shaped={topline:batch.filter(r=>(r.target_type||'continuous_normal')==='continuous_normal').length,profile:batch.filter(r=>r.target_type==='profile_energy').length,ranking:batch.filter(r=>r.target_type==='ranking_list').length};
+  const horizons=batch.map(r=>(Date.parse(r.lock_at)-Date.parse(due))/86400000);
+  document.getElementById('weekly-title').textContent='Week of '+new Date(due).toLocaleDateString(undefined,{month:'long',day:'numeric'});
+  host.innerHTML='<div><div class="week-card"><h3>'+esc(batchId)+'</h3><p>A fixed set with one deadline. Open a row to read the exact wording and release rule.</p>'
+    +'<div class="week-stat"><div><b>'+batch.length+'</b><span>questions</span></div><div><b>'+shaped.profile+'</b><span>profiles</span></div><div><b>'+shaped.ranking+'</b><span>rankings</span></div></div>'
+    +'<div class="week-questions">'+batch.sort((a,b)=>a.release_at.localeCompare(b.release_at)).map(r=>'<details><summary>'+shapeChip(r)+esc(taskForRound(r).label)+' · '+esc(r.round_id)+'</summary><p>'+esc(r.question)+'</p><a class="go" href="#live/'+taskKeyForRound(r)+'/all">open task →</a></details>').join('')+'</div></div>'
+    +'<div class="week-card"><h3>Agent files</h3><p>Machine-readable questions and response contracts stay in Git, so the page cannot drift from what the validator accepts.</p><p style="margin-top:10px;"><a class="btn soft" href="https://github.com/Social-Atoms/social-sim-arena/blob/main/questions/bundles/'+batchId+'.json">questions.json</a> <a class="btn soft" href="docs.html#weekly-route">response guide</a></p></div></div>'
+    +'<aside class="week-side"><div class="week-card"><h3>The calendar</h3><dl><dt>Published</dt><dd>'+esc(fmtLocal(new Date(Date.parse(due)-7*86400000).toISOString()))+'</dd><dt>Deadline</dt><dd>'+esc(fmtLocal(due))+'</dd><dt>Release horizon</dt><dd>'+Math.min(...horizons).toFixed(1)+'–'+Math.max(...horizons).toFixed(1)+' days</dd><dt>Formats</dt><dd>'+shaped.topline+' topline · '+shaped.profile+' profile · '+shaped.ranking+' ranking</dd></dl></div>'
+    +'<div class="week-card"><h3>Task mix</h3>'+cats.map(x=>'<p>'+esc(x.label)+' <b style="float:right;color:var(--ink);">'+x.n+'</b></p>').join('')+'</div></aside>';
 }
 
 const AG_PAGE = 10;
 function entrantsList(data){
   const el = document.getElementById('entrants-list');
-  const ents = data.entrants||[];
+  const ents = (data.entrants||[]).filter(e=>e.type!=='human' && e.entrant_id!=='human-crowd');
   const f = window.__af || 'all';
   const pg = window.__ap || 1;
   const regLink = submissionLink('agent');
 
   const match = e => f==='all' ? true
     : f==='baseline' ? e.type==='baseline'
-    : f==='human' ? e.type==='human'
     : vendorOf(e.entrant_id)===f;
   const list = ents.filter(match);
   const pages = Math.max(1, Math.ceil(list.length/AG_PAGE));
@@ -917,9 +1166,8 @@ function entrantsList(data){
   const keys = ['all'];
   VENDORS.forEach(([,k])=>{ if(ents.some(e=>vendorOf(e.entrant_id)===k)) keys.push(k); });
   if(ents.some(e=>e.type==='baseline')) keys.push('baseline');
-  if(ents.some(e=>e.type==='human')) keys.push('human');
-  const cnt = k => k==='all'?ents.length:ents.filter(e=>k==='baseline'?e.type==='baseline':k==='human'?e.type==='human':vendorOf(e.entrant_id)===k).length;
-  const chipLabel = k => k==='all'?'All':k==='baseline'?'Baselines':k==='human'?'Human':vendorName(k);
+  const cnt = k => k==='all'?ents.length:ents.filter(e=>k==='baseline'?e.type==='baseline':vendorOf(e.entrant_id)===k).length;
+  const chipLabel = k => k==='all'?'All':k==='baseline'?'Baselines':vendorName(k);
   const chips = '<div class="fchips">'+keys.map(k=>
     '<button class="'+(f===k?'on':'')+'" onclick="window.__af=\''+k+'\';window.__ap=1;entrantsList(window.__data)">'+chipLabel(k)+' <span>'+cnt(k)+'</span></button>').join('')+'</div>';
 
@@ -993,10 +1241,10 @@ function render(data){
   const lb = data.leaderboard || {};
 
   function meta(){
-    const openNow = data.rounds.filter(r=>r.status==='open'&&Date.parse(r.deadline||r.lock_at)>Date.now()).sort((a,b)=>(a.deadline||a.lock_at).localeCompare(b.deadline||b.lock_at));
+    const openNow = data.rounds.filter(r=>r.status==='open'&&Date.parse(deadlineOf(r))>Date.now()).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
     const nx = openNow[0];
     const parts = ['<b>season 0</b> starts Aug 11'];
-    if(nx) parts.push('next deadline in <b>'+fmtCountdown(new Date(nx.deadline||nx.lock_at)-Date.now())+'</b>');
+    if(nx) parts.push('next deadline in <b>'+fmtCountdown(new Date(deadlineOf(nx))-Date.now())+'</b>');
     parts.push(openNow.length+' rounds open');
     parts.push((lb.resolved_rounds||0)+' resolved');
     document.getElementById('meta-line').innerHTML = parts.join(' &nbsp;·&nbsp; ');
@@ -1008,18 +1256,15 @@ function render(data){
   meta();
   clearInterval(window.__metaInt); window.__metaInt = setInterval(meta, 30000);
 
-  const openNow = data.rounds.filter(r=>r.status==='open'&&Date.parse(r.deadline||r.lock_at)>Date.now()).sort((a,b)=>(a.deadline||a.lock_at).localeCompare(b.deadline||b.lock_at));
-  const next = openNow[0];
+  const openNow = data.rounds.filter(r=>r.status==='open'&&Date.parse(deadlineOf(r))>Date.now()).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
   document.getElementById('btn-register-2').href = submissionLink('agent');
-  if(next){
-    document.getElementById('btn-human').href = submissionLink('human');
-  }
   document.getElementById('foot-updated').textContent = 'data updated '+new Date(data.generated_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+' · refreshed every 6 hours';
 
   requestAnimationFrame(()=>setTab(window.__tab || 'agg'));
   applyHash();
   renderBoard(window.__board || 'all');
   roundsList(data);
+  renderWeekly(data);
   entrantsList(data);
   examRounds(data);
 }
@@ -1041,11 +1286,10 @@ function examRounds(data){
   const first = mids[0];
   if(first){
     document.getElementById('btn-exam-submit').href = submissionLink('agent');
-    document.getElementById('btn-exam-human').href = submissionLink('human');
   }
 }
 
-const PAGES=['live','rounds','submit','agents','exam'];
+const PAGES=['live','rounds','weekly','submit','agents','exam'];
 function showPage(k){
   PAGES.forEach(pg=>{
     document.getElementById('page-'+pg).classList.toggle('on', pg===k);
@@ -1053,11 +1297,11 @@ function showPage(k){
   });
   window.__page = k;
   if(k==='live' && window.__data) requestAnimationFrame(()=>setTab(window.__tab||'agg'));
-  if(k==='rounds') demoReplay();
+  if(k==='weekly' && window.__data) renderWeekly(window.__data);
   if(typeof syncHash==='function') syncHash();
 }
 
-const CHART_KEYS = ['agg','approval_avg','umich_sentiment','yougov_approval','mc_approval','generic_margin'];
+const CHART_KEYS = Object.keys(TASKS);
 const SPAN_KEYS = ['all','m6','d30','last'];
 function syncHash(){
   const pg = window.__page || 'live';
@@ -1073,7 +1317,7 @@ function syncHash(){
 }
 function applyHash(){
   const parts = (location.hash || '').slice(1).split('/');
-  const pg = ['live','rounds','submit','agents','exam'].includes(parts[0]) ? parts[0] : null;
+  const pg = PAGES.includes(parts[0]) ? parts[0] : null;
   if(!pg) return;
   if(pg === 'live'){
     if(CHART_KEYS.includes(parts[1])) window.__tab = parts[1];
@@ -1089,7 +1333,9 @@ window.addEventListener('hashchange', applyHash);
 document.querySelectorAll('.ptab').forEach(b=> b.onclick = ()=> showPage(b.dataset.page));
 document.getElementById('exam-chip').onclick = ()=> showPage('exam');
 document.getElementById('nav-submit').onclick = e=>{ e.preventDefault(); showPage('submit'); };
-document.querySelectorAll('#chart-tabs button').forEach(b=> b.onclick = ()=> setTab(b.dataset.tab));
+document.querySelector('.task-all').onclick=()=>{setTab('agg');renderBoard(window.__board||'all');};
+document.getElementById('task-search').oninput=e=>{window.__roundQuery=e.target.value;roundsList(window.__data);};
+document.querySelectorAll('#round-status-seg button').forEach(b=>b.onclick=()=>{window.__roundStatus=b.dataset.status;roundsList(window.__data);});
 document.querySelectorAll('#range-seg button').forEach(b=> b.onclick = ()=>{
   window.__range = Number(b.dataset.range);
   document.querySelectorAll('#range-seg button').forEach(x=>x.classList.toggle('on', x===b));
@@ -1102,7 +1348,6 @@ document.querySelectorAll('#unit-seg button').forEach(b=> b.onclick = ()=>{
 });
 document.querySelectorAll('#span-seg button').forEach(b=> b.onclick = ()=>{
   renderBoard(b.dataset.span);
-  if(b.dataset.span==='last' && (window.__tab||'agg')==='agg') setTab('umich_sentiment');
 });
 let rsz;
 function redraw(){ if(window.__data && (window.__page||'live')==='live') setTab(window.__tab||'agg'); }
