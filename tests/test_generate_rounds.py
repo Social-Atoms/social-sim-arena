@@ -175,6 +175,80 @@ def test_the_economist_series_carry_only_economist_waves():
     print("ok test_the_economist_series_carry_only_economist_waves")
 
 
+def test_a_recorded_publication_calendar_schedules_the_tracker():
+    """Economist/YouGov enters the sheet on Tuesdays and is scheduled from it."""
+    import re
+    from ssa.series import SERIES
+    history = gen.load_history()["yougov_approval"]
+    meta = SERIES["yougov_approval"]
+    _, reason = gen.schedule_contract("yougov_approval", meta, history)
+    assert reason is None, reason
+    reviewed = next(r for r in _season() if r["series"] == "yougov_approval")
+    # Anchored to the newest archived wave, so the archive growing cannot push
+    # every candidate past MAX_WEEKS_AHEAD.
+    now = datetime.strptime(history[-1]["date"],
+                            "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    out = gen.candidates("yougov_approval", meta, history, 3, now)
+    assert out, "the calendar scheduled nothing"
+    for r in out:
+        rel = datetime.fromisoformat(r["release_at"].replace("Z", "+00:00"))
+        lock = datetime.fromisoformat(r["lock_at"].replace("Z", "+00:00"))
+        assert (rel.weekday(), rel.hour) == (2, 14), r["release_at"]
+        assert rel - lock == timedelta(hours=48)
+        # Entrants file Monday 12:00Z, while the wave is still in the field.
+        deadline = gen.batches.deadline_for(r["lock_at"])
+        assert lock - deadline == timedelta(hours=2)
+        assert r["resolve"] == reviewed["resolve"]
+        assert re.fullmatch(r"yougov-\d{4}-w\d{2}-approval", r["round_id"])
+    for sid, row in SERIES.items():
+        if row.get("source") not in gen.FIELD_DATE_SOURCES \
+                or row["tracker"] == "economist_yougov":
+            continue
+        ok, why = gen.gate(sid, row, [])
+        assert not ok and why["gate"] == "schedule", (sid, why)
+        assert "no publication calendar" in why["detail"], why
+    print("ok test_a_recorded_publication_calendar_schedules_the_tracker")
+
+
+def test_the_calendar_is_checked_against_the_sheet():
+    """A recorded calendar schedules nothing the archive does not confirm."""
+    from ssa.series import SERIES
+    meta = SERIES["yougov_approval"]
+    tuesdays = [date(2026, 6, 30) + timedelta(days=7 * i) for i in range(8)]
+
+    def contract(days):
+        with mock.patch.object(gen, "entry_days", lambda meta: days):
+            return gen.schedule_contract("yougov_approval", meta, [])
+    assert contract(tuesdays)[1] is None
+    # One slip is a holiday: the wave enters Wednesday, a day later.
+    holiday = tuesdays[:-1] + [tuesdays[-1] + timedelta(days=1)]
+    assert contract(holiday)[1] is None
+    late = tuesdays[:-2] + [d + timedelta(days=1) for d in tuesdays[-2:]]
+    assert "slips" in contract(late)[1]
+    fortnightly = [date(2026, 6, 30) + timedelta(days=14 * i)
+                   for i in range(8)]
+    assert "slips" in contract(fortnightly)[1]
+    at_once = tuesdays[:6] + [tuesdays[5]] * 2
+    assert "slips" in contract(at_once)[1]
+    assert "only 7 waves" in contract(tuesdays[:7])[1]
+    calendar = gen.PUBLICATION["economist_yougov"]
+    # A release two days after the entry would lock on the entry day.
+    thursday = dict(calendar, release=3)
+    with mock.patch.dict(gen.PUBLICATION, {"economist_yougov": thursday}):
+        try:
+            contract(tuesdays)
+        except ValueError as e:
+            assert "lock must precede" in str(e), e
+        else:
+            raise AssertionError("a lock after the entry was scheduled")
+    # On the real sheet: Rasmussen enters on five weekdays in eight.
+    house = SERIES["rasmussen_approval"]
+    with mock.patch.dict(gen.PUBLICATION, {house["tracker"]: calendar}):
+        _, reason = gen.schedule_contract("rasmussen_approval", house, [])
+    assert "slips" in reason, reason
+    print("ok test_the_calendar_is_checked_against_the_sheet")
+
+
 def test_civiqs_candidate_matches_the_reviewed_family_calendar():
     from ssa.series import SERIES
     with open(os.path.join(ROOT, "questions", "season0.json")) as fh:
@@ -825,6 +899,8 @@ if __name__ == "__main__":
     test_schedule_comes_from_source_semantics_not_a_modal_weekday()
     test_silver_bulletin_field_midpoints_cannot_become_release_dates()
     test_the_economist_series_carry_only_economist_waves()
+    test_a_recorded_publication_calendar_schedules_the_tracker()
+    test_the_calendar_is_checked_against_the_sheet()
     test_civiqs_candidate_matches_the_reviewed_family_calendar()
     test_generated_rounds_are_shaped_like_the_hand_written_ones()
     test_generation_is_deterministic()
@@ -849,4 +925,4 @@ if __name__ == "__main__":
     test_declined_families_carry_their_decision()
     test_the_headline_profile_round_no_longer_stops_in_september()
     test_a_sixteen_cell_question_is_not_interpolated_to_another_width()
-    print("31 passed")
+    print("33 passed")

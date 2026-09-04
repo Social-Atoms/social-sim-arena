@@ -27,7 +27,9 @@ target is omitted.
 Only a proved release calendar may produce timestamps. Civiqs dates mean the
 value displayed on the registry-declared Friday, and the Wikipedia ranking
 calendar is rolled from a reviewed round contract. Silver Bulletin series are
-reported as `gate: schedule`: their archive dates are poll field midpoints, not
+reported as `gate: schedule` unless `ssa/series.py` records a publication
+calendar for the tracker and the newest archived sheet confirms it
+(Economist/YouGov today): their archive dates are poll field midpoints, not
 publication dates, so a regular-looking weekday is not permission to invent a
 future release.
 

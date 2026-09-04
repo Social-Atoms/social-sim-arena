@@ -69,6 +69,49 @@ The 13 rounds in date order:
 `resolutions/resolved.json` currently holds **0** entries. The first release
 lands **2026-08-14**.
 
+### 1.3 Publication calendars (issue #64)
+
+The Silver Bulletin sheet dates a poll by its field window, so the generator
+refused all 21 of its series as `gate: schedule`. Its `createddate` column is
+the day a poll entered the sheet, which is the day the arena first sees it: of
+the polls entered since the archive began on 2026-08-18, all but two appear in
+that day's or the next day's vintage, and every Economist wave in that day's.
+Field end and entry day of each house's last eight waves, 2026-09-02 vintage:
+
+| house | field end → entered |
+|---|---|
+| Economist/YouGov | 07-13→07-14 Tue, 07-20→07-21 Tue, 07-27→07-28 Tue, 08-03→08-04 Tue, 08-10→08-11 Tue, 08-17→08-18 Tue, 08-24→08-25 Tue, 08-31→09-01 Tue |
+| Morning Consult | 07-13→07-14 Tue, 07-19→07-21 Tue, 07-26→07-29 Wed, 08-02→08-06 Thu, 08-10→08-25 Tue, 08-17→08-18 Tue, 08-24→09-01 Tue, 08-30→09-01 Tue |
+| Ipsos | 06-15→06-15 Mon, 06-22→06-24 Wed, 07-13→07-16 Thu, 07-26→07-28 Tue, 08-03→08-04 Tue, 08-17→08-18 Tue, 08-24→08-25 Tue, 08-31→09-01 Tue |
+| Rasmussen | 08-20→08-21 Fri, 08-21→08-24 Mon, 08-24→08-25 Tue, 08-25→08-26 Wed, 08-26→08-27 Thu, 08-27→08-28 Fri, 08-28→08-31 Mon, 08-31→09-01 Tue |
+| Navigator | 03-16→03-18 Wed, 04-06→04-08 Wed, 04-27→04-29 Wed, 05-18→05-20 Wed, 06-08→06-15 Mon, 06-30→07-07 Tue, 07-27→07-29 Wed, 08-24→08-26 Wed |
+| RMG | 06-23→06-26 Fri, 07-14→07-17 Fri, 07-21→07-24 Fri, 07-29→07-31 Fri, 08-04→08-11 Tue, 08-11→08-18 Tue, 08-17→08-21 Fri, 08-25→08-28 Fri |
+
+Economist/YouGov is scheduled where its item runs weekly. Its window usually
+opens Friday and closes Monday, and the wave enters the sheet the next day, 84 of
+84 since 2025-01-28: Tuesday in 69, Wednesday in 15, each of those after a
+window that closed Tuesday (13 weeks of early 2025, Labor Day 2025, Memorial
+Day 2026). `PUBLICATION` in
+`ssa/series.py` records entry Tuesday and release Wednesday 14:00Z: entrants
+file by the Monday 12:00Z batch deadline while the wave is still in the field,
+the wave enters Tuesday, and the round resolves on it Wednesday. A wave that
+enters late resolves the round late; nothing moves at the deadline. The twelve
+hand-written `yougov-2026-w34..w39` rounds release Tuesday 14:00Z with a
+Sunday lock; under the batch deadline that shape resolves on the wave entered
+the day after the previous Monday, which is why the calendar records
+Wednesday instead. On every
+run the generator re-checks the calendar against the newest archived sheet and
+refuses when the last eight waves show more than one slip: an entry off
+Tuesday, or a gap between entries that is not within eight days. The second
+kind is what refuses the issue-specific YouGov items the pollster asks only
+some weeks.
+
+The other five houses cannot carry a locked round and stay refused: Morning
+Consult's waves enter on mixed weekdays, weeks late and sometimes two at once;
+Ipsos is ad hoc; Rasmussen is a daily tracker whose number is public on its
+own site first; Navigator polls every three weeks or so; RMG entered a week
+late in two of the last eight.
+
 ---
 
 ## Part 2 — Resolution: you are right, and the reason is specific

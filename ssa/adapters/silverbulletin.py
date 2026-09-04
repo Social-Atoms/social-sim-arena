@@ -136,6 +136,8 @@ def _records(rows, value_cols, subgroup=None, pollster=None, population=None,
             "n": int(_float(r.get("samplesize")) or 0),
             "population": (r.get("population") or "").strip().upper(),
             "url": (r.get("url") or "").strip(),
+            # The day the poll entered the sheet: the arena's publication date.
+            "created": _date(r.get("createddate")),
         }
         rec.update(values)
         out.append(rec)

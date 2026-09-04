@@ -510,6 +510,32 @@ SERIES["mc_generic_margin"] = {
 }
 
 
+# --- publication calendars -------------------------------------------------
+#
+# The sheet dates a poll by its field window; `createddate` is the day the poll
+# entered the sheet, which is the day the arena first sees it. A tracker whose
+# entry day is regular can be scheduled from it. `tools/generate_rounds.py`
+# refuses a tracker with no entry here, and one whose entry the newest archived
+# sheet no longer confirms.
+#
+# Measured on the 2026-09-02 vintages: Economist/YouGov entered on Tuesday in
+# its last eight waves, and the day after its window closed in 84 of 84 since
+# 2025-01-28; the 15 Wednesdays are all weeks that closed Tuesday. The other
+# five houses move their entry day; the evidence is in
+# docs/data-and-resolution.md, section 1.3.
+#
+# `entry` is the weekday the wave reaches the sheet, `release` the weekday the
+# arena resolves on, `hour` its 14:00Z convention, and `resolve` the reviewed
+# wording these rounds already carry. Entrants file by the batch deadline,
+# Monday 12:00Z, while the Economist wave is still in the field; the wave
+# enters Tuesday and the round resolves on it Wednesday, the shape the reviewed
+# Morning Consult rounds use. A wave that enters late resolves the round late,
+# which is what `release_estimated` means; nothing moves at the deadline.
+PUBLICATION = {
+    "economist_yougov": {"entry": 1, "release": 2, "hour": 14,
+                         "resolve": "topline PDF of the wave"},
+}
+
 # --- Civiqs -----------------------------------------------------------------
 #
 # The first *modeled* tracker in the registry, and it does not behave like the
