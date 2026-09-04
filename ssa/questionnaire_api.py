@@ -7,6 +7,7 @@ locally and moved to another host without changing the public API.
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import os
@@ -27,6 +28,12 @@ MANIFEST_VERSION = "ssa-questionnaire-manifest-v1"
 SUBMISSION_VERSION = "ssa-questionnaire-submission-v1"
 TERMS_VERSION = "ssa-participant-v1"
 MAX_BODY_BYTES = 512 * 1024
+TRACK_DIRECTORIES = {"agent": "registrations", "human": "human"}
+INTAKE_REPO = "Social-Atoms/social-sim-arena-intake"
+INTAKE_API_VERSION = "2022-11-28"
+# One request can make both calls, so the pair has to fit the platform's
+# function budget with room left for validation.
+INTAKE_TIMEOUT = 3
 
 
 class SubmissionError(ValueError):
@@ -310,7 +317,10 @@ def canonical_json(value: Any) -> bytes:
 def _submission_record(validated: dict[str, Any], idempotency_key: str,
                        now: datetime) -> tuple[str, str, dict[str, Any]]:
     payload_hash = hashlib.sha256(canonical_json(validated)).hexdigest()
-    key_hash = hashlib.sha256(idempotency_key.encode("utf-8")).hexdigest()
+    # The tracks store to different directories, so a key on its own would
+    # issue one submission_id for two records that are not the same packet.
+    key_hash = hashlib.sha256(
+        f"{validated['track']}\n{idempotency_key}".encode("utf-8")).hexdigest()
     submission_id = "ssa_" + key_hash[:24]
     record = {
         "record_version": SUBMISSION_VERSION,
@@ -339,6 +349,64 @@ def _store_local(pathname: str, record_bytes: bytes,
         if existing.get("receipt_hash") != receipt_hash:
             raise IdempotencyConflict()
         return existing
+
+
+def _intake_headers(accept: str) -> dict[str, str]:
+    return {"Authorization": f"Bearer {os.environ['INTAKE_REPO_TOKEN']}",
+            "Accept": accept,
+            "X-GitHub-Api-Version": INTAKE_API_VERSION}
+
+
+def _intake_read(pathname: str, receipt_hash: str) -> dict[str, Any] | None:
+    """The stored record, or None when the path holds nothing."""
+    import requests
+    url = f"https://api.github.com/repos/{INTAKE_REPO}/contents/{pathname}"
+    try:
+        response = requests.get(
+            url, timeout=INTAKE_TIMEOUT,
+            headers=_intake_headers("application/vnd.github.raw"))
+        if response.status_code == 404:
+            return None
+        response.raise_for_status()
+        stored = response.json()
+    except requests.RequestException as error:
+        raise StorageUnavailable(
+            f"The intake repository could not be read: {error}") from error
+    # A response missing either field is a failed read, not a packet whose
+    # bytes differ.
+    if not isinstance(stored, dict) or not all(
+            isinstance(stored.get(field), str)
+            for field in ("receipt_hash", "received_at")):
+        raise StorageUnavailable(
+            "The intake repository holds an unreadable record.")
+    if stored["receipt_hash"] != receipt_hash:
+        raise IdempotencyConflict()
+    return stored
+
+
+def _store_github(pathname: str, record_bytes: bytes,
+                  receipt_hash: str) -> dict[str, Any] | None:
+    import requests
+    url = f"https://api.github.com/repos/{INTAKE_REPO}/contents/{pathname}"
+    body = {"message": pathname,
+            "content": base64.b64encode(record_bytes).decode("ascii")}
+    try:
+        response = requests.put(
+            url, json=body, timeout=INTAKE_TIMEOUT,
+            headers=_intake_headers("application/vnd.github+json"))
+    except requests.RequestException as error:
+        raise StorageUnavailable(
+            f"The intake repository could not be reached: {error}") from error
+    if response.status_code == 201:
+        return None
+    # Sending no `sha` makes the write a create, which the API refuses once the
+    # path is taken. That refusal is the replay signal; the read decides.
+    if response.status_code in (409, 422):
+        existing = _intake_read(pathname, receipt_hash)
+        if existing is not None:
+            return existing
+    raise StorageUnavailable(
+        f"The intake repository returned HTTP {response.status_code}.")
 
 
 def _store_blob(pathname: str, record_bytes: bytes,
@@ -383,16 +451,18 @@ def store_submission(validated: dict[str, Any], idempotency_key: str,
     now = now or datetime.now(timezone.utc)
     submission_id, receipt_hash, record = _submission_record(
         validated, idempotency_key, now)
-    pathname = f"questionnaire-submissions/{submission_id}.json"
+    pathname = f"{TRACK_DIRECTORIES[validated['track']]}/{submission_id}.json"
     record_bytes = canonical_json(record)
     if os.environ.get("SUBMISSION_STORAGE_DIR"):
         existing = _store_local(pathname, record_bytes, receipt_hash)
+    elif os.environ.get("INTAKE_REPO_TOKEN"):
+        existing = _store_github(pathname, record_bytes, receipt_hash)
     elif os.environ.get("BLOB_READ_WRITE_TOKEN"):
         existing = _store_blob(pathname, record_bytes, receipt_hash)
     else:
         raise StorageUnavailable(
-            "Private submission storage is not configured. Connect a private "
-            "Vercel Blob store before accepting submissions.")
+            "Private submission storage is not configured. Set "
+            "INTAKE_REPO_TOKEN to write submissions to the intake repository.")
     stored_record = existing or record
     return {
         "submission_id": submission_id,

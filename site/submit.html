@@ -713,7 +713,7 @@ async function transmitQuestionnaire(track,packet){
     if(track==='human') try{localStorage.removeItem(HUMAN_DRAFT_KEY);}catch(error){}
   }catch(error){
     receipt.className='receipt bad';
-    receipt.textContent=error.status===503?'Submission storage is not active yet. Your answers remain in this browser; ask the maintainer to connect the private Vercel Blob store, then retry.':`Submission was not accepted: ${error.message}`;
+    receipt.textContent=error.status===503?`Storage did not accept this submission: ${error.message} Press Submit again; an unchanged submission cannot be entered twice.`:`Submission was not accepted: ${error.message}`;
     output.textContent=error.details?.length?JSON.stringify({details:error.details},null,2):'';
   }
 }

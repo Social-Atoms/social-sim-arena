@@ -277,6 +277,22 @@ class QuestionnaireApiContracts(unittest.TestCase):
             with self.assertRaises(IdempotencyConflict):
                 store_submission(changed, "test-key-123", NOW)
 
+    def test_one_key_on_each_track_is_two_records(self):
+        """A key alone used to name a record. With a directory per track it
+        cannot: the same key on both tracks is two unrelated packets."""
+        agent = validate_submission(agent_submission(self.data), self.data, NOW)
+        human = validate_submission(human_submission(self.data), self.data, NOW)
+        with tempfile.TemporaryDirectory() as directory, patch.dict(
+                os.environ, {"SUBMISSION_STORAGE_DIR": directory}, clear=False):
+            first = store_submission(agent, "test-key-123", NOW)
+            second = store_submission(human, "test-key-123", NOW)
+            stored = sorted(str(path.relative_to(directory))
+                            for path in Path(directory).rglob("*.json"))
+        self.assertNotEqual(first["submission_id"], second["submission_id"])
+        self.assertEqual([f"human/{second['submission_id']}.json",
+                          f"registrations/{first['submission_id']}.json"],
+                         stored)
+
 
 if __name__ == "__main__":
     unittest.main()
