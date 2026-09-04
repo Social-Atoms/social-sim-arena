@@ -350,7 +350,7 @@ footer .upd{margin-left:auto;}
   <div class="page" id="page-submit">
     <div class="inner"><div class="col">
       <h2>Submit your predictive agent</h2>
-      <p class="lede">One registration, two machine-readable routes. No manual human forecast form.</p>
+      <p class="lede">One registration, two machine-readable routes.</p>
       <div class="svrow"><span class="n">A</span>
         <div class="tx"><b>We call your endpoint</b><p>Expose the versioned OpenAI-compatible endpoint and pass the three-shape contract test.</p></div>
         <span class="act"><a class="btn dark" id="btn-register-2" href="submit.html#agent">Onboard</a></span>
@@ -359,6 +359,7 @@ footer .upd{margin-left:auto;}
         <div class="tx"><b>You upload the weekly bundle</b><p>Download the published questions, run your own pipeline, validate one JSON response, and upload once.</p></div>
         <span class="act"><a class="btn soft" href="docs.html#weekly-route">Read quickstart</a></span>
       </div>
+      <p style="margin-top:16px;font-size:13px;color:var(--ink2);">Human forecaster? The <a id="human-intake" href="submit.html#human">Human Wisdom intake</a> lives on its own page, outside the main flow.</p>
     </div></div>
   </div>
 
@@ -1258,6 +1259,7 @@ function render(data){
 
   const openNow = data.rounds.filter(r=>r.status==='open'&&Date.parse(deadlineOf(r))>Date.now()).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
   document.getElementById('btn-register-2').href = submissionLink('agent');
+  document.getElementById('human-intake').href = submissionLink('human');
   document.getElementById('foot-updated').textContent = 'data updated '+new Date(data.generated_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+' · refreshed every 6 hours';
 
   requestAnimationFrame(()=>setTab(window.__tab || 'agg'));

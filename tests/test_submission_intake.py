@@ -333,13 +333,15 @@ class SubmissionPrototype(unittest.TestCase):
 
     def test_index_submit_page_has_exactly_two_submit_paths(self):
         self.assertEqual(2, self.index_submit.count('class="svrow"'))
-        self.assertIn('<b>Your predictive agent</b>', self.index_submit)
-        self.assertIn(
-            'For startups, research groups, institutions, and individual researchers.',
-            self.index_submit)
-        self.assertIn('<b>Human wisdom</b>', self.index_submit)
-        self.assertIn("Humanity's last glory.", self.index_submit)
-        self.assertEqual(2, self.index_submit.count('>Submit</a>'))
+        self.assertIn('<b>We call your endpoint</b>', self.index_submit)
+        self.assertIn('<b>You upload the weekly bundle</b>', self.index_submit)
+        self.assertNotIn('id="track-human"', self.index)
+
+    def test_human_intake_lives_on_its_own_page_off_the_main_flow(self):
+        self.assertIn('id="human-intake"', self.index_submit)
+        self.assertIn("human-intake').href = submissionLink('human')", self.index)
+        self.assertIn("outside the main flow", self.index_submit)
+        self.assertNotIn("No manual human forecast form", self.index)
 
     def test_arena_links_open_the_new_single_page_tracks(self):
         self.assertIn("submissionLink('agent')", self.index)
