@@ -154,6 +154,27 @@ def test_silver_bulletin_field_midpoints_cannot_become_release_dates():
     print("ok test_silver_bulletin_field_midpoints_cannot_become_release_dates")
 
 
+def test_the_economist_series_carry_only_economist_waves():
+    """The sheet files CBS News, Yahoo News and unsponsored YouGov polls, among
+    others, under the pollster 'YouGov'. Those are other surveys; the
+    registry's nine Economist/YouGov series must not resolve on one of them."""
+    from ssa.adapters import silverbulletin as sb
+    from ssa.series import SERIES
+    for source in ("sb_approval", "sb_generic"):
+        directory = os.path.join(ROOT, "sources", source)
+        latest = sorted(n for n in os.listdir(directory) if n.endswith(".csv"))[-1]
+        with open(os.path.join(directory, latest)) as fh:
+            rows = sb.parse(fh.read())
+        polls = sb.approval_polls if source == "sb_approval" else sb.generic_ballot_polls
+        for sid, meta in SERIES.items():
+            if meta.get("source") != source or meta["tracker"] != "economist_yougov":
+                continue
+            recs = polls(rows=rows, **meta["filters"])
+            assert len(recs) >= 8, sid
+            assert all("economist" in r["sponsors"].lower() for r in recs), sid
+    print("ok test_the_economist_series_carry_only_economist_waves")
+
+
 def test_civiqs_candidate_matches_the_reviewed_family_calendar():
     from ssa.series import SERIES
     with open(os.path.join(ROOT, "questions", "season0.json")) as fh:
@@ -803,6 +824,7 @@ if __name__ == "__main__":
     test_volatility_gate_refuses_only_pure_noise()
     test_schedule_comes_from_source_semantics_not_a_modal_weekday()
     test_silver_bulletin_field_midpoints_cannot_become_release_dates()
+    test_the_economist_series_carry_only_economist_waves()
     test_civiqs_candidate_matches_the_reviewed_family_calendar()
     test_generated_rounds_are_shaped_like_the_hand_written_ones()
     test_generation_is_deterministic()
@@ -827,4 +849,4 @@ if __name__ == "__main__":
     test_declined_families_carry_their_decision()
     test_the_headline_profile_round_no_longer_stops_in_september()
     test_a_sixteen_cell_question_is_not_interpolated_to_another_width()
-    print("30 passed")
+    print("31 passed")

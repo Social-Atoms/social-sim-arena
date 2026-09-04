@@ -103,17 +103,21 @@ def fetch_text(url, timeout=TIMEOUT, retries=RETRIES):
     raise RuntimeError(f"Silver Bulletin sheet unreachable: {url} ({last})")
 
 
-def _records(rows, value_cols, subgroup=None, pollster=None, population=None):
+def _records(rows, value_cols, subgroup=None, pollster=None, population=None,
+             sponsor=None):
     """Poll-level records, newest last.
 
-    subgroup/pollster/population are matched case-insensitively; pollster is a
-    substring match so 'YouGov' catches the sponsor-suffixed variants.
+    subgroup/pollster/population/sponsor are matched case-insensitively;
+    pollster and sponsor are substring matches, so 'YouGov' catches the
+    sponsor-suffixed variants and 'Economist' catches 'The Economist'.
     """
     out = []
     for r in rows:
         if subgroup and (r.get("subgroup") or "").strip().lower() != subgroup.lower():
             continue
         if pollster and pollster.lower() not in (r.get("pollster") or "").lower():
+            continue
+        if sponsor and sponsor.lower() not in (r.get("sponsors") or "").lower():
             continue
         if population and (r.get("population") or "").strip().upper() != population.upper():
             continue
@@ -139,7 +143,8 @@ def _records(rows, value_cols, subgroup=None, pollster=None, population=None):
     return out
 
 
-def approval_polls(subgroup="All polls", pollster=None, population=None, rows=None):
+def approval_polls(subgroup="All polls", pollster=None, population=None, rows=None,
+                   sponsor=None):
     """Trump approval. Same record shape as votehub.approval_polls, so this is a
     drop-in replacement wherever poll records are averaged.
 
@@ -147,7 +152,8 @@ def approval_polls(subgroup="All polls", pollster=None, population=None, rows=No
     and 'Cost' are issue-specific trackers in the same file.
     """
     rows = rows if rows is not None else fetch(APPROVAL_URL)
-    recs = _records(rows, ("approve", "disapprove"), subgroup, pollster, population)
+    recs = _records(rows, ("approve", "disapprove"), subgroup, pollster, population,
+                    sponsor)
     for r in recs:
         r["net"] = round(r["approve"] - r["disapprove"], 2)
         # `value` is the quantity the averaging code scores by default, and
@@ -158,11 +164,13 @@ def approval_polls(subgroup="All polls", pollster=None, population=None, rows=No
     return recs
 
 
-def generic_ballot_polls(subgroup="All polls", pollster=None, population=None, rows=None):
+def generic_ballot_polls(subgroup="All polls", pollster=None, population=None, rows=None,
+                         sponsor=None):
     """2026 generic congressional ballot. Same record shape as
     votehub.generic_ballot_polls; `value` and `margin` are both D minus R."""
     rows = rows if rows is not None else fetch(GENERIC_URL)
-    recs = _records(rows, ("dem", "rep", "net"), subgroup, pollster, population)
+    recs = _records(rows, ("dem", "rep", "net"), subgroup, pollster, population,
+                    sponsor)
     for r in recs:
         r["value"] = r["net"]
         r["margin"] = r["net"]
