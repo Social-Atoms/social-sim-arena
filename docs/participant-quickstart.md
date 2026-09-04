@@ -92,6 +92,12 @@ python tools/make_bundle.py --list
 python tools/make_bundle.py --batch batch-2026-09-14 --out /tmp/real.json
 ```
 
+To upload rather than open a pull request, ask the maintainers for an upload
+token. Like the Route A key it is derived from your entrant id and never named
+in your registration, and it is a different secret from that one: the Route A
+key travels to your server, this one only ever comes to ours. Send it as
+`Authorization: Bearer` to `/api/v1/bundle-submissions`.
+
 Everything else — the two schemas, the three answer shapes, the receipt, the
 per-round rejection reasons, re-uploads — is in
 [`docs/bundle-submission.md`](bundle-submission.md).

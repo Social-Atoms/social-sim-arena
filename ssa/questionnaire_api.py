@@ -441,6 +441,20 @@ def _store_blob(pathname: str, record_bytes: bytes,
     return None
 
 
+def store_record(pathname: str, record_bytes: bytes,
+                 receipt_hash: str) -> dict[str, Any] | None:
+    """The stored record when this path already holds one, else None."""
+    if os.environ.get("SUBMISSION_STORAGE_DIR"):
+        return _store_local(pathname, record_bytes, receipt_hash)
+    if os.environ.get("INTAKE_REPO_TOKEN"):
+        return _store_github(pathname, record_bytes, receipt_hash)
+    if os.environ.get("BLOB_READ_WRITE_TOKEN"):
+        return _store_blob(pathname, record_bytes, receipt_hash)
+    raise StorageUnavailable(
+        "Private submission storage is not configured. Set "
+        "INTAKE_REPO_TOKEN to write submissions to the intake repository.")
+
+
 def store_submission(validated: dict[str, Any], idempotency_key: str,
                      now: datetime | None = None) -> dict[str, Any]:
     if not isinstance(idempotency_key, str) or not 8 <= len(idempotency_key) <= 200:
@@ -452,17 +466,7 @@ def store_submission(validated: dict[str, Any], idempotency_key: str,
     submission_id, receipt_hash, record = _submission_record(
         validated, idempotency_key, now)
     pathname = f"{TRACK_DIRECTORIES[validated['track']]}/{submission_id}.json"
-    record_bytes = canonical_json(record)
-    if os.environ.get("SUBMISSION_STORAGE_DIR"):
-        existing = _store_local(pathname, record_bytes, receipt_hash)
-    elif os.environ.get("INTAKE_REPO_TOKEN"):
-        existing = _store_github(pathname, record_bytes, receipt_hash)
-    elif os.environ.get("BLOB_READ_WRITE_TOKEN"):
-        existing = _store_blob(pathname, record_bytes, receipt_hash)
-    else:
-        raise StorageUnavailable(
-            "Private submission storage is not configured. Set "
-            "INTAKE_REPO_TOKEN to write submissions to the intake repository.")
+    existing = store_record(pathname, canonical_json(record), receipt_hash)
     stored_record = existing or record
     return {
         "submission_id": submission_id,

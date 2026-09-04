@@ -230,9 +230,28 @@ so there is no single moment to put in the `deadline` field.
 
 ## Handing the file over
 
-Until the authenticated upload endpoint is live, an answer bundle is delivered
-the way a forecast has always been delivered — as a pull request adding the
-normalised records, which `tools/accept_bundle.py --write` produces for you:
+`POST /api/v1/bundle-submissions` accepts the response and answers with the
+receipt and the same per-round verdicts `tools/validate_bundle.py` shows you.
+Authenticate with the upload token the maintainers install for your entrant id:
+
+```bash
+curl -X POST https://social-simulation-arena.com/api/v1/bundle-submissions \
+  -H "Authorization: Bearer $SSA_UPLOAD_TOKEN" \
+  -H "Content-Type: application/json" \
+  --data-binary @RESPONSE.json
+```
+
+Uploading the same bytes twice returns the first receipt rather than filing
+twice. A `401` means the token or the entrant id is wrong, and says no more
+than that. A `403` means your registration is revoked, `404` that no bundle is
+published for that batch, and `422` names the field. A `503` is ours, not
+yours, and it is what you get today: production has no private store connected
+yet. An upload after the deadline still receipts, with nothing accepted and
+every answer marked `late`, so you can see what happened.
+
+The endpoint stores your response for review; it does not file the records.
+That step stays a pull request, which `tools/accept_bundle.py --write` produces
+for you:
 
 ```bash
 python tools/accept_bundle.py RESPONSE.json --bundle BUNDLE.json --write
@@ -262,9 +281,12 @@ Public: your entrant id, name, method, forecast files, their canonical hashes,
 lock records, and post-resolution scores.
 
 Not public: contact details, endpoint URLs, credentials, and private review
-records. Credentials are never in Git, never in an issue, never in an email,
-and never in a forecast's `notes`. They are deleted on revocation and can be
-rotated without changing your entrant id. The fuller retention design is in
+records. An accepted upload is kept whole, `notes` included, in a private
+repository, one file per upload, because a receipt nobody can check against
+the bytes it receipted is not a receipt. Credentials are never in Git, never
+in an issue, never in an email, and never in a forecast's `notes`. They are
+deleted on revocation and can be rotated without changing your entrant id.
+The fuller retention design is in
 [`docs/submission-design.md`](submission-design.md).
 
 Setting `"status": "revoked"` in `entrants/<entrant_id>.json` stops both routes
