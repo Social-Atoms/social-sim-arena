@@ -449,6 +449,24 @@ def test_trends_generation_refuses_drifted_wording_and_split_spacings():
     print("ok test_trends_generation_refuses_drifted_wording_and_split_spacings")
 
 
+def test_declined_families_carry_their_decision():
+    """Considered and declined is not the same refusal as never templated.
+
+    `unsupported_family` sends the next reader off to write the template; for
+    these three that work was done and decided against.
+    """
+    ok, why = gen.gate("hh_trump_approval", {"source": "hhpoll"}, [])
+    assert not ok and why["gate"] == "declined_family", why
+    assert "calendar" in why["detail"], why
+    ok, why = gen.gate("trends_share_tesla", {"source": "trends_basket"}, [])
+    assert not ok and why["gate"] == "declined_family", why
+    assert "basket" in why["detail"], why
+    ok, why = gen.gate("trends_iphone", {"source": "trends"}, [])
+    assert not ok and why["gate"] == "declined_family", why
+    assert "basket" in why["detail"], why
+    print("ok test_declined_families_carry_their_decision")
+
+
 def test_the_headline_profile_round_no_longer_stops_in_september():
     """Sixteen cells scored with the energy score is the thing this benchmark
     does that a scalar board cannot, and it had three instances.
@@ -632,6 +650,7 @@ if __name__ == "__main__":
     test_the_trends_basket_rolls_forward_and_keeps_its_shape()
     test_a_seasonal_note_is_never_carried_into_a_month_it_is_false_in()
     test_trends_generation_refuses_drifted_wording_and_split_spacings()
+    test_declined_families_carry_their_decision()
     test_the_headline_profile_round_no_longer_stops_in_september()
     test_a_sixteen_cell_question_is_not_interpolated_to_another_width()
-    print("23 passed")
+    print("26 passed")

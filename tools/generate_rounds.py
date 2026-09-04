@@ -150,6 +150,29 @@ RETIRED_TEMPLATES = {
         "top-10 ranking round. See `wiki_views_trump`.",
 }
 
+# Families this generator deliberately has no template for, and why.
+#
+# Like RETIRED_TEMPLATES these are decisions, not gaps. Reporting them as
+# `unsupported_family` would send the next reader off to write a template that
+# was considered and declined.
+DECLINED_FAMILIES = {
+    "hhpoll":
+        "Harvard-Harris announces no release calendar and has no derivable "
+        "URL; a wave enters the archive when a maintainer fetches its PDF, so "
+        "no forward release can be scheduled. The hand-written rounds resolve "
+        "on the next wave published after their lock; write any further one "
+        "the same way.",
+    "trends_basket":
+        "the five basket cells are asked jointly by the trends-basket profile "
+        "round, which trends_candidates rolls forward; a scalar twin of a "
+        "cell is allowed but not generated.",
+    "trends":
+        "single-query index rounds ran for one reviewed week (2026-08-29), "
+        "and one week is not a contract to extend; the basket share round "
+        "asks the same queries on a scale that cancels the sampling draw a "
+        "raw index carries.",
+}
+
 # The pollster, not the file it arrives in. Every Silver Bulletin series is a
 # different house asking a different question, and collapsing them onto one
 # tracker name would give `mc_approval`, `yougov_approval` and `ipsos_approval`
@@ -329,6 +352,10 @@ def gate(sid, meta, hist):
         return False, {"gate": "retired_template",
                        "source": meta.get("source"),
                        "detail": RETIRED_TEMPLATES[sid]}
+    if meta.get("source") in DECLINED_FAMILIES:
+        return False, {"gate": "declined_family",
+                       "source": meta.get("source"),
+                       "detail": DECLINED_FAMILIES[meta["source"]]}
     if meta.get("source") not in RESOLVE:
         return False, {"gate": "unsupported_family",
                        "source": meta.get("source"),
