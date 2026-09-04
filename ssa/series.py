@@ -167,7 +167,11 @@ SERIES = {
         "tracker": "economist_yougov",
         "publisher": "The Economist and YouGov, jointly: a weekly survey wave of YouGov's own online panel of US adults. The published number is what respondents said that week, not a model's estimate.",
         "source": "sb_approval",
-        "filters": {"subgroup": "All polls", "pollster": "YouGov", "population": "A"},
+        # The sheet files CBS News, Yahoo News and unsponsored YouGov polls,
+        # among others, under the same pollster; those are other surveys, on
+        # other schedules.
+        "filters": {"subgroup": "All polls", "pollster": "YouGov",
+                    "population": "A", "sponsor": "Economist"},
         "value": "approve", "unit": "% approve",
         "cadence": "weekly, fielded over a weekend and published midweek",
         "question": ("Economist/YouGov weekly tracker: percent of US adult "
@@ -215,7 +219,8 @@ SERIES = {
         "tracker": "economist_yougov",
         "publisher": "The Economist and YouGov, jointly: a weekly survey wave of YouGov's own online panel of US adults. The published number is what respondents said that week, not a model's estimate.",
         "source": "sb_generic",
-        "filters": {"subgroup": "All polls", "pollster": "YouGov"},
+        "filters": {"subgroup": "All polls", "pollster": "YouGov",
+                    "sponsor": "Economist"},
         "value": "net", "unit": "net points, Democratic minus Republican",
         "cadence": "weekly",
         "question": ("Economist/YouGov generic congressional ballot: the "
@@ -243,7 +248,8 @@ SERIES = {
         "tracker": "economist_yougov",
         "publisher": "The Economist and YouGov, jointly: a weekly survey wave of YouGov's own online panel of US adults. The published number is what respondents said that week, not a model's estimate.",
         "source": "sb_approval",
-        "filters": {"subgroup": "Economy", "pollster": "YouGov"},
+        "filters": {"subgroup": "Economy", "pollster": "YouGov",
+                    "sponsor": "Economist"},
         "value": "approve", "unit": "% approve",
         "cadence": "weekly",
         "question": ("Economist/YouGov weekly tracker: percent who approve of "
@@ -265,7 +271,8 @@ SERIES = {
         "tracker": "economist_yougov",
         "publisher": "The Economist and YouGov, jointly: a weekly survey wave of YouGov's own online panel of US adults. The published number is what respondents said that week, not a model's estimate.",
         "source": "sb_approval",
-        "filters": {"subgroup": "Immigration", "pollster": "YouGov"},
+        "filters": {"subgroup": "Immigration", "pollster": "YouGov",
+                    "sponsor": "Economist"},
         "value": "approve", "unit": "% approve",
         "cadence": "weekly",
         "question": ("Economist/YouGov weekly tracker: percent who approve of "
@@ -369,14 +376,19 @@ _HOUSES = [
 _POP_NAME = {"A": "US adults", "RV": "US registered voters", "LV": "likely voters"}
 
 for _sid, _pollster, _sub, _pop, _asks in _CELLS:
+    _filters = {"subgroup": _sub, "pollster": _pollster, "population": _pop}
+    _house = _pollster
+    if _pollster == "YouGov":
+        _filters["sponsor"] = "Economist"
+        _house = "Economist/YouGov"
     SERIES[_sid] = {
-        "label": f"{_pollster} Trump approval, {_sub.lower()}",
+        "label": f"{_house} Trump approval, {_sub.lower()}",
         "tracker": "economist_yougov" if _pollster == "YouGov" else "morning_consult",
         "source": "sb_approval",
-        "filters": {"subgroup": _sub, "pollster": _pollster, "population": _pop},
+        "filters": _filters,
         "value": "approve", "unit": "% approve",
         "cadence": "weekly",
-        "question": f"{_pollster} weekly tracker: {_asks}",
+        "question": f"{_house} weekly tracker: {_asks}",
         "methodology": (
             f"the same waves as the {_pollster} headline approval tracker, "
             f"reported for {_POP_NAME[_pop]}; 'strongly' and 'somewhat' "
@@ -497,6 +509,32 @@ SERIES["mc_generic_margin"] = {
     },
 }
 
+
+# --- publication calendars -------------------------------------------------
+#
+# The sheet dates a poll by its field window; `createddate` is the day the poll
+# entered the sheet, which is the day the arena first sees it. A tracker whose
+# entry day is regular can be scheduled from it. `tools/generate_rounds.py`
+# refuses a tracker with no entry here, and one whose entry the newest archived
+# sheet no longer confirms.
+#
+# Measured on the 2026-09-02 vintages: Economist/YouGov entered on Tuesday in
+# its last eight waves, and the day after its window closed in 84 of 84 since
+# 2025-01-28; the 15 Wednesdays are all weeks that closed Tuesday. The other
+# five houses move their entry day; the evidence is in
+# docs/data-and-resolution.md, section 1.3.
+#
+# `entry` is the weekday the wave reaches the sheet, `release` the weekday the
+# arena resolves on, `hour` its 14:00Z convention, and `resolve` the reviewed
+# wording these rounds already carry. Entrants file by the batch deadline,
+# Monday 12:00Z, while the Economist wave is still in the field; the wave
+# enters Tuesday and the round resolves on it Wednesday, the shape the reviewed
+# Morning Consult rounds use. A wave that enters late resolves the round late,
+# which is what `release_estimated` means; nothing moves at the deadline.
+PUBLICATION = {
+    "economist_yougov": {"entry": 1, "release": 2, "hour": 14,
+                         "resolve": "topline PDF of the wave"},
+}
 
 # --- Civiqs -----------------------------------------------------------------
 #

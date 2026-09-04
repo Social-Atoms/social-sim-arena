@@ -43,8 +43,9 @@ all derived, none sampled. Civiqs uses its registry-declared Friday sampling
 contract, whose adapter defines each date as the value displayed that day.
 Wikipedia rankings roll the reviewed week contract forward. SCE rounds roll the
 reviewed month forward on release days copied by hand from the NY Fed calendar.
-Silver Bulletin dates are poll field midpoints, so those families are refused
-until a real forward publication calendar is integrated.
+Silver Bulletin dates are poll field midpoints, so a tracker is scheduled only
+from a publication calendar the registry records and the archived sheet
+confirms.
 """
 import argparse
 import collections
@@ -61,7 +62,8 @@ from ssa import batches                                    # noqa: E402
 from ssa import inventory                                  # noqa: E402
 from ssa import profile_round                             # noqa: E402
 from ssa import ranking_round                              # noqa: E402
-from ssa.series import SERIES                              # noqa: E402
+from ssa.adapters import silverbulletin as sb              # noqa: E402
+from ssa.series import PUBLICATION, SERIES                 # noqa: E402
 
 # Minimum observations before the baselines mean anything.
 MIN_HISTORY = 12
@@ -130,6 +132,20 @@ RESOLVE = {
 # reviewed calendar change, not something history can infer.
 CIVIQS_RELEASE_HOUR_UTC = 14
 FIELD_DATE_SOURCES = frozenset({"sb_approval", "sb_generic"})
+
+# A recorded calendar is checked against the newest archived sheet before it
+# schedules anything: over the last CHECKED_WAVES entries, each entry off the
+# declared weekday is a slip, and so is each gap between entries not within
+# MAX_GAP_DAYS; more than MAX_SLIPS refuse the tracker. One slip is tolerated
+# because a Monday holiday moves an Economist/YouGov entry to Wednesday, which
+# also stretches that gap to eight days: MAX_GAP_DAYS is 8, not 7, so the
+# holiday costs one slip rather than two. More than one is a calendar that
+# moved, or an item the pollster asks only some weeks.
+# Two Monday holidays four weeks apart refuse the tracker for the weeks both
+# sit in the window, and the refusal says so.
+CHECKED_WAVES = 8
+MAX_SLIPS = 1
+MAX_GAP_DAYS = 8
 
 # Series this generator deliberately stops producing rounds for, and why.
 #
@@ -207,6 +223,23 @@ def naming(sid):
     return sid.split("_")[0], sid.split("_")[0], sid.replace("_", "-")
 
 
+def sb_rows(source):
+    """The newest archived Silver Bulletin sheet, parsed."""
+    directory = os.path.join(ROOT, "sources", source)
+    newest = sorted(f for f in os.listdir(directory) if f.endswith(".csv"))[-1]
+    with open(os.path.join(directory, newest)) as fh:
+        return sb.parse(fh.read())
+
+
+def entry_days(meta):
+    """The day each of the series' waves entered the sheet, in wave order."""
+    polls = (sb.approval_polls if meta["source"] == "sb_approval"
+             else sb.generic_ballot_polls)
+    recs = polls(rows=sb_rows(meta["source"]), **meta["filters"])
+    by_wave = {(r["start_date"], r["end_date"]): r["created"] for r in recs}
+    return [by_wave[k] for k in sorted(by_wave)]
+
+
 def load_history():
     """Every registered series as {id: [{date, value}]}, from the archive.
 
@@ -217,10 +250,11 @@ def load_history():
     """
     from ssa.adapters import civiqs as civiqs_adapter
     src = {}
-    # Only a family with both a generation template and a proved forward
-    # schedule needs history. Everything else is refused before a history or
-    # network call is considered. This is the load-bearing offline rule: the
-    # previous version called ``build_all`` over the entire registry, which
+    # Only a family the archive can schedule needs history: Civiqs from its
+    # dated snapshots, Silver Bulletin from the newest archived sheet.
+    # Everything else is refused before a history or network call is
+    # considered. This is the load-bearing offline rule: the previous
+    # version called ``build_all`` over the entire registry, which
     # fetched Conference Board, SCE, Civiqs, Trends and Wikipedia even though
     # none of those source families could safely produce a scalar candidate. A
     # supposedly deterministic command could therefore hang for 45 seconds or
@@ -232,7 +266,7 @@ def load_history():
     from ssa import series as registry
     all_series = dict(registry.SERIES)
     supported = {sid: meta for sid, meta in all_series.items()
-                 if meta.get("source") == "civiqs"}
+                 if meta.get("source") in ("civiqs", "sb_approval", "sb_generic")}
     src["civiqs"] = {}
     for sid, meta in sorted(supported.items()):
         if meta.get("source") != "civiqs":
@@ -241,6 +275,8 @@ def load_history():
         src["civiqs"][sid] = civiqs_adapter.as_displayed(
             cfg["name"], cfg.get("filters"), choice=cfg.get("choice"),
             net=cfg.get("net", False), weekday=cfg.get("weekday"), fetch=False)
+    src["sb_approval"] = sb_rows("sb_approval")
+    src["sb_generic"] = sb_rows("sb_generic")
 
     for sid in tuple(registry.SERIES):
         if sid not in supported:
@@ -257,19 +293,45 @@ def load_history():
 
 
 def schedule_contract(sid, meta, hist):
-    """(``{weekday, hour}``, reason) from explicit source date semantics.
+    """(``{weekday, hour}``, reason) from explicit source date semantics; a
+    Silver Bulletin calendar also carries its reviewed ``resolve`` wording.
 
     A regular pattern is not evidence that a date is a release date. Silver
     Bulletin deliberately labels its series with poll field midpoints; using
     their modal weekday previously generated Saturday Morning Consult releases
-    while the reviewed calendar said Wednesday. Refuse that family until a
-    publisher calendar exists rather than manufacturing a precise timestamp.
+    while the reviewed calendar said Wednesday. A tracker is scheduled only
+    from the calendar the registry records, and only while the newest
+    archived sheet agrees with it.
     """
     source = meta.get("source")
     if source in FIELD_DATE_SOURCES:
-        return None, (
-            "Silver Bulletin series dates are poll field midpoints, not "
-            "publication dates; no forward publisher calendar is integrated")
+        calendar = PUBLICATION.get(meta.get("tracker"))
+        if not calendar:
+            return None, (
+                "Silver Bulletin series dates are poll field midpoints, not "
+                "publication dates; no publication calendar is recorded for "
+                f"{meta.get('tracker')}")
+        # The round releases the day after the wave enters: any later and
+        # its lock, 48 hours earlier, falls on or after the entry.
+        if (calendar["release"] - calendar["entry"]) % 7 != 1:
+            raise ValueError(
+                f"{meta['tracker']} would release on weekday "
+                f"{calendar['release']} but its wave enters on "
+                f"{calendar['entry']}; the lock must precede the entry")
+        days = entry_days(meta)[-CHECKED_WAVES:]
+        if len(days) < CHECKED_WAVES:
+            return None, (f"only {len(days)} waves in the sheet; a calendar "
+                          f"is checked against the last {CHECKED_WAVES}")
+        off = sum(d.weekday() != calendar["entry"] for d in days)
+        gaps = sum(not 0 < (d - p).days <= MAX_GAP_DAYS
+                   for p, d in zip(days, days[1:]))
+        if off + gaps > MAX_SLIPS:
+            return None, (
+                f"{off + gaps} slips in the last {CHECKED_WAVES} waves: {off} "
+                f"entered off the declared weekday, {gaps} gaps not within "
+                f"{MAX_GAP_DAYS} days")
+        return {"weekday": calendar["release"], "hour": calendar["hour"],
+                "resolve": calendar["resolve"]}, None
     if source != "civiqs":
         return None, "no explicit forward release calendar is integrated"
     weekday = (meta.get("civiqs") or {}).get("weekday")
@@ -450,7 +512,7 @@ def candidates(sid, meta, hist, weeks, now, through=None):
             "release_at": release.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "release_estimated": True,
             "lock_at": lock.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "resolve": RESOLVE[meta["source"]],
+            "resolve": calendar.get("resolve", RESOLVE[meta["source"]]),
             "target_type": "continuous_normal",
         })
     return out
