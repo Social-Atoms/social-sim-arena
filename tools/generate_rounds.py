@@ -41,9 +41,10 @@ the refusals with their evidence.
 ids, wording, units, release and lock times, resolution rule and target type are
 all derived, none sampled. Civiqs uses its registry-declared Friday sampling
 contract, whose adapter defines each date as the value displayed that day.
-Wikipedia rankings roll the reviewed week contract forward. Silver Bulletin
-dates are poll field midpoints, so those families are refused until a real
-forward publication calendar is integrated.
+Wikipedia rankings roll the reviewed week contract forward. SCE rounds roll the
+reviewed month forward on release days copied by hand from the NY Fed calendar.
+Silver Bulletin dates are poll field midpoints, so those families are refused
+until a real forward publication calendar is integrated.
 """
 import argparse
 import collections
@@ -148,6 +149,29 @@ RETIRED_TEMPLATES = {
     "wiki_views_taylor_swift":
         "issue #48 retires single-page weekly view totals in favour of the "
         "top-10 ranking round. See `wiki_views_trump`.",
+}
+
+# Families this generator deliberately has no template for, and why.
+#
+# Like RETIRED_TEMPLATES these are decisions, not gaps. Reporting them as
+# `unsupported_family` would send the next reader off to write a template that
+# was considered and declined.
+DECLINED_FAMILIES = {
+    "hhpoll":
+        "Harvard-Harris announces no release calendar and has no derivable "
+        "URL; a wave enters the archive when a maintainer fetches its PDF, so "
+        "no forward release can be scheduled. The hand-written rounds resolve "
+        "on the next wave published after their lock; write any further one "
+        "the same way.",
+    "trends_basket":
+        "the five basket cells are asked jointly by the trends-basket profile "
+        "round, which trends_candidates rolls forward; a scalar twin of a "
+        "cell is allowed but not generated.",
+    "trends":
+        "single-query index rounds ran for one reviewed week (2026-08-29), "
+        "and one week is not a contract to extend; the basket share round "
+        "asks the same queries on a scale that cancels the sampling draw a "
+        "raw index carries.",
 }
 
 # The pollster, not the file it arrives in. Every Silver Bulletin series is a
@@ -329,6 +353,10 @@ def gate(sid, meta, hist):
         return False, {"gate": "retired_template",
                        "source": meta.get("source"),
                        "detail": RETIRED_TEMPLATES[sid]}
+    if meta.get("source") in DECLINED_FAMILIES:
+        return False, {"gate": "declined_family",
+                       "source": meta.get("source"),
+                       "detail": DECLINED_FAMILIES[meta["source"]]}
     if meta.get("source") not in RESOLVE:
         return False, {"gate": "unsupported_family",
                        "source": meta.get("source"),
@@ -718,6 +746,156 @@ def civiqs_profile_candidates(rounds, weeks, now, through=None):
     return out
 
 
+# --- the NY Fed Survey of Consumer Expectations ------------------------------
+#
+# Two horizons a month, rolled forward from the newest reviewed round the way
+# the basket and ranking families are. The one thing nothing here may derive
+# is the release day: the workbook dates its rows by survey month, and the day
+# is preannounced on the NY Fed calendar rather than fixed to a weekday. So it
+# is a hand-entered table, checked against every reviewed round, and the
+# family stops at the first month nobody has entered.
+
+SCE_HORIZONS = {"sce_inflation_1y": ("infl1y", "one-year"),
+                "sce_inflation_3y": ("infl3y", "three-year")}
+SCE_ID = re.compile(r"^sce-(\d{4}-\d{2})-infl[13]y$")
+
+# Release day per survey month, copied by hand from the NY Fed's own calendar
+# file: the CSV behind newyorkfed.org/microeconomics/calendar.html, which runs
+# to the end of the calendar year. The rows to copy:
+#
+#   curl -s https://www.newyorkfed.org/medialibrary/research/interactives/data/cmdCalendar/cmdCalendar.csv \
+#     | grep 'Survey of Consumer Expectations: Press release'
+#
+# A row's date is the release day; the survey month is the month before it.
+SCE_RELEASES = {
+    "2026-08": "2026-09-08",
+    "2026-09": "2026-10-07",
+    "2026-10": "2026-11-09",
+    "2026-11": "2026-12-07",
+}
+
+# The invariant sentence of the reviewed wording. Each reviewed round appends
+# its own aside (the release date, and for August the July reading); a
+# generated round appends nothing, so the check is a prefix match, as in
+# `trends_template`.
+SCE_QUESTION = (
+    "NY Fed Survey of Consumer Expectations, produced by the Federal Reserve "
+    "Bank of New York from its rotating panel of about 1,300 US household "
+    "heads: the median {horizon}-ahead expected inflation rate for the "
+    "{month} survey month.")
+
+
+def _sce_month(rid):
+    """`2026-09`, the survey month an SCE round id names."""
+    m = SCE_ID.match(rid)
+    if not m:
+        raise ValueError(f"{rid} does not name an SCE survey month")
+    return m.group(1)
+
+
+def _month_phrase(month):
+    """`September 2026`, the way the reviewed rounds write it."""
+    return datetime.strptime(month, "%Y-%m").strftime("%B %Y")
+
+
+def _next_month(month):
+    d = datetime.strptime(month, "%Y-%m")
+    return f"{d.year + d.month // 12}-{d.month % 12 + 1:02d}"
+
+
+def sce_template(rounds):
+    """(newest reviewed SCE round, lock offset, release offset).
+
+    The lock is measured from the release and the release from midnight on
+    the release day, because the day is what the calendar fixes. Raises when
+    the reviewed rounds disagree on that spacing, when `SCE_RELEASES`
+    contradicts a reviewed release date, or when `SCE_QUESTION` no longer
+    rebuilds the wording a human approved.
+    """
+    got = sorted((r for r in rounds if r.get("series") in SCE_HORIZONS),
+                 key=lambda r: r["release_at"])
+    if not got:
+        raise ValueError(
+            "no reviewed SCE round to template from; this generator extends "
+            "an existing contract rather than inventing one")
+    offsets = set()
+    for r in got:
+        month = _sce_month(r["round_id"])
+        if SCE_RELEASES.get(month) != r["release_at"][:10]:
+            raise ValueError(
+                f"SCE_RELEASES disagrees with {r['round_id']}: "
+                f"{SCE_RELEASES.get(month)} against {r['release_at'][:10]}")
+        rel = datetime.fromisoformat(r["release_at"].replace("Z", "+00:00"))
+        lock = datetime.fromisoformat(r["lock_at"].replace("Z", "+00:00"))
+        day = rel.replace(hour=0, minute=0, second=0)
+        offsets.add((lock - rel, rel - day))
+        rebuilt = SCE_QUESTION.format(horizon=SCE_HORIZONS[r["series"]][1],
+                                      month=_month_phrase(month))
+        if not r["question"].startswith(rebuilt):
+            raise ValueError(
+                f"SCE_QUESTION no longer reproduces {r['round_id']}'s "
+                "wording; the reviewed question changed and the template did "
+                "not")
+        if _month_phrase(month) not in r["resolve"]:
+            raise ValueError(
+                f"{r['round_id']}'s resolve rule does not name its survey "
+                "month; that name is the one thing the template rewrites")
+    if len(offsets) != 1:
+        raise ValueError(
+            f"the reviewed SCE rounds use {len(offsets)} different "
+            f"lock/release spacings: {sorted(map(str, offsets))}")
+    lock_off, rel_off = offsets.pop()
+    return got[-1], lock_off, rel_off
+
+
+def sce_candidates(rounds, weeks, now, through=None):
+    """(future SCE rounds, the first survey month the calendar does not cover).
+
+    `weeks` counts releases per series, so a month is two rounds. The month
+    the calendar lacks is returned for `main` to report, so running out of
+    calendar is a refusal and not silence. Beyond MAX_WEEKS_AHEAD the walk
+    stops quietly, as the other families do.
+    """
+    tpl, lock_off, rel_off = sce_template(rounds)
+    last = _sce_month(tpl["round_id"])
+    month = _next_month(last)
+    out = []
+    while through is not None or len(out) < 2 * weeks:
+        day = SCE_RELEASES.get(month)
+        if day is None:
+            return out, month
+        if day[:7] <= month:
+            raise ValueError(
+                f"SCE_RELEASES[{month!r}] is {day}, which does not follow the "
+                "survey month; a calendar row is dated by its release day")
+        release = datetime.strptime(day, "%Y-%m-%d").replace(
+            tzinfo=timezone.utc) + rel_off
+        lock = release + lock_off
+        this, month = month, _next_month(month)
+        if through is not None and release.date() > through:
+            break
+        if lock <= now or not publishable(lock, now):
+            continue
+        if through is None and (release - now).days > MAX_WEEKS_AHEAD * 7:
+            break
+        for sid, (suffix, horizon) in SCE_HORIZONS.items():
+            out.append({
+                "round_id": f"sce-{this}-{suffix}",
+                "tracker": tpl["tracker"],
+                "series": sid,
+                "question": SCE_QUESTION.format(
+                    horizon=horizon, month=_month_phrase(this)),
+                "unit": tpl["unit"],
+                "release_at": release.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "release_estimated": tpl.get("release_estimated", False),
+                "lock_at": lock.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "resolve": tpl["resolve"].replace(_month_phrase(last),
+                                                  _month_phrase(this)),
+                "target_type": tpl["target_type"],
+            })
+    return out, None
+
+
 def week_phrase(start, end):
     """`Mon Aug 31 - Sun Sep 6, 2026`, the way the reviewed rounds write it.
 
@@ -910,6 +1088,8 @@ def main():
     hist_by_series = load_history()
     made, refused = [], []
     for sid in sorted(SERIES):
+        if sid in SCE_HORIZONS:
+            continue    # rolled forward below; the row is not the template
         meta = SERIES[sid]
         hist = hist_by_series.get(sid) or []
         ok, why = gate(sid, meta, hist)
@@ -952,6 +1132,28 @@ def main():
         r["_sn"] = float("nan")     # a permutation has no signal-to-noise ratio
         r["_new_series"] = False    # three reviewed rounds already ran on it
         made.append(r)
+
+    # SCE: two horizons a month, on the day the NY Fed preannounced. Its rows
+    # skip the gate loop, so the rights verdict is read here. The calendar
+    # is typed in by hand, so the first month it does not cover is reported
+    # rather than silently ending the family.
+    rights = RIGHTS.get("sce", "unresolved")
+    if rights not in inventory.GENERATING_RIGHTS:
+        sce, why = [], {"gate": "rights", "state": rights, "source": "sce"}
+    else:
+        sce, unentered = sce_candidates(rounds, weeks, now, through=through)
+        why = unentered and {
+            "gate": "calendar", "source": "sce",
+            "detail": f"no release day entered for the {unentered} survey "
+                      "month; copy it from the NY Fed calendar into "
+                      "SCE_RELEASES"}
+    for r in sce:
+        r["_sn"] = r["_move"] = float("nan")    # no history is loaded for it
+        r["_new_series"] = False
+        made.append(r)
+    if why:
+        refused.extend((sid, why) for sid in SCE_HORIZONS)
+    refused.sort(key=lambda x: x[0])
 
     made.sort(key=lambda r: (r["lock_at"], r["round_id"]))
     by_batch = collections.defaultdict(list)

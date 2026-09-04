@@ -449,6 +449,194 @@ def test_trends_generation_refuses_drifted_wording_and_split_spacings():
     print("ok test_trends_generation_refuses_drifted_wording_and_split_spacings")
 
 
+def _sce_template_round():
+    """The newest reviewed SCE round, which the clocks and ids anchor to."""
+    return max((r for r in _season() if r.get("series") in gen.SCE_HORIZONS),
+               key=lambda r: r["release_at"])
+
+
+def test_sce_rolls_the_reviewed_month_forward_on_the_entered_calendar():
+    """Two horizons a month, on a release day somebody typed in.
+
+    The day is a fixture, patched in rather than read from `SCE_RELEASES`,
+    so the test does not move when another month is entered.
+    """
+    rounds = _season()
+    tpl = _sce_template_round()
+    month = gen._next_month(gen._sce_month(tpl["round_id"]))
+    # A survey month is released the month after it; a day inside its own
+    # month would lock before `now` and be skipped.
+    day = f"{gen._next_month(month)}-08"
+    now = datetime.fromisoformat(tpl["release_at"].replace("Z", "+00:00"))
+    with mock.patch.dict(gen.SCE_RELEASES, {month: day}):
+        out, unentered = gen.sce_candidates(rounds, 1, now)
+    assert unentered is None, unentered
+    # At least one reviewed round carries an aside after the invariant
+    # sentence, so the prefix rule is exercised. Not the newest: once a
+    # generated month is promoted, the newest carries none.
+    assert any(r["question"] != gen.SCE_QUESTION.format(
+        horizon=gen.SCE_HORIZONS[r["series"]][1],
+        month=gen._month_phrase(gen._sce_month(r["round_id"])))
+        for r in rounds if r.get("series") in gen.SCE_HORIZONS), \
+        "fixture: no reviewed round carries an aside any more"
+    assert [r["round_id"] for r in out] == [f"sce-{month}-infl1y",
+                                            f"sce-{month}-infl3y"], out
+    lock_off = (datetime.fromisoformat(tpl["lock_at"].replace("Z", "+00:00"))
+                - now)
+    for r in out:
+        assert r["release_at"] == f"{day}T{tpl['release_at'][11:]}", r
+        rel = datetime.fromisoformat(r["release_at"].replace("Z", "+00:00"))
+        lock = datetime.fromisoformat(r["lock_at"].replace("Z", "+00:00"))
+        assert lock - rel == lock_off, r["round_id"]
+        # The invariant sentence and nothing after it: neither the release
+        # date nor the July reading the reviewed rounds append is carried.
+        assert r["question"] == gen.SCE_QUESTION.format(
+            horizon=gen.SCE_HORIZONS[r["series"]][1],
+            month=gen._month_phrase(month)), r["question"]
+        assert gen._month_phrase(month) in r["resolve"], r["resolve"]
+        assert gen._month_phrase(gen._sce_month(tpl["round_id"])) \
+            not in r["resolve"], r["resolve"]
+        assert r["unit"] == tpl["unit"] and r["tracker"] == tpl["tracker"]
+        assert r["target_type"] == tpl["target_type"]
+        assert gen.batches.governed_by_batch(r["lock_at"])
+    print("ok test_sce_rolls_the_reviewed_month_forward_on_the_entered_calendar")
+
+
+def test_sce_refuses_drifted_wording_split_spacings_and_a_wrong_day():
+    rounds = [dict(r) for r in _season()
+              if r.get("series") in gen.SCE_HORIZONS]
+    tpl = _sce_template_round()
+    now = datetime.fromisoformat(tpl["release_at"].replace("Z", "+00:00"))
+
+    drifted = [dict(r) for r in rounds]
+    top = max(drifted, key=lambda r: r["release_at"])
+    top["question"] = top["question"].replace("survey month", "survey week")
+    assert "survey week" in top["question"], "fixture: nothing drifted"
+    try:
+        gen.sce_candidates(drifted, 1, now)
+    except ValueError as e:
+        assert "no longer reproduces" in str(e), e
+    else:
+        raise AssertionError("drifted wording was generated anyway")
+
+    split = [dict(r) for r in rounds]
+    lock = datetime.fromisoformat(split[0]["lock_at"].replace("Z", "+00:00"))
+    split[0]["lock_at"] = (lock - timedelta(days=1)).strftime(
+        "%Y-%m-%dT%H:%M:%SZ")
+    try:
+        gen.sce_candidates(split, 1, now)
+    except ValueError as e:
+        assert "different" in str(e), e
+    else:
+        raise AssertionError("inconsistent spacings were templated from anyway")
+
+    # The typed-in calendar is checked against the reviewed rounds, not
+    # trusted: a wrong day would schedule a round for a date the NY Fed
+    # publishes nothing on.
+    month = gen._sce_month(tpl["round_id"])
+    wrong = date.fromisoformat(gen.SCE_RELEASES[month]) + timedelta(days=1)
+    with mock.patch.dict(gen.SCE_RELEASES, {month: wrong.isoformat()}):
+        try:
+            gen.sce_candidates(rounds, 1, now)
+        except ValueError as e:
+            assert "disagrees" in str(e), e
+        else:
+            raise AssertionError("a day nobody reviewed was templated from")
+
+    # A row keyed by its own month would release before the survey ends.
+    nxt = gen._next_month(month)
+    with mock.patch.dict(gen.SCE_RELEASES, {nxt: f"{nxt}-07"}):
+        try:
+            gen.sce_candidates(rounds, 1, now)
+        except ValueError as e:
+            assert "does not follow" in str(e), e
+        else:
+            raise AssertionError("a release inside its survey month was kept")
+
+    # The resolve rule is rewritten by swapping the month name, so one that
+    # never names it would roll forward whole and settle the wrong row.
+    unnamed = [dict(r) for r in rounds]
+    top = max(unnamed, key=lambda r: r["release_at"])
+    top["resolve"] = top["resolve"].replace(
+        gen._month_phrase(gen._sce_month(top["round_id"])), "the survey month")
+    try:
+        gen.sce_candidates(unnamed, 1, now)
+    except ValueError as e:
+        assert "resolve rule" in str(e), e
+    else:
+        raise AssertionError("a resolve naming no month was rolled forward")
+    print("ok test_sce_refuses_drifted_wording_split_spacings_and_a_wrong_day")
+
+
+def test_sce_names_the_first_month_the_calendar_does_not_cover():
+    """A hand-entered calendar runs out. Ending the family silently there is
+    the "forgotten" the module docstring warns about, so the month is named."""
+    import contextlib
+    import io
+    rounds = _season()
+    tpl = _sce_template_round()
+    now = datetime.fromisoformat(tpl["release_at"].replace("Z", "+00:00"))
+    expected = gen._next_month(gen._sce_month(tpl["round_id"]))
+    # Trimmed to the reviewed months, where a hand-entered calendar always
+    # ends up, whatever has been entered since.
+    reviewed = {gen._sce_month(r["round_id"]): r["release_at"][:10]
+                for r in rounds if r.get("series") in gen.SCE_HORIZONS}
+    argv = [sys.argv[0], "--rejects", "--now", tpl["release_at"]]
+    buf = io.StringIO()
+    with mock.patch.dict(gen.SCE_RELEASES, reviewed, clear=True):
+        assert gen.sce_candidates(rounds, 1, now) == ([], expected)
+        with mock.patch.object(sys, "argv", argv), \
+                contextlib.redirect_stdout(buf):
+            gen.main()
+    printed = buf.getvalue()
+    named = [ln for ln in printed.splitlines() if "sce_inflation" in ln]
+    assert len(named) == 2, printed
+    assert all('"gate": "calendar"' in ln and expected in ln for ln in named)
+    for line in printed.splitlines():
+        if "unsupported_family" not in line:
+            continue
+        for source in ("sce", "hhpoll", "trends", "trends_basket"):
+            assert f'"source": "{source}"' not in line, line
+    print("ok test_sce_names_the_first_month_the_calendar_does_not_cover")
+
+
+def test_sce_rounds_are_still_rights_gated():
+    """The SCE rows skip the gate loop, so rights is read where they
+    generate: a withdrawn verdict refuses them by name, it does not forget
+    them."""
+    import contextlib
+    import io
+    tpl = _sce_template_round()
+    argv = [sys.argv[0], "--rejects", "--now", tpl["release_at"]]
+    buf = io.StringIO()
+    with mock.patch.dict(gen.RIGHTS, {"sce": "unresolved"}), \
+            mock.patch.object(sys, "argv", argv), \
+            contextlib.redirect_stdout(buf):
+        gen.main()
+    lines = [ln for ln in buf.getvalue().splitlines() if "sce_inflation" in ln]
+    assert len(lines) == 2 and all('"gate": "rights"' in ln for ln in lines), \
+        lines
+    print("ok test_sce_rounds_are_still_rights_gated")
+
+
+def test_declined_families_carry_their_decision():
+    """Considered and declined is not the same refusal as never templated.
+
+    `unsupported_family` sends the next reader off to write the template; for
+    these three that work was done and decided against.
+    """
+    ok, why = gen.gate("hh_trump_approval", {"source": "hhpoll"}, [])
+    assert not ok and why["gate"] == "declined_family", why
+    assert "calendar" in why["detail"], why
+    ok, why = gen.gate("trends_share_tesla", {"source": "trends_basket"}, [])
+    assert not ok and why["gate"] == "declined_family", why
+    assert "basket" in why["detail"], why
+    ok, why = gen.gate("trends_iphone", {"source": "trends"}, [])
+    assert not ok and why["gate"] == "declined_family", why
+    assert "basket" in why["detail"], why
+    print("ok test_declined_families_carry_their_decision")
+
+
 def test_the_headline_profile_round_no_longer_stops_in_september():
     """Sixteen cells scored with the energy score is the thing this benchmark
     does that a scalar board cannot, and it had three instances.
@@ -632,6 +820,11 @@ if __name__ == "__main__":
     test_the_trends_basket_rolls_forward_and_keeps_its_shape()
     test_a_seasonal_note_is_never_carried_into_a_month_it_is_false_in()
     test_trends_generation_refuses_drifted_wording_and_split_spacings()
+    test_sce_rolls_the_reviewed_month_forward_on_the_entered_calendar()
+    test_sce_refuses_drifted_wording_split_spacings_and_a_wrong_day()
+    test_sce_names_the_first_month_the_calendar_does_not_cover()
+    test_sce_rounds_are_still_rights_gated()
+    test_declined_families_carry_their_decision()
     test_the_headline_profile_round_no_longer_stops_in_september()
     test_a_sixteen_cell_question_is_not_interpolated_to_another_width()
-    print("23 passed")
+    print("30 passed")
