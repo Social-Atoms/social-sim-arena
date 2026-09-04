@@ -123,13 +123,14 @@ A valid request returns `201 Created`:
 
 Retry the same body with the same `Idempotency-Key`; it returns the same ID and
 sets `idempotent_replay` to `true`. Reusing the key with a different body is a
-`409` conflict. Schema, manifest, type, or deadline failures return `422` with
-field-level details. The maximum request size is 512 KiB.
+`409` conflict. Keys are scoped to a track, so the same key on `agent` and on
+`human` names two submissions. Schema, manifest, type, or deadline failures
+return `422` with field-level details. The maximum request size is 512 KiB.
 
 ## Storage and privacy
 
-Accepted requests are stored as private JSON objects and return no storage
-URL. Contact details and answers are never committed to Git. Production must
-connect a **Private Vercel Blob** store so Vercel supplies
-`BLOB_READ_WRITE_TOKEN`; without it the endpoint fails closed with `503`.
-`SUBMISSION_STORAGE_DIR` is only a local development and test backend.
+Accepted requests are committed to a private repository, one file per
+submission, and the response carries no storage URL. Contact details and
+answers are never public. Production must supply `INTAKE_REPO_TOKEN`, a token
+that can write to that repository; without it the endpoint fails closed with
+`503`. `SUBMISSION_STORAGE_DIR` is only a local development and test backend.

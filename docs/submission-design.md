@@ -201,10 +201,16 @@ deleted on revocation and rotated without exposing their values to operators.
 
 The implemented minimum intake uses same-origin checks, strict schema and
 manifest validation, server-authoritative deadlines, a 512 KiB body limit,
-idempotency keys, redacted receipts, and Private Vercel Blob storage. It fails
+idempotency keys, redacted receipts, and a private intake repository. It fails
 closed when private storage is absent. Rate limits, bot protection, a review
 console, approved privacy text, retention automation, and operator access
 controls remain production gates.
+
+Both tracks are kept. Route A now registers an agent through the public
+repository and nothing reads a stored agent packet, so the agent half of this
+endpoint may be redundant. Retiring it would drop `registrations/` and half the
+track table, which is its own change to weigh; until then the endpoint accepts
+both.
 
 Implemented questionnaire endpoints:
 
@@ -255,10 +261,10 @@ The API key is sent only to the endpoint chosen for the explicit test and is
 reduced to a boolean before the packet is displayed. Human draft storage omits
 the contact email.
 
-Production activation remains gated on connecting a Private Vercel Blob store,
-the authoritative endpoint probe, approved commitment and consent text, privacy
-notice, retention policy, rate limiting, operator review access, and
-PII/credential leak tests.
+Production activation remains gated on a token for the private intake
+repository, the authoritative endpoint probe, approved commitment and consent
+text, privacy notice, retention policy, rate limiting, operator review access,
+and PII/credential leak tests.
 
 ## Migration
 
@@ -266,7 +272,7 @@ PII/credential leak tests.
    the operational fallback.
 2. Validate the API contract and starter server, then run accepted endpoints
    through the non-scored fixture.
-3. Connect and threat-model the private Blob store, then add Human magic links,
+3. Threat-model the private intake repository, then add Human magic links,
    rate limiting, bot protection, and the review workflow.
 4. Add Human board projections and shadow-score hand-checked fixtures without
    publishing standings.
