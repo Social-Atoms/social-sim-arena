@@ -209,6 +209,65 @@ def test_an_empty_history_never_overwrites_a_real_snapshot():
         refresh.LOCKS = real_locks
 
 
+def test_a_late_wave_resolves_its_own_round_and_moves_no_deadline():
+    """The Economist/YouGov calendar (issue #64) promises a specific thing when
+    a wave slips: the round resolves on that same wave, late, and the freeze
+    does not follow it. Both halves are here because they are one promise:
+    if the snapshot moved, the late wave would be inside the history it is
+    supposed to be the answer to, and the round could never resolve at all.
+
+    The round asks about the wave fielded to 2026-09-20, due to enter the
+    sheet Tuesday the 22nd and resolve Wednesday the 23rd. It enters Thursday.
+    """
+    import json as _json
+    import tempfile
+    import ssa.refresh as refresh
+
+    r = _round("yougov-2026-w39-approval", series="yougov_approval",
+               lock="2026-09-21T14:00:00Z", release="2026-09-23T14:00:00Z")
+    before = [{"date": "2026-09-06", "value": 47.0},
+              {"date": "2026-09-13", "value": 48.0}]
+    wave = {"date": "2026-09-20", "value": 45.0}
+    after = {"date": "2026-09-27", "value": 46.0}
+
+    real_locks = refresh.LOCKS
+    refresh.LOCKS = tempfile.mkdtemp()
+    try:
+        # Friday, while the round is open: the snapshot is still being written.
+        assert refresh.update_lock_snapshot(r, before, T("2026-09-18T04:00:00Z"))
+
+        # Wednesday, the release: the wave has not entered, so there is nothing
+        # to resolve against, and the refusal says so rather than reaching for
+        # the previous wave.
+        res, why = resolve.resolve_round(r, _series(
+            [(p["date"], p["value"]) for p in before], "yougov_approval"),
+            T("2026-09-23T14:00:00Z"))
+        assert res is None and "no release has landed" in why, why
+
+        # Thursday, the wave enters. The deadline passed on Monday, so the
+        # refresh that picks it up must not write it into the frozen history.
+        assert not refresh.update_lock_snapshot(
+            r, before + [wave], T("2026-09-24T13:00:00Z"))
+        with open(refresh.lock_snapshot_path(r["round_id"])) as f:
+            assert _json.load(f)["history"] == before
+
+        late = _series([(p["date"], p["value"]) for p in before + [wave]],
+                       "yougov_approval")
+        res, why = resolve.resolve_round(r, late, T("2026-09-24T13:00:00Z"))
+        assert why is None, why
+        assert (res["observed_date"], res["value"]) == ("2026-09-20", 45.0), res
+
+        # And a week later, with the next wave in too, it is still the round's
+        # own wave: late is late, not skipped.
+        later = _series([(p["date"], p["value"]) for p in before + [wave, after]],
+                        "yougov_approval")
+        res, why = resolve.resolve_round(r, later, T("2026-10-01T13:00:00Z"))
+        assert why is None, why
+        assert (res["observed_date"], res["value"]) == ("2026-09-20", 45.0), res
+    finally:
+        refresh.LOCKS = real_locks
+
+
 def test_a_monthly_row_is_not_available_on_the_day_it_is_labelled():
     """Michigan labels a row by the month it describes, not by when it was
     published: 2026-08-01 carries the August preliminary, released 2026-08-14.
