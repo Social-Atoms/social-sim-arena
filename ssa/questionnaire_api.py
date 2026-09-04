@@ -27,6 +27,7 @@ MANIFEST_VERSION = "ssa-questionnaire-manifest-v1"
 SUBMISSION_VERSION = "ssa-questionnaire-submission-v1"
 TERMS_VERSION = "ssa-participant-v1"
 MAX_BODY_BYTES = 512 * 1024
+TRACK_DIRECTORIES = {"agent": "registrations", "human": "human"}
 
 
 class SubmissionError(ValueError):
@@ -310,7 +311,10 @@ def canonical_json(value: Any) -> bytes:
 def _submission_record(validated: dict[str, Any], idempotency_key: str,
                        now: datetime) -> tuple[str, str, dict[str, Any]]:
     payload_hash = hashlib.sha256(canonical_json(validated)).hexdigest()
-    key_hash = hashlib.sha256(idempotency_key.encode("utf-8")).hexdigest()
+    # The tracks store to different directories, so a key on its own would
+    # issue one submission_id for two records that are not the same packet.
+    key_hash = hashlib.sha256(
+        f"{validated['track']}\n{idempotency_key}".encode("utf-8")).hexdigest()
     submission_id = "ssa_" + key_hash[:24]
     record = {
         "record_version": SUBMISSION_VERSION,
@@ -383,7 +387,7 @@ def store_submission(validated: dict[str, Any], idempotency_key: str,
     now = now or datetime.now(timezone.utc)
     submission_id, receipt_hash, record = _submission_record(
         validated, idempotency_key, now)
-    pathname = f"questionnaire-submissions/{submission_id}.json"
+    pathname = f"{TRACK_DIRECTORIES[validated['track']]}/{submission_id}.json"
     record_bytes = canonical_json(record)
     if os.environ.get("SUBMISSION_STORAGE_DIR"):
         existing = _store_local(pathname, record_bytes, receipt_hash)
