@@ -51,8 +51,10 @@ publishes about where its number came from; that now comes from
 crediting Civiqs for a YouGov number is exactly the failure
 `ssa/provenance.py` exists to prevent.
 """
+from datetime import date, timedelta
+
 from . import batches
-from . import baselines, scoring
+from . import baselines, crosstab, scoring
 from . import series as series_registry
 
 # The discriminator in `questions/season0.json`. Every existing round carries
@@ -205,10 +207,36 @@ def cell_outcome(points, release_date, freeze_date, cell):
 ARCHIVE_PHRASE = {
     "civiqs": "the archived Civiqs dashboard",
     "trends_basket": "the archived Google Trends comparison snapshots",
-    "yougov_xtab": ("the Economist/YouGov tracker workbook, as the mean of the "
-                    "four weekly waves dated in the scored month"),
+    "yougov_xtab": ("the Economist/YouGov tracker workbook, the wave dated "
+                    "inside the seven days ending on the release date"),
 }
 DEFAULT_ARCHIVE_PHRASE = "the cells' own registered series archives"
+
+# Sources whose observations are discrete waves rather than a daily reading,
+# keyed by the cells' registered `source`, with the length of the source's
+# own week. `cell_outcome` above admits any value dated on or after the
+# freeze, which is the right rule for a daily dashboard and the wrong one for
+# a weekly wave: under the batch calendar the freeze is a Monday, YouGov dates
+# its waves by a Monday field end, and the *previous* wave -- public before
+# every entrant answered -- is dated on the freeze day and passes. A round
+# scored against it would be scored against a number its entrants had. So a
+# wave source's outcome must also fall inside the round's own week: the
+# `window` days ending on the release date. A stale archive is then refused
+# by name rather than resolved against last week's survey.
+WAVE_WINDOW_DAYS = {
+    "yougov_xtab": crosstab.WAVE_WINDOW_DAYS,
+}
+
+
+def wave_window(cells):
+    """(source, days) when every cell comes from one wave source, else None."""
+    sources = {series_registry.SERIES[c]["source"] for c in cells
+               if c in series_registry.SERIES}
+    if len(sources) != 1:
+        return None
+    src = sources.pop()
+    days = WAVE_WINDOW_DAYS.get(src)
+    return (src, days) if days else None
 
 
 def archive_phrase(cells):
@@ -235,10 +263,21 @@ def resolution(r, series, cells=None):
     cells = cells or cells_for(r)
     release_date = r["release_at"][:10]
     freeze_date = batches.freeze_at(r["lock_at"]).strftime("%Y-%m-%d")
+    window = wave_window(cells)
+    earliest = None
+    if window:
+        _, days = window
+        earliest = (date.fromisoformat(release_date)
+                    - timedelta(days=days - 1)).isoformat()
     values, dates, missing = {}, {}, []
     for c in cells:
         try:
             p = cell_outcome(series.get(c) or [], release_date, freeze_date, c)
+            if earliest and p["date"] < earliest:
+                raise ValueError(
+                    f"{c}: newest wave {p['date']} is not this round's wave; "
+                    f"the round resolves on a wave dated {earliest} to "
+                    f"{release_date}, and the archive carries none yet")
         except ValueError as e:
             missing.append(str(e))
             continue

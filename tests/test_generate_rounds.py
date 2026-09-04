@@ -718,7 +718,7 @@ def test_declined_families_carry_their_decision():
     """Considered and declined is not the same refusal as never templated.
 
     `unsupported_family` sends the next reader off to write the template; for
-    these three that work was done and decided against.
+    these four that work was done and decided against.
     """
     ok, why = gen.gate("hh_trump_approval", {"source": "hhpoll"}, [])
     assert not ok and why["gate"] == "declined_family", why
@@ -729,6 +729,9 @@ def test_declined_families_carry_their_decision():
     ok, why = gen.gate("trends_iphone", {"source": "trends"}, [])
     assert not ok and why["gate"] == "declined_family", why
     assert "basket" in why["detail"], why
+    ok, why = gen.gate("yougov_xtab_approve_rep", {"source": "yougov_xtab"}, [])
+    assert not ok and why["gate"] == "declined_family", why
+    assert "xtab_candidates" in why["detail"], why
     print("ok test_declined_families_carry_their_decision")
 
 

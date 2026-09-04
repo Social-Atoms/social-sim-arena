@@ -20,28 +20,26 @@ def _series(rows):
             for d, v in rows]
 
 
-def test_target_averages_the_window_and_says_which_waves():
-    """A mean of four numbers is not checkable from the answer alone, so the
-    resolution records the waves it used."""
-    s = _series([("2026-07-06", [40, 10]), ("2026-07-13", [42, 12]),
-                 ("2026-07-20", [44, 14]), ("2026-07-27", [46, 16]),
-                 ("2026-08-03", [90, 90])])
-    vec, detail = crosstab.target(s, "2026-07-31")
-    assert vec == [43.0, 13.0], vec
-    assert detail["waves"] == ["2026-07-06", "2026-07-13",
-                               "2026-07-20", "2026-07-27"]
-    assert detail["n_waves"] == 4
-    # a wave after the window must not leak in
-    assert "2026-08-03" not in detail["waves"]
+def test_weekly_cell_series_is_one_point_per_wave_in_profile_order():
+    """The registry's sixteen columns come from one read of the workbook, and
+    a wave's cell i must land in cell i's series -- not a neighbour's."""
+    from ssa.adapters import yougov_xtab
+    labels = list(yougov_xtab.SCORED_CELLS)[:3]
 
+    def wave(date, base):
+        cells = {yougov_xtab.TOPLINE: {"approve": 40.0}}
+        for i, name in enumerate(labels):
+            cells[name] = {"approve": base + 10.0 * i, "base": 500.0}
+        return {"date": date, "cells": cells}
 
-def test_a_short_window_is_reported_not_padded():
-    """Three waves is worse-resolved than four. Saying so beats silently
-    averaging a different number of waves under the same name."""
-    s = _series([("2026-07-13", [40]), ("2026-07-20", [44])])
-    vec, detail = crosstab.target(s, "2026-07-31")
-    assert vec == [42.0]
-    assert detail["n_waves"] == 2 and detail["requested_waves"] == 4
+    ws = [wave("2026-07-06", 40.0), wave("2026-07-13", 42.0)]
+    out = crosstab.weekly_cell_series(ws, labels)
+    assert list(out) == labels
+    assert out[labels[0]] == [{"date": "2026-07-06", "value": 40.0},
+                              {"date": "2026-07-13", "value": 42.0}]
+    assert out[labels[2]][-1]["value"] == 62.0
+    # nothing averages: a point per wave, dated by the wave
+    assert [p["date"] for p in out[labels[1]]] == ["2026-07-06", "2026-07-13"]
 
 
 def test_a_profile_with_a_hole_is_refused():
@@ -137,13 +135,6 @@ def test_a_digest_for_a_lock_that_has_not_happened_is_never_archived():
     assert newsdigest._window_closed("2026-08-01T14:00:00Z", now)
     # exactly at the lock counts as closed
     assert newsdigest._window_closed("2026-08-12T10:00:00Z", now)
-
-
-def test_month_end():
-    from datetime import date
-    assert crosstab.month_end(date(2026, 8, 3)) == date(2026, 8, 31)
-    assert crosstab.month_end(date(2026, 12, 1)) == date(2026, 12, 31)
-    assert crosstab.month_end(date(2028, 2, 5)) == date(2028, 2, 29)
 
 
 if __name__ == "__main__":

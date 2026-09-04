@@ -310,6 +310,15 @@ not weekly rounds against a single wave. (Note: subsampling every 4th wave
 instead of averaging leaves ~20 points and makes `noise_floor` unstable — it
 returned values like `inf` and `20.63`. Those are artifacts; do not cite them.)
 
+> **Superseded 2026-09-04.** The monthly round as built locked on the date of
+> the month's *last* wave, so three of the four were public at lock: the
+> entrant forecast one wave divided by four, the same signal-to-noise as a
+> weekly round, with a quarter of the rounds and a persistence null built from
+> the previous month. The family is now weekly, one round per wave
+> (`yougov-xtab-<year>-w<NN>`), each cell's weekly noise and movement is
+> quoted to entrants, and `profile_round.resolution` refuses to score a round
+> against any wave outside its own week. `ssa/crosstab.py` holds the argument.
+
 #### 2.2.2 What is not wired up yet
 
 The extraction and the scoring both exist and are tested. **Nothing consumes

@@ -245,6 +245,36 @@
       "target_type": "continuous_normal",
       "tracker": "economist_yougov",
       "unit": "net points, Democratic minus Republican"
+    },
+    {
+      "cells": [
+        "yougov_xtab_approve_dem",
+        "yougov_xtab_approve_ind",
+        "yougov_xtab_approve_rep",
+        "yougov_xtab_approve_age_under_30",
+        "yougov_xtab_approve_age_30_44",
+        "yougov_xtab_approve_age_45_64",
+        "yougov_xtab_approve_age_65_up",
+        "yougov_xtab_approve_race_white",
+        "yougov_xtab_approve_race_black",
+        "yougov_xtab_approve_race_hispanic",
+        "yougov_xtab_approve_male",
+        "yougov_xtab_approve_female",
+        "yougov_xtab_approve_edu_hs_or_less",
+        "yougov_xtab_approve_edu_some_college",
+        "yougov_xtab_approve_edu_college_grad",
+        "yougov_xtab_approve_edu_postgrad"
+      ],
+      "horizon_days": 6.083,
+      "lock_at": "2026-09-20T14:00:00Z",
+      "question": "Economist/YouGov weekly tracker: Donald Trump's job approval among US registered voters, broken into the survey's own sixteen crosstab cells, for the wave released in the week of Monday Sep 21. Forecast the percentage approving in each subgroup as the tracker workbook reports it for that wave. These are measured cells of one survey, not a model's subgroup estimates: they move with the national mood and they also move apart, and the whole profile is scored.",
+      "release_at": "2026-09-22T14:00:00Z",
+      "resolve": "for each of the sixteen cells, that cell's approve percentage in the single Economist/YouGov wave the tracker workbook dates inside the seven days ending on the release date, read from the workbook. If the workbook does not yet carry that wave the round waits; it never resolves on the previous wave, which was public before the round's batch deadline.",
+      "round_id": "yougov-xtab-2026-w39",
+      "series": "yougov_xtab_approve_dem",
+      "target_type": "profile_energy",
+      "tracker": "yougov_xtab",
+      "unit": "percent approving"
     }
   ],
   "schema_version": "1.0.0"

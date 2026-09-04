@@ -1,24 +1,60 @@
 """Crosstab rounds: the subgroup structure of a wave, asked and scored as one.
 
 `ssa/adapters/yougov_xtab.py` extracts the ground truth and `ssa/scoring.py`
-knows how to score a vector. Neither was connected to the round lifecycle, so
-no round could ask a crosstab question and no submission could be resolved
-against one. This is that connection.
+knows how to score a vector. This module is the connection between them and
+the round lifecycle: it turns the workbook's waves into the sixteen registered
+cell series, and it holds the measurement that says what a round on those
+cells can and cannot tell anyone.
 
-**Why these rounds are monthly and resolve against a four-wave average.**
-Measured over all 81 published waves, ten of the seventeen series here carry no
-weekly signal at all: for Republicans, the three older age bands, White, Male
-and all four education bands, every point of week-to-week movement is
-measurement noise. A weekly round on "Postgrad approval" is a round on a coin
-flip -- every entrant including a perfect one is scored on noise, and the
-arena score's ceiling collapses toward zero, which is exactly the regime where
-it returns nonsense.
+**One round per wave.** The tracker is weekly and so is the round: each wave
+YouGov puts in the workbook is one sixteen-cell target, dated by the wave's own
+date, resolved against that wave and no other. `profile_round.resolution`
+enforces the "no other" -- a wave outside the round's own week is refused by
+name rather than substituted, because a round scored against last week's
+survey is a round whose answer every entrant already had.
 
-Averaging four consecutive waves roughly halves the noise (Democrat 1.05 ->
-0.23 points, College grad 2.58 -> 0.74) because it averages noise down rather
-than throwing data away. So the target is the mean of the four waves published
-in the month, and the round is monthly. This is a design constraint the data
-imposed, not a preference.
+**What the noise measurement says, and what it does not.** Measured over the
+83 waves published 2025-01-28 to 2026-08-24 (`scoring.noise_floor`, per cell,
+from the cell's own first differences), six of the sixteen cells carry real
+week-to-week movement and ten do not:
+
+    cell           noise  movement        cell           noise  movement
+    Democrat        1.12    0.87          Republican      1.94    0.00
+    Independent     2.06    1.38          30-44 / 45-64 / 65+     0.00
+    Under 30        2.82    1.01          White / Hispanic / Male 0.00
+    Black           1.98    1.57          HS / some college / college grad 0.00
+    Female          1.21    0.65
+    Postgrad        3.43    1.09          (topline, for scale: 0.78 / 0.48)
+
+A movement of 0.00 means the estimator hit its boundary: over these waves,
+every point of that cell's weekly wobble is explained by respondents changing
+rather than opinion changing. It is not a claim that Republicans never move;
+it is a statement that a week is too short to see them move through a sample
+of four hundred. The boundary is also unstable at the margin -- between the
+81st and 83rd wave Hispanic crossed from "moves" to "noise" and Postgrad the
+other way -- so the split is published as a description, never used as a
+scoring rule.
+
+**Why the round is weekly anyway.** An earlier design made the round monthly,
+resolved against the mean of the month's four waves, on the argument that
+averaging four waves halves the noise. The argument is right about the
+target and wrong about the task: that round locked on the date of the month's
+*last* wave, by which time the other three were public. What an entrant had
+to forecast was one wave divided by four -- the same signal-to-noise as a
+weekly round -- with a quarter as many rounds, and a persistence null built
+from the previous month's mean that any reader of the public tracker beat
+for free. Weekly loses nothing that design actually had, and gains the round
+count that lets the season average do the only thing that ever removes
+sampling noise from a score.
+
+The consequences for anyone reading a crosstab score:
+
+  - the ten boundary cells add the same expected noise to every entrant's
+    energy score; they widen a single round's spread and bias nobody, and a
+    season of them narrows the spread by the square root of the round count;
+  - `noise_by_cell` is what to publish beside a board, so the spread on a
+    cell is never mistaken for skill on it;
+  - `arena_score` is season-level only, as its docstring already insists.
 
 **Why the whole profile is one round.** Scoring sixteen cells as sixteen
 separate rounds would score the marginals and discard the joint, and the joint
@@ -30,19 +66,18 @@ apart and splits the result into `level` (the national mean) and `structure`
 model reading the national mood off a headline from one that has a model of a
 society.
 """
-import statistics
-from datetime import date, timedelta
-
 from . import scoring
 from .adapters import yougov_xtab
-
-# Waves averaged into one target. Four is about a month of a weekly tracker and
-# is where the noise reduction above was measured.
-WAVES_PER_ROUND = 4
 
 # The profile is scored in this fixed order everywhere -- submission,
 # resolution, scoring -- so nothing has to carry labels alongside the numbers.
 CELLS = yougov_xtab.SCORED_CELLS
+
+# The tracker's own week. A wave is dated by its field end, a Monday in 68 of
+# 83 waves, a Tuesday in 13 and a Sunday in 2, and enters the workbook within
+# days. A round asks about the one wave dated inside the seven days ending on
+# its release date; `profile_round.WAVE_WINDOW_DAYS` reads this.
+WAVE_WINDOW_DAYS = 7
 
 
 def profile_series(waves, cells=None, measure="approve"):
@@ -54,33 +89,19 @@ def profile_series(waves, cells=None, measure="approve"):
             for w in waves]
 
 
-def window(series, end_date, n=WAVES_PER_ROUND):
-    """The n waves at or before `end_date`, oldest first.
+def weekly_cell_series(waves, cells=None, measure="approve"):
+    """{cell: [{date, value}]} -- the weekly series the registry publishes.
 
-    Fewer than n is returned as-is and the caller decides; a round that resolves
-    on three waves is worse-resolved than one on four, and saying so beats
-    silently averaging a different number of waves under the same name.
+    One point per wave, dated by the wave. One call over the whole workbook
+    produces all sixteen cells, which is why `series.build_all` derives it
+    once and hands each registered cell its own column: sixteen independent
+    reads of one payload would be sixteen chances for the cells to disagree
+    about which waves exist.
     """
-    got = [p for p in series if p["date"] <= end_date]
-    return got[-n:]
-
-
-def target(series, end_date, n=WAVES_PER_ROUND):
-    """(vector, detail) -- the mean profile over the window, per cell.
-
-    `detail` records exactly which waves went in, because a mean of four
-    numbers is not reproducible from the answer alone and a resolution has to
-    be checkable.
-    """
-    got = window(series, end_date, n)
-    if not got:
-        raise ValueError(f"no waves at or before {end_date}")
-    k = len(got[0]["values"])
-    vec = [round(statistics.fmean(p["values"][i] for p in got), 4)
-           for i in range(k)]
-    return vec, {"waves": [p["date"] for p in got],
-                 "n_waves": len(got),
-                 "requested_waves": n}
+    names = list(cells or CELLS)
+    points = profile_series(waves, names, measure)
+    return {c: [{"date": p["date"], "value": p["values"][i]} for p in points]
+            for i, c in enumerate(names)}
 
 
 def submission_vector(crosstabs, cells=None, dimension="all"):
@@ -136,146 +157,3 @@ def noise_by_cell(series, cells=None):
         out[name] = {"noise": round(m, 3), "movement": round(s, 3),
                      "forecastable": s > 0}
     return out
-
-
-def month_end(d):
-    """Last day of d's month, as a date."""
-    first_next = date(d.year + (d.month == 12), d.month % 12 + 1, 1)
-    return first_next - timedelta(days=1)
-
-
-# --- the calendar month, which is the unit a crosstab round is scored on -----
-#
-# `target` above averages "the last four waves at or before a date", which is
-# the right rule for a rolling window and the wrong one for a month. Asked for
-# August 2026 -- three waves published so far -- it happily reaches back into
-# July for a fourth and returns a number labelled August that is one quarter
-# July. The functions below exist so that cannot happen: every one of them
-# filters to the month *first* and only then averages, so the boundary is
-# structural rather than something a caller has to remember to check.
-#
-# **Why a month is refused rather than shortened.** The whole justification for
-# this round type is the measured noise reduction of averaging four waves
-# (module docstring above). A three-wave average is a different estimator with
-# a different noise floor, and publishing it under the same series name would
-# make two rounds' scores incomparable while looking identical in the data. The
-# tracker's own calendar makes this common, not hypothetical: of the twenty
-# months from 2025-01 to 2026-08, one has a single wave (the tracker's first
-# month), one has three so far (the month in progress) and six have five.
-
-def month_end_iso(month):
-    """'YYYY-MM' -> the ISO date of that month's last day."""
-    return month_end(date(int(month[:4]), int(month[5:7]), 1)).isoformat()
-
-
-def months_present(series):
-    """The calendar months the series carries waves in, 'YYYY-MM', oldest first."""
-    seen = []
-    for p in series:
-        m = p["date"][:7]
-        if m not in seen:
-            seen.append(m)
-    return seen
-
-
-def monthly_coverage(series):
-    """{'YYYY-MM': waves dated in it} -- what `monthly_profile` kept and dropped.
-
-    Published rather than logged, so a caller can say *why* a month is missing
-    from a monthly series. A month absent because the tracker has not finished
-    it and a month absent because the extractor dropped an incomplete wave look
-    identical in the output series and are entirely different problems.
-    """
-    out = {}
-    for p in series:
-        out[p["date"][:7]] = out.get(p["date"][:7], 0) + 1
-    return out
-
-
-def month_target(series, month, n=WAVES_PER_ROUND):
-    """(vector, detail) -- the n-wave mean for one calendar month. Raises if short.
-
-    The month is isolated before the window is taken, so a short month can
-    never borrow the previous month's last wave to make up its count. It raises
-    instead, for the reason in the block comment above: a three-wave average is
-    a different estimator wearing the same name, and every score computed
-    against it would be quietly incomparable with every other month's.
-
-    A month with *more* than n waves -- six of the twenty months on this
-    tracker have five -- keeps the last n. Fixing n rather than averaging
-    whatever the month happens to carry is what keeps the target's own noise
-    floor the same number every month, which is the property that makes two
-    rounds' energy scores comparable at all.
-    """
-    inside = [p for p in series if p["date"][:7] == month]
-    if len(inside) < n:
-        raise ValueError(
-            f"{month} carries {len(inside)} wave(s), not {n}: refusing to "
-            f"publish a {n}-wave average computed from {len(inside)}")
-    vec, detail = target(inside, month_end_iso(month), n)
-    detail["month"] = month
-    detail["waves_in_month"] = len(inside)
-    return vec, detail
-
-
-def monthly_profile(waves, cells=None, measure="approve", n=WAVES_PER_ROUND):
-    """[{month, date, values, bases, waves}] -- one point per *complete* month.
-
-    Oldest first. A month that cannot produce an n-wave average is not in the
-    output, because there is no n-wave average for it to be: the loud refusal
-    lives in `month_target`, which is the function that would otherwise return
-    a wrong number, and `monthly_coverage` names every month either way so the
-    omission is inspectable rather than mysterious.
-
-    Each point is dated by the newest wave in its own average -- the month's
-    last wave. Not by the month label and not by the month's last day: the
-    round lifecycle freezes history with a string comparison on ISO dates
-    (`refresh.build_rounds`, `profile_round.frozen_history`), so a point dated
-    later than the observation it summarises would be excluded from a history
-    it belongs in, and one dated earlier would leak into a history it does not.
-
-    `bases` is the mean *per-wave* weighted base across the averaged waves, not
-    the effective base of the average. The waves share a panel, so the four are
-    not independent draws and multiplying by four would overstate precision by
-    an unknown amount. What the noise reduction actually is was measured, not
-    computed -- see the module docstring.
-    """
-    names = list(cells or CELLS)
-    series = profile_series(waves, names, measure)
-    out = []
-    for m in months_present(series):
-        try:
-            vec, detail = month_target(series, m, n)
-        except ValueError:
-            continue
-        # Re-selected inside the month, not by date alone: the month filter is
-        # what makes the boundary structural everywhere in this block, and a
-        # lookup keyed only on the date would quietly reintroduce the one bug
-        # these functions exist to prevent if a wave date ever repeated.
-        chosen = set(detail["waves"])
-        got = [p for p in series
-               if p["date"][:7] == m and p["date"] in chosen]
-        k = len(names)
-        out.append({
-            "month": m,
-            "date": detail["waves"][-1],
-            "values": vec,
-            "bases": [round(statistics.fmean(p["bases"][i] for p in got), 1)
-                      for i in range(k)],
-            "waves": list(detail["waves"]),
-        })
-    return out
-
-
-def monthly_cell_series(waves, cells=None, measure="approve", n=WAVES_PER_ROUND):
-    """{cell: [{date, value}]} -- the monthly series the registry publishes.
-
-    One call over the whole workbook produces all sixteen cells, which is why
-    `series.build_all` derives it once and hands each registered cell its own
-    column: sixteen independent aggregations of one payload would be sixteen
-    chances for the cells to disagree about which waves September had.
-    """
-    names = list(cells or CELLS)
-    points = monthly_profile(waves, names, measure, n)
-    return {c: [{"date": p["date"], "value": p["values"][i]} for p in points]
-            for i, c in enumerate(names)}
