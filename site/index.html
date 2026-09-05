@@ -68,8 +68,6 @@ main{flex:1 1 auto;min-height:0;display:flex;max-width:1680px;width:100%;margin:
 .task-group[open] summary:before{content:'\2212';}
 .task-group summary .tc{margin-left:auto;color:var(--mut);font-size:10.5px;font-weight:600;}
 .task-group.selected{border-color:#b8b7b1;}
-.task-group.shape{border-left:3px solid var(--accent);}
-.task-group summary .gk{display:block;width:max-content;margin:3px 0 0;font:700 9px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);border:1px solid var(--accent);border-radius:3px;padding:0 5px;font-style:normal;line-height:1.5;}
 .task-items{border-top:1px solid #eeede9;padding:4px;}
 .task-link{display:block;width:100%;border:0;border-radius:4px;background:transparent;color:var(--ink2);font:600 13.5px/1.28 var(--sans);padding:8px;cursor:pointer;text-align:left;}
 .task-link:hover{background:#f4f4f2;color:var(--ink);}
@@ -139,8 +137,6 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .qcard{border:1px solid var(--line);border-radius:5px;background:#fff;padding:14px 16px 12px;display:flex;flex-direction:column;min-width:0;}
 .qcard .qhead{display:flex;align-items:center;gap:8px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);font-weight:700;}
 .qcard .qhead .qshape{border:1px solid var(--line);border-radius:3px;padding:0 5px;letter-spacing:.04em;}
-.qcard .qhead .qshape.special{border-color:var(--accent);color:var(--accent-ink);}
-.qcard .qhead .fam.special{color:var(--accent-ink);}
 .qcard .qhead .qdue{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink2);}
 .qcard .qhead .qdue.live:before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:1px;}
 .qcard h3{margin:8px 0 3px;font-size:17px;line-height:1.25;color:var(--ink);}
@@ -257,8 +253,6 @@ footer .upd{margin-left:auto;}
 .fchips button{font:600 11px var(--sans);letter-spacing:.02em;padding:4px 9px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink2);cursor:pointer;}
 .fchips button span{color:var(--mut);font-weight:500;}
 .fchips button.on{background:var(--ink);border-color:var(--ink);color:#fff;}
-.fchips button.special{border-color:var(--accent);color:var(--accent-ink);}
-.fchips button.special.on{background:var(--accent-ink);border-color:var(--accent-ink);color:#fff;}
 .fchips button.on span{color:#cfcec9;}
 .erow p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .erow.cta{border:1px solid var(--accent);border-radius:4px;padding:10px 12px;align-items:center;}
@@ -481,7 +475,7 @@ function submissionLink(track){
 const TASK_GROUPS = [
   {id:'opinion', label:'Public opinion', short:'approval + elections'},
   {id:'sentiment', label:'Sentiment & expectations', short:'consumers + investors'},
-  {id:'population', label:'Population profiles', short:'subgroups jointly', kind:'shape'},
+  {id:'population', label:'Population profiles', short:'subgroups jointly'},
   {id:'attention', label:'Collective attention', short:'search + reading ranks'},
 ];
 const CIVIQS_PROFILE_CELLS = [
@@ -895,8 +889,8 @@ function renderTaskNav(data,key){
   host.innerHTML = TASK_GROUPS.map(g=>{
     const keys = Object.keys(TASKS).filter(k=>TASKS[k].group===g.id);
     const count = keys.reduce((n,k)=>n+taskRounds(TASKS[k],data).length,0);
-    return '<details class="task-group'+(activeGroup===g.id?' selected':'')+(g.kind==='shape'?' shape':'')+'" '+(activeGroup===g.id?'open':'')+'>'
-      +'<summary><span>'+esc(g.label)+(g.kind==='shape'?'<em class="gk">task shape</em>':'')+'</span><span class="tc">'+count+'</span></summary><div class="task-items">'
+    return '<details class="task-group'+(activeGroup===g.id?' selected':'')+'" '+(activeGroup===g.id?'open':'')+'>'
+      +'<summary><span>'+esc(g.label)+'</span><span class="tc">'+count+'</span></summary><div class="task-items">'
       +keys.map(k=>'<button class="task-link'+(k===key?' on':'')+'" data-task="'+k+'">'+esc(TASKS[k].label)
         +'<small>'+esc(TASKS[k].population)+'</small></button>').join('')+'</div></details>';
   }).join('');
@@ -1181,7 +1175,7 @@ function roundsList(data){
   const el = document.getElementById('rounds-list');
   const cat=window.__roundCategory||'all',status=window.__roundStatus||'active',query=(window.__roundQuery||'').toLowerCase();
   const chips=document.getElementById('round-category-chips');
-  chips.innerHTML=[['all','All',false]].concat(TASK_GROUPS.map(g=>[g.id,g.label,g.kind==='shape'])).map(([k,n,sp])=>'<button data-cat="'+k+'" class="'+(cat===k?'on':'')+(sp?' special':'')+'">'+esc(n)+'</button>').join('');
+  chips.innerHTML=[['all','All']].concat(TASK_GROUPS.map(g=>[g.id,g.label])).map(([k,n])=>'<button data-cat="'+k+'" class="'+(cat===k?'on':'')+'">'+esc(n)+'</button>').join('');
   chips.querySelectorAll('button').forEach(b=>b.onclick=()=>{window.__roundCategory=b.dataset.cat;roundsList(data);});
   document.querySelectorAll('#round-status-seg button').forEach(b=>b.classList.toggle('on',b.dataset.status===status));
   const rows=(data.rounds||[]).filter(r=>{
@@ -1197,7 +1191,7 @@ function roundsList(data){
     const shape=kind==='profile_energy'?'profile · '+(r.cells||[]).length+' cells':kind==='ranking_list'?'ranking':'number';
     const when=active?'<span class="qdue live">due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue">resolved '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue">releases '+esc(fmtLocal(r.release_at))+'</span>';
     const strip=forecastStrip(r,t,data)||'<div class="qempty">'+(r.n_forecasts?esc(r.n_forecasts)+' forecasts filed · '+esc(shape):'No forecasts filed yet · '+esc(shape))+'</div>';
-    return '<div class="qcard'+(active?' live':'')+'"><div class="qhead"><span'+(g&&g.kind==='shape'?' class="fam special"':'')+'>'+esc(g?g.label:'Task')+'</span><span class="qshape'+(kind!=='continuous_normal'?' special':'')+'">'+esc(shape)+'</span>'+when+'</div>'
+    return '<div class="qcard'+(active?' live':'')+'"><div class="qhead"><span>'+esc(g?g.label:'Task')+'</span><span class="qshape'+(kind!=='continuous_normal'?' special':'')+'">'+esc(shape)+'</span>'+when+'</div>'
       +'<h3>'+esc(t.label)+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
       +'<div class="qfoot"><span class="qid" title="round id">'+esc(r.round_id)+'</span><span>'+esc(t.population)+'</span><a class="go" href="#live/'+taskKeyForRound(r)+'/all">open task →</a></div></div>';
   }).join('')+'</div>'||'';
