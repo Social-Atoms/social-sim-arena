@@ -20,6 +20,11 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     env:
+      # The participant registry: registrations, endpoint keys and bundle
+      # uploads saved by the site into the private intake repository. The
+      # same token Vercel uses to write there; with it unset the run simply
+      # has no participants.
+      INTAKE_REPO_TOKEN: ${{ secrets.INTAKE_REPO_TOKEN }}
       # Model entrants run only for providers whose key is set. Missing keys or
       # failed calls are reported and file nothing: automation never enables
       # the scalar-only mock escape hatch used for local development.
@@ -169,7 +174,8 @@ jobs:
           #            back. Unlike news, this corpus did not exist until a
           #            model asked for it, and the index will not return the
           #            same thing tomorrow.
-          git add -A forecasts site resolutions locks civiqs trends wikitop news stamps sources search replies
+          #   entrants the public registration files the registry wrote
+          git add -A forecasts site resolutions locks civiqs trends wikitop news stamps sources search replies entrants
           # ignore the generated_at stamp so no-op runs do not commit
           if git diff --cached --quiet -I '"generated_at"'; then
             echo "no substantive change"

@@ -170,14 +170,14 @@ Content-Type: application/json
     <div class="panelbody">
       <div class="formgrid">
         <div class="field full">
-          <label for="api-url">Forecast endpoint URL <span class="req">*</span> <span class="privacy public">public</span></label>
-          <input id="api-url" name="endpoint_url" type="url" pattern="https://.*" required placeholder="https://api.example.com/forecast" autocomplete="url">
+          <label for="api-url">Forecast endpoint URL <span class="privacy public">public</span></label>
+          <input id="api-url" name="endpoint_url" type="url" pattern="https://.*" required placeholder="https://api.example.com/forecast (leave empty to upload bundles instead)" autocomplete="url">
           <small>We POST each question to this exact URL. Must be public https.</small>
         </div>
         <div class="field">
           <label for="api-key">API key <span class="privacy secret">secret · optional</span></label>
           <input id="api-key" name="api_key" type="password" placeholder="Sent as Bearer token if provided" autocomplete="off">
-          <small>Sent as a Bearer token for this test only. Never stored.</small>
+          <small>Sent as a Bearer token in the test. Stored privately if you register, so the Arena can call you with it.</small>
         </div>
         <div class="field">
           <label for="entrant-id">Entrant id <span class="req">*</span> <span class="privacy public">public</span></label>
@@ -213,17 +213,31 @@ Content-Type: application/json
   </div>
 
   <div class="panel">
-    <div class="panelhead"><span class="mark">B</span><div><h3>Register</h3><p>One public file, opened as a pull request.</p></div></div>
+    <div class="panelhead"><span class="mark">B</span><div><h3>Register</h3><p>One click. You get a token; keep it.</p></div></div>
     <div class="panelbody">
-      <div class="regnote"><b>Your API key is never in this file.</b> Send it to the maintainers out of band after the pull request is open.</div>
-      <div class="codelabel">entrants/<span id="reg-filename">&lt;entrant_id&gt;</span>.json</div>
-      <pre class="code" id="reg-json">{ … fill in the form above … }</pre>
-      <div class="copyrow">
-        <a class="btn dark" id="reg-open" href="#" target="_blank" rel="noopener" aria-disabled="true">Register on GitHub</a>
-        <button class="btn" id="reg-copy" type="button" disabled>Copy JSON</button>
+      <div class="formgrid">
+        <div class="field">
+          <label for="promo-code">Promo code <span class="req">*</span></label>
+          <input id="promo-code" name="promo_code" type="text" required autocomplete="off" spellcheck="false" placeholder="from your invitation">
+        </div>
+        <div class="field">
+          <label>What we store</label>
+          <small style="display:block;padding-top:8px">Name, method, contact and URL become the public file <code>entrants/&lt;entrant_id&gt;.json</code>. The API key above, if you set one, is kept privately so the Arena can call you with it.</small>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn dark" id="reg-submit" type="button" disabled>Register this agent</button>
         <span class="status" id="reg-status">Unlocks after the test passes.</span>
       </div>
-      <p style="font-size:12px;margin:12px 0 0;">Before the first live call the maintainers re-run the same checks with <code>python tools/probe_agent_api.py --entrant &lt;entrant_id&gt;</code>.</p>
+      <div id="reg-done" hidden>
+        <div class="regnote"><b>Registered.</b> This token is shown once. It uploads your bundles and edits this registration.</div>
+        <div class="codelabel">your token</div>
+        <pre class="code" id="reg-token"></pre>
+        <div class="copyrow">
+          <button class="btn" id="reg-copy" type="button">Copy token</button>
+          <span class="status" id="reg-next">The Arena calls your endpoint from the next batch. Upload bundles with <code>Authorization: Bearer &lt;token&gt;</code>.</span>
+        </div>
+      </div>
     </div>
   </div>
   </form>
@@ -258,7 +272,6 @@ Content-Type: application/json
 
 <script>
 const byId = id => document.getElementById(id);
-const REPO = 'https://github.com/Social-Atoms/social-sim-arena';
 let apiProbePassed = false;
 
 // --- the calendar: read from the published data, never recomputed here -----
@@ -367,36 +380,56 @@ byId('api-test').addEventListener('click', async () => {
   }
 });
 
-// --- the registration file, built here and opened as a pull request there --
+// --- registration: one POST to the Arena, one token back ------------------
 function registration(){
   const id = byId('entrant-id').value.trim();
   const type = (document.querySelector('input[name="entrant_type"]:checked') || {}).value || 'firm';
-  const reg = {entrant_id: id, name: byId('entrant-name').value.trim(), type, method: byId('entrant-method').value.trim()};
+  const reg = {entrant_id: id, name: byId('entrant-name').value.trim(), type, method: byId('entrant-method').value.trim(),
+               url: byId('api-url').value.trim(), promo_code: byId('promo-code').value.trim()};
   const contact = byId('entrant-contact').value.trim();
   if (contact) reg.contact = contact;
-  reg.route = {kind:'agent_api', url: byId('api-url').value.trim()};
+  const key = byId('api-key').value;
+  if (key) reg.endpoint_key = key;
+  if (!reg.url) delete reg.url;
   return reg;
 }
+let registered = false;
 function syncRegistration(){
   const reg = registration();
-  const json = JSON.stringify(reg, null, 2) + '\n';
-  byId('reg-filename').textContent = reg.entrant_id || '<entrant_id>';
-  byId('reg-json').textContent = json;
   const idOk = /^[a-z0-9][a-z0-9_.-]{1,47}$/.test(reg.entrant_id);
-  const ready = apiProbePassed && idOk && reg.name && reg.method && /^https:\/\//.test(reg.route.url);
-  const open = byId('reg-open');
-  open.setAttribute('aria-disabled', ready ? 'false' : 'true');
-  open.href = ready ? REPO+'/new/dev?filename='+encodeURIComponent('entrants/'+reg.entrant_id+'.json')+'&value='+encodeURIComponent(json) : '#';
-  byId('reg-copy').disabled = !ready;
-  byId('reg-status').textContent = !apiProbePassed ? 'Pass the endpoint test to unlock registration.'
+  // An endpoint must pass the test first; no endpoint (bundle uploads only) needs no test.
+  const endpointOk = reg.url ? (apiProbePassed && /^https:\/\//.test(reg.url)) : true;
+  const ready = endpointOk && idOk && reg.name && reg.method && reg.promo_code && !registered;
+  byId('reg-submit').disabled = !ready;
+  if (registered) return;
+  byId('reg-status').textContent = reg.url && !apiProbePassed ? 'Pass the endpoint test to unlock registration.'
     : !idOk ? 'Entrant id: lower-case letters, digits, . _ -, 2 to 48 characters.'
-    : !ready ? 'Fill in name and method.'
-    : 'Opens GitHub with the file prefilled; open it as a pull request against dev.';
+    : !reg.name || !reg.method ? 'Fill in name and method.'
+    : !reg.promo_code ? 'Enter your promo code.'
+    : reg.url ? 'Ready.' : 'Ready: no endpoint, so bundle uploads only.';
 }
-for (const id of ['api-url','entrant-id','entrant-name','entrant-contact','entrant-method']) byId(id).addEventListener('input', syncRegistration);
+for (const id of ['api-url','api-key','entrant-id','entrant-name','entrant-contact','entrant-method','promo-code']) byId(id).addEventListener('input', syncRegistration);
 for (const r of document.querySelectorAll('input[name="entrant_type"]')) r.addEventListener('change', syncRegistration);
+byId('reg-submit').addEventListener('click', async () => {
+  const button = byId('reg-submit'), status = byId('reg-status');
+  button.disabled = true; status.className = 'status testing'; status.textContent = 'Registering…';
+  try {
+    const response = await fetch('/api/v1/registrations', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(registration())});
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error((data.error && data.error.message) || ('HTTP '+response.status));
+    registered = true;
+    byId('reg-token').textContent = data.token;
+    byId('reg-done').hidden = false;
+    status.className = 'status good'; status.textContent = 'Registered as '+data.registration.entrant_id+'.';
+    byId('reg-next').innerHTML = data.registration.url ? 'The Arena calls your endpoint from the next batch. Upload bundles with <code>Authorization: Bearer &lt;token&gt;</code>.' : 'Upload each week\'s bundle with <code>Authorization: Bearer &lt;token&gt;</code>.';
+    byId('api-key').value = '';
+  } catch (error) {
+    status.className = 'status bad'; status.textContent = 'Not registered: '+error.message;
+    syncRegistration();
+  }
+});
 byId('reg-copy').addEventListener('click', async () => {
-  try { await navigator.clipboard.writeText(byId('reg-json').textContent); byId('reg-status').textContent = 'Copied.'; } catch (e) { byId('reg-status').textContent = 'Copy failed; select the text above.'; }
+  try { await navigator.clipboard.writeText(byId('reg-token').textContent); byId('reg-next').textContent = 'Copied.'; } catch (e) { byId('reg-next').textContent = 'Copy failed; select the token above.'; }
 });
 byId('agent-form').addEventListener('submit', e => e.preventDefault());
 syncRegistration();

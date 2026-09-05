@@ -255,7 +255,8 @@ class SubmissionPrototype(unittest.TestCase):
     def test_page_is_agents_only_and_has_no_form_to_fill_in(self):
         for marker in ('id="api-test"', 'name="endpoint_url"',
                        'id="entrant-id"', 'id="entrant-method"',
-                       'id="test-results"', 'id="reg-json"', 'id="route-b"'):
+                       'id="test-results"', 'id="promo-code"', 'id="reg-token"',
+                       'id="route-b"'):
             self.assertIn(marker, self.page)
         for gone in ("track-human", "Human wisdom", "Human Wisdom",
                      "human_questionnaire_mode", "Fill in this form",
@@ -279,32 +280,36 @@ class SubmissionPrototype(unittest.TestCase):
         for shape in ("Topline", "Population", "Ranking"):
             self.assertIn('<div class="shape"><b>' + shape + "</b>", self.page)
 
-    def test_secret_is_password_and_only_the_explicit_probe_transmits_it(self):
+    def test_secret_is_password_and_goes_only_to_the_endpoint_and_the_arena(self):
         self.assertIn('id="api-key" name="api_key" type="password"', self.page)
         self.assertIn('type="url" pattern="https://.*" required', self.page)
         self.assertNotIn("<form action=", self.page)
         self.assertIn("const target = endpointUrl(urlInput.value);", self.page)
-        # Every other fetch on the page is the arena's own data, never a
-        # third party carrying what was typed.
+        # The key travels twice, both on an explicit click: to the endpoint
+        # being tested, and to the arena's own registry when the person
+        # registers. Every other fetch on the page is the arena's own data;
+        # no third party ever carries what was typed.
         fetches = re.findall(r"fetch\(([^,)]+)", self.page)
         self.assertEqual(
             sorted(fetches),
             sorted(["'data.json'",
                     "'https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/site/data.json'",
-                    "target"]))
+                    "target", "'/api/v1/registrations'"]))
         self.assertNotIn("localStorage", self.page)
 
-    def test_registration_has_no_key_and_opens_as_a_pull_request(self):
-        builder = self.page.split("function registration(){", 1)[1].split(
-            "function syncRegistration(){", 1)[0]
-        self.assertNotIn("api-key", builder)
-        self.assertNotIn("key", builder.lower().replace("kind", ""))
-        self.assertIn("kind:'agent_api'", builder)
-        self.assertIn("'/new/dev?filename='", self.page)
-        self.assertIn("encodeURIComponent('entrants/'+reg.entrant_id+'.json')", self.page)
-        self.assertIn("const ready = apiProbePassed &&", self.page)
-        self.assertIn("Your API key is never in this file.",
-                      self.page)
+    def test_registration_is_one_post_with_a_promo_code_and_returns_a_token_once(self):
+        # Registration goes to the arena's registry, never to a public file
+        # from the browser; the token comes back once and the key field is
+        # cleared after it has been stored.
+        self.assertIn("fetch('/api/v1/registrations', {method:'POST'", self.page)
+        self.assertIn("promo_code: byId('promo-code').value.trim()", self.page)
+        self.assertIn("if (key) reg.endpoint_key = key;", self.page)
+        self.assertIn("byId('reg-token').textContent = data.token;", self.page)
+        self.assertIn("byId('api-key').value = '';", self.page)
+        self.assertIn("This token is shown once.", self.page)
+        self.assertIn("const ready = endpointOk && idOk", self.page)
+        self.assertIn("const endpointOk = reg.url ? (apiProbePassed &&", self.page)
+        self.assertNotIn("/new/dev?filename=", self.page)
         self.assertIn('pattern="[a-z0-9][a-z0-9_.-]{1,47}"', self.page)
         with open(os.path.join(ROOT, "schema", "entrant.schema.json")) as f:
             schema = json.load(f)

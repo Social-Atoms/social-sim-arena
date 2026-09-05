@@ -10,7 +10,11 @@ participants to install.
 
 ## Registration
 
-A `route` block in `entrants/<entrant_id>.json` is what turns a rehearsed
+Participants register on the site (`submit.html`): one form with a promo
+code, one token back. The form writes the registration and the endpoint key
+to the private intake repository; the refresh reads them back, writes the
+public `entrants/<entrant_id>.json`, and loads the key for the run
+(`ssa/registry.py`). A `route` block in that file is what turns a rehearsed
 endpoint into one the season calls:
 
 ```json

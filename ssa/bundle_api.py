@@ -53,18 +53,31 @@ def _authenticate(entrant_id: Any, token: Any,
         entrant = participants.registration(entrant_id, entrants_dir)
     except ValueError:
         entrant = None
-    if not isinstance(entrant, dict):
-        return None
     expected = (os.environ.get(upload_key_env(entrant_id)) or "").strip()
-    if not expected:
-        return None
-    # `compare_digest` refuses a non-ASCII `str`, and a plain `encode` refuses
-    # a lone surrogate, which a token can carry and `os.environ` produces for
-    # any byte the platform could not decode.
-    if not hmac.compare_digest(token.encode("utf-8", "surrogatepass"),
+    if expected and isinstance(entrant, dict):
+        # A token installed by hand. `compare_digest` refuses a non-ASCII
+        # `str`, and a plain `encode` refuses a lone surrogate, which a token
+        # can carry and `os.environ` produces for any byte the platform could
+        # not decode.
+        if hmac.compare_digest(token.encode("utf-8", "surrogatepass"),
                                expected.encode("utf-8", "surrogatepass")):
+            return entrant
         return None
-    return entrant
+    # Otherwise the registry: the token minted at registration. A registry
+    # that is not configured or cannot be reached is "no token", never an
+    # open door. A registration the cron has not yet written to entrants/
+    # is still a registration; its public record comes from the registry.
+    try:
+        from ssa import registry
+        store = registry.Store()
+        if not registry.authenticate(store, entrant_id, token):
+            return None
+        if not isinstance(entrant, dict):
+            record, _ = registry.load(store, entrant_id)
+            entrant = registry.entrant_file(record) if record else None
+    except Exception:
+        return None
+    return entrant if isinstance(entrant, dict) else None
 
 
 def accept_upload(body: Any, token: Any, now=None, entrants_dir=None,

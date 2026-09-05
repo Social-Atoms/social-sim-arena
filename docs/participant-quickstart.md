@@ -92,11 +92,10 @@ python tools/make_bundle.py --list
 python tools/make_bundle.py --batch batch-2026-09-14 --out /tmp/real.json
 ```
 
-To upload rather than open a pull request, ask the maintainers for an upload
-token. Like the Route A key it is derived from your entrant id and never named
-in your registration, and it is a different secret from that one: the Route A
-key travels to your server, this one only ever comes to ours. Send it as
-`Authorization: Bearer` to `/api/v1/bundle-submissions`.
+To upload rather than open a pull request, use the token you received when
+you registered on the site (`submit.html`). Send it as `Authorization: Bearer`
+to `/api/v1/bundle-submissions`. It is a different secret from your Route A
+key: that one travels to your server, this one only ever comes to ours.
 
 Everything else — the two schemas, the three answer shapes, the receipt, the
 per-round rejection reasons, re-uploads — is in
@@ -136,7 +135,12 @@ Your production endpoint must use HTTPS and follow
 
 ### Registering the endpoint
 
-Add a `route` block to your `entrants/<entrant_id>.json`:
+Register on the site: [`submit.html`](https://social-simulation-arena.com/submit.html)
+tests your endpoint, then one form (entrant id, name, method, URL, your API
+key if the endpoint needs one, and your promo code) registers it. You get a
+token, shown once, that edits the registration later and uploads bundles.
+The Arena writes your public entry, `entrants/<entrant_id>.json`, itself at
+the next refresh; it looks like this:
 
 ```json
 {
@@ -151,11 +155,10 @@ Add a `route` block to your `entrants/<entrant_id>.json`:
 }
 ```
 
-`auth` defaults to `"bearer"`; set it to `"none"` only if your endpoint
-authenticates by allow-listing our egress instead.
+`auth` is `"bearer"` when you gave a key and `"none"` when you did not.
 
-**There is no field for your API key, and there will not be one.** Send it to
-the maintainers out of band. The arena reads it from
+**The key is never in this public file.** The site keeps it in the Arena's
+private registry and the refresh loads it as
 `SSA_ENTRANT_KEY_<ENTRANT_ID>` — derived from your id, never named in the
 registration, because a file that could name its own variable could name one
 of ours and have the arena send our provider key to the address in the same
