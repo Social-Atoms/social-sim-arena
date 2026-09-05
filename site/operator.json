@@ -1,0 +1,253 @@
+{
+  "alerts": [
+    {
+      "id": "civiqs",
+      "kind": "source",
+      "last_error": "approve_president_trump_2025.party-Republican: HTTPError: 504 Server Error: Gateway Time-out for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican",
+      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
+      "state": "stale"
+    },
+    {
+      "id": "ranking_wikitop",
+      "kind": "source",
+      "last_error": "wiki-top10-2026-10-18: RuntimeError: no complete pre-lock ranking observation is available; wiki-top10-2026-10-25: RuntimeError: no complete pre-lock ranking observation is available",
+      "required_action": "retry on the next refresh; preserve the last valid vintage",
+      "state": "retryable_failure"
+    }
+  ],
+  "counts": {
+    "entrant_rounds": {
+      "missed_lock": 0,
+      "queued": 0,
+      "retryable_failure": 0,
+      "running": 0,
+      "succeeded": 0,
+      "terminal_failure": 0
+    },
+    "sources": {
+      "deadline_risk": 0,
+      "healthy": 11,
+      "retryable_failure": 1,
+      "stale": 1,
+      "unresolvable": 0
+    }
+  },
+  "entrant_round_states": [],
+  "generated_at": "2026-09-05T02:45:00Z",
+  "source_states": [
+    {
+      "alert": false,
+      "attempts": 1,
+      "estimated_spend": 0.0,
+      "evidence": [
+        "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=12",
+        "sources/aaii/2026-09-05.html sha256=fb645492b57c00b0fb38b7eaefb1228b5725f9e3a2d0e897e7604bc38c1285f0"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-06T14:00:00Z",
+      "next_lock": "2026-09-06T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "route": "https://www.aaii.com/sentimentsurvey/sent_results",
+      "source": "aaii",
+      "state": "healthy"
+    },
+    {
+      "alert": true,
+      "attempts": 1,
+      "estimated_spend": 0.0,
+      "evidence": [
+        "civiqs/approve_president_trump_2025.party-Republican (20 snapshots; newest 2026-09-04)",
+        "fetched_days=1.1; changed_days=11.1; fetch_budget=2; change_budget=10; stale_keys=describe_feeling_us,economy_us_direction",
+        "live attempt failed; same-source archive used"
+      ],
+      "last_error": "approve_president_trump_2025.party-Republican: HTTPError: 504 Server Error: Gateway Time-out for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican",
+      "next_deadline": "2026-09-06T14:00:00Z",
+      "next_lock": "2026-09-06T14:00:00Z",
+      "next_retry": "2026-09-05T08:45:00Z",
+      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
+      "route": "ssa.series:civiqs",
+      "source": "civiqs",
+      "state": "stale"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "estimated_spend": 0.0,
+      "evidence": [
+        "1 validated non-empty series"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-06T14:00:00Z",
+      "next_lock": "2026-09-06T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "route": "ssa.series:hhpoll",
+      "source": "hhpoll",
+      "state": "healthy"
+    },
+    {
+      "alert": true,
+      "attempts": 1,
+      "estimated_spend": 0.0,
+      "evidence": [
+        "affected_rounds=wiki-top10-2026-10-18,wiki-top10-2026-10-25"
+      ],
+      "last_error": "wiki-top10-2026-10-18: RuntimeError: no complete pre-lock ranking observation is available; wiki-top10-2026-10-25: RuntimeError: no complete pre-lock ranking observation is available",
+      "next_deadline": "2026-09-06T14:00:00Z",
+      "next_lock": "2026-09-06T14:00:00Z",
+      "next_retry": "2026-09-05T08:45:00Z",
+      "required_action": "retry on the next refresh; preserve the last valid vintage",
+      "route": "ssa.ranking:ranking_wikitop",
+      "source": "ranking_wikitop",
+      "state": "retryable_failure"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "estimated_spend": 0.0,
+      "evidence": [
+        "fetched_days=-0.0; changed_days=-0.0; fetch_budget=2; change_budget=7",
+        "sources/sb_approval/2026-09-05.csv sha256=eea02cc76a3ba96c0d0d3a1870ba67d3ce12e48a5e8fa9d713bc7292f425dbf7"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-06T14:00:00Z",
+      "next_lock": "2026-09-06T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "route": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
+      "source": "sb_approval",
+      "state": "healthy"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "estimated_spend": 0.0,
+      "evidence": [
+        "fetched_days=-0.0; changed_days=-0.0; fetch_budget=2; change_budget=10",
+        "sources/sb_generic/2026-09-05.csv sha256=9c72f4128a0fd9226f076aee7feec561fe857a16ec5297deec105e623ee750cc"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-06T14:00:00Z",
+      "next_lock": "2026-09-06T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "route": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
+      "source": "sb_generic",
+      "state": "healthy"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "estimated_spend": 0.0,
+      "evidence": [
+        "2 validated non-empty series"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-06T14:00:00Z",
+      "next_lock": "2026-09-06T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "route": "ssa.series:sce",
+      "source": "sce",
+      "state": "healthy"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "estimated_spend": 0.0,
+      "evidence": [
+        "2 validated non-empty series"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-06T14:00:00Z",
+      "next_lock": "2026-09-06T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "route": "ssa.series:trends",
+      "source": "trends",
+      "state": "healthy"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "estimated_spend": 0.0,
+      "evidence": [
+        "5 validated non-empty series"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-06T14:00:00Z",
+      "next_lock": "2026-09-06T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "route": "ssa.series:trends_basket",
+      "source": "trends_basket",
+      "state": "healthy"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "estimated_spend": 0.0,
+      "evidence": [
+        "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=40",
+        "sources/umich/2026-09-05.json sha256=a4e677722ac5addd704db9b2dd1081cc19192972b543781c0c9354568a63e59f"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-06T14:00:00Z",
+      "next_lock": "2026-09-06T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "route": "http://www.sca.isr.umich.edu/files/tbmics.csv",
+      "source": "umich",
+      "state": "healthy"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "estimated_spend": 0.0,
+      "evidence": [
+        "3 validated non-empty series"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-06T14:00:00Z",
+      "next_lock": "2026-09-06T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "route": "ssa.series:umichparty",
+      "source": "umichparty",
+      "state": "healthy"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "estimated_spend": 0.0,
+      "evidence": [
+        "2 validated non-empty series"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-06T14:00:00Z",
+      "next_lock": "2026-09-06T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "route": "ssa.series:wikipedia",
+      "source": "wikipedia",
+      "state": "healthy"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "estimated_spend": 0.0,
+      "evidence": [
+        "16 validated non-empty series"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-06T14:00:00Z",
+      "next_lock": "2026-09-06T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "route": "ssa.series:yougov_xtab",
+      "source": "yougov_xtab",
+      "state": "healthy"
+    }
+  ]
+}
