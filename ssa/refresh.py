@@ -382,11 +382,11 @@ def season_roster():
     """(entrant_id, model, variant) for every condition this run will file.
 
     Route A participants are appended last and only when they can actually be
-    called -- registered, not revoked, credential installed. A registration
-    that is missing its key is left out of the roster rather than queued and
-    failed every six hours: the entrant has not gone wrong, we have not
-    finished onboarding them, and a red run every cycle through a week of
-    onboarding trains everyone to ignore the colour.
+    called -- registered, not revoked, and this run holding the arena's
+    signing key. A run without the key leaves them out of the roster rather
+    than queuing them and failing every six hours: the entrant has not gone
+    wrong, we have not finished setting up, and a red run every cycle through
+    a week of setup trains everyone to ignore the colour.
     """
     roster = [] if elicitation_only() else list(harness.season_entrants())
     want = elicitation_variants()

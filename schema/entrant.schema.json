@@ -85,7 +85,7 @@
           "type": "string",
           "pattern": "^https://[^\\s?#]+$",
           "maxLength": 300,
-          "description": "The exact HTTPS URL the arena POSTs each question to, as one JSON object; the reply body is the forecast, one JSON object. Plain http is refused here and again in code: a forecast is not secret, but the Bearer token sent with it is. No query string or fragment, so a URL that appears to carry a key cannot silently send the request without it."
+          "description": "The exact HTTPS URL the arena POSTs each question to, as one JSON object; the reply body is the forecast, one JSON object. Plain http is refused here and again in code: the signature says who sent the request, https is what keeps a third party from reading the question or rewriting the reply in transit. No query string or fragment, so a URL cannot smuggle a credential."
         }
       }
     }

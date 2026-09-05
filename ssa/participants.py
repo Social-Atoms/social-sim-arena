@@ -24,7 +24,7 @@ What this file refuses, and why each refusal exists
   the schema refuses any such field.
 - **HTTPS only.** Checked here as well as in the schema. The schema runs when a
   registration is opened as a pull request; this runs every time we are about
-  to send a bearer token.
+  to send a signed request.
 - **No standby.** `harness.standby_route` falls back to OpenRouter when a
   configured route is terminally down. For a participant that would send their
   round to a third-party vendor on our account and file the reply as their

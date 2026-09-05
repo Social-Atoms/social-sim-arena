@@ -112,7 +112,7 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
   <div class="panel">
     <div class="panelbody">
       <ol class="steps">
-        <li><span class="n">1</span><p><b>We POST each question to your exact URL.</b> The payload carries the question wording, its answer shape, the unit, the resolution rule, the series history every entrant sees, and the lock time. If you set an API key, we send it as a Bearer token. The endpoint must be reachable over public https.</p></li>
+        <li><span class="n">1</span><p><b>We POST each question to your exact URL.</b> The payload carries the question wording, its answer shape, the unit, the resolution rule, the series history every entrant sees, and the lock time. Every request is signed with the Arena's published key; you hand us no key of any kind. The endpoint must be reachable over public https.</p></li>
         <li><span class="n">2</span><p><b>You do your own research.</b> A raw endpoint is a self-contained forecaster. The Arena does not build a prompt or run any search for you.</p></li>
         <li><span class="n">3</span><p><b>You return a forecast in the shape the question asks for.</b> A number question takes a mean and an sd. A population question takes a mean and an sd for every named cell. A ranking question takes the items in order. A point guess is refused.</p></li>
       </ol>
@@ -178,11 +178,6 @@ Content-Type: application/json
           <small>We POST each question to this exact URL. Must be public https.</small>
         </div>
         <div class="field">
-          <label for="api-key">API key <span class="privacy secret">secret · optional</span></label>
-          <input id="api-key" name="api_key" type="password" placeholder="Sent as Bearer token if provided" autocomplete="off">
-          <small>Only if your endpoint wants one for this browser test. The Arena itself sends no key: it signs its requests.</small>
-        </div>
-        <div class="field">
           <label for="entrant-id">Entrant id <span class="req">*</span> <span class="privacy public">public</span></label>
           <input id="entrant-id" name="entrant_id" type="text" required pattern="[a-z0-9][a-z0-9_.-]{1,47}" placeholder="acme-forecast" autocomplete="off" spellcheck="false">
           <small>Lower-case, permanent.</small>
@@ -226,7 +221,7 @@ Content-Type: application/json
         </div>
         <div class="field">
           <label>Nothing secret in this file</label>
-          <small style="display:block;padding-top:8px">The Arena signs every request it sends you (<a href="keys.json">public keys</a>); you verify, and hand us no key at all. The API key field above is used by the browser test only.</small>
+          <small style="display:block;padding-top:8px">The Arena signs every request it sends you (<a href="keys.json">public keys</a>); you verify, and hand us no key at all. An endpoint that demands its own key cannot be called by the cron, so do not put one in front of it.</small>
         </div>
       </div>
       <div class="codelabel">entrants/<span id="reg-filename">&lt;entrant_id&gt;</span>.json</div>
@@ -365,16 +360,14 @@ byId('api-test').addEventListener('click', async () => {
     const target = endpointUrl(urlInput.value);
     step('HTTPS endpoint', esc(target), 'good');
     const headers = {'Content-Type':'application/json'};
-    const key = byId('api-key').value;
-    if (key) headers.Authorization = 'Bearer ' + key;
     const bodyText = JSON.stringify(FIXTURE);
     const signed = await signHeaders(bodyText);
     if (signed) Object.assign(headers, signed);
     step('Signature', signed ? 'signed with the published test key ssa-test' : 'this browser cannot sign Ed25519; sent unsigned. Use tools/probe_agent_api.py to test verification.', signed ? 'good' : 'wait');
-    const s2 = step('Transport', 'POST the contract fixture'+(key?' with a Bearer token':'')+'…', 'wait');
+    const s2 = step('Transport', 'POST the contract fixture…', 'wait');
     const response = await fetch(target, {method:'POST', headers, body:bodyText, signal:controller.signal});
     const ms = Math.round(performance.now() - started);
-    if (response.status === 401 || response.status === 403) throw new Error('Authentication failed (HTTP '+response.status+').');
+    if (response.status === 401 || response.status === 403) throw new Error('Refused (HTTP '+response.status+'). The cron sends no key, so an endpoint that wants one will refuse the cron too; if you verify signatures, check the test key from keys.json.');
     if (!response.ok) throw new Error('Endpoint returned HTTP '+response.status+'.');
     s2.state = 'good'; s2.detail = 'HTTP '+response.status+' in '+ms+' ms'; paintResults();
     const data = await response.json();

@@ -1,6 +1,12 @@
 # Submission intake design
 
-Status: implementation for Issue #42. The interactive form is at
+Status: historical. This is the Issue #42 design (OpenAI-compatible route,
+per-entrant API key, Human Wisdom questionnaire, private intake API). Season 0
+replaced it: the contract is `ssa-agent-api-v2` (`docs/agent-api.md`), the
+arena signs its requests and no participant key exists anywhere, and
+registration is a pull request. Kept for the record; do not build from it.
+
+Original status: implementation for Issue #42. The interactive form is at
 [`site/submit.html`](../site/submit.html). Agent and Human questionnaire
 submissions use one validated private intake API; each questionnaire also has a
 programmatic POST option documented in

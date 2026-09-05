@@ -278,8 +278,12 @@ class SubmissionPrototype(unittest.TestCase):
         for shape in ("Topline", "Population", "Ranking"):
             self.assertIn('<div class="shape"><b>' + shape + "</b>", self.page)
 
-    def test_secret_is_password_and_only_the_explicit_probe_transmits_it(self):
-        self.assertIn('id="api-key" name="api_key" type="password"', self.page)
+    def test_the_page_asks_for_no_key_and_only_the_explicit_probe_sends_anything(self):
+        # Season 0 Route A carries no credential in either direction: the
+        # arena signs, the participant verifies. A key field would let an
+        # endpoint pass the browser test behind a key the cron never sends.
+        for token in ('id="api-key"', 'api_key', 'Bearer'):
+            self.assertNotIn(token, self.page)
         self.assertIn('type="url" pattern="https://.*" required', self.page)
         self.assertNotIn("<form action=", self.page)
         self.assertIn("const target = endpointUrl(urlInput.value);", self.page)
