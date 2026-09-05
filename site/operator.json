@@ -1,16 +1,9 @@
 {
   "alerts": [
     {
-      "id": "sce-2026-08-infl3y/glm-web",
-      "kind": "entrant_round",
-      "last_error": "glm-web (glm-5.2) failed on sce-2026-08-infl3y: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
-      "state": "retryable_failure"
-    },
-    {
       "id": "civiqs",
       "kind": "source",
-      "last_error": "approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican",
+      "last_error": "approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us",
       "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
       "state": "stale"
     },
@@ -26,9 +19,9 @@
     "entrant_rounds": {
       "missed_lock": 0,
       "queued": 0,
-      "retryable_failure": 1,
+      "retryable_failure": 0,
       "running": 0,
-      "succeeded": 119,
+      "succeeded": 120,
       "terminal_failure": 0
     },
     "sources": {
@@ -1061,19 +1054,21 @@
       "state": "succeeded"
     },
     {
-      "alert": true,
+      "alert": false,
       "attempts": 1,
       "entrant": "glm-web",
       "estimated_spend": 0.01041,
-      "evidence": [],
-      "last_error": "glm-web (glm-5.2) failed on sce-2026-08-infl3y: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+      "evidence": [
+        "forecast=forecasts/sce-2026-08-infl3y/glm-web.json"
+      ],
+      "last_error": null,
       "next_deadline": "2026-09-06T15:00:00Z",
       "next_lock": "2026-09-06T15:00:00Z",
-      "next_retry": "2026-09-05T10:23:32Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": null,
+      "required_action": "none",
       "round_id": "sce-2026-08-infl3y",
       "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
-      "state": "retryable_failure"
+      "state": "succeeded"
     },
     {
       "alert": false,
@@ -2079,7 +2074,7 @@
       "state": "succeeded"
     }
   ],
-  "generated_at": "2026-09-05T04:28:36Z",
+  "generated_at": "2026-09-05T10:37:22Z",
   "source_states": [
     {
       "alert": false,
@@ -2103,14 +2098,14 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "civiqs/approve_president_trump_2025.party-Republican (20 snapshots; newest 2026-09-04)",
-        "fetched_days=1.2; changed_days=11.2; fetch_budget=2; change_budget=10; stale_keys=describe_feeling_us,economy_us_direction",
+        "civiqs/approve_president_trump_2025.party-Republican (20 snapshots; newest 2026-09-04); civiqs/describe_feeling_us (18 snapshots; newest 2026-09-05); civiqs/economy_us_direction (19 snapshots; newest 2026-09-05); civiqs/economy_us_now (19 snapshots; newest 2026-09-05); civiqs/inflation_impact (19 snapshots; newest 2026-09-05)",
+        "fetched_days=1.4; changed_days=11.4; fetch_budget=2; change_budget=10; stale_keys=describe_feeling_us,economy_us_direction",
         "live attempt failed; same-source archive used"
       ],
-      "last_error": "approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican",
+      "last_error": "approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us",
       "next_deadline": "2026-09-06T14:00:00Z",
       "next_lock": "2026-09-06T14:00:00Z",
-      "next_retry": "2026-09-05T10:28:36Z",
+      "next_retry": "2026-09-05T16:37:22Z",
       "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
       "route": "ssa.series:civiqs",
       "source": "civiqs",
@@ -2142,7 +2137,7 @@
       "last_error": "wiki-top10-2026-10-18: RuntimeError: no complete pre-lock ranking observation is available; wiki-top10-2026-10-25: RuntimeError: no complete pre-lock ranking observation is available",
       "next_deadline": "2026-09-06T14:00:00Z",
       "next_lock": "2026-09-06T14:00:00Z",
-      "next_retry": "2026-09-05T10:28:36Z",
+      "next_retry": "2026-09-05T16:37:22Z",
       "required_action": "retry on the next refresh; preserve the last valid vintage",
       "route": "ssa.ranking:ranking_wikitop",
       "source": "ranking_wikitop",
@@ -2153,7 +2148,7 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
+        "fetched_days=-0.0; changed_days=0.3; fetch_budget=2; change_budget=7",
         "sources/sb_approval/2026-09-05.csv sha256=902d8d0bebf95505afd5d4ae5744dff4ff43327d24bc8e85b1a498f63aad5c28"
       ],
       "last_error": null,
@@ -2170,7 +2165,7 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=10",
+        "fetched_days=-0.0; changed_days=0.3; fetch_budget=2; change_budget=10",
         "sources/sb_generic/2026-09-05.csv sha256=31c263df0b6d550d7d113f53663c14a6595febb8ff2043247c88013a10a34b84"
       ],
       "last_error": null,
@@ -2235,7 +2230,7 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=0.1; fetch_budget=3; change_budget=40",
+        "fetched_days=-0.0; changed_days=0.3; fetch_budget=3; change_budget=40",
         "sources/umich/2026-09-05.json sha256=a4e677722ac5addd704db9b2dd1081cc19192972b543781c0c9354568a63e59f"
       ],
       "last_error": null,
