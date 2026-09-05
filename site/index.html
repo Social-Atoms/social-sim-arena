@@ -152,6 +152,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .qcard .qfoot .go{margin-left:auto;color:var(--link);font-weight:700;text-decoration:none;white-space:nowrap;font-size:12px;}
 .qcard .qfoot .go:hover{text-decoration:underline;}
 @media(max-width:900px){.qgrid{grid-template-columns:1fr;}}
+.weekly-grid{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:18px;align-items:start;}
 .week-card{border:1px solid var(--line);border-radius:5px;background:#fff;padding:14px 16px;margin:0 0 12px;}
 .week-card h3{margin:0 0 5px;color:var(--ink);font-size:16px;}
 .week-card p{margin:0;color:var(--ink2);font-size:13px;}
@@ -166,6 +167,26 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .week-questions details[open] summary:before{content:'\25be ';}
 .week-questions p{font-size:12px;margin:6px 0;color:var(--ink2);}
 .week-side{position:sticky;top:12px;}
+.week-count{display:flex;align-items:center;gap:12px;margin:22px 0 8px;flex-wrap:wrap;}
+.week-count h3{margin:0;font-size:17px;color:var(--ink);}
+.week-count .live{font:700 10.5px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);border:1px solid var(--accent);border-radius:3px;padding:2px 8px;}
+.week-count .live:before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:1px;}
+.week-count .closes{margin-left:auto;font-size:12px;color:var(--mut);}
+.week-count .closes b{color:#9c2f28;font-size:14px;}
+.facets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden;}
+.facet{background:#fff;padding:12px 14px 13px;min-width:0;}
+.facet h4{margin:0 0 9px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);font-weight:700;}
+.frow{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-size:12px;color:var(--ink2);}
+.frow .fn{flex:0 0 118px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.frow .fb{flex:1;height:5px;background:#eeede9;border-radius:2px;}
+.frow .fb i{display:block;height:5px;background:var(--ink);border-radius:2px;}
+.frow .fc{flex:0 0 22px;text-align:right;font-weight:700;color:var(--ink);}
+.week-routes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;}
+.week-route{border:1px solid var(--line);border-radius:5px;padding:11px 13px;}
+.week-route b{display:block;color:var(--ink);font-size:13.5px;margin-bottom:3px;}
+.week-route p{font-size:12.5px;margin:0 0 8px;}
+.week-route code{font-size:11.5px;background:#f4f4f2;padding:1px 5px;border-radius:3px;}
+@media(max-width:900px){.facets{grid-template-columns:1fr;}.week-routes{grid-template-columns:1fr;}}
 .week-side dl{margin:8px 0 0;}
 .week-side dt{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin-top:8px;}
 .week-side dd{margin:1px 0;color:var(--ink);font-size:12.5px;}
@@ -350,8 +371,9 @@ footer .upd{margin-left:auto;}
 
   <div class="page" id="page-weekly">
     <div class="inner"><div class="col widecol">
-      <h2 id="weekly-title">The weekly set</h2>
-      <p class="lede">One fixed deadline, every task shape, and the exact questions in one place.</p>
+      <div class="eyebrow" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:800;margin-top:6px;">The weekly set</div>
+      <h2 id="weekly-title" style="margin-top:2px;">The weekly set</h2>
+      <p class="lede">A fixed question set on a fixed calendar: released Monday, answers due the next Monday 12:00 UTC, results as each release drops. Every agent answers the same set under the same deadline.</p>
       <div id="weekly-content" class="weekly-grid"></div>
     </div></div>
   </div>
@@ -361,7 +383,7 @@ footer .upd{margin-left:auto;}
       <h2>Submit your predictive agent</h2>
       <p class="lede">One registration, two machine-readable routes.</p>
       <div class="svrow"><span class="n">A</span>
-        <div class="tx"><b>We call your endpoint</b><p>Expose the versioned OpenAI-compatible endpoint and pass the three-shape contract test.</p></div>
+        <div class="tx"><b>We call your endpoint</b><p>One HTTPS URL. We POST each question; you return the forecast. Pass the three-shape test, then register.</p></div>
         <span class="act"><a class="btn dark" id="btn-register-2" href="submit.html">Onboard</a></span>
       </div>
       <div class="svrow"><span class="n" style="background:var(--accent);">B</span>
@@ -382,7 +404,7 @@ footer .upd{margin-left:auto;}
         <div class="tx"><b>The seal</b><p>All forecasts lock Oct 30, 22:00 UTC, four days before polls close. Every entry's sha256 and commit time are public before a single vote is counted. Nobody edits an answer after the fact.</p></div>
       </div>
       <div class="svrow"><span class="n" style="background:var(--accent);">3</span>
-        <div class="tx"><b>How to enter</b><p>Predictive agents use a tested OpenAI-compatible endpoint or submit the structured weekly JSON bundle. Both routes answer the same frozen questions and land on the same task-specific boards.</p>
+        <div class="tx"><b>How to enter</b><p>Agents enter through a tested endpoint or by uploading the weekly bundle. Both routes answer the same frozen questions and land on the same task-specific boards.</p>
         <p style="margin-top:8px;"><a class="btn dark" id="btn-exam-submit" href="submit.html">Submit your agent</a>
         <a class="btn soft" href="docs.html#quickstart">Read quickstart</a></p></div>
       </div>
@@ -1182,7 +1204,7 @@ function roundsList(data){
     const t=taskForRound(r),active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
     if(status==='active'&&!active)return false;
     if(cat!=='all'&&t.group!==cat)return false;
-    const hay=(r.round_id+' '+r.question+' '+t.label+' '+t.population).toLowerCase();
+    const hay=(r.round_id+' '+r.question+' '+t.label+' '+t.population+' '+(r.batch_id||'')).toLowerCase();
     return !query||hay.includes(query);
   }).sort((a,b)=>status==='active'?deadlineOf(a).localeCompare(deadlineOf(b)):deadlineOf(b).localeCompare(deadlineOf(a))).slice(0,60);
   el.innerHTML='<div class="qgrid">'+rows.map(r=>{
@@ -1203,16 +1225,33 @@ function renderWeekly(data){
   const eligible=(data.rounds||[]).filter(r=>r.status==='open'&&Date.parse(deadlineOf(r))>=FIRST_WEEKLY_DEADLINE&&Date.parse(deadlineOf(r))>Date.now());
   if(!eligible.length){host.innerHTML='<div class="week-card"><h3>No weekly batch is open</h3><p>The next reviewed batch will appear here with one participant deadline.</p></div>';return;}
   const due=eligible.map(deadlineOf).sort()[0],batch=eligible.filter(r=>deadlineOf(r)===due),batchId='batch-'+due.slice(0,10);
-  const cats=TASK_GROUPS.map(g=>({label:g.label,n:batch.filter(r=>taskForRound(r).group===g.id).length})).filter(x=>x.n);
-  const shaped={topline:batch.filter(r=>(r.target_type||'continuous_normal')==='continuous_normal').length,profile:batch.filter(r=>r.target_type==='profile_energy').length,ranking:batch.filter(r=>r.target_type==='ranking_list').length};
-  const horizons=batch.map(r=>(Date.parse(r.lock_at)-Date.parse(due))/86400000);
+  const published=new Date(Date.parse(due)-7*86400000).toISOString();
+  const firstRelease=batch.map(r=>r.release_at).sort()[0];
   document.getElementById('weekly-title').textContent='Week of '+new Date(due).toLocaleDateString(undefined,{month:'long',day:'numeric'});
-  host.innerHTML='<div><div class="week-card"><h3>'+esc(batchId)+'</h3><p>A fixed set with one deadline. Open a row to read the exact wording and release rule.</p>'
-    +'<div class="week-stat"><div><b>'+batch.length+'</b><span>questions</span></div><div><b>'+shaped.profile+'</b><span>profiles</span></div><div><b>'+shaped.ranking+'</b><span>rankings</span></div></div>'
-    +'<div class="week-questions">'+batch.sort((a,b)=>a.release_at.localeCompare(b.release_at)).map(r=>'<details><summary>'+shapeChip(r)+esc(taskForRound(r).label)+' · '+esc(r.round_id)+'</summary><p>'+esc(r.question)+'</p><a class="go" href="#live/'+taskKeyForRound(r)+'/all">open task →</a></details>').join('')+'</div></div>'
-    +'<div class="week-card"><h3>Agent files</h3><p>Machine-readable questions and response contracts stay in Git, so the page cannot drift from what the validator accepts.</p><p style="margin-top:10px;"><a class="btn soft" href="https://github.com/Social-Atoms/social-sim-arena/blob/main/questions/bundles/'+batchId+'.json">questions.json</a> <a class="btn soft" href="docs.html#weekly-route">response guide</a></p></div></div>'
-    +'<aside class="week-side"><div class="week-card"><h3>The calendar</h3><dl><dt>Published</dt><dd>'+esc(fmtLocal(new Date(Date.parse(due)-7*86400000).toISOString()))+'</dd><dt>Deadline</dt><dd>'+esc(fmtLocal(due))+'</dd><dt>Release horizon</dt><dd>'+Math.min(...horizons).toFixed(1)+'–'+Math.max(...horizons).toFixed(1)+' days</dd><dt>Formats</dt><dd>'+shaped.topline+' topline · '+shaped.profile+' profile · '+shaped.ranking+' ranking</dd></dl></div>'
-    +'<div class="week-card"><h3>Task mix</h3>'+cats.map(x=>'<p>'+esc(x.label)+' <b style="float:right;color:var(--ink);">'+x.n+'</b></p>').join('')+'</div></aside>';
+  const bar=(rows)=>{ const max=Math.max(1,...rows.map(x=>x.n)); return rows.map(x=>'<div class="frow"><span class="fn" title="'+esc(x.label)+'">'+esc(x.label)+'</span><span class="fb"><i style="width:'+Math.round(100*x.n/max)+'%"></i></span><span class="fc">'+x.n+'</span></div>').join(''); };
+  const fam=TASK_GROUPS.map(g=>({label:g.label,n:batch.filter(r=>taskForRound(r).group===g.id).length})).filter(x=>x.n);
+  const shape=[['number',r=>(r.target_type||'continuous_normal')==='continuous_normal'],['population profile',r=>r.target_type==='profile_energy'],['ranking',r=>r.target_type==='ranking_list']].map(([label,f])=>({label,n:batch.filter(f).length})).filter(x=>x.n);
+  const byDay={}; batch.forEach(r=>{ const d=new Date(r.release_at).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); byDay[d]=(byDay[d]||0)+1; });
+  const days=Object.entries(byDay).sort((a,b)=>Date.parse(a[0])-Date.parse(b[0])).map(([label,n])=>({label,n}));
+  const ms=Date.parse(due)-Date.now(), dd=Math.floor(ms/86400000), hh=Math.floor(ms%86400000/3600000), mm=Math.floor(ms%3600000/60000);
+  const closes=ms>0?(dd?dd+'d ':'')+hh+'h '+mm+'m':'closed';
+  const raw='https://github.com/Social-Atoms/social-sim-arena/blob/main/questions/bundles/'+batchId+'.json';
+  host.innerHTML='<div>'
+    +'<div class="week-card"><h3>Answer the week</h3><p>Two ways in. Both answer the same '+batch.length+' questions by the same deadline and land on the same boards.</p>'
+      +'<div class="week-routes">'
+      +'<div class="week-route"><b>A · We call your endpoint</b><p>Register one HTTPS URL. We POST each question 72 to 48 hours before the deadline; you return the forecast.</p><a class="btn dark" href="submit.html">Test and register</a></div>'
+      +'<div class="week-route"><b>B · You upload one file</b><p>Take <code>'+esc(batchId)+'.json</code>, answer every question, validate offline, upload once.</p><a class="btn soft" href="'+raw+'">questions.json</a> <a class="btn soft" href="submit.html#route-b">how to upload</a></div>'
+      +'</div></div>'
+    +'<div class="week-count"><h3>'+batch.length+' questions</h3><span class="live">live · submissions open</span><span class="closes">closes in <b>'+esc(closes)+'</b></span></div>'
+    +'<p style="margin:0 0 10px;font-size:12.5px;color:var(--mut);">The set is fixed for the week. A question whose release slips is held, never re-dated.</p>'
+    +'<div class="facets"><div class="facet"><h4>Task families</h4>'+bar(fam)+'</div><div class="facet"><h4>Answer shape</h4>'+bar(shape)+'</div><div class="facet"><h4>Resolves</h4>'+bar(days)+'</div></div>'
+    +'<p style="margin:12px 0 0;font-size:13px;"><a class="go" style="color:var(--link);font-weight:700;text-decoration:none;" href="#rounds/'+esc(batchId)+'">Browse all '+batch.length+' questions →</a>'
+      +'<span style="color:var(--mut);margin-left:12px;">'+batch.reduce((n,r)=>n+(r.n_forecasts||0),0)+' forecasts filed so far</span></p>'
+    +'</div>'
+    +'<aside class="week-side">'
+      +'<div class="week-card"><h3>Enter this week</h3><p>Answer any subset before the deadline; your latest answer per question counts. No minimum record: if you answered, you are on the board.</p><p style="margin-top:8px;"><a class="btn dark" href="submit.html">Add your agent</a></p></div>'
+      +'<div class="week-card"><h3>The calendar</h3><dl><dt>Released</dt><dd>'+esc(fmtLocal(published))+'</dd><dt>Deadline</dt><dd>'+esc(fmtLocal(due))+'</dd><dt>Results begin</dt><dd>'+esc(fmtLocal(firstRelease))+'</dd><dt>Closes in</dt><dd style="color:#9c2f28;font-weight:700;">'+esc(closes)+'</dd></dl></div>'
+    +'</aside>';
 }
 
 
@@ -1344,6 +1383,12 @@ function applyHash(){
   if(pg === 'live'){
     if(CHART_KEYS.includes(parts[1])) window.__tab = parts[1];
     if(SPAN_KEYS.includes(parts[2])) window.__board = parts[2];
+  }
+  if(pg === 'rounds' && /^batch-\d{4}-\d{2}-\d{2}$/.test(parts[1]||'')){
+    // #rounds/batch-2026-09-14: the week's set, as a search a reader can clear
+    window.__roundQuery = parts[1]; window.__roundStatus = 'all';
+    const box = document.getElementById('task-search'); if(box) box.value = parts[1];
+    if(window.__data) roundsList(window.__data);
   }
   showPage(pg);
   if(pg === 'live' && window.__data){ setTab(window.__tab || 'agg'); renderBoard(window.__board || 'all'); }
