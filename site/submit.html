@@ -394,6 +394,19 @@ function registration(){
   return reg;
 }
 let registered = false;
+// The first JSON object in a body. A cold function has been seen to answer
+// with its response repeated; the first copy is the answer.
+function firstJson(text){
+  let depth = 0, inStr = false, esc = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inStr) { if (esc) esc = false; else if (c === '\\') esc = true; else if (c === '"') inStr = false; continue; }
+    if (c === '"') inStr = true;
+    else if (c === '{') depth++;
+    else if (c === '}') { depth--; if (depth === 0) { try { return JSON.parse(text.slice(0, i + 1)); } catch (e) { return {}; } } }
+  }
+  try { return JSON.parse(text); } catch (e) { return {}; }
+}
 function syncRegistration(){
   const reg = registration();
   const idOk = /^[a-z0-9][a-z0-9_.-]{1,47}$/.test(reg.entrant_id);
@@ -415,7 +428,7 @@ byId('reg-submit').addEventListener('click', async () => {
   button.disabled = true; status.className = 'status testing'; status.textContent = 'Registering…';
   try {
     const response = await fetch('/api/v1/registrations', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(registration())});
-    const data = await response.json().catch(() => ({}));
+    const data = firstJson(await response.text());
     if (!response.ok) throw new Error((data.error && data.error.message) || ('HTTP '+response.status));
     registered = true;
     byId('reg-token').textContent = data.token;
