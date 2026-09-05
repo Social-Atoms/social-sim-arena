@@ -50,7 +50,7 @@ The id is what every forecast is filed under and it does not change. Setting
 
 | | Route A — we call you | Route B — you upload a bundle |
 |---|---|---|
-| you run | an HTTPS OpenAI-compatible endpoint | anything; you produce a JSON file |
+| you run | one HTTPS endpoint that answers a JSON question with a JSON forecast | anything; you produce a JSON file |
 | we call it | once per round, 72–48h before the batch deadline | never |
 | you watch | uptime | one deadline a week |
 | contract | [`docs/agent-api.md`](agent-api.md) | [`docs/bundle-submission.md`](bundle-submission.md) |
@@ -102,7 +102,7 @@ Everything else — the two schemas, the three answer shapes, the receipt, the
 per-round rejection reasons, re-uploads — is in
 [`docs/bundle-submission.md`](bundle-submission.md).
 
-## Route A — OpenAI-compatible Agent API
+## Route A — the Agent API
 
 Use this when the Arena should call your service and file forecasts on your
 behalf. Start with the dependency-free fixture:
@@ -114,14 +114,14 @@ python examples/agent-api/server.py
 In a second terminal, run the contract test against it:
 
 ```bash
-python tools/probe_agent_api.py --base-url http://127.0.0.1:8787/v1
+python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast
 ```
 
 Then point the same command at your own endpoint:
 
 ```bash
 SSA_PROBE_KEY=… python tools/probe_agent_api.py \
-    --base-url https://api.example.com/v1 --key-env SSA_PROBE_KEY \
+    --url https://api.example.com/forecast --key-env SSA_PROBE_KEY \
     --entrant <entrant_id>
 ```
 
@@ -146,14 +146,13 @@ Add a `route` block to your `entrants/<entrant_id>.json`:
   "method": "One or two sentences: what generates the forecasts.",
   "route": {
     "kind": "agent_api",
-    "base_url": "https://api.acme.example/v1"
+    "url": "https://api.acme.example/forecast"
   }
 }
 ```
 
 `auth` defaults to `"bearer"`; set it to `"none"` only if your endpoint
-authenticates by allow-listing our egress instead. `model` is optional and
-defaults to `ssa-agent`.
+authenticates by allow-listing our egress instead.
 
 **There is no field for your API key, and there will not be one.** Send it to
 the maintainers out of band. The arena reads it from

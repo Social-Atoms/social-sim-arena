@@ -17,7 +17,7 @@ REG = {
     "name": "Acme Forecast",
     "type": "firm",
     "method": "test fixture.",
-    "route": {"kind": "agent_api", "base_url": "https://api.acme.test/v1"},
+    "route": {"kind": "agent_api", "url": "https://api.acme.test/forecast"},
 }
 
 
@@ -64,7 +64,7 @@ def test_the_credential_variable_cannot_be_named_by_the_registration():
     A registration is a file in a pull request. If it could name the variable
     holding its bearer token, it could name `ANTHROPIC_API_KEY`, and the arena
     would put our provider key in an Authorization header addressed to the
-    `base_url` in the same file. It could equally name another participant's.
+    `url` in the same file. It could equally name another participant's.
     Deriving the name from the entrant id makes both unrepresentable.
     """
     schema = json.load(open(os.path.join(ROOT, "schema",
@@ -95,10 +95,10 @@ def test_a_participant_route_is_https_only():
     """Checked here as well as in the schema. The schema runs when a
     registration is opened as a pull request; this runs every time we are about
     to send a bearer token to the address in it."""
-    for bad in ("http://api.acme.test/v1",
-                "https://api.acme.test/v1?key=leaked",
+    for bad in ("http://api.acme.test/forecast",
+                "https://api.acme.test/forecast?key=leaked",
                 "ftp://api.acme.test", ""):
-        with registry(dict(REG, route=dict(REG["route"], base_url=bad))):
+        with registry(dict(REG, route=dict(REG["route"], url=bad))):
             try:
                 participants.route("acme-forecast")
             except ValueError as err:
@@ -176,7 +176,7 @@ def test_a_participant_has_no_standby_and_no_base_override():
         os.environ["SSA_MODEL_ACME_FORECAST"] = "some-other-model"
         try:
             assert harness.base_url("acme-forecast") == \
-                "https://api.acme.test/v1"
+                "https://api.acme.test/forecast"
             assert harness.model_id("acme-forecast") == "ssa-agent"
         finally:
             os.environ.pop("SSA_BASE_ACME_FORECAST", None)
@@ -252,7 +252,7 @@ def test_the_request_id_is_stable_so_a_retry_is_the_same_question():
 # --- the reply --------------------------------------------------------------
 
 def test_a_reply_that_is_not_the_contract_is_refused():
-    good = json.dumps({"schema_version": "ssa-agent-api-v1",
+    good = json.dumps({"schema_version": "ssa-agent-api-v2",
                        "forecast": {"mean": 50.0, "sd": 5.0}})
     assert agent_api.parse_scalar(good) == {"mean": 50.0, "sd": 5.0}
 
@@ -262,8 +262,8 @@ def test_a_reply_that_is_not_the_contract_is_refused():
         (json.dumps({"forecast": {"mean": 1, "sd": 1}}), "schema_version"),
         (json.dumps({"schema_version": "v2",
                      "forecast": {"mean": 1, "sd": 1}}), "schema_version"),
-        (json.dumps({"schema_version": "ssa-agent-api-v1"}), "no `forecast`"),
-        (json.dumps({"schema_version": "ssa-agent-api-v1",
+        (json.dumps({"schema_version": "ssa-agent-api-v2"}), "no `forecast`"),
+        (json.dumps({"schema_version": "ssa-agent-api-v2",
                      "forecast": {"mean": 1}}), "needs `mean` and `sd`"),
     ]:
         try:
@@ -277,11 +277,11 @@ def test_a_reply_that_is_not_the_contract_is_refused():
 
 def test_a_profile_reply_is_all_cells_or_none():
     cells = ["a", "b", "c"]
-    whole = json.dumps({"schema_version": "ssa-agent-api-v1", "forecast": {
+    whole = json.dumps({"schema_version": "ssa-agent-api-v2", "forecast": {
         "profile": {c: {"mean": 1.0, "sd": 1.0} for c in cells}}})
     assert set(agent_api.parse_profile(whole, cells)) == set(cells)
 
-    partial = json.dumps({"schema_version": "ssa-agent-api-v1", "forecast": {
+    partial = json.dumps({"schema_version": "ssa-agent-api-v2", "forecast": {
         "profile": {c: {"mean": 1.0, "sd": 1.0} for c in cells[:2]}}})
     try:
         agent_api.parse_profile(partial, cells)
@@ -324,7 +324,7 @@ def test_filing_goes_through_the_shared_runner_and_caches_like_one():
 
     def fake_ask(entrant, prompt, previous, round_id, parse=None):
         calls.append(prompt)
-        return parse(json.dumps({"schema_version": "ssa-agent-api-v1",
+        return parse(json.dumps({"schema_version": "ssa-agent-api-v2",
                                  "forecast": {"mean": -23.0, "sd": 1.5}})), \
             "participant", harness.prompt_hash(entrant, prompt), False
 

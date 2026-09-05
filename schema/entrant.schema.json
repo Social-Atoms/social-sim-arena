@@ -68,7 +68,7 @@
       "additionalProperties": false,
       "required": [
         "kind",
-        "base_url"
+        "url"
       ],
       "description": "Route A only: where the arena calls this entrant. Absent means the entrant hands forecasts over itself (a bundle or a pull request), which is what every registration written before this field did -- so absent has to keep meaning exactly that. There is deliberately no field naming the credential: the arena derives the environment variable from the entrant id (SSA_ENTRANT_KEY_<ID>). A registration that could name its own variable could name ANTHROPIC_API_KEY, and the arena would put our provider key in a Bearer header addressed to the endpoint in the same file. Deriving it also stops one participant asking for another's.",
       "properties": {
@@ -76,11 +76,11 @@
           "const": "agent_api",
           "description": "The only route kind. Named rather than implied so a second one is an added value here, not a guess about a missing field."
         },
-        "base_url": {
+        "url": {
           "type": "string",
           "pattern": "^https://[^\\s?#]+$",
           "maxLength": 300,
-          "description": "HTTPS chat-completions base; the arena POSTs to {base_url}/chat/completions. Plain http is refused here and again in code: a forecast is not secret, but the Bearer token sent with it is. No query string or fragment -- those would be dropped when the path is appended, so a URL that appears to carry a key would silently send the request without it."
+          "description": "The exact HTTPS URL the arena POSTs each question to, as one JSON object; the reply body is the forecast, one JSON object. Plain http is refused here and again in code: a forecast is not secret, but the Bearer token sent with it is. No query string or fragment, so a URL that appears to carry a key cannot silently send the request without it."
         },
         "auth": {
           "enum": [
@@ -88,11 +88,6 @@
             "none"
           ],
           "description": "Whether the arena sends Authorization: Bearer from SSA_ENTRANT_KEY_<ID>. 'none' is for an endpoint that authenticates by allow-listing our egress instead. Absent means bearer, because an endpoint that needs no key is the rarer case and the safer default is to expect one and fail loudly when it is missing."
-        },
-        "model": {
-          "type": "string",
-          "maxLength": 128,
-          "description": "Value sent as `model` in the request body. Defaults to 'ssa-agent'. Dedicated endpoints may ignore it; a shared gateway needs it to pick the right deployment."
         }
       }
     }

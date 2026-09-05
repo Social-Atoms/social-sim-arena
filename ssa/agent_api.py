@@ -8,12 +8,12 @@ the machine-readable form.
 
 Why this reuses `harness._ask` instead of its own client
 --------------------------------------------------------
-The contract body is `{"model": ..., "messages": [{"role": "user",
-"content": "<json envelope>"}]}` -- an OpenAI-compatible chat completion whose
-single user message is a JSON string. `harness._ask` already sends exactly
-that shape, and takes the message as a string and the reply parser as an
-argument. So a participant call is the existing runner with a different string
-and a different parser, and it inherits, for free and identically:
+The request body is the JSON envelope itself and the reply body is the
+forecast object; `harness._call_agent` sends the one and returns the other as
+text. `harness._ask` takes the body as a string and the reply parser as an
+argument, so a participant call is the existing runner with a different string,
+a different transport and a different parser, and it inherits, for free and
+identically:
 
 - **idempotency by input hash**, which the contract requires: `prompt_hash`
   over the envelope is the same key our own models use, so a second run over an
@@ -43,7 +43,7 @@ from . import participants
 from . import profile_round
 from . import ranking_round
 
-SCHEMA_VERSION = "ssa-agent-api-v1"
+SCHEMA_VERSION = "ssa-agent-api-v2"
 
 BOARD = {"profile_energy": "profile", "ranking_list": "ranking"}
 

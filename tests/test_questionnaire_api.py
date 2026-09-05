@@ -195,7 +195,7 @@ class QuestionnaireApiContracts(unittest.TestCase):
             "method": "openai_compatible_api",
             "endpoint": "https://agent.example/v1",
             "credential_supplied": False,
-            "contract_version": "ssa-agent-api-v1",
+            "contract_version": "ssa-agent-api-v2",
             "probe_status": "passed",
         }
         with self.assertRaisesRegex(SubmissionError,

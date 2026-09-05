@@ -21,7 +21,7 @@ What this file refuses, and why each refusal exists
   The variable is `SSA_ENTRANT_KEY_<ID>`, computed from the entrant id. A
   registration that named its own variable could name `ANTHROPIC_API_KEY`, and
   the arena would obligingly put our provider key in an `Authorization` header
-  addressed to the `base_url` in the same file. It would also let one
+  addressed to the `url` in the same file. It would also let one
   participant ask to be called with another's credential. Neither is reachable
   when the name is a function of the id.
 - **HTTPS only.** Checked here as well as in the schema. The schema runs when a
@@ -107,11 +107,11 @@ def route(entrant, entrants_dir=None):
     if kind != KIND:
         raise ValueError(
             f"{entrant}: unknown route kind {kind!r}; only {KIND!r} exists")
-    base = (spec.get("base_url") or "").rstrip("/")
-    if not _HTTPS.match(base):
+    url = spec.get("url") or ""
+    if not _HTTPS.match(url):
         raise ValueError(
-            f"{entrant}: route base_url must be an https URL with no query or "
-            f"fragment, got {spec.get('base_url')!r}")
+            f"{entrant}: route url must be an https URL with no query or "
+            f"fragment, got {spec.get('url')!r}")
     auth = spec.get("auth", "bearer")
     if auth not in ("bearer", "none"):
         raise ValueError(f"{entrant}: route auth must be 'bearer' or 'none'")
@@ -120,9 +120,9 @@ def route(entrant, entrants_dir=None):
         # `env` is the name the runner looks up; "" means send no header, and
         # is why `auth: none` cannot be confused with a missing secret.
         "env": key_env(entrant) if auth == "bearer" else "",
-        "api": "openai",
-        "base": base,
-        "model": spec.get("model") or DEFAULT_MODEL,
+        "api": "agent",
+        "base": url,
+        "model": DEFAULT_MODEL,
         "params": {},
         "via": "participant",
     }

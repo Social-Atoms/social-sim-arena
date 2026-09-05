@@ -60,7 +60,7 @@ class SubmissionIntakeContracts(unittest.TestCase):
             "method": "openai_compatible_api",
             "endpoint": "https://api.example.com/v1",
             "credential_supplied": True,
-            "contract_version": "ssa-agent-api-v1",
+            "contract_version": "ssa-agent-api-v2",
             "probe_status": "passed",
         })
         self.assertValid(self.participant, body)
@@ -81,7 +81,7 @@ class SubmissionIntakeContracts(unittest.TestCase):
             "method": "openai_compatible_api",
             "endpoint": "https://api.example.com/v1",
             "credential_supplied": False,
-            "contract_version": "ssa-agent-api-v1",
+            "contract_version": "ssa-agent-api-v2",
             "probe_status": "passed",
             "answers": [self.answer],
         })
@@ -92,7 +92,7 @@ class SubmissionIntakeContracts(unittest.TestCase):
             "method": "openai_compatible_api",
             "endpoint": "http://api.example.com/v1",
             "credential_supplied": False,
-            "contract_version": "ssa-agent-api-v1",
+            "contract_version": "ssa-agent-api-v2",
             "probe_status": "passed",
         })
         self.assertTrue(errors(self.participant, body))
@@ -108,7 +108,7 @@ class SubmissionIntakeContracts(unittest.TestCase):
             "method": "openai_compatible_api",
             "endpoint": "https://api.example.com/v1",
             "credential_supplied": False,
-            "contract_version": "ssa-agent-api-v1",
+            "contract_version": "ssa-agent-api-v2",
             "probe_status": "passed",
         })
         body["publication_consent"] = dict(
@@ -182,17 +182,16 @@ class SubmissionIntakeContracts(unittest.TestCase):
         self.assertValid(self.human, body)
 
     def test_agent_api_starter_fixtures_match_the_versioned_contract(self):
-        request = load_json("examples/agent-api/request.json")
-        prompt = json.loads(request["messages"][0]["content"])
+        # The fixtures are the bodies as they travel: no wrapper on either side.
+        prompt = load_json("examples/agent-api/request.json")
         self.assertValid(self.agent_api_request, prompt)
 
-        response = load_json("examples/agent-api/response.json")
-        content = json.loads(response["choices"][0]["message"]["content"])
+        content = load_json("examples/agent-api/response.json")
         self.assertValid(self.agent_api_response, content)
         self.assertIn("reasoning_trace", content)
         self.assertIn("crosstabs", content)
 
-    def test_openai_compatible_auth_is_optional(self):
+    def test_agent_auth_is_optional_and_the_body_is_the_envelope(self):
         calls = []
 
         class Response:
@@ -201,7 +200,8 @@ class SubmissionIntakeContracts(unittest.TestCase):
 
             @staticmethod
             def json():
-                return {"choices": [{"message": {"content": "ok"}}]}
+                return {"schema_version": "ssa-agent-api-v2",
+                        "forecast": {"mean": 50.0, "sd": 5.0}}
 
         def fake_post(url, **kwargs):
             calls.append((url, kwargs))
@@ -210,15 +210,22 @@ class SubmissionIntakeContracts(unittest.TestCase):
         real_post = harness.requests.post
         harness.requests.post = fake_post
         try:
-            harness._call_openai({}, "https://agent.example/v1", "",
-                                 "ssa-agent", "test")
-            harness._call_openai({}, "https://agent.example/v1", "secret",
-                                 "ssa-agent", "test")
+            text, _ = harness._call_agent({}, "https://agent.example/forecast",
+                                          "", "acme", '{"round": 1}')
+            harness._call_agent({}, "https://agent.example/forecast",
+                                "secret", "acme", '{"round": 1}')
         finally:
             harness.requests.post = real_post
-        self.assertEqual({}, calls[0][1]["headers"])
+        # the exact URL, the envelope as the whole body, no chat wrapper
+        self.assertEqual("https://agent.example/forecast", calls[0][0])
+        self.assertEqual(b'{"round": 1}', calls[0][1]["data"])
+        self.assertNotIn("json", calls[0][1])
+        self.assertNotIn("Authorization", calls[0][1]["headers"])
         self.assertEqual("Bearer secret",
                          calls[1][1]["headers"]["Authorization"])
+        # and the reply comes back as the text the parsers decode
+        self.assertEqual({"mean": 50.0, "sd": 5.0},
+                         json.loads(text)["forecast"])
 
 
 class SubmissionPrototype(unittest.TestCase):
@@ -246,7 +253,7 @@ class SubmissionPrototype(unittest.TestCase):
                 '<div class="page" id="page-exam">', 1)[0]
 
     def test_page_is_agents_only_and_has_no_form_to_fill_in(self):
-        for marker in ('id="api-test"', 'name="openai_compatible_url"',
+        for marker in ('id="api-test"', 'name="endpoint_url"',
                        'id="entrant-id"', 'id="entrant-method"',
                        'id="test-results"', 'id="reg-json"', 'id="route-b"'):
             self.assertIn(marker, self.page)
@@ -262,14 +269,13 @@ class SubmissionPrototype(unittest.TestCase):
             response = json.load(f)
         # The page's fixture is the starter kit's fixture with a browser
         # request id; the round is byte-identical.
-        inner = json.loads(request["messages"][0]["content"])
+        inner = request
         shown = self.page.split("const FIXTURE = ", 1)[1].split(";", 1)[0]
         self.assertIn("round_id:'ssa-contract-test'", shown)
-        self.assertIn("schema_version:'ssa-agent-api-v1'", shown)
+        self.assertIn("schema_version:'ssa-agent-api-v2'", shown)
         self.assertIn(inner["round"]["question"], shown)
-        content = json.loads(response["choices"][0]["message"]["content"])
-        self.assertEqual("ssa-agent-api-v1", content["schema_version"])
-        self.assertIn('\\"forecast\\":{\\"mean\\":50.0,\\"sd\\":5.0}', self.page)
+        self.assertEqual("ssa-agent-api-v2", response["schema_version"])
+        self.assertIn('"forecast": {"mean": 50.0, "sd": 5.0}', self.page)
         for shape in ("Topline", "Population", "Ranking"):
             self.assertIn('<div class="shape"><b>' + shape + "</b>", self.page)
 
@@ -277,7 +283,7 @@ class SubmissionPrototype(unittest.TestCase):
         self.assertIn('id="api-key" name="api_key" type="password"', self.page)
         self.assertIn('type="url" pattern="https://.*" required', self.page)
         self.assertNotIn("<form action=", self.page)
-        self.assertIn("const target = chatCompletionUrl(urlInput.value);", self.page)
+        self.assertIn("const target = endpointUrl(urlInput.value);", self.page)
         # Every other fetch on the page is the arena's own data, never a
         # third party carrying what was typed.
         fetches = re.findall(r"fetch\(([^,)]+)", self.page)

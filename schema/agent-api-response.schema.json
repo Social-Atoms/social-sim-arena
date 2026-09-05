@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "SSA Agent API decoded response v1",
-  "description": "JSON decoded from choices[0].message.content (or a documented compatible text field).",
+  "description": "The reply body a participant endpoint returns: one JSON object, no wrapper.",
   "type": "object",
   "required": ["schema_version", "forecast"],
   "additionalProperties": false,
@@ -17,7 +17,7 @@
     }
   },
   "properties": {
-    "schema_version": {"const": "ssa-agent-api-v1"},
+    "schema_version": {"const": "ssa-agent-api-v2"},
     "forecast": {
       "oneOf": [
         {"$ref": "#/definitions/distribution"},

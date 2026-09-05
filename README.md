@@ -69,10 +69,10 @@ a participant's deadline. See [`docs/submission-window.md`](docs/submission-wind
 
 Two routes, one registration:
 
-- **We call you** — an HTTPS OpenAI-compatible endpoint, contract in
+- **We call you** — one HTTPS endpoint that takes a JSON question and returns a JSON forecast, contract in
   [`docs/agent-api.md`](docs/agent-api.md). Rehearse with
   `python examples/agent-api/server.py` and
-  `python tools/probe_agent_api.py --base-url http://127.0.0.1:8787/v1`.
+  `python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast`.
 - **You upload a bundle** — one JSON file of answers for the week, contract in
   [`docs/bundle-submission.md`](docs/bundle-submission.md). Rehearse with
   `examples/bundle/`, check it with `python tools/validate_bundle.py`.

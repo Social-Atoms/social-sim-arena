@@ -1,11 +1,12 @@
 # Agent API contract
 
-Status: versioned intake contract for `ssa-agent-api-v1`.
+Status: versioned intake contract for `ssa-agent-api-v2`.
 
-The API route is deliberately small. A participant exposes one HTTPS
-OpenAI-compatible chat-completions base URL; the arena reuses its existing
-request runner, response-text extraction, validation, and filing window. There
-is no arena SDK or long-running process for participants to install.
+The API route is deliberately small. A participant exposes one HTTPS URL.
+The arena POSTs each question to it as one JSON object and reads one JSON
+object back; the arena's existing request runner, validation, and filing
+window do the rest. There is no arena SDK or long-running process for
+participants to install.
 
 ## Registration
 
@@ -15,13 +16,12 @@ endpoint into one the season calls:
 ```json
 "route": {
   "kind": "agent_api",
-  "base_url": "https://api.acme.example/v1",
-  "auth": "bearer",
-  "model": "ssa-agent"
+  "url": "https://api.acme.example/forecast",
+  "auth": "bearer"
 }
 ```
 
-`auth` and `model` are optional and default to `"bearer"` and `"ssa-agent"`.
+`auth` is optional and defaults to `"bearer"`.
 A registration with no `route` is unchanged in meaning: that entrant hands its
 forecasts over itself, which is what every registration written before this
 field did.
@@ -30,7 +30,7 @@ field did.
 from `SSA_ENTRANT_KEY_<ENTRANT_ID>`, computed from the entrant id. There is no
 field naming it, and the schema refuses one: a registration that could name its
 own variable could name `ANTHROPIC_API_KEY`, and the arena would put our
-provider key in an `Authorization` header addressed to the `base_url` in the
+provider key in an `Authorization` header addressed to the `url` in the
 same file. It would equally let one participant ask to be called with another's
 credential.
 
@@ -58,31 +58,24 @@ run every cycle through a week of it teaches everyone to ignore the colour.
 The arena calls:
 
 ```text
-POST {base_url}/chat/completions
+POST {url}
 Content-Type: application/json
 Authorization: Bearer {api_key}    # only when a key was supplied
 ```
 
-The request body is the ordinary chat-completions shape:
-
-```json
-{
-  "model": "ssa-agent",
-  "messages": [{"role": "user", "content": "{...JSON prompt envelope...}"}]
-}
-```
-
-Dedicated agent endpoints may ignore the fixed `model` value. The JSON string
-in `content` conforms to
+The request body is the question envelope itself, one JSON object conforming
+to
 [`schema/agent-api-request.schema.json`](../schema/agent-api-request.schema.json).
-The endpoint returns an OpenAI-compatible response. The arena reads the same
-response text locations already supported by `ssa/harness.py`, preferring
-`choices[0].message.content`.
+There is no wrapper: what the contract page shows is byte-for-byte what
+travels.
 
-The decoded response content conforms to
+The response body is one JSON object conforming to
 [`schema/agent-api-response.schema.json`](../schema/agent-api-response.schema.json).
-It contains `schema_version` and one typed `forecast`. `reasoning_trace` and
-`crosstabs` are optional.
+It contains `schema_version` and one typed `forecast`, whose shape follows the
+round's `target_type`: `{"mean", "sd"}` for `continuous_normal`,
+`{"profile": {cell: {"mean", "sd"}}}` with every named cell for
+`profile_energy`, `{"ranking": [...]}` for `ranking_list`. `reasoning_trace`
+and `crosstabs` are optional.
 
 ## Call and deadline policy
 
@@ -108,7 +101,7 @@ participant-visible deadline applied to uploads and pull requests.
 
 ```bash
 python examples/agent-api/server.py
-python tools/probe_agent_api.py --base-url http://127.0.0.1:8787/v1
+python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast
 ```
 
 `tools/probe_agent_api.py` is the runnable contract test: standard library
@@ -127,15 +120,15 @@ retried; a 4xx is an answer and is never retried.
 `--entrant <id>` reads the route from `entrants/<id>.json` — base URL and the
 derived credential variable — so the maintainer-side probe aims at the endpoint
 the season will actually call rather than at whatever was typed on the command
-line. `--base-url` becomes optional when it does. It also refuses to probe a
+line. `--url` becomes optional when it does. It also refuses to probe a
 registration whose `entrants/<id>.json` carries `"status": "revoked"`. Revocation stops both
 routes at once: the bundle intake refuses an upload before issuing a receipt,
 and the probe refuses to make the call. A revocation the arena does not honour
 is a revocation in name only.
 
 The browser's **Test connection** button sends the fixed non-scored fixture in
-`examples/agent-api/request.json`. It checks HTTPS, optional Bearer auth, the
-OpenAI response wrapper, decoded JSON, and a valid continuous forecast. Browser
+`examples/agent-api/request.json`. It checks HTTPS, optional Bearer auth, a
+JSON object in reply, and a valid continuous forecast. Browser
 testing may additionally require CORS. Before activation, the private intake
 service repeats the same probe server-side, where CORS does not apply.
 

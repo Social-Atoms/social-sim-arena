@@ -1526,12 +1526,14 @@ def call_provider(entrant, prompt, with_usage=False, context=None, via=None):
     context = context or context_of_id
     rt = route(entrant, via)
     cfg = {"params": dict(rt["params"])}
-    key = os.environ[rt["env"]]
+    # A participant route may carry no credential (`auth: none`); every
+    # provider route names one.
+    key = os.environ[rt["env"]] if rt["env"] else ""
     mid = model_id(entrant, via)
     base = base_url(entrant, via)
     api = rt["api"]
     fn = {"openai": _call_openai, "anthropic": _call_anthropic,
-          "gemini": _call_gemini}.get(api)
+          "gemini": _call_gemini, "agent": _call_agent}.get(api)
     if fn is None:
         raise ValueError("unknown api: " + api)
     with _provider_slot(entrant, via):
@@ -1629,6 +1631,22 @@ def _call_openai(cfg, base, key, mid, prompt):
         r = requests.post(url, headers=headers, json=body, timeout=TIMEOUT)
     data = _check(r, f"{mid} @ {base}")
     return _extract_text(data, mid), _usage(data)
+
+
+def _call_agent(cfg, base, key, mid, prompt):
+    """Route A. `base` is the participant's exact URL and `prompt` is the
+    request envelope, already serialised: it goes out as the whole body, and
+    the reply body is the whole answer. No chat wrapper on either side, so a
+    participant's server reads one JSON object and writes one, and what the
+    contract page shows is byte-for-byte what travels.
+    """
+    headers = {"Content-Type": "application/json"}
+    if key:
+        headers["Authorization"] = "Bearer " + key
+    r = requests.post(base, headers=headers, data=prompt.encode("utf-8"),
+                      timeout=TIMEOUT)
+    data = _check(r, f"{mid} @ {base}")
+    return json.dumps(data), {}
 
 
 def _call_anthropic(cfg, base, key, mid, prompt):

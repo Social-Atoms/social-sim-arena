@@ -1,10 +1,10 @@
 """Route A contract test: does this endpoint actually answer an arena round?
 
   python examples/agent-api/server.py &
-  python tools/probe_agent_api.py --base-url http://127.0.0.1:8787/v1
+  python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast
 
   SSA_PROBE_KEY=... python tools/probe_agent_api.py \
-      --base-url https://api.example.com/v1 --key-env SSA_PROBE_KEY
+      --url https://api.example.com/forecast --key-env SSA_PROBE_KEY
 
 Standard library only, so a participant can run it inside their own deployment
 without installing anything. It sends non-scored fixtures, files nothing, and
@@ -50,7 +50,7 @@ from urllib.parse import urlparse
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SCHEMA_VERSION = "ssa-agent-api-v1"
+SCHEMA_VERSION = "ssa-agent-api-v2"
 # Mirrors ssa/participants.KEY_ENV_PREFIX. This file imports nothing from
 # ssa/ on purpose: a participant runs it from a bare checkout.
 KEY_ENV_PREFIX = "SSA_ENTRANT_KEY_"
@@ -116,17 +116,14 @@ def envelope(shape, request_id):
     }
 
 
-def call(base_url, prompt, key=None, timeout=30.0, retries=2):
-    """POST one chat-completions request. Retries transient failures only.
+def call(url, prompt, key=None, timeout=30.0, retries=2):
+    """POST one request envelope to the exact URL. Retries transient failures
+    only.
 
-    Returns the decoded `choices[0].message.content`. Raises `ProbeFailure`
-    with the reason a participant has to fix.
+    Returns the decoded reply object. Raises `ProbeFailure` with the reason a
+    participant has to fix.
     """
-    url = base_url.rstrip("/") + "/chat/completions"
-    body = json.dumps({"model": "ssa-agent",
-                       "messages": [{"role": "user",
-                                     "content": json.dumps(prompt)}]}
-                      ).encode("utf-8")
+    body = json.dumps(prompt).encode("utf-8")
     headers = {"Content-Type": "application/json"}
     if key:
         headers["Authorization"] = f"Bearer {key}"
@@ -162,18 +159,14 @@ def call(base_url, prompt, key=None, timeout=30.0, retries=2):
         raise last
 
     try:
-        wrapper = json.loads(raw)
-        content = wrapper["choices"][0]["message"]["content"]
-    except (json.JSONDecodeError, KeyError, IndexError, TypeError) as err:
-        raise ProbeFailure(
-            "reply is not an OpenAI-compatible chat completion; the arena "
-            f"reads choices[0].message.content ({err})") from err
-    try:
-        return json.loads(content)
+        reply = json.loads(raw)
     except (json.JSONDecodeError, TypeError) as err:
         raise ProbeFailure(
-            "message.content is not JSON. It must decode to the object in "
+            "reply body is not JSON. It must be the object in "
             f"schema/agent-api-response.schema.json ({err})") from err
+    if not isinstance(reply, dict):
+        raise ProbeFailure("reply body is JSON but not an object")
+    return reply
 
 
 def check_content(content, shape):
@@ -230,10 +223,10 @@ def load_entrant(entrant_id):
         return json.load(fh)
 
 
-def probe(base_url, key=None, timeout=30.0, retries=2, shapes=None):
+def probe(url, key=None, timeout=30.0, retries=2, shapes=None):
     """[(name, ok, detail)] -- one row per check, in the order they ran."""
     rows = []
-    parsed = urlparse(base_url)
+    parsed = urlparse(url)
     if parsed.scheme == "https":
         rows.append(("transport", True, "https"))
     elif parsed.hostname in LOOPBACK:
@@ -248,7 +241,7 @@ def probe(base_url, key=None, timeout=30.0, retries=2, shapes=None):
     for shape in (shapes or ("scalar", "profile", "ranking")):
         request_id = f"ssa-probe-{shape}"
         try:
-            content = call(base_url, envelope(shape, request_id), key, timeout,
+            content = call(url, envelope(shape, request_id), key, timeout,
                            retries)
             check_content(content, shape)
             rows.append((f"round/{shape}", True, "valid forecast"))
@@ -257,7 +250,7 @@ def probe(base_url, key=None, timeout=30.0, retries=2, shapes=None):
             continue
         if shape == "scalar":
             try:
-                again = call(base_url, envelope(shape, request_id), key,
+                again = call(url, envelope(shape, request_id), key,
                              timeout, retries)
                 same = again.get("forecast") == content.get("forecast")
                 rows.append(("idempotency", same,
@@ -272,7 +265,7 @@ def probe(base_url, key=None, timeout=30.0, retries=2, shapes=None):
 
     if key:
         try:
-            call(base_url, envelope("scalar", "ssa-probe-badkey"),
+            call(url, envelope("scalar", "ssa-probe-badkey"),
                  key + "-wrong", timeout, retries=0)
             rows.append(("auth", False,
                          "a wrong bearer token was answered anyway; anyone "
@@ -289,8 +282,8 @@ def probe(base_url, key=None, timeout=30.0, retries=2, shapes=None):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--base-url",
-                    help="OpenAI-compatible base, e.g. https://host/v1. "
+    ap.add_argument("--url",
+                    help="The exact endpoint URL, e.g. https://host/forecast. "
                          "Optional when --entrant names a registration that "
                          "carries a route.")
     ap.add_argument("--key-env",
@@ -328,8 +321,8 @@ def main(argv=None):
         # operator typed. A probe that passes against a URL nobody registered
         # says nothing about the endpoint the season will actually call.
         spec = entrant.get("route") or {}
-        if spec.get("base_url") and not args.base_url:
-            args.base_url = spec["base_url"]
+        if spec.get("url") and not args.url:
+            args.url = spec["url"]
             derived = KEY_ENV_PREFIX + re.sub(
                 r"[^A-Z0-9]", "_", args.entrant.upper())
             if spec.get("auth", "bearer") == "bearer" and not args.key_env:
@@ -345,8 +338,8 @@ def main(argv=None):
                           "not send.", file=sys.stderr)
                     return 1
 
-    if not args.base_url:
-        print("FAIL: pass --base-url, or --entrant naming a registration that "
+    if not args.url:
+        print("FAIL: pass --url, or --entrant naming a registration that "
               "carries a route", file=sys.stderr)
         return 1
 
@@ -356,7 +349,7 @@ def main(argv=None):
             print(f"FAIL: ${args.key_env} is not set", file=sys.stderr)
             return 1
 
-    rows = probe(args.base_url, key, args.timeout, args.retries, args.shapes)
+    rows = probe(args.url, key, args.timeout, args.retries, args.shapes)
     for name, ok, detail in rows:
         print(f"{'PASS' if ok else 'FAIL'}  {name:<16} {detail}")
     failures = [name for name, ok, _ in rows if not ok]

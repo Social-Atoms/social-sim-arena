@@ -26,7 +26,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HOST = "127.0.0.1"
 PORT = 8787
-SCHEMA_VERSION = "ssa-agent-api-v1"
+SCHEMA_VERSION = "ssa-agent-api-v2"
 
 # The fixed answer for a scalar round. Constant on purpose: the contract test
 # checks the shape of a reply, and a fixture that moved would make a failing
@@ -67,7 +67,7 @@ class Handler(BaseHTTPRequestHandler):
     delay = 0.0
 
     def do_POST(self):
-        if self.path != "/v1/chat/completions":
+        if self.path.rstrip("/") not in ("", "/forecast"):
             self.send_error(404)
             return
         if self.api_key:
@@ -80,8 +80,7 @@ class Handler(BaseHTTPRequestHandler):
                 return
         try:
             size = int(self.headers.get("Content-Length", "0"))
-            body = json.loads(self.rfile.read(size))
-            prompt = json.loads(body["messages"][0]["content"])
+            prompt = json.loads(self.rfile.read(size))
             if prompt["schema_version"] != SCHEMA_VERSION:
                 raise ValueError("unsupported schema_version")
             forecast = forecast_for(prompt["round"])
@@ -92,21 +91,11 @@ class Handler(BaseHTTPRequestHandler):
 
         if self.delay:
             time.sleep(self.delay)
-        content = {
+        self._json(200, {
             "schema_version": SCHEMA_VERSION,
             "forecast": forecast,
             "reasoning_trace": "Non-scored starter-kit fixture.",
             "crosstabs": {},
-        }
-        self._json(200, {
-            "id": "chatcmpl-ssa-contract-test",
-            "object": "chat.completion",
-            "choices": [{
-                "index": 0,
-                "message": {"role": "assistant",
-                            "content": json.dumps(content)},
-                "finish_reason": "stop",
-            }],
         })
 
     def _json(self, status, body):
@@ -139,6 +128,6 @@ if __name__ == "__main__":
     key = os.environ.get("SSA_EXAMPLE_API_KEY")
     server = serve(args.host, args.port, key, args.delay)
     print(f"SSA Agent API example listening on "
-          f"http://{args.host}:{args.port}/v1"
+          f"http://{args.host}:{args.port}/forecast"
           + ("  (Bearer auth required)" if key else "  (no authentication)"))
     server.serve_forever()

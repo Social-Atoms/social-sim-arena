@@ -61,7 +61,7 @@ class Fixture:
         self.thread = threading.Thread(target=self.server.serve_forever,
                                        daemon=True)
         self.thread.start()
-        self.base_url = f"http://127.0.0.1:{port}/v1"
+        self.url = f"http://127.0.0.1:{port}/forecast"
         return self
 
     def __exit__(self, *exc):
@@ -77,7 +77,7 @@ def verdicts(rows):
 def test_the_example_server_answers_all_three_round_shapes():
     """A real batch mixes them; an endpoint proved on one is proved on one."""
     with Fixture() as fixture:
-        rows = verdicts(probe_tool.probe(fixture.base_url, timeout=5))
+        rows = verdicts(probe_tool.probe(fixture.url, timeout=5))
     for shape in ("scalar", "profile", "ranking"):
         ok, detail = rows[f"round/{shape}"]
         assert ok, (shape, detail)
@@ -89,7 +89,7 @@ def test_a_correct_key_passes_and_a_wrong_one_is_required_to_be_refused():
     """Configuring a key and never testing that it is enforced is the common
     version of leaving the endpoint open."""
     with Fixture(api_key="probe-secret") as fixture:
-        rows = verdicts(probe_tool.probe(fixture.base_url, key="probe-secret",
+        rows = verdicts(probe_tool.probe(fixture.url, key="probe-secret",
                                          timeout=5))
     assert rows["round/scalar"][0], rows["round/scalar"]
     assert rows["auth"][0], rows["auth"]
@@ -97,7 +97,7 @@ def test_a_correct_key_passes_and_a_wrong_one_is_required_to_be_refused():
 
 def test_a_bad_credential_fails_the_probe_rather_than_being_reported_as_open():
     with Fixture(api_key="probe-secret") as fixture:
-        rows = verdicts(probe_tool.probe(fixture.base_url, key="wrong-key",
+        rows = verdicts(probe_tool.probe(fixture.url, key="wrong-key",
                                          timeout=5, retries=0))
     ok, detail = rows["round/scalar"]
     assert not ok, detail
@@ -126,7 +126,7 @@ def test_a_4xx_is_an_answer_and_is_never_retried():
     thread.start()
     try:
         try:
-            probe_tool.call(f"http://127.0.0.1:{port}/v1",
+            probe_tool.call(f"http://127.0.0.1:{port}/forecast",
                             probe_tool.envelope("scalar", "id"),
                             key="wrong", timeout=5, retries=3)
             assert False, "a 401 was accepted"
@@ -143,7 +143,7 @@ def test_a_slow_endpoint_times_out_rather_than_hanging_the_run():
     """An endpoint that answers in eleven minutes looks exactly like one that
     works, right up until the read timeout closes the round."""
     with Fixture(delay=3.0) as fixture:
-        rows = verdicts(probe_tool.probe(fixture.base_url, timeout=0.5,
+        rows = verdicts(probe_tool.probe(fixture.url, timeout=0.5,
                                          retries=0, shapes=("scalar",)))
     ok, detail = rows["round/scalar"]
     assert not ok, detail
@@ -152,7 +152,7 @@ def test_a_slow_endpoint_times_out_rather_than_hanging_the_run():
 
 def test_http_is_refused_for_anything_that_is_not_loopback():
     """A bearer token over http is a token you have published."""
-    rows = verdicts(probe_tool.probe("http://example.com/v1", timeout=1))
+    rows = verdicts(probe_tool.probe("http://example.com/forecast", timeout=1))
     assert not rows["transport"][0], rows["transport"]
     assert len(rows) == 1, "the probe kept going after refusing the transport"
 
@@ -160,7 +160,7 @@ def test_http_is_refused_for_anything_that_is_not_loopback():
 def test_a_wrong_shaped_reply_fails_the_shape_it_answered():
     """A valid profile is still a wrong answer to a scalar round: it satisfies
     the versioned response schema and answers a different question."""
-    content = {"schema_version": "ssa-agent-api-v1",
+    content = {"schema_version": "ssa-agent-api-v2",
                "forecast": {"profile": {"probe_cell_a": {"mean": 1, "sd": 1},
                                         "probe_cell_b": {"mean": 1, "sd": 1}}}}
     try:
@@ -169,7 +169,7 @@ def test_a_wrong_shaped_reply_fails_the_shape_it_answered():
     except probe_tool.ProbeFailure as err:
         assert "mean" in str(err), err
 
-    partial = {"schema_version": "ssa-agent-api-v1",
+    partial = {"schema_version": "ssa-agent-api-v2",
                "forecast": {"profile": {c: {"mean": 1.0, "sd": 1.0}
                                         for c in ["probe_cell_a",
                                                   "probe_cell_b"]}}}
@@ -193,7 +193,7 @@ def test_a_revoked_entrant_is_not_probed():
                        "type": "llm", "method": "example",
                        "status": "revoked"}, fh)
         probe_tool.ROOT = root
-        assert probe_tool.main(["--base-url", "https://example.com/v1",
+        assert probe_tool.main(["--url", "https://example.com/forecast",
                                 "--entrant", "probe_demo"]) == 1
         with open(path, "w", encoding="utf-8") as fh:
             json.dump({"entrant_id": "probe_demo", "name": "Demo",

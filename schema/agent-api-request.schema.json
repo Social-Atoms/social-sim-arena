@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "SSA Agent API prompt envelope v1",
-  "description": "JSON encoded as the single user message in an OpenAI-compatible chat completion request.",
+  "description": "The request body the arena POSTs to a participant endpoint: one JSON object, no wrapper.",
   "type": "object",
   "required": [
     "schema_version",
@@ -12,7 +12,7 @@
   "additionalProperties": false,
   "properties": {
     "schema_version": {
-      "const": "ssa-agent-api-v1"
+      "const": "ssa-agent-api-v2"
     },
     "request_id": {
       "type": "string",

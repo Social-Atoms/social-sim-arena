@@ -124,34 +124,42 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
       <details class="contract">
         <summary>View the full test payload and expected response</summary>
         <div class="codelabel">Request — what we POST to your endpoint</div>
-<pre class="code" id="contract-request">POST https://api.example.com/v1/chat/completions
+<pre class="code" id="contract-request">POST https://api.example.com/forecast
 Authorization: Bearer &lt;your API key&gt;   (only sent if you provide one)
 Content-Type: application/json
 
 {
-  "model": "ssa-agent",
-  "messages": [{"role": "user", "content": "{\"schema_version\":\"ssa-agent-api-v1\",\"request_id\":\"browser-contract-test\",\"round\":{\"round_id\":\"ssa-contract-test\",\"board_id\":\"topline\",\"target_type\":\"continuous_normal\",\"question\":\"Non-scored contract test: return a normal forecast centered on 50.\",\"unit\":\"points\",\"lock_at\":\"2099-01-01T00:00:00Z\",\"context\":{\"persistence\":50}},\"optional_crosstabs\":[]}"}]
+  "schema_version": "ssa-agent-api-v2",
+  "request_id": "browser-contract-test",
+  "round": {
+    "round_id": "ssa-contract-test",
+    "board_id": "topline",
+    "target_type": "continuous_normal",
+    "question": "Non-scored contract test: return a normal forecast centered on 50.",
+    "unit": "points",
+    "lock_at": "2099-01-01T00:00:00Z",
+    "context": {
+      "persistence": 50
+    }
+  },
+  "optional_crosstabs": []
 }</pre>
-        <p style="font-size:12px;margin:8px 0 0;">The message content is the Arena request as a JSON string. On a live round <code>context</code> carries the frozen series history and <code>round</code> the real question; a population round lists its cells and a ranking round its universe. The full contract is in <a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/agent-api.md">docs/agent-api.md</a>.</p>
+        <p style="font-size:12px;margin:8px 0 0;">On a live round <code>context</code> carries the frozen series history and <code>round</code> the real question; a population round lists its <code>cells</code> and a ranking round its <code>ranking.length</code> and, for a fixed basket, its <code>items</code>.</p>
         <div class="codelabel">Response — what your endpoint returns</div>
-        <p style="font-size:12px;margin:0 0 6px;">The reply is a chat-completion whose <code>choices[0].message.content</code> is one JSON string. That string is one of three shapes, and the question's <code>target_type</code> says which.</p>
+        <p style="font-size:12px;margin:0 0 6px;">One JSON object. Its <code>forecast</code> takes one of three shapes, and the question's <code>target_type</code> says which.</p>
 <pre class="code" id="contract-response">200 OK
-{
-  "choices": [{"message": {"role": "assistant", "content":
-    "{\"schema_version\":\"ssa-agent-api-v1\",\"forecast\":{\"mean\":50.0,\"sd\":5.0},\"reasoning_trace\":\"optional, archived with the forecast\",\"crosstabs\":{}}"
-  }}]
-}</pre>
-        <div class="codelabel">The <code>content</code> string, decoded, for each of the three question shapes</div>
-<pre class="code">// continuous_normal — a number
-{"schema_version": "ssa-agent-api-v1", "forecast": {"mean": 41.2, "sd": 1.4}}
+Content-Type: application/json
+
+// continuous_normal — a number
+{"schema_version": "ssa-agent-api-v2", "forecast": {"mean": 50.0, "sd": 5.0}, "reasoning_trace": "optional, archived with the forecast"}
 
 // profile_energy — every cell the question names, none missing
-{"schema_version": "ssa-agent-api-v1",
+{"schema_version": "ssa-agent-api-v2",
  "forecast": {"profile": {"dem": {"mean": 4.0, "sd": 1.5}, "ind": {"mean": 23.0, "sd": 2.0}, "rep": {"mean": 79.0, "sd": 1.5}, "…": {}}}}
 
 // ranking_list — the items in your predicted order, exactly the length asked for
-{"schema_version": "ssa-agent-api-v1", "forecast": {"ranking": ["Item_A", "Item_B", "Item_C"]}}</pre>
-        <p style="font-size:12px;margin:8px 0 0;"><code>reasoning_trace</code> is optional and archived with the forecast. The full contract is <a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/agent-api.md">docs/agent-api.md</a>.</p>
+{"schema_version": "ssa-agent-api-v2", "forecast": {"ranking": ["Item_A", "Item_B", "Item_C"]}}</pre>
+        <p style="font-size:12px;margin:8px 0 0;">The full contract is <a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/agent-api.md">docs/agent-api.md</a>; a starter server that answers all three shapes is <a href="https://github.com/Social-Atoms/social-sim-arena/tree/main/examples/agent-api">examples/agent-api</a>.</p>
       </details>
     </div>
   </div>
@@ -162,9 +170,9 @@ Content-Type: application/json
     <div class="panelbody">
       <div class="formgrid">
         <div class="field full">
-          <label for="api-url">Forecast endpoint base URL <span class="req">*</span> <span class="privacy public">public</span></label>
-          <input id="api-url" name="openai_compatible_url" type="url" pattern="https://.*" required placeholder="https://api.example.com/v1" autocomplete="url">
-          <small>We POST to <code>&lt;base&gt;/chat/completions</code>.</small>
+          <label for="api-url">Forecast endpoint URL <span class="req">*</span> <span class="privacy public">public</span></label>
+          <input id="api-url" name="endpoint_url" type="url" pattern="https://.*" required placeholder="https://api.example.com/forecast" autocomplete="url">
+          <small>We POST each question to this exact URL. Must be public https.</small>
         </div>
         <div class="field">
           <label for="api-key">API key <span class="privacy secret">secret · optional</span></label>
@@ -294,24 +302,19 @@ async function loadCalendar(){
 loadCalendar();
 
 // --- the endpoint test: the same fixture the starter kit and the CLI use ----
-function chatCompletionUrl(value){
+function endpointUrl(value){
   const url = new URL(value);
   if (url.protocol !== 'https:') throw new Error('URL must use HTTPS.');
-  url.pathname = url.pathname.replace(/\/$/, '');
-  if (!url.pathname.endsWith('/chat/completions')) url.pathname += '/chat/completions';
+  if (url.search || url.hash) throw new Error('URL must carry no query string or fragment.');
   return url.toString();
 }
-function responseText(data){
-  return data?.choices?.[0]?.message?.content || data?.choices?.[0]?.text || data?.output?.choices?.[0]?.message?.content || data?.output?.text || data?.text;
-}
-function parseAgentContent(text){
-  const clean = String(text || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
-  const body = JSON.parse(clean);
-  if (body.schema_version !== 'ssa-agent-api-v1') throw new Error('Response must declare schema_version ssa-agent-api-v1.');
+function parseAgentReply(body){
+  if (!body || typeof body !== 'object') throw new Error('Reply body must be one JSON object.');
+  if (body.schema_version !== 'ssa-agent-api-v2') throw new Error('Response must declare schema_version ssa-agent-api-v2.');
   if (!Number.isFinite(body.forecast?.mean) || !Number.isFinite(body.forecast?.sd) || body.forecast.sd <= 0) throw new Error('Test forecast must contain numeric mean and positive sd.');
   return body;
 }
-const FIXTURE = {schema_version:'ssa-agent-api-v1', request_id:'browser-contract-test', round:{round_id:'ssa-contract-test', board_id:'topline', target_type:'continuous_normal', question:'Non-scored contract test: return a normal forecast centered on 50.', unit:'points', lock_at:'2099-01-01T00:00:00Z', context:{persistence:50}}, optional_crosstabs:[]};
+const FIXTURE = {schema_version:'ssa-agent-api-v2', request_id:'browser-contract-test', round:{round_id:'ssa-contract-test', board_id:'topline', target_type:'continuous_normal', question:'Non-scored contract test: return a normal forecast centered on 50.', unit:'points', lock_at:'2099-01-01T00:00:00Z', context:{persistence:50}}, optional_crosstabs:[]};
 
 const results = [];
 function paintResults(){
@@ -334,20 +337,20 @@ byId('api-test').addEventListener('click', async () => {
   apiProbePassed = false; syncRegistration();
   const started = performance.now();
   try {
-    const target = chatCompletionUrl(urlInput.value);
+    const target = endpointUrl(urlInput.value);
     step('HTTPS endpoint', esc(target), 'good');
     const headers = {'Content-Type':'application/json'};
     const key = byId('api-key').value;
     if (key) headers.Authorization = 'Bearer ' + key;
-    const s2 = step('Transport', 'POST /chat/completions with the contract fixture'+(key?' and a Bearer token':'')+'…', 'wait');
-    const response = await fetch(target, {method:'POST', headers, body:JSON.stringify({model:'ssa-agent', messages:[{role:'user', content:JSON.stringify(FIXTURE)}]}), signal:controller.signal});
+    const s2 = step('Transport', 'POST the contract fixture'+(key?' with a Bearer token':'')+'…', 'wait');
+    const response = await fetch(target, {method:'POST', headers, body:JSON.stringify(FIXTURE), signal:controller.signal});
     const ms = Math.round(performance.now() - started);
     if (response.status === 401 || response.status === 403) throw new Error('Authentication failed (HTTP '+response.status+').');
     if (!response.ok) throw new Error('Endpoint returned HTTP '+response.status+'.');
     s2.state = 'good'; s2.detail = 'HTTP '+response.status+' in '+ms+' ms'; paintResults();
     const data = await response.json();
-    const s3 = step('Response shape', 'choices[0].message.content is JSON declaring ssa-agent-api-v1…', 'wait');
-    const body = parseAgentContent(responseText(data));
+    const s3 = step('Response shape', 'the reply is one JSON object declaring ssa-agent-api-v2…', 'wait');
+    const body = parseAgentReply(data);
     s3.state = 'good'; s3.detail = 'forecast mean '+body.forecast.mean+', sd '+body.forecast.sd+(body.reasoning_trace?' · reasoning_trace present':''); paintResults();
     apiProbePassed = true;
     status.className = 'status good'; status.textContent = 'Passed. The server-side probe repeats this before your endpoint is called for real.';
@@ -356,7 +359,7 @@ byId('api-test').addEventListener('click', async () => {
     if (last && last.state === 'wait') { last.state = 'bad'; last.detail = esc(error.message); }
     else step('Failed', esc(error.message), 'bad');
     if (error.name === 'AbortError') { last.detail = 'Request timed out after 60 seconds.'; }
-    else if (error instanceof TypeError) { step('Reachability', 'The browser could not complete the request. A browser test also needs CORS on your endpoint; the CLI probe does not: <code>python tools/probe_agent_api.py --base-url '+esc(urlInput.value)+'</code>', 'bad'); }
+    else if (error instanceof TypeError) { step('Reachability', 'The browser could not complete the request. A browser test also needs CORS on your endpoint; the CLI probe does not: <code>python tools/probe_agent_api.py --url '+esc(urlInput.value)+'</code>', 'bad'); }
     paintResults();
     status.className = 'status bad'; status.textContent = 'Not passed.';
   } finally {
@@ -371,9 +374,7 @@ function registration(){
   const reg = {entrant_id: id, name: byId('entrant-name').value.trim(), type, method: byId('entrant-method').value.trim()};
   const contact = byId('entrant-contact').value.trim();
   if (contact) reg.contact = contact;
-  let base = byId('api-url').value.trim();
-  try { const u = new URL(base); u.pathname = u.pathname.replace(/\/chat\/completions\/?$/, '').replace(/\/$/, ''); base = u.toString().replace(/\/$/, ''); } catch (e) {}
-  reg.route = {kind:'agent_api', base_url: base};
+  reg.route = {kind:'agent_api', url: byId('api-url').value.trim()};
   return reg;
 }
 function syncRegistration(){
@@ -382,7 +383,7 @@ function syncRegistration(){
   byId('reg-filename').textContent = reg.entrant_id || '<entrant_id>';
   byId('reg-json').textContent = json;
   const idOk = /^[a-z0-9][a-z0-9_.-]{1,47}$/.test(reg.entrant_id);
-  const ready = apiProbePassed && idOk && reg.name && reg.method && /^https:\/\//.test(reg.route.base_url);
+  const ready = apiProbePassed && idOk && reg.name && reg.method && /^https:\/\//.test(reg.route.url);
   const open = byId('reg-open');
   open.setAttribute('aria-disabled', ready ? 'false' : 'true');
   open.href = ready ? REPO+'/new/dev?filename='+encodeURIComponent('entrants/'+reg.entrant_id+'.json')+'&value='+encodeURIComponent(json) : '#';

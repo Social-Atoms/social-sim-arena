@@ -9,7 +9,7 @@ python examples/agent-api/server.py
 Run the contract test against it:
 
 ```bash
-python tools/probe_agent_api.py --base-url http://127.0.0.1:8787/v1
+python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast
 ```
 
 That checks the transport, all three round shapes, and idempotency. Probing
@@ -20,7 +20,7 @@ verdict.
 Or send the single fixed request by hand:
 
 ```bash
-curl -sS http://127.0.0.1:8787/v1/chat/completions \
+curl -sS http://127.0.0.1:8787/forecast \
   -H 'Content-Type: application/json' \
   --data-binary @examples/agent-api/request.json
 ```
@@ -32,7 +32,7 @@ The response should match the shape in `response.json`.
 ```bash
 SSA_EXAMPLE_API_KEY=secret python examples/agent-api/server.py
 SSA_PROBE_KEY=secret python tools/probe_agent_api.py \
-    --base-url http://127.0.0.1:8787/v1 --key-env SSA_PROBE_KEY
+    --url http://127.0.0.1:8787/forecast --key-env SSA_PROBE_KEY
 ```
 
 With a key configured the probe also sends a *wrong* one and requires a 401 or
@@ -48,7 +48,7 @@ the log of whoever pastes the command into an issue. Never commit or email one.
 
 ```bash
 python examples/agent-api/server.py --port 8788 --delay 5
-python tools/probe_agent_api.py --base-url http://127.0.0.1:8788/v1 --timeout 1
+python tools/probe_agent_api.py --url http://127.0.0.1:8788/forecast --timeout 1
 ```
 
 `--delay` stalls the reply so a timeout can be seen against something real. The
