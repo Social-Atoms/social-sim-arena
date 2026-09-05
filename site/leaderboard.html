@@ -9,6 +9,7 @@
 <title>Leaderboard · Social Simulation Arena</title>
 <meta name="description" content="The live benchmark for social simulation. Simulators and agents forecast real public opinion before it is published. Locked, hashed, scored in public.">
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700;800&display=swap');
 details.result{margin-top:6px;}
 details.result>summary{cursor:pointer;font-size:11.5px;color:var(--mut);list-style:none;}
 details.result>summary::-webkit-details-marker{display:none;}
@@ -29,7 +30,7 @@ h3.sub{margin:24px 0 8px;font-size:13px;font-weight:650;color:var(--ink);letter-
 .openb{padding:20px 22px 0;overflow:hidden;}
 .ob-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:11px;}
 .ob-id{font-size:19px;font-weight:650;color:var(--ink);letter-spacing:-.022em;}
-.ob-tag{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;border-radius:999px;padding:2px 10px;border:1px solid var(--line);color:var(--mut);white-space:nowrap;}
+.ob-tag{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;border-radius:4px;padding:2px 10px;border:1px solid var(--line);color:var(--mut);white-space:nowrap;}
 .ob-tag.live{border-color:var(--ink);color:var(--ink);}
 .ob-tag.live:before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ink);margin-right:6px;vertical-align:1px;animation:pulse 2.4s infinite;}
 .ob-sum{font-size:13px;color:var(--mut);margin:5px 0 16px;}
@@ -46,8 +47,8 @@ h3.sub{margin:24px 0 8px;font-size:13px;font-weight:650;color:var(--ink);letter-
 .frow{display:flex;align-items:center;gap:9px;margin-bottom:8px;}
 .frow:last-child{margin-bottom:0;}
 .fname{flex:0 0 82px;width:82px;font-size:11.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.fbar{flex:1 1 auto;min-width:10px;height:5px;border-radius:999px;background:var(--grid);}
-.fbar i{display:block;height:5px;border-radius:999px;background:var(--s1);}
+.fbar{flex:1 1 auto;min-width:10px;height:5px;border-radius:4px;background:var(--grid);}
+.fbar i{display:block;height:5px;border-radius:4px;background:var(--s1);}
 .fn{flex:0 0 auto;min-width:17px;text-align:right;font-size:11.5px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;}
 /* The task-form column gets a drawing rather than a bar. The three shapes are
    three different questions, not more or less of one thing, and a bar chart
@@ -63,33 +64,37 @@ h3.sub{margin:24px 0 8px;font-size:13px;font-weight:650;color:var(--ink);letter-
 .shrow .c{flex:0 0 auto;font-size:12.5px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;margin-top:1px;}
 @media(max-width:860px){.ob-grid{grid-template-columns:repeat(2,1fr);}.facets{grid-template-columns:1fr 1fr;}}
 @media(max-width:560px){.ob-grid{grid-template-columns:1fr;}.facets{grid-template-columns:1fr;}.fname{flex-basis:70px;width:70px;}}
-.shape{display:inline-block;border:1px solid var(--line,#e0e0e0);border-radius:999px;padding:0 7px;margin-left:7px;font-size:10.5px;font-weight:700;color:var(--mut);vertical-align:1px;white-space:nowrap;}
+.shape{display:inline-block;border:1px solid var(--line,#e0e0e0);border-radius:4px;padding:0 7px;margin-left:7px;font-size:10.5px;font-weight:700;color:var(--mut);vertical-align:1px;white-space:nowrap;}
 :root{
   color-scheme: light;
-  --bg:#ffffff; --ink:#1d1d1b; --ink2:#6f6e69; --mut:#9a9891;
-  --line:rgba(0,0,0,.08); --grid:#eeede9; --axis:#d6d4cd;
+  --bg:#ffffff; --ink:#111110; --ink2:#4f4e49; --mut:#96948d; --accent:#15803d; --link:#0000ee;
+  --line:#e0e0e0; --grid:#eeede9; --axis:#d6d4cd;
   --s0:#1d1d1b; --s1:#85837d; --s2:#b3b1aa; --s3:#d1cfc8; --spark:#55534e;
-  --sans:system-ui,-apple-system,"Segoe UI","Helvetica Neue",sans-serif;
+  --sans:"Inconsolata",ui-monospace,SFMono-Regular,Menlo,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
-body{margin:0;background:var(--bg);color:var(--ink2);font-family:var(--sans);font-size:14.5px;line-height:1.65;-webkit-font-smoothing:antialiased;}
+body{margin:0;background:var(--bg);color:var(--ink2);font-family:var(--sans);font-size:14.5px;line-height:1.5;-webkit-font-smoothing:antialiased;}
 a{color:inherit;}
 .wrap{max-width:1020px;margin:0 auto;padding:0 22px;}
-nav.top{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
-nav.top .wrap{display:flex;align-items:center;gap:24px;height:58px;}
-nav.top .brand{font-weight:650;color:var(--ink);font-size:15.5px;text-decoration:none;margin-right:auto;display:flex;align-items:center;gap:9px;letter-spacing:-.01em;}
-nav.top .brand .dot{width:8px;height:8px;border-radius:50%;background:var(--ink);animation:pulse 2.4s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
-nav.top a.item{color:var(--ink2);text-decoration:none;font-size:13.5px;}
-nav.top a.item:hover{color:var(--ink);}
+nav.top{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--line);}
+nav.top .in{display:flex;align-items:center;gap:2px;height:50px;padding:0 16px;max-width:1440px;margin:0 auto;overflow-x:auto;}
+nav.top .brand{font-weight:700;color:var(--ink);font-size:15.5px;text-decoration:none;display:flex;align-items:center;gap:8px;margin-right:18px;white-space:nowrap;}
+nav.top .brand .by{color:var(--mut);font-weight:400;font-size:11px;}
+nav.top .brand .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2.6s infinite;flex:0 0 auto;}
+nav.top a.item{font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:4px;color:var(--ink2);white-space:nowrap;}
+nav.top a.item.on{background:var(--ink);color:#fff;}
+nav.top .right{margin-left:auto;display:flex;align-items:center;gap:16px;}
+nav.top .right a{font-size:12.5px;text-decoration:none;color:var(--ink2);white-space:nowrap;}
+nav.top .right a.cta{color:var(--link);text-decoration:underline;text-underline-offset:3px;font-weight:600;}
+nav.top a:hover{color:var(--link);}
 .hero{padding:58px 0 8px;}
 .hero h1{margin:0 0 10px;font-size:32px;font-weight:650;color:var(--ink);letter-spacing:-.025em;line-height:1.15;}
 .hero p.sub{margin:0;font-size:16px;max-width:640px;color:var(--ink2);}
 .meta{margin:18px 0 0;font-size:13px;color:var(--mut);}
 .meta b{color:var(--ink);font-weight:600;}
 .cta-row{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 0;}
-.btn{display:inline-block;text-decoration:none;font-size:13.5px;font-weight:600;border-radius:999px;padding:9px 20px;border:1px solid var(--ink);}
+.btn{display:inline-block;text-decoration:none;font-size:13.5px;font-weight:600;border-radius:4px;padding:9px 20px;border:1px solid var(--ink);}
 .btn.primary{background:var(--ink);color:#fff;}
 .btn.primary:hover{opacity:.85;}
 .btn.ghost{background:#fff;color:var(--ink);border-color:var(--line);}
@@ -104,13 +109,13 @@ td{padding:12px 16px;border-bottom:1px solid var(--grid);vertical-align:middle;}
 tbody tr:last-child td{border-bottom:none;}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 .type{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);}
-.ref-chip{display:inline-block;font-size:10px;font-weight:600;color:var(--mut);border:1px solid var(--grid);border-radius:999px;padding:0 8px;margin-left:8px;vertical-align:1px;}
+.ref-chip{display:inline-block;font-size:10px;font-weight:600;color:var(--mut);border:1px solid var(--grid);border-radius:4px;padding:0 8px;margin-left:8px;vertical-align:1px;}
 .status{font-size:12.5px;font-weight:600;color:var(--ink2);white-space:nowrap;}
 .status .d{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:1px;background:var(--ink);}
 .status.locked .d,.status.resolved .d{background:transparent;border:1.5px solid var(--mut);}
 .status.awaiting_resolution .d{background:var(--mut);}
-.tabs{display:inline-flex;gap:2px;background:#f4f3f0;border-radius:999px;padding:3px;margin:0 0 14px;}
-.tabs button{font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--ink2);background:none;border:none;border-radius:999px;padding:6px 16px;cursor:pointer;}
+.tabs{display:inline-flex;gap:2px;background:#f4f3f0;border-radius:4px;padding:3px;margin:0 0 14px;}
+.tabs button{font-family:var(--sans);font-size:12.5px;font-weight:600;color:var(--ink2);background:none;border:none;border-radius:4px;padding:6px 16px;cursor:pointer;}
 .tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.07);}
 .chart-card{padding:18px 20px 10px;position:relative;}
 .chart-card h3{margin:0;font-size:14px;font-weight:600;color:var(--ink);}
@@ -132,9 +137,8 @@ footer a{color:var(--ink2);}
   .hero{padding:36px 0 4px;}
   .hero h1{font-size:26px;}
   .hero p.sub{font-size:15px;}
-  nav.top .wrap{gap:16px;}
-  nav.top a.item{display:none;}
-  nav.top a.item.keep{display:inline;}
+  nav.top .right a{display:none;}
+  nav.top .right a.cta{display:inline;}
   section{padding:24px 0 2px;}
   table{white-space:nowrap;}
   .btn{padding:9px 16px;}
@@ -145,16 +149,14 @@ footer a{color:var(--ink2);}
 </head>
 <body>
 
-<nav class="top">
-  <div class="wrap">
-    <a class="brand" href="#"><span class="dot"></span>Social Simulation Arena</a>
-    <a class="item" href="index.html">Arena</a>
-    <a class="item" href="#targets">Targets</a>
-    <a class="item" href="#rounds">Rounds</a>
-    <a class="item keep" href="docs.html">Docs</a>
-    <a class="item keep" href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a>
-  </div>
-</nav>
+<nav class="top"><div class="in">
+  <a class="brand" href="index.html#live"><span class="dot"></span>Social Simulation Arena <span class="by">by MIT</span></a>
+  <a class="item" href="index.html#live">Live</a>
+  <a class="item" href="index.html#rounds">Tasks</a>
+  <a class="item" href="index.html#weekly">Weekly</a>
+  <a class="item" href="index.html#agents">Agents</a>
+  <div class="right"><a href="docs.html">Docs</a><a href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a><a class="cta" href="submit.html">SUBMIT YOUR AGENT</a></div>
+</div></nav>
 
 <div class="wrap">
 

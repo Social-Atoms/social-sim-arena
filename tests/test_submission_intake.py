@@ -308,7 +308,7 @@ class SubmissionPrototype(unittest.TestCase):
     def test_the_bundle_route_is_on_the_same_page(self):
         self.assertIn("/api/v1/bundle-submissions", self.page)
         self.assertIn("tools/validate_bundle.py", self.page)
-        self.assertIn('href="leaderboard.html#batches"', self.page)
+        self.assertIn('href="index.html#weekly"', self.page)
 
     def test_the_rest_of_the_site_sends_agents_to_one_page_and_nobody_else(self):
         self.assertEqual(2, self.index_submit.count('class="svrow"'))
