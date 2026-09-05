@@ -29,9 +29,11 @@ const shaped = data.rounds.filter(r =>
   r.target_type === 'profile_energy' || r.target_type === 'ranking_list');
 const shownShaped = shaped.filter(r => list.includes(r.round_id));
 for (const r of shownShaped) {
-  const row = list.split('<div class="vrow">')
+  // One question card per round; a shaped round wears the marked shape tag
+  // ("profile · 16 cells", "ranking") in its header.
+  const row = list.split('<div class="qcard')
     .find(chunk => chunk.includes(r.round_id)) || '';
-  if (!/class="shape"/.test(row)) {
+  if (!/class="qshape special"/.test(row)) {
     problems.push(`${r.round_id} is a ${r.target_type} and its row does not `
       + 'say so; the page presents it as one number');
   }
@@ -47,10 +49,10 @@ for (const [name, body] of [['open rounds', list], ['midterm rounds', exam]]) {
   }
 }
 
-console.log(`open-round rows : ${(list.match(/class="vrow"/g) || []).length}`);
+console.log(`question cards  : ${(list.match(/class="qcard/g) || []).length}`);
 console.log(`midterm rows    : ${(exam.match(/class="vrow"/g) || []).length}`);
 console.log(`shaped rounds   : ${shaped.length} in data, ${shownShaped.length} on the page, `
-  + `${(list.match(/class="shape"/g) || []).length} chips rendered`);
+  + `${(list.match(/class="qshape special"/g) || []).length} shape tags rendered`);
 console.log(`footer          : ${els['foot-updated'].textContent}`);
 
 // A rendered `undefined` or `NaN` is a bug the reader sees before anyone else

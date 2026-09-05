@@ -68,6 +68,8 @@ main{flex:1 1 auto;min-height:0;display:flex;max-width:1680px;width:100%;margin:
 .task-group[open] summary:before{content:'\2212';}
 .task-group summary .tc{margin-left:auto;color:var(--mut);font-size:10.5px;font-weight:600;}
 .task-group.selected{border-color:#b8b7b1;}
+.task-group.shape{border-left:3px solid var(--accent);}
+.task-group summary .gk{display:block;width:max-content;margin:3px 0 0;font:700 9px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);border:1px solid var(--accent);border-radius:3px;padding:0 5px;font-style:normal;line-height:1.5;}
 .task-items{border-top:1px solid #eeede9;padding:4px;}
 .task-link{display:block;width:100%;border:0;border-radius:4px;background:transparent;color:var(--ink2);font:600 13.5px/1.28 var(--sans);padding:8px;cursor:pointer;text-align:left;}
 .task-link:hover{background:#f4f4f2;color:var(--ink);}
@@ -132,16 +134,28 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .widecol{max-width:1120px!important;}
 .task-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 12px;}
 .task-search{flex:1 1 280px;border:1px solid var(--line);border-radius:5px;padding:8px 10px;font:13px var(--sans);color:var(--ink);background:#fff;}
-.event-card{border:1px solid var(--line);border-radius:5px;margin:0 0 8px;background:#fff;overflow:hidden;}
-.event-card summary{list-style:none;cursor:pointer;}
-.event-card summary::-webkit-details-marker{display:none;}
-.event-card summary .vrow:before{content:'\25b8';color:var(--mut);width:8px;flex:0 0 auto;}
-.event-card[open] summary .vrow:before{content:'\25be';}
-.event-card .vrow{border:0;padding:10px 12px;cursor:pointer;}
-.event-card .event-more{border-top:1px solid #eeede9;padding:9px 12px 11px;font-size:12.5px;color:var(--ink2);}
-.event-card .event-more p{margin:0 0 7px;}
-.event-card .event-more .facts{display:flex;flex-wrap:wrap;gap:5px 16px;color:var(--mut);font-size:11.5px;}
-.weekly-grid{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:18px;align-items:start;}
+/* question cards: the question first, then every answer on one scale */
+.qgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.qcard{border:1px solid var(--line);border-radius:5px;background:#fff;padding:14px 16px 12px;display:flex;flex-direction:column;min-width:0;}
+.qcard .qhead{display:flex;align-items:center;gap:8px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);font-weight:700;}
+.qcard .qhead .qshape{border:1px solid var(--line);border-radius:3px;padding:0 5px;letter-spacing:.04em;}
+.qcard .qhead .qshape.special{border-color:var(--accent);color:var(--accent-ink);}
+.qcard .qhead .fam.special{color:var(--accent-ink);}
+.qcard .qhead .qdue{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink2);}
+.qcard .qhead .qdue.live:before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:1px;}
+.qcard h3{margin:8px 0 3px;font-size:17px;line-height:1.25;color:var(--ink);}
+.qcard .qtext{margin:0 0 10px;font-size:13px;line-height:1.45;color:var(--ink2);}
+.qcard .qstrip{margin:auto -4px 0;}
+.qcard .qstrip svg{display:block;width:100%;height:58px;overflow:visible;}
+.qcard .qstats{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;font-size:12px;color:var(--mut);margin-top:6px;}
+.qcard .qstats b{font-size:19px;color:var(--ink);font-weight:700;}
+.qcard .qstats .hit{color:var(--accent-ink);font-weight:700;}
+.qcard .qempty{font-size:12.5px;color:var(--mut);padding:10px 0 6px;border-top:1px dashed var(--line);margin-top:auto;}
+.qcard .qfoot{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid #eeede9;font-size:11px;color:var(--mut);}
+.qcard .qfoot .qid{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.qcard .qfoot .go{margin-left:auto;color:var(--link);font-weight:700;text-decoration:none;white-space:nowrap;font-size:12px;}
+.qcard .qfoot .go:hover{text-decoration:underline;}
+@media(max-width:900px){.qgrid{grid-template-columns:1fr;}}
 .week-card{border:1px solid var(--line);border-radius:5px;background:#fff;padding:14px 16px;margin:0 0 12px;}
 .week-card h3{margin:0 0 5px;color:var(--ink);font-size:16px;}
 .week-card p{margin:0;color:var(--ink2);font-size:13px;}
@@ -243,6 +257,8 @@ footer .upd{margin-left:auto;}
 .fchips button{font:600 11px var(--sans);letter-spacing:.02em;padding:4px 9px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink2);cursor:pointer;}
 .fchips button span{color:var(--mut);font-weight:500;}
 .fchips button.on{background:var(--ink);border-color:var(--ink);color:#fff;}
+.fchips button.special{border-color:var(--accent);color:var(--accent-ink);}
+.fchips button.special.on{background:var(--accent-ink);border-color:var(--accent-ink);color:#fff;}
 .fchips button.on span{color:#cfcec9;}
 .erow p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .erow.cta{border:1px solid var(--accent);border-radius:4px;padding:10px 12px;align-items:center;}
@@ -259,9 +275,8 @@ footer .upd{margin-left:auto;}
   <div class="in">
     <a class="brand" href="#"><span class="dot"></span>Social Simulation Arena <span class="by">by MIT</span></a>
     <button class="ptab on" data-page="live">Live</button>
-    <button class="ptab" data-page="rounds">Tasks</button>
+    <button class="ptab" data-page="rounds">Questions</button>
     <button class="ptab" data-page="weekly">Weekly</button>
-    <button class="ptab" data-page="agents">Agents</button>
     <div class="right">
       <a class="item" href="docs.html">Docs</a>
       <a class="item" href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a>
@@ -328,10 +343,10 @@ footer .upd{margin-left:auto;}
 
   <div class="page" id="page-rounds">
     <div class="inner"><div class="col widecol">
-      <h2>Tasks and questions</h2>
-      <p class="lede">Browse by research question, then open the exact live question. Four task families keep subject matter separate from answer format.</p>
+      <h2>Questions</h2>
+      <p class="lede">Every question the models are forecasting now, and what each one answered.</p>
       <div class="task-toolbar">
-        <input class="task-search" id="task-search" type="search" placeholder="Search task, population, or question…" aria-label="Search tasks">
+        <input class="task-search" id="task-search" type="search" placeholder="Search questions…" aria-label="Search tasks">
         <div class="fchips" id="round-category-chips" style="margin:0;"></div>
         <div class="seg mini" id="round-status-seg"><button data-status="active" class="on">Active</button><button data-status="all">All</button></div>
       </div>
@@ -381,19 +396,12 @@ footer .upd{margin-left:auto;}
     </div></div>
   </div>
 
-  <div class="page" id="page-agents">
-    <div class="inner"><div class="col">
-      <h2>Agents</h2>
-      <p class="lede">Baselines run in every round. Submitted agents join them on the board.</p>
-      <div id="entrants-list"></div>
-    </div></div>
-  </div>
 
 </main>
 
 <footer>
   <span><b>Social Simulation Arena</b> by MIT</span>
-  <a href="#rounds">tasks</a>
+  <a href="#rounds">questions</a>
   <a href="docs.html">docs</a>
   <a href="https://github.com/Social-Atoms/social-sim-arena">github</a>
   <a href="/opinion-arena.html">background</a>
@@ -473,7 +481,7 @@ function submissionLink(track){
 const TASK_GROUPS = [
   {id:'opinion', label:'Public opinion', short:'approval + elections'},
   {id:'sentiment', label:'Sentiment & expectations', short:'consumers + investors'},
-  {id:'population', label:'Population profiles', short:'subgroups jointly'},
+  {id:'population', label:'Population profiles', short:'subgroups jointly', kind:'shape'},
   {id:'attention', label:'Collective attention', short:'search + reading ranks'},
 ];
 const CIVIQS_PROFILE_CELLS = [
@@ -887,8 +895,8 @@ function renderTaskNav(data,key){
   host.innerHTML = TASK_GROUPS.map(g=>{
     const keys = Object.keys(TASKS).filter(k=>TASKS[k].group===g.id);
     const count = keys.reduce((n,k)=>n+taskRounds(TASKS[k],data).length,0);
-    return '<details class="task-group'+(activeGroup===g.id?' selected':'')+'" '+(activeGroup===g.id?'open':'')+'>'
-      +'<summary><span>'+esc(g.label)+'</span><span class="tc">'+count+'</span></summary><div class="task-items">'
+    return '<details class="task-group'+(activeGroup===g.id?' selected':'')+(g.kind==='shape'?' shape':'')+'" '+(activeGroup===g.id?'open':'')+'>'
+      +'<summary><span>'+esc(g.label)+(g.kind==='shape'?'<em class="gk">task shape</em>':'')+'</span><span class="tc">'+count+'</span></summary><div class="task-items">'
       +keys.map(k=>'<button class="task-link'+(k===key?' on':'')+'" data-task="'+k+'">'+esc(TASKS[k].label)
         +'<small>'+esc(TASKS[k].population)+'</small></button>').join('')+'</div></details>';
   }).join('');
@@ -1109,11 +1117,71 @@ function shapeChip(r){
   return '<span class="shape" title="'+esc(detail)+'">'+esc(spec[0])+'</span>';
 }
 
+// A question reads like a question: the task in large type, the wording
+// under it, then every answer on one scale so a reader sees the field at a
+// glance -- models as dots, the reference forecasts hollow, the released
+// number as a line once it exists. The round id is bookkeeping and sits small
+// in the footer.
+function questionText(r){
+  let q = String(r.question||'').trim();
+  const m = q.match(/^(.{4,200}?):\s+(.{40,})$/);         // "Source, its panel, its cadence: the question"
+  if(m) q = m[2];
+  q = q.replace(/\s+/g,' ');
+  if(q.length > 150){                                     // a paragraph is not a title
+    const sent = q.match(/^(.{40,150}?[.;:])\s/);
+    q = sent ? sent[1].replace(/[;:]$/,'') : q.slice(0,150).replace(/\s+\S*$/,'')+'…';
+  }
+  return q.charAt(0).toUpperCase()+q.slice(1);
+}
+function forecasterName(id, data){
+  const ents = data.__byId || (data.__byId = Object.fromEntries((data.entrants||[]).map(e=>[e.entrant_id,e])));
+  const base = id.replace(/-(web|superfc|zeroshot|news|persona)/g,'');
+  const e = ents[id] || ents[base];
+  const name = e ? e.name.split(' (')[0] : base;
+  const cond = [/-web/.test(id)?'web':'', /-superfc/.test(id)?'sfc':'', /-zeroshot/.test(id)?'zs':''].filter(Boolean).join('+');
+  return name + (cond ? ' · '+cond : '');
+}
+function isBaseline(id){ return /^(persistence|trend|ewma|climatology)$/.test(id); }
+function fmtNum(v, unit){
+  const a = Math.abs(v), d = a>=100?0:a>=10?1:2;
+  return (typeof v==='number' ? v.toFixed(d) : '·') + (unit||'');
+}
+function forecastStrip(r, t, data){
+  const f = r.forecasts||{}, ids = Object.keys(f).filter(k=>typeof (f[k]||{}).mean==='number');
+  if(!ids.length) return '';
+  const unit = (t.unit||'').trim()==='%' ? '%' : '';
+  const models = ids.filter(k=>!isBaseline(k)), bases = ids.filter(isBaseline);
+  const per = (f.persistence||(r.baselines||{}).persistence||{}).mean;
+  const rel = (r.resolution||{}).value;
+  const means = ids.map(k=>f[k].mean).concat(typeof per==='number'?[per]:[], typeof rel==='number'?[rel]:[]);
+  let lo = Math.min(...means), hi = Math.max(...means);
+  const pad = Math.max((hi-lo)*0.18, 0.6); lo -= pad; hi += pad;
+  const W = 600, H = 58, L = 8, R = 8, y0 = 30;
+  const x = v => L + (v-lo)/(hi-lo)*(W-L-R);
+  const mm = models.map(k=>f[k].mean).sort((a,b)=>a-b);
+  const cons = mm.length ? mm[Math.floor(mm.length/2)] : null;
+  let g = '';
+  g += '<line x1="'+L+'" y1="'+y0+'" x2="'+(W-R)+'" y2="'+y0+'" stroke="#dcdbd6" stroke-width="1"/>';
+  // model dots, spread a little so a crowd does not collapse into one point
+  models.forEach((k,i)=>{ const dy = ((i%5)-2)*3.2; g += '<circle cx="'+x(f[k].mean).toFixed(1)+'" cy="'+(y0+dy).toFixed(1)+'" r="3.4" fill="#111110" fill-opacity=".72"><title>'+esc(forecasterName(k,data))+': '+fmtNum(f[k].mean,unit)+' ± '+fmtNum(f[k].sd,'')+'</title></circle>'; });
+  bases.forEach(k=>{ g += '<circle cx="'+x(f[k].mean).toFixed(1)+'" cy="'+y0+'" r="3.6" fill="#fff" stroke="#96948d" stroke-width="1.4"><title>'+esc(forecasterName(k,data))+' (reference): '+fmtNum(f[k].mean,unit)+'</title></circle>'; });
+  if(typeof per==='number'){ g += '<line x1="'+x(per).toFixed(1)+'" y1="'+(y0-14)+'" x2="'+x(per).toFixed(1)+'" y2="'+(y0+14)+'" stroke="#96948d" stroke-width="1" stroke-dasharray="2 2"/><text x="'+x(per).toFixed(1)+'" y="'+(y0+26)+'" font-size="9.5" fill="#96948d" text-anchor="middle">last release '+fmtNum(per,unit)+'</text>'; }
+  if(cons!==null){ g += '<line x1="'+x(cons).toFixed(1)+'" y1="'+(y0-16)+'" x2="'+x(cons).toFixed(1)+'" y2="'+(y0+16)+'" stroke="#111110" stroke-width="2"/><text x="'+x(cons).toFixed(1)+'" y="'+(y0-20)+'" font-size="10" font-weight="700" fill="#111110" text-anchor="middle">models '+fmtNum(cons,unit)+'</text>'; }
+  if(typeof rel==='number'){ g += '<line x1="'+x(rel).toFixed(1)+'" y1="'+(y0-18)+'" x2="'+x(rel).toFixed(1)+'" y2="'+(y0+18)+'" stroke="#15803d" stroke-width="2"/><text x="'+x(rel).toFixed(1)+'" y="'+(y0-21)+'" font-size="10" font-weight="700" fill="#0a6a30" text-anchor="middle">released '+fmtNum(rel,unit)+'</text>'; }
+  let stats = cons!==null
+    ? '<b>'+fmtNum(cons,unit)+'</b><span>what the models say · '+models.length+' answers</span>'
+    : '<span>No model answers yet</span><span>reference forecasts only</span>';
+  if(typeof rel==='number'){
+    let best=null, bd=Infinity; models.forEach(k=>{ const d=Math.abs(f[k].mean-rel); if(d<bd){bd=d;best=k;} });
+    stats += '<span class="hit">released '+fmtNum(rel,unit)+'</span>' + (best?'<span>closest: '+esc(forecasterName(best,data))+'</span>':'');
+  }
+  return '<div class="qstrip"><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" font-family="Inconsolata,ui-monospace,monospace">'+g+'</svg></div><div class="qstats">'+stats+'</div>';
+}
 function roundsList(data){
   const el = document.getElementById('rounds-list');
   const cat=window.__roundCategory||'all',status=window.__roundStatus||'active',query=(window.__roundQuery||'').toLowerCase();
   const chips=document.getElementById('round-category-chips');
-  chips.innerHTML=[['all','All']].concat(TASK_GROUPS.map(g=>[g.id,g.label])).map(([k,n])=>'<button data-cat="'+k+'" class="'+(cat===k?'on':'')+'">'+esc(n)+'</button>').join('');
+  chips.innerHTML=[['all','All',false]].concat(TASK_GROUPS.map(g=>[g.id,g.label,g.kind==='shape'])).map(([k,n,sp])=>'<button data-cat="'+k+'" class="'+(cat===k?'on':'')+(sp?' special':'')+'">'+esc(n)+'</button>').join('');
   chips.querySelectorAll('button').forEach(b=>b.onclick=()=>{window.__roundCategory=b.dataset.cat;roundsList(data);});
   document.querySelectorAll('#round-status-seg button').forEach(b=>b.classList.toggle('on',b.dataset.status===status));
   const rows=(data.rounds||[]).filter(r=>{
@@ -1122,14 +1190,18 @@ function roundsList(data){
     if(cat!=='all'&&t.group!==cat)return false;
     const hay=(r.round_id+' '+r.question+' '+t.label+' '+t.population).toLowerCase();
     return !query||hay.includes(query);
-  }).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b))).slice(0,40);
-  el.innerHTML=rows.map(r=>{
+  }).sort((a,b)=>status==='active'?deadlineOf(a).localeCompare(deadlineOf(b)):deadlineOf(b).localeCompare(deadlineOf(a))).slice(0,60);
+  el.innerHTML='<div class="qgrid">'+rows.map(r=>{
     const t=taskForRound(r),g=TASK_GROUPS.find(x=>x.id===t.group),active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
-    return '<details class="event-card"><summary><div class="vrow"><span class="'+(active?'live':'')+'"></span>'
-      +'<span class="id">'+esc(r.round_id)+'</span><span class="q">'+shapeChip(r)+'<b>'+esc(t.label)+'</b>'
-      +'<span class="dim"> · '+esc(t.population)+'</span></span><span class="when">'+(active?'due ':'released ')+esc(fmtLocal(active?deadlineOf(r):r.release_at))+'</span></div></summary>'
-      +'<div class="event-more"><p>'+esc(r.question)+'</p><div class="facts"><span>'+esc(g?g.label:'Task')+'</span><span>'+esc(t.population)+'</span><span>release '+esc(fmtLocal(r.release_at))+'</span><span>'+esc(r.n_forecasts||0)+' forecasts</span><a class="go" href="#live/'+taskKeyForRound(r)+'/all">open task →</a></div></div></details>';
-  }).join('')||'<div class="week-card"><h3>No matching questions</h3><p>Try another task family, status, or search term.</p></div>';
+    const kind=r.target_type||((r.cells&&r.cells.length)?'profile_energy':'continuous_normal');
+    const shape=kind==='profile_energy'?'profile · '+(r.cells||[]).length+' cells':kind==='ranking_list'?'ranking':'number';
+    const when=active?'<span class="qdue live">due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue">resolved '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue">releases '+esc(fmtLocal(r.release_at))+'</span>';
+    const strip=forecastStrip(r,t,data)||'<div class="qempty">'+(r.n_forecasts?esc(r.n_forecasts)+' forecasts filed · '+esc(shape):'No forecasts filed yet · '+esc(shape))+'</div>';
+    return '<div class="qcard'+(active?' live':'')+'"><div class="qhead"><span'+(g&&g.kind==='shape'?' class="fam special"':'')+'>'+esc(g?g.label:'Task')+'</span><span class="qshape'+(kind!=='continuous_normal'?' special':'')+'">'+esc(shape)+'</span>'+when+'</div>'
+      +'<h3>'+esc(t.label)+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
+      +'<div class="qfoot"><span class="qid" title="round id">'+esc(r.round_id)+'</span><span>'+esc(t.population)+'</span><a class="go" href="#live/'+taskKeyForRound(r)+'/all">open task →</a></div></div>';
+  }).join('')+'</div>'||'';
+  if(!rows.length) el.innerHTML='<div class="week-card"><h3>No matching questions</h3><p>Try another task family, status, or search term.</p></div>';
 }
 
 function renderWeekly(data){
@@ -1149,48 +1221,6 @@ function renderWeekly(data){
     +'<div class="week-card"><h3>Task mix</h3>'+cats.map(x=>'<p>'+esc(x.label)+' <b style="float:right;color:var(--ink);">'+x.n+'</b></p>').join('')+'</div></aside>';
 }
 
-const AG_PAGE = 10;
-function entrantsList(data){
-  const el = document.getElementById('entrants-list');
-  const ents = (data.entrants||[]).filter(e=>e.type!=='human' && e.entrant_id!=='human-crowd');
-  const f = window.__af || 'all';
-  const pg = window.__ap || 1;
-  const regLink = submissionLink('agent');
-
-  const match = e => f==='all' ? true
-    : f==='baseline' ? e.type==='baseline'
-    : vendorOf(e.entrant_id)===f;
-  const list = ents.filter(match);
-  const pages = Math.max(1, Math.ceil(list.length/AG_PAGE));
-  const page = Math.min(pg, pages);
-  const slice = list.slice((page-1)*AG_PAGE, page*AG_PAGE);
-
-  const keys = ['all'];
-  VENDORS.forEach(([,k])=>{ if(ents.some(e=>vendorOf(e.entrant_id)===k)) keys.push(k); });
-  if(ents.some(e=>e.type==='baseline')) keys.push('baseline');
-  const cnt = k => k==='all'?ents.length:ents.filter(e=>k==='baseline'?e.type==='baseline':vendorOf(e.entrant_id)===k).length;
-  const chipLabel = k => k==='all'?'All':k==='baseline'?'Baselines':vendorName(k);
-  const chips = '<div class="fchips">'+keys.map(k=>
-    '<button class="'+(f===k?'on':'')+'" onclick="window.__af=\''+k+'\';window.__ap=1;entrantsList(window.__data)">'+chipLabel(k)+' <span>'+cnt(k)+'</span></button>').join('')+'</div>';
-
-  const cta = '<div class="erow cta" style="align-items:center;"><span class="av" style="background:var(--accent);color:#fff;">+</span>'
-    + '<span class="tx"><b>Create your own</b></span>'
-    + '<a class="go" href="'+regLink+'" target="_blank" rel="noopener">Register</a></div>';
-
-  const pager = pages>1 ? '<div class="pager">'
-    + '<button '+(page<=1?'disabled':'')+' onclick="window.__ap='+(page-1)+';entrantsList(window.__data)">&#8592;</button>'
-    + '<span>'+page+' / '+pages+'</span>'
-    + '<button '+(page>=pages?'disabled':'')+' onclick="window.__ap='+(page+1)+';entrantsList(window.__data)">&#8594;</button></div>' : '';
-
-  el.innerHTML = cta + chips + slice.map(e=>{
-    const v = vendorOf(e.entrant_id);
-    const cond = condTag(e.name)==='zs' ? ' · zero-shot' : (condTag(e.name)==='r10' ? ' · recent-10' : '');
-    return '<div class="erow">'+avatar(e.entrant_id)
-      + '<span class="tx"><b>'+esc(e.name.split(' (')[0])+'</b><span class="type">'+esc(e.type)+(v?' · '+esc(vendorName(v)):'')+cond+'</span>'
-      + '<p>'+esc(e.method||'')+'</p></span></div>';
-  }).join('') + pager;
-  if(typeof syncHash==='function') syncHash();
-}
 
 function noiseFloorJS(vals){
   // Measurement noise per release from the series' own history: for a level
@@ -1267,7 +1297,6 @@ function render(data){
   renderBoard(window.__board || 'all');
   roundsList(data);
   renderWeekly(data);
-  entrantsList(data);
   examRounds(data);
 }
 
@@ -1291,7 +1320,7 @@ function examRounds(data){
   }
 }
 
-const PAGES=['live','rounds','weekly','submit','agents','exam'];
+const PAGES=['live','rounds','weekly','submit','exam'];
 function showPage(k){
   PAGES.forEach(pg=>{
     document.getElementById('page-'+pg).classList.toggle('on', pg===k);
@@ -1311,9 +1340,6 @@ function syncHash(){
   if(pg === 'live'){
     const tab = window.__tab || 'agg', span = window.__board || 'all';
     if(tab !== 'agg' || span !== 'all') h = 'live/' + tab + '/' + span;
-  } else if(pg === 'agents'){
-    const f = window.__af || 'all';
-    if(f !== 'all') h = 'agents/' + f;
   }
   history.replaceState(null, '', '#' + h);
 }
@@ -1325,10 +1351,8 @@ function applyHash(){
     if(CHART_KEYS.includes(parts[1])) window.__tab = parts[1];
     if(SPAN_KEYS.includes(parts[2])) window.__board = parts[2];
   }
-  if(pg === 'agents' && parts[1]) { window.__af = parts[1]; window.__ap = 1; }
   showPage(pg);
   if(pg === 'live' && window.__data){ setTab(window.__tab || 'agg'); renderBoard(window.__board || 'all'); }
-  if(pg === 'agents' && window.__data) entrantsList(window.__data);
 }
 window.addEventListener('hashchange', applyHash);
 

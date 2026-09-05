@@ -297,7 +297,7 @@ class SubmissionPrototype(unittest.TestCase):
         self.assertIn("'/new/dev?filename='", self.page)
         self.assertIn("encodeURIComponent('entrants/'+reg.entrant_id+'.json')", self.page)
         self.assertIn("const ready = apiProbePassed &&", self.page)
-        self.assertIn("There is no field for your API key, and there will not be one.",
+        self.assertIn("Your API key is never in this file.",
                       self.page)
         self.assertIn('pattern="[a-z0-9][a-z0-9_.-]{1,47}"', self.page)
         with open(os.path.join(ROOT, "schema", "entrant.schema.json")) as f:
