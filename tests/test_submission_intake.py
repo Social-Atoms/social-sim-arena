@@ -313,7 +313,7 @@ class SubmissionPrototype(unittest.TestCase):
     def test_the_rest_of_the_site_sends_agents_to_one_page_and_nobody_else(self):
         self.assertEqual(2, self.index_submit.count('class="svrow"'))
         self.assertIn("<b>We call your endpoint</b>", self.index_submit)
-        self.assertIn("<b>You upload the week's bundle</b>", self.index_submit)
+        self.assertIn("<b>You upload the weekly bundle</b>", self.index_submit)
         for page in (self.index_submit, self.board, self.docs):
             self.assertNotIn("Human Wisdom", page)
             self.assertNotIn("Human wisdom", page)

@@ -87,8 +87,14 @@ noise, drift = scoring.noise_floor(values)     # measurement noise vs real movem
 ```
 
 `ssa/crosstab.py` has already recorded what happens when this is skipped: over
-81 published YouGov waves, **ten of seventeen subgroup series carried no weekly
-signal at all**. That is why crosstab rounds are monthly on a four-wave average.
+83 published YouGov waves, **ten of sixteen subgroup cells carry no weekly
+signal at all**. Those cells are still asked -- the profile is scored jointly
+and a season of weekly rounds is where sampling noise averages out of a score
+-- but each cell's noise and movement are quoted to the entrant in its
+methodology text, and `crosstab.noise_by_cell` is what to publish beside any
+board on them. (The family was monthly on a four-wave average for one round;
+`ssa/crosstab.py` says why that did not survive: the lock sat after three of
+the four waves were public.)
 
 And know when `noise_floor` is the wrong tool. It returns ~0 for every Civiqs
 tracker, because Civiqs publishes a smoothed model fit rather than a survey wave

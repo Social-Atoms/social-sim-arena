@@ -585,19 +585,16 @@ def attach_profile(row, r, series):
     dashboard, archived every day under the date it was read: label and
     observation are the same day, and the filter is exact.
 
-    The Economist/YouGov crosstab cells are monthly and still need no snapshot,
-    which is worth stating because the rule above would seem to forbid them.
-    The difference is what the point is *dated by*. A YouGov month is dated by
-    the last of the four waves it averages -- an observation date, not a month
-    label -- so the gap between "labelled" and "existed" is the few days YouGov
-    takes to put that wave in the workbook, not the weeks a label-dated series
-    runs behind. That residue is closed by the round definition rather than by
-    a snapshot: a crosstab round locks on the date of its month's last wave, so
-    the strict `<` excludes the month being scored, and every earlier month's
-    point is already several weeks old when the round freezes. A crosstab round
-    whose release is set more than 48 hours after its last wave breaks that and
-    would need snapshots; `ssa/series.py`'s crosstab block says so where the
-    series are declared.
+    The Economist/YouGov crosstab cells are weekly waves and need no snapshot
+    either, for the same reason: a wave is dated by its own field end, an
+    observation date, and enters the workbook within days of it. The wave a
+    round scores is published after the batch deadline that froze it, so the
+    strict `<` on the freeze date excludes it from every entrant's null. What
+    the date filter cannot do on its own is keep the *previous* wave -- public
+    before anyone answered, and dated on the batch's Monday freeze -- from
+    resolving the round; `profile_round.resolution` adds the round's own
+    seven-day wave window for that, and `ssa/series.py`'s crosstab block says
+    where the series are declared.
     """
     cells = profile_round.cells_for(r)
     hist = profile_round.frozen_history(r, series, cells)

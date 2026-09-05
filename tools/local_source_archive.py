@@ -62,6 +62,12 @@ from ssa import ranking_round, series as series_registry        # noqa: E402
 from ssa.adapters import civiqs as civiqs_adapter               # noqa: E402
 from ssa.adapters import trends as trends_adapter               # noqa: E402
 from ssa.adapters import wikipedia as wikipedia_adapter         # noqa: E402
+from ssa.adapters import yougov_xtab as yougov_xtab_adapter     # noqa: E402
+
+# Days a YouGov crosstab vintage may age before a new pull is due. A wave dated
+# Monday is in the workbook by about Thursday; a pull every five days or so
+# catches each wave once without asking YouGov four times a day.
+YOUGOV_MAX_AGE_DAYS = 5
 
 # Seconds between distinct Civiqs page fetches. The dashboard is a free
 # service being asked for ~22 pages; spacing is the whole cost of staying
@@ -237,7 +243,40 @@ def archive_wikipedia(now=None, season=None):
     return ok, failures
 
 
+def yougov_xtab_status(now=None):
+    """(line, pulled) -- the crosstab archive's age, and whether this run
+    refreshed it.
+
+    The courier never pulls YouGov on its own. The public-data licence bars
+    "automated scripts to extract or copy the Licensed Data" without written
+    permission, and the inventory's approval of this source rests on the pull
+    being a maintainer's act (`ssa/inventory.py`, `yougov_xtab`). So the
+    default is a report: how old the newest vintage is, and the command that
+    refreshes it. Setting SSA_YOUGOV_FETCH=1 in this process's environment is
+    that act, made once and standing; with it set, a vintage older than
+    YOUGOV_MAX_AGE_DAYS is refreshed here.
+    """
+    now = now or datetime.now(timezone.utc)
+    days = yougov_xtab_adapter.archived_days()
+    if not days:
+        return "yougov_xtab: no vintage archived", False
+    newest = datetime.strptime(days[-1], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    age = (now - newest).days
+    if age < YOUGOV_MAX_AGE_DAYS:
+        return f"yougov_xtab: newest vintage {days[-1]} ({age}d old)", False
+    if os.environ.get("SSA_YOUGOV_FETCH"):
+        waves = yougov_xtab_adapter.pull()
+        return (f"yougov_xtab: pulled a new vintage, newest wave "
+                f"{waves[-1]['date']}"), True
+    return (f"yougov_xtab: newest vintage {days[-1]} is {age}d old; a weekly "
+            "crosstab round resolves only against a vintage carrying its wave "
+            "-- run `python tools/pull_yougov_xtab.py --execute` and commit "
+            "sources/yougov_xtab/"), False
+
+
 def main():
+    y_line, _ = yougov_xtab_status()
+    print(y_line)
     c_ok, c_fail = archive_civiqs()
     t_ok, t_fail = archive_trends()
     b_ok, b_fail = archive_trends_baskets()
@@ -254,7 +293,7 @@ def main():
         return subprocess.run(["git", "-C", root, *args],
                               check=check, capture_output=True, text=True)
 
-    git("add", "-A", "civiqs", "trends", "wikitop")
+    git("add", "-A", "civiqs", "trends", "wikitop", "sources/yougov_xtab")
     if git("diff", "--cached", "--quiet", check=False).returncode == 0:
         print("nothing new to commit")
         return 0 if not (c_fail or t_fail or b_fail or w_fail) else 1

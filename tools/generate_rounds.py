@@ -188,6 +188,12 @@ DECLINED_FAMILIES = {
         "and one week is not a contract to extend; the basket share round "
         "asks the same queries on a scale that cancels the sampling draw a "
         "raw index carries.",
+    "yougov_xtab":
+        "the sixteen crosstab cells are asked jointly by the yougov-xtab "
+        "profile round, which xtab_candidates rolls forward one wave a week; "
+        "a scalar twin of a cell would be the same number under a second "
+        "scoring rule, and ten of the sixteen cells carry no weekly signal "
+        "on their own.",
 }
 
 # The pollster, not the file it arrives in. Every Silver Bulletin series is a
@@ -808,6 +814,122 @@ def civiqs_profile_candidates(rounds, weeks, now, through=None):
     return out
 
 
+# --- the Economist/YouGov crosstab profile ----------------------------------
+#
+# The second population round: the survey's own sixteen crosstab cells rather
+# than a model's. One round per wave, rolled forward from the newest reviewed
+# round the way the Civiqs profile is -- same cells, same unit, same resolve
+# rule byte for byte, and a question that differs only in the week it names.
+# The cadence is YouGov's: a wave every week, dated by its field end (a Monday
+# in 68 of 83 waves) and in the workbook within days. The round mirrors the
+# tracker's topline rounds (`yougov-<year>-w<NN>-approval`) in release and
+# lock because it is the same survey; the topline round asks for the wave's
+# headline and this one asks for its structure.
+#
+# The scalar loop refuses the sixteen cell series by name (DECLINED_FAMILIES):
+# the profile is the round that wants them.
+
+XTAB_SERIES = "yougov_xtab_approve_dem"     # the anchor the reviewed rounds name
+XTAB_ID = "yougov-xtab-{year}-w{week:02d}"
+
+XTAB_QUESTION = (
+    "Economist/YouGov weekly tracker: Donald Trump's job approval among US "
+    "registered voters, broken into the survey's own sixteen crosstab cells, "
+    "for the wave released in the week of {day}. Forecast the percentage "
+    "approving in each subgroup as the tracker workbook reports it for that "
+    "wave. These are measured cells of one survey, not a model's subgroup "
+    "estimates: they move with the national mood and they also move apart, "
+    "and the whole profile is scored.")
+
+XTAB_CELLS = 16
+
+
+def _monday_phrase(d):
+    """`Monday Sep 21` -- the Monday of the release's ISO week, which is the
+    field-end date YouGov gives the wave in 68 of 83 cases."""
+    monday = d - timedelta(days=d.weekday())
+    return f"{monday.strftime('%A %b')} {monday.day}"
+
+
+def xtab_template(rounds):
+    """(newest reviewed crosstab round, lock offset from the release).
+
+    Raises when the reviewed rounds disagree on their cells, their spacing or
+    their wording, for the reasons `civiqs_profile_template` gives.
+    """
+    got = sorted((r for r in rounds
+                  if r.get("cells") and r.get("series") == XTAB_SERIES),
+                 key=lambda r: r["release_at"])
+    if not got:
+        raise ValueError(
+            "no reviewed Economist/YouGov crosstab round to template from; "
+            "this generator extends an existing contract rather than "
+            "inventing one")
+    shapes = {(tuple(r["cells"]), r["unit"], r["resolve"]) for r in got}
+    if len(shapes) != 1:
+        raise ValueError(
+            f"the reviewed crosstab rounds disagree on cells, unit or resolve "
+            f"rule across {len(shapes)} variants")
+    if len(got[-1]["cells"]) != XTAB_CELLS:
+        raise ValueError(
+            f"{got[-1]['round_id']} has {len(got[-1]['cells'])} cells, but the "
+            f"reviewed wording says sixteen in words; a different vector needs "
+            "its own reviewed sentence, not an interpolated one")
+    offsets = set()
+    for r in got:
+        rel = datetime.fromisoformat(r["release_at"].replace("Z", "+00:00"))
+        lock = datetime.fromisoformat(r["lock_at"].replace("Z", "+00:00"))
+        offsets.add(lock - rel)
+        rebuilt = XTAB_QUESTION.format(day=_monday_phrase(rel.date()))
+        if rebuilt != r["question"]:
+            raise ValueError(
+                f"XTAB_QUESTION no longer reproduces {r['round_id']}'s "
+                "wording; the reviewed question changed and the template did "
+                "not")
+    if len(offsets) != 1:
+        raise ValueError(
+            f"the reviewed crosstab rounds use {len(offsets)} different lock "
+            f"spacings: {sorted(map(str, offsets))}")
+    return got[-1], offsets.pop()
+
+
+def xtab_candidates(rounds, weeks, now, through=None):
+    """Future sixteen-cell crosstab rounds, one per wave."""
+    tpl, lock_off = xtab_template(rounds)
+    taken = {r["round_id"] for r in rounds}
+    rel = datetime.fromisoformat(tpl["release_at"].replace("Z", "+00:00"))
+    out = []
+    while through is not None or len(out) < weeks:
+        rel = rel + timedelta(days=7)
+        lock = rel + lock_off
+        if through is not None and rel.date() > through:
+            break
+        if lock <= now or not publishable(lock, now):
+            continue
+        if through is None and (rel - now).days > MAX_WEEKS_AHEAD * 7:
+            break
+        year, week = rel.date().isocalendar()[:2]
+        r = {
+            "round_id": XTAB_ID.format(year=year, week=week),
+            "tracker": tpl["tracker"],
+            "profile_noun": tpl.get("profile_noun", "subgroup"),
+            "series": tpl["series"],
+            "cells": list(tpl["cells"]),
+            "question": XTAB_QUESTION.format(day=_monday_phrase(rel.date())),
+            "unit": tpl["unit"],
+            "release_at": rel.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "release_estimated": tpl.get("release_estimated", True),
+            "lock_at": lock.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "resolve": tpl["resolve"],
+            "target_type": tpl["target_type"],
+        }
+        profile_round.cells_for(r)
+        if r["round_id"] in taken:
+            continue
+        out.append(r)
+    return out
+
+
 # --- the NY Fed Survey of Consumer Expectations ------------------------------
 #
 # Two horizons a month, rolled forward from the newest reviewed round the way
@@ -1175,6 +1297,14 @@ def main():
     # The Civiqs 16-cell profile: the headline round type, which had three
     # hand-written weeks and no way to continue.
     for r in civiqs_profile_candidates(rounds, weeks, now, through=through):
+        r["_sn"] = float("nan")     # a 16-vector has no scalar S/N
+        r["_move"] = float("nan")
+        r["_new_series"] = False
+        made.append(r)
+
+    # The Economist/YouGov crosstab profile: the survey's own sixteen cells,
+    # one round per wave.
+    for r in xtab_candidates(rounds, weeks, now, through=through):
         r["_sn"] = float("nan")     # a 16-vector has no scalar S/N
         r["_move"] = float("nan")
         r["_new_series"] = False

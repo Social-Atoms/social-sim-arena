@@ -41,9 +41,16 @@ prohibits "bots, crawlers, or automated scripts to extract or copy the
 Licensed Data" without written permission, and a permission request is with
 their legal team. Until it is answered, a pull is a deliberate maintainer act
 -- set SSA_YOUGOV_FETCH=1 or call `pull()` -- never a side effect of the
-six-hourly refresh. The crosstab round aggregates a month of waves, so the
-archive only needs refreshing in the weeks before its lock, not four times a
-day.
+six-hourly refresh. The crosstab round is weekly, one round per wave, so the
+archive needs one pull a week: a wave dated Monday is in the workbook by
+about Thursday, and the round that asks about it waits, by name, until a
+vintage carrying it is committed (`profile_round.resolution`). The pull is
+
+    python tools/pull_yougov_xtab.py --execute
+
+followed by committing the new file under sources/yougov_xtab/. The courier
+(`tools/local_source_archive.py`) reports the archive's age every day and
+never pulls on its own, for the licence reason above.
 """
 import io
 import os
