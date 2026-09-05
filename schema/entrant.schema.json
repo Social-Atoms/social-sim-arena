@@ -63,6 +63,11 @@
       "maxLength": 120,
       "description": "Email or GitHub handle. Used only to reach you about your entry."
     },
+    "github": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$",
+      "description": "GitHub login of the person or organisation that registered this entrant. CI refuses a pull request that edits this file, or files forecasts under this entrant id, unless its author is this account or a maintainer (tools/validate_submission.py --author). Required for registrations opened by pull request since 2026-09-05; older hand-written registrations without it are maintained by the maintainers."
+    },
     "route": {
       "type": "object",
       "additionalProperties": false,
@@ -70,7 +75,7 @@
         "kind",
         "url"
       ],
-      "description": "Route A only: where the arena calls this entrant. Absent means the entrant hands forecasts over itself (a bundle or a pull request), which is what every registration written before this field did -- so absent has to keep meaning exactly that. There is deliberately no field naming the credential: the arena derives the environment variable from the entrant id (SSA_ENTRANT_KEY_<ID>). A registration that could name its own variable could name ANTHROPIC_API_KEY, and the arena would put our provider key in a Bearer header addressed to the endpoint in the same file. Deriving it also stops one participant asking for another's.",
+      "description": "Route A only: where the arena calls this entrant. Absent means the entrant hands forecasts over itself (a pull request with forecast files), which is what every registration written before this field did -- so absent has to keep meaning exactly that. There is no credential anywhere in this block and there will not be one: the arena signs every request it sends (ssa/signing.py, public key in site/keys.json) and the participant verifies. A block that could name a credential could name ANTHROPIC_API_KEY.",
       "properties": {
         "kind": {
           "const": "agent_api",
@@ -81,13 +86,6 @@
           "pattern": "^https://[^\\s?#]+$",
           "maxLength": 300,
           "description": "The exact HTTPS URL the arena POSTs each question to, as one JSON object; the reply body is the forecast, one JSON object. Plain http is refused here and again in code: a forecast is not secret, but the Bearer token sent with it is. No query string or fragment, so a URL that appears to carry a key cannot silently send the request without it."
-        },
-        "auth": {
-          "enum": [
-            "bearer",
-            "none"
-          ],
-          "description": "Whether the arena sends Authorization: Bearer from SSA_ENTRANT_KEY_<ID>. 'none' is for an endpoint that authenticates by allow-listing our egress instead. Absent means bearer, because an endpoint that needs no key is the rarer case and the safer default is to expect one and fail loudly when it is missing."
         }
       }
     }

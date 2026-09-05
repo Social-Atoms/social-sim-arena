@@ -10,38 +10,42 @@ participants to install.
 
 ## Registration
 
-Participants register on the site (`submit.html`): one form with a promo
-code, one token back. The form writes the registration and the endpoint key
-to the private intake repository; the refresh reads them back, writes the
-public `entrants/<entrant_id>.json`, and loads the key for the run
-(`ssa/registry.py`). A `route` block in that file is what turns a rehearsed
-endpoint into one the season calls:
+A registration is a pull request against `main` adding
+`entrants/<entrant_id>.json`. `submit.html` builds the file after the endpoint
+passes the browser test and opens GitHub with it prefilled. CI validates it
+(`tools/validate_submission.py`) and, when it passes, merges it by itself
+(`.github/workflows/auto-merge.yml`); nobody has to be online. A `route` block
+is what turns a rehearsed endpoint into one the season calls:
 
 ```json
-"route": {
-  "kind": "agent_api",
-  "url": "https://api.acme.example/forecast",
-  "auth": "bearer"
+{
+  "entrant_id": "acme-forecast",
+  "name": "Acme Forecast",
+  "type": "firm",
+  "method": "One or two sentences: what generates the forecasts.",
+  "github": "acme-bot",
+  "route": {"kind": "agent_api", "url": "https://api.acme.example/forecast"}
 }
 ```
 
-`auth` is optional and defaults to `"bearer"`.
+`github` is the account that owns the entrant: only it, or a maintainer, may
+later change this file or file forecasts under this id (checked against the
+base branch's copy, so the owner cannot be rewritten by its own pull request).
 A registration with no `route` is unchanged in meaning: that entrant hands its
 forecasts over itself, which is what every registration written before this
 field did.
 
-**The credential is derived, never declared.** The arena reads the bearer token
-from `SSA_ENTRANT_KEY_<ENTRANT_ID>`, computed from the entrant id. There is no
-field naming it, and the schema refuses one: a registration that could name its
-own variable could name `ANTHROPIC_API_KEY`, and the arena would put our
-provider key in an `Authorization` header addressed to the `url` in the
-same file. It would equally let one participant ask to be called with another's
-credential.
+**There is no credential in the registration, and none anywhere else.** The
+arena authenticates itself to the endpoint by signing every request
+(`ssa/signing.py`, below); the participant verifies with the published public
+key and hands the arena nothing. The schema refuses any field that could name
+a credential: a registration that could name one could name
+`ANTHROPIC_API_KEY`.
 
 Three further rules follow from a registration being a public file:
 
 - **HTTPS only**, checked in the schema when the registration is opened as a
-  pull request and again in `ssa/participants.py` every time a token is about
+  pull request and again in `ssa/participants.py` every time a request is about
   to be sent.
 - **No standby.** Our own models fall back to OpenRouter when a route is
   terminally down. A participant's endpoint is the only place their forecast
@@ -53,9 +57,10 @@ Three further rules follow from a registration being a public file:
   variable would silently redirect their round to a host their public record
   does not name.
 
-Until the key is installed the entrant is simply not on the roster: not called,
-and not failing the run every six hours. Onboarding is not a fault, and a red
-run every cycle through a week of it teaches everyone to ignore the colour.
+Without the arena's own signing key (`SSA_SIGNING_KEY`, one Actions secret) no
+participant is called at all: an unsigned request would be refused by a
+verifying endpoint, and the participant could not tell our misconfiguration
+from an attack.
 
 ## Endpoint and authentication
 
@@ -64,8 +69,29 @@ The arena calls:
 ```text
 POST {url}
 Content-Type: application/json
-Authorization: Bearer {api_key}    # only when a key was supplied
+X-SSA-Key-Id: ssa-live
+X-SSA-Timestamp: 1789030800
+X-SSA-Signature: base64( Ed25519_sign( arena_private_key, "1789030800." + raw_body ) )
 ```
+
+**Verifying the signature is the participant's choice and needs nothing
+secret.** The public keys are published in
+[`site/keys.json`](../site/keys.json) under a key id. To verify: take the raw
+request body *as received* (re-serialising the JSON changes the bytes and the
+signature will never match), check the Ed25519 signature over
+`X-SSA-Timestamp + "." + body` with the key named by `X-SSA-Key-Id`, reject a
+timestamp more than 300 seconds from your clock, and answer a repeated
+`request_id` with the same forecast you gave before (the contract's
+idempotency, which also makes a replayed request cost nothing).
+`examples/agent-api/server.py` does this in fifteen lines with the
+`cryptography` package; any language with Ed25519 can. An endpoint that does
+not verify is not a risk to the arena, which alone files forecasts; it is
+merely open to anyone who finds the URL and wants it to compute.
+
+The key `ssa-test` is published *with* its private key so the browser test on
+`submit.html` and `tools/probe_agent_api.py` can send signed requests; accept
+both key ids. Rotation: a new key id is added to `keys.json`, both are valid
+for a week or two, then the old one is removed.
 
 The request body is the question envelope itself, one JSON object conforming
 to
@@ -109,20 +135,21 @@ python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast
 ```
 
 `tools/probe_agent_api.py` is the runnable contract test: standard library
-only, non-scored fixtures, files nothing. It checks the transport, **all three
-round shapes**, idempotency of a repeated `request_id`, and — when a key is
-configured — that a *wrong* bearer token is refused with 401 or 403. Probing
-one scalar fixture is how an endpoint passes today and fails on the first
-profile round of the season, after the deadline, which is why each shape is a
-separate verdict.
+plus, optionally, `cryptography` to sign; non-scored fixtures; files nothing.
+It signs with the published `ssa-test` key and checks the transport, **all
+three round shapes**, idempotency of a repeated `request_id`, and whether a
+*bad* signature is refused with 401 or 403 (reported either way: verifying is
+optional). Probing one scalar fixture is how an endpoint passes today and fails
+on the first profile round of the season, after the deadline, which is why
+each shape is a separate verdict.
 
-A key is read from an environment variable named with `--key-env`, never from
-an argument: a key on the command line is in `ps` output, in shell history, and
-in the log of whoever pastes the command into an issue. Transient failures are
+A maintainer probing with the live key names its variable with
+`--signing-key-env`; the key itself is never an argument, because arguments end
+up in `ps` output, shell history and pasted logs. Transient failures are
 retried; a 4xx is an answer and is never retried.
 
-`--entrant <id>` reads the route from `entrants/<id>.json` — base URL and the
-derived credential variable — so the maintainer-side probe aims at the endpoint
+`--entrant <id>` reads the route from `entrants/<id>.json` so the
+maintainer-side probe aims at the endpoint
 the season will actually call rather than at whatever was typed on the command
 line. `--url` becomes optional when it does. It also refuses to probe a
 registration whose `entrants/<id>.json` carries `"status": "revoked"`. Revocation stops both
@@ -131,10 +158,10 @@ and the probe refuses to make the call. A revocation the arena does not honour
 is a revocation in name only.
 
 The browser's **Test connection** button sends the fixed non-scored fixture in
-`examples/agent-api/request.json`. It checks HTTPS, optional Bearer auth, a
-JSON object in reply, and a valid continuous forecast. Browser
-testing may additionally require CORS. Before activation, the private intake
-service repeats the same probe server-side, where CORS does not apply.
+`examples/agent-api/request.json`, signed with the `ssa-test` key through
+WebCrypto. It checks HTTPS, a JSON object in reply, and a valid continuous
+forecast. Browser testing may additionally require CORS; the CLI probe does
+not.
 
 ## Forecasts and future fields
 
@@ -153,11 +180,10 @@ The public forecast may carry only a content hash or private artifact reference.
 
 ## Secret handling
 
-The static design preview never stores a key. Production registration first
-creates a non-secret intake, then uses a short-lived upload to place the key in
-an encrypted secret store. Keys are redacted from packets and logs, may be
-rotated without changing the entrant, and are deleted when the entrant is
-revoked.
+There is one secret in Route A and it is ours: the arena's Ed25519 private
+key, held only as the Actions secret `SSA_SIGNING_KEY`, generated with
+`tools/make_signing_key.py`. Participants hold none. Rotation is a new key id
+in `site/keys.json`.
 
 ## Starter example
 

@@ -27,22 +27,23 @@ curl -sS http://127.0.0.1:8787/forecast \
 
 The response should match the shape in `response.json`.
 
-## Authentication
+## Signatures
+
+The server verifies the arena's signature on every request (`verify_signature`
+in `server.py`, the fifteen lines a participant copies) against the public
+keys in `site/keys.json`; the probe signs with the published test key, so the
+two agree out of the box. `--no-verify` accepts unsigned requests, which is a
+participant's right and the probe reports as "does not verify".
 
 ```bash
-SSA_EXAMPLE_API_KEY=secret python examples/agent-api/server.py
-SSA_PROBE_KEY=secret python tools/probe_agent_api.py \
-    --url http://127.0.0.1:8787/forecast --key-env SSA_PROBE_KEY
+python examples/agent-api/server.py
+python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast
 ```
 
-With a key configured the probe also sends a *wrong* one and requires a 401 or
-403. An endpoint that answers an unauthenticated caller is an endpoint anyone
-can file forecasts through under your entrant id, and configuring a key without
-ever testing that it is enforced is the common version of that mistake.
-
-The probe reads the key from an environment variable you name, never from an
-argument: a key on the command line is in `ps` output, in shell history, and in
-the log of whoever pastes the command into an issue. Never commit or email one.
+The probe also sends one request with a corrupted signature and reports
+whether it was refused with 401 or 403. Nothing here is a secret of yours: the
+only private key in the exchange is the arena's, and the test key is public by
+design.
 
 ## Timeouts
 

@@ -35,8 +35,8 @@ BATCH_ID = re.compile(bundle.load_schema("bundle_response.schema.json")
 def upload_key_env(entrant: str) -> str:
     """The variable holding this entrant's upload token.
 
-    A separate secret from `participants.key_env`, which is the participant's
-    own key and travels to their server on every Route A call.
+    The only per-entrant secret left: Route A carries none (the arena signs
+    its requests instead). Registry-issued tokens are checked by hash below.
     """
     return UPLOAD_KEY_PREFIX + re.sub(r"[^A-Z0-9]", "_", entrant.upper())
 

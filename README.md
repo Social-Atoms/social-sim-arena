@@ -69,7 +69,7 @@ a participant's deadline. See [`docs/submission-window.md`](docs/submission-wind
 
 Two routes, one registration:
 
-- **We call you** — one HTTPS endpoint that takes a JSON question and returns a JSON forecast, contract in
+- **We call you** — one HTTPS endpoint that takes a signed JSON question and returns a JSON forecast, contract in
   [`docs/agent-api.md`](docs/agent-api.md). Rehearse with
   `python examples/agent-api/server.py` and
   `python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast`.

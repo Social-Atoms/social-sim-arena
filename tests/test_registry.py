@@ -1,7 +1,8 @@
-"""The participant registry: register once with a promo code, get one token,
-and everything after that is automatic -- the cron writes the public file,
-loads the key, files the uploads. Runs against a temporary directory; the
-GitHub-backed store has the same contract and is not exercised here."""
+"""The participant registry (kept, not wired for Season 0; see the note atop
+ssa/registry.py): register once with a promo code, get one token, and the cron
+side writes the public file and files the uploads. Runs against a temporary
+directory; the GitHub-backed store has the same contract and is not exercised
+here."""
 import json
 import os
 import shutil
@@ -17,8 +18,7 @@ from ssa import bundle_api, participants, registry, registry_api  # noqa: E402
 FIELDS = {"entrant_id": "acme-forecast", "name": "Acme Forecast",
           "type": "firm", "method": "A model with a newsfeed.",
           "contact": "ops@acme.example",
-          "url": "https://api.acme.example/forecast",
-          "endpoint_key": "sk-acme-0123456789"}
+          "url": "https://api.acme.example/forecast"}
 
 
 class Sandbox:
@@ -28,12 +28,11 @@ class Sandbox:
         os.makedirs(self.entrants)
         self.saved = {k: os.environ.get(k) for k in
                       ("SUBMISSION_STORAGE_DIR", "SSA_PROMO_CODES",
-                       "SSA_ENTRANT_KEY_ACME_FORECAST",
-                       "SSA_UPLOAD_KEY_ACME_FORECAST")}
+                       "SSA_UPLOAD_KEY_ACME_FORECAST", "SSA_SIGNING_KEY")}
         os.environ["SUBMISSION_STORAGE_DIR"] = self.dir
         os.environ.pop("SSA_PROMO_CODES", None)
-        os.environ.pop("SSA_ENTRANT_KEY_ACME_FORECAST", None)
         os.environ.pop("SSA_UPLOAD_KEY_ACME_FORECAST", None)
+        os.environ["SSA_SIGNING_KEY"] = "HLHPLfr2J+BaNVHYXBHNs5CJOSbmgouzCUp2cxcwdy4="
         self.store = registry.Store()
         self.store.put("promo.json", {"codes": ["SEASON0"]}, None)
         return self
@@ -59,8 +58,8 @@ def test_registration_needs_a_promo_code_and_returns_one_token():
         assert record["entrant_id"] == "acme-forecast"
         assert record["url"] == FIELDS["url"]
         secret, _ = sb.store.get("secrets/acme-forecast.json")
-        assert secret["endpoint_key"] == FIELDS["endpoint_key"]
         assert token not in json.dumps(secret), "the token is stored in the clear"
+        assert "endpoint_key" not in secret, "the registry holds no participant key"
         assert registry.authenticate(sb.store, "acme-forecast", token)
         assert not registry.authenticate(sb.store, "acme-forecast", token[:-1])
         try:
@@ -90,11 +89,8 @@ def test_the_token_edits_the_registration_and_only_that_one():
         other = dict(FIELDS, entrant_id="beta-labs", name="Beta")
         _, other_token = registry.register(sb.store, other, "SEASON0", sb.entrants)
         record = registry.update(sb.store, "acme-forecast", token,
-                                 {"url": "https://api.acme.example/v2",
-                                  "endpoint_key": ""})
+                                 {"url": "https://api.acme.example/v2"})
         assert record["url"] == "https://api.acme.example/v2"
-        secret, _ = sb.store.get("secrets/acme-forecast.json")
-        assert "endpoint_key" not in secret, "an empty key did not clear it"
         try:
             registry.update(sb.store, "acme-forecast", other_token, {"name": "X"})
             assert False, "another entrant's token edited this one"
@@ -114,7 +110,7 @@ def test_the_token_edits_the_registration_and_only_that_one():
         print("ok test_the_token_edits_the_registration_and_only_that_one")
 
 
-def test_the_cron_writes_the_public_file_and_loads_the_key():
+def test_the_cron_side_writes_the_public_file():
     with Sandbox() as sb:
         registry.register(sb.store, FIELDS, "SEASON0", sb.entrants)
         wrote = registry.materialize(sb.store, sb.entrants)
@@ -122,28 +118,16 @@ def test_the_cron_writes_the_public_file_and_loads_the_key():
         with open(os.path.join(sb.entrants, "acme-forecast.json")) as fh:
             doc = json.load(fh)
         assert doc["route"] == {"kind": "agent_api", "url": FIELDS["url"]}
-        assert "endpoint_key" not in json.dumps(doc), "the key reached the public file"
         assert registry.materialize(sb.store, sb.entrants) == [], "rewrote an unchanged file"
-        # a registration without a key is called without one, not skipped
-        other = dict(FIELDS, entrant_id="beta-labs", endpoint_key="")
-        registry.register(sb.store, other, "SEASON0", sb.entrants)
-        assert registry.materialize(sb.store, sb.entrants) == ["beta-labs"]
-        with open(os.path.join(sb.entrants, "beta-labs.json")) as fh:
-            assert json.load(fh)["route"]["auth"] == "none"
-        ok, why = participants.callable_now("beta-labs", sb.entrants)
-        assert ok, why
         # the schema the pull-request path enforces accepts what the cron wrote
         import jsonschema
         with open(os.path.join(ROOT, "schema", "entrant.schema.json")) as fh:
             jsonschema.validate(doc, json.load(fh))
-        loaded = registry.load_keys_into_env(sb.store)
-        assert loaded == ["acme-forecast"]
-        assert os.environ[participants.key_env("acme-forecast")] == FIELDS["endpoint_key"]
         ok, why = participants.callable_now("acme-forecast", sb.entrants)
         assert ok, why
         rt = participants.route("acme-forecast", sb.entrants)
-        assert rt["api"] == "agent" and rt["base"] == FIELDS["url"]
-        print("ok test_the_cron_writes_the_public_file_and_loads_the_key")
+        assert rt["api"] == "agent" and rt["base"] == FIELDS["url"] and rt["env"] == ""
+        print("ok test_the_cron_side_writes_the_public_file")
 
 
 def test_an_upload_is_authenticated_by_the_registration_token():
@@ -209,7 +193,7 @@ def test_the_endpoint_registers_reads_and_edits_with_the_token():
         assert body["registration"]["entrant_id"] == "acme-forecast"
         assert "endpoint_key" not in json.dumps(body["registration"])
         status, body = registry_api.handle("GET", "acme-forecast", token, None, sb.entrants)
-        assert status == 200 and body["registration"]["endpoint_key_set"] is True
+        assert status == 200 and body["registration"]["entrant_id"] == "acme-forecast"
         status, body = registry_api.handle("GET", "acme-forecast", "nope", None, sb.entrants)
         assert status == 401
         status, body = registry_api.handle("PATCH", "acme-forecast", token,

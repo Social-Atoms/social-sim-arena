@@ -31,6 +31,7 @@ imported from `ssa/profile_round.py` and `ssa/ranking_round.py`, which own them.
 import hashlib
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 
@@ -132,7 +133,7 @@ def canonical_sha256(obj):
     return hashlib.sha256(blob).hexdigest()
 
 
-def validate_entrant(path):
+def validate_entrant(path, author=None, base_ref=None):
     rel = os.path.relpath(os.path.abspath(path), ROOT)
     with open(path) as f:
         try:
@@ -153,7 +154,82 @@ def validate_entrant(path):
         fail(f"{rel}: schema violation: {err}")
     if e["entrant_id"] + ".json" != os.path.basename(path):
         fail(f"{rel}: entrant_id '{e['entrant_id']}' does not match file name")
-    ok(rel)
+    check_entrant_owner(rel, e, author, base_ref)
+    ok(rel, f"owner @{e['github']}" if e.get("github") else "")
+
+
+# --- who may change what -----------------------------------------------------
+#
+# A registration or a forecast arrives as a pull request from anyone with a
+# GitHub account. The file's `github` field names the account that owns the
+# entrant; CI passes the pull request's author with `--author` and the base
+# branch with `--base`, and these checks refuse an edit by anyone else. The
+# owner is read from the *base* version of the registration, so a pull request
+# cannot rewrite `github` to its own author in the same change. Maintainers may
+# edit anything. Without `--author` (a local run) ownership is not checked.
+
+MAINTAINERS = frozenset({"jajamoa", "assassin808", "zhenzemo"})
+
+
+def _base_file(base_ref, rel):
+    """The JSON at `rel` on the base branch, or None when it does not exist."""
+    if not base_ref:
+        return None
+    proc = subprocess.run(["git", "show", f"{base_ref}:{rel}"], cwd=ROOT,
+                          capture_output=True, text=True)
+    if proc.returncode != 0:
+        return None
+    try:
+        return json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        return None
+
+
+def _same_login(a, b):
+    return bool(a) and bool(b) and a.strip().lower() == b.strip().lower()
+
+
+def check_entrant_owner(rel, new_doc, author, base_ref):
+    if not author or author.lower() in MAINTAINERS:
+        return
+    old = _base_file(base_ref, rel)
+    if old is None:
+        # A new registration must name its own author, or nobody could ever
+        # edit it again except a maintainer.
+        if not _same_login(new_doc.get("github"), author):
+            fail(f"{rel}: a new registration must carry \"github\": "
+                 f"\"{author}\" (the pull request's author); got "
+                 f"{new_doc.get('github')!r}")
+        return
+    owner = old.get("github")
+    if not owner:
+        fail(f"{rel}: this registration has no github owner on record; only a "
+             "maintainer can change it")
+    if not _same_login(owner, author):
+        fail(f"{rel}: registered to @{owner}; @{author} may not change it")
+    if not _same_login(new_doc.get("github"), owner):
+        fail(f"{rel}: the github owner cannot be changed by its own pull "
+             "request; ask a maintainer")
+
+
+def check_forecast_owner(rel, entrant_id, author, base_ref):
+    if not author or author.lower() in MAINTAINERS:
+        return
+    reg = _base_file(base_ref, f"entrants/{entrant_id}.json")
+    if reg is None:
+        # Registered in the same pull request: the working-tree file is the
+        # one CI validated a moment ago, with its own ownership check.
+        path = os.path.join(ROOT, "entrants", entrant_id + ".json")
+        if os.path.isfile(path):
+            with open(path) as f:
+                reg = json.load(f)
+    if not reg:
+        fail(f"{rel}: no registration entrants/{entrant_id}.json; register "
+             "first (same pull request is fine)")
+    if not _same_login(reg.get("github"), author):
+        fail(f"{rel}: forecasts for '{entrant_id}' may only be filed by "
+             f"@{reg.get('github') or 'a maintainer'}; the pull request is by "
+             f"@{author}")
 
 
 def answer_blocks(fc):
@@ -325,12 +401,12 @@ def check_answer_matches_round(rel, fc, rnd):
              f"for: {', '.join(extra[:5])}{' ...' if len(extra) > 5 else ''}")
 
 
-def validate(path, now=None):
+def validate(path, now=None, author=None, base_ref=None):
     now = now or datetime.now(timezone.utc)
     rel = os.path.relpath(os.path.abspath(path), ROOT)
     parts = rel.split(os.sep)
     if len(parts) == 2 and parts[0] == "entrants":
-        validate_entrant(path)
+        validate_entrant(path, author, base_ref)
         return
     if len(parts) != 3 or parts[0] != "forecasts":
         fail(f"{rel}: forecasts live at forecasts/<round_id>/<entrant>.json, registrations at entrants/<entrant_id>.json")
@@ -389,6 +465,7 @@ def validate(path, now=None):
         fail(f"{rel}: unknown round '{fc['round_id']}'")
     check_answer_matches_round(rel, fc, rounds[fc["round_id"]])
     if not is_example:
+        check_forecast_owner(rel, fc["entrant"], author, base_ref)
         lock_at = datetime.strptime(rounds[fc["round_id"]]["lock_at"],
                                     "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
         # The deadline is the batch's, not the round's own lock. Season 0's
@@ -409,8 +486,34 @@ def validate(path, now=None):
     print(f"    sha256: {canonical_sha256(fc)}")
 
 
+def parse_args(argv):
+    """Positional files plus three CI options. No argparse: a participant
+    reads `--now`, `--author`, `--base` and the file list and nothing else."""
+    files, opts = [], {"now": None, "author": None, "base": None}
+    it = iter(argv)
+    for arg in it:
+        if arg.startswith("--") and arg[2:] in opts:
+            opts[arg[2:]] = next(it, None)
+        elif arg.startswith("--"):
+            fail(f"unknown option {arg}; usage: python tools/validate_submission.py "
+                 "[--now ISO8601] [--author LOGIN --base REF] <file> [<file> ...]")
+        else:
+            files.append(arg)
+    now = None
+    if opts["now"]:
+        # The receipt time to judge lateness by (the moment the pull request
+        # reached GitHub), when CI runs later than that moment.
+        now = datetime.fromisoformat(opts["now"].replace("Z", "+00:00"))
+        if now.tzinfo is None:
+            now = now.replace(tzinfo=timezone.utc)
+        now = now.astimezone(timezone.utc)
+    return files, now, opts["author"], opts["base"]
+
+
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        fail("usage: python tools/validate_submission.py <file> [<file> ...]")
-    for p in sys.argv[1:]:
-        validate(p)
+    files, now, author, base = parse_args(sys.argv[1:])
+    if not files:
+        fail("usage: python tools/validate_submission.py [--now ISO8601] "
+             "[--author LOGIN --base REF] <file> [<file> ...]")
+    for p in files:
+        validate(p, now=now, author=author, base_ref=base)

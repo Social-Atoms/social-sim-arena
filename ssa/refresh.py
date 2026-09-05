@@ -1977,46 +1977,10 @@ def _load_previous_operator():
 
 
 
-def sync_registry():
-    """What the registration form saved, read back before the run.
-
-    Three things, each printed so the log says what changed: the public
-    entrants/<id>.json files are written from the registry (the data commit
-    at the end of the run carries them to main), every stored endpoint key
-    becomes SSA_ENTRANT_KEY_<ID> for this process, and every bundle upload
-    that arrived since last time is filed into forecasts/ against its own
-    receipt time. With no INTAKE_REPO_TOKEN there is no registry and nothing
-    happens, which is what a local run wants.
-    """
-    from . import registry
-    if not registry.configured():
-        return
-    try:
-        store = registry.Store()
-        wrote = registry.materialize(store)
-        keyed = registry.load_keys_into_env(store)
-        filed = registry.file_uploads(store)
-    except registry.RegistryError as err:
-        # A registry that will not answer must not take the run down with
-        # it; the season's own sources and models still refresh.
-        print(f"registry: unavailable ({err}); continuing without it")
-        return
-    print(f"registry: {len(wrote)} registration file(s) written "
-          f"({', '.join(wrote) or 'none'}), keys loaded for {len(keyed)}, "
-          f"{len(filed)} upload packet(s) seen")
-    for row in filed:
-        if row["status"] == "filed":
-            print(f"  upload {row['packet']}: {row['accepted']} accepted, "
-                  f"{row['written']} written")
-        else:
-            print(f"  upload {row['packet']}: {row['status']} ({row['why']})")
-
-
 def main():
     # Local runs read keys from .env; in CI they arrive as Actions secrets
     # and no .env exists, so already-set variables always win.
     envfile.load()
-    sync_registry()
     now = now_utc()
     with open(QUESTIONS) as f:
         season = json.load(f)

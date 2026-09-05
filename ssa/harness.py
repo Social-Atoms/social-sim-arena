@@ -1639,12 +1639,22 @@ def _call_agent(cfg, base, key, mid, prompt):
     the reply body is the whole answer. No chat wrapper on either side, so a
     participant's server reads one JSON object and writes one, and what the
     contract page shows is byte-for-byte what travels.
+
+    The body is signed with the arena's key (`ssa/signing.py`); `key` is
+    unused here and kept for the shared call signature. Without a signing
+    key the call is refused rather than sent bare: a participant who verifies
+    would reject it and could not tell our misconfiguration from an attack.
     """
-    headers = {"Content-Type": "application/json"}
-    if key:
-        headers["Authorization"] = "Bearer " + key
-    r = requests.post(base, headers=headers, data=prompt.encode("utf-8"),
-                      timeout=TIMEOUT)
+    from . import signing
+    signer = signing.live_signer()
+    if signer is None:
+        raise RuntimeError(
+            f"{mid} @ {base}: no signing key ({signing.LIVE_KEY_ENV} unset); "
+            "participant endpoints are only ever called with a signed request")
+    body = prompt.encode("utf-8")
+    headers = {"Content-Type": "application/json",
+               **signing.sign(signer[0], body, signer[1])}
+    r = requests.post(base, headers=headers, data=body, timeout=TIMEOUT)
     data = _check(r, f"{mid} @ {base}")
     return json.dumps(data), {}
 

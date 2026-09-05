@@ -6,7 +6,7 @@
       "src": "api/*.py",
       "use": "@vercel/python",
       "config": {
-        "includeFiles": "{site/data.json,schema/*.schema.json,ssa/questionnaire_api.py,ssa/registry.py,ssa/registry_api.py,ssa/bundle_api.py,ssa/bundle.py,ssa/participants.py,tools/validate_submission.py,entrants/*.json,questions/bundles/*.json}"
+        "includeFiles": "{site/data.json,schema/*.schema.json,ssa/questionnaire_api.py,ssa/registry.py,ssa/bundle_api.py,ssa/bundle.py,ssa/participants.py,tools/validate_submission.py,entrants/*.json,site/keys.json,examples/agent-api/server.py,questions/bundles/*.json}"
       }
     },
     {
@@ -28,12 +28,8 @@
       "destination": "/api/bundle_submissions.py"
     },
     {
-      "source": "/api/v1/registrations",
-      "destination": "/api/registrations.py"
-    },
-    {
-      "source": "/api/v1/registrations/:entrant",
-      "destination": "/api/registrations.py?entrant=:entrant"
+      "source": "/api/example-agent",
+      "destination": "/api/example_agent.py"
     },
     {
       "source": "/",

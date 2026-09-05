@@ -1,0 +1,18 @@
+{
+  "note": "Public keys the Social Simulation Arena signs Route A requests with. Verify X-SSA-Signature over `X-SSA-Timestamp + '.' + raw request body` with the key named by X-SSA-Key-Id; reject a timestamp more than 300 s from now; answer a repeated request_id with the same forecast. The ssa-test private key is published so the browser test and tools/probe_agent_api.py can sign; test requests are never filed.",
+  "algorithm": "ed25519",
+  "keys": [
+    {
+      "key_id": "ssa-live",
+      "purpose": "live",
+      "public_key": null,
+      "since": null
+    },
+    {
+      "key_id": "ssa-test",
+      "purpose": "test",
+      "public_key": "zt0rAf60fDi4fOj1qhhAqzx7GJz7XmBV1AWs+ln2xOY=",
+      "private_key": "HLHPLfr2J+BaNVHYXBHNs5CJOSbmgouzCUp2cxcwdy4="
+    }
+  ]
+}

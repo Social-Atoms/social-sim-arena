@@ -3,18 +3,19 @@
   python examples/agent-api/server.py &
   python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast
 
-  SSA_PROBE_KEY=... python tools/probe_agent_api.py \
-      --url https://api.example.com/forecast --key-env SSA_PROBE_KEY
+  python tools/probe_agent_api.py --url https://api.example.com/forecast
 
-Standard library only, so a participant can run it inside their own deployment
-without installing anything. It sends non-scored fixtures, files nothing, and
-never touches `forecasts/`.
+Standard library plus, optionally, `cryptography`: with it the probe signs its
+requests with the published test key (`ssa-test`, see site/keys.json) the way
+the arena signs live ones; without it the requests go unsigned and the probe
+says so. It sends non-scored fixtures, files nothing, and never touches
+`forecasts/`.
 
-**The key is read from an environment variable, never from an argument.** A
-key on the command line is in `ps` output, in shell history, and in the CI log
-of whoever pastes the command into an issue. `--key-env` names the variable;
-that name is the only credential-shaped thing this tool will accept, print, or
-put in a report. Nothing here writes a key to disk.
+**Signing, not a bearer token.** The arena authenticates itself to your
+endpoint by signing every request with its Ed25519 key; you verify with the
+public key. Nothing secret is exchanged. A maintainer probing with the live
+key names its variable with `--signing-key-env`; the key itself is never an
+argument, because arguments end up in `ps`, shell history and pasted logs.
 
 **Why probe more than one shape.** A real batch mixes scalar, profile and
 ranking rounds. An endpoint tested against a single scalar fixture passes, and
@@ -23,11 +24,11 @@ meets one -- which the arena records as a failed call, not as a forecast, and
 the participant discovers after the deadline. Each shape is a separate check
 with its own verdict.
 
-**Why the auth check sends a wrong key.** An endpoint that answers an
-unauthenticated caller is an endpoint anyone can file forecasts through under
-your entrant id. Configuring a key and never testing that it is enforced is the
-common version of this mistake, so the probe checks the refusal, not just the
-acceptance.
+**Why the signature check sends a bad signature.** Verifying is optional: an
+endpoint that answers an unsigned or badly signed request is not insecure for
+the arena (only the arena files forecasts), it is merely open to anyone who
+finds the URL and wants it to compute. The probe reports which of the two your
+endpoint is, so you know rather than assume.
 
 **Why retries are only for transient failures.** A 4xx is an answer: the
 request was wrong, and sending it again is a way to be told so four more times.
@@ -40,7 +41,6 @@ Exit status is 0 only when every selected check passed.
 import argparse
 import json
 import os
-import re
 import socket
 import sys
 import time
@@ -51,9 +51,31 @@ from urllib.parse import urlparse
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SCHEMA_VERSION = "ssa-agent-api-v2"
-# Mirrors ssa/participants.KEY_ENV_PREFIX. This file imports nothing from
-# ssa/ on purpose: a participant runs it from a bare checkout.
-KEY_ENV_PREFIX = "SSA_ENTRANT_KEY_"
+# Mirrors ssa/signing.py. This file imports nothing from ssa/ on purpose: a
+# participant runs it from a bare checkout.
+TEST_KEY_ID = "ssa-test"
+TEST_PRIVATE_KEY = "HLHPLfr2J+BaNVHYXBHNs5CJOSbmgouzCUp2cxcwdy4="
+HEADER_KEY_ID, HEADER_TIMESTAMP, HEADER_SIGNATURE = (
+    "X-SSA-Key-Id", "X-SSA-Timestamp", "X-SSA-Signature")
+
+
+def make_signer(private_b64, key_id):
+    """A function body -> headers, or None when `cryptography` is missing."""
+    try:
+        import base64
+        from cryptography.hazmat.primitives.asymmetric import ed25519
+    except ImportError:
+        return None
+    key = ed25519.Ed25519PrivateKey.from_private_bytes(base64.b64decode(private_b64))
+
+    def sign(body, timestamp=None, corrupt=False):
+        ts = str(int(timestamp if timestamp is not None else time.time()))
+        sig = key.sign(ts.encode() + b"." + body)
+        if corrupt:
+            sig = bytes([sig[0] ^ 0xFF]) + sig[1:]
+        return {HEADER_KEY_ID: key_id, HEADER_TIMESTAMP: ts,
+                HEADER_SIGNATURE: base64.b64encode(sig).decode()}
+    return sign
 
 # What the arena's own runner uses (`ssa.harness.TIMEOUT`). Quoted here so a
 # participant sizing their endpoint reads one number, not two.
@@ -116,17 +138,17 @@ def envelope(shape, request_id):
     }
 
 
-def call(url, prompt, key=None, timeout=30.0, retries=2):
-    """POST one request envelope to the exact URL. Retries transient failures
-    only.
+def call(url, prompt, signer=None, timeout=30.0, retries=2, corrupt=False):
+    """POST one request envelope to the exact URL, signed when a signer is
+    given. Retries transient failures only.
 
     Returns the decoded reply object. Raises `ProbeFailure` with the reason a
     participant has to fix.
     """
     body = json.dumps(prompt).encode("utf-8")
     headers = {"Content-Type": "application/json"}
-    if key:
-        headers["Authorization"] = f"Bearer {key}"
+    if signer:
+        headers.update(signer(body, corrupt=corrupt))
 
     last = None
     for attempt in range(retries + 1):
@@ -223,7 +245,7 @@ def load_entrant(entrant_id):
         return json.load(fh)
 
 
-def probe(url, key=None, timeout=30.0, retries=2, shapes=None):
+def probe(url, signer=None, timeout=30.0, retries=2, shapes=None):
     """[(name, ok, detail)] -- one row per check, in the order they ran."""
     rows = []
     parsed = urlparse(url)
@@ -234,14 +256,14 @@ def probe(url, key=None, timeout=30.0, retries=2, shapes=None):
                      "loopback http, acceptable for a local fixture only"))
     else:
         rows.append(("transport", False,
-                     "production endpoints must be https; a bearer token over "
-                     "http is a token you have published"))
+                     "production endpoints must be https; the arena refuses "
+                     "to call anything else"))
         return rows
 
     for shape in (shapes or ("scalar", "profile", "ranking")):
         request_id = f"ssa-probe-{shape}"
         try:
-            content = call(url, envelope(shape, request_id), key, timeout,
+            content = call(url, envelope(shape, request_id), signer, timeout,
                            retries)
             check_content(content, shape)
             rows.append((f"round/{shape}", True, "valid forecast"))
@@ -250,7 +272,7 @@ def probe(url, key=None, timeout=30.0, retries=2, shapes=None):
             continue
         if shape == "scalar":
             try:
-                again = call(url, envelope(shape, request_id), key,
+                again = call(url, envelope(shape, request_id), signer,
                              timeout, retries)
                 same = again.get("forecast") == content.get("forecast")
                 rows.append(("idempotency", same,
@@ -263,20 +285,22 @@ def probe(url, key=None, timeout=30.0, retries=2, shapes=None):
             except ProbeFailure as err:
                 rows.append(("idempotency", False, str(err)))
 
-    if key:
-        try:
-            call(url, envelope("scalar", "ssa-probe-badkey"),
-                 key + "-wrong", timeout, retries=0)
-            rows.append(("auth", False,
-                         "a wrong bearer token was answered anyway; anyone "
-                         "who finds this URL can file forecasts as you"))
-        except ProbeFailure as err:
-            expected = "HTTP 401" in str(err) or "HTTP 403" in str(err)
-            rows.append(("auth", expected,
-                         "wrong token refused" if expected else
-                         f"wrong token was not refused with 401/403: {err}"))
+    if signer is None:
+        rows.append(("signature", True,
+                     "requests were sent unsigned (install `cryptography` to "
+                     "probe signature verification)"))
     else:
-        rows.append(("auth", True, "no key configured; endpoint is open"))
+        try:
+            call(url, envelope("scalar", "ssa-probe-badsig"), signer, timeout,
+                 retries=0, corrupt=True)
+            rows.append(("signature", True,
+                         "endpoint does not verify signatures: allowed, but "
+                         "anyone who finds this URL can make it compute"))
+        except ProbeFailure as err:
+            refused = "HTTP 401" in str(err) or "HTTP 403" in str(err)
+            rows.append(("signature", refused,
+                         "bad signature refused; endpoint verifies" if refused
+                         else f"bad signature was not refused with 401/403: {err}"))
     return rows
 
 
@@ -286,9 +310,12 @@ def main(argv=None):
                     help="The exact endpoint URL, e.g. https://host/forecast. "
                          "Optional when --entrant names a registration that "
                          "carries a route.")
-    ap.add_argument("--key-env",
-                    help="NAME of the environment variable holding the bearer "
-                         "token. Never pass the token itself.")
+    ap.add_argument("--signing-key-env",
+                    help="NAME of the environment variable holding a signing "
+                         "key (maintainers, with the live key). Default: the "
+                         "published test key. Never pass the key itself.")
+    ap.add_argument("--key-id", default=TEST_KEY_ID,
+                    help="key id to send with --signing-key-env")
     ap.add_argument("--timeout", type=float, default=30.0,
                     help=f"seconds to wait for a reply (the arena allows "
                          f"{ARENA_TIMEOUT[1]})")
@@ -303,7 +330,6 @@ def main(argv=None):
                          "to probe a revoked registration")
     args = ap.parse_args(argv)
 
-    key = None
     if args.entrant:
         entrant = load_entrant(args.entrant)
         if entrant is None:
@@ -323,33 +349,24 @@ def main(argv=None):
         spec = entrant.get("route") or {}
         if spec.get("url") and not args.url:
             args.url = spec["url"]
-            derived = KEY_ENV_PREFIX + re.sub(
-                r"[^A-Z0-9]", "_", args.entrant.upper())
-            if spec.get("auth", "bearer") == "bearer" and not args.key_env:
-                # The variable name is derived from the id, never read from the
-                # registration -- see ssa/participants.py. Naming it on the
-                # command line stays possible for a rehearsal against a
-                # throwaway key, but the default is the one the arena will use.
-                args.key_env = derived
-                if not os.environ.get(derived):
-                    print(f"FAIL: ${derived} is not set. That is the variable "
-                          f"the arena reads for '{args.entrant}'; probing with "
-                          "a different key tests a credential the season will "
-                          "not send.", file=sys.stderr)
-                    return 1
-
     if not args.url:
         print("FAIL: pass --url, or --entrant naming a registration that "
               "carries a route", file=sys.stderr)
         return 1
 
-    if args.key_env:
-        key = os.environ.get(args.key_env)
-        if not key:
-            print(f"FAIL: ${args.key_env} is not set", file=sys.stderr)
+    if args.signing_key_env:
+        private = os.environ.get(args.signing_key_env)
+        if not private:
+            print(f"FAIL: ${args.signing_key_env} is not set", file=sys.stderr)
             return 1
+        signer = make_signer(private, args.key_id)
+        if signer is None:
+            print("FAIL: signing needs the `cryptography` package", file=sys.stderr)
+            return 1
+    else:
+        signer = make_signer(TEST_PRIVATE_KEY, TEST_KEY_ID)
 
-    rows = probe(args.url, key, args.timeout, args.retries, args.shapes)
+    rows = probe(args.url, signer, args.timeout, args.retries, args.shapes)
     for name, ok, detail in rows:
         print(f"{'PASS' if ok else 'FAIL'}  {name:<16} {detail}")
     failures = [name for name, ok, _ in rows if not ok]
