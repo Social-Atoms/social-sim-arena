@@ -21,7 +21,7 @@ from . import health
 from . import provenance
 from . import reliability
 from . import stamps
-from . import average, backtest, baselines, batches, envfile, harness, scoring, sharecard
+from . import average, backtest, baselines, batches, domains, envfile, harness, scoring, sharecard
 from . import participants
 from . import profile_round
 from . import ranking_round
@@ -488,6 +488,15 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
             row["batch_id"] = None
             row["published_at"] = None
             row["horizon_days"] = None
+        # What the question is *about*, as opposed to what shape its answer
+        # takes (`target_type`) or who published the figure (`tracker`). The
+        # board groups on this, and it is published rather than derived in the
+        # browser for the reason `batch_id` is: a second copy of the taxonomy
+        # in a page drifts the first time a series is reassigned.
+        # `strict=False`: an unplaced series is published by name rather
+        # than stopping the run. `tests/test_domains.py` is the gate that
+        # keeps one from ever getting this far.
+        row["domain"] = domains.domain_of(r["series"], strict=False)
         for k in ("cells", "options"):
             if k in r:
                 row[k] = list(r[k])
@@ -1381,7 +1390,7 @@ def load_entrants():
 # the cron and never passes through them. A missing field would reach a
 # participant before it reached CI.
 SITE_ROUND_FIELDS = ("round_id", "question", "lock_at", "release_at",
-                     "status", "target_type", "deadline", "series")
+                     "status", "target_type", "deadline", "series", "domain")
 
 # Present or absent, but never the wrong shape when present.
 SITE_ROUND_TYPES = {

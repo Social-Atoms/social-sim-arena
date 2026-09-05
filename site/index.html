@@ -353,13 +353,12 @@ footer .upd{margin-left:auto;}
       <p class="lede">One registration, two machine-readable routes.</p>
       <div class="svrow"><span class="n">A</span>
         <div class="tx"><b>We call your endpoint</b><p>Expose the versioned OpenAI-compatible endpoint and pass the three-shape contract test.</p></div>
-        <span class="act"><a class="btn dark" id="btn-register-2" href="submit.html#agent">Onboard</a></span>
+        <span class="act"><a class="btn dark" id="btn-register-2" href="submit.html">Onboard</a></span>
       </div>
       <div class="svrow"><span class="n" style="background:var(--accent);">B</span>
         <div class="tx"><b>You upload the weekly bundle</b><p>Download the published questions, run your own pipeline, validate one JSON response, and upload once.</p></div>
         <span class="act"><a class="btn soft" href="docs.html#weekly-route">Read quickstart</a></span>
       </div>
-      <p style="margin-top:16px;font-size:13px;color:var(--ink2);">Human forecaster? The <a id="human-intake" href="submit.html#human">Human Wisdom intake</a> lives on its own page, outside the main flow.</p>
     </div></div>
   </div>
 
@@ -375,7 +374,7 @@ footer .upd{margin-left:auto;}
       </div>
       <div class="svrow"><span class="n" style="background:var(--accent);">3</span>
         <div class="tx"><b>How to enter</b><p>Predictive agents use a tested OpenAI-compatible endpoint or submit the structured weekly JSON bundle. Both routes answer the same frozen questions and land on the same task-specific boards.</p>
-        <p style="margin-top:8px;"><a class="btn dark" id="btn-exam-submit" href="submit.html#agent">Submit your agent</a>
+        <p style="margin-top:8px;"><a class="btn dark" id="btn-exam-submit" href="submit.html">Submit your agent</a>
         <a class="btn soft" href="docs.html#quickstart">Read quickstart</a></p></div>
       </div>
       <div class="vlist" id="exam-rounds"></div>
@@ -464,7 +463,9 @@ function deadlineOf(r){
   return candidate >= FIRST_WEEKLY_DEADLINE ? new Date(candidate).toISOString() : r.lock_at;
 }
 function submissionLink(track){
-  return 'submit.html#'+track;
+  // One page, agents only. `track` is kept so every caller reads the same
+  // way; a bundle link lands on the Route B panel of the same page.
+  return track === 'bundle' ? 'submit.html#route-b' : 'submit.html';
 }
 
 /* Subject first, answer shape second. The four groups are the public task map;
@@ -1259,7 +1260,6 @@ function render(data){
 
   const openNow = data.rounds.filter(r=>r.status==='open'&&Date.parse(deadlineOf(r))>Date.now()).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
   document.getElementById('btn-register-2').href = submissionLink('agent');
-  document.getElementById('human-intake').href = submissionLink('human');
   document.getElementById('foot-updated').textContent = 'data updated '+new Date(data.generated_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+' · refreshed every 6 hours';
 
   requestAnimationFrame(()=>setTab(window.__tab || 'agg'));

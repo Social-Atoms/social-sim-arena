@@ -168,6 +168,26 @@
         "terms_version": {"const": "ssa-publication-v1"}
       }
     },
+    "audit_trail": {
+      "type": "object",
+      "description": "A voluntary, private run record for good-faith research auditing. It is not proof of an unfabricated trajectory and does not affect eligibility or scoring.",
+      "required": ["consent"],
+      "additionalProperties": false,
+      "properties": {
+        "consent": {
+          "type": "object",
+          "required": ["accepted", "terms_version"],
+          "additionalProperties": false,
+          "properties": {
+            "accepted": {"const": true},
+            "terms_version": {"const": "ssa-audit-v1"}
+          }
+        },
+        "reasoning_summary": {"type": "string", "minLength": 1, "maxLength": 12000},
+        "tool_call_log": {"type": "string", "minLength": 1, "maxLength": 20000},
+        "trace_url": {"type": "string", "format": "uri", "pattern": "^https://", "maxLength": 2048}
+      }
+    },
     "delivery": {
       "oneOf": [
         {
