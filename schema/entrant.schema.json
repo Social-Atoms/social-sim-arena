@@ -5,8 +5,7 @@
   "required": [
     "entrant_id",
     "name",
-    "type",
-    "method"
+    "type"
   ],
   "additionalProperties": false,
   "properties": {
@@ -20,19 +19,26 @@
       "maxLength": 80,
       "description": "Display name for the leaderboard."
     },
+    "organization": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Company or research group behind the entry. Public, shown next to the display name."
+    },
     "type": {
       "type": "string",
       "enum": [
         "llm",
         "human",
         "firm",
-        "baseline"
-      ]
+        "baseline",
+        "participant"
+      ],
+      "description": "`participant` is any outside entrant answering from its own endpoint; the site's registration form writes it. The other values are the arena's own entries."
     },
     "method": {
       "type": "string",
       "maxLength": 300,
-      "description": "One or two sentences: what generates the forecasts."
+      "description": "One or two sentences: what generates the forecasts. Written for the arena's own entries; a participant may leave it out."
     },
     "arms": {
       "type": "array",
@@ -61,7 +67,7 @@
     "contact": {
       "type": "string",
       "maxLength": 120,
-      "description": "Email or GitHub handle. Used only to reach you about your entry."
+      "description": "Contact email, optional. Public in this file; leave it out to be reached through the `github` account instead."
     },
     "github": {
       "type": "string",

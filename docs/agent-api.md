@@ -20,20 +20,25 @@ is what turns a rehearsed endpoint into one the season calls:
 ```json
 {
   "entrant_id": "acme-forecast",
-  "name": "Acme Forecast",
-  "type": "firm",
-  "method": "One or two sentences: what generates the forecasts.",
+  "name": "Acme Forecaster",
+  "organization": "Acme Research",
+  "type": "participant",
+  "contact": "team@acme.example",
   "github": "acme-bot",
   "route": {"kind": "agent_api", "url": "https://api.acme.example/forecast"}
 }
 ```
 
+`entrant_id` is the "Model / Team Name" on the form: lower-case, permanent,
+the name of the file and of the row on the board. `contact` is optional and
+public; leave it out to be reached through the `github` account.
+
 `github` is the account that owns the entrant: only it, or a maintainer, may
 later change this file or file forecasts under this id (checked against the
 base branch's copy, so the owner cannot be rewritten by its own pull request).
-A registration with no `route` is unchanged in meaning: that entrant hands its
-forecasts over itself, which is what every registration written before this
-field did.
+A registration with no `route` is one of the arena's own entries (the
+baselines and the models it runs itself); Season 0 admits outside entrants
+through an endpoint only.
 
 **There is no credential in the registration, and none anywhere else.** The
 arena authenticates itself to the endpoint by signing every request

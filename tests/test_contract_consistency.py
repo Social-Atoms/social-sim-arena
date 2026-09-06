@@ -39,10 +39,14 @@ def test_cadence_and_resolution_docs_match_the_workflow():
 
 def test_deadline_is_exposed_and_used_by_every_site_path():
     api = _read("ssa/questionnaire_api.py")
-    for path in ("site/index.html", "site/leaderboard.html", "site/submit.html"):
+    # The onboarding page is not in this list on purpose: an endpoint entrant
+    # has no deadline to meet, the cron calls it inside the window, so the
+    # page shows no calendar (Season 0, endpoint-only).
+    for path in ("site/index.html", "site/leaderboard.html"):
         page = _read(path)
         assert "deadline||" in page or "deadline ||" in page, path
         assert "Date.parse(" in page, path
+    assert "deadline" not in _read("site/submit.html").split("<script>")[1]
     assert '"deadline": _iso(_round_deadline(round_data))' in api
     site = _read("site/docs.html")
     assert "it is not a participant due date" in site
