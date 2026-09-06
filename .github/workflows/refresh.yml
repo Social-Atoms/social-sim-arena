@@ -8,6 +8,14 @@ on:
   schedule:
     - cron: "17 */6 * * *"   # every 6 hours
   workflow_dispatch:
+    inputs:
+      participants_only:
+        description: >-
+          Call only registered Route A participants; no model provider is
+          called and nothing is billed. For rehearsing an endpoint on a
+          branch (the cron's own path, with the live signing key).
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -74,7 +82,10 @@ jobs:
       # on is setting a repository variable, and tools/estimate_arms.py prints
       # the season's bill for each before anyone does. The arms differ by two
       # orders of magnitude: news is about $8 a season, persona about $39.
-      SSA_ELICITATION: ${{ vars.SSA_ELICITATION }}
+      # `only:` with no arm named is the roster with every model removed, so
+      # a manual run with participants_only calls the registered endpoints and
+      # nothing else (refresh.season_roster).
+      SSA_ELICITATION: ${{ github.event.inputs.participants_only == 'true' && 'only:' || vars.SSA_ELICITATION }}
       # The model allowlist. Without this line the runner sees every key in
       # secrets and runs all seventeen models -- including the ones the season
       # deliberately dropped -- which is exactly what the first re-enabled run
