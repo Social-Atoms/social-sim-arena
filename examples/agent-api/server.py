@@ -111,7 +111,10 @@ def forecast_for(round_spec):
         # of the envelope a ranking round needs actually live:
         # `context.recent_weeks` and `ranking.exclusions`.
         weeks = (round_spec.get("context") or {}).get("recent_weeks") or []
-        last = (weeks[-1] or {}).get("ranking") if weeks else None
+        # A week is `{"date", "items", ...}`; `ranking` is accepted as well so
+        # this keeps working if the envelope ever names the list that.
+        newest = weeks[-1] if weeks else {}
+        last = (newest.get("items") or newest.get("ranking")) if isinstance(newest, dict) else None
         if not last:
             raise ValueError(
                 "free-choice ranking round carried no recent_weeks to repeat; "

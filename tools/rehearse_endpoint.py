@@ -27,6 +27,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 from ssa import harness, participants, profile_round, ranking_round, signing  # noqa: E402
+from ssa import refresh  # noqa: E402
 
 SHAPES = ("continuous_normal", "profile_energy", "ranking_list")
 KEY_OF = {"continuous_normal": "topline", "profile_energy": "profile",
@@ -41,6 +42,28 @@ def open_rounds(data, shapes):
         if r.get("status") == "open" and tt in shapes and tt not in picked:
             picked[tt] = r
     return picked
+
+
+_RANKING_OBS = {}
+
+
+def ranking_history(r):
+    """The frozen ordered lists this round's envelope carries, from the
+    committed archive. Empty when the archive has none: an endpoint that
+    answers rankings from history will say so, which is the honest result."""
+    if not _RANKING_OBS:
+        season_path = os.path.join(ROOT, "questions", "season0.json")
+        with open(season_path) as fh:
+            season = json.load(fh)
+        try:
+            _RANKING_OBS["obs"] = refresh.ranking_observations(season, fetch=False)
+        except Exception:                        # noqa: BLE001 - best effort
+            _RANKING_OBS["obs"] = {}
+    obs = (_RANKING_OBS.get("obs") or {}).get(r["round_id"])
+    try:
+        return ranking_round.frozen_history(r, obs) if obs else []
+    except Exception:                            # noqa: BLE001 - best effort
+        return []
 
 
 def main(argv=None):
@@ -101,7 +124,11 @@ def main(argv=None):
             if profile_round.is_profile(r):
                 kw["profile_history"] = {c: [] for c in profile_round.cells_for(r)}
             if ranking_round.is_ranking(r):
-                kw["ranking_history"] = []
+                # The real refresh hands a ranking round its frozen history,
+                # and an endpoint may answer from it. Reading the committed
+                # archive (fetch=False) keeps this command offline while still
+                # sending the envelope the season sends.
+                kw["ranking_history"] = ranking_history(r)
             history = (data.get("series_tail") or {}).get(r.get("series")) or None
             try:
                 body = harness.forecast(args.entrant, r, history=history, previous=None, **kw)

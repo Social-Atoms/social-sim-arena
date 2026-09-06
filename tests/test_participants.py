@@ -394,20 +394,33 @@ def test_the_starter_server_answers_all_three_shapes_from_the_envelope_alone():
     persistence null, built only from the envelope."""
     import sys
     sys.path.insert(0, os.path.join(ROOT, "examples", "agent-api"))
+    sys.path.insert(0, os.path.join(ROOT, "tools"))
     from server import forecast_for
+    from rehearse_endpoint import ranking_history
     from ssa import ranking_round
     season = json.load(open(os.path.join(ROOT, "questions", "season0.json")))["rounds"]
-    r = next(x for x in season if x.get("target_type") == "ranking_list")
+    # The real frozen history from the committed archive, not a hand-made one:
+    # the first version of this test invented `{"week_end", "ranking"}` while
+    # production hands over `{"date", "items", "views"}`, so it passed against
+    # a shape that does not exist and the live rehearsal failed.
+    r, weeks = None, []
+    for cand in season:
+        if cand.get("target_type") != "ranking_list":
+            continue
+        weeks = ranking_history(cand)
+        if weeks:
+            r = cand
+            break
+    assert r and weeks, "no committed ranking history to rehearse against"
+    assert "items" in weeks[-1], sorted(weeks[-1])
     spec = ranking_round.spec_for(r)
-    weeks = [{"week_end": "2026-08-30",
-              "ranking": ["Main_Page", "Special:Search"] +
-                         [f"Article_{i}" for i in range(spec["length"])]}]
     env = agent_api.build_envelope("acme-forecast", dict(r, baselines={}),
                                    ranking_history=weeks)
     reply = forecast_for(env["round"])
     order = reply["ranking"]
     assert len(order) == spec["length"], order
     assert "Main_Page" not in order and not any(t.startswith("Special:") for t in order)
+    assert order == [t for t in weeks[-1]["items"] if t != "Main_Page"][:spec["length"]]
     # And what it produced is what the arena accepts for this round.
     parsed = agent_api.parse_ranking(json.dumps(
         {"schema_version": "ssa-agent-api-v2", "forecast": reply}), spec)
