@@ -187,19 +187,20 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .wc-tag.res{background:#eaf6ee;color:var(--accent-ink);}
 .wcell[tabindex]{cursor:pointer;}
 .wcell[tabindex]:hover,.wcell[tabindex]:focus{outline:none;box-shadow:inset 0 0 0 1px var(--ink);}
-#wpop{position:absolute;z-index:60;width:min(430px,calc(100vw - 24px));background:#fff;border:1px solid var(--ink);
-  border-radius:5px;box-shadow:0 8px 26px rgba(0,0,0,.13);padding:10px 12px 11px;font-size:12.5px;}
-#wpop .wp-head{font-weight:800;color:var(--ink);font-size:12.5px;margin-bottom:7px;}
-#wpop .wp-sec{margin-top:8px;}
-#wpop .wp-sec:first-of-type{margin-top:0;}
-#wpop h5{margin:0 0 4px;font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink);}
+/* Small, dense, and reachable: one line per question, and the line is a link. */
+#wpop{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:#fff;border:1px solid var(--ink);
+  border-radius:5px;box-shadow:0 8px 22px rgba(0,0,0,.12);padding:7px 0 5px;font-size:12px;}
+#wpop .wp-head{font-weight:800;color:var(--ink);font-size:11.5px;padding:0 11px 6px;}
+#wpop .wp-sec{border-top:1px solid var(--line);padding-top:5px;}
+#wpop h5{margin:0 0 2px;padding:0 11px;font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);}
 #wpop .wp-sec.res h5{color:var(--accent-ink);}
-#wpop ul{list-style:none;margin:0;padding:0;max-height:230px;overflow:auto;}
-#wpop li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:3px 0;border-top:1px solid var(--line);}
-#wpop li:first-child{border-top:0;}
-#wpop .wp-src{color:var(--ink);font-weight:700;font-size:12px;}
-#wpop .wp-t{color:var(--mut);font-size:11.5px;font-variant-numeric:tabular-nums;text-align:right;}
-#wpop .wp-q{grid-column:1/-1;color:var(--mut);font-size:11.5px;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+#wpop ul{list-style:none;margin:0;padding:0;max-height:190px;overflow:auto;}
+#wpop li a{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:baseline;
+  padding:3px 11px;text-decoration:none;color:inherit;}
+#wpop li a:hover{background:var(--soft);}
+#wpop .wp-q{color:var(--ink);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#wpop .wp-q i{font-style:normal;color:var(--mut);}
+#wpop .wp-t{color:var(--mut);font-size:11px;font-variant-numeric:tabular-nums;}
 .week-side dl dt.sub{font-weight:400;color:var(--mut);text-transform:none;letter-spacing:0;font-size:11.5px;}
 @media(max-width:820px){.wcell{min-height:64px;padding:5px 6px 6px;}.wc-tag{font-size:10.5px;padding:0 4px;}.wc-day b{font-size:12.5px;}.wc-day span{display:none;}}
 .week-count{display:flex;align-items:center;gap:12px;margin:22px 0 8px;flex-wrap:wrap;}
@@ -1306,13 +1307,25 @@ function renderWeekly(data){
   const dayPanel=(key)=>{
     const c=(closesBy[key]||[]), v=(releasesBy[key]||[]);
     if(!c.length&&!v.length) return '';
-    const line=(r,kind)=>'<li><span class="wp-src">'+esc(taskForRound(r).label)+'</span>'
-      +'<span class="wp-q">'+esc(questionText(r))+'</span>'
-      +'<span class="wp-t">'+esc(kind==='close'?timeOf(deadlineOf(r)):timeOf(r.release_at))+'</span></li>';
-    const dateLabel=new Date(key+'T12:00:00Z').toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',timeZone:'UTC'});
+    // Grouped by task, not one line per round. Twelve Civiqs rounds close on
+    // the same morning and their question text differs only past the point a
+    // line can show, so twelve truncated lines read as one repeated line.
+    // The task is what a reader recognises, and it is what the link opens.
+    const group=(rs,kind)=>{
+      const by=new Map();
+      rs.forEach(r=>{ const k=taskKeyForRound(r);
+        if(!by.has(k)) by.set(k,{key:k,label:taskForRound(r).label,n:0,
+                                when:kind==='close'?deadlineOf(r):r.release_at});
+        by.get(k).n++; });
+      return [...by.values()].sort((a,b)=>b.n-a.n||a.label.localeCompare(b.label));
+    };
+    const line=(g)=>'<li><a href="#live/'+g.key+'/all">'
+      +'<span class="wp-q">'+esc(g.label)+(g.n>1?' <i>&times;'+g.n+'</i>':'')+'</span>'
+      +'<span class="wp-t">'+esc(timeOf(g.when))+'</span></a></li>';
+    const dateLabel=new Date(key+'T12:00:00Z').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',timeZone:'UTC'});
     return '<div class="wp-head">'+esc(dateLabel)+'</div>'
-      +(c.length?'<div class="wp-sec"><h5>'+c.length+' close'+(c.length>1?'':'s')+'</h5><ul>'+c.map(r=>line(r,'close')).join('')+'</ul></div>':'')
-      +(v.length?'<div class="wp-sec res"><h5>'+v.length+' resolve'+(v.length>1?'':'s')+'</h5><ul>'+v.map(r=>line(r,'res')).join('')+'</ul></div>':'');
+      +(c.length?'<div class="wp-sec"><h5>'+c.length+' close'+(c.length>1?'':'s')+'</h5><ul>'+group(c,'close').map(line).join('')+'</ul></div>':'')
+      +(v.length?'<div class="wp-sec res"><h5>'+v.length+' resolve'+(v.length>1?'':'s')+'</h5><ul>'+group(v,'res').map(line).join('')+'</ul></div>':'');
   };
   const weekRow=(offset)=>{
     let out='';
@@ -1354,14 +1367,25 @@ function renderWeekly(data){
     if(top+h > window.scrollY+window.innerHeight-8) top=r.top+window.scrollY-h-6;
     pop.style.left=left+'px'; pop.style.top=top+'px';
   };
-  const show=(el)=>{ const html=dayPanel(el.dataset.day); if(!html){hide();return;} pop.innerHTML=html; place(el); };
-  const hide=()=>{ pop.hidden=true; };
+  // The panel is reachable: leaving the cell starts a short timer that
+  // entering the panel cancels, so the mouse can travel into it and click a
+  // question. Hiding on `mouseleave` alone made the panel unusable -- it
+  // vanished the moment you moved towards it.
+  let hideTimer=null;
+  const cancelHide=()=>{ if(hideTimer){ clearTimeout(hideTimer); hideTimer=null; } };
+  const hide=()=>{ cancelHide(); pop.hidden=true; };
+  const hideSoon=()=>{ cancelHide(); hideTimer=setTimeout(hide, 220); };
+  const show=(el)=>{ cancelHide(); const html=dayPanel(el.dataset.day);
+    if(!html){hide();return;} pop.innerHTML=html; place(el); };
   host.querySelectorAll('.wcell[data-day]').forEach(el=>{
     el.addEventListener('mouseenter', ()=>show(el));
     el.addEventListener('focus', ()=>show(el));
-    el.addEventListener('mouseleave', hide);
-    el.addEventListener('blur', hide);
+    el.addEventListener('mouseleave', hideSoon);
+    el.addEventListener('blur', hideSoon);
   });
+  pop.addEventListener('mouseenter', cancelHide);
+  pop.addEventListener('mouseleave', hide);
+  pop.addEventListener('click', e=>{ if(e.target.closest('a')) hide(); });
   window.addEventListener('scroll', hide, {passive:true});
 }
 
