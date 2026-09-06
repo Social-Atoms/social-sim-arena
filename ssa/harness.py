@@ -1040,7 +1040,13 @@ def base_url(entrant, via=None):
     # would let an environment variable silently send their round to a host
     # their public record does not name.
     if participants.is_participant(entrant):
-        return route(entrant, via)["base"].rstrip("/")
+        # Exactly the URL on the public record, trailing slash and all. The
+        # `rstrip` the provider routes use turned `/forecast/` into
+        # `/forecast`, which is a different resource to most servers: the
+        # browser test and the probe post to the registered form, so an
+        # endpoint could pass both and then be called at a path it does not
+        # serve -- and, with redirects now refused, fail outright.
+        return route(entrant, via)["base"]
     model = resolve(entrant)[0]
     return (os.environ.get("SSA_BASE_" + _env_suffix(model))
             or route(entrant, via)["base"]).rstrip("/")
@@ -1679,10 +1685,25 @@ def _call_agent(cfg, base, key, mid, prompt):
     body = prompt.encode("utf-8")
     headers = {"Content-Type": "application/json",
                **signing.sign(signer[0], body, signer[1])}
+    # `allow_redirects=False` is the whole of "https only". With the default,
+    # a registered https endpoint answering `307 Location: http://elsewhere`
+    # made requests replay the envelope and all three X-SSA-* headers to that
+    # host in cleartext, and the arena filed whatever came back. The signature
+    # covers the timestamp and the body, never the URL, so the forwarded copy
+    # is a valid arena request for the whole 300-second skew window -- to a
+    # host the participant's public record does not name.
     r = requests.post(base, headers=headers, data=body, timeout=TIMEOUT,
-                      stream=True)
-    raw = _read_capped(r, AGENT_MAX_REPLY_BYTES)
+                      stream=True, allow_redirects=False)
     what = f"{mid} @ {base}"
+    if 300 <= r.status_code < 400:
+        target = r.headers.get("Location", "")
+        r.close()
+        raise RuntimeError(
+            f"{what} answered HTTP {r.status_code} redirecting to "
+            f"{target[:120]!r}. The arena does not follow redirects: a signed "
+            "request must reach the URL on the public record and no other. "
+            "Register the final URL.")
+    raw = _read_capped(r, AGENT_MAX_REPLY_BYTES)
     if len(raw) > AGENT_MAX_REPLY_BYTES:
         raise RuntimeError(f"{what} reply exceeds {AGENT_MAX_REPLY_BYTES} bytes")
     if r.status_code >= 400:

@@ -1,0 +1,30 @@
+{
+  "note": "Entrant ids nobody may register. The arena runs its own models and baselines under these names, and `tools/validate_submission.py` refuses a new registration that takes one -- otherwise an outside account could claim a name the harness already files under, and the arena would call their endpoint for our model's rounds and publish the answers under our model's name. Prefixes match the id itself and anything after a following '-', so every condition suffix (-news, -web, -superfc, -zeroshot, -persona, ...) is covered without listing them. Maintainers are exempt: adding entrants/<our model>.json is how an arena entry gets a public record. tests/test_signing.py fails if the harness roster or the baseline set grows past this file.",
+  "prefixes": [
+    "claude-fable",
+    "claude-opus",
+    "claude-opus-5",
+    "claude-sonnet",
+    "deepseek-flash",
+    "deepseek-pro",
+    "gemini-flash",
+    "gemini-pro",
+    "glm",
+    "gpt-5.6-luna",
+    "gpt-5.6-sol",
+    "gpt-5.6-terra",
+    "grok",
+    "kimi",
+    "minimax",
+    "qwen-3.7",
+    "qwen-3.8"
+  ],
+  "exact": [
+    "persistence",
+    "trend",
+    "ewma",
+    "climatology",
+    "crowd",
+    "human-crowd"
+  ]
+}

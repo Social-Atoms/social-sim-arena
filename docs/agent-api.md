@@ -135,6 +135,11 @@ registration open, and `tools/probe_agent_api.py` is the check instead.
   counting, and the moment the null freezes. It is `release − 48h` for most
   rounds and deliberately earlier for the ones that ask about a period rather
   than a moment — see [`docs/submission-window.md`](submission-window.md).
+- **The URL is called exactly as registered, and redirects are refused.** A
+  3xx is a failed call, not a hop: a signed request must reach the URL on the
+  public record and no other, because the signature covers the timestamp and
+  the body but not the destination. Register the final URL, trailing slash and
+  all -- the arena does not normalise it either.
 - **Your endpoint is called in the 24 hours before that close**, and so is
   every other entrant's. The context in the request is frozen at the window's
   opening, so being called first or last inside it changes nothing you see.
