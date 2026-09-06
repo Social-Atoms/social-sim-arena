@@ -301,7 +301,23 @@ def test_a_reply_that_is_not_the_contract_is_refused():
                      "forecast": {"mean": 1, "sd": 1}}), "schema_version"),
         (json.dumps({"schema_version": "ssa-agent-api-v2"}), "no `forecast`"),
         (json.dumps({"schema_version": "ssa-agent-api-v2",
-                     "forecast": {"mean": 1}}), "needs `mean` and `sd`"),
+                     "forecast": {"mean": 1}}), "needs mean and sd, or quantiles"),
+        (json.dumps({"schema_version": "ssa-agent-api-v2",
+                     "forecast": {"value": 41.2}}), "needs mean and sd, or quantiles"),
+        # A quantile answer is accepted, so the rules that make one scoreable
+        # are enforced here rather than discovered when CI rejects the file.
+        (json.dumps({"schema_version": "ssa-agent-api-v2",
+                     "forecast": {"quantiles": {"0.1": 1, "0.9": 3}}}),
+         "at least three levels"),
+        (json.dumps({"schema_version": "ssa-agent-api-v2",
+                     "forecast": {"quantiles": {"0.1": 1, "0.4": 2, "0.9": 3}}}),
+         "median"),
+        (json.dumps({"schema_version": "ssa-agent-api-v2",
+                     "forecast": {"quantiles": {"0.1": 5, "0.5": 2, "0.9": 9}}}),
+         "must not decrease"),
+        (json.dumps({"schema_version": "ssa-agent-api-v2",
+                     "forecast": {"quantiles": {".1": 1, "0.5": 2, "0.9": 3}}}),
+         "0.NNN"),
     ]:
         try:
             agent_api.parse_scalar(text)
@@ -310,6 +326,35 @@ def test_a_reply_that_is_not_the_contract_is_refused():
         else:
             raise AssertionError(f"accepted a non-contract reply: {text[:40]}")
     print("ok test_a_reply_that_is_not_the_contract_is_refused")
+
+
+def test_a_participant_may_answer_with_quantiles_on_either_shape():
+    """The submission schema accepts a normal or a quantile set for a topline
+    and for every profile cell, and `scoring.crps_forecast` scores both. The
+    parser used to carry a quantiles branch that raised KeyError('mean'), so
+    an endpoint expressing skew was refused by the arena and never knew why."""
+    import jsonschema
+    from ssa import scoring
+    schema = json.load(open(os.path.join(ROOT, "schema", "forecast.schema.json")))
+    q = {"0.05": 33.0, "0.5": 36.0, "0.95": 40.5}
+    top = agent_api.parse_scalar(json.dumps(
+        {"schema_version": "ssa-agent-api-v2", "forecast": {"quantiles": q}}))
+    assert top == {"quantiles": q}, top
+    cells = ["civiqs_net_approval_dem", "civiqs_net_approval_rep"]
+    prof = agent_api.parse_profile(json.dumps(
+        {"schema_version": "ssa-agent-api-v2",
+         "forecast": {"profile": {cells[0]: {"quantiles": q},
+                                  cells[1]: {"mean": 2.0, "sd": 1.0}}}}), cells)
+    assert prof[cells[0]] == {"quantiles": q}
+    assert prof[cells[1]] == {"mean": 2.0, "sd": 1.0}
+    # Both are scoreable and both survive the schema a filed forecast faces.
+    assert scoring.crps_forecast(top, 36.0) > 0
+    for body in ({"round_id": "aaii-2026-09-10", "entrant": "acme-forecast",
+                  "topline": top, "notes": "n"},
+                 {"round_id": "aaii-2026-09-10", "entrant": "acme-forecast",
+                  "profile": prof, "notes": "n"}):
+        jsonschema.validate(body, schema)
+    print("ok test_a_participant_may_answer_with_quantiles_on_either_shape")
 
 
 def test_a_profile_reply_is_all_cells_or_none():
@@ -593,6 +638,7 @@ if __name__ == "__main__":
     test_the_envelope_states_the_participant_deadline_not_our_lock()
     test_the_request_id_is_stable_so_a_retry_is_the_same_question()
     test_a_reply_that_is_not_the_contract_is_refused()
+    test_a_participant_may_answer_with_quantiles_on_either_shape()
     test_a_profile_reply_is_all_cells_or_none()
     test_a_participant_forecast_is_never_mocked()
     test_filing_goes_through_the_shared_runner_and_caches_like_one()
@@ -601,4 +647,4 @@ if __name__ == "__main__":
     test_a_registration_without_a_route_is_unchanged()
     test_a_reply_over_the_size_cap_is_refused_unread()
     test_an_endpoint_failing_three_times_is_not_called_again_this_run()
-    print("18 passed")
+    print("19 passed")
