@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-05T04:28:36Z",
+ "generated_at": "2026-09-06T04:40:58Z",
  "season": 0,
  "trackers": {
   "trump_approval_avg": {
@@ -5920,7 +5920,7 @@
     "trends_share_netflix",
     "trends_share_disney"
    ],
-   "status": "locked",
+   "status": "awaiting_resolution",
    "history_source": "lock snapshot",
    "baselines": null,
    "scoreable": true,
@@ -8577,7 +8577,7 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 28,
+   "n_forecasts": 29,
    "forecasts": {
     "claude-opus-5-web-superfc": {
      "mean": 35.6,
@@ -8687,6 +8687,10 @@
      "mean": 35.8,
      "sd": 2.2
     },
+    "ssa-starter": {
+     "mean": 50.0,
+     "sd": 5.0
+    },
     "trend": {
      "mean": 34.94,
      "sd": 2.4
@@ -8733,7 +8737,7 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 28,
+   "n_forecasts": 29,
    "forecasts": {
     "claude-opus-5-web-superfc": {
      "mean": 6.1,
@@ -8843,6 +8847,10 @@
      "mean": 6.0,
      "sd": 1.8
     },
+    "ssa-starter": {
+     "mean": 50.0,
+     "sd": 5.0
+    },
     "trend": {
      "mean": 7.0,
      "sd": 1.45
@@ -8889,7 +8897,7 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 28,
+   "n_forecasts": 29,
    "forecasts": {
     "claude-opus-5-web-superfc": {
      "mean": 3.57,
@@ -8999,6 +9007,10 @@
      "mean": 3.6,
      "sd": 0.2
     },
+    "ssa-starter": {
+     "mean": 50.0,
+     "sd": 5.0
+    },
     "trend": {
      "mean": 3.72,
      "sd": 1.82
@@ -9045,7 +9057,7 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 27,
+   "n_forecasts": 28,
    "forecasts": {
     "claude-opus-5-web-superfc": {
      "mean": 3.26,
@@ -9151,6 +9163,10 @@
      "mean": 3.3,
      "sd": 0.1
     },
+    "ssa-starter": {
+     "mean": 50.0,
+     "sd": 5.0
+    },
     "trend": {
      "mean": 3.32,
      "sd": 1.82
@@ -9197,7 +9213,7 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 28,
+   "n_forecasts": 29,
    "forecasts": {
     "claude-opus-5-web-superfc": {
      "mean": 41.7,
@@ -9307,6 +9323,10 @@
      "mean": 40.9,
      "sd": 1.4
     },
+    "ssa-starter": {
+     "mean": 50.0,
+     "sd": 5.0
+    },
     "trend": {
      "mean": 41.09,
      "sd": 1.51
@@ -9353,7 +9373,7 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 4,
+   "n_forecasts": 5,
    "forecasts": {
     "climatology": {
      "mean": -3.28,
@@ -9366,6 +9386,10 @@
     "persistence": {
      "mean": 2.1,
      "sd": 1.5
+    },
+    "ssa-starter": {
+     "mean": 50.0,
+     "sd": 5.0
     },
     "trend": {
      "mean": -6.23,
@@ -16578,6 +16602,17 @@
    "homepage": "https://github.com/Social-Atoms/social-sim-arena"
   },
   {
+   "entrant_id": "ssa-starter",
+   "name": "SSA starter server",
+   "organization": "Social Simulation Arena",
+   "type": "participant",
+   "github": "assassin808",
+   "route": {
+    "kind": "agent_api",
+    "url": "https://social-sim-arena-dev.vercel.app/api/example-agent"
+   }
+  },
+  {
    "entrant_id": "trend",
    "name": "Linear trend (OLS)",
    "type": "baseline",
@@ -17245,11 +17280,623 @@
   ]
  },
  "profile": {
-  "scored_rounds": 0,
-  "rounds": [],
-  "board": [],
-  "matched": [],
-  "matched_rounds": 0,
+  "scored_rounds": 1,
+  "rounds": [
+   {
+    "round_id": "trends-basket-2026-09-05",
+    "release_at": "2026-09-05T14:00:00Z",
+    "cells": [
+     "trends_share_tesla",
+     "trends_share_iphone",
+     "trends_share_samsung",
+     "trends_share_netflix",
+     "trends_share_disney"
+    ],
+    "n_cells": 5,
+    "persistence_energy": 1.8069,
+    "outcome": {
+     "trends_share_tesla": 8.94,
+     "trends_share_iphone": 39.84,
+     "trends_share_samsung": 12.2,
+     "trends_share_netflix": 18.7,
+     "trends_share_disney": 20.33
+    },
+    "resolution": {
+     "method": "each cell's own series value as of the release date, from the archived Google Trends comparison snapshots; the same freeze the round's per-cell persistence null used",
+     "release_date": "2026-09-05",
+     "observed_dates": {
+      "trends_share_tesla": "2026-08-29",
+      "trends_share_iphone": "2026-08-29",
+      "trends_share_samsung": "2026-08-29",
+      "trends_share_netflix": "2026-08-29",
+      "trends_share_disney": "2026-08-29"
+     }
+    },
+    "entries": [
+     {
+      "entrant": "persistence",
+      "energy": 1.7976,
+      "skill": 0.0052,
+      "level": 0.16,
+      "structure": 1.7599,
+      "mean_cell_crps": 0.691
+     },
+     {
+      "entrant": "claude-opus-5-web",
+      "energy": 2.3895,
+      "skill": -0.3224,
+      "level": 0.1375,
+      "structure": 2.4092,
+      "mean_cell_crps": 0.9174
+     },
+     {
+      "entrant": "qwen-3.8-web",
+      "energy": 2.7044,
+      "skill": -0.4967,
+      "level": 0.1157,
+      "structure": 2.751,
+      "mean_cell_crps": 1.0473
+     },
+     {
+      "entrant": "claude-sonnet-web",
+      "energy": 3.2208,
+      "skill": -0.7825,
+      "level": 0.1789,
+      "structure": 3.2535,
+      "mean_cell_crps": 1.2432
+     },
+     {
+      "entrant": "glm-web-superfc",
+      "energy": 3.2483,
+      "skill": -0.7977,
+      "level": 0.1534,
+      "structure": 3.2723,
+      "mean_cell_crps": 1.1614
+     },
+     {
+      "entrant": "deepseek-pro-web-superfc",
+      "energy": 3.4084,
+      "skill": -0.8863,
+      "level": 0.1954,
+      "structure": 3.4414,
+      "mean_cell_crps": 1.3137
+     },
+     {
+      "entrant": "grok-web-superfc",
+      "energy": 3.5512,
+      "skill": -0.9653,
+      "level": 0.2497,
+      "structure": 3.53,
+      "mean_cell_crps": 1.2556
+     },
+     {
+      "entrant": "claude-opus-5-web-superfc",
+      "energy": 3.6637,
+      "skill": -1.0276,
+      "level": 0.2033,
+      "structure": 3.6755,
+      "mean_cell_crps": 1.2891
+     },
+     {
+      "entrant": "claude-sonnet-web-superfc",
+      "energy": 3.7772,
+      "skill": -1.0904,
+      "level": 0.2343,
+      "structure": 3.7958,
+      "mean_cell_crps": 1.4567
+     },
+     {
+      "entrant": "gemini-flash-web",
+      "energy": 4.0403,
+      "skill": -1.236,
+      "level": 0.1194,
+      "structure": 4.1145,
+      "mean_cell_crps": 1.4682
+     },
+     {
+      "entrant": "gemini-flash-web-superfc",
+      "energy": 4.1961,
+      "skill": -1.3222,
+      "level": 0.1198,
+      "structure": 4.2731,
+      "mean_cell_crps": 1.5115
+     },
+     {
+      "entrant": "grok-web",
+      "energy": 4.3432,
+      "skill": -1.4036,
+      "level": 0.2781,
+      "structure": 4.3196,
+      "mean_cell_crps": 1.4916
+     },
+     {
+      "entrant": "gemini-pro-web-superfc",
+      "energy": 4.3876,
+      "skill": -1.4282,
+      "level": 0.158,
+      "structure": 4.4583,
+      "mean_cell_crps": 1.552
+     },
+     {
+      "entrant": "gemini-pro-web",
+      "energy": 4.554,
+      "skill": -1.5203,
+      "level": 0.2139,
+      "structure": 4.5897,
+      "mean_cell_crps": 1.5633
+     },
+     {
+      "entrant": "deepseek-flash-web",
+      "energy": 4.687,
+      "skill": -1.5939,
+      "level": 0.311,
+      "structure": 4.6997,
+      "mean_cell_crps": 1.7522
+     },
+     {
+      "entrant": "deepseek-flash-web-superfc",
+      "energy": 6.6214,
+      "skill": -2.6645,
+      "level": 0.3456,
+      "structure": 6.6603,
+      "mean_cell_crps": 2.3091
+     },
+     {
+      "entrant": "gpt-5.6-terra-web-superfc",
+      "energy": 6.8808,
+      "skill": -2.808,
+      "level": 0.2823,
+      "structure": 6.9524,
+      "mean_cell_crps": 2.324
+     },
+     {
+      "entrant": "glm-web",
+      "energy": 7.4481,
+      "skill": -3.122,
+      "level": 0.2204,
+      "structure": 7.5783,
+      "mean_cell_crps": 2.8353
+     },
+     {
+      "entrant": "gpt-5.6-luna-web-superfc",
+      "energy": 8.0527,
+      "skill": -3.4566,
+      "level": 0.2971,
+      "structure": 8.2031,
+      "mean_cell_crps": 3.25
+     },
+     {
+      "entrant": "gpt-5.6-terra-web",
+      "energy": 9.1772,
+      "skill": -4.0789,
+      "level": 0.2468,
+      "structure": 9.3534,
+      "mean_cell_crps": 3.6441
+     },
+     {
+      "entrant": "kimi-web-superfc",
+      "energy": 9.2433,
+      "skill": -4.1155,
+      "level": 0.2175,
+      "structure": 9.4281,
+      "mean_cell_crps": 3.7317
+     },
+     {
+      "entrant": "gpt-5.6-luna-web",
+      "energy": 9.5335,
+      "skill": -4.2761,
+      "level": 0.3527,
+      "structure": 9.64,
+      "mean_cell_crps": 3.4019
+     },
+     {
+      "entrant": "kimi-web",
+      "energy": 9.6393,
+      "skill": -4.3346,
+      "level": 0.2391,
+      "structure": 9.8138,
+      "mean_cell_crps": 3.926
+     },
+     {
+      "entrant": "deepseek-pro-web",
+      "energy": 11.6953,
+      "skill": -5.4725,
+      "level": 0.2246,
+      "structure": 11.8904,
+      "mean_cell_crps": 4.0176
+     }
+    ]
+   }
+  ],
+  "board": [
+   {
+    "entrant": "persistence",
+    "rounds": 1,
+    "mean_energy": 1.7976,
+    "mean_skill": 0.0052,
+    "mean_level": 0.16,
+    "mean_structure": 1.7599
+   },
+   {
+    "entrant": "claude-opus-5-web",
+    "rounds": 1,
+    "mean_energy": 2.3895,
+    "mean_skill": -0.3224,
+    "mean_level": 0.1375,
+    "mean_structure": 2.4092
+   },
+   {
+    "entrant": "qwen-3.8-web",
+    "rounds": 1,
+    "mean_energy": 2.7044,
+    "mean_skill": -0.4967,
+    "mean_level": 0.1157,
+    "mean_structure": 2.751
+   },
+   {
+    "entrant": "claude-sonnet-web",
+    "rounds": 1,
+    "mean_energy": 3.2208,
+    "mean_skill": -0.7825,
+    "mean_level": 0.1789,
+    "mean_structure": 3.2535
+   },
+   {
+    "entrant": "glm-web-superfc",
+    "rounds": 1,
+    "mean_energy": 3.2483,
+    "mean_skill": -0.7977,
+    "mean_level": 0.1534,
+    "mean_structure": 3.2723
+   },
+   {
+    "entrant": "deepseek-pro-web-superfc",
+    "rounds": 1,
+    "mean_energy": 3.4084,
+    "mean_skill": -0.8863,
+    "mean_level": 0.1954,
+    "mean_structure": 3.4414
+   },
+   {
+    "entrant": "grok-web-superfc",
+    "rounds": 1,
+    "mean_energy": 3.5512,
+    "mean_skill": -0.9653,
+    "mean_level": 0.2497,
+    "mean_structure": 3.53
+   },
+   {
+    "entrant": "claude-opus-5-web-superfc",
+    "rounds": 1,
+    "mean_energy": 3.6637,
+    "mean_skill": -1.0276,
+    "mean_level": 0.2033,
+    "mean_structure": 3.6755
+   },
+   {
+    "entrant": "claude-sonnet-web-superfc",
+    "rounds": 1,
+    "mean_energy": 3.7772,
+    "mean_skill": -1.0904,
+    "mean_level": 0.2343,
+    "mean_structure": 3.7958
+   },
+   {
+    "entrant": "gemini-flash-web",
+    "rounds": 1,
+    "mean_energy": 4.0403,
+    "mean_skill": -1.236,
+    "mean_level": 0.1194,
+    "mean_structure": 4.1145
+   },
+   {
+    "entrant": "gemini-flash-web-superfc",
+    "rounds": 1,
+    "mean_energy": 4.1961,
+    "mean_skill": -1.3222,
+    "mean_level": 0.1198,
+    "mean_structure": 4.2731
+   },
+   {
+    "entrant": "grok-web",
+    "rounds": 1,
+    "mean_energy": 4.3432,
+    "mean_skill": -1.4036,
+    "mean_level": 0.2781,
+    "mean_structure": 4.3196
+   },
+   {
+    "entrant": "gemini-pro-web-superfc",
+    "rounds": 1,
+    "mean_energy": 4.3876,
+    "mean_skill": -1.4282,
+    "mean_level": 0.158,
+    "mean_structure": 4.4583
+   },
+   {
+    "entrant": "gemini-pro-web",
+    "rounds": 1,
+    "mean_energy": 4.554,
+    "mean_skill": -1.5203,
+    "mean_level": 0.2139,
+    "mean_structure": 4.5897
+   },
+   {
+    "entrant": "deepseek-flash-web",
+    "rounds": 1,
+    "mean_energy": 4.687,
+    "mean_skill": -1.5939,
+    "mean_level": 0.311,
+    "mean_structure": 4.6997
+   },
+   {
+    "entrant": "deepseek-flash-web-superfc",
+    "rounds": 1,
+    "mean_energy": 6.6214,
+    "mean_skill": -2.6645,
+    "mean_level": 0.3456,
+    "mean_structure": 6.6603
+   },
+   {
+    "entrant": "gpt-5.6-terra-web-superfc",
+    "rounds": 1,
+    "mean_energy": 6.8808,
+    "mean_skill": -2.808,
+    "mean_level": 0.2823,
+    "mean_structure": 6.9524
+   },
+   {
+    "entrant": "glm-web",
+    "rounds": 1,
+    "mean_energy": 7.4481,
+    "mean_skill": -3.122,
+    "mean_level": 0.2204,
+    "mean_structure": 7.5783
+   },
+   {
+    "entrant": "gpt-5.6-luna-web-superfc",
+    "rounds": 1,
+    "mean_energy": 8.0527,
+    "mean_skill": -3.4566,
+    "mean_level": 0.2971,
+    "mean_structure": 8.2031
+   },
+   {
+    "entrant": "gpt-5.6-terra-web",
+    "rounds": 1,
+    "mean_energy": 9.1772,
+    "mean_skill": -4.0789,
+    "mean_level": 0.2468,
+    "mean_structure": 9.3534
+   },
+   {
+    "entrant": "kimi-web-superfc",
+    "rounds": 1,
+    "mean_energy": 9.2433,
+    "mean_skill": -4.1155,
+    "mean_level": 0.2175,
+    "mean_structure": 9.4281
+   },
+   {
+    "entrant": "gpt-5.6-luna-web",
+    "rounds": 1,
+    "mean_energy": 9.5335,
+    "mean_skill": -4.2761,
+    "mean_level": 0.3527,
+    "mean_structure": 9.64
+   },
+   {
+    "entrant": "kimi-web",
+    "rounds": 1,
+    "mean_energy": 9.6393,
+    "mean_skill": -4.3346,
+    "mean_level": 0.2391,
+    "mean_structure": 9.8138
+   },
+   {
+    "entrant": "deepseek-pro-web",
+    "rounds": 1,
+    "mean_energy": 11.6953,
+    "mean_skill": -5.4725,
+    "mean_level": 0.2246,
+    "mean_structure": 11.8904
+   }
+  ],
+  "matched": [
+   {
+    "entrant": "persistence",
+    "rounds": 1,
+    "mean_energy": 1.7976,
+    "mean_skill": 0.0052,
+    "mean_level": 0.16,
+    "mean_structure": 1.7599
+   },
+   {
+    "entrant": "claude-opus-5-web",
+    "rounds": 1,
+    "mean_energy": 2.3895,
+    "mean_skill": -0.3224,
+    "mean_level": 0.1375,
+    "mean_structure": 2.4092
+   },
+   {
+    "entrant": "qwen-3.8-web",
+    "rounds": 1,
+    "mean_energy": 2.7044,
+    "mean_skill": -0.4967,
+    "mean_level": 0.1157,
+    "mean_structure": 2.751
+   },
+   {
+    "entrant": "claude-sonnet-web",
+    "rounds": 1,
+    "mean_energy": 3.2208,
+    "mean_skill": -0.7825,
+    "mean_level": 0.1789,
+    "mean_structure": 3.2535
+   },
+   {
+    "entrant": "glm-web-superfc",
+    "rounds": 1,
+    "mean_energy": 3.2483,
+    "mean_skill": -0.7977,
+    "mean_level": 0.1534,
+    "mean_structure": 3.2723
+   },
+   {
+    "entrant": "deepseek-pro-web-superfc",
+    "rounds": 1,
+    "mean_energy": 3.4084,
+    "mean_skill": -0.8863,
+    "mean_level": 0.1954,
+    "mean_structure": 3.4414
+   },
+   {
+    "entrant": "grok-web-superfc",
+    "rounds": 1,
+    "mean_energy": 3.5512,
+    "mean_skill": -0.9653,
+    "mean_level": 0.2497,
+    "mean_structure": 3.53
+   },
+   {
+    "entrant": "claude-opus-5-web-superfc",
+    "rounds": 1,
+    "mean_energy": 3.6637,
+    "mean_skill": -1.0276,
+    "mean_level": 0.2033,
+    "mean_structure": 3.6755
+   },
+   {
+    "entrant": "claude-sonnet-web-superfc",
+    "rounds": 1,
+    "mean_energy": 3.7772,
+    "mean_skill": -1.0904,
+    "mean_level": 0.2343,
+    "mean_structure": 3.7958
+   },
+   {
+    "entrant": "gemini-flash-web",
+    "rounds": 1,
+    "mean_energy": 4.0403,
+    "mean_skill": -1.236,
+    "mean_level": 0.1194,
+    "mean_structure": 4.1145
+   },
+   {
+    "entrant": "gemini-flash-web-superfc",
+    "rounds": 1,
+    "mean_energy": 4.1961,
+    "mean_skill": -1.3222,
+    "mean_level": 0.1198,
+    "mean_structure": 4.2731
+   },
+   {
+    "entrant": "grok-web",
+    "rounds": 1,
+    "mean_energy": 4.3432,
+    "mean_skill": -1.4036,
+    "mean_level": 0.2781,
+    "mean_structure": 4.3196
+   },
+   {
+    "entrant": "gemini-pro-web-superfc",
+    "rounds": 1,
+    "mean_energy": 4.3876,
+    "mean_skill": -1.4282,
+    "mean_level": 0.158,
+    "mean_structure": 4.4583
+   },
+   {
+    "entrant": "gemini-pro-web",
+    "rounds": 1,
+    "mean_energy": 4.554,
+    "mean_skill": -1.5203,
+    "mean_level": 0.2139,
+    "mean_structure": 4.5897
+   },
+   {
+    "entrant": "deepseek-flash-web",
+    "rounds": 1,
+    "mean_energy": 4.687,
+    "mean_skill": -1.5939,
+    "mean_level": 0.311,
+    "mean_structure": 4.6997
+   },
+   {
+    "entrant": "deepseek-flash-web-superfc",
+    "rounds": 1,
+    "mean_energy": 6.6214,
+    "mean_skill": -2.6645,
+    "mean_level": 0.3456,
+    "mean_structure": 6.6603
+   },
+   {
+    "entrant": "gpt-5.6-terra-web-superfc",
+    "rounds": 1,
+    "mean_energy": 6.8808,
+    "mean_skill": -2.808,
+    "mean_level": 0.2823,
+    "mean_structure": 6.9524
+   },
+   {
+    "entrant": "glm-web",
+    "rounds": 1,
+    "mean_energy": 7.4481,
+    "mean_skill": -3.122,
+    "mean_level": 0.2204,
+    "mean_structure": 7.5783
+   },
+   {
+    "entrant": "gpt-5.6-luna-web-superfc",
+    "rounds": 1,
+    "mean_energy": 8.0527,
+    "mean_skill": -3.4566,
+    "mean_level": 0.2971,
+    "mean_structure": 8.2031
+   },
+   {
+    "entrant": "gpt-5.6-terra-web",
+    "rounds": 1,
+    "mean_energy": 9.1772,
+    "mean_skill": -4.0789,
+    "mean_level": 0.2468,
+    "mean_structure": 9.3534
+   },
+   {
+    "entrant": "kimi-web-superfc",
+    "rounds": 1,
+    "mean_energy": 9.2433,
+    "mean_skill": -4.1155,
+    "mean_level": 0.2175,
+    "mean_structure": 9.4281
+   },
+   {
+    "entrant": "gpt-5.6-luna-web",
+    "rounds": 1,
+    "mean_energy": 9.5335,
+    "mean_skill": -4.2761,
+    "mean_level": 0.3527,
+    "mean_structure": 9.64
+   },
+   {
+    "entrant": "kimi-web",
+    "rounds": 1,
+    "mean_energy": 9.6393,
+    "mean_skill": -4.3346,
+    "mean_level": 0.2391,
+    "mean_structure": 9.8138
+   },
+   {
+    "entrant": "deepseek-pro-web",
+    "rounds": 1,
+    "mean_energy": 11.6953,
+    "mean_skill": -5.4725,
+    "mean_level": 0.2246,
+    "mean_structure": 11.8904
+   }
+  ],
+  "matched_rounds": 1,
   "skipped": [],
   "note": "energy score (multivariate CRPS) over the round's cell vector; skill = 1 - ES(entrant) / ES(per-cell persistence). `matched` holds only entrants who answered every scored profile round."
  },
@@ -46079,38 +46726,38 @@
   "sb_approval": {
    "source": "sb_approval",
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
-   "fetched_at": "2026-09-05T04:28:37Z",
-   "sha256": "902d8d0bebf95505afd5d4ae5744dff4ff43327d24bc8e85b1a498f63aad5c28",
+   "fetched_at": "2026-09-06T04:40:58Z",
+   "sha256": "1e179f50623148d23177e52457200cd1542bc0f747096e7e4befe3c9f8572287",
    "bytes": 1601450,
-   "file": "sources/sb_approval/2026-09-05.csv",
+   "file": "sources/sb_approval/2026-09-06.csv",
    "note": "Silver Bulletin poll database, published as a Google Sheet"
   },
   "sb_generic": {
    "source": "sb_generic",
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
-   "fetched_at": "2026-09-05T04:28:37Z",
-   "sha256": "31c263df0b6d550d7d113f53663c14a6595febb8ff2043247c88013a10a34b84",
-   "bytes": 156028,
-   "file": "sources/sb_generic/2026-09-05.csv",
+   "fetched_at": "2026-09-06T04:40:59Z",
+   "sha256": "930c55ddcaad5a5d79194fc5e0fdaa8ddade120248874958b0313a9336c6553f",
+   "bytes": 155945,
+   "file": "sources/sb_generic/2026-09-06.csv",
    "note": "Silver Bulletin generic-ballot database, published as a Google Sheet"
   },
   "umich": {
    "source": "umich",
    "url": "http://www.sca.isr.umich.edu/files/tbmics.csv",
-   "fetched_at": "2026-09-05T04:28:38Z",
+   "fetched_at": "2026-09-06T04:41:00Z",
    "sha256": "a4e677722ac5addd704db9b2dd1081cc19192972b543781c0c9354568a63e59f",
    "bytes": 14372,
-   "file": "sources/umich/2026-09-05.json",
+   "file": "sources/umich/2026-09-06.json",
    "note": "Surveys of Consumers, University of Michigan (sca.isr.umich.edu): tbmics.csv for finals and tbcics.csv for the current preliminary, newest reading 2026-08-01; hash-covered canonical raw composite of http://www.sca.isr.umich.edu/files/tbmics.csv and http://www.sca.isr.umich.edu/files/tbcics.csv"
   },
   "aaii": {
    "source": "aaii",
    "url": "https://www.aaii.com/sentimentsurvey/sent_results",
-   "fetched_at": "2026-09-05T04:28:38Z",
-   "sha256": "96c28faa6fe349a4cb46db6d1dbec3453f635705bfcf83e7af3f644b0e87619e",
-   "bytes": 46280,
-   "file": "sources/aaii/2026-09-05.html",
-   "note": "AAII sentiment survey results page, a ~22-week rolling window parsed against the response's own date 2026-09-05; the full 1987-present .xls is OLE2 and unreadable without a dependency"
+   "fetched_at": "2026-09-06T04:41:00Z",
+   "sha256": "a8be6a2aec1f52cd857b6ad5961d27dfe504a5e3b6d42292ea63b043dbb4467c",
+   "bytes": 46414,
+   "file": "sources/aaii/2026-09-06.html",
+   "note": "AAII sentiment survey results page, a ~22-week rolling window parsed against the response's own date 2026-09-06; the full 1987-present .xls is OLE2 and unreadable without a dependency"
   },
   "repo": "https://github.com/Social-Atoms/social-sim-arena"
  },
@@ -46521,111 +47168,111 @@
    "budget_fetch_days": 3,
    "budget_change_days": 12,
    "url": "https://www.aaii.com/sentimentsurvey/sent_results",
-   "file": "sources/aaii/2026-09-05.html"
+   "file": "sources/aaii/2026-09-06.html"
   },
   {
    "source": "civiqs",
    "state": "stale",
    "fetched_days": 1.2,
-   "changed_days": 11.2,
+   "changed_days": 5.2,
    "budget_fetch_days": 2,
-   "budget_change_days": 10,
+   "budget_change_days": 4,
    "url": null,
    "file": null,
    "trackers": 22,
    "tracker_health": [
     {
      "key": "approve_president_trump_2025",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
     },
     {
      "key": "approve_president_trump_2025.age-18-34",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
     },
     {
      "key": "approve_president_trump_2025.age-35-49",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
     },
     {
      "key": "approve_president_trump_2025.age-50-64",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
     },
     {
      "key": "approve_president_trump_2025.age-65_",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
     },
     {
      "key": "approve_president_trump_2025.education-College_Graduate",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
     },
     {
      "key": "approve_president_trump_2025.education-Non-College_Graduate",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
     },
     {
      "key": "approve_president_trump_2025.education-Postgraduate",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
     },
     {
      "key": "approve_president_trump_2025.gender-Female",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
     },
     {
      "key": "approve_president_trump_2025.gender-Male",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
     },
     {
      "key": "approve_president_trump_2025.party-Democrat",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
     },
     {
      "key": "approve_president_trump_2025.party-Independent",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
@@ -46635,77 +47282,77 @@
      "fetched_days": 1.2,
      "changed_days": 2.2,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-04",
-     "newest_reading": "2026-09-03"
+     "newest_snapshot": "2026-09-05",
+     "newest_reading": "2026-09-04"
     },
     {
      "key": "approve_president_trump_2025.race-Black_or_African-American",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
     },
     {
      "key": "approve_president_trump_2025.race-Hispanic_Latino",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
     },
     {
      "key": "approve_president_trump_2025.race-Other",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
     },
     {
      "key": "approve_president_trump_2025.race-White",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
     },
     {
      "key": "describe_feeling_us",
-     "fetched_days": 0.2,
-     "changed_days": 11.2,
+     "fetched_days": 1.2,
+     "changed_days": 12.2,
      "change_budget_days": 10,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-08-25"
     },
     {
      "key": "economy_family_retro",
-     "fetched_days": 0.2,
-     "changed_days": 1.2,
+     "fetched_days": 1.2,
+     "changed_days": 2.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-04"
     },
     {
      "key": "economy_us_direction",
-     "fetched_days": 0.2,
-     "changed_days": 4.2,
+     "fetched_days": 1.2,
+     "changed_days": 5.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-01"
     },
     {
      "key": "economy_us_now",
-     "fetched_days": 0.2,
-     "changed_days": 2.2,
+     "fetched_days": 1.2,
+     "changed_days": 3.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-03"
     },
     {
      "key": "inflation_impact",
-     "fetched_days": 0.2,
-     "changed_days": 2.2,
+     "fetched_days": 1.2,
+     "changed_days": 3.2,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-05",
      "newest_reading": "2026-09-03"
@@ -46723,12 +47370,12 @@
   {
    "source": "sb_approval",
    "state": "ok",
-   "fetched_days": -0.0,
+   "fetched_days": 0.0,
    "changed_days": 0.0,
    "budget_fetch_days": 2,
    "budget_change_days": 7,
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
-   "file": "sources/sb_approval/2026-09-05.csv"
+   "file": "sources/sb_approval/2026-09-06.csv"
   },
   {
    "source": "sb_generic",
@@ -46738,21 +47385,21 @@
    "budget_fetch_days": 2,
    "budget_change_days": 10,
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
-   "file": "sources/sb_generic/2026-09-05.csv"
+   "file": "sources/sb_generic/2026-09-06.csv"
   },
   {
    "source": "umich",
    "state": "ok",
    "fetched_days": -0.0,
-   "changed_days": 0.1,
+   "changed_days": 1.1,
    "budget_fetch_days": 3,
    "budget_change_days": 40,
    "url": "http://www.sca.isr.umich.edu/files/tbmics.csv",
-   "file": "sources/umich/2026-09-05.json"
+   "file": "sources/umich/2026-09-06.json"
   }
  ],
  "operator_status": {
-  "generated_at": "2026-09-05T04:28:36Z",
+  "generated_at": "2026-09-06T04:40:58Z",
   "source_states": [
    {
     "attempts": 1,
@@ -46765,7 +47412,7 @@
     "required_action": "none",
     "evidence": [
      "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=12",
-     "sources/aaii/2026-09-05.html sha256=96c28faa6fe349a4cb46db6d1dbec3453f635705bfcf83e7af3f644b0e87619e"
+     "sources/aaii/2026-09-06.html sha256=a8be6a2aec1f52cd857b6ad5961d27dfe504a5e3b6d42292ea63b043dbb4467c"
     ],
     "alert": false,
     "source": "aaii",
@@ -46773,16 +47420,16 @@
    },
    {
     "attempts": 1,
-    "last_error": "approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican",
-    "next_retry": "2026-09-05T10:28:36Z",
+    "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/app",
+    "next_retry": "2026-09-06T10:40:58Z",
     "next_lock": "2026-09-06T14:00:00Z",
     "next_deadline": "2026-09-06T14:00:00Z",
     "route": "ssa.series:civiqs",
     "estimated_spend": 0.0,
     "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
     "evidence": [
-     "civiqs/approve_president_trump_2025.party-Republican (20 snapshots; newest 2026-09-04)",
-     "fetched_days=1.2; changed_days=11.2; fetch_budget=2; change_budget=10; stale_keys=describe_feeling_us,economy_us_direction",
+     "civiqs/approve_president_trump_2025 (21 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.age-18-34 (17 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.age-35-49 (17 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.age-50-64 (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.age-65_ (17 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.education-College_Graduate (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.education-Non-College_Graduate (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.education-Postgraduate (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.gender-Female (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.gender-Male (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.party-Democrat (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.party-Independent (17 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.party-Republican (21 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.race-Black_or_African-American (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.race-Hispanic_Latino (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.race-Other (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.race-White (17 snapshots; newest 2026-09-05); civiqs/describe_feeling_us (18 snapshots; newest 2026-09-05); civiqs/economy_family_retro (19 snapshots; newest 2026-09-05); civiqs/economy_us_direction (19 snapshots; newest 2026-09-05); civiqs/economy_us_now (19 snapshots; newest 2026-09-05); civiqs/inflation_impact (19 snapshots; newest 2026-09-05)",
+     "fetched_days=1.2; changed_days=5.2; fetch_budget=2; change_budget=4; stale_keys=describe_feeling_us,economy_us_direction",
      "live attempt failed; same-source archive used"
     ],
     "alert": true,
@@ -46808,7 +47455,7 @@
    {
     "attempts": 1,
     "last_error": "wiki-top10-2026-10-18: RuntimeError: no complete pre-lock ranking observation is available; wiki-top10-2026-10-25: RuntimeError: no complete pre-lock ranking observation is available",
-    "next_retry": "2026-09-05T10:28:36Z",
+    "next_retry": "2026-09-06T10:40:58Z",
     "next_lock": "2026-09-06T14:00:00Z",
     "next_deadline": "2026-09-06T14:00:00Z",
     "route": "ssa.ranking:ranking_wikitop",
@@ -46831,8 +47478,8 @@
     "estimated_spend": 0.0,
     "required_action": "none",
     "evidence": [
-     "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
-     "sources/sb_approval/2026-09-05.csv sha256=902d8d0bebf95505afd5d4ae5744dff4ff43327d24bc8e85b1a498f63aad5c28"
+     "fetched_days=0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
+     "sources/sb_approval/2026-09-06.csv sha256=1e179f50623148d23177e52457200cd1542bc0f747096e7e4befe3c9f8572287"
     ],
     "alert": false,
     "source": "sb_approval",
@@ -46849,7 +47496,7 @@
     "required_action": "none",
     "evidence": [
      "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=10",
-     "sources/sb_generic/2026-09-05.csv sha256=31c263df0b6d550d7d113f53663c14a6595febb8ff2043247c88013a10a34b84"
+     "sources/sb_generic/2026-09-06.csv sha256=930c55ddcaad5a5d79194fc5e0fdaa8ddade120248874958b0313a9336c6553f"
     ],
     "alert": false,
     "source": "sb_generic",
@@ -46873,19 +47520,20 @@
    },
    {
     "attempts": 1,
-    "last_error": null,
-    "next_retry": null,
+    "last_error": "Tesla.geo-US: RuntimeError: Google Trends rate-limited this address (HTTP 429). Not retried in-process: the next scheduled refresh retries, and registered series serve their archive until then.; iPhone.geo-US: RuntimeError: Google Trends rate-limited this address (HTTP 429). Not retried in-process: the next scheduled refresh retries, and registered series serve their archive until then.",
+    "next_retry": "2026-09-06T10:40:58Z",
     "next_lock": "2026-09-06T14:00:00Z",
     "next_deadline": "2026-09-06T14:00:00Z",
     "route": "ssa.series:trends",
     "estimated_spend": 0.0,
-    "required_action": "none",
+    "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
     "evidence": [
-     "2 validated non-empty series"
+     "live attempt failed; same-source archive used",
+     "trends/Tesla.geo-US (19 snapshots; newest 2026-09-05); trends/iPhone.geo-US (19 snapshots; newest 2026-09-05)"
     ],
-    "alert": false,
+    "alert": true,
     "source": "trends",
-    "state": "healthy"
+    "state": "stale"
    },
    {
     "attempts": 1,
@@ -46913,8 +47561,8 @@
     "estimated_spend": 0.0,
     "required_action": "none",
     "evidence": [
-     "fetched_days=-0.0; changed_days=0.1; fetch_budget=3; change_budget=40",
-     "sources/umich/2026-09-05.json sha256=a4e677722ac5addd704db9b2dd1081cc19192972b543781c0c9354568a63e59f"
+     "fetched_days=-0.0; changed_days=1.1; fetch_budget=3; change_budget=40",
+     "sources/umich/2026-09-06.json sha256=a4e677722ac5addd704db9b2dd1081cc19192972b543781c0c9354568a63e59f"
     ],
     "alert": false,
     "source": "umich",
@@ -46972,1097 +47620,62 @@
   "entrant_round_states": [
    {
     "alert": false,
-    "attempts": 0,
-    "entrant": "claude-opus-5-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/claude-opus-5-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-opus-5-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/claude-opus-5-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-sonnet-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/claude-sonnet-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-sonnet-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/claude-sonnet-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-flash-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/deepseek-flash-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-flash-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/deepseek-flash-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-pro-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/deepseek-pro-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-pro-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/deepseek-pro-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-flash-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/gemini-flash-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-flash-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/gemini-flash-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-pro-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/gemini-pro-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-pro-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/gemini-pro-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "glm-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/glm-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "glm-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/glm-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-luna-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/gpt-5.6-luna-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-luna-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/gpt-5.6-luna-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-terra-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/gpt-5.6-terra-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-terra-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/gpt-5.6-terra-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "grok-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/grok-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "direct:api.x.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "grok-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/grok-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "direct:api.x.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "kimi-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/kimi-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "kimi-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/kimi-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "qwen-3.8-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/qwen-3.8-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "qwen-3.8-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/mc-2026-w37-approval/qwen-3.8-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-07T14:00:00Z",
-    "next_lock": "2026-09-07T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "mc-2026-w37-approval",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-opus-5-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/claude-opus-5-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-opus-5-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/claude-opus-5-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-sonnet-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/claude-sonnet-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-sonnet-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/claude-sonnet-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-flash-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/deepseek-flash-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-flash-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/deepseek-flash-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-pro-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/deepseek-pro-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-pro-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/deepseek-pro-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-flash-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/gemini-flash-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-flash-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/gemini-flash-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-pro-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/gemini-pro-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-pro-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/gemini-pro-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "glm-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/glm-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "glm-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/glm-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-luna-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/gpt-5.6-luna-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-luna-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/gpt-5.6-luna-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-terra-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/gpt-5.6-terra-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-terra-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/gpt-5.6-terra-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "grok-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/grok-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "direct:api.x.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "grok-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/grok-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "direct:api.x.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "kimi-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/kimi-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "kimi-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/kimi-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "qwen-3.8-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/qwen-3.8-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "qwen-3.8-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl1y/qwen-3.8-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl1y",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-opus-5-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/claude-opus-5-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-opus-5-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/claude-opus-5-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-sonnet-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/claude-sonnet-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-sonnet-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/claude-sonnet-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-flash-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/deepseek-flash-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-flash-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/deepseek-flash-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-pro-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/deepseek-pro-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-pro-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/deepseek-pro-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-flash-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/gemini-flash-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-flash-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/gemini-flash-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-pro-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/gemini-pro-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-pro-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/gemini-pro-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": true,
     "attempts": 1,
-    "entrant": "glm-web",
-    "estimated_spend": 0.01041,
-    "evidence": [],
-    "last_error": "glm-web (glm-5.2) failed on sce-2026-08-infl3y: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": "2026-09-05T10:23:32Z",
-    "required_action": "retry on the next refresh; keep other entrants' successes",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
-    "state": "retryable_failure"
+    "entrant": "ssa-starter",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=forecasts/aaii-2026-09-10/ssa-starter.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-08T14:00:00Z",
+    "next_lock": "2026-09-08T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "aaii-2026-09-10",
+    "route": "participant:social-sim-arena-dev.vercel.app",
+    "state": "succeeded"
    },
    {
     "alert": false,
-    "attempts": 0,
-    "entrant": "glm-web-superfc",
+    "attempts": 1,
+    "entrant": "ssa-starter",
     "estimated_spend": 0.0,
     "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/glm-web-superfc.json"
+     "forecast=forecasts/mc-2026-w37-approval/ssa-starter.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-07T14:00:00Z",
+    "next_lock": "2026-09-07T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "mc-2026-w37-approval",
+    "route": "participant:social-sim-arena-dev.vercel.app",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "ssa-starter",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=forecasts/sce-2026-08-infl1y/ssa-starter.json"
     ],
     "last_error": null,
     "next_deadline": "2026-09-06T15:00:00Z",
     "next_lock": "2026-09-06T15:00:00Z",
     "next_retry": null,
     "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
+    "round_id": "sce-2026-08-infl1y",
+    "route": "participant:social-sim-arena-dev.vercel.app",
     "state": "succeeded"
    },
    {
     "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-luna-web",
+    "attempts": 1,
+    "entrant": "ssa-starter",
     "estimated_spend": 0.0,
     "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/gpt-5.6-luna-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-luna-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/gpt-5.6-luna-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-terra-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/gpt-5.6-terra-web.json"
+     "forecast=forecasts/sce-2026-08-infl3y/ssa-starter.json"
     ],
     "last_error": null,
     "next_deadline": "2026-09-06T15:00:00Z",
@@ -48070,135 +47683,16 @@
     "next_retry": null,
     "required_action": "none",
     "round_id": "sce-2026-08-infl3y",
-    "route": "direct:api.openai.com",
+    "route": "participant:social-sim-arena-dev.vercel.app",
     "state": "succeeded"
    },
    {
     "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-terra-web-superfc",
+    "attempts": 1,
+    "entrant": "ssa-starter",
     "estimated_spend": 0.0,
     "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/gpt-5.6-terra-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "grok-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/grok-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "direct:api.x.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "grok-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/grok-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "direct:api.x.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "kimi-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/kimi-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "kimi-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/kimi-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "qwen-3.8-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/qwen-3.8-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "qwen-3.8-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/sce-2026-08-infl3y/qwen-3.8-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T15:00:00Z",
-    "next_lock": "2026-09-06T15:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "sce-2026-08-infl3y",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-opus-5-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/claude-opus-5-web.json"
+     "forecast=forecasts/yougov-2026-w37-approval/ssa-starter.json"
     ],
     "last_error": null,
     "next_deadline": "2026-09-06T14:00:00Z",
@@ -48206,407 +47700,16 @@
     "next_retry": null,
     "required_action": "none",
     "round_id": "yougov-2026-w37-approval",
-    "route": "openrouter:openrouter.ai",
+    "route": "participant:social-sim-arena-dev.vercel.app",
     "state": "succeeded"
    },
    {
     "alert": false,
-    "attempts": 0,
-    "entrant": "claude-opus-5-web-superfc",
+    "attempts": 1,
+    "entrant": "ssa-starter",
     "estimated_spend": 0.0,
     "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/claude-opus-5-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-sonnet-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/claude-sonnet-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-sonnet-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/claude-sonnet-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-flash-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/deepseek-flash-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-flash-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/deepseek-flash-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-pro-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/deepseek-pro-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-pro-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/deepseek-pro-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-flash-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/gemini-flash-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-flash-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/gemini-flash-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-pro-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/gemini-pro-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-pro-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/gemini-pro-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "glm-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/glm-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "glm-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/glm-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-luna-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/gpt-5.6-luna-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-luna-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/gpt-5.6-luna-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-terra-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/gpt-5.6-terra-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-terra-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/gpt-5.6-terra-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "grok-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/grok-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "direct:api.x.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "grok-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/grok-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "direct:api.x.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "kimi-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/kimi-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "kimi-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/kimi-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "qwen-3.8-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/qwen-3.8-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "qwen-3.8-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-approval/qwen-3.8-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-approval",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-opus-5-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/claude-opus-5-web.json"
+     "forecast=forecasts/yougov-2026-w37-generic/ssa-starter.json"
     ],
     "last_error": null,
     "next_deadline": "2026-09-06T14:00:00Z",
@@ -48614,431 +47717,33 @@
     "next_retry": null,
     "required_action": "none",
     "round_id": "yougov-2026-w37-generic",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-opus-5-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/claude-opus-5-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-sonnet-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/claude-sonnet-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-sonnet-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/claude-sonnet-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-flash-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/deepseek-flash-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-flash-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/deepseek-flash-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-pro-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/deepseek-pro-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-pro-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/deepseek-pro-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "direct:api.deepseek.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-flash-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/gemini-flash-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-flash-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/gemini-flash-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-pro-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/gemini-pro-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-pro-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/gemini-pro-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "direct:generativelanguage.googleapis.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "glm-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/glm-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "glm-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/glm-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-luna-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/gpt-5.6-luna-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-luna-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/gpt-5.6-luna-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-terra-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/gpt-5.6-terra-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-terra-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/gpt-5.6-terra-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "direct:api.openai.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "grok-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/grok-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "direct:api.x.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "grok-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/grok-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "direct:api.x.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "kimi-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/kimi-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "kimi-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/kimi-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "qwen-3.8-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/qwen-3.8-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "openrouter:openrouter.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "qwen-3.8-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/yougov-2026-w37-generic/qwen-3.8-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-06T14:00:00Z",
-    "next_lock": "2026-09-06T14:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "yougov-2026-w37-generic",
-    "route": "openrouter:openrouter.ai",
+    "route": "participant:social-sim-arena-dev.vercel.app",
     "state": "succeeded"
    }
   ],
   "counts": {
    "sources": {
     "deadline_risk": 0,
-    "healthy": 11,
+    "healthy": 10,
     "retryable_failure": 1,
-    "stale": 1,
+    "stale": 2,
     "unresolvable": 0
    },
    "entrant_rounds": {
     "missed_lock": 0,
     "queued": 0,
-    "retryable_failure": 1,
+    "retryable_failure": 0,
     "running": 0,
-    "succeeded": 119,
+    "succeeded": 6,
     "terminal_failure": 0
    }
   },
   "alerts": [
    {
-    "kind": "entrant_round",
-    "id": "sce-2026-08-infl3y/glm-web",
-    "state": "retryable_failure",
-    "last_error": "glm-web (glm-5.2) failed on sce-2026-08-infl3y: ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
-    "required_action": "retry on the next refresh; keep other entrants' successes"
-   },
-   {
     "kind": "source",
     "id": "civiqs",
     "state": "stale",
-    "last_error": "approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican",
+    "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/app",
     "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release"
    },
    {
@@ -49047,6 +47752,13 @@
     "state": "retryable_failure",
     "last_error": "wiki-top10-2026-10-18: RuntimeError: no complete pre-lock ranking observation is available; wiki-top10-2026-10-25: RuntimeError: no complete pre-lock ranking observation is available",
     "required_action": "retry on the next refresh; preserve the last valid vintage"
+   },
+   {
+    "kind": "source",
+    "id": "trends",
+    "state": "stale",
+    "last_error": "Tesla.geo-US: RuntimeError: Google Trends rate-limited this address (HTTP 429). Not retried in-process: the next scheduled refresh retries, and registered series serve their archive until then.; iPhone.geo-US: RuntimeError: Google Trends rate-limited this address (HTTP 429). Not retried in-process: the next scheduled refresh retries, and registered series serve their archive until then.",
+    "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release"
    }
   ]
  },
