@@ -3,8 +3,8 @@
     {
       "id": "civiqs",
       "kind": "source",
-      "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/app",
-      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
+      "last_error": null,
+      "required_action": "inspect upstream freshness; do not resolve a new round until the source moves",
       "state": "stale"
     },
     {
@@ -13,13 +13,6 @@
       "last_error": "wiki-top10-2026-10-18: RuntimeError: no complete pre-lock ranking observation is available; wiki-top10-2026-10-25: RuntimeError: no complete pre-lock ranking observation is available",
       "required_action": "retry on the next refresh; preserve the last valid vintage",
       "state": "retryable_failure"
-    },
-    {
-      "id": "trends",
-      "kind": "source",
-      "last_error": "Tesla.geo-US: RuntimeError: Google Trends rate-limited this address (HTTP 429). Not retried in-process: the next scheduled refresh retries, and registered series serve their archive until then.; iPhone.geo-US: RuntimeError: Google Trends rate-limited this address (HTTP 429). Not retried in-process: the next scheduled refresh retries, and registered series serve their archive until then.",
-      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
-      "state": "stale"
     }
   ],
   "counts": {
@@ -28,122 +21,19 @@
       "queued": 0,
       "retryable_failure": 0,
       "running": 0,
-      "succeeded": 6,
+      "succeeded": 0,
       "terminal_failure": 0
     },
     "sources": {
       "deadline_risk": 0,
-      "healthy": 10,
+      "healthy": 11,
       "retryable_failure": 1,
-      "stale": 2,
+      "stale": 1,
       "unresolvable": 0
     }
   },
-  "entrant_round_states": [
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "ssa-starter",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/ssa-starter.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "participant:social-sim-arena-dev.vercel.app",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "ssa-starter",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/mc-2026-w37-approval/ssa-starter.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-07T14:00:00Z",
-      "next_lock": "2026-09-07T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "mc-2026-w37-approval",
-      "route": "participant:social-sim-arena-dev.vercel.app",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "ssa-starter",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/sce-2026-08-infl1y/ssa-starter.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-06T15:00:00Z",
-      "next_lock": "2026-09-06T15:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "sce-2026-08-infl1y",
-      "route": "participant:social-sim-arena-dev.vercel.app",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "ssa-starter",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/sce-2026-08-infl3y/ssa-starter.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-06T15:00:00Z",
-      "next_lock": "2026-09-06T15:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "sce-2026-08-infl3y",
-      "route": "participant:social-sim-arena-dev.vercel.app",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "ssa-starter",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/yougov-2026-w37-approval/ssa-starter.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-06T14:00:00Z",
-      "next_lock": "2026-09-06T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "yougov-2026-w37-approval",
-      "route": "participant:social-sim-arena-dev.vercel.app",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "ssa-starter",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/yougov-2026-w37-generic/ssa-starter.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-06T14:00:00Z",
-      "next_lock": "2026-09-06T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "yougov-2026-w37-generic",
-      "route": "participant:social-sim-arena-dev.vercel.app",
-      "state": "succeeded"
-    }
-  ],
-  "generated_at": "2026-09-06T04:40:58Z",
+  "entrant_round_states": [],
+  "generated_at": "2026-09-06T17:42:49Z",
   "source_states": [
     {
       "alert": false,
@@ -151,11 +41,11 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=12",
-        "sources/aaii/2026-09-06.html sha256=a8be6a2aec1f52cd857b6ad5961d27dfe504a5e3b6d42292ea63b043dbb4467c"
+        "sources/aaii/2026-09-06.html sha256=d37e2a0d16805eafeb5d9c73bac2985891db7c4cc2593cc15d086976445c69f1"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-06T14:00:00Z",
-      "next_lock": "2026-09-06T14:00:00Z",
+      "next_deadline": "2026-09-07T14:00:00Z",
+      "next_lock": "2026-09-07T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "https://www.aaii.com/sentimentsurvey/sent_results",
@@ -167,15 +57,14 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "civiqs/approve_president_trump_2025 (21 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.age-18-34 (17 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.age-35-49 (17 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.age-50-64 (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.age-65_ (17 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.education-College_Graduate (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.education-Non-College_Graduate (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.education-Postgraduate (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.gender-Female (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.gender-Male (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.party-Democrat (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.party-Independent (17 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.party-Republican (21 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.race-Black_or_African-American (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.race-Hispanic_Latino (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.race-Other (18 snapshots; newest 2026-09-05); civiqs/approve_president_trump_2025.race-White (17 snapshots; newest 2026-09-05); civiqs/describe_feeling_us (18 snapshots; newest 2026-09-05); civiqs/economy_family_retro (19 snapshots; newest 2026-09-05); civiqs/economy_us_direction (19 snapshots; newest 2026-09-05); civiqs/economy_us_now (19 snapshots; newest 2026-09-05); civiqs/inflation_impact (19 snapshots; newest 2026-09-05)",
-        "fetched_days=1.2; changed_days=5.2; fetch_budget=2; change_budget=4; stale_keys=describe_feeling_us,economy_us_direction",
-        "live attempt failed; same-source archive used"
+        "22 validated non-empty series",
+        "fetched_days=0.7; changed_days=5.7; fetch_budget=2; change_budget=4; stale_keys=describe_feeling_us,economy_us_direction"
       ],
-      "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/app",
-      "next_deadline": "2026-09-06T14:00:00Z",
-      "next_lock": "2026-09-06T14:00:00Z",
-      "next_retry": "2026-09-06T10:40:58Z",
-      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
+      "last_error": null,
+      "next_deadline": "2026-09-07T14:00:00Z",
+      "next_lock": "2026-09-07T14:00:00Z",
+      "next_retry": null,
+      "required_action": "inspect upstream freshness; do not resolve a new round until the source moves",
       "route": "ssa.series:civiqs",
       "source": "civiqs",
       "state": "stale"
@@ -188,8 +77,8 @@
         "1 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-06T14:00:00Z",
-      "next_lock": "2026-09-06T14:00:00Z",
+      "next_deadline": "2026-09-07T14:00:00Z",
+      "next_lock": "2026-09-07T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:hhpoll",
@@ -204,9 +93,9 @@
         "affected_rounds=wiki-top10-2026-10-18,wiki-top10-2026-10-25"
       ],
       "last_error": "wiki-top10-2026-10-18: RuntimeError: no complete pre-lock ranking observation is available; wiki-top10-2026-10-25: RuntimeError: no complete pre-lock ranking observation is available",
-      "next_deadline": "2026-09-06T14:00:00Z",
-      "next_lock": "2026-09-06T14:00:00Z",
-      "next_retry": "2026-09-06T10:40:58Z",
+      "next_deadline": "2026-09-07T14:00:00Z",
+      "next_lock": "2026-09-07T14:00:00Z",
+      "next_retry": "2026-09-06T23:42:49Z",
       "required_action": "retry on the next refresh; preserve the last valid vintage",
       "route": "ssa.ranking:ranking_wikitop",
       "source": "ranking_wikitop",
@@ -217,12 +106,12 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
-        "sources/sb_approval/2026-09-06.csv sha256=1e179f50623148d23177e52457200cd1542bc0f747096e7e4befe3c9f8572287"
+        "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
+        "sources/sb_approval/2026-09-06.csv sha256=805eae46d30f9a6ae2b7fe6de2a9faf2d5f62fac8940d0fb491974d0f58e8004"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-06T14:00:00Z",
-      "next_lock": "2026-09-06T14:00:00Z",
+      "next_deadline": "2026-09-07T14:00:00Z",
+      "next_lock": "2026-09-07T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
@@ -235,11 +124,11 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=10",
-        "sources/sb_generic/2026-09-06.csv sha256=930c55ddcaad5a5d79194fc5e0fdaa8ddade120248874958b0313a9336c6553f"
+        "sources/sb_generic/2026-09-06.csv sha256=871875e93dd5c41b69840ca4764a191b77159686976f4b4a1e160af6c37610b0"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-06T14:00:00Z",
-      "next_lock": "2026-09-06T14:00:00Z",
+      "next_deadline": "2026-09-07T14:00:00Z",
+      "next_lock": "2026-09-07T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
@@ -254,8 +143,8 @@
         "2 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-06T14:00:00Z",
-      "next_lock": "2026-09-06T14:00:00Z",
+      "next_deadline": "2026-09-07T14:00:00Z",
+      "next_lock": "2026-09-07T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:sce",
@@ -263,21 +152,20 @@
       "state": "healthy"
     },
     {
-      "alert": true,
+      "alert": false,
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "live attempt failed; same-source archive used",
-        "trends/Tesla.geo-US (19 snapshots; newest 2026-09-05); trends/iPhone.geo-US (19 snapshots; newest 2026-09-05)"
+        "2 validated non-empty series"
       ],
-      "last_error": "Tesla.geo-US: RuntimeError: Google Trends rate-limited this address (HTTP 429). Not retried in-process: the next scheduled refresh retries, and registered series serve their archive until then.; iPhone.geo-US: RuntimeError: Google Trends rate-limited this address (HTTP 429). Not retried in-process: the next scheduled refresh retries, and registered series serve their archive until then.",
-      "next_deadline": "2026-09-06T14:00:00Z",
-      "next_lock": "2026-09-06T14:00:00Z",
-      "next_retry": "2026-09-06T10:40:58Z",
-      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
+      "last_error": null,
+      "next_deadline": "2026-09-07T14:00:00Z",
+      "next_lock": "2026-09-07T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
       "route": "ssa.series:trends",
       "source": "trends",
-      "state": "stale"
+      "state": "healthy"
     },
     {
       "alert": false,
@@ -287,8 +175,8 @@
         "5 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-06T14:00:00Z",
-      "next_lock": "2026-09-06T14:00:00Z",
+      "next_deadline": "2026-09-07T14:00:00Z",
+      "next_lock": "2026-09-07T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:trends_basket",
@@ -300,12 +188,12 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=1.1; fetch_budget=3; change_budget=40",
+        "fetched_days=-0.0; changed_days=1.6; fetch_budget=3; change_budget=40",
         "sources/umich/2026-09-06.json sha256=a4e677722ac5addd704db9b2dd1081cc19192972b543781c0c9354568a63e59f"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-06T14:00:00Z",
-      "next_lock": "2026-09-06T14:00:00Z",
+      "next_deadline": "2026-09-07T14:00:00Z",
+      "next_lock": "2026-09-07T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "http://www.sca.isr.umich.edu/files/tbmics.csv",
@@ -320,8 +208,8 @@
         "3 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-06T14:00:00Z",
-      "next_lock": "2026-09-06T14:00:00Z",
+      "next_deadline": "2026-09-07T14:00:00Z",
+      "next_lock": "2026-09-07T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:umichparty",
@@ -336,8 +224,8 @@
         "2 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-06T14:00:00Z",
-      "next_lock": "2026-09-06T14:00:00Z",
+      "next_deadline": "2026-09-07T14:00:00Z",
+      "next_lock": "2026-09-07T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:wikipedia",
@@ -352,8 +240,8 @@
         "16 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-06T14:00:00Z",
-      "next_lock": "2026-09-06T14:00:00Z",
+      "next_deadline": "2026-09-07T14:00:00Z",
+      "next_lock": "2026-09-07T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:yougov_xtab",
