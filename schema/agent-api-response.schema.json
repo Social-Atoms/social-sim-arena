@@ -3,51 +3,100 @@
   "title": "SSA Agent API decoded response v1",
   "description": "The reply body a participant endpoint returns: one JSON object, no wrapper.",
   "type": "object",
-  "required": ["schema_version", "forecast"],
+  "required": [
+    "schema_version",
+    "forecast"
+  ],
   "additionalProperties": false,
   "definitions": {
     "distribution": {
       "type": "object",
-      "required": ["mean", "sd"],
+      "description": "A normal or a quantile set, the answerer's choice. Both are scored with CRPS (a topline) or pooled into the energy score (a profile cell); a point guess is neither and is refused. Mirrors schema/forecast.schema.json, which the filed forecast is then validated against.",
       "additionalProperties": false,
       "properties": {
-        "mean": {"type": "number"},
-        "sd": {"type": "number", "exclusiveMinimum": 0, "maximum": 1000000000}
-      }
+        "mean": {
+          "type": "number"
+        },
+        "sd": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1000000000
+        },
+        "quantiles": {
+          "type": "object",
+          "minProperties": 3,
+          "description": "Levels as keys ('0.05' ... '0.95'), values in the round's unit. Must include '0.5'; values must not decrease as the level rises.",
+          "propertyNames": {
+            "pattern": "^0\\.\\d{1,3}$"
+          },
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "mean",
+            "sd"
+          ]
+        },
+        {
+          "required": [
+            "quantiles"
+          ]
+        }
+      ]
     }
   },
   "properties": {
-    "schema_version": {"const": "ssa-agent-api-v2"},
+    "schema_version": {
+      "const": "ssa-agent-api-v2"
+    },
     "forecast": {
       "oneOf": [
-        {"$ref": "#/definitions/distribution"},
+        {
+          "$ref": "#/definitions/distribution"
+        },
         {
           "type": "object",
-          "required": ["probabilities"],
+          "required": [
+            "probabilities"
+          ],
           "additionalProperties": false,
           "properties": {
             "probabilities": {
               "type": "object",
               "minProperties": 2,
-              "additionalProperties": {"type": "number", "minimum": 0, "maximum": 1}
+              "additionalProperties": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
             }
           }
         },
         {
           "type": "object",
-          "required": ["profile"],
+          "required": [
+            "profile"
+          ],
           "additionalProperties": false,
           "properties": {
             "profile": {
               "type": "object",
               "minProperties": 2,
-              "additionalProperties": {"$ref": "#/definitions/distribution"}
+              "additionalProperties": {
+                "$ref": "#/definitions/distribution"
+              }
             }
           }
         },
         {
           "type": "object",
-          "required": ["ranking"],
+          "required": [
+            "ranking"
+          ],
           "additionalProperties": false,
           "properties": {
             "ranking": {
@@ -55,20 +104,31 @@
               "minItems": 2,
               "maxItems": 50,
               "uniqueItems": true,
-              "items": {"type": "string", "minLength": 1, "maxLength": 256}
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
             }
           }
         }
       ]
     },
-    "reasoning_trace": {"type": "string", "maxLength": 20000},
+    "reasoning_trace": {
+      "type": "string",
+      "maxLength": 20000
+    },
     "crosstabs": {
       "type": "object",
-      "propertyNames": {"pattern": "^[a-z][a-z0-9_]{1,63}$"},
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]{1,63}$"
+      },
       "additionalProperties": {
         "type": "object",
         "minProperties": 2,
-        "additionalProperties": {"$ref": "#/definitions/distribution"}
+        "additionalProperties": {
+          "$ref": "#/definitions/distribution"
+        }
       }
     }
   }

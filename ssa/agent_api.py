@@ -42,6 +42,7 @@ from . import harness
 from . import participants
 from . import profile_round
 from . import ranking_round
+from .adapters import wikipedia as wikipedia_adapter
 
 SCHEMA_VERSION = "ssa-agent-api-v2"
 
@@ -132,6 +133,30 @@ def build_envelope(entrant, r, history=None, profile_history=None,
         block["ranking"] = {"length": spec["length"]}
         if spec.get("items"):
             block["ranking"]["items"] = list(spec["items"])
+        # What the round refuses, said in the round rather than discovered when
+        # the answer is thrown away. The Wikipedia weekly excludes `Main_Page`
+        # -- first every single week by an order of magnitude -- and everything
+        # outside the article namespace. An endpoint that ranks the most-viewed
+        # page on the site would otherwise have its whole list rejected by a
+        # rule it was never told about.
+        if spec.get("exclusions"):
+            block["ranking"]["exclusions"] = {
+                "rule": spec["exclusions"],
+                "titles": list(getattr(wikipedia_adapter, "EXCLUDED_TITLES", ())),
+                "prefixes": list(getattr(wikipedia_adapter, "NAMESPACE_PREFIXES", ())),
+                "note": ("Items matching this rule are not part of the answer "
+                         "and an answer containing one is refused."),
+            }
+        if spec.get("project"):
+            block["ranking"]["project"] = spec["project"]
+        if spec.get("access"):
+            block["ranking"]["access"] = spec["access"]
+        block["ranking"]["item_format"] = (
+            "Wikipedia article titles as the API writes them: underscores for "
+            "spaces, case as on the page (e.g. Elon_Musk). Spaces are accepted "
+            "and normalised; each item appears once."
+            if spec.get("kind") == "wiki_top10" else
+            "Exactly the item names the round names, each once.")
     return {
         "schema_version": SCHEMA_VERSION,
         "request_id": f"{entrant}:{r['round_id']}",

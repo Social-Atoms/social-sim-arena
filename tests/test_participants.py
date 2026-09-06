@@ -357,6 +357,36 @@ def test_a_participant_may_answer_with_quantiles_on_either_shape():
     print("ok test_a_participant_may_answer_with_quantiles_on_either_shape")
 
 
+def test_the_round_tells_a_participant_what_it_will_refuse():
+    """A ranking round throws away an answer containing an excluded title, and
+    `Main_Page` is first on the Wikipedia weekly by an order of magnitude every
+    single week. If the envelope does not name the rule, the most obvious answer
+    an endpoint can give is the one that scores nothing."""
+    import jsonschema
+    from ssa import ranking_round
+    schema = json.load(open(os.path.join(ROOT, "schema", "agent-api-request.schema.json")))
+    season = json.load(open(os.path.join(ROOT, "questions", "season0.json")))["rounds"]
+    r = next(x for x in season if x.get("target_type") == "ranking_list")
+    env = agent_api.build_envelope("acme-forecast", dict(r, baselines={}), ranking_history=[])
+    jsonschema.validate(env, schema)
+    block = env["round"]["ranking"]
+    spec = ranking_round.spec_for(r)
+    assert block["length"] == spec["length"]
+    assert block["exclusions"]["rule"] == spec["exclusions"]
+    assert "Main_Page" in block["exclusions"]["titles"]
+    assert "Special:" in block["exclusions"]["prefixes"]
+    assert "underscores" in block["item_format"]
+    # And the rule the envelope quotes is the rule the parser applies.
+    try:
+        agent_api.parse_ranking(json.dumps(
+            {"schema_version": "ssa-agent-api-v2",
+             "forecast": {"ranking": ["Main_Page"] + [f"A{i}" for i in range(spec["length"] - 1)]}}), spec)
+        raise AssertionError("an excluded title was accepted")
+    except ValueError as err:
+        assert spec["exclusions"] in str(err), err
+    print("ok test_the_round_tells_a_participant_what_it_will_refuse")
+
+
 def test_a_profile_reply_is_all_cells_or_none():
     cells = ["a", "b", "c"]
     whole = json.dumps({"schema_version": "ssa-agent-api-v2", "forecast": {
@@ -639,6 +669,7 @@ if __name__ == "__main__":
     test_the_request_id_is_stable_so_a_retry_is_the_same_question()
     test_a_reply_that_is_not_the_contract_is_refused()
     test_a_participant_may_answer_with_quantiles_on_either_shape()
+    test_the_round_tells_a_participant_what_it_will_refuse()
     test_a_profile_reply_is_all_cells_or_none()
     test_a_participant_forecast_is_never_mocked()
     test_filing_goes_through_the_shared_runner_and_caches_like_one()
@@ -647,4 +678,4 @@ if __name__ == "__main__":
     test_a_registration_without_a_route_is_unchanged()
     test_a_reply_over_the_size_cap_is_refused_unread()
     test_an_endpoint_failing_three_times_is_not_called_again_this_run()
-    print("19 passed")
+    print("20 passed")
