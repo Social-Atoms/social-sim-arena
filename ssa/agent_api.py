@@ -167,15 +167,10 @@ def _payload(text):
 
 
 def parse_scalar(text):
-    fc = _payload(text)
-    if "quantiles" in fc:
-        return harness.parse_forecast(json.dumps(fc))
-    if "mean" not in fc or "sd" not in fc:
-        raise ValueError(
-            "scalar forecast needs `mean` and `sd`, or `quantiles`; "
-            f"got keys {sorted(fc)}")
-    return harness.parse_forecast(json.dumps({"mean": fc["mean"],
-                                              "sd": fc["sd"]}))
+    """A scalar round's answer: {mean, sd} or {quantiles}. Both are scored
+    with CRPS (`scoring.crps_forecast`), so which one an endpoint sends is
+    its own choice."""
+    return harness.answer(_payload(text), "forecast")
 
 
 def parse_profile(text, cells):
