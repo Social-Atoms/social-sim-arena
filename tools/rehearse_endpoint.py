@@ -97,6 +97,15 @@ def main(argv=None):
             ap.error(f"no --url and entrants/{args.entrant}.json has no route")
         url = reg["route"]["url"]
 
+    if not url.startswith("https://"):
+        # The arena only ever calls https, so a local fixture cannot be
+        # rehearsed through this path at all -- and failing once with the
+        # alternative named beats failing once per shape with the rule quoted.
+        print(f"{url} is not https, and the arena calls https only.\n"
+              f"For a local fixture use the contract probe instead:\n"
+              f"  python tools/probe_agent_api.py --url {url}")
+        return 2
+
     tmp_entrants = tempfile.mkdtemp(prefix="ssa-rehearse-entrants-")
     tmp_replies = tempfile.mkdtemp(prefix="ssa-rehearse-replies-")
     with open(os.path.join(tmp_entrants, args.entrant + ".json"), "w") as fh:
