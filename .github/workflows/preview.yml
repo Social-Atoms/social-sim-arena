@@ -16,6 +16,11 @@ on:
   pull_request:
   push:
     branches: [dev]
+  # A push made with GITHUB_TOKEN (the refresh bot's data commit) does not
+  # trigger this workflow, so after a manual refresh on dev the preview
+  # still serves the previous data.json until someone pushes. This lets a
+  # maintainer redeploy the preview from the branch as it is.
+  workflow_dispatch:
 
 permissions:
   contents: read
