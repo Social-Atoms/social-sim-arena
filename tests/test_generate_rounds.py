@@ -341,22 +341,27 @@ def test_it_cannot_publish():
     print("ok test_it_cannot_publish")
 
 
-def test_a_round_whose_deadline_has_passed_is_not_generated():
-    """A batch that has closed can no longer be answered, so proposing into it
-    proposes a question that would be listed, never filed against, and then
-    scored against a null nobody competed with. Before this check the generator
-    happily offered a whole batch of them on any run made after Monday noon."""
+def test_a_round_that_has_already_closed_is_not_generated():
+    """A round nobody can still answer would be listed, never filed against,
+    and then scored against a null nobody competed with.
+
+    The gate asks about the round's own close, not the Monday its week is
+    grouped under. Asking about the Monday was right while the Monday was the
+    deadline; once it became a label it silently dropped any round generated
+    later in its own week -- one closing Friday, judged on Tuesday."""
     from datetime import timezone as tz
-    now = datetime(2026, 9, 14, 13, tzinfo=tz.utc)          # Monday, past 12:00Z
+    now = datetime(2026, 9, 14, 13, tzinfo=tz.utc)
     meta = civiqs_meta()
-    # A Wednesday-publishing series: the next release is 2026-09-16, locking
-    # 09-14T14:00Z -- two days out, but governed by the deadline an hour ago.
     h = weekly(30, start="2026-01-07")
     for r in gen.candidates("civiqs_net_approval_ind", meta, h, 3, now):
-        assert gen.batches.deadline_for(r["lock_at"]) > now, r["round_id"]
-    assert not gen.publishable("2026-09-16T14:00:00Z", now)
-    assert gen.publishable("2026-09-23T14:00:00Z", now)
-    print("ok test_a_round_whose_deadline_has_passed_is_not_generated")
+        assert gen.batches.effective_deadline(r["lock_at"]) > now, r["round_id"]
+    # Closes in an hour: still answerable, still generated.
+    assert gen.publishable("2026-09-14T14:00:00Z", now)
+    # Closed an hour ago: not.
+    assert not gen.publishable("2026-09-14T12:00:00Z", now)
+    # And the week's Monday having passed refuses nothing on its own.
+    assert gen.publishable("2026-09-18T14:00:00Z", now)
+    print("ok test_a_round_that_has_already_closed_is_not_generated")
 
 
 def test_single_page_wikipedia_rounds_are_retired_not_unsupported():
@@ -912,7 +917,7 @@ if __name__ == "__main__":
     test_it_cannot_publish()
     test_dedupe_is_per_board_not_per_series()
     test_it_refuses_to_generate_a_round_it_cannot_publish()
-    test_a_round_whose_deadline_has_passed_is_not_generated()
+    test_a_round_that_has_already_closed_is_not_generated()
     test_single_page_wikipedia_rounds_are_retired_not_unsupported()
     test_the_wiki_week_phrase_matches_the_reviewed_wording()
     test_wiki_top10_rolls_the_reviewed_contract_forward()

@@ -458,20 +458,19 @@ def round_id(sid, release):
 def publishable(lock, now):
     """Whether a round locking at `lock` can still reach entrants.
 
-    A round belongs to the batch whose deadline is the last Monday 12:00Z
-    before its lock, and every entrant answers that batch by that one moment.
-    Once the deadline has passed there is no longer a way for anyone to file
-    against the round, so generating it produces a question that would be
-    listed, never answered, and then scored against a null nobody competed
-    with. `docs/submission-window.md` states the rule; this is where the
-    generator obeys it.
+    A round closes at its own lock. Once that has passed there is no longer a
+    way for anyone to file against it, so generating it produces a question
+    that would be listed, never answered, and then scored against a null nobody
+    competed with. `docs/submission-window.md` states the rule; this is where
+    the generator obeys it.
 
-    Note this is strictly tighter than "the release is in the future". The old
-    check let through rounds locking two days out whose deadline was already
-    hours in the past -- a whole batch of them on any run made after Monday
-    noon.
+    This asks about the round's own close, not the Monday its week is grouped
+    under. Asking about the Monday was right while that Monday was the
+    deadline; once it became a label, it refused any round generated later in
+    its own week -- a round closing Friday, judged on Tuesday, was silently
+    dropped because the group's Monday had passed.
     """
-    return batches.deadline_for(lock) > now
+    return batches.effective_deadline(lock) > now
 
 
 def candidates(sid, meta, hist, weeks, now, through=None):
@@ -500,10 +499,12 @@ def candidates(sid, meta, hist, weeks, now, through=None):
         lock = release - timedelta(hours=48)
         # A round whose batch predates the cutover cannot be published. Its
         # deadline is its own lock, `bundle` refuses to build a batch with no
-        # common deadline, and its publication date has already passed -- so
-        # only the in-house harness could ever answer it. Generating one wastes
-        # a reviewer's attention on a round that can never reach a
-        # participant, which is the failure this whole tool exists to stop.
+        # A round older than the weekly calendar belongs to no week and cannot
+        # be listed on the site, which is a display fact rather than a
+        # validity one -- `publishable` below is what decides whether anyone
+        # can still answer it. Every generated round locks in the future, so
+        # this refuses nothing today; it is kept so a backfill cannot produce
+        # one that the site has nowhere to put.
         if not batches.governed_by_batch(lock.strftime("%Y-%m-%dT%H:%M:%SZ")):
             continue
         if not publishable(lock, now):

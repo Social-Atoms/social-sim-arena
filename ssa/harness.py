@@ -2283,12 +2283,9 @@ def filed_in_window(notes, lock_at):
     replaced once, inside the window, where the input hash makes the
     replacement free if nothing actually changed.
 
-    The window is measured back from the round's *batch deadline*, not its
-    lock. Under the weekly batch calendar those differ by up to seven days, and
-    anchoring on the lock would let our own entrants keep buying after the
-    deadline every external entrant was held to. `batches.effective_deadline`
-    returns the lock itself for rounds that predate the cutover, so their
-    windows are unchanged and their filed stamps stay valid.
+    The window is measured back from `batches.effective_deadline`, the round's
+    own close, so our models are held to the moment every external entrant is
+    held to.
     """
     m = re.search(r"filed=(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?Z)",
                   notes or "")

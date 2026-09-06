@@ -202,7 +202,7 @@ footer a{color:var(--ink2);}
   <h3 class="sub">Every batch</h3>
   <div class="card scroll">
     <table>
-      <thead><tr><th>Batch</th><th>Deadline</th><th class="num">Questions</th><th>Shapes</th><th class="num">Horizon</th><th>Status</th></tr></thead>
+      <thead><tr><th>Batch</th><th>Closes</th><th class="num">Questions</th><th>Shapes</th><th class="num">Horizon</th><th>Status</th></tr></thead>
       <tbody id="batch-body"><tr><td colspan="6" style="color:var(--mut);">loading…</td></tr></tbody>
     </table>
   </div>
@@ -225,7 +225,7 @@ footer a{color:var(--ink2);}
   <p class="lede">One round is one scheduled release. Submit before its weekly batch deadline; the later release-minus-48h lock is the Arena's internal clock.</p>
   <div class="card scroll">
     <table>
-      <thead><tr><th>Round</th><th>Status</th><th>Deadline / lock</th><th></th></tr></thead>
+      <thead><tr><th>Round</th><th>Status</th><th>Closes / answer</th><th></th></tr></thead>
       <tbody id="rounds-body"><tr><td colspan="4" style="color:var(--mut);">loading…</td></tr></tbody>
     </table>
   </div>
@@ -470,7 +470,12 @@ function render(data){
     byBatch.get(r.batch_id).push(r);
   }
   const nowMs = Date.now();
-  const dueOf = rs => rs[0].deadline;
+  // Each question closes on its own clock, so a batch has a first close and
+  // a last one, not "the deadline". `rs[0]` was whichever round happened to
+  // sort first, which on batch-2026-09-28 advertised 10-04 while four of its
+  // questions closed 09-30 -- later than the truth, the dangerous direction.
+  const dueOf = rs => rs.map(r => r.deadline || r.lock_at).sort()[0];
+  const lastDueOf = rs => rs.map(r => r.deadline || r.lock_at).sort().slice(-1)[0];
   const all = [...byBatch.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   // Two closed batches for context, then everything ahead. A calendar that
   // shows the whole season pushes the open one off the first screen.
@@ -563,8 +568,11 @@ function render(data){
       + '<div class="ob-cell"><div class="ob-k">Released</div><div class="ob-v">'
       + esc(pub ? utcDay(pub) : '—') + '</div><div class="ob-v2">'
       + esc(pub ? utcTime(pub) : '') + '</div></div>'
-      + '<div class="ob-cell"><div class="ob-k">Deadline</div><div class="ob-v">'
+      + '<div class="ob-cell"><div class="ob-k">First close</div><div class="ob-v">'
       + esc(utcDay(due)) + '</div><div class="ob-v2">' + esc(utcTime(due)) + '</div></div>'
+      + '<div class="ob-cell"><div class="ob-k">Last close</div><div class="ob-v">'
+      + esc(utcDay(lastDueOf(frs))) + '</div><div class="ob-v2">'
+      + esc(utcTime(lastDueOf(frs))) + '</div></div>'
       + '<div class="ob-cell"><div class="ob-k">Results begin</div><div class="ob-v">'
       + esc(firstRelease ? utcDay(firstRelease) : '—') + '</div><div class="ob-v2">'
       + esc(firstRelease ? utcTime(firstRelease) : '') + '</div></div>'
@@ -650,7 +658,9 @@ function render(data){
     // UTC, like the card above and like every deadline in the docs. The table
     // used the reader's zone, which put 05:00 next to a rule that says 12:00.
     const when = isOpen ? 'in ' + fmtCountdown(ms)
-      : utcDay(due) + ' · ' + utcTime(due);
+      : (utcDay(due) === utcDay(lastDueOf(rs))
+          ? utcDay(due) + ' · ' + utcTime(due)
+          : utcDay(due) + ' – ' + utcDay(lastDueOf(rs)));
     return '<tr' + (isOpen ? ' style="background:var(--soft,#f6f6f4);"' : '') + '>'
       + '<td><b style="color:var(--ink);font-weight:600;">'
       + esc(batchId) + '</b></td>'
@@ -758,7 +768,7 @@ function render(data){
       : kind==='ranking_list' ? '<span class="shape">ranking · ordered list</span>' : '';
     tr.innerHTML = '<td><b style="color:var(--ink);font-weight:600;">'+esc(r.round_id)+'</b>'+shape+'<br><span style="font-size:12px;color:var(--mut);">'+esc(r.question)+'</span>'+resultBlock(r)+'</td>'
       + '<td><span class="status '+esc(displayStatus)+'"><span class="d"></span>'+esc(displayStatus.replace('_',' '))+'</span></td>'
-      + '<td style="white-space:nowrap;">due '+esc(fmtLocal(r.deadline||r.lock_at))+'<br><span style="color:var(--mut);font-size:11px;">lock '+esc(fmtLocal(r.lock_at))+'</span></td>'
+      + '<td style="white-space:nowrap;">closes '+esc(fmtLocal(r.deadline||r.lock_at))+'<br><span style="color:var(--mut);font-size:11px;">answer '+esc(fmtLocal(r.release_at))+'</span></td>'
       + '<td>'+(link?'<a href="'+link+'" target="_blank" rel="noopener" style="font-weight:600;color:var(--ink);text-decoration:none;">submit →</a>':'')+'</td>';
     rb.appendChild(tr);
   }
