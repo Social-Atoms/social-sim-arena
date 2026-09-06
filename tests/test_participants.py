@@ -383,6 +383,68 @@ def test_filing_goes_through_the_shared_runner_and_caches_like_one():
     print("ok test_filing_goes_through_the_shared_runner_and_caches_like_one")
 
 
+def test_every_shape_files_through_the_real_transport_and_validates():
+    """The whole path below `forecast`, nothing mocked but the socket: the
+    envelope is signed and POSTed, the reply is parsed, and the filed dict
+    validates against the forecast schema under the key the scorer reads.
+    This is the test that would have caught two shipped bugs: `call_provider`
+    resolving a participant id as one of our models, and a profile filed
+    under `cells` instead of `profile`."""
+    import jsonschema
+    from ssa import profile_round, ranking_round
+    schema = json.load(open(os.path.join(ROOT, "schema", "forecast.schema.json")))
+    season = json.load(open(os.path.join(ROOT, "questions", "season0.json")))["rounds"]
+    picks = {}
+    for x in season:
+        tt = x.get("target_type", "continuous_normal")
+        picks.setdefault(tt, x)
+    assert set(picks) == {"continuous_normal", "profile_energy", "ranking_list"}, picks.keys()
+
+    def answer(url, **kw):
+        env = json.loads(kw["data"])
+        rd = env["round"]
+        if rd["target_type"] == "profile_energy":
+            fc = {"profile": {c: {"mean": 10.0, "sd": 2.0} for c in rd["cells"]}}
+        elif rd["target_type"] == "ranking_list":
+            spec = rd["ranking"]
+            items = spec.get("items") or [f"Item_{i}" for i in range(spec["length"])]
+            fc = {"ranking": items[:spec["length"]]}
+        else:
+            fc = {"mean": 42.0, "sd": 3.0}
+
+        class Response:
+            status_code = 200
+            content = json.dumps({"schema_version": "ssa-agent-api-v2", "forecast": fc}).encode()
+        return Response()
+
+    log_dir = tempfile.mkdtemp(prefix="ssa-replies-")
+    with registry(REG):
+        with_key()
+        real_post = harness.requests.post
+        harness.requests.post = answer
+        # The reply log is real too, so point it away from the repository.
+        os.environ["SSA_REPLIES_DIR"] = log_dir
+        try:
+            for tt, x in picks.items():
+                r = dict(x, baselines={"persistence": {"mean": 1.0, "sd": 2.0}})
+                kw = {}
+                if profile_round.is_profile(r):
+                    kw["profile_history"] = {c: [] for c in profile_round.cells_for(r)}
+                if ranking_round.is_ranking(r):
+                    kw["ranking_history"] = []
+                body = harness.forecast("acme-forecast", r, previous=None, **kw)
+                jsonschema.validate(body, schema)
+                key = {"continuous_normal": "topline", "profile_energy": "profile",
+                       "ranking_list": "ranking"}[tt]
+                assert key in body, (tt, body.keys())
+                assert body["entrant"] == "acme-forecast" and "via=participant" in body["notes"]
+        finally:
+            harness.requests.post = real_post
+            os.environ.pop("SSA_REPLIES_DIR", None)
+            shutil.rmtree(log_dir, ignore_errors=True)
+    print("ok test_every_shape_files_through_the_real_transport_and_validates")
+
+
 def test_a_registration_without_a_route_is_unchanged():
     """Every registration written before this field must keep meaning exactly
     what it meant: an entrant that hands its forecasts over itself."""
@@ -478,7 +540,8 @@ if __name__ == "__main__":
     test_a_profile_reply_is_all_cells_or_none()
     test_a_participant_forecast_is_never_mocked()
     test_filing_goes_through_the_shared_runner_and_caches_like_one()
+    test_every_shape_files_through_the_real_transport_and_validates()
     test_a_registration_without_a_route_is_unchanged()
     test_a_reply_over_the_size_cap_is_refused_unread()
     test_an_endpoint_failing_three_times_is_not_called_again_this_run()
-    print("16 passed")
+    print("17 passed")

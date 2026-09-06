@@ -1526,12 +1526,16 @@ def call_provider(entrant, prompt, with_usage=False, context=None, via=None):
     `variant` only matters where the condition changes the *request* rather
     than the prompt, which today means attaching the provider's search tool.
     """
-    model, context_of_id, _ = resolve(entrant)
-    context = context or context_of_id
+    # A Route A participant is not one of our models: `resolve` only knows
+    # MODELS and would raise on their id. Their route is their registration,
+    # and there is no context axis to read off the id.
+    if not participants.is_participant(entrant):
+        _, context_of_id, _ = resolve(entrant)
+        context = context or context_of_id
     rt = route(entrant, via)
     cfg = {"params": dict(rt["params"])}
-    # A participant route may carry no credential (`auth: none`); every
-    # provider route names one.
+    # A participant route carries no credential (the arena signs instead);
+    # every provider route names one.
     key = os.environ[rt["env"]] if rt["env"] else ""
     mid = model_id(entrant, via)
     base = base_url(entrant, via)

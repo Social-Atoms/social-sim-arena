@@ -226,7 +226,7 @@ def forecast(entrant, r, history=None, previous=None, profile_history=None,
     if tt == "profile_energy":
         cells = list(profile_round.cells_for(r))
         parse = lambda text: parse_profile(text, cells)          # noqa: E731
-        key = "cells"
+        key = "profile"          # the forecast schema's key, same as our own
     elif tt == "ranking_list":
         spec = ranking_round.spec_for(r)
         parse = lambda text: parse_ranking(text, spec)           # noqa: E731
