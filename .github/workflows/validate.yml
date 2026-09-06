@@ -21,4 +21,8 @@ jobs:
           FILES=$(git diff --name-only --diff-filter=d origin/${{ github.base_ref }}...HEAD -- 'forecasts/**/*.json' 'entrants/*.json')
           if [ -z "$FILES" ]; then echo "no forecast or entrant files changed"; exit 0; fi
           echo "$FILES"
-          python tools/validate_submission.py $FILES
+          # --author/--base: the file's `github` owner must be the pull
+          # request's author (or a maintainer); see tools/validate_submission.py
+          python tools/validate_submission.py \
+            --author "${{ github.event.pull_request.user.login }}" \
+            --base "origin/${{ github.base_ref }}" $FILES

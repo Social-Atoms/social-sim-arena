@@ -1,4 +1,7 @@
-"""The registration endpoint's logic, as one function the Vercel handler and
+"""KEPT, NOT WIRED (Season 0, issue #81): no `vercel.json` rewrite points here
+and `api/registrations.py` is gone. See the note atop `ssa/registry.py`.
+
+The registration endpoint's logic, as one function the Vercel handler and
 the tests both call: (method, entrant id from the path, bearer token, body)
 in, (status, JSON) out. Raises nothing; every refusal is a status and a code.
 

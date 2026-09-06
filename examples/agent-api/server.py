@@ -2,12 +2,16 @@
 
 Run from the repository root:
 
-    python examples/agent-api/server.py                    # no authentication
-    SSA_EXAMPLE_API_KEY=secret python examples/agent-api/server.py
+    python examples/agent-api/server.py                    # verifies signatures
+    python examples/agent-api/server.py --no-verify        # accepts anything
     python examples/agent-api/server.py --port 8788 --delay 2
 
-This is a fixture server, not a predictive agent and not production
-authentication. It answers all three round shapes because a real week mixes
+This is a fixture server, not a predictive agent. It does show the one piece
+of security a participant writes: verifying that a request really came from
+the arena (`verify_signature` below, ~15 lines, `cryptography` only). The
+arena signs `X-SSA-Timestamp + "." + raw body` with its Ed25519 key; the
+public keys are in `site/keys.json` and the test key is published so this
+server can be probed without the live one. It answers all three round shapes because a real week mixes
 them: an endpoint that only ever returns a scalar passes a contract test built
 from one fixture and then fails on the first profile round it is asked, which
 is the week a participant finds out.
@@ -19,10 +23,53 @@ that answers in eleven minutes is indistinguishable from one that works, right
 up until the arena's read timeout closes the round.
 """
 import argparse
+import base64
 import json
 import os
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+KEYS_FILE = os.path.join(ROOT, "site", "keys.json")
+MAX_SKEW_SECONDS = 300
+# The published test key, so this file works from a bare checkout too.
+PUBLIC_KEYS = {"ssa-test": "zt0rAf60fDi4fOj1qhhAqzx7GJz7XmBV1AWs+ln2xOY="}
+
+
+def load_public_keys(path=KEYS_FILE):
+    """{key_id: base64 public key} from site/keys.json plus the test key."""
+    keys = dict(PUBLIC_KEYS)
+    if os.path.isfile(path):
+        with open(path, encoding="utf-8") as fh:
+            for row in json.load(fh).get("keys", []):
+                if row.get("key_id") and row.get("public_key"):
+                    keys[row["key_id"]] = row["public_key"]
+    return keys
+
+
+def verify_signature(headers, raw_body, keys, now=None):
+    """Raise ValueError unless the request is a fresh, genuine arena request.
+
+    Verify over the raw bytes as received: re-serialising the JSON changes
+    the bytes and the signature will never match. Reject a timestamp more than
+    five minutes from now. A repeated request_id is not an attack but a
+    retry, and the contract wants the same answer back: see `do_POST`.
+    """
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+    key_id = headers.get("X-SSA-Key-Id")
+    ts = headers.get("X-SSA-Timestamp")
+    sig = headers.get("X-SSA-Signature")
+    if not (key_id and ts and sig):
+        raise ValueError("request is not signed")
+    if key_id not in keys:
+        raise ValueError(f"unknown key id {key_id!r}")
+    if abs((now or time.time()) - int(ts)) > MAX_SKEW_SECONDS:
+        raise ValueError("timestamp too old or too far ahead")
+    public = Ed25519PublicKey.from_public_bytes(base64.b64decode(keys[key_id]))
+    try:
+        public.verify(base64.b64decode(sig), ts.encode() + b"." + raw_body)
+    except Exception as exc:
+        raise ValueError("signature does not match") from exc
 
 HOST = "127.0.0.1"
 PORT = 8787
@@ -63,24 +110,27 @@ def forecast_for(round_spec):
 
 
 class Handler(BaseHTTPRequestHandler):
-    api_key = None
+    verify = True
+    keys = PUBLIC_KEYS
+    answered = {}        # request_id -> reply: a retry gets the same answer
     delay = 0.0
 
     def do_POST(self):
         if self.path.rstrip("/") not in ("", "/forecast"):
             self.send_error(404)
             return
-        if self.api_key:
-            supplied = self.headers.get("Authorization", "")
-            if supplied != f"Bearer {self.api_key}":
-                # 401, not 200-with-an-error: an endpoint that answers an
-                # unauthenticated caller is an endpoint anyone can file
-                # forecasts through under your entrant id.
-                self._json(401, {"error": "missing or wrong bearer token"})
+        size = int(self.headers.get("Content-Length", "0"))
+        raw = self.rfile.read(size)
+        if self.verify:
+            try:
+                verify_signature(self.headers, raw, self.keys)
+            except ValueError as exc:
+                # 401, not 200-with-an-error, so the probe (and the arena's
+                # runner) records a refusal rather than a malformed answer.
+                self._json(401, {"error": str(exc)})
                 return
         try:
-            size = int(self.headers.get("Content-Length", "0"))
-            prompt = json.loads(self.rfile.read(size))
+            prompt = json.loads(raw)
             if prompt["schema_version"] != SCHEMA_VERSION:
                 raise ValueError("unsupported schema_version")
             forecast = forecast_for(prompt["round"])
@@ -89,14 +139,24 @@ class Handler(BaseHTTPRequestHandler):
             self._json(400, {"error": str(exc)})
             return
 
+        # Idempotency: the arena retries with the same request_id, and the
+        # contract wants the same forecast back, not a second computation.
+        # This also blunts a replayed request: it costs nothing to answer.
+        request_id = prompt.get("request_id")
+        if request_id in self.answered:
+            self._json(200, self.answered[request_id])
+            return
         if self.delay:
             time.sleep(self.delay)
-        self._json(200, {
+        reply = {
             "schema_version": SCHEMA_VERSION,
             "forecast": forecast,
             "reasoning_trace": "Non-scored starter-kit fixture.",
             "crosstabs": {},
-        })
+        }
+        if request_id is not None:
+            self.answered[request_id] = reply
+        self._json(200, reply)
 
     def _json(self, status, body):
         payload = json.dumps(body).encode()
@@ -110,11 +170,12 @@ class Handler(BaseHTTPRequestHandler):
         return
 
 
-def serve(host=HOST, port=PORT, api_key=None, delay=0.0):
+def serve(host=HOST, port=PORT, verify=True, delay=0.0, keys=None):
     """A configured server, not started. Returned so a test can run it in
     process rather than shelling out to a port that may already be busy."""
     handler = type("ConfiguredHandler", (Handler,),
-                   {"api_key": api_key, "delay": delay})
+                   {"verify": verify, "keys": keys or load_public_keys(),
+                    "answered": {}, "delay": delay})
     return ThreadingHTTPServer((host, port), handler)
 
 
@@ -124,10 +185,12 @@ if __name__ == "__main__":
     ap.add_argument("--port", type=int, default=PORT)
     ap.add_argument("--delay", type=float, default=0.0,
                     help="seconds to stall before replying, for timeout tests")
+    ap.add_argument("--no-verify", action="store_true",
+                    help="answer unsigned requests too (not recommended)")
     args = ap.parse_args()
-    key = os.environ.get("SSA_EXAMPLE_API_KEY")
-    server = serve(args.host, args.port, key, args.delay)
+    server = serve(args.host, args.port, not args.no_verify, args.delay)
     print(f"SSA Agent API example listening on "
           f"http://{args.host}:{args.port}/forecast"
-          + ("  (Bearer auth required)" if key else "  (no authentication)"))
+          + ("  (unsigned requests accepted)" if args.no_verify
+             else "  (verifying arena signatures)"))
     server.serve_forever()

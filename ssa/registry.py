@@ -1,5 +1,16 @@
-"""The participant registry: registrations, keys and tokens in the private
-intake repository, saved at registration time and read back by the cron.
+"""The participant registry: registrations and upload tokens in the private
+intake repository. KEPT, NOT WIRED (Season 0 decision, issue #81).
+
+Status: Season 0 registers by pull request (`entrants/<id>.json`) and Route A
+is authenticated by the arena signing its requests (`ssa/signing.py`), so
+nothing here runs in production: the HTTP route is not in `vercel.json` and
+the refresh does not call `materialize`/`file_uploads`. The module and its
+tests stay because the design is complete and tested; wiring it back is the
+`vercel.json` rewrite plus one call in `refresh.main`, for when self-service
+registration without GitHub is wanted. `ssa/bundle_api` still consults it for
+a token when no hand-installed one exists, which is a no-op while unconfigured.
+
+Original design notes follow.
 
 Why the private repository and not a database or per-entrant secrets
 --------------------------------------------------------------------
@@ -8,8 +19,7 @@ install an Actions secret for the endpoint key, install a Vercel variable for
 the upload token, file each upload by hand. Every one of those is a step that
 can be forgotten the week it matters. Here the registration form writes
 everything into `Social-Atoms/social-sim-arena-intake` once, and the six-hourly
-refresh reads it back: it writes the public `entrants/<id>.json` files, loads
-the endpoint keys into its own environment for the run, and files the bundle
+refresh reads it back: it writes the public `entrants/<id>.json` files and files the bundle
 uploads that arrived since last time. One secret in two places (the token that
 reads and writes the intake repository) is the whole configuration.
 
@@ -17,11 +27,8 @@ What is stored where
 --------------------
 - `registrations/<entrant>.json` -- the public part: name, type, method,
   contact, endpoint URL. Exactly what `entrants/<entrant>.json` will say.
-- `secrets/<entrant>.json` -- the participant's endpoint key as given, and the
-  SHA-256 of the token we issued them. The key is stored as it is because the
-  arena has to send it onward as a Bearer token; it is the key to *their*
-  server, and the repository is private. Rotation overwrites; history keeps
-  the old value, which is the honest limit of this design.
+- `secrets/<entrant>.json` -- the SHA-256 of the token we issued them. No
+  endpoint key: the arena signs its own requests instead.
 - `promo.json` -- `{"codes": [...]}`. Registration needs one of them.
 
 The token
@@ -274,15 +281,6 @@ def _clean_fields(fields: dict, *, url_required: bool = False) -> dict:
     return out
 
 
-def _clean_key(key: Any) -> str | None:
-    if key is None or key == "":
-        return None
-    key = str(key).strip()
-    if not 8 <= len(key) <= 512 or any(c.isspace() for c in key):
-        raise RegistryError("The endpoint key must be 8 to 512 characters "
-                            "with no spaces.")
-    return key
-
 
 def register(store: Store, fields: dict, promo_code: Any,
              entrants_dir: str | None = None) -> tuple[dict, str]:
@@ -302,16 +300,12 @@ def register(store: Store, fields: dict, promo_code: Any,
     if existing:
         raise RegistryError("That entrant id is already registered.", 409, "taken")
     public = _clean_fields(fields)
-    key = _clean_key(fields.get("endpoint_key"))
     token, digest = mint_token()
     now = _now_iso()
     record = {"record_version": RECORD_VERSION, "entrant_id": entrant_id,
               "created_at": now, "updated_at": now, **public}
     secret = {"entrant_id": entrant_id, "token_sha256": digest,
               "token_issued_at": now}
-    if key:
-        secret["endpoint_key"] = key
-        secret["endpoint_key_set_at"] = now
     # The registration first: it is the uniqueness check, and a create on a
     # taken path is refused by both backends.
     store.put(_reg_path(entrant_id), record, None)
@@ -351,16 +345,6 @@ def update(store: Store, entrant_id: str, token: Any, fields: dict) -> dict:
     record.update(public)
     record["updated_at"] = _now_iso()
     store.put(_reg_path(entrant_id), record, version)
-    if "endpoint_key" in fields:
-        secret, sversion = store.get(_secret_path(entrant_id))
-        key = _clean_key(fields.get("endpoint_key"))
-        if key:
-            secret["endpoint_key"] = key
-            secret["endpoint_key_set_at"] = record["updated_at"]
-        else:
-            secret.pop("endpoint_key", None)
-            secret.pop("endpoint_key_set_at", None)
-        store.put(_secret_path(entrant_id), secret, sversion)
     return record
 
 
@@ -377,29 +361,19 @@ def rotate_token(store: Store, entrant_id: str, token: Any) -> str:
 
 
 def public_view(record: dict, secret: dict | None = None) -> dict:
-    out = {k: record.get(k) for k in ("entrant_id", "name", "type", "method",
-                                      "contact", "url", "created_at",
-                                      "updated_at") if record.get(k)}
-    if secret is not None:
-        out["endpoint_key_set"] = bool(secret.get("endpoint_key"))
-    return out
+    return {k: record.get(k) for k in ("entrant_id", "name", "type", "method",
+                                       "contact", "url", "created_at",
+                                       "updated_at") if record.get(k)}
 
 
-def entrant_file(record: dict, has_key: bool = True) -> dict:
-    """The public registration the pipeline reads, from the record.
-
-    A URL registered without a key is called without one (`auth: none`);
-    otherwise the default `bearer` would make the cron wait for a credential
-    that will never come and leave the entrant silently off the roster.
-    """
+def entrant_file(record: dict) -> dict:
+    """The public registration the pipeline reads, from the record."""
     doc = {"entrant_id": record["entrant_id"], "name": record["name"],
            "type": record.get("type", "firm"), "method": record["method"]}
     if record.get("contact"):
         doc["contact"] = record["contact"]
     if record.get("url"):
         doc["route"] = {"kind": "agent_api", "url": record["url"]}
-        if not has_key:
-            doc["route"]["auth"] = "none"
     return doc
 
 
@@ -423,8 +397,7 @@ def materialize(store: Store, entrants_dir: str | None = None) -> list[str]:
     os.makedirs(entrants_dir, exist_ok=True)
     changed = []
     for record in registrations(store):
-        secret, _ = store.get(_secret_path(record["entrant_id"]))
-        doc = entrant_file(record, bool((secret or {}).get("endpoint_key")))
+        doc = entrant_file(record)
         raw = json.dumps(doc, indent=2, sort_keys=True) + "\n"
         path = os.path.join(entrants_dir, record["entrant_id"] + ".json")
         if os.path.isfile(path):
@@ -436,29 +409,6 @@ def materialize(store: Store, entrants_dir: str | None = None) -> list[str]:
         changed.append(record["entrant_id"])
     return changed
 
-
-def endpoint_keys(store: Store) -> dict[str, str]:
-    """{entrant_id: endpoint key} for every registration that stored one."""
-    out = {}
-    for name in store.list("secrets"):
-        doc, _ = store.get(f"secrets/{name}")
-        if doc and doc.get("endpoint_key") and \
-                ENTRANT_ID.match(str(doc.get("entrant_id") or "")):
-            out[doc["entrant_id"]] = doc["endpoint_key"]
-    return out
-
-
-def load_keys_into_env(store: Store) -> list[str]:
-    """Set SSA_ENTRANT_KEY_<ID> for this process from the registry, without
-    overriding a variable an operator set by hand. Returns the ids loaded."""
-    from ssa import participants
-    loaded = []
-    for entrant_id, key in endpoint_keys(store).items():
-        var = participants.key_env(entrant_id)
-        if not os.environ.get(var):
-            os.environ[var] = key
-            loaded.append(entrant_id)
-    return loaded
 
 
 def file_uploads(store: Store, out_dir: str | None = None,

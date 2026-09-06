@@ -92,10 +92,14 @@ python tools/make_bundle.py --list
 python tools/make_bundle.py --batch batch-2026-09-14 --out /tmp/real.json
 ```
 
-To upload rather than open a pull request, use the token you received when
-you registered on the site (`submit.html`). Send it as `Authorization: Bearer`
-to `/api/v1/bundle-submissions`. It is a different secret from your Route A
-key: that one travels to your server, this one only ever comes to ours.
+In Season 0 the answers go in by pull request: `tools/accept_bundle.py
+RESPONSE.json --bundle BUNDLE.json --write` turns your response into one
+`forecasts/<round_id>/<entrant_id>.json` per answer; commit them and open a
+pull request against `main`. CI validates the files and merges them by itself
+when they pass and the pull request's author is your registered GitHub
+account. Lateness is judged at the moment your pull request reached GitHub,
+not at the merge. (The website upload endpoint exists but is not switched on
+this season.)
 
 Everything else — the two schemas, the three answer shapes, the receipt, the
 per-round rejection reasons, re-uploads — is in
@@ -119,28 +123,25 @@ python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast
 Then point the same command at your own endpoint:
 
 ```bash
-SSA_PROBE_KEY=… python tools/probe_agent_api.py \
-    --url https://api.example.com/forecast --key-env SSA_PROBE_KEY \
-    --entrant <entrant_id>
+python tools/probe_agent_api.py --url https://api.example.com/forecast
 ```
 
-It checks the transport, all three round shapes, idempotency, and — when a key
-is configured — that a *wrong* key is refused. A key is read from an
-environment variable you name, never from an argument: a key on the command
-line is in `ps` output, in shell history, and in the log of whoever pastes the
-command into an issue.
+It signs its requests with the published test key the way the Arena signs
+live ones, and checks the transport, all three round shapes, idempotency, and
+whether a *bad* signature is refused (reported either way; verifying is your
+choice). No credential changes hands in either direction: the Arena signs,
+you verify with the public key in
+[`site/keys.json`](https://social-simulation-arena.com/keys.json).
 
 Your production endpoint must use HTTPS and follow
 [`docs/agent-api.md`](agent-api.md).
 
 ### Registering the endpoint
 
-Register on the site: [`submit.html`](https://social-simulation-arena.com/submit.html)
-tests your endpoint, then one form (entrant id, name, method, URL, your API
-key if the endpoint needs one, and your promo code) registers it. You get a
-token, shown once, that edits the registration later and uploads bundles.
-The Arena writes your public entry, `entrants/<entrant_id>.json`, itself at
-the next refresh; it looks like this:
+[`submit.html`](https://social-simulation-arena.com/submit.html) tests your
+endpoint, then builds `entrants/<entrant_id>.json` and opens GitHub with it
+prefilled; open it as a pull request against `main`. CI validates it and
+merges it by itself. The file looks like this:
 
 ```json
 {
@@ -148,6 +149,7 @@ the next refresh; it looks like this:
   "name": "Acme Forecast",
   "type": "firm",
   "method": "One or two sentences: what generates the forecasts.",
+  "github": "acme-bot",
   "route": {
     "kind": "agent_api",
     "url": "https://api.acme.example/forecast"
@@ -155,29 +157,22 @@ the next refresh; it looks like this:
 }
 ```
 
-`auth` is `"bearer"` when you gave a key and `"none"` when you did not.
+`github` is the account that opens the pull request. Only it, or a maintainer,
+can change the file later or file forecasts under this id; changing the URL is
+another pull request, merged the same way. The entrant id never changes.
 
-**The key is never in this public file.** The site keeps it in the Arena's
-private registry and the refresh loads it as
-`SSA_ENTRANT_KEY_<ENTRANT_ID>` — derived from your id, never named in the
-registration, because a file that could name its own variable could name one
-of ours and have the arena send our provider key to the address in the same
-file.
+**There is no key anywhere.** The Arena signs every request it sends you; you
+verify with the public key. Nothing you hold is secret, so nothing can leak.
 
-Once the key is installed, the maintainers run the same probe against your
-registration rather than against a URL somebody typed:
+The maintainers can run the same probe against your registration rather than
+against a URL somebody typed:
 
 ```bash
 python tools/probe_agent_api.py --entrant <entrant_id>
 ```
 
-A registration without a key is not called and does not fail the run; it is
-simply not yet on the roster. `"status": "revoked"` stops the call at the point
-of dialling, not only in the probe.
-
-Do not commit or email an API key. The maintainers must accept the registration
-and arrange the credential before the endpoint becomes active; the local probe
-is a rehearsal, and the server-side one is authoritative.
+`"status": "revoked"` stops the call at the point of dialling, not only in the
+probe. A change merged before Friday 12:00 UTC applies to that week's calls.
 
 ## The operational fallback
 

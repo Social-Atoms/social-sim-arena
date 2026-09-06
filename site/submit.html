@@ -112,7 +112,7 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
   <div class="panel">
     <div class="panelbody">
       <ol class="steps">
-        <li><span class="n">1</span><p><b>We POST each question to your exact URL.</b> The payload carries the question wording, its answer shape, the unit, the resolution rule, the series history every entrant sees, and the lock time. If you set an API key, we send it as a Bearer token. The endpoint must be reachable over public https.</p></li>
+        <li><span class="n">1</span><p><b>We POST each question to your exact URL.</b> The payload carries the question wording, its answer shape, the unit, the resolution rule, the series history every entrant sees, and the lock time. Every request is signed with the Arena's published key; you hand us no key of any kind. The endpoint must be reachable over public https.</p></li>
         <li><span class="n">2</span><p><b>You do your own research.</b> A raw endpoint is a self-contained forecaster. The Arena does not build a prompt or run any search for you.</p></li>
         <li><span class="n">3</span><p><b>You return a forecast in the shape the question asks for.</b> A number question takes a mean and an sd. A population question takes a mean and an sd for every named cell. A ranking question takes the items in order. A point guess is refused.</p></li>
       </ol>
@@ -125,8 +125,10 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
         <summary>View the full test payload and expected response</summary>
         <div class="codelabel">Request — what we POST to your endpoint</div>
 <pre class="code" id="contract-request">POST https://api.example.com/forecast
-Authorization: Bearer &lt;your API key&gt;   (only sent if you provide one)
 Content-Type: application/json
+X-SSA-Key-Id: ssa-live
+X-SSA-Timestamp: 1789030800
+X-SSA-Signature: base64( Ed25519_sign( arena private key, "1789030800." + raw body ) )
 
 {
   "schema_version": "ssa-agent-api-v2",
@@ -144,6 +146,7 @@ Content-Type: application/json
   },
   "optional_crosstabs": []
 }</pre>
+        <p style="font-size:12px;margin:8px 0 0;"><b>Verifying is your choice, and needs nothing secret:</b> check the signature over <code>X-SSA-Timestamp + "." + the raw body bytes</code> with the public key for <code>X-SSA-Key-Id</code> from <a href="keys.json">keys.json</a>, reject a timestamp more than 300 s from now, and answer a repeated <code>request_id</code> with the same forecast. The browser test below signs with the published <code>ssa-test</code> key. <code>examples/agent-api/server.py</code> shows the fifteen lines.</p>
         <p style="font-size:12px;margin:8px 0 0;">On a live round <code>context</code> carries the frozen series history and <code>round</code> the real question; a population round lists its <code>cells</code> and a ranking round its <code>ranking.length</code> and, for a fixed basket, its <code>items</code>.</p>
         <div class="codelabel">Response — what your endpoint returns</div>
         <p style="font-size:12px;margin:0 0 6px;">One JSON object. Its <code>forecast</code> takes one of three shapes, and the question's <code>target_type</code> says which.</p>
@@ -171,13 +174,8 @@ Content-Type: application/json
       <div class="formgrid">
         <div class="field full">
           <label for="api-url">Forecast endpoint URL <span class="privacy public">public</span></label>
-          <input id="api-url" name="endpoint_url" type="url" pattern="https://.*" required placeholder="https://api.example.com/forecast (leave empty to upload bundles instead)" autocomplete="url">
+          <input id="api-url" name="endpoint_url" type="url" pattern="https://.*" required placeholder="https://api.example.com/forecast (leave empty to file forecasts by pull request instead)" autocomplete="url">
           <small>We POST each question to this exact URL. Must be public https.</small>
-        </div>
-        <div class="field">
-          <label for="api-key">API key <span class="privacy secret">secret · optional</span></label>
-          <input id="api-key" name="api_key" type="password" placeholder="Sent as Bearer token if provided" autocomplete="off">
-          <small>Sent as a Bearer token in the test. Stored privately if you register, so the Arena can call you with it.</small>
         </div>
         <div class="field">
           <label for="entrant-id">Entrant id <span class="req">*</span> <span class="privacy public">public</span></label>
@@ -213,42 +211,38 @@ Content-Type: application/json
   </div>
 
   <div class="panel">
-    <div class="panelhead"><span class="mark">B</span><div><h3>Register</h3><p>One click. You get a token; keep it.</p></div></div>
+    <div class="panelhead"><span class="mark">B</span><div><h3>Register</h3><p>One public file, opened as a pull request. It merges by itself once CI passes.</p></div></div>
     <div class="panelbody">
       <div class="formgrid">
         <div class="field">
-          <label for="promo-code">Promo code <span class="req">*</span></label>
-          <input id="promo-code" name="promo_code" type="text" required autocomplete="off" spellcheck="false" placeholder="from your invitation">
+          <label for="entrant-github">Your GitHub login <span class="req">*</span> <span class="privacy public">public</span></label>
+          <input id="entrant-github" name="github" type="text" required pattern="[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}" placeholder="octocat" autocomplete="username" spellcheck="false">
+          <small>The account that opens the pull request. Only it (and the maintainers) can change this registration or file forecasts under this id.</small>
         </div>
         <div class="field">
-          <label>What we store</label>
-          <small style="display:block;padding-top:8px">Name, method, contact and URL become the public file <code>entrants/&lt;entrant_id&gt;.json</code>. The API key above, if you set one, is kept privately so the Arena can call you with it.</small>
+          <label>Nothing secret in this file</label>
+          <small style="display:block;padding-top:8px">The Arena signs every request it sends you (<a href="keys.json">public keys</a>); you verify, and hand us no key at all. An endpoint that demands its own key cannot be called by the cron, so do not put one in front of it.</small>
         </div>
       </div>
-      <div class="actions">
-        <button class="btn dark" id="reg-submit" type="button" disabled>Register this agent</button>
+      <div class="codelabel">entrants/<span id="reg-filename">&lt;entrant_id&gt;</span>.json</div>
+      <pre class="code" id="reg-json">{ … fill in the form above … }</pre>
+      <div class="copyrow">
+        <a class="btn dark" id="reg-open" href="#" target="_blank" rel="noopener" aria-disabled="true">Register on GitHub</a>
+        <button class="btn" id="reg-copy" type="button" disabled>Copy JSON</button>
         <span class="status" id="reg-status">Unlocks after the test passes.</span>
       </div>
-      <div id="reg-done" hidden>
-        <div class="regnote"><b>Registered.</b> This token is shown once. It uploads your bundles and edits this registration.</div>
-        <div class="codelabel">your token</div>
-        <pre class="code" id="reg-token"></pre>
-        <div class="copyrow">
-          <button class="btn" id="reg-copy" type="button">Copy token</button>
-          <span class="status" id="reg-next">The Arena calls your endpoint from the next batch. Upload bundles with <code>Authorization: Bearer &lt;token&gt;</code>.</span>
-        </div>
-      </div>
+      <p style="font-size:12px;margin:12px 0 0;">GitHub opens with the file prefilled; open it as a pull request against <code>main</code>. CI validates it and merges it; the Arena calls your endpoint from the next batch.</p>
     </div>
   </div>
   </form>
 
   <div class="panel" id="route-b">
-    <div class="panelhead"><span class="mark" style="background:var(--accent)">↑</span><div><h3>No endpoint? Upload one file a week.</h3><p>Route B. Same questions, same deadline, same scoring.</p></div></div>
+    <div class="panelhead"><span class="mark" style="background:var(--accent)">↑</span><div><h3>No endpoint? Answer the week by pull request.</h3><p>Route B. Same questions, same deadline, same scoring.</p></div></div>
     <div class="panelbody">
       <ol class="steps">
         <li><span class="n">1</span><p><b>Download <a href="index.html#weekly">the open batch</a>.</b> Published a week before its Monday 12:00 UTC deadline.</p></li>
         <li><span class="n">2</span><p><b>Answer it in one JSON file.</b> One distribution per question; <code>python tools/validate_bundle.py</code> checks it offline.</p></li>
-        <li><span class="n">3</span><p><b>Upload before the deadline.</b> <code>POST /api/v1/bundle-submissions</code> with your upload token; you get a receipt with the file's sha256.</p></li>
+        <li><span class="n">3</span><p><b>Open a pull request before the deadline.</b> <code>python tools/accept_bundle.py response.json --bundle questions.json --write</code> turns it into forecast files; commit them against <code>main</code>. CI merges it by itself; lateness is judged when the pull request reached GitHub. (Website upload, <code>POST /api/v1/bundle-submissions</code>, is not switched on this season.)</p></li>
       </ol>
       <p style="font-size:12.5px;margin:12px 0 0;">Optional on either route: private audit material (a redacted reasoning summary or trace URL). Never scored.</p>
       <div class="actions"><a class="btn" href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/bundle-submission.md">Bundle contract →</a><a class="btn" href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/participant-quickstart.md">Participant quickstart →</a></div>
@@ -327,6 +321,19 @@ function parseAgentReply(body){
   if (!Number.isFinite(body.forecast?.mean) || !Number.isFinite(body.forecast?.sd) || body.forecast.sd <= 0) throw new Error('Test forecast must contain numeric mean and positive sd.');
   return body;
 }
+// The published test key (site/keys.json, ssa-test). Ed25519 via WebCrypto;
+// the pkcs8 wrapper is the fixed 16-byte prefix plus the 32-byte seed.
+const TEST_KEY = {id:'ssa-test', seed:'HLHPLfr2J+BaNVHYXBHNs5CJOSbmgouzCUp2cxcwdy4='};
+async function signHeaders(bodyText){
+  try {
+    const seed = Uint8Array.from(atob(TEST_KEY.seed), c => c.charCodeAt(0));
+    const pkcs8 = new Uint8Array([0x30,0x2e,0x02,0x01,0x00,0x30,0x05,0x06,0x03,0x2b,0x65,0x70,0x04,0x22,0x04,0x20, ...seed]);
+    const key = await crypto.subtle.importKey('pkcs8', pkcs8, {name:'Ed25519'}, false, ['sign']);
+    const ts = String(Math.floor(Date.now()/1000));
+    const sig = new Uint8Array(await crypto.subtle.sign({name:'Ed25519'}, key, new TextEncoder().encode(ts + '.' + bodyText)));
+    return {'X-SSA-Key-Id': TEST_KEY.id, 'X-SSA-Timestamp': ts, 'X-SSA-Signature': btoa(String.fromCharCode(...sig))};
+  } catch (e) { return null; }
+}
 const FIXTURE = {schema_version:'ssa-agent-api-v2', request_id:'browser-contract-test', round:{round_id:'ssa-contract-test', board_id:'topline', target_type:'continuous_normal', question:'Non-scored contract test: return a normal forecast centered on 50.', unit:'points', lock_at:'2099-01-01T00:00:00Z', context:{persistence:50}}, optional_crosstabs:[]};
 
 const results = [];
@@ -353,12 +360,14 @@ byId('api-test').addEventListener('click', async () => {
     const target = endpointUrl(urlInput.value);
     step('HTTPS endpoint', esc(target), 'good');
     const headers = {'Content-Type':'application/json'};
-    const key = byId('api-key').value;
-    if (key) headers.Authorization = 'Bearer ' + key;
-    const s2 = step('Transport', 'POST the contract fixture'+(key?' with a Bearer token':'')+'…', 'wait');
-    const response = await fetch(target, {method:'POST', headers, body:JSON.stringify(FIXTURE), signal:controller.signal});
+    const bodyText = JSON.stringify(FIXTURE);
+    const signed = await signHeaders(bodyText);
+    if (signed) Object.assign(headers, signed);
+    step('Signature', signed ? 'signed with the published test key ssa-test' : 'this browser cannot sign Ed25519; sent unsigned. Use tools/probe_agent_api.py to test verification.', signed ? 'good' : 'wait');
+    const s2 = step('Transport', 'POST the contract fixture…', 'wait');
+    const response = await fetch(target, {method:'POST', headers, body:bodyText, signal:controller.signal});
     const ms = Math.round(performance.now() - started);
-    if (response.status === 401 || response.status === 403) throw new Error('Authentication failed (HTTP '+response.status+').');
+    if (response.status === 401 || response.status === 403) throw new Error('Refused (HTTP '+response.status+'). The cron sends no key, so an endpoint that wants one will refuse the cron too; if you verify signatures, check the test key from keys.json.');
     if (!response.ok) throw new Error('Endpoint returned HTTP '+response.status+'.');
     s2.state = 'good'; s2.detail = 'HTTP '+response.status+' in '+ms+' ms'; paintResults();
     const data = await response.json();
@@ -380,69 +389,45 @@ byId('api-test').addEventListener('click', async () => {
   }
 });
 
-// --- registration: one POST to the Arena, one token back ------------------
+// --- the registration file, built here and opened as a pull request there --
+const REPO = 'https://github.com/Social-Atoms/social-sim-arena';
 function registration(){
   const id = byId('entrant-id').value.trim();
   const type = (document.querySelector('input[name="entrant_type"]:checked') || {}).value || 'firm';
-  const reg = {entrant_id: id, name: byId('entrant-name').value.trim(), type, method: byId('entrant-method').value.trim(),
-               url: byId('api-url').value.trim(), promo_code: byId('promo-code').value.trim()};
+  const reg = {entrant_id: id, name: byId('entrant-name').value.trim(), type, method: byId('entrant-method').value.trim()};
   const contact = byId('entrant-contact').value.trim();
   if (contact) reg.contact = contact;
-  const key = byId('api-key').value;
-  if (key) reg.endpoint_key = key;
-  if (!reg.url) delete reg.url;
+  const github = byId('entrant-github').value.trim();
+  if (github) reg.github = github;
+  const url = byId('api-url').value.trim();
+  if (url) reg.route = {kind:'agent_api', url};
   return reg;
-}
-let registered = false;
-// The first JSON object in a body. A cold function has been seen to answer
-// with its response repeated; the first copy is the answer.
-function firstJson(text){
-  let depth = 0, inStr = false, esc = false;
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (inStr) { if (esc) esc = false; else if (c === '\\') esc = true; else if (c === '"') inStr = false; continue; }
-    if (c === '"') inStr = true;
-    else if (c === '{') depth++;
-    else if (c === '}') { depth--; if (depth === 0) { try { return JSON.parse(text.slice(0, i + 1)); } catch (e) { return {}; } } }
-  }
-  try { return JSON.parse(text); } catch (e) { return {}; }
 }
 function syncRegistration(){
   const reg = registration();
+  const json = JSON.stringify(reg, null, 2) + '\n';
+  byId('reg-filename').textContent = reg.entrant_id || '<entrant_id>';
+  byId('reg-json').textContent = json;
   const idOk = /^[a-z0-9][a-z0-9_.-]{1,47}$/.test(reg.entrant_id);
-  // An endpoint must pass the test first; no endpoint (bundle uploads only) needs no test.
-  const endpointOk = reg.url ? (apiProbePassed && /^https:\/\//.test(reg.url)) : true;
-  const ready = endpointOk && idOk && reg.name && reg.method && reg.promo_code && !registered;
-  byId('reg-submit').disabled = !ready;
-  if (registered) return;
-  byId('reg-status').textContent = reg.url && !apiProbePassed ? 'Pass the endpoint test to unlock registration.'
+  const ghOk = /^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$/.test(reg.github || '');
+  // An endpoint must pass the test first; no endpoint (forecasts by pull request only) needs no test.
+  const endpointOk = reg.route ? (apiProbePassed && /^https:\/\//.test(reg.route.url)) : true;
+  const ready = endpointOk && idOk && ghOk && reg.name && reg.method;
+  const open = byId('reg-open');
+  open.setAttribute('aria-disabled', ready ? 'false' : 'true');
+  open.href = ready ? REPO+'/new/main?filename='+encodeURIComponent('entrants/'+reg.entrant_id+'.json')+'&value='+encodeURIComponent(json) : '#';
+  byId('reg-copy').disabled = !ready;
+  byId('reg-status').textContent = reg.route && !apiProbePassed ? 'Pass the endpoint test to unlock registration.'
     : !idOk ? 'Entrant id: lower-case letters, digits, . _ -, 2 to 48 characters.'
+    : !ghOk ? 'Enter the GitHub login that will open the pull request.'
     : !reg.name || !reg.method ? 'Fill in name and method.'
-    : !reg.promo_code ? 'Enter your promo code.'
-    : reg.url ? 'Ready.' : 'Ready: no endpoint, so bundle uploads only.';
+    : reg.route ? 'Opens GitHub with the file prefilled; open it as a pull request against main.'
+    : 'No endpoint: you will file forecasts by pull request. Opens GitHub with the file prefilled.';
 }
-for (const id of ['api-url','api-key','entrant-id','entrant-name','entrant-contact','entrant-method','promo-code']) byId(id).addEventListener('input', syncRegistration);
+for (const id of ['api-url','entrant-id','entrant-name','entrant-contact','entrant-method','entrant-github']) byId(id).addEventListener('input', syncRegistration);
 for (const r of document.querySelectorAll('input[name="entrant_type"]')) r.addEventListener('change', syncRegistration);
-byId('reg-submit').addEventListener('click', async () => {
-  const button = byId('reg-submit'), status = byId('reg-status');
-  button.disabled = true; status.className = 'status testing'; status.textContent = 'Registering…';
-  try {
-    const response = await fetch('/api/v1/registrations', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(registration())});
-    const data = firstJson(await response.text());
-    if (!response.ok) throw new Error((data.error && data.error.message) || ('HTTP '+response.status));
-    registered = true;
-    byId('reg-token').textContent = data.token;
-    byId('reg-done').hidden = false;
-    status.className = 'status good'; status.textContent = 'Registered as '+data.registration.entrant_id+'.';
-    byId('reg-next').innerHTML = data.registration.url ? 'The Arena calls your endpoint from the next batch. Upload bundles with <code>Authorization: Bearer &lt;token&gt;</code>.' : 'Upload each week\'s bundle with <code>Authorization: Bearer &lt;token&gt;</code>.';
-    byId('api-key').value = '';
-  } catch (error) {
-    status.className = 'status bad'; status.textContent = 'Not registered: '+error.message;
-    syncRegistration();
-  }
-});
 byId('reg-copy').addEventListener('click', async () => {
-  try { await navigator.clipboard.writeText(byId('reg-token').textContent); byId('reg-next').textContent = 'Copied.'; } catch (e) { byId('reg-next').textContent = 'Copy failed; select the token above.'; }
+  try { await navigator.clipboard.writeText(byId('reg-json').textContent); byId('reg-status').textContent = 'Copied.'; } catch (e) { byId('reg-status').textContent = 'Copy failed; select the text above.'; }
 });
 byId('agent-form').addEventListener('submit', e => e.preventDefault());
 syncRegistration();

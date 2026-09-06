@@ -1,0 +1,44 @@
+name: auto-merge-submissions
+# A participant's pull request -- a registration or forecast files -- merges
+# into main by itself once validate-submissions has passed on it. No person
+# has to be online before a deadline. tools/auto_merge.py holds the rules:
+# base is main, only entrants/<id>.json and forecasts/<round>/<id>.json, every
+# id owned by the author, and a second validation at receipt time. Anything
+# else is left for a maintainer with a comment.
+#
+# workflow_run, not pull_request: the pull request's own run has no write
+# token (forks, by design), so the merge happens here, in the repository's
+# context, and only reads the JSON files it merges. The merge is made by
+# github-actions[bot], which main-guard.yml allows.
+on:
+  workflow_run:
+    workflows: [validate-submissions]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  merge:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: merge if this is a validated submission by its owner
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python tools/auto_merge.py \
+            --sha "${{ github.event.workflow_run.head_sha }}" \
+            --received "${{ github.event.workflow_run.created_at }}" \
+            --run-url "${{ github.event.workflow_run.html_url }}"

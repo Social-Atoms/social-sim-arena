@@ -146,14 +146,15 @@ class BundleUpload(unittest.TestCase):
         self.assertEqual(first["receipt"], later["receipt"])
         self.assertEqual(1, len(self.stored()))
 
-    def test_the_upload_secret_is_not_the_one_route_a_hands_out(self):
-        """`SSA_ENTRANT_KEY_` travels to the participant's own server, so it
-        must not open this door even when it is the only key installed."""
+    def test_the_upload_secret_is_the_only_secret_and_a_missing_one_is_closed(self):
+        """Route A hands out no credential at all any more (the arena signs
+        its requests), so the arena's own signing key must never open this
+        door, and an empty upload variable is a closed door, not an open one."""
         self.assertEqual("SSA_UPLOAD_KEY_", bundle_api.UPLOAD_KEY_PREFIX)
         with patch.dict(os.environ, {
                 upload_key_env(ENTRANT): "",
-                participants.key_env(ENTRANT): "route-a-outbound-key"}):
-            self.assertEqual(401, self.upload(token="route-a-outbound-key")[0])
+                "SSA_SIGNING_KEY": "HLHPLfr2J+BaNVHYXBHNs5CJOSbmgouzCUp2cxcwdy4="}):
+            self.assertEqual(401, self.upload(token="HLHPLfr2J+BaNVHYXBHNs5CJOSbmgouzCUp2cxcwdy4=")[0])
             self.assertEqual(401, self.upload(token="")[0])
         self.assertEqual([], self.stored())
 

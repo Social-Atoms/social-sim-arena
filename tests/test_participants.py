@@ -10,6 +10,7 @@ import jsonschema
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
+from ssa import signing  # noqa: E402
 from ssa import agent_api, batches, bundle_api, harness, participants, refresh  # noqa: E402
 
 REG = {
@@ -48,25 +49,26 @@ class registry:
         shutil.rmtree(self.dir, ignore_errors=True)
 
 
-def with_key(entrant="acme-forecast", value="sk-test"):
-    os.environ[participants.key_env(entrant)] = value
+SIGNING_PRIVATE, SIGNING_PUBLIC = signing.generate()
 
 
-def without_key(entrant="acme-forecast"):
-    os.environ.pop(participants.key_env(entrant), None)
+def with_key():
+    """The arena's own signing key, the only secret Route A has."""
+    os.environ[signing.LIVE_KEY_ENV] = SIGNING_PRIVATE
+
+
+def without_key():
+    os.environ.pop(signing.LIVE_KEY_ENV, None)
 
 
 # --- the credential ---------------------------------------------------------
 
-def test_the_credential_variable_cannot_be_named_by_the_registration():
-    """The whole reason `key_env` is derived rather than declared.
-
-    A registration is a file in a pull request. If it could name the variable
-    holding its bearer token, it could name `ANTHROPIC_API_KEY`, and the arena
-    would put our provider key in an Authorization header addressed to the
-    `url` in the same file. It could equally name another participant's.
-    Deriving the name from the entrant id makes both unrepresentable.
-    """
+def test_the_registration_carries_no_credential_and_cannot_name_one():
+    """A registration is a file in a pull request. If it could name a
+    credential it could name `ANTHROPIC_API_KEY`, and the arena would put our
+    provider key in a header addressed to the `url` in the same file. Route A
+    has no per-entrant credential at all: the arena signs, the entrant
+    verifies with the published key."""
     schema = json.load(open(os.path.join(ROOT, "schema",
                                          "entrant.schema.json")))
     assert schema["properties"]["route"]["additionalProperties"] is False
@@ -83,12 +85,12 @@ def test_the_credential_variable_cannot_be_named_by_the_registration():
     else:
         raise AssertionError("a registration naming a credential validated")
 
-    assert participants.key_env("acme-forecast") == \
-        "SSA_ENTRANT_KEY_ACME_FORECAST"
+    assert "auth" not in fields, "the route block has no auth mode any more"
     with registry(REG):
-        assert harness.route("acme-forecast")["env"] == \
-            "SSA_ENTRANT_KEY_ACME_FORECAST"
-    print("ok test_the_credential_variable_cannot_be_named_by_the_registration")
+        assert harness.route("acme-forecast")["env"] == "", \
+            "a participant route must name no environment variable"
+        assert harness.route("acme-forecast")["api"] == "agent"
+    print("ok test_the_registration_carries_no_credential_and_cannot_name_one")
 
 
 def test_a_participant_route_is_https_only():
@@ -129,14 +131,15 @@ def test_revocation_stops_the_call_and_the_roster():
 
 # --- the roster -------------------------------------------------------------
 
-def test_an_unkeyed_participant_is_not_queued_every_six_hours():
-    """Onboarding is not a fault. Queuing an entrant whose key we have not
-    installed yet fails the run every cycle for a week and teaches everyone to
-    ignore the colour."""
+def test_without_a_signing_key_no_participant_is_called():
+    """The arena never sends an unsigned request: a verifying endpoint would
+    refuse it and could not tell our misconfiguration from an attack. So with
+    no signing key installed, participants are left off the roster, and the
+    reason names the variable."""
     with registry(REG):
         without_key()
         ok, why = participants.callable_now("acme-forecast")
-        assert not ok and "SSA_ENTRANT_KEY_ACME_FORECAST" in why
+        assert not ok and signing.LIVE_KEY_ENV in why
         assert not any(e == "acme-forecast" for e, *_ in refresh.season_roster())
 
         with_key()
@@ -145,16 +148,54 @@ def test_an_unkeyed_participant_is_not_queued_every_six_hours():
                  if row[0] == "acme-forecast"]
         assert seats == [("acme-forecast", "agent-api", "participant",
                           "participant")]
-    print("ok test_an_unkeyed_participant_is_not_queued_every_six_hours")
+    print("ok test_without_a_signing_key_no_participant_is_called")
 
 
-def test_an_auth_none_endpoint_is_callable_without_a_secret():
-    with registry(dict(REG, route=dict(REG["route"], auth="none"))):
-        without_key()
-        assert harness.route("acme-forecast")["env"] == ""
-        assert participants.callable_now("acme-forecast") == (True, "")
-        assert harness.has_key("acme-forecast")
-    print("ok test_an_auth_none_endpoint_is_callable_without_a_secret")
+def test_a_participant_request_is_signed_over_the_bytes_sent():
+    """What travels: the envelope as the whole body, and three headers whose
+    signature verifies with the published public key over exactly those
+    bytes. A body re-serialised on the way would not verify, which is the
+    property a participant relies on."""
+    calls = []
+
+    class Response:
+        status_code = 200
+        text = ""
+
+        @staticmethod
+        def json():
+            return {"schema_version": "ssa-agent-api-v2",
+                    "forecast": {"mean": 1.0, "sd": 1.0}}
+
+    def fake_post(url, **kwargs):
+        calls.append((url, kwargs))
+        return Response()
+
+    with_key()
+    real_post = harness.requests.post
+    harness.requests.post = fake_post
+    try:
+        harness._call_agent({}, "https://api.acme.test/forecast", "", "acme",
+                            '{"request_id":"acme:r1","round":{}}')
+    finally:
+        harness.requests.post = real_post
+    url, kw = calls[0]
+    assert url == "https://api.acme.test/forecast"
+    assert kw["data"] == b'{"request_id":"acme:r1","round":{}}'
+    assert "Authorization" not in kw["headers"], "no bearer token travels"
+    assert signing.verify(SIGNING_PUBLIC, kw["headers"], kw["data"]) == "ssa-live"
+    try:
+        signing.verify(SIGNING_PUBLIC, kw["headers"], kw["data"] + b" ")
+        raise AssertionError("a changed body verified")
+    except signing.SignatureError:
+        pass
+    without_key()
+    try:
+        harness._call_agent({}, "https://api.acme.test/forecast", "", "acme", "{}")
+        raise AssertionError("an unsigned request was sent")
+    except RuntimeError as err:
+        assert signing.LIVE_KEY_ENV in str(err)
+    print("ok test_a_participant_request_is_signed_over_the_bytes_sent")
 
 
 # --- what a participant must never be routed through ------------------------
@@ -296,9 +337,9 @@ def test_a_profile_reply_is_all_cells_or_none():
 # --- filing -----------------------------------------------------------------
 
 def test_a_participant_forecast_is_never_mocked():
-    """`harness.forecast` files a labelled placeholder when a key is missing
-    and SSA_ALLOW_MOCK is set. Under someone else's entrant id that is us
-    inventing their forecast."""
+    """`harness.forecast` files a labelled placeholder when a provider key is
+    missing and SSA_ALLOW_MOCK is set. Under someone else's entrant id that is
+    us inventing their forecast, so an uncallable participant raises."""
     r = _round("civiqs-2026-w38-approval")
     with registry(REG):
         without_key()
@@ -307,7 +348,7 @@ def test_a_participant_forecast_is_never_mocked():
         try:
             harness.forecast("acme-forecast", r)
         except RuntimeError as err:
-            assert "no credential" in str(err), str(err)
+            assert "no signing key" in str(err), str(err)
         else:
             raise AssertionError("a forecast was invented for a participant "
                                  "we could not reach")
@@ -365,23 +406,21 @@ def test_a_registration_without_a_route_is_unchanged():
             jsonschema.validate(json.load(fh), schema)
         live.append(name[:-5])
     assert live, "no registrations found to re-validate"
-    # `key_env` folds `-` and `.` to `_`, and ids use both. Two ids sharing a
-    # variable would send one entrant's token to the other's endpoint, and let
-    # one upload token file as either.
-    for derive in (participants.key_env, bundle_api.upload_key_env):
-        names = [derive(entrant) for entrant in live]
-        assert len(set(names)) == len(names), sorted(
-            n for n in names if names.count(n) > 1)
+    # `upload_key_env` folds `-` and `.` to `_`, and ids use both. Two ids
+    # sharing a variable would let one upload token file as either.
+    names = [bundle_api.upload_key_env(entrant) for entrant in live]
+    assert len(set(names)) == len(names), sorted(
+        n for n in names if names.count(n) > 1)
     print(f"ok test_a_registration_without_a_route_is_unchanged "
           f"({len(live)} committed registrations still validate)")
 
 
 if __name__ == "__main__":
-    test_the_credential_variable_cannot_be_named_by_the_registration()
+    test_the_registration_carries_no_credential_and_cannot_name_one()
     test_a_participant_route_is_https_only()
     test_revocation_stops_the_call_and_the_roster()
-    test_an_unkeyed_participant_is_not_queued_every_six_hours()
-    test_an_auth_none_endpoint_is_callable_without_a_secret()
+    test_without_a_signing_key_no_participant_is_called()
+    test_a_participant_request_is_signed_over_the_bytes_sent()
     test_a_participant_has_no_standby_and_no_base_override()
     test_every_round_shape_builds_a_valid_envelope()
     test_the_envelope_states_the_participant_deadline_not_our_lock()

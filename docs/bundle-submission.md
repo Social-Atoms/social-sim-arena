@@ -232,8 +232,9 @@ so there is no single moment to put in the `deadline` field.
 
 `POST /api/v1/bundle-submissions` accepts the response and answers with the
 receipt and the same per-round verdicts `tools/validate_bundle.py` shows you.
-Authenticate with the token you received when you registered on the site
-(`submit.html`); a token installed by the maintainers by hand works too:
+Not switched on in Season 0: answers go in by pull request (see the
+participant quickstart). When it is on, authenticate with the upload token the
+maintainers install for your entrant id:
 
 ```bash
 curl -X POST https://social-simulation-arena.com/api/v1/bundle-submissions \

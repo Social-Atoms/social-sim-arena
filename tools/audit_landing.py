@@ -34,6 +34,18 @@ def changed_contract_files(before="HEAD^", after="HEAD", root=ROOT):
     return out
 
 
+def received_at(commit="HEAD", root=ROOT):
+    """The `Received-At:` trailer tools/auto_merge.py writes into a merge
+    commit: the moment the submission reached GitHub. Without it, lateness is
+    judged at landing, as before."""
+    proc = subprocess.run(["git", "log", "-1", "--format=%B", commit], cwd=root,
+                          capture_output=True, text=True, check=True)
+    for line in proc.stdout.splitlines():
+        if line.startswith("Received-At:"):
+            return line.split(":", 1)[1].strip()
+    return None
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("before", nargs="?", default="HEAD^")
@@ -44,9 +56,13 @@ def main(argv=None):
         print("nothing to audit")
         return 0
     print("\n".join(files))
+    received = received_at(args.after)
+    extra = ["--now", received] if received else []
+    if received:
+        print(f"judging lateness at receipt time {received} (Received-At trailer)")
     return subprocess.call(
         [sys.executable, os.path.join(ROOT, "tools", "validate_submission.py"),
-         *files], cwd=ROOT)
+         *extra, *files], cwd=ROOT)
 
 
 if __name__ == "__main__":

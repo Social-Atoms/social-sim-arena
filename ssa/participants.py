@@ -17,16 +17,14 @@ would be the one nobody exercises weekly.
 
 What this file refuses, and why each refusal exists
 ---------------------------------------------------
-- **The credential is derived, never declared.** There is no `key_env` field.
-  The variable is `SSA_ENTRANT_KEY_<ID>`, computed from the entrant id. A
-  registration that named its own variable could name `ANTHROPIC_API_KEY`, and
-  the arena would obligingly put our provider key in an `Authorization` header
-  addressed to the `url` in the same file. It would also let one
-  participant ask to be called with another's credential. Neither is reachable
-  when the name is a function of the id.
+- **No credential at all.** The arena signs every request it sends
+  (`ssa/signing.py`) and the participant verifies with the published public
+  key, so a registration carries no key and the arena stores none. A
+  registration that could name a credential could name `ANTHROPIC_API_KEY`;
+  the schema refuses any such field.
 - **HTTPS only.** Checked here as well as in the schema. The schema runs when a
   registration is opened as a pull request; this runs every time we are about
-  to send a bearer token.
+  to send a signed request.
 - **No standby.** `harness.standby_route` falls back to OpenRouter when a
   configured route is terminally down. For a participant that would send their
   round to a third-party vendor on our account and file the reply as their
@@ -43,7 +41,6 @@ import re
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ENTRANTS = os.path.join(ROOT, "entrants")
 
-KEY_ENV_PREFIX = "SSA_ENTRANT_KEY_"
 DEFAULT_MODEL = "ssa-agent"
 KIND = "agent_api"
 
@@ -52,14 +49,6 @@ KIND = "agent_api"
 # A registration can be edited on main by anyone who can push there.
 _HTTPS = re.compile(r"^https://[^\s?#]+$")
 _ENTRANT_ID = re.compile(r"^[a-z0-9][a-z0-9_.-]{1,47}$")
-
-
-def key_env(entrant):
-    """The environment variable holding this entrant's bearer token.
-
-    Derived, never read from the registration. See the module docstring.
-    """
-    return KEY_ENV_PREFIX + re.sub(r"[^A-Z0-9]", "_", entrant.upper())
 
 
 def _path(entrant):
@@ -112,14 +101,11 @@ def route(entrant, entrants_dir=None):
         raise ValueError(
             f"{entrant}: route url must be an https URL with no query or "
             f"fragment, got {spec.get('url')!r}")
-    auth = spec.get("auth", "bearer")
-    if auth not in ("bearer", "none"):
-        raise ValueError(f"{entrant}: route auth must be 'bearer' or 'none'")
-
     return {
-        # `env` is the name the runner looks up; "" means send no header, and
-        # is why `auth: none` cannot be confused with a missing secret.
-        "env": key_env(entrant) if auth == "bearer" else "",
+        # No credential: the arena signs its requests (ssa/signing.py) and the
+        # participant verifies with the published key. "" tells the runner
+        # there is nothing to look up.
+        "env": "",
         "api": "agent",
         "base": url,
         "model": DEFAULT_MODEL,
@@ -152,12 +138,13 @@ def callable_now(entrant, entrants_dir=None):
     if reg.get("status") == "revoked":
         return False, "registration is revoked"
     try:
-        rt = route(entrant, entrants_dir)
+        route(entrant, entrants_dir)
     except ValueError as err:
         return False, str(err)
-    if rt["env"] and not os.environ.get(rt["env"]):
-        return False, (f"no credential in {rt['env']}; the maintainers have "
-                       "not installed this entrant's key")
+    from . import signing
+    if signing.live_signer() is None:
+        return False, (f"no signing key in {signing.LIVE_KEY_ENV}; the arena "
+                       "does not call participants unsigned")
     return True, ""
 
 

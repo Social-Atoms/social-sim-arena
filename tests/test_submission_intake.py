@@ -3,6 +3,7 @@ import json
 import re
 import os
 import unittest
+from unittest.mock import patch
 
 from jsonschema import Draft7Validator, FormatChecker
 
@@ -191,7 +192,8 @@ class SubmissionIntakeContracts(unittest.TestCase):
         self.assertIn("reasoning_trace", content)
         self.assertIn("crosstabs", content)
 
-    def test_agent_auth_is_optional_and_the_body_is_the_envelope(self):
+    def test_the_arena_signs_the_envelope_it_sends(self):
+        from ssa import signing
         calls = []
 
         class Response:
@@ -207,26 +209,22 @@ class SubmissionIntakeContracts(unittest.TestCase):
             calls.append((url, kwargs))
             return Response()
 
+        private, public = signing.generate()
         real_post = harness.requests.post
         harness.requests.post = fake_post
         try:
-            text, _ = harness._call_agent({}, "https://agent.example/forecast",
-                                          "", "acme", '{"round": 1}')
-            harness._call_agent({}, "https://agent.example/forecast",
-                                "secret", "acme", '{"round": 1}')
+            with patch.dict(os.environ, {signing.LIVE_KEY_ENV: private}):
+                text, _ = harness._call_agent({}, "https://agent.example/forecast",
+                                              "", "acme", '{"round": 1}')
         finally:
             harness.requests.post = real_post
-        # the exact URL, the envelope as the whole body, no chat wrapper
+        # the exact URL, the envelope as the whole body, a signature that
+        # verifies with the public key over those bytes, and no bearer token
         self.assertEqual("https://agent.example/forecast", calls[0][0])
         self.assertEqual(b'{"round": 1}', calls[0][1]["data"])
-        self.assertNotIn("json", calls[0][1])
         self.assertNotIn("Authorization", calls[0][1]["headers"])
-        self.assertEqual("Bearer secret",
-                         calls[1][1]["headers"]["Authorization"])
-        # and the reply comes back as the text the parsers decode
-        self.assertEqual({"mean": 50.0, "sd": 5.0},
-                         json.loads(text)["forecast"])
-
+        self.assertEqual("ssa-live", signing.verify(public, calls[0][1]["headers"], b'{"round": 1}'))
+        self.assertEqual({"mean": 50.0, "sd": 5.0}, json.loads(text)["forecast"])
 
 class SubmissionPrototype(unittest.TestCase):
     """The submit page is agents only.
@@ -255,7 +253,7 @@ class SubmissionPrototype(unittest.TestCase):
     def test_page_is_agents_only_and_has_no_form_to_fill_in(self):
         for marker in ('id="api-test"', 'name="endpoint_url"',
                        'id="entrant-id"', 'id="entrant-method"',
-                       'id="test-results"', 'id="promo-code"', 'id="reg-token"',
+                       'id="test-results"', 'id="entrant-github"', 'id="reg-json"',
                        'id="route-b"'):
             self.assertIn(marker, self.page)
         for gone in ("track-human", "Human wisdom", "Human Wisdom",
@@ -280,36 +278,48 @@ class SubmissionPrototype(unittest.TestCase):
         for shape in ("Topline", "Population", "Ranking"):
             self.assertIn('<div class="shape"><b>' + shape + "</b>", self.page)
 
-    def test_secret_is_password_and_goes_only_to_the_endpoint_and_the_arena(self):
-        self.assertIn('id="api-key" name="api_key" type="password"', self.page)
+    def test_the_page_asks_for_no_key_and_only_the_explicit_probe_sends_anything(self):
+        # Season 0 Route A carries no credential in either direction: the
+        # arena signs, the participant verifies. A key field would let an
+        # endpoint pass the browser test behind a key the cron never sends.
+        for token in ('id="api-key"', 'api_key', 'Bearer'):
+            self.assertNotIn(token, self.page)
         self.assertIn('type="url" pattern="https://.*" required', self.page)
         self.assertNotIn("<form action=", self.page)
         self.assertIn("const target = endpointUrl(urlInput.value);", self.page)
-        # The key travels twice, both on an explicit click: to the endpoint
-        # being tested, and to the arena's own registry when the person
-        # registers. Every other fetch on the page is the arena's own data;
-        # no third party ever carries what was typed.
+        # Every other fetch on the page is the arena's own data, never a
+        # third party carrying what was typed.
         fetches = re.findall(r"fetch\(([^,)]+)", self.page)
         self.assertEqual(
             sorted(fetches),
             sorted(["'data.json'",
                     "'https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/site/data.json'",
-                    "target", "'/api/v1/registrations'"]))
+                    "target"]))
         self.assertNotIn("localStorage", self.page)
 
-    def test_registration_is_one_post_with_a_promo_code_and_returns_a_token_once(self):
-        # Registration goes to the arena's registry, never to a public file
-        # from the browser; the token comes back once and the key field is
-        # cleared after it has been stored.
-        self.assertIn("fetch('/api/v1/registrations', {method:'POST'", self.page)
-        self.assertIn("promo_code: byId('promo-code').value.trim()", self.page)
-        self.assertIn("if (key) reg.endpoint_key = key;", self.page)
-        self.assertIn("byId('reg-token').textContent = data.token;", self.page)
-        self.assertIn("byId('api-key').value = '';", self.page)
-        self.assertIn("This token is shown once.", self.page)
-        self.assertIn("const ready = endpointOk && idOk", self.page)
-        self.assertIn("const endpointOk = reg.url ? (apiProbePassed &&", self.page)
-        self.assertNotIn("/new/dev?filename=", self.page)
+    def test_the_browser_test_signs_with_the_published_test_key(self):
+        from ssa import signing
+        self.assertIn("seed:'" + signing.TEST_PRIVATE_KEY + "'", self.page)
+        self.assertIn("{name:'Ed25519'}", self.page)
+        self.assertIn("const signed = await signHeaders(bodyText);", self.page)
+        self.assertIn("body:bodyText", self.page, "the signed bytes must be the sent bytes")
+        with open(os.path.join(ROOT, "site", "keys.json")) as f:
+            keys = json.load(f)
+        test = next(k for k in keys["keys"] if k["key_id"] == signing.TEST_KEY_ID)
+        self.assertEqual(signing.TEST_PUBLIC_KEY, test["public_key"])
+        self.assertEqual(signing.TEST_PRIVATE_KEY, test["private_key"])
+
+    def test_registration_is_a_pull_request_by_its_owner_with_no_secret_in_it(self):
+        builder = self.page.split("function registration(){", 1)[1].split(
+            "function syncRegistration(){", 1)[0]
+        self.assertNotIn("api-key", builder)
+        self.assertNotIn("key", builder.lower().replace("kind", ""))
+        self.assertIn("kind:'agent_api'", builder)
+        self.assertIn("if (github) reg.github = github;", builder)
+        self.assertIn("'/new/main?filename='", self.page)
+        self.assertIn("encodeURIComponent('entrants/'+reg.entrant_id+'.json')", self.page)
+        self.assertIn("const ready = endpointOk && idOk && ghOk", self.page)
+        self.assertNotIn("/api/v1/registrations", self.page)
         self.assertIn('pattern="[a-z0-9][a-z0-9_.-]{1,47}"', self.page)
         with open(os.path.join(ROOT, "schema", "entrant.schema.json")) as f:
             schema = json.load(f)
@@ -324,7 +334,7 @@ class SubmissionPrototype(unittest.TestCase):
     def test_the_rest_of_the_site_sends_agents_to_one_page_and_nobody_else(self):
         self.assertEqual(2, self.index_submit.count('class="svrow"'))
         self.assertIn("<b>We call your endpoint</b>", self.index_submit)
-        self.assertIn("<b>You upload the weekly bundle</b>", self.index_submit)
+        self.assertIn("<b>You answer the weekly bundle</b>", self.index_submit)
         for page in (self.index_submit, self.board, self.docs):
             self.assertNotIn("Human Wisdom", page)
             self.assertNotIn("Human wisdom", page)

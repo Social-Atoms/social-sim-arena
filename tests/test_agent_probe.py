@@ -10,9 +10,9 @@ what the probe *refuses*, which a live endpoint cannot be asked to demonstrate.
 
 The four that matter:
 
-- an endpoint that answers a wrong bearer token is one anyone can file
-  forecasts through, so the probe fails it rather than reporting auth as
-  untested;
+- the probe signs with the published test key the way the arena signs live
+  requests, so an endpoint that verifies is exercised as it will be called,
+  and a bad signature is required to be refused with 401/403;
 - an endpoint tested only on a scalar fixture fails on the first profile round
   of the season, after the deadline, so every shape is a separate verdict;
 - a 4xx is an answer and must not be retried, or a misconfigured request
@@ -49,15 +49,15 @@ SERVER = load_example_server()
 class Fixture:
     """The example server on a free loopback port, for the life of a `with`."""
 
-    def __init__(self, api_key=None, delay=0.0):
-        self.api_key = api_key
+    def __init__(self, verify=True, delay=0.0):
+        self.verify = verify
         self.delay = delay
 
     def __enter__(self):
         with socket.socket() as probe_socket:
             probe_socket.bind(("127.0.0.1", 0))
             port = probe_socket.getsockname()[1]
-        self.server = SERVER.serve("127.0.0.1", port, self.api_key, self.delay)
+        self.server = SERVER.serve("127.0.0.1", port, self.verify, self.delay)
         self.thread = threading.Thread(target=self.server.serve_forever,
                                        daemon=True)
         self.thread.start()
@@ -74,10 +74,13 @@ def verdicts(rows):
     return {name: (ok, detail) for name, ok, detail in rows}
 
 
+SIGNER = probe_tool.make_signer(probe_tool.TEST_PRIVATE_KEY, probe_tool.TEST_KEY_ID)
+
+
 def test_the_example_server_answers_all_three_round_shapes():
     """A real batch mixes them; an endpoint proved on one is proved on one."""
     with Fixture() as fixture:
-        rows = verdicts(probe_tool.probe(fixture.url, timeout=5))
+        rows = verdicts(probe_tool.probe(fixture.url, SIGNER, timeout=5))
     for shape in ("scalar", "profile", "ranking"):
         ok, detail = rows[f"round/{shape}"]
         assert ok, (shape, detail)
@@ -85,23 +88,31 @@ def test_the_example_server_answers_all_three_round_shapes():
     assert rows["transport"][0], rows["transport"]
 
 
-def test_a_correct_key_passes_and_a_wrong_one_is_required_to_be_refused():
-    """Configuring a key and never testing that it is enforced is the common
-    version of leaving the endpoint open."""
-    with Fixture(api_key="probe-secret") as fixture:
-        rows = verdicts(probe_tool.probe(fixture.url, key="probe-secret",
-                                         timeout=5))
-    assert rows["round/scalar"][0], rows["round/scalar"]
-    assert rows["auth"][0], rows["auth"]
+def test_a_verifying_endpoint_refuses_a_bad_signature_and_an_unsigned_request():
+    """The signature check sends a corrupted signature and requires 401/403;
+    an unsigned request must be refused too, or verification is decorative."""
+    with Fixture(verify=True) as fixture:
+        rows = verdicts(probe_tool.probe(fixture.url, SIGNER, timeout=5))
+        assert rows["round/scalar"][0], rows["round/scalar"]
+        assert rows["signature"][0] and "verifies" in rows["signature"][1], rows["signature"]
+        try:
+            probe_tool.call(fixture.url, probe_tool.envelope("scalar", "unsigned"),
+                            None, timeout=5, retries=0)
+            raise AssertionError("an unsigned request was answered by a verifying server")
+        except probe_tool.ProbeFailure as err:
+            assert "401" in str(err), err
 
 
-def test_a_bad_credential_fails_the_probe_rather_than_being_reported_as_open():
-    with Fixture(api_key="probe-secret") as fixture:
-        rows = verdicts(probe_tool.probe(fixture.url, key="wrong-key",
-                                         timeout=5, retries=0))
-    ok, detail = rows["round/scalar"]
-    assert not ok, detail
-    assert "401" in detail, detail
+def test_an_open_endpoint_is_reported_as_open_not_failed():
+    """Verifying is the participant's choice. An endpoint that answers a bad
+    signature is not a contract failure; the probe says what it saw."""
+    with Fixture(verify=False) as fixture:
+        rows = verdicts(probe_tool.probe(fixture.url, SIGNER, timeout=5))
+    assert rows["signature"][0], rows["signature"]
+    assert "does not verify" in rows["signature"][1], rows["signature"]
+    with Fixture(verify=False) as fixture:
+        rows = verdicts(probe_tool.probe(fixture.url, None, timeout=5))
+    assert rows["round/scalar"][0] and "unsigned" in rows["signature"][1], rows
 
 
 def test_a_4xx_is_an_answer_and_is_never_retried():
@@ -110,7 +121,9 @@ def test_a_4xx_is_an_answer_and_is_never_retried():
     attempts = []
 
     class Counting(SERVER.Handler):
-        api_key = "probe-secret"
+        verify = True
+        keys = SERVER.PUBLIC_KEYS
+        answered = {}
         delay = 0.0
 
         def do_POST(self):
@@ -128,7 +141,7 @@ def test_a_4xx_is_an_answer_and_is_never_retried():
         try:
             probe_tool.call(f"http://127.0.0.1:{port}/forecast",
                             probe_tool.envelope("scalar", "id"),
-                            key="wrong", timeout=5, retries=3)
+                            SIGNER, timeout=5, retries=3, corrupt=True)
             assert False, "a 401 was accepted"
         except probe_tool.ProbeFailure as err:
             assert "401" in str(err), err
@@ -143,7 +156,7 @@ def test_a_slow_endpoint_times_out_rather_than_hanging_the_run():
     """An endpoint that answers in eleven minutes looks exactly like one that
     works, right up until the read timeout closes the round."""
     with Fixture(delay=3.0) as fixture:
-        rows = verdicts(probe_tool.probe(fixture.url, timeout=0.5,
+        rows = verdicts(probe_tool.probe(fixture.url, SIGNER, timeout=0.5,
                                          retries=0, shapes=("scalar",)))
     ok, detail = rows["round/scalar"]
     assert not ok, detail
