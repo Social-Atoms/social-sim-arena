@@ -100,12 +100,37 @@ def forecast_for(round_spec):
                             for cell in cells}}
     if target == "ranking_list":
         spec = round_spec.get("ranking") or {}
+        length = spec.get("length") or 0
         items = spec.get("items")
-        if not items:
+        if items:
+            return {"ranking": list(items)[:length] if length else list(items)}
+        # Free choice: repeat the most recent week the round handed us, minus
+        # anything the round says it excludes. That is the persistence null --
+        # the thing every entrant is scored against -- so it is an honest
+        # demonstration rather than a guess, and it shows where the two pieces
+        # of the envelope a ranking round needs actually live:
+        # `context.recent_weeks` and `ranking.exclusions`.
+        weeks = (round_spec.get("context") or {}).get("recent_weeks") or []
+        last = (weeks[-1] or {}).get("ranking") if weeks else None
+        if not last:
             raise ValueError(
-                "this fixture only answers fixed-basket ranking rounds; a "
-                "free-choice ranking needs a real model, not a default")
-        return {"ranking": list(items)}
+                "free-choice ranking round carried no recent_weeks to repeat; "
+                "a real entrant answers from its own model")
+        excl = spec.get("exclusions") or {}
+        titles = set(excl.get("titles") or ())
+        prefixes = tuple(excl.get("prefixes") or ())
+        keep, seen = [], set()
+        for title in last:
+            if title in titles or (prefixes and title.startswith(prefixes)):
+                continue
+            if title in seen:
+                continue
+            seen.add(title)
+            keep.append(title)
+        if length and len(keep) < length:
+            raise ValueError(
+                f"only {len(keep)} usable items in the last week, round wants {length}")
+        return {"ranking": keep[:length] if length else keep}
     raise ValueError(f"unsupported target_type '{target}'")
 
 
