@@ -445,6 +445,62 @@ def test_every_shape_files_through_the_real_transport_and_validates():
     print("ok test_every_shape_files_through_the_real_transport_and_validates")
 
 
+def test_the_refresh_loop_files_a_participant_with_our_models_removed():
+    """`refresh.file_baseline_forecasts`, the loop the cron runs, with the
+    roster reduced to participants (SSA_ELICITATION=only:) and the socket
+    faked: the participant's forecast lands as a file. This is the layer above
+    `harness.forecast`, where the third `resolve(entrant)` on a participant id
+    lived, and the one a manual dev run of the workflow found."""
+    import glob
+    import datetime as dt
+
+    def answer(url, **kw):
+        class R:
+            status_code = 200
+            content = (b'{"schema_version": "ssa-agent-api-v2", '
+                       b'"forecast": {"mean": 42.0, "sd": 3.0}}')
+        return R()
+
+    season = json.load(open(os.path.join(ROOT, "questions", "season0.json")))
+    scalar = next(x for x in season["rounds"]
+                  if x.get("target_type", "continuous_normal") == "continuous_normal")
+    # An open round inside the buy window: the loop calls an entrant only
+    # between 72 h and 30 min before the deadline, so lock is 60 h after `now`.
+    now = dt.datetime(2026, 9, 1, tzinfo=dt.timezone.utc)
+    r = dict(scalar, lock_at="2026-09-03T12:00:00Z", release_at="2026-09-05T12:00:00Z",
+             release_estimated=True)
+    series = {r["series"]: [{"date": f"2026-08-{d:02d}", "value": 40.0 + d / 10} for d in range(1, 29)]}
+    scratch = tempfile.mkdtemp(prefix="ssa-loop-")
+    saved = (refresh.FORECASTS, refresh.LOCKS, os.environ.get("SSA_REPLIES_DIR"),
+             os.environ.get("SSA_ELICITATION"), harness.requests.post)
+    refresh.FORECASTS = os.path.join(scratch, "forecasts")
+    refresh.LOCKS = os.path.join(scratch, "locks")
+    os.environ["SSA_REPLIES_DIR"] = os.path.join(scratch, "replies")
+    os.environ["SSA_ELICITATION"] = "only:"
+    harness.requests.post = answer
+    try:
+        with registry(REG):
+            with_key()
+            rows, hist = refresh.build_rounds({"season": 0, "rounds": [r]}, series, {}, now)
+            assert rows[0]["status"] == "open", rows[0]["status"]
+            assert refresh.season_roster() == [("acme-forecast", "agent-api", "participant", "participant")]
+            written, failures = refresh.file_baseline_forecasts(rows, hist, now, series)
+            assert not failures, failures
+            paths = glob.glob(os.path.join(refresh.FORECASTS, r["round_id"], "acme-forecast.json"))
+            assert paths, written
+            body = json.load(open(paths[0]))
+            assert body["topline"] == {"mean": 42.0, "sd": 3.0} and "via=participant" in body["notes"]
+    finally:
+        (refresh.FORECASTS, refresh.LOCKS, log, eli, harness.requests.post) = saved
+        for k, v in (("SSA_REPLIES_DIR", log), ("SSA_ELICITATION", eli)):
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        shutil.rmtree(scratch, ignore_errors=True)
+    print("ok test_the_refresh_loop_files_a_participant_with_our_models_removed")
+
+
 def test_a_registration_without_a_route_is_unchanged():
     """Every registration written before this field must keep meaning exactly
     what it meant: an entrant that hands its forecasts over itself."""
@@ -541,7 +597,8 @@ if __name__ == "__main__":
     test_a_participant_forecast_is_never_mocked()
     test_filing_goes_through_the_shared_runner_and_caches_like_one()
     test_every_shape_files_through_the_real_transport_and_validates()
+    test_the_refresh_loop_files_a_participant_with_our_models_removed()
     test_a_registration_without_a_route_is_unchanged()
     test_a_reply_over_the_size_cap_is_refused_unread()
     test_an_endpoint_failing_three_times_is_not_called_again_this_run()
-    print("17 passed")
+    print("18 passed")

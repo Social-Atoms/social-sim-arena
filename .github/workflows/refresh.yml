@@ -193,7 +193,10 @@ jobs:
             git checkout -- site forecasts resolutions locks civiqs trends wikitop news stamps sources search replies
           else
             git commit -m "data refresh $(date -u +%Y-%m-%dT%H:%MZ)"
-            git -c rebase.autoStash=true pull --rebase origin main
+            # The branch this run is on, never a hard-coded main: a manual run on
+  # dev used to rebase dev onto main here, conflict, and throw its work
+  # away at the last step.
+  git -c rebase.autoStash=true pull --rebase origin "$GITHUB_REF_NAME"
             # GITHUB_TOKEN pushes do not recursively trigger lock-audit.yml.
             # Audit the rebased commit here, at its actual landing time, using
             # the same executable as the push workflow. A late forecast makes
