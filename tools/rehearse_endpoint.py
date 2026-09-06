@@ -1,7 +1,7 @@
 """Call an endpoint the way the cron will, and file nothing.
 
     python tools/rehearse_endpoint.py --url https://host/forecast
-    python tools/rehearse_endpoint.py --entrant ssa-starter          # url from entrants/<id>.json
+    python tools/rehearse_endpoint.py --entrant acme-forecast       # url from entrants/<id>.json
 
 This is not the contract probe (`tools/probe_agent_api.py`, which sends
 fixtures). It runs `harness.forecast` itself -- the same function the
