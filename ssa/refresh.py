@@ -1217,7 +1217,13 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
         if run_status is not None:
             run_status.entrant_started(r["round_id"], entrant)
         try:
-            _, context, _elicitation = harness.resolve(entrant)
+            # A Route A participant has no context axis: `resolve` knows only
+            # our model ids and raises on theirs, which used to fail every
+            # participant job here before a request was built.
+            if participants.is_participant(entrant):
+                context = None
+            else:
+                _, context, _elicitation = harness.resolve(entrant)
             news = news_for(r) if context == "news" else None
             if context == "news" and not (news or {}).get("text") \
                     and not (news or {}).get("window_closed"):

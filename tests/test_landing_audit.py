@@ -52,7 +52,7 @@ def test_changed_contract_files_uses_the_landed_commit_range():
 
 def test_refresh_audits_after_rebase_and_before_its_bot_push():
     refresh = open(os.path.join(ROOT, ".github", "workflows", "refresh.yml")).read()
-    pull = refresh.index("git -c rebase.autoStash=true pull --rebase origin main")
+    pull = refresh.index('git -c rebase.autoStash=true pull --rebase origin "$GITHUB_REF_NAME"')
     audit = refresh.index("python tools/audit_landing.py HEAD^ HEAD")
     push = refresh.index("git push", audit)
     assert pull < audit < push
