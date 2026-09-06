@@ -26,6 +26,15 @@ permissions:
   contents: read
   pull-requests: write
 
+# Two pushes to dev seconds apart ran two deploys, and the one that finished
+# second was not the newer commit: it set `social-sim-arena-dev.vercel.app` to
+# the older deployment, so the alias served a build nobody had asked for. One
+# run per ref at a time, and a superseded one is cancelled rather than allowed
+# to win the alias.
+concurrency:
+  group: preview-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   preview:
     # Fork PRs get no secrets by design; forecast submissions from entrants
