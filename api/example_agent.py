@@ -21,10 +21,23 @@ KEYS = load_public_keys(os.path.join(ROOT, "site", "keys.json"))
 
 
 class handler(BaseHTTPRequestHandler):
+    def do_OPTIONS(self):
+        # The onboarding page tests an endpoint from the visitor's browser, and
+        # a browser sends no cross-origin POST until the preflight is answered.
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers",
+                         "Content-Type, X-SSA-Key-Id, X-SSA-Timestamp, X-SSA-Signature")
+        self.send_header("Access-Control-Max-Age", "86400")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
     def _json(self, status, payload):
         body = json.dumps(payload, separators=(",", ":")).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Cache-Control", "no-store")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()

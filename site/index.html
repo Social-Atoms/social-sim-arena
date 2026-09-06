@@ -181,12 +181,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .frow .fb{flex:1;height:5px;background:#eeede9;border-radius:2px;}
 .frow .fb i{display:block;height:5px;background:var(--ink);border-radius:2px;}
 .frow .fc{flex:0 0 22px;text-align:right;font-weight:700;color:var(--ink);}
-.week-routes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;}
-.week-route{border:1px solid var(--line);border-radius:5px;padding:11px 13px;}
-.week-route b{display:block;color:var(--ink);font-size:13.5px;margin-bottom:3px;}
-.week-route p{font-size:12.5px;margin:0 0 8px;}
-.week-route code{font-size:11.5px;background:#f4f4f2;padding:1px 5px;border-radius:3px;}
-@media(max-width:900px){.facets{grid-template-columns:1fr;}.week-routes{grid-template-columns:1fr;}}
+@media(max-width:900px){.facets{grid-template-columns:1fr;}}
 .week-side dl{margin:8px 0 0;}
 .week-side dt{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin-top:8px;}
 .week-side dd{margin:1px 0;color:var(--ink);font-size:12.5px;}
@@ -420,14 +415,13 @@ footer .upd{margin-left:auto;}
   <a href="#rounds">questions</a>
   <a href="docs.html">docs</a>
   <a href="https://github.com/Social-Atoms/social-sim-arena">github</a>
-  <a href="/opinion-arena.html">background</a>
   <span class="upd" id="foot-updated"></span>
 </footer>
 
 <script>
 const RAW  = 'https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/site/data.json';
 const ENTITY = { crowd:'#15803d', ewma:'#4b4a46', trend:'#8b897f', climatology:'#c6c4bc', persistence:'#b3b1aa' };
-const MCOLORS = { 'gpt-5.5':'#10a37f','claude-opus':'#d97757','gemini-pro':'#4285f4','grok':'#1d1d1f','deepseek':'#4d6bfe','qwen':'#7b5cf0','human-crowd':'#e34948' };
+const MCOLORS = { 'gpt-5.5':'#10a37f','claude-opus':'#d97757','gemini-pro':'#4285f4','grok':'#1d1d1f','deepseek':'#4d6bfe','qwen':'#7b5cf0' };
 const VENDORS = [
   [/^claude/, 'claude', 'Anthropic'], [/^gpt/, 'openai', 'OpenAI'], [/^gemini/, 'gemini', 'Google'],
   [/^grok/, 'grok', 'xAI'], [/^deepseek/, 'deepseek', 'DeepSeek'], [/^qwen/, 'qwen', 'Qwen'], [/^glm/, 'zhipu', 'Zhipu'],
@@ -437,8 +431,7 @@ const vendorOf = id => { for(const [re,key] of VENDORS) if(re.test(id)) return k
 const LOGO_VENDORS = new Set(['claude','openai','gemini','grok','deepseek','qwen','zhipu']);
 const vendorName = key => { for(const [,k,n] of VENDORS) if(k===key) return n; return key; };
 const VCOLOR = {claude:'#C87B60', openai:'#3F9581', gemini:'#6B92D4', grok:'#111110', deepseek:'#7783D8', qwen:'#907FD2', zhipu:'#588FBE', kimi:'#4C8A99'};
-const avColor = id => { const v = vendorOf(id); if(v) return VCOLOR[v];
-  if(id==='human-crowd') return 'var(--accent)'; return '#a8a69e'; };
+const avColor = id => { const v = vendorOf(id); return v ? VCOLOR[v] : '#a8a69e'; };
 const avatar = id => { const v = vendorOf(id);
   return '<span class="av" style="background:'+avColor(id)+'">'+(v?'<img class="lg" src="logos/'+v+'.svg" onerror="this.remove()" alt="">':'')+initOf(id)+'</span>'; };
 // Every model wears its vendor's hue; siblings inside a family split on
@@ -689,7 +682,25 @@ function aggChart(traj, nameOf, unit){
   let lo=Infinity, hi=-Infinity;
   traj.forEach(t => series.forEach(s => { const v=val(t,s); if(v!=null){ lo=Math.min(lo,v); hi=Math.max(hi,v);} }));
   if(unit==='skill'){ lo=Math.min(lo,0); hi=Math.max(hi,0); lo=Math.max(lo,-0.30); }
-  if(unit==='arena'){ lo=Math.min(lo,0); hi=Math.max(hi,100); lo=Math.max(lo,-30); hi=Math.min(hi,115); }
+  // The axis fits the entrants on screen, not a fixed 0..100 frame. With every
+  // model between 18 and 31, forcing the oracle into view spent nine tenths of
+  // the plot on empty space and flattened the differences the chart exists to
+  // show. Two things stay true regardless: 0 (persistence) is always in view,
+  // because it is what every score is relative to, and an entrant that
+  // collapses is clipped rather than allowed to set the scale for everyone --
+  // the axis keeps the middle of the plotted values and says below how many
+  // points fell outside it.
+  let clipped = 0;
+  if(unit==='arena'){
+    const vals = [];
+    traj.forEach(t => series.forEach(s => { const v=val(t,s); if(v!=null) vals.push(v); }));
+    vals.sort((a,b)=>a-b);
+    if(vals.length){
+      const q = f => vals[Math.min(vals.length-1, Math.max(0, Math.round(f*(vals.length-1))))];
+      lo = Math.min(0, q(0.02)); hi = Math.max(0, q(0.995));
+      clipped = vals.filter(v => v < lo || v > hi).length;
+    } else { lo = 0; hi = 100; }
+  }
   const pad=(hi-lo)*0.08||0.05; lo-=pad; hi+=pad;
   const X = i => P.l + i/(traj.length-1)*(W-P.l-P.r);
   const Y = v => P.t + (hi-v)/(hi-lo)*(H-P.t-P.b);
@@ -707,9 +718,16 @@ function aggChart(traj, nameOf, unit){
   }
   if(unit!=='crps') g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="#96948d" stroke-dasharray="2 5"/>`;
   if(unit==='arena'){
-    g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(100)}" y2="${Y(100)}" stroke="#15803d" stroke-width="1.4" stroke-dasharray="5 4"/>`;
-    g += `<text x="${W-P.r-6}" y="${Y(100)-6}" font-size="10.5" font-weight="700" fill="#0a6a30" text-anchor="end">oracle 100</text>`;
+    // The oracle is drawn only when something is near it; otherwise it is a
+    // line at the top of every chart that nothing ever approaches.
+    if(hi >= 100){
+      g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(100)}" y2="${Y(100)}" stroke="#15803d" stroke-width="1.4" stroke-dasharray="5 4"/>`;
+      g += `<text x="${W-P.r-6}" y="${Y(100)-6}" font-size="10.5" font-weight="700" fill="#0a6a30" text-anchor="end">oracle 100</text>`;
+    } else {
+      g += `<text x="${W-P.r-6}" y="${(P.t+11).toFixed(1)}" font-size="10.5" font-weight="600" fill="#0a6a30" text-anchor="end">oracle 100 is above this range</text>`;
+    }
     g += `<text x="${W-P.r-6}" y="${Y(0)-6}" font-size="10.5" font-weight="600" fill="#96948d" text-anchor="end">persistence 0</text>`;
+    if(clipped) g += `<text x="${P.l+4}" y="${(H-P.b-6).toFixed(1)}" font-size="10" fill="#96948d">${clipped} point${clipped>1?'s':''} outside this range</text>`;
   }
   const nx = small?3:5, seen = new Set();
   for(let k=0;k<nx;k++){
@@ -1083,7 +1101,18 @@ function renderBoard(mode){
   }
   document.getElementById('lb-title').textContent=title;
   document.getElementById('lb-score-head').textContent=replay?'Skill':'Score';
-  document.getElementById('lb-loss-head').textContent=metricLabel;
+  const lossHead=document.getElementById('lb-loss-head');
+  lossHead.textContent=metricLabel;
+  // The loss column is the one number on this page nobody outside forecasting
+  // recognises, and it is the column the board is sorted by. Say what it means
+  // where it is read, not in the docs.
+  const METRIC_HELP={
+    'CRPS':'CRPS is how far the whole forecast distribution sat from the published answer, in the question\u2019s own unit \u2014 lower is better, and being confidently wrong costs more than being unsure.',
+    'Energy':'The energy score is CRPS for a whole population at once: one number for all sixteen subgroups together, so getting the pattern right counts, not just the average. Lower is better.',
+    'Profile RMSE':'Profile RMSE is the average per-subgroup error. Lower is better.'};
+  const help=METRIC_HELP[metricLabel]||'';
+  lossHead.title=help;
+  if(help) note=note?note+' '+help:help;
   function row(id, s, rank, ref){
     const arena = s ? 100*s.mean_skill : null;
     const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0)) : '<span class="pend">···</span>';

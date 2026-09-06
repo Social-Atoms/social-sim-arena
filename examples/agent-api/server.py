@@ -158,10 +158,32 @@ class Handler(BaseHTTPRequestHandler):
             self.answered[request_id] = reply
         self._json(200, reply)
 
+    def do_OPTIONS(self):
+        # The arena's own calls are server-to-server and never preflight. This
+        # is here for one reason: the onboarding page tests an endpoint from
+        # the visitor's browser, and a browser will not send that POST at all
+        # unless the endpoint answers the preflight first. Two headers, and a
+        # participant can test their endpoint from the page like everyone else.
+        self.send_response(204)
+        self._cors()
+        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers",
+                         "Content-Type, X-SSA-Key-Id, X-SSA-Timestamp, X-SSA-Signature")
+        self.send_header("Access-Control-Max-Age", "86400")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def _cors(self):
+        # Public: the question is public, the forecast is public, and the
+        # signature is what says a request came from the arena -- so nothing
+        # here is protected by an origin check.
+        self.send_header("Access-Control-Allow-Origin", "*")
+
     def _json(self, status, body):
         payload = json.dumps(body).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
+        self._cors()
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
         self.wfile.write(payload)

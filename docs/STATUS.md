@@ -134,11 +134,10 @@ which admits every previously dated row and therefore leaves the current
 entrant roster, call plan, and provider cost unchanged. Each run records the
 selected policy and the per-model trust decision in its output.
 
-### Baselines and reference forecasters (5 + 1)
+### Baselines and reference forecasters (5)
 
 `persistence` (the reference, skill = 0 by definition), `trend`, `ewma`,
-`climatology`, `crowd` (equal-weight pool of all submissions), plus
-`human-crowd`.
+`climatology`, and `crowd` (equal-weight pool of all submissions).
 
 ---
 

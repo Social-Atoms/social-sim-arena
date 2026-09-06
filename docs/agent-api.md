@@ -112,6 +112,23 @@ round's `target_type`: `{"mean", "sd"}` for `continuous_normal`,
 `profile_energy`, `{"ranking": [...]}` for `ranking_list`. `reasoning_trace`
 and `crosstabs` are optional.
 
+## Browser test and CORS
+
+The onboarding page tests an endpoint from the visitor's own browser, and a
+browser sends no cross-origin POST until the endpoint answers a preflight
+`OPTIONS`. Two headers are enough:
+
+```
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Headers: Content-Type, X-SSA-Key-Id, X-SSA-Timestamp, X-SSA-Signature
+```
+
+`examples/agent-api/server.py` does exactly that in a few lines. This is for
+the page only: the arena's calls are server-to-server and never preflight, so
+an endpoint without these headers works in the season and simply cannot be
+tested from the page. When the browser is blocked the page says so and leaves
+registration open, and `tools/probe_agent_api.py` is the check instead.
+
 ## Call and deadline policy
 
 - The first call is due between 72 and 48 hours before the round's effective
