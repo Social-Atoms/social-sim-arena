@@ -387,6 +387,34 @@ def test_the_round_tells_a_participant_what_it_will_refuse():
     print("ok test_the_round_tells_a_participant_what_it_will_refuse")
 
 
+def test_the_starter_server_answers_all_three_shapes_from_the_envelope_alone():
+    """The reference implementation is the thing a participant copies, and a
+    ranking round it cannot answer is a shape nobody can rehearse. It repeats
+    the last week the round handed it, minus what the round excludes -- the
+    persistence null, built only from the envelope."""
+    import sys
+    sys.path.insert(0, os.path.join(ROOT, "examples", "agent-api"))
+    from server import forecast_for
+    from ssa import ranking_round
+    season = json.load(open(os.path.join(ROOT, "questions", "season0.json")))["rounds"]
+    r = next(x for x in season if x.get("target_type") == "ranking_list")
+    spec = ranking_round.spec_for(r)
+    weeks = [{"week_end": "2026-08-30",
+              "ranking": ["Main_Page", "Special:Search"] +
+                         [f"Article_{i}" for i in range(spec["length"])]}]
+    env = agent_api.build_envelope("acme-forecast", dict(r, baselines={}),
+                                   ranking_history=weeks)
+    reply = forecast_for(env["round"])
+    order = reply["ranking"]
+    assert len(order) == spec["length"], order
+    assert "Main_Page" not in order and not any(t.startswith("Special:") for t in order)
+    # And what it produced is what the arena accepts for this round.
+    parsed = agent_api.parse_ranking(json.dumps(
+        {"schema_version": "ssa-agent-api-v2", "forecast": reply}), spec)
+    assert parsed == order
+    print("ok test_the_starter_server_answers_all_three_shapes_from_the_envelope_alone")
+
+
 def test_a_profile_reply_is_all_cells_or_none():
     cells = ["a", "b", "c"]
     whole = json.dumps({"schema_version": "ssa-agent-api-v2", "forecast": {
@@ -670,6 +698,7 @@ if __name__ == "__main__":
     test_a_reply_that_is_not_the_contract_is_refused()
     test_a_participant_may_answer_with_quantiles_on_either_shape()
     test_the_round_tells_a_participant_what_it_will_refuse()
+    test_the_starter_server_answers_all_three_shapes_from_the_envelope_alone()
     test_a_profile_reply_is_all_cells_or_none()
     test_a_participant_forecast_is_never_mocked()
     test_filing_goes_through_the_shared_runner_and_caches_like_one()
@@ -678,4 +707,4 @@ if __name__ == "__main__":
     test_a_registration_without_a_route_is_unchanged()
     test_a_reply_over_the_size_cap_is_refused_unread()
     test_an_endpoint_failing_three_times_is_not_called_again_this_run()
-    print("20 passed")
+    print("21 passed")
