@@ -109,6 +109,8 @@ td{padding:12px 16px;border-bottom:1px solid var(--grid);vertical-align:middle;}
 tbody tr:last-child td{border-bottom:none;}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;}
 .type{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);}
+/* A heading with a title= explanation says so, rather than hiding it. */
+thead th[title]{cursor:help;text-decoration:underline dotted var(--mut);text-underline-offset:3px;}
 .ref-chip{display:inline-block;font-size:10px;font-weight:600;color:var(--mut);border:1px solid var(--grid);border-radius:4px;padding:0 8px;margin-left:8px;vertical-align:1px;}
 .status{font-size:12.5px;font-weight:600;color:var(--ink2);white-space:nowrap;}
 .status .d{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:1px;background:var(--ink);}
@@ -175,7 +177,7 @@ footer a{color:var(--ink2);}
   </div>
   <div class="card scroll">
     <table>
-      <thead><tr><th>#</th><th>Entrant</th><th>Type</th><th class="num">Skill</th><th class="num" id="lb-loss-head">CRPS</th><th class="num">Rounds</th></tr></thead>
+      <thead><tr><th>#</th><th>Entrant</th><th>Type</th><th class="num" title="Skill &#8212; how much of persistence&#8217;s error this forecaster removed. 0 is persistence, above 0 beats it.">Skill</th><th class="num" id="lb-loss-head">CRPS</th><th class="num" title="How many resolved rounds this row is averaged over. Fewer rounds, noisier score.">Rounds</th></tr></thead>
       <tbody id="lb-body"><tr><td colspan="6" style="color:var(--mut);">loading…</td></tr></tbody>
     </table>
   </div>
@@ -393,6 +395,12 @@ function render(data){
   }
   const body = document.getElementById('lb-body');
   const head = document.getElementById('lb-loss-head');
+  // The loss column changes name with the board; its explanation follows it.
+  const METRIC_HELP={
+    'CRPS':'CRPS \u2014 how far the whole forecast distribution sat from the published answer, in the question\u2019s own unit. Lower is better, and being confidently wrong costs more than being unsure.',
+    'Energy':'Energy score \u2014 CRPS for a whole population at once: one number for all sixteen subgroups together, so getting the pattern right counts, not just the average. Lower is better.',
+    'Loss':'RBO distance \u2014 how far the predicted order sat from the published one, weighted towards the top of the list. Lower is better.'};
+  const setMetricHelp = () => { head.title = METRIC_HELP[head.textContent.trim()] || ''; };
   function renderBoard(mode){
     for(const t of ['bt','live','profile','ranking'])
       document.getElementById('tab-'+t).classList.toggle('on', mode===t);
@@ -406,6 +414,7 @@ function render(data){
                                                        : (src.board || []);
       const lossKey = mode==='profile' ? 'mean_energy' : 'mean_loss';
       head.textContent = mode==='profile' ? 'Energy' : 'Loss';
+      setMetricHelp();
       const pred = mode==='profile'
         ? (r => (r.cells && r.cells.length) || r.target_type === 'profile_energy')
         : (r => r.target_type === 'ranking_list' || /wiki-top10|ranking/.test(r.round_id));
@@ -419,6 +428,7 @@ function render(data){
       return;
     }
     head.textContent = 'CRPS';
+    setMetricHelp();
     if(mode==='bt'){
       const entries = (data.backtest&&data.backtest.overall)||[];
       body.innerHTML = entries.map((e,i)=>boardRow(e.entrant, e, i+1)).join('')
