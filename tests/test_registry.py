@@ -1,5 +1,5 @@
 """The participant registry (kept, not wired for Season 0; see the note atop
-ssa/registry.py): register once with a promo code, get one token, and the cron
+ssa/registry.py): register once with an invitation code, get one token, and the cron
 side writes the public file and files the uploads. Runs against a temporary
 directory; the GitHub-backed store has the same contract and is not exercised
 here."""
@@ -34,7 +34,7 @@ class Sandbox:
         os.environ.pop("SSA_UPLOAD_KEY_ACME_FORECAST", None)
         os.environ["SSA_SIGNING_KEY"] = "HLHPLfr2J+BaNVHYXBHNs5CJOSbmgouzCUp2cxcwdy4="
         self.store = registry.Store()
-        self.store.put("promo.json", {"codes": ["SEASON0"]}, None)
+        self.store.put("invitations.json", {"codes": ["SEASON0"]}, None)
         return self
 
     def __exit__(self, *exc):
@@ -46,13 +46,13 @@ class Sandbox:
         shutil.rmtree(self.dir, ignore_errors=True)
 
 
-def test_registration_needs_a_promo_code_and_returns_one_token():
+def test_registration_needs_a_invitation_code_and_returns_one_token():
     with Sandbox() as sb:
         try:
             registry.register(sb.store, FIELDS, "WRONG", sb.entrants)
-            assert False, "a wrong promo code registered"
+            assert False, "a wrong invitation code registered"
         except registry.RegistryError as err:
-            assert err.status == 403 and err.code == "bad_promo"
+            assert err.status == 403 and err.code == "bad_invitation"
         record, token = registry.register(sb.store, FIELDS, "season0", sb.entrants)
         assert token.startswith("ssa_") and len(token) > 30
         assert record["entrant_id"] == "acme-forecast"
@@ -67,7 +67,7 @@ def test_registration_needs_a_promo_code_and_returns_one_token():
             assert False, "the same id registered twice"
         except registry.RegistryError as err:
             assert err.status == 409
-        print("ok test_registration_needs_a_promo_code_and_returns_one_token")
+        print("ok test_registration_needs_a_invitation_code_and_returns_one_token")
 
 
 def test_a_hand_written_entrant_id_cannot_be_claimed():
@@ -187,7 +187,7 @@ def test_stored_uploads_are_filed_against_their_receipt_time():
 def test_the_endpoint_registers_reads_and_edits_with_the_token():
     with Sandbox() as sb:
         status, body = registry_api.handle("POST", None, None,
-                                           dict(FIELDS, promo_code="SEASON0"), sb.entrants)
+                                           dict(FIELDS, invitation_code="SEASON0"), sb.entrants)
         assert status == 201, body
         token = body["token"]
         assert body["registration"]["entrant_id"] == "acme-forecast"
@@ -210,7 +210,7 @@ def test_the_endpoint_registers_reads_and_edits_with_the_token():
 def test_without_storage_the_endpoint_says_so_instead_of_crashing():
     saved = {k: os.environ.pop(k, None) for k in ("SUBMISSION_STORAGE_DIR", "INTAKE_REPO_TOKEN")}
     try:
-        status, body = registry_api.handle("POST", None, None, dict(FIELDS, promo_code="SEASON0"))
+        status, body = registry_api.handle("POST", None, None, dict(FIELDS, invitation_code="SEASON0"))
         assert status == 503 and body["error"]["code"] == "registry_unavailable"
     finally:
         for k, v in saved.items():

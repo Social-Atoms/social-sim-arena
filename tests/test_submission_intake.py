@@ -254,9 +254,9 @@ class SubmissionPrototype(unittest.TestCase):
     def test_page_is_agents_only_and_has_no_form_to_fill_in(self):
         # Two panels, in Prophet Arena's order: test the API, then the model
         # information, and one submit button that opens the pull request.
-        for marker in ('<h3>Test Your API</h3>', 'id="api-test"', 'name="endpoint_url"',
+        for marker in ('<h3>Test your API</h3>', 'id="api-test"', 'name="endpoint_url"',
                        '>Forecast Endpoint URL <', '>Model / Team Name <', 'id="entrant-id"',
-                       '<h3>Model Information</h3>', '>Display Name <', '>Company/Organization <',
+                       '<h3>Your details</h3>', '>Display Name <', '>Company/Organization <',
                        'id="entrant-org"', 'id="entrant-github"', 'id="reg-json"',
                        '>Submit for review</a>', '<h3>Test Results</h3>', '<h3>API Response</h3>'):
             self.assertIn(marker, self.page)

@@ -29,7 +29,7 @@ What is stored where
   contact, endpoint URL. Exactly what `entrants/<entrant>.json` will say.
 - `secrets/<entrant>.json` -- the SHA-256 of the token we issued them. No
   endpoint key: the arena signs its own requests instead.
-- `promo.json` -- `{"codes": [...]}`. Registration needs one of them.
+- `invitations.json` -- `{"codes": [...]}`. Registration needs one of them.
 
 The token
 ---------
@@ -238,8 +238,8 @@ def _secret_path(entrant_id: str) -> str:
     return f"secrets/{entrant_id}.json"
 
 
-def promo_codes(store: Store) -> set[str]:
-    doc, _ = store.get("promo.json")
+def invitation_codes(store: Store) -> set[str]:
+    doc, _ = store.get("invitations.json")
     codes = set()
     if doc and isinstance(doc.get("codes"), list):
         codes |= {str(c).strip().upper() for c in doc["codes"] if str(c).strip()}
@@ -282,14 +282,14 @@ def _clean_fields(fields: dict, *, url_required: bool = False) -> dict:
 
 
 
-def register(store: Store, fields: dict, promo_code: Any,
+def register(store: Store, fields: dict, invitation_code: Any,
              entrants_dir: str | None = None) -> tuple[dict, str]:
     """Create a registration. Returns (public record, the token, shown once)."""
-    codes = promo_codes(store)
+    codes = invitation_codes(store)
     if not codes:
         raise RegistryError("Registration is closed for now.", 403, "closed")
-    if str(promo_code or "").strip().upper() not in codes:
-        raise RegistryError("That promo code is not valid.", 403, "bad_promo")
+    if str(invitation_code or "").strip().upper() not in codes:
+        raise RegistryError("That invitation code is not valid.", 403, "bad_invitation")
     entrant_id = str(fields.get("entrant_id") or "").strip()
     if not ENTRANT_ID.match(entrant_id):
         raise RegistryError("Entrant id: lower-case letters, digits, . _ -; "
