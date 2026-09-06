@@ -168,6 +168,16 @@ WebCrypto. It checks HTTPS, a JSON object in reply, and a valid continuous
 forecast. Browser testing may additionally require CORS; the CLI probe does
 not.
 
+Then the cron's own path, against a real open round of each shape, signed
+with the test key, filing nothing:
+
+```bash
+python tools/rehearse_endpoint.py --url https://your-host/forecast
+```
+
+If that prints `3 of 3 shapes filed and validated`, the refresh will file
+for the endpoint; a failure line is the refresh's own error message.
+
 ## Forecasts and future fields
 
 The response supports scalar distributions, outcome probabilities, profile
