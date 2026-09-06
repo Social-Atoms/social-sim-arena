@@ -247,6 +247,14 @@ Content-Type: application/json
 <script>
 const byId = id => document.getElementById(id);
 let apiProbePassed = false;
+// A browser will not send a cross-origin POST to an endpoint that does not
+// answer the preflight, and most API servers do not. That is the browser's
+// rule, not the Arena's: the cron is server-to-server and never preflights.
+// So a browser-side block is reported as what it is and does not stand between
+// a working endpoint and its registration -- the CLI probe is the check then,
+// and a URL that does not answer the real call files nothing and is dropped
+// after three failures in a row.
+let browserBlocked = false;
 
 // --- the endpoint test: the same fixture the starter kit and the CLI use ----
 function endpointUrl(value){
@@ -294,7 +302,7 @@ byId('api-test').addEventListener('click', async () => {
   const timeout = setTimeout(() => controller.abort(), 60000);
   results.length = 0; paintResults(); byId('response-rail').hidden = true;
   button.disabled = true; status.className = 'status testing'; status.textContent = 'Testing the endpoint…';
-  apiProbePassed = false; syncRegistration();
+  apiProbePassed = false; browserBlocked = false; syncRegistration();
   const started = performance.now();
   try {
     const target = endpointUrl(urlInput.value);
@@ -322,9 +330,13 @@ byId('api-test').addEventListener('click', async () => {
     if (last && last.state === 'wait') { last.state = 'bad'; last.detail = esc(error.message); }
     else step('Failed', esc(error.message), 'bad');
     if (error.name === 'AbortError') { last.detail = 'Request timed out after 60 seconds.'; }
-    else if (error instanceof TypeError) { step('Reachability', 'The browser could not complete the request. A browser test also needs CORS on your endpoint; the CLI probe does not: <code>python tools/probe_agent_api.py --url '+esc(urlInput.value)+'</code>', 'bad'); }
+    else if (error instanceof TypeError) {
+      browserBlocked = true;
+      step('Blocked by the browser, not by us', 'Your endpoint did not answer this page\u2019s preflight, which is what a browser needs before it will send a cross-origin POST. The Arena\u2019s own calls are server-to-server and never preflight, so this says nothing about whether the endpoint works. Test it from a terminal instead: <code>python tools/probe_agent_api.py --url '+esc(urlInput.value)+'</code>. To make this page work too, answer OPTIONS with <code>Access-Control-Allow-Origin: *</code> (see examples/agent-api/server.py).', 'wait');
+    }
     paintResults();
-    status.className = 'status bad'; status.textContent = 'Test failed.';
+    if (browserBlocked) { status.className = 'status testing'; status.textContent = 'Not tested from this browser. Registration is open; verify with the CLI probe.'; }
+    else { status.className = 'status bad'; status.textContent = 'Test failed.'; }
   } finally {
     clearTimeout(timeout); button.disabled = false; syncRegistration();
   }
@@ -350,16 +362,17 @@ function syncRegistration(){
   byId('reg-json').textContent = json;
   const idOk = /^[a-z0-9][a-z0-9_.-]{1,47}$/.test(reg.entrant_id);
   const ghOk = /^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$/.test(reg.github || '');
-  const endpointOk = apiProbePassed && /^https:\/\//.test(reg.route.url);
+  const endpointOk = (apiProbePassed || browserBlocked) && /^https:\/\//.test(reg.route.url);
   const ready = endpointOk && idOk && ghOk && reg.name && reg.organization;
   const open = byId('reg-open');
   open.setAttribute('aria-disabled', ready ? 'false' : 'true');
   open.href = ready ? REPO+'/new/main?filename='+encodeURIComponent('entrants/'+reg.entrant_id+'.json')+'&value='+encodeURIComponent(json) : '#';
   byId('reg-copy').disabled = !ready;
-  byId('reg-status').textContent = !apiProbePassed ? 'Pass the test to unlock.'
+  byId('reg-status').textContent = !endpointOk ? 'Pass the test to unlock.'
     : !idOk ? 'Model / Team Name: lower-case letters, digits, . _ -, 2 to 48 characters.'
     : !reg.name || !reg.organization ? 'Fill in the display name and organization.'
     : !ghOk ? 'Enter the GitHub login that will open the pull request.'
+    : browserBlocked ? 'Run the CLI probe before you open the pull request \u2014 this browser could not reach your endpoint.'
     : 'Opens GitHub with the file prefilled; open it as a pull request against main.';
 }
 for (const id of ['api-url','entrant-id','entrant-name','entrant-org','entrant-contact','entrant-github']) byId(id).addEventListener('input', syncRegistration);

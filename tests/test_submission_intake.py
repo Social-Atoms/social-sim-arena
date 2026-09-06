@@ -18,6 +18,11 @@ def load_json(path):
         return json.load(f)
 
 
+def load_text(path):
+    with open(os.path.join(ROOT, path)) as f:
+        return f.read()
+
+
 def errors(schema, body):
     validator = Draft7Validator(schema, format_checker=FormatChecker())
     return sorted(validator.iter_errors(body), key=lambda error: list(error.path))
@@ -324,6 +329,25 @@ class SubmissionPrototype(unittest.TestCase):
             schema = json.load(f)
         self.assertEqual(schema["properties"]["entrant_id"]["pattern"],
                          "^[a-z0-9][a-z0-9_.-]{1,47}$")
+
+    def test_a_browser_side_block_does_not_lock_a_working_endpoint_out(self):
+        """Most API servers answer no CORS preflight, so the browser refuses to
+        send the test POST. That is the browser's rule; the cron is
+        server-to-server and never preflights. If that state locked the submit
+        button, a working endpoint could not register from this page at all."""
+        self.assertIn("let browserBlocked = false;", self.page)
+        self.assertIn("browserBlocked = true;", self.page)
+        self.assertIn("const endpointOk = (apiProbePassed || browserBlocked)", self.page)
+        self.assertIn("Blocked by the browser, not by us", self.page)
+        self.assertIn("tools/probe_agent_api.py --url", self.page)
+        # And the starter server everyone copies answers the preflight, so the
+        # page works for anyone who follows the example.
+        server = load_text("examples/agent-api/server.py")
+        self.assertIn("def do_OPTIONS(self):", server)
+        self.assertIn('"Access-Control-Allow-Origin", "*"', server)
+        deployed = load_text("api/example_agent.py")
+        self.assertIn("def do_OPTIONS(self):", deployed)
+        self.assertIn('"Access-Control-Allow-Origin", "*"', deployed)
 
     def test_the_registration_file_is_the_prophet_arena_shape_with_a_github_owner(self):
         builder = self.page.split("function registration(){", 1)[1].split(
