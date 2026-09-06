@@ -121,6 +121,8 @@ table.lb .rank{color:var(--mut);width:24px;font-variant-numeric:tabular-nums;}
 table.lb .who{display:flex;align-items:center;gap:9px;}
 table.lb .who b{color:var(--ink);font-weight:700;font-size:15px;}
 table.lb .who .type{font-size:11px;color:var(--mut);}
+/* A heading with a title= explanation says so, rather than hiding it. */
+table.lb thead th[title]{cursor:help;text-decoration:underline dotted var(--mut);text-underline-offset:3px;}
 table.lb .skill{font-weight:800;color:var(--ink);font-size:15px;}
 table.lb .pend{color:#c9c7c0;font-weight:600;letter-spacing:.15em;}
 table.lb .skill.pos{color:var(--accent-ink);}
@@ -299,7 +301,6 @@ footer .upd{margin-left:auto;}
   <h1><img src="logo.svg" alt="" style="height:.92em;width:auto;vertical-align:-0.1em;margin-right:.5em">Social Simulation vs. The Real Future</h1>
   <span class="livebadge"><span class="ld"></span>LIVE</span>
   <span class="sub">Live benchmark for social simulation: models forecast the next public-opinion release before it is published. Locked, hashed, scored in public.</span>
-  <span class="exam" id="exam-chip" style="cursor:pointer;">MIDTERM EXAM · Nov 3</span>
   <span class="meta" id="meta-line" style="margin-left:auto;">loading…</span>
 </div>
 
@@ -343,7 +344,7 @@ footer .upd{margin-left:auto;}
       </div>
       <div class="scroll">
         <table class="lb">
-          <thead><tr><th></th><th>Entrant</th><th class="num" id="lb-score-head">Score</th><th class="num" id="lb-loss-head">CRPS</th><th class="num">Rounds</th></tr></thead>
+          <thead><tr><th></th><th>Entrant</th><th class="num" id="lb-score-head">Score</th><th class="num" id="lb-loss-head">CRPS</th><th class="num" id="lb-rounds-head">Rounds</th></tr></thead>
           <tbody id="lb-body"><tr><td colspan="5" style="color:var(--mut);">loading…</td></tr></tbody>
         </table>
       </div>
@@ -682,25 +683,11 @@ function aggChart(traj, nameOf, unit){
   let lo=Infinity, hi=-Infinity;
   traj.forEach(t => series.forEach(s => { const v=val(t,s); if(v!=null){ lo=Math.min(lo,v); hi=Math.max(hi,v);} }));
   if(unit==='skill'){ lo=Math.min(lo,0); hi=Math.max(hi,0); lo=Math.max(lo,-0.30); }
-  // The axis fits the entrants on screen, not a fixed 0..100 frame. With every
-  // model between 18 and 31, forcing the oracle into view spent nine tenths of
-  // the plot on empty space and flattened the differences the chart exists to
-  // show. Two things stay true regardless: 0 (persistence) is always in view,
-  // because it is what every score is relative to, and an entrant that
-  // collapses is clipped rather than allowed to set the scale for everyone --
-  // the axis keeps the middle of the plotted values and says below how many
-  // points fell outside it.
-  let clipped = 0;
-  if(unit==='arena'){
-    const vals = [];
-    traj.forEach(t => series.forEach(s => { const v=val(t,s); if(v!=null) vals.push(v); }));
-    vals.sort((a,b)=>a-b);
-    if(vals.length){
-      const q = f => vals[Math.min(vals.length-1, Math.max(0, Math.round(f*(vals.length-1))))];
-      lo = Math.min(0, q(0.02)); hi = Math.max(0, q(0.995));
-      clipped = vals.filter(v => v < lo || v > hi).length;
-    } else { lo = 0; hi = 100; }
-  }
+  // The arena score keeps its own frame: 0 is persistence, 100 is the oracle,
+  // and both stay in view whatever the entrants are doing. Fitting the axis to
+  // the data instead makes a good week and a bad one look identical, and the
+  // distance still to run invisible. Reverted deliberately after review.
+  if(unit==='arena'){ lo=Math.min(lo,0); hi=Math.max(hi,100); lo=Math.max(lo,-30); hi=Math.min(hi,115); }
   const pad=(hi-lo)*0.08||0.05; lo-=pad; hi+=pad;
   const X = i => P.l + i/(traj.length-1)*(W-P.l-P.r);
   const Y = v => P.t + (hi-v)/(hi-lo)*(H-P.t-P.b);
@@ -718,16 +705,9 @@ function aggChart(traj, nameOf, unit){
   }
   if(unit!=='crps') g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="#96948d" stroke-dasharray="2 5"/>`;
   if(unit==='arena'){
-    // The oracle is drawn only when something is near it; otherwise it is a
-    // line at the top of every chart that nothing ever approaches.
-    if(hi >= 100){
-      g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(100)}" y2="${Y(100)}" stroke="#15803d" stroke-width="1.4" stroke-dasharray="5 4"/>`;
-      g += `<text x="${W-P.r-6}" y="${Y(100)-6}" font-size="10.5" font-weight="700" fill="#0a6a30" text-anchor="end">oracle 100</text>`;
-    } else {
-      g += `<text x="${W-P.r-6}" y="${(P.t+11).toFixed(1)}" font-size="10.5" font-weight="600" fill="#0a6a30" text-anchor="end">oracle 100 is above this range</text>`;
-    }
+    g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(100)}" y2="${Y(100)}" stroke="#15803d" stroke-width="1.4" stroke-dasharray="5 4"/>`;
+    g += `<text x="${W-P.r-6}" y="${Y(100)-6}" font-size="10.5" font-weight="700" fill="#0a6a30" text-anchor="end">oracle 100</text>`;
     g += `<text x="${W-P.r-6}" y="${Y(0)-6}" font-size="10.5" font-weight="600" fill="#96948d" text-anchor="end">persistence 0</text>`;
-    if(clipped) g += `<text x="${P.l+4}" y="${(H-P.b-6).toFixed(1)}" font-size="10" fill="#96948d">${clipped} point${clipped>1?'s':''} outside this range</text>`;
   }
   const nx = small?3:5, seen = new Set();
   for(let k=0;k<nx;k++){
@@ -1103,16 +1083,20 @@ function renderBoard(mode){
   document.getElementById('lb-score-head').textContent=replay?'Skill':'Score';
   const lossHead=document.getElementById('lb-loss-head');
   lossHead.textContent=metricLabel;
-  // The loss column is the one number on this page nobody outside forecasting
-  // recognises, and it is the column the board is sorted by. Say what it means
-  // where it is read, not in the docs.
+  // Three column headings nobody outside forecasting reads at a glance. The
+  // explanation hangs off the heading on hover rather than sitting under the
+  // table, so it is there when wanted and takes no room when not.
   const METRIC_HELP={
-    'CRPS':'CRPS is how far the whole forecast distribution sat from the published answer, in the question\u2019s own unit \u2014 lower is better, and being confidently wrong costs more than being unsure.',
-    'Energy':'The energy score is CRPS for a whole population at once: one number for all sixteen subgroups together, so getting the pattern right counts, not just the average. Lower is better.',
-    'Profile RMSE':'Profile RMSE is the average per-subgroup error. Lower is better.'};
-  const help=METRIC_HELP[metricLabel]||'';
-  lossHead.title=help;
-  if(help) note=note?note+' '+help:help;
+    'CRPS':'CRPS \u2014 how far the whole forecast distribution sat from the published answer, in the question\u2019s own unit. Lower is better, and being confidently wrong costs more than being unsure.',
+    'Energy':'Energy score \u2014 CRPS for a whole population at once: one number for all sixteen subgroups together, so getting the pattern right counts, not just the average. Lower is better.',
+    'Profile RMSE':'Profile RMSE \u2014 the average error per subgroup. Lower is better.'};
+  lossHead.title=METRIC_HELP[metricLabel]||'';
+  const scoreHead=document.getElementById('lb-score-head');
+  scoreHead.title=replay
+    ? 'Skill \u2014 how much of persistence\u2019s error this forecaster removed. 0 is persistence, above 0 beats it.'
+    : 'Arena score \u2014 0 is persistence (copying the last release), 100 is a perfect oracle. Higher is better.';
+  const roundsHead=document.getElementById('lb-rounds-head');
+  if(roundsHead) roundsHead.title='How many resolved rounds this row is averaged over. Fewer rounds, noisier score.';
   function row(id, s, rank, ref){
     const arena = s ? 100*s.mean_skill : null;
     const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0)) : '<span class="pend">···</span>';
@@ -1338,10 +1322,6 @@ function render(data){
     parts.push(openNow.length+' rounds open');
     parts.push((lb.resolved_rounds||0)+' resolved');
     document.getElementById('meta-line').innerHTML = parts.join(' &nbsp;·&nbsp; ');
-    const days = Math.max(0, Math.ceil((new Date(2026,10,3) - Date.now())/86400000));
-    const mids = data.rounds.filter(r=>r.round_id.indexOf('midterm-')===0);
-    const nf = mids.reduce((a,r)=>a+(r.n_forecasts||0), 0);
-    document.getElementById('exam-chip').innerHTML = 'MIDTERM EXAM · Nov 3 · <b>'+days+'d</b> · <b>'+nf+'</b> forecasts locked in';
   }
   meta();
   clearInterval(window.__metaInt); window.__metaInt = setInterval(meta, 30000);
@@ -1421,7 +1401,6 @@ function applyHash(){
 window.addEventListener('hashchange', applyHash);
 
 document.querySelectorAll('.ptab').forEach(b=> b.onclick = ()=> showPage(b.dataset.page));
-document.getElementById('exam-chip').onclick = ()=> showPage('exam');
 document.getElementById('nav-submit').onclick = e=>{ e.preventDefault(); showPage('submit'); };
 document.querySelector('.task-all').onclick=()=>{setTab('agg');renderBoard(window.__board||'all');};
 document.getElementById('task-search').oninput=e=>{window.__roundQuery=e.target.value;roundsList(window.__data);};
