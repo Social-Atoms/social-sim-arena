@@ -65,6 +65,22 @@ def test_ci_runs_every_suite_that_exists():
     print("ok test_ci_runs_every_suite_that_exists")
 
 
+def test_every_workflow_file_parses_as_yaml_with_its_triggers():
+    """A workflow that does not parse is a workflow GitHub silently drops:
+    the run shows up as a failure with zero jobs and `workflow_dispatch`
+    answers "Workflow does not have 'workflow_dispatch' trigger". One lost
+    indent in a `run: |` block did exactly that on dev (run 34011704426)."""
+    import glob
+    import yaml
+    for path in sorted(glob.glob(os.path.join(ROOT, ".github", "workflows", "*.yml"))):
+        with open(path) as fh:
+            doc = yaml.safe_load(fh)
+        on = doc.get("on", doc.get(True))
+        assert isinstance(on, (dict, list, str)) and on, f"{path}: no triggers"
+        assert doc.get("jobs"), f"{path}: no jobs"
+    print("ok test_every_workflow_file_parses_as_yaml_with_its_triggers")
+
+
 def test_every_workflow_pins_a_python_the_code_supports():
     """CI's version, the documented floor, and what a contributor installs are
     three different numbers unless something checks. `.python-version` used to
