@@ -1,0 +1,15 @@
+{
+  "entrant": "gemini-pro-web-superfc",
+  "input_hash": "d6986637a5a4",
+  "logged_at": "2026-09-06T20:23:37Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt_sha256": "a4ab53fa164527382e8fe3e029d98ec45b63a6e60083fd935067fc25e91d35ec",
+  "reply": "1. Outside view. What is the base rate here? What has this series done historically, how much does it move between releases, and what would a naive extrapolation predict?\nThe historical data shows a series that has steadily declined over the past two months, moving from -3.6 in early July to a low of -8.7 in late August. Over the past 9 weeks, the average week-over-week change is approximately -0.48 points, with an absolute mean change of about 0.9 points. A naive linear extrapolation based on the recent average weekly movement of -0.5 would predict a score of around -8.4 for the next release.\n\n2. Inside view. What is specific to this release -- events, timing, anything that would move this particular number away from the base rate? Say how much each is worth, in the unit of the series.\nRecent news updates from early September (specifically a September 6 report regarding an FT poll) confirm that Trump's approval ratings are continuing to slide, hitting record lows of 33% nationally amidst an ongoing US-Iran conflict, high gas prices, and economic pessimism. While the 50-64 demographic is more Republican-leaning than the broader electorate (sitting at -7.9 compared to a national Civiqs net of -24), these macroeconomic and geopolitical factors typically exert downward pressure across all age demographics. The ongoing negative news cycle is likely worth an additional -0.3 to -0.6 points on top of the current -7.9 baseline, moving the estimate to around -8.3 or -8.4.\n\n3. Pre-mortem. Assume your answer turns out badly wrong. Write the most likely reason, then correct for it.\nIf the forecast is badly wrong, it is most likely because the 50-64 demographic experienced a temporary bounce-back or plateau despite the national polls, similar to the jump from -8.7 to -7.5 seen in late August. Partisan polarization often creates a floor for presidential approval ratings, meaning further negative news yields diminishing impacts on approval. I will correct for this by avoiding an overly aggressive drop and keeping the standard deviation wide enough to encompass a reversion to the -7.0 to -7.5 range. \n\n4. Calibrate. Your sd should be wide enough that the true value falls inside one sd about two thirds of the time. Check it against how much this series actually moves between releases.\nThe standard deviation of the weekly changes over the observed period is approximately 0.92 points. To ensure my predictive distribution realistically covers the true value roughly two-thirds of the time, I will set my standard deviation to 1.0. \n\n{\"mean\": -8.4, \"sd\": 1.0}",
+  "round_id": "civiqs-age5064-2026-w37",
+  "usage": {
+    "input_tokens": 3015,
+    "output_tokens": 584,
+    "thinking_tokens": 1926
+  },
+  "via": "direct"
+}
