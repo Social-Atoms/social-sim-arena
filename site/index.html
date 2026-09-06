@@ -150,7 +150,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .qcard .qstats .hit{color:var(--accent-ink);font-weight:700;}
 .qcard .qempty{font-size:12.5px;color:var(--mut);padding:10px 0 6px;border-top:1px dashed var(--line);margin-top:auto;}
 .qcard .qfoot{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid #eeede9;font-size:11px;color:var(--mut);}
-.qcard .qfoot .qid{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.qcard .qfoot .qid{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .qcard .qfoot .go{margin-left:auto;color:var(--link);font-weight:700;text-decoration:none;white-space:nowrap;font-size:12px;}
 .qcard .qfoot .go:hover{text-decoration:underline;}
 @media(max-width:900px){.qgrid{grid-template-columns:1fr;}}
@@ -935,7 +935,7 @@ function renderTaskHeader(data,key){
     return;
   }
   const due=deadlineOf(r), state=active.includes(r)?'OPEN':'LATEST';
-  document.getElementById('task-question-summary').innerHTML='<span class="replay-tag">'+state+'</span><span>'+esc(r.round_id)+'</span><span style="margin-left:auto;color:var(--mut);font-weight:500;">due '+esc(fmtLocal(due))+'</span>';
+  document.getElementById('task-question-summary').innerHTML='<span class="replay-tag">'+state+'</span><span title="'+esc(r.round_id)+'">'+esc(questionText(r))+'</span><span style="margin-left:auto;color:var(--mut);font-weight:500;">due '+esc(fmtLocal(due))+'</span>';
   document.getElementById('task-question-body').innerHTML='<p>'+esc(r.question)+'</p><div class="qfoot">'
     +'<span>'+shapeChip(r)+(r.target_type==='profile_energy'?(r.cells||[]).length+' cells':r.target_type==='ranking_list'?'ordered list':'predictive distribution')+'</span>'
     +'<span>releases '+esc(fmtLocal(r.release_at))+'</span><span>'+esc(r.n_forecasts||0)+' forecasts filed</span>'
@@ -1009,7 +1009,7 @@ function rankingChart(d,data){
     +'<text x="350" y="105" text-anchor="middle" fill="#111110" font-size="18" font-weight="700">The list is the forecast</text>'
     +'<text x="350" y="137" text-anchor="middle" fill="#4f4e49" font-size="13">Predict ten article titles in order. Rank-biased overlap scores the whole list.</text>'
     +'<text x="350" y="170" text-anchor="middle" fill="#96948d" font-size="12">No historical Wikipedia list archive is published in data.json yet.</text>'
-    +'<text x="350" y="195" text-anchor="middle" fill="#0a6a30" font-size="12" font-weight="700">'+esc(r?'First live round: '+r.round_id:'No scheduled round')+'</text>';
+    +'<text x="350" y="195" text-anchor="middle" fill="#0a6a30" font-size="12" font-weight="700">'+esc(r?'First live round: '+questionText(r):'No scheduled round')+'</text>';
 }
 
 function setTab(key){
@@ -1227,7 +1227,7 @@ function roundsList(data){
     const strip=forecastStrip(r,t,data)||'<div class="qempty">'+(r.n_forecasts?esc(r.n_forecasts)+' forecasts filed · '+esc(shape):'No forecasts filed yet · '+esc(shape))+'</div>';
     return '<div class="qcard'+(active?' live':'')+'"><div class="qhead"><span>'+esc(g?g.label:'Task')+'</span><span class="qshape'+(kind!=='continuous_normal'?' special':'')+'">'+esc(shape)+'</span>'+when+'</div>'
       +'<h3>'+esc(t.label)+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
-      +'<div class="qfoot"><span class="qid" title="round id">'+esc(r.round_id)+'</span><span>'+esc(t.population)+'</span><a class="go" href="#live/'+taskKeyForRound(r)+'/all">open task →</a></div></div>';
+      +'<div class="qfoot"><span class="qid" title="'+esc(r.round_id)+'">'+esc(t.srcName||t.label)+'</span><span>'+esc(t.population)+'</span><a class="go" href="#live/'+taskKeyForRound(r)+'/all">open task →</a></div></div>';
   }).join('')+'</div>'||'';
   if(!rows.length) el.innerHTML='<div class="week-card"><h3>No matching questions</h3><p>Try another task family, status, or search term.</p></div>';
 }
@@ -1347,7 +1347,7 @@ function examRounds(data){
     // deadline is the Monday four days earlier -- so the label that was here
     // told a participant they had until Friday when they were closed out on
     // Monday. Every other list on this page already reads `deadline || lock_at`.
-    return '<div class="vrow"><span class="live"></span><span class="id">'+esc(r.round_id)+'</span>'
+    return '<div class="vrow"><span class="live"></span>'
       + '<span class="q">'+shapeChip(r)+esc(r.question)+' <span class="dim">· '+(r.n_forecasts||0)+' forecasts locked in</span></span>'
       + '<span class="when">due '+esc(fmtLocal(r.deadline||r.lock_at))+'</span>'
       + '<a class="go" href="'+link+'" target="_blank" rel="noopener">Submit forecast</a></div>';
