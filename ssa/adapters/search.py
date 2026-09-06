@@ -87,8 +87,11 @@ TOPIC = "news"
 DAYS = 14                # recency window, matched to the news corpus
 
 # The call window, read the same way `ssa/harness.py` reads it. Importing
-# harness here would be circular; duplicating the *default* would let the
-# two drift, so only the parse is repeated and the variable is shared.
+# harness here would be circular -- harness imports this module -- so the
+# variable name and its default are repeated, which is a drift waiting to
+# happen: change the default there and this file silently keeps the old one.
+# `tests/test_contract_consistency.py` pins the two equal so the drift fails a
+# pull request instead of quietly serving replies older than the window.
 _FILE_WINDOW_SECONDS = float(
     os.environ.get("SSA_FILE_WINDOW_HOURS") or "24") * 3600
 
@@ -96,13 +99,11 @@ _FILE_WINDOW_SECONDS = float(
 # models issuing overlapping keywords inside one round's window cost one
 # request, not fifteen -- it must not also serve last week's snippets to next
 # week's round just because two models phrased the same query. Matched to the
-# call window (`harness.FILE_WINDOW_SECONDS`, SSA_FILE_WINDOW_HOURS, 24h) so
-# that within one round's window a repeat is a hit and across rounds it is
-# not. Read from harness rather than re-read from the environment: the two
-# were separate variables once, and when the window shrank from three days to
-# one the cache kept serving replies older than the window it was supposed to
-# match. Overwriting an aged entry loses nothing, because every round's own
-# corpus is stored in full under search/rounds/.
+# call window above, so that within one round's window a repeat is a hit and
+# across rounds it is not. The two were separate variables once, and when the
+# window shrank from three days to one this file went on serving replies older
+# than the window it exists to match. Overwriting an aged entry loses nothing,
+# because every round's own corpus is stored in full under search/rounds/.
 CACHE_MAX_AGE_DAYS = float(
     os.environ.get("SSA_SEARCH_CACHE_DAYS")
     or _FILE_WINDOW_SECONDS / 86400.0)

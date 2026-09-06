@@ -403,7 +403,7 @@ footer .upd{margin-left:auto;}
     <div class="inner"><div class="col widecol">
       <div class="eyebrow" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:800;margin-top:6px;">The calendar</div>
       <h2 id="weekly-title" style="margin-top:2px;">The weekly set</h2>
-      <p class="lede">Every question runs on its own clock: listed a week ahead, answered in the 24 hours before it closes, and closed 48 hours before its answer is published. Same distance to the answer for every question, and the same window for every entrant.</p>
+      <p class="lede">Every question runs on its own clock: listed a week ahead, and answered in the 24 hours before it closes &#8212; the same window for every entrant. Most close 48 hours before their answer is published; the ones that ask about a whole week close before that week begins.</p>
       <div id="weekly-content" class="weekly-grid"></div>
     </div></div>
   </div>
@@ -1324,8 +1324,8 @@ function renderWeekly(data){
       +'<span class="wp-t">'+esc(timeOf(g.when))+'</span></a></li>';
     const dateLabel=new Date(key+'T12:00:00Z').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',timeZone:'UTC'});
     return '<div class="wp-head">'+esc(dateLabel)+'</div>'
-      +(c.length?'<div class="wp-sec"><h5>'+c.length+' close'+(c.length>1?'':'s')+'</h5><ul>'+group(c,'close').map(line).join('')+'</ul></div>':'')
-      +(v.length?'<div class="wp-sec res"><h5>'+v.length+' resolve'+(v.length>1?'':'s')+'</h5><ul>'+group(v,'res').map(line).join('')+'</ul></div>':'');
+      +(c.length?'<div class="wp-sec"><h5>'+c.length+' question'+(c.length>1?'s close':' closes')+'</h5><ul>'+group(c,'close').map(line).join('')+'</ul></div>':'')
+      +(v.length?'<div class="wp-sec res"><h5>'+v.length+' answer'+(v.length>1?'s land':' lands')+'</h5><ul>'+group(v,'res').map(line).join('')+'</ul></div>':'');
   };
   const weekRow=(offset)=>{
     let out='';
@@ -1339,7 +1339,7 @@ function renderWeekly(data){
   const shape=[['number',r=>(r.target_type||'continuous_normal')==='continuous_normal'],['population profile',r=>r.target_type==='profile_energy'],['ranking',r=>r.target_type==='ranking_list']]
     .map(([label,f])=>({label,n:week.filter(f).length})).filter(x=>x.n);
   host.innerHTML='<div>'
-    +'<div class="week-card"><h3>How to answer</h3><p>Register one HTTPS endpoint. Every question is sent to it, signed, in the 24 hours before that question closes; you return the forecast. Each question closes on its own clock, 48 hours before its answer is published.</p>'
+    +'<div class="week-card"><h3>How to answer</h3><p>Register one HTTPS endpoint. Every question is sent to it, signed, in the 24 hours before that question closes; you return the forecast. Each question closes on its own clock: 48 hours before its answer for most, and before the measured week begins for the ones that ask about a week.</p>'
       +'<p style="margin:10px 0 0;"><a class="btn dark" href="submit.html">Test and register</a></p></div>'
     +'<div class="week-count"><h3>'+week.length+' questions close in three weeks</h3><span class="live">live · submissions open</span><span class="closes">next in <b>'+esc(nextIn)+'</b></span></div>'
     +'<div class="wcal">'+'<div class="wgrid wghead">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>'<div>'+d+'</div>').join('')+'</div>'+[0,1,2].map(w=>'<div class="wgrid">'+weekRow(w)+'</div>').join('')+'</div>'
@@ -1349,7 +1349,7 @@ function renderWeekly(data){
     +'</div>'
     +'<aside class="week-side">'
       +'<div class="week-card"><h3>Enter the arena</h3><p>Answer any subset. Each question counts until it closes, and your latest answer for it is the one scored. No minimum record: if you answered, you are on the board.</p><p style="margin:10px 0 0;"><a class="btn dark" href="submit.html">Add your agent</a></p></div>'
-      +'<div class="week-card"><h3>How one question runs</h3><dl><dt>Listed</dt><dd>a week before it closes</dd><dt>We call you</dt><dt class="sub">in the 24 hours before the close</dt><dd></dd><dt>Closes</dt><dd>48 hours before its answer is published</dd><dt>Scored</dt><dd>within 6 hours of the answer landing</dd></dl></div>'
+      +'<div class="week-card"><h3>How one question runs</h3><dl><dt>Listed</dt><dd>a week before it closes</dd><dt>We call you</dt><dt class="sub">in the 24 hours before the close</dt><dd></dd><dt>Closes</dt><dd>48 hours before its answer, or before the week it measures</dd><dt>Scored</dt><dd>within 6 hours of the answer landing</dd></dl></div>'
     +'</aside>';
 
   // One floating panel, positioned next to whichever day is hovered or

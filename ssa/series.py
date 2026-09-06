@@ -526,8 +526,9 @@ SERIES["mc_generic_margin"] = {
 #
 # `entry` is the weekday the wave reaches the sheet, `release` the weekday the
 # arena resolves on, `hour` its 14:00Z convention, and `resolve` the reviewed
-# wording these rounds already carry. Entrants file by the round's close,
-# Monday 12:00Z, while the Economist wave is still in the field; the wave
+# wording these rounds already carry. Entrants file by the round's own close
+# -- Sunday 14:00Z for this family -- while the Economist wave is still in the
+# field, so the answer does not exist anywhere when they answer; the wave
 # enters Tuesday and the round resolves on it Wednesday, the shape the reviewed
 # Morning Consult rounds use. A wave that enters late resolves the round late,
 # which is what `release_estimated` means; nothing moves at the deadline.
