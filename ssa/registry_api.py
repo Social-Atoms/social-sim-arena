@@ -35,7 +35,7 @@ def handle(method: str, entrant_id: str | None, token: str | None,
             if not isinstance(body, dict):
                 return _err(422, "invalid_body", "Body must be a JSON object.")
             record, new_token = registry.register(
-                store, body, body.get("promo_code"), entrants_dir)
+                store, body, body.get("invitation_code"), entrants_dir)
             return 201, {"registration": registry.public_view(record),
                          "token": new_token,
                          "note": ("Keep the token: it is shown once. It "
