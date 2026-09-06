@@ -5,8 +5,8 @@ on a pull request. It decides, with no person online, whether that pull
 request is one the arena merges by itself:
 
   - the base branch is `main` and the pull request is not a draft;
-  - every changed file is a registration (`entrants/<id>.json`) or a forecast
-    (`forecasts/<round>/<id>.json`), none deleted, and every `<id>` is owned
+  - every changed file is a registration (`entrants/<id>.json`), none
+    deleted, and every `<id>` is owned
     by the pull request's author (`tools/validate_submission.py --author`);
   - the files, taken from the pull request's head commit, validate again with
     the receipt time set to the moment GitHub started the validation run,
@@ -65,9 +65,14 @@ def classify(files):
         name, status = f["filename"], f["status"]
         if status in ("removed", "renamed"):
             return False, f"{name}: {status}; only a maintainer removes or renames"
-        if not (REGISTRATION.match(name) or FORECAST.match(name)):
-            return False, (f"{name}: not a registration or forecast file; "
-                           "left for a maintainer")
+        if FORECAST.match(name):
+            # Season 0 admits outside entrants through an endpoint only; a
+            # forecast file arriving by pull request is not a route anyone
+            # was offered, so a person looks at it rather than the bot.
+            return False, (f"{name}: forecast files are not merged by the bot "
+                           "this season; left for a maintainer")
+        if not REGISTRATION.match(name):
+            return False, f"{name}: not a registration file; left for a maintainer"
     return True, ""
 
 

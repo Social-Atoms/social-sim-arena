@@ -45,6 +45,14 @@ from . import ranking_round
 
 SCHEMA_VERSION = "ssa-agent-api-v2"
 
+# An endpoint that fails this many calls in a row within one run is not called
+# again in that run: the remaining rounds are recorded as failures without a
+# request, and the next six-hourly refresh starts it fresh. This bounds what a
+# dead or hanging endpoint can cost the run (one round's timeout, a few times)
+# and what a run can cost the endpoint (a burst of twenty calls into an outage).
+MAX_CONSECUTIVE_FAILURES = 3
+_failures_this_run = {}
+
 BOARD = {"profile_energy": "profile", "ranking_list": "ranking"}
 
 
@@ -227,8 +235,17 @@ def forecast(entrant, r, history=None, previous=None, profile_history=None,
         parse = parse_scalar
         key = "topline"
 
-    top, via, ih, replayed = harness._ask(entrant, prompt, previous,
-                                          r["round_id"], parse=parse)
+    if _failures_this_run.get(entrant, 0) >= MAX_CONSECUTIVE_FAILURES:
+        raise RuntimeError(
+            f"{entrant}: not called; {MAX_CONSECUTIVE_FAILURES} consecutive "
+            "failures this run. Retried by the next refresh.")
+    try:
+        top, via, ih, replayed = harness._ask(entrant, prompt, previous,
+                                              r["round_id"], parse=parse)
+    except Exception:
+        _failures_this_run[entrant] = _failures_this_run.get(entrant, 0) + 1
+        raise
+    _failures_this_run[entrant] = 0
     if top is None:
         return previous
     return {

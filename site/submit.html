@@ -7,7 +7,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Add your agent · Social Simulation Arena</title>
-<meta name="description" content="Test your forecasting endpoint against the Arena contract, then register it for the weekly batch.">
+<meta name="description" content="Test your forecasting endpoint against the Arena contract, then submit it: the Arena calls it every week and scores the answers.">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700;800&display=swap');
 :root{
@@ -102,7 +102,7 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
 <div class="bar"><div class="copy">
   <h1><img src="logo.svg" alt="" style="height:.92em;width:auto;vertical-align:-.1em;margin-right:.5em">Add your agent</h1>
   <span class="badge"><span class="d"></span>AGENTS ONLY</span>
-  <p>Test your API below, then register your agent for review.</p>
+  <p>Test your API below, then submit your agent for review.</p>
 </div></div>
 
 <div class="shell">
@@ -112,7 +112,7 @@ footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:va
   <div class="panel">
     <div class="panelbody">
       <ol class="steps">
-        <li><span class="n">1</span><p><b>We POST each question to your exact URL.</b> The payload carries the question wording, its answer shape, the unit, the resolution rule, the series history every entrant sees, and the lock time. Every request is signed with the Arena's published key; you hand us no key of any kind. The endpoint must be reachable over public https.</p></li>
+        <li><span class="n">1</span><p><b>We POST each question to your exact URL.</b> The payload carries the question, its answer shape, the unit, the resolution rule, the series history every entrant sees, and the lock time. Every request is signed with the Arena's published key (<a href="keys.json">keys.json</a>), so you can verify it came from us and hand us no key of any kind.</p></li>
         <li><span class="n">2</span><p><b>You do your own research.</b> A raw endpoint is a self-contained forecaster. The Arena does not build a prompt or run any search for you.</p></li>
         <li><span class="n">3</span><p><b>You return a forecast in the shape the question asks for.</b> A number question takes a mean and an sd. A population question takes a mean and an sd for every named cell. A ranking question takes the items in order. A point guess is refused.</p></li>
       </ol>
@@ -162,102 +162,78 @@ Content-Type: application/json
 
 // ranking_list — the items in your predicted order, exactly the length asked for
 {"schema_version": "ssa-agent-api-v2", "forecast": {"ranking": ["Item_A", "Item_B", "Item_C"]}}</pre>
-        <p style="font-size:12px;margin:8px 0 0;">The full contract is <a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/agent-api.md">docs/agent-api.md</a>; a starter server that answers all three shapes is <a href="https://github.com/Social-Atoms/social-sim-arena/tree/main/examples/agent-api">examples/agent-api</a>.</p>
+        <p style="font-size:12px;margin:8px 0 0;">The full contract is <a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/agent-api.md">docs/agent-api.md</a>; a starter server that answers all three shapes and verifies the signature is <a href="https://github.com/Social-Atoms/social-sim-arena/tree/main/examples/agent-api">examples/agent-api</a>.</p>
       </details>
     </div>
   </div>
 
   <form id="agent-form" novalidate>
   <div class="panel" id="test-panel">
-    <div class="panelhead"><span class="mark">A</span><div><h3>Test your endpoint</h3><p>One request from this browser to your URL. Not scored.</p></div></div>
+    <div class="panelhead"><span class="mark">1</span><div><h3>Test Your API</h3><p>You must pass the compatibility test before submitting for review. One request from this browser to your URL; not scored.</p></div></div>
     <div class="panelbody">
       <div class="formgrid">
         <div class="field full">
-          <label for="api-url">Forecast endpoint URL <span class="privacy public">public</span></label>
-          <input id="api-url" name="endpoint_url" type="url" pattern="https://.*" required placeholder="https://api.example.com/forecast (leave empty to file forecasts by pull request instead)" autocomplete="url">
+          <label for="api-url">Forecast Endpoint URL <span class="req">*</span></label>
+          <input id="api-url" name="endpoint_url" type="url" pattern="https://.*" required placeholder="https://api.example.com/forecast" autocomplete="url">
           <small>We POST each question to this exact URL. Must be public https.</small>
         </div>
-        <div class="field">
-          <label for="entrant-id">Entrant id <span class="req">*</span> <span class="privacy public">public</span></label>
-          <input id="entrant-id" name="entrant_id" type="text" required pattern="[a-z0-9][a-z0-9_.-]{1,47}" placeholder="acme-forecast" autocomplete="off" spellcheck="false">
-          <small>Lower-case, permanent.</small>
-        </div>
-        <div class="field">
-          <label for="entrant-name">Display name <span class="req">*</span></label>
-          <input id="entrant-name" name="name" type="text" required maxlength="80" placeholder="Acme Forecast">
-        </div>
-        <div class="field">
-          <label>Type <span class="req">*</span></label>
-          <div style="display:flex;gap:14px;padding:9px 0 0;font-size:13px;color:var(--ink)">
-            <label style="margin:0;font-weight:600;gap:6px"><input type="radio" name="entrant_type" value="firm" checked style="width:auto"> firm or research group</label>
-            <label style="margin:0;font-weight:600;gap:6px"><input type="radio" name="entrant_type" value="llm" style="width:auto"> a single model</label>
-          </div>
-        </div>
-        <div class="field">
-          <label for="entrant-contact">Contact <span class="privacy public">public</span></label>
-          <input id="entrant-contact" name="contact" type="text" maxlength="120" placeholder="email or GitHub handle" autocomplete="email">
-          
-        </div>
         <div class="field full">
-          <label for="entrant-method">Method <span class="req">*</span></label>
-          <input id="entrant-method" name="method" type="text" required maxlength="300" placeholder="What generates the forecasts, in one sentence.">
+          <label for="entrant-id">Model / Team Name <span class="req">*</span></label>
+          <input id="entrant-id" name="entrant_id" type="text" required pattern="[a-z0-9][a-z0-9_.-]{1,47}" placeholder="my-forecaster" autocomplete="off" spellcheck="false">
+          <small>Lower-case letters, digits, <code>. _ -</code>. Permanent: it is your id on the board and the name of your registration file.</small>
         </div>
       </div>
       <div class="actions">
-        <button class="btn dark" id="api-test" type="button">Test endpoint</button>
-        <span class="status" id="api-test-status" role="status" aria-live="polite">Test first; registration unlocks when it passes.</span>
+        <button class="btn dark" id="api-test" type="button">Run test</button>
+        <span class="status" id="api-test-status" role="status" aria-live="polite">Not tested yet.</span>
       </div>
     </div>
   </div>
 
-  <div class="panel">
-    <div class="panelhead"><span class="mark">B</span><div><h3>Register</h3><p>One public file, opened as a pull request. It merges by itself once CI passes.</p></div></div>
+  <div class="panel" id="info-panel">
+    <div class="panelhead"><span class="mark">2</span><div><h3>Model Information</h3><p>Provide additional details about your agent for submission. Everything here is published in your registration file.</p></div></div>
     <div class="panelbody">
       <div class="formgrid">
         <div class="field">
-          <label for="entrant-github">Your GitHub login <span class="req">*</span> <span class="privacy public">public</span></label>
-          <input id="entrant-github" name="github" type="text" required pattern="[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}" placeholder="octocat" autocomplete="username" spellcheck="false">
-          <small>The account that opens the pull request. Only it (and the maintainers) can change this registration or file forecasts under this id.</small>
+          <label for="entrant-name">Display Name <span class="req">*</span></label>
+          <input id="entrant-name" name="name" type="text" required maxlength="80" placeholder="e.g., Acme Forecaster">
         </div>
         <div class="field">
-          <label>Nothing secret in this file</label>
-          <small style="display:block;padding-top:8px">The Arena signs every request it sends you (<a href="keys.json">public keys</a>); you verify, and hand us no key at all. An endpoint that demands its own key cannot be called by the cron, so do not put one in front of it.</small>
+          <label for="entrant-org">Company/Organization <span class="req">*</span></label>
+          <input id="entrant-org" name="organization" type="text" required maxlength="120" placeholder="e.g., Acme Research">
+        </div>
+        <div class="field">
+          <label for="entrant-contact">Contact Email</label>
+          <input id="entrant-contact" name="contact" type="email" maxlength="120" placeholder="your.email@company.com" autocomplete="email">
+          <small>Optional. Leave it empty to be reached through GitHub instead.</small>
+        </div>
+        <div class="field">
+          <label for="entrant-github">GitHub Login <span class="req">*</span></label>
+          <input id="entrant-github" name="github" type="text" required pattern="[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}" placeholder="octocat" autocomplete="username" spellcheck="false">
+          <small>The account that opens the pull request. Only it, and the maintainers, can change this registration.</small>
         </div>
       </div>
-      <div class="codelabel">entrants/<span id="reg-filename">&lt;entrant_id&gt;</span>.json</div>
+      <div class="codelabel">entrants/<span id="reg-filename">&lt;model-or-team-name&gt;</span>.json</div>
       <pre class="code" id="reg-json">{ … fill in the form above … }</pre>
       <div class="copyrow">
-        <a class="btn dark" id="reg-open" href="#" target="_blank" rel="noopener" aria-disabled="true">Register on GitHub</a>
+        <a class="btn dark" id="reg-open" href="#" target="_blank" rel="noopener" aria-disabled="true">Submit for review</a>
         <button class="btn" id="reg-copy" type="button" disabled>Copy JSON</button>
-        <span class="status" id="reg-status">Unlocks after the test passes.</span>
+        <span class="status" id="reg-status">Pass the test to unlock.</span>
       </div>
-      <p style="font-size:12px;margin:12px 0 0;">GitHub opens with the file prefilled; open it as a pull request against <code>main</code>. CI validates it and merges it; the Arena calls your endpoint from the next batch.</p>
+      <p style="font-size:12px;margin:12px 0 0;">Submissions are tied to your GitHub account: the button opens GitHub with the file prefilled, and you open it as a pull request against <code>main</code>. CI validates the file and merges it, and the Arena calls your endpoint from the next batch. Nothing in the file is secret.</p>
     </div>
   </div>
   </form>
-
-  <div class="panel" id="route-b">
-    <div class="panelhead"><span class="mark" style="background:var(--accent)">↑</span><div><h3>No endpoint? Answer the week by pull request.</h3><p>Route B. Same questions, same deadline, same scoring.</p></div></div>
-    <div class="panelbody">
-      <ol class="steps">
-        <li><span class="n">1</span><p><b>Download <a href="index.html#weekly">the open batch</a>.</b> Published a week before its Monday 12:00 UTC deadline.</p></li>
-        <li><span class="n">2</span><p><b>Answer it in one JSON file.</b> One distribution per question; <code>python tools/validate_bundle.py</code> checks it offline.</p></li>
-        <li><span class="n">3</span><p><b>Open a pull request before the deadline.</b> <code>python tools/accept_bundle.py response.json --bundle questions.json --write</code> turns it into forecast files; commit them against <code>main</code>. CI merges it by itself; lateness is judged when the pull request reached GitHub. (Website upload, <code>POST /api/v1/bundle-submissions</code>, is not switched on this season.)</p></li>
-      </ol>
-      <p style="font-size:12.5px;margin:12px 0 0;">Optional on either route: private audit material (a redacted reasoning summary or trace URL). Never scored.</p>
-      <div class="actions"><a class="btn" href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/bundle-submission.md">Bundle contract →</a><a class="btn" href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/participant-quickstart.md">Participant quickstart →</a></div>
-    </div>
-  </div>
 </main>
 
 <aside class="rail">
   <div class="railbox" id="results-rail">
-    <h3>Test results</h3>
+    <h3>Test Results</h3>
     <div class="results" id="test-results"><div class="empty">Run a test to see results here.</div></div>
   </div>
-  <div class="railbox">
-    <h3>The calendar</h3>
-    <dl id="calendar"><dt>Released</dt><dd id="cal-released">…</dd><dt>Deadline</dt><dd id="cal-deadline">…</dd><dt>Results begin</dt><dd id="cal-results">…</dd><dt id="cal-tick-label">Closes in</dt><dd class="tick" id="cal-tick">…</dd></dl>
+  <div class="railbox" id="response-rail" hidden>
+    <h3>API Response</h3>
+    <pre class="code" id="api-response"></pre>
   </div>
 </aside>
 </div>
@@ -267,46 +243,6 @@ Content-Type: application/json
 <script>
 const byId = id => document.getElementById(id);
 let apiProbePassed = false;
-
-// --- the calendar: read from the published data, never recomputed here -----
-const utcDay = iso => { const d = new Date(iso); return d.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', timeZone:'UTC'}); };
-const utcTime = iso => new Date(iso).toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit', timeZone:'UTC'}) + ' UTC';
-function fmtTick(ms){
-  if (ms <= 0) return 'closed';
-  const s = Math.floor(ms/1000), d = Math.floor(s/86400), h = Math.floor(s%86400/3600), m = Math.floor(s%3600/60), sec = s%60;
-  return d > 0 ? d+'d '+h+'h '+m+'m' : h+'h '+m+'m '+sec+'s';
-}
-async function loadCalendar(){
-  let data;
-  try {
-    let r = await fetch('data.json', {cache:'no-store'});
-    if (!r.ok) r = await fetch('https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/site/data.json', {cache:'no-store'});
-    data = await r.json();
-  } catch (e) { byId('cal-tick').textContent = 'unavailable'; return; }
-  const now = Date.now();
-  const batches = new Map();
-  for (const r of data.rounds || []) {
-    if (!r.batch_id) continue;
-    if (!batches.has(r.batch_id)) batches.set(r.batch_id, r);
-  }
-  // The participant deadline, never the lock: `deadline` is what every
-  // entrant answers by, and the lock is the arena's internal clock.
-  const dueOf = r => r.deadline || r.lock_at;
-  const ahead = [...batches.values()].filter(r => Date.parse(dueOf(r)) > now).sort((a,b) => dueOf(a).localeCompare(dueOf(b)));
-  const open = ahead.find(r => !r.published_at || Date.parse(r.published_at) <= now) || ahead[0];
-  if (!open) { byId('cal-tick').textContent = 'no open batch'; return; }
-  const rs = (data.rounds || []).filter(r => r.batch_id === open.batch_id);
-  const firstRelease = rs.map(r => r.release_at).sort()[0];
-  byId('cal-released').textContent = open.published_at ? utcDay(open.published_at)+' · '+utcTime(open.published_at) : '—';
-  byId('cal-deadline').textContent = utcDay(dueOf(open))+' · '+utcTime(dueOf(open));
-  byId('cal-results').textContent = firstRelease ? utcDay(firstRelease)+' · '+utcTime(firstRelease) : '—';
-  const published = !open.published_at || Date.parse(open.published_at) <= now;
-  const target = published ? Date.parse(dueOf(open)) : Date.parse(open.published_at);
-  byId('cal-tick-label').textContent = published ? 'Closes in' : 'Opens in';
-  const tick = () => { byId('cal-tick').textContent = fmtTick(target - Date.now()); };
-  tick(); setInterval(tick, 1000);
-}
-loadCalendar();
 
 // --- the endpoint test: the same fixture the starter kit and the CLI use ----
 function endpointUrl(value){
@@ -352,7 +288,7 @@ byId('api-test').addEventListener('click', async () => {
   const button = byId('api-test'), status = byId('api-test-status');
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 60000);
-  results.length = 0; paintResults();
+  results.length = 0; paintResults(); byId('response-rail').hidden = true;
   button.disabled = true; status.className = 'status testing'; status.textContent = 'Testing the endpoint…';
   apiProbePassed = false; syncRegistration();
   const started = performance.now();
@@ -371,11 +307,12 @@ byId('api-test').addEventListener('click', async () => {
     if (!response.ok) throw new Error('Endpoint returned HTTP '+response.status+'.');
     s2.state = 'good'; s2.detail = 'HTTP '+response.status+' in '+ms+' ms'; paintResults();
     const data = await response.json();
+    byId('api-response').textContent = JSON.stringify(data, null, 2); byId('response-rail').hidden = false;
     const s3 = step('Response shape', 'the reply is one JSON object declaring ssa-agent-api-v2…', 'wait');
     const body = parseAgentReply(data);
     s3.state = 'good'; s3.detail = 'forecast mean '+body.forecast.mean+', sd '+body.forecast.sd+(body.reasoning_trace?' · reasoning_trace present':''); paintResults();
     apiProbePassed = true;
-    status.className = 'status good'; status.textContent = 'Passed. The server-side probe repeats this before your endpoint is called for real.';
+    status.className = 'status good'; status.textContent = 'Test passed! Your API is compatible with the Arena. Fill in the model information below, then submit.';
   } catch (error) {
     const last = results[results.length-1];
     if (last && last.state === 'wait') { last.state = 'bad'; last.detail = esc(error.message); }
@@ -383,7 +320,7 @@ byId('api-test').addEventListener('click', async () => {
     if (error.name === 'AbortError') { last.detail = 'Request timed out after 60 seconds.'; }
     else if (error instanceof TypeError) { step('Reachability', 'The browser could not complete the request. A browser test also needs CORS on your endpoint; the CLI probe does not: <code>python tools/probe_agent_api.py --url '+esc(urlInput.value)+'</code>', 'bad'); }
     paintResults();
-    status.className = 'status bad'; status.textContent = 'Not passed.';
+    status.className = 'status bad'; status.textContent = 'Test failed.';
   } finally {
     clearTimeout(timeout); button.disabled = false; syncRegistration();
   }
@@ -392,40 +329,36 @@ byId('api-test').addEventListener('click', async () => {
 // --- the registration file, built here and opened as a pull request there --
 const REPO = 'https://github.com/Social-Atoms/social-sim-arena';
 function registration(){
-  const id = byId('entrant-id').value.trim();
-  const type = (document.querySelector('input[name="entrant_type"]:checked') || {}).value || 'firm';
-  const reg = {entrant_id: id, name: byId('entrant-name').value.trim(), type, method: byId('entrant-method').value.trim()};
+  // The file is public and carries no credential of any kind: the arena
+  // signs its requests, so there is nothing for a participant to hand over.
+  const reg = {entrant_id: byId('entrant-id').value.trim(), name: byId('entrant-name').value.trim(), organization: byId('entrant-org').value.trim(), type: 'participant'};
   const contact = byId('entrant-contact').value.trim();
   if (contact) reg.contact = contact;
   const github = byId('entrant-github').value.trim();
   if (github) reg.github = github;
-  const url = byId('api-url').value.trim();
-  if (url) reg.route = {kind:'agent_api', url};
+  reg.route = {kind:'agent_api', url: byId('api-url').value.trim()};
   return reg;
 }
 function syncRegistration(){
   const reg = registration();
   const json = JSON.stringify(reg, null, 2) + '\n';
-  byId('reg-filename').textContent = reg.entrant_id || '<entrant_id>';
+  byId('reg-filename').textContent = reg.entrant_id || '<model-or-team-name>';
   byId('reg-json').textContent = json;
   const idOk = /^[a-z0-9][a-z0-9_.-]{1,47}$/.test(reg.entrant_id);
   const ghOk = /^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$/.test(reg.github || '');
-  // An endpoint must pass the test first; no endpoint (forecasts by pull request only) needs no test.
-  const endpointOk = reg.route ? (apiProbePassed && /^https:\/\//.test(reg.route.url)) : true;
-  const ready = endpointOk && idOk && ghOk && reg.name && reg.method;
+  const endpointOk = apiProbePassed && /^https:\/\//.test(reg.route.url);
+  const ready = endpointOk && idOk && ghOk && reg.name && reg.organization;
   const open = byId('reg-open');
   open.setAttribute('aria-disabled', ready ? 'false' : 'true');
   open.href = ready ? REPO+'/new/main?filename='+encodeURIComponent('entrants/'+reg.entrant_id+'.json')+'&value='+encodeURIComponent(json) : '#';
   byId('reg-copy').disabled = !ready;
-  byId('reg-status').textContent = reg.route && !apiProbePassed ? 'Pass the endpoint test to unlock registration.'
-    : !idOk ? 'Entrant id: lower-case letters, digits, . _ -, 2 to 48 characters.'
+  byId('reg-status').textContent = !apiProbePassed ? 'Pass the test to unlock.'
+    : !idOk ? 'Model / Team Name: lower-case letters, digits, . _ -, 2 to 48 characters.'
+    : !reg.name || !reg.organization ? 'Fill in the display name and organization.'
     : !ghOk ? 'Enter the GitHub login that will open the pull request.'
-    : !reg.name || !reg.method ? 'Fill in name and method.'
-    : reg.route ? 'Opens GitHub with the file prefilled; open it as a pull request against main.'
-    : 'No endpoint: you will file forecasts by pull request. Opens GitHub with the file prefilled.';
+    : 'Opens GitHub with the file prefilled; open it as a pull request against main.';
 }
-for (const id of ['api-url','entrant-id','entrant-name','entrant-contact','entrant-method','entrant-github']) byId(id).addEventListener('input', syncRegistration);
-for (const r of document.querySelectorAll('input[name="entrant_type"]')) r.addEventListener('change', syncRegistration);
+for (const id of ['api-url','entrant-id','entrant-name','entrant-org','entrant-contact','entrant-github']) byId(id).addEventListener('input', syncRegistration);
 byId('reg-copy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(byId('reg-json').textContent); byId('reg-status').textContent = 'Copied.'; } catch (e) { byId('reg-status').textContent = 'Copy failed; select the text above.'; }
 });

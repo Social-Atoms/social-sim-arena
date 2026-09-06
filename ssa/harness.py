@@ -488,6 +488,10 @@ ANTHROPIC_MAX_TOKENS = 128000   # max_tokens reported by /v1/models for Opus 4.8
 # the connect budget stays short so an unreachable host still fails fast
 # instead of holding a worker for ten minutes.
 TIMEOUT = (15, 600)
+# The most a participant endpoint's reply may weigh. A forecast is a few
+# hundred bytes; a reasoning trace a few kilobytes; a megabyte is a bug or
+# an attack, and either is refused rather than parsed.
+AGENT_MAX_REPLY_BYTES = 1_000_000
 
 # Two prompt variants, differing only in how much of the series the model sees.
 # Everything that defines *what number is being asked for* -- the pollster, the
@@ -1633,6 +1637,23 @@ def _call_openai(cfg, base, key, mid, prompt):
     return _extract_text(data, mid), _usage(data)
 
 
+def _read_capped(r, cap):
+    """The reply body, read no further than `cap` + 1 bytes.
+
+    An endpoint that streams forever or answers with a gigabyte costs the run
+    one megabyte, not its memory: the caller sees a body one byte over the cap
+    and refuses it. Falls back to `.content` for a response that was not
+    opened for streaming (the tests' fakes).
+    """
+    raw_stream = getattr(r, "raw", None)
+    if raw_stream is None or not hasattr(raw_stream, "read"):
+        return getattr(r, "content", b"") or b""
+    try:
+        return raw_stream.read(cap + 1, decode_content=True)
+    finally:
+        r.close()
+
+
 def _call_agent(cfg, base, key, mid, prompt):
     """Route A. `base` is the participant's exact URL and `prompt` is the
     request envelope, already serialised: it goes out as the whole body, and
@@ -1654,8 +1675,20 @@ def _call_agent(cfg, base, key, mid, prompt):
     body = prompt.encode("utf-8")
     headers = {"Content-Type": "application/json",
                **signing.sign(signer[0], body, signer[1])}
-    r = requests.post(base, headers=headers, data=body, timeout=TIMEOUT)
-    data = _check(r, f"{mid} @ {base}")
+    r = requests.post(base, headers=headers, data=body, timeout=TIMEOUT,
+                      stream=True)
+    raw = _read_capped(r, AGENT_MAX_REPLY_BYTES)
+    what = f"{mid} @ {base}"
+    if len(raw) > AGENT_MAX_REPLY_BYTES:
+        raise RuntimeError(f"{what} reply exceeds {AGENT_MAX_REPLY_BYTES} bytes")
+    if r.status_code >= 400:
+        detail = " ".join(raw.decode("utf-8", "replace").split())[:400]
+        raise RuntimeError(f"{what} HTTP {r.status_code}: {detail}")
+    try:
+        data = json.loads(raw.decode("utf-8"))
+    except ValueError:
+        raise RuntimeError(f"{what} returned non-JSON: "
+                           f"{' '.join(raw.decode('utf-8', 'replace').split())[:200]}")
     return json.dumps(data), {}
 
 

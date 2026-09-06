@@ -198,12 +198,8 @@ class SubmissionIntakeContracts(unittest.TestCase):
 
         class Response:
             status_code = 200
-            text = ""
-
-            @staticmethod
-            def json():
-                return {"schema_version": "ssa-agent-api-v2",
-                        "forecast": {"mean": 50.0, "sd": 5.0}}
+            content = (b'{"schema_version": "ssa-agent-api-v2", '
+                       b'"forecast": {"mean": 50.0, "sd": 5.0}}')
 
         def fake_post(url, **kwargs):
             calls.append((url, kwargs))
@@ -251,12 +247,19 @@ class SubmissionPrototype(unittest.TestCase):
                 '<div class="page" id="page-exam">', 1)[0]
 
     def test_page_is_agents_only_and_has_no_form_to_fill_in(self):
-        for marker in ('id="api-test"', 'name="endpoint_url"',
-                       'id="entrant-id"', 'id="entrant-method"',
-                       'id="test-results"', 'id="entrant-github"', 'id="reg-json"',
-                       'id="route-b"'):
+        # Two panels, in Prophet Arena's order: test the API, then the model
+        # information, and one submit button that opens the pull request.
+        for marker in ('<h3>Test Your API</h3>', 'id="api-test"', 'name="endpoint_url"',
+                       '>Forecast Endpoint URL <', '>Model / Team Name <', 'id="entrant-id"',
+                       '<h3>Model Information</h3>', '>Display Name <', '>Company/Organization <',
+                       'id="entrant-org"', 'id="entrant-github"', 'id="reg-json"',
+                       '>Submit for review</a>', '<h3>Test Results</h3>', '<h3>API Response</h3>'):
             self.assertIn(marker, self.page)
-        for gone in ("track-human", "Human wisdom", "Human Wisdom",
+        # Gone: the second route, the type radio, the method line, the
+        # calendar, and everything from the questionnaire era.
+        for gone in ('id="route-b"', "Route B", "entrant_type", 'id="entrant-method"',
+                     'id="calendar"', "loadCalendar", "bundle",
+                     "track-human", "Human wisdom", "Human Wisdom",
                      "human_questionnaire_mode", "Fill in this form",
                      "questionnaire_commitment", "<textarea", "<select"):
             self.assertNotIn(gone, self.page)
@@ -290,11 +293,7 @@ class SubmissionPrototype(unittest.TestCase):
         # Every other fetch on the page is the arena's own data, never a
         # third party carrying what was typed.
         fetches = re.findall(r"fetch\(([^,)]+)", self.page)
-        self.assertEqual(
-            sorted(fetches),
-            sorted(["'data.json'",
-                    "'https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/site/data.json'",
-                    "target"]))
+        self.assertEqual(fetches, ["target"])
         self.assertNotIn("localStorage", self.page)
 
     def test_the_browser_test_signs_with_the_published_test_key(self):
@@ -326,15 +325,25 @@ class SubmissionPrototype(unittest.TestCase):
         self.assertEqual(schema["properties"]["entrant_id"]["pattern"],
                          "^[a-z0-9][a-z0-9_.-]{1,47}$")
 
-    def test_the_bundle_route_is_on_the_same_page(self):
-        self.assertIn("/api/v1/bundle-submissions", self.page)
-        self.assertIn("tools/validate_bundle.py", self.page)
-        self.assertIn('href="index.html#weekly"', self.page)
+    def test_the_registration_file_is_the_prophet_arena_shape_with_a_github_owner(self):
+        builder = self.page.split("function registration(){", 1)[1].split(
+            "function syncRegistration(){", 1)[0]
+        for field in ("entrant_id:", "name:", "organization:", "type: 'participant'",
+                      "reg.contact = contact", "reg.github = github", "kind:'agent_api'"):
+            self.assertIn(field, builder)
+        self.assertNotIn("method", builder)
+        schema = load_json("schema/entrant.schema.json")
+        self.assertIn("participant", schema["properties"]["type"]["enum"])
+        self.assertIn("organization", schema["properties"])
+        self.assertNotIn("method", schema["required"])
 
     def test_the_rest_of_the_site_sends_agents_to_one_page_and_nobody_else(self):
         self.assertEqual(2, self.index_submit.count('class="svrow"'))
-        self.assertIn("<b>We call your endpoint</b>", self.index_submit)
-        self.assertIn("<b>You answer the weekly bundle</b>", self.index_submit)
+        self.assertIn("<b>Test your API</b>", self.index_submit)
+        self.assertIn("<b>Submit for review</b>", self.index_submit)
+        for page in (self.index, self.board, self.docs):
+            self.assertNotIn("route-b", page)
+            self.assertNotIn("weekly-route", page)
         for page in (self.index_submit, self.board, self.docs):
             self.assertNotIn("Human Wisdom", page)
             self.assertNotIn("Human wisdom", page)
@@ -369,7 +378,6 @@ class SubmissionPrototype(unittest.TestCase):
         self.assertEqual([], errors(schema, body))
         body.pop("audit_trail")
         self.assertEqual([], errors(schema, body))
-        self.assertIn("audit material", self.page)
 
     def test_the_pipeline_still_publishes_what_the_page_reads(self):
         self.assertIn('row["target_type"] = r.get("target_type", "continuous_normal")',

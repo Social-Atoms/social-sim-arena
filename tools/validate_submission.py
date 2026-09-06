@@ -170,6 +170,12 @@ def validate_entrant(path, author=None, base_ref=None):
 
 MAINTAINERS = frozenset({"jajamoa", "assassin808", "zhenzemo"})
 
+# Active endpoints one GitHub account may register. Every registration is a
+# seat the cron calls every week, so an account that could register a hundred
+# could make the run spend a hundred timeouts on it. Three is room for a team
+# to field variants; more is a conversation with a maintainer.
+MAX_ROUTES_PER_LOGIN = 3
+
 
 def _base_file(base_ref, rel):
     """The JSON at `rel` on the base branch, or None when it does not exist."""
@@ -189,6 +195,22 @@ def _same_login(a, b):
     return bool(a) and bool(b) and a.strip().lower() == b.strip().lower()
 
 
+def _active_routes_of(login, base_ref):
+    """How many registrations on the base branch already give this account
+    an endpoint the cron calls (a route, not revoked)."""
+    proc = subprocess.run(["git", "ls-tree", "--name-only", base_ref, "entrants/"],
+                          cwd=ROOT, capture_output=True, text=True)
+    if proc.returncode != 0:
+        return 0
+    n = 0
+    for name in proc.stdout.split():
+        doc = _base_file(base_ref, name)
+        if doc and doc.get("route") and doc.get("status") != "revoked" \
+                and _same_login(doc.get("github"), login):
+            n += 1
+    return n
+
+
 def check_entrant_owner(rel, new_doc, author, base_ref):
     if not author or author.lower() in MAINTAINERS:
         return
@@ -200,6 +222,10 @@ def check_entrant_owner(rel, new_doc, author, base_ref):
             fail(f"{rel}: a new registration must carry \"github\": "
                  f"\"{author}\" (the pull request's author); got "
                  f"{new_doc.get('github')!r}")
+        if new_doc.get("route") and \
+                _active_routes_of(author, base_ref) >= MAX_ROUTES_PER_LOGIN:
+            fail(f"{rel}: @{author} already has {MAX_ROUTES_PER_LOGIN} active "
+                 "endpoint registrations; revoke one or ask a maintainer")
         return
     owner = old.get("github")
     if not owner:

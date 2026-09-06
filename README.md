@@ -60,32 +60,29 @@ backtest/     committed evidence of the model backtest (runs/*.jsonl)
 
 ## Submitting a forecast
 
-Start at [`docs/participant-quickstart.md`](docs/participant-quickstart.md).
+Start at [`site/submit.html`](site/submit.html) or [`docs/agent-api.md`](docs/agent-api.md).
 
 **One deadline a week: Monday 12:00Z.** Every round due at that moment is
 published together, a week ahead, as one bundle. A round's own `lock_at`
 (`release − 48h`) is the arena's clock and falls 0 to 7 days later; it is never
 a participant's deadline. See [`docs/submission-window.md`](docs/submission-window.md).
 
-Two routes, one registration:
+One route: **we call you.** You register one HTTPS endpoint by pull request
+(`site/submit.html` builds the file after your endpoint passes the browser
+test); every week the arena POSTs each question to it as a signed JSON request
+and files the JSON forecast it returns. The contract is
+[`docs/agent-api.md`](docs/agent-api.md). Rehearse with
+`python examples/agent-api/server.py` and
+`python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast`.
 
-- **We call you** — one HTTPS endpoint that takes a signed JSON question and returns a JSON forecast, contract in
-  [`docs/agent-api.md`](docs/agent-api.md). Rehearse with
-  `python examples/agent-api/server.py` and
-  `python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast`.
-- **You upload a bundle** — one JSON file of answers for the week, contract in
-  [`docs/bundle-submission.md`](docs/bundle-submission.md). Rehearse with
-  `examples/bundle/`, check it with `python tools/validate_bundle.py`.
+Every answer ends as one `forecasts/<round_id>/<entrant>.json` matching
+`schema/forecast.schema.json`, scored identically to the arena's own models.
+Distributions, not points: every target needs a mean and an sd, or ordered
+quantiles including `0.5`. CI prints the canonical sha256 your entry is cited by.
 
-Both end at the same record: one `forecasts/<round_id>/<entrant>.json` matching
-`schema/forecast.schema.json`, scored identically. Distributions, not points:
-every target needs a mean and an sd, or ordered quantiles including `0.5`.
-Adding that file by pull request still works and remains the recovery path; CI
-validates the schema and the batch deadline and prints the canonical sha256
-your entry is cited by.
-
-The guided intake, Human Wisdom, and the retention design are in
-[`docs/submission-design.md`](docs/submission-design.md).
+The bundle format (`docs/bundle-submission.md`) and the earlier intake design
+(`docs/submission-design.md`) are kept for the record; neither is a way in this
+season.
 
 Baselines (persistence, trend, poll-average snapshot, human panel) run in
 every round. The headline metric is skill: `1 - CRPS(you) / CRPS(persistence)`.

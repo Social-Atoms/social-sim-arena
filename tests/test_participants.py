@@ -160,12 +160,8 @@ def test_a_participant_request_is_signed_over_the_bytes_sent():
 
     class Response:
         status_code = 200
-        text = ""
-
-        @staticmethod
-        def json():
-            return {"schema_version": "ssa-agent-api-v2",
-                    "forecast": {"mean": 1.0, "sd": 1.0}}
+        content = (b'{"schema_version": "ssa-agent-api-v2", '
+                   b'"forecast": {"mean": 1.0, "sd": 1.0}}')
 
     def fake_post(url, **kwargs):
         calls.append((url, kwargs))
@@ -415,6 +411,59 @@ def test_a_registration_without_a_route_is_unchanged():
           f"({len(live)} committed registrations still validate)")
 
 
+def test_a_reply_over_the_size_cap_is_refused_unread():
+    """A megabyte is not a forecast. The body is read to the cap plus one
+    byte and refused; nothing past it is downloaded or parsed."""
+    class Big:
+        status_code = 200
+        content = b"[" + b"1," * (harness.AGENT_MAX_REPLY_BYTES // 2) + b"1]"
+
+    with_key()
+    real_post = harness.requests.post
+    harness.requests.post = lambda url, **kw: Big()
+    try:
+        harness._call_agent({}, "https://api.acme.test/forecast", "", "acme", "{}")
+        raise AssertionError("an oversized reply was accepted")
+    except RuntimeError as err:
+        assert "exceeds" in str(err), err
+    finally:
+        harness.requests.post = real_post
+    print("ok test_a_reply_over_the_size_cap_is_refused_unread")
+
+
+def test_an_endpoint_failing_three_times_is_not_called_again_this_run():
+    """The per-run stop: after MAX_CONSECUTIVE_FAILURES the remaining rounds
+    are recorded as failures without a request, and a success resets it."""
+    from ssa import agent_api
+    calls = []
+
+    def failing_ask(entrant, prompt, previous, round_id, parse=None):
+        calls.append(round_id)
+        raise RuntimeError("down")
+
+    with registry(REG):
+        with_key()
+        real_ask = harness._ask
+        harness._ask = failing_ask
+        agent_api._failures_this_run.clear()
+        try:
+            rounds = [x for x in json.load(open(os.path.join(
+                ROOT, "questions", "season0.json")))["rounds"]
+                if x.get("target_type", "continuous_normal") == "continuous_normal"][:5]
+            for i, r in enumerate(rounds):
+                try:
+                    agent_api.forecast("acme-forecast", r)
+                    raise AssertionError("a failing endpoint filed something")
+                except RuntimeError as err:
+                    if i >= agent_api.MAX_CONSECUTIVE_FAILURES:
+                        assert "not called" in str(err), err
+            assert len(calls) == agent_api.MAX_CONSECUTIVE_FAILURES, calls
+        finally:
+            harness._ask = real_ask
+            agent_api._failures_this_run.clear()
+    print("ok test_an_endpoint_failing_three_times_is_not_called_again_this_run")
+
+
 if __name__ == "__main__":
     test_the_registration_carries_no_credential_and_cannot_name_one()
     test_a_participant_route_is_https_only()
@@ -430,4 +479,6 @@ if __name__ == "__main__":
     test_a_participant_forecast_is_never_mocked()
     test_filing_goes_through_the_shared_runner_and_caches_like_one()
     test_a_registration_without_a_route_is_unchanged()
-    print("14 passed")
+    test_a_reply_over_the_size_cap_is_refused_unread()
+    test_an_endpoint_failing_three_times_is_not_called_again_this_run()
+    print("16 passed")

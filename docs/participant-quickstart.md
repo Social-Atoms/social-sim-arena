@@ -1,5 +1,11 @@
 # Participant quickstart
 
+> **Status: historical.** Season 0 admits outside entrants through one route
+> only: an HTTPS endpoint the arena calls with a signed request, registered by
+> pull request from `site/submit.html`. That path is `docs/agent-api.md`. The
+> bundle route described below is not offered this season; the page is kept
+> for the record and for the tools it documents.
+
 One registration, two ways to hand over a forecast. This page is the whole
 onboarding path: read it, and you can complete a valid non-scored submission
 without sending anyone a credential or a file by hand.

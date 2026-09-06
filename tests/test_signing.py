@@ -227,11 +227,15 @@ def test_the_validator_cli_takes_receipt_time_author_and_base():
 
 # --- what the bot merges by itself -------------------------------------------
 
-def test_the_bot_merges_only_registration_and_forecast_files():
-    ok, why = auto_merge.classify([{"filename": "entrants/acme.json", "status": "added"},
-                                   {"filename": "forecasts/yougov-2026-w38-approval/acme.json", "status": "added"}])
+def test_the_bot_merges_only_registration_files():
+    """Season 0 admits outside entrants through an endpoint only, so the bot
+    merges registrations and nothing else; a forecast file by pull request
+    waits for a person."""
+    ok, why = auto_merge.classify([{"filename": "entrants/acme.json", "status": "added"}])
     assert ok, why
     for bad in ([{"filename": "tools/validate_submission.py", "status": "modified"}],
+                [{"filename": "entrants/acme.json", "status": "added"},
+                 {"filename": "forecasts/yougov-2026-w38-approval/acme.json", "status": "added"}],
                 [{"filename": "entrants/acme.json", "status": "removed"}],
                 [{"filename": "forecasts/r/acme.json", "status": "renamed"}],
                 [{"filename": ".github/workflows/auto-merge.yml", "status": "modified"}],
@@ -240,7 +244,7 @@ def test_the_bot_merges_only_registration_and_forecast_files():
                 []):
         ok, why = auto_merge.classify(bad)
         assert not ok, bad
-    print("ok test_the_bot_merges_only_registration_and_forecast_files")
+    print("ok test_the_bot_merges_only_registration_files")
 
 
 def test_the_auto_merge_workflow_runs_in_the_base_repository_and_never_checks_out_the_pull_request():
