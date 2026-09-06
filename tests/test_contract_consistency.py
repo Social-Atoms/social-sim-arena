@@ -49,8 +49,11 @@ def test_deadline_is_exposed_and_used_by_every_site_path():
     assert "deadline" not in _read("site/submit.html").split("<script>")[1]
     assert '"deadline": _iso(_round_deadline(round_data))' in api
     site = _read("site/docs.html")
-    assert "it is not a participant due date" in site
+    # The page must say when a question closes, and must not imply the close
+    # is anything other than the round's own clock.
+    assert "Each question closes on its own clock" in site
     assert "filed before the lock" not in site
+    assert "Monday 12:00" not in site
 
 
 def test_search_corpus_and_stamp_docs_use_the_participant_deadline():

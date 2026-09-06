@@ -1384,7 +1384,7 @@ def main():
             # week. Flag on the number that means something.
             warn = "  barely moves" if mv < 0.5 else ""
             print(f"   {mark}{r['round_id']:<40} lock {r['lock_at'][:10]} "
-                  f"h={batches.horizon_days(r['lock_at']):.1f}d "
+                  f"h={batches.horizon_days(r['lock_at'], r['release_at']):.1f}d "
                   f"S/N={cell} wk={mv:5.2f}{warn}")
 
     if args.rejects:

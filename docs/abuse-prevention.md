@@ -25,7 +25,7 @@ The arena holds no key of yours, so there is nothing of yours for it to leak.
   the cron from asking twice (`ssa/agent_api.py`). The open batch is about
   twenty questions.
 - **Retries only on failure**, at the six-hourly refresh, until 30 minutes
-  before the batch deadline. A valid forecast is final and is never asked for
+  before the round closes. A valid forecast is final and is never asked for
   again (`docs/agent-api.md`, call policy).
 - **Timeouts**: 15 s to connect, 600 s to answer (`harness.TIMEOUT`).
 

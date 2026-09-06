@@ -2226,11 +2226,18 @@ def _provider_text(entrant, prompt):
     return call_provider(entrant, prompt, via=sb["via"])
 
 
-# Model forecasts are bought only inside this window before a round's deadline
-# (`refresh.model_jobs_due`; the rationale is written there). It is defined
-# here rather than in refresh because `_retrieve` needs it too and refresh
-# already imports harness.
-FILE_WINDOW_SECONDS = float(os.environ.get("SSA_FILE_WINDOW_DAYS") or "3") * 86400
+# Every entrant for a round is called inside this window before the round's
+# deadline (`refresh.model_jobs_due`; the rationale is written there), and the
+# shared context is frozen at the window's opening, so when inside it a given
+# entrant is reached does not change what it was shown.
+#
+# 24 hours, down from three days. What we hand over is frozen either way, so
+# the window only bounds what an entrant can look up *for itself* between the
+# first call and the last retry -- and three days of that is a real advantage
+# to whoever happened to be retried late. Prophet Arena reaches the same place
+# with windows of a few hours and a published reliability number instead of a
+# long tail.
+FILE_WINDOW_SECONDS = float(os.environ.get("SSA_FILE_WINDOW_HOURS") or "24") * 3600
 
 
 def _gathered_in_window(frozen, r):

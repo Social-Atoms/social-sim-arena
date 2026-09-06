@@ -233,7 +233,8 @@ def question_from_round(round_data):
         "target_type": target,
         "release_at": _require(round_data, "release_at"),
         "lock_at": lock_at,
-        "horizon_days": round(batches.horizon_days(lock_at), 3),
+        "horizon_days": round(batches.horizon_days(
+            lock_at, _require(round_data, "release_at")), 3),
         "resolve": _require(round_data, "resolve"),
     }
     if target == PROFILE_TARGET_TYPE:
@@ -306,12 +307,16 @@ def build_bundle(rounds, batch_id=None, now=None):
             "were bought and scored against their own locks, so the batch has "
             "no single deadline to publish",
             code="pre_cutover_batch")
-    lock_at = picked[0]["lock_at"]
+    # Each question closes at its own lock. The header's `deadline` is the
+    # last of them -- the moment the whole listing is closed -- and the header's
+    # `published_at` the earliest listing moment. Neither is what a submission
+    # is judged against; `question["lock_at"]` is.
+    locks = [r["lock_at"] for r in picked]
     return {
         "schema_version": BUNDLE_VERSION,
         "batch_id": batch_id,
-        "deadline": iso(batches.effective_deadline(lock_at)),
-        "published_at": iso(batches.published_at(lock_at)),
+        "deadline": iso(max(batches.effective_deadline(l) for l in locks)),
+        "published_at": iso(min(batches.published_at(l) for l in locks)),
         "questions": [question_from_round(r) for r in picked],
     }
 
@@ -339,12 +344,13 @@ def check_bundle(bundle):
             problems.append(
                 f"{q['round_id']}: locks in {batches.batch_of(lock_at)}, not "
                 f"{bundle['batch_id']}")
-        due = iso(batches.effective_deadline(lock_at))
-        if due != bundle["deadline"]:
+        due = batches.effective_deadline(lock_at)
+        header = datetime.fromisoformat(bundle["deadline"].replace("Z", "+00:00"))
+        if due > header:
             problems.append(
-                f"{q['round_id']}: its deadline is {due}, but the bundle "
-                f"declares {bundle['deadline']}")
-        want = round(batches.horizon_days(lock_at), 3)
+                f"{q['round_id']}: closes at {iso(due)}, after the bundle's "
+                f"declared close of {bundle['deadline']}")
+        want = round(batches.horizon_days(lock_at, q["release_at"]), 3)
         if abs(q["horizon_days"] - want) > 0.001:
             problems.append(
                 f"{q['round_id']}: horizon_days is {q['horizon_days']}, "
@@ -532,8 +538,9 @@ def normalise(response, bundle, now=None, entrant=None):
         if received_at >= due:
             reasons.append((
                 "late",
-                f"{rid}: {batches.batch_of(question['lock_at'])} closed at "
-                f"{iso(due)}; this payload arrived {iso(received_at)}"))
+                f"{rid}: this question closed at {iso(due)} "
+                f"({batches.batch_of(question['lock_at'])}); "
+                f"this payload arrived {iso(received_at)}"))
         if reasons:
             # `late` wins the headline because it is the one problem a
             # re-upload cannot fix, but every message is carried so a payload

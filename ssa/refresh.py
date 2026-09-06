@@ -473,21 +473,17 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
         # predate target_type and are numeric distributions.
         row["target_type"] = r.get("target_type", "continuous_normal")
         row["deadline"] = iso(batches.effective_deadline(r["lock_at"]))
-        # The batch this round belongs to, and when that batch is handed over,
-        # or null for a round that predates the weekly calendar. Published
-        # rather than derived in the browser: a page that recomputes "which
-        # Monday" owns a second copy of `ssa/batches.py`, and the two would
-        # drift the first time the calendar moved. Null is load-bearing -- a
-        # pre-cutover round's deadline is its own lock, so grouping those by
-        # deadline invents one batch per round.
-        if batches.governed_by_batch(r["lock_at"]):
-            row["batch_id"] = batches.batch_of(r["lock_at"])
-            row["published_at"] = iso(batches.published_at(r["lock_at"]))
-            row["horizon_days"] = round(batches.horizon_days(r["lock_at"]), 3)
-        else:
-            row["batch_id"] = None
-            row["published_at"] = None
-            row["horizon_days"] = None
+        # When this round is listed, and which week it displays under. The
+        # deadline is its own lock; the week is only how the site groups it,
+        # and is null for a round older than the calendar. Published rather
+        # than derived in the browser: a page that recomputes "which Monday"
+        # owns a second copy of `ssa/batches.py` and drifts the first time the
+        # calendar moves.
+        row["published_at"] = iso(batches.published_at(r["lock_at"]))
+        row["horizon_days"] = round(
+            batches.horizon_days(r["lock_at"], r["release_at"]), 3)
+        row["batch_id"] = (batches.batch_of(r["lock_at"])
+                           if batches.governed_by_batch(r["lock_at"]) else None)
         # What the question is *about*, as opposed to what shape its answer
         # takes (`target_type`) or who published the figure (`tracker`). The
         # board groups on this, and it is published rather than derived in the
@@ -701,7 +697,12 @@ LOCK_MARGIN_SECONDS = 30 * 60
 # turn cannot run before the window opens. FILE_WINDOW_SECONDS lives in
 # harness because `_retrieve` and `filed_in_window` need it too.
 FILE_WINDOW_SECONDS = harness.FILE_WINDOW_SECONDS
-BUY_BY_SECONDS = float(os.environ.get("SSA_BUY_BY_DAYS") or "2") * 86400
+# The point inside the window after which an unstamped pre-window draft stands
+# rather than being replaced. Derived from the window rather than set beside
+# it: the two used to be three days and two days, and a window shorter than
+# the boundary silently means "never replace a draft".
+BUY_BY_SECONDS = float(os.environ.get("SSA_BUY_BY_SECONDS")
+                       or FILE_WINDOW_SECONDS / 2)
 
 
 def model_jobs_due(r, now):

@@ -131,23 +131,22 @@ registration open, and `tools/probe_agent_api.py` is the check instead.
 
 ## Call and deadline policy
 
-- The first call is due between 72 and 48 hours before the round's effective
-  participant deadline (the weekly batch deadline after the dated cutover;
-  `lock_at` for older rounds).
+- **A round closes at its own `lock_at`.** That is the moment an answer stops
+  counting, and the moment the null freezes. It is `release − 48h` for most
+  rounds and deliberately earlier for the ones that ask about a period rather
+  than a moment — see [`docs/submission-window.md`](submission-window.md).
+- **Your endpoint is called in the 24 hours before that close**, and so is
+  every other entrant's. The context in the request is frozen at the window's
+  opening, so being called first or last inside it changes nothing you see.
 - The current runner uses a 15-second connection timeout and a 600-second read
-  timeout.
+  timeout, and reads at most 1 MB of reply.
 - A valid forecast filed in that window is final and is never called again.
-- A missing or invalid forecast is retried by the existing six-hourly refresh,
-  rather than a second retry service, until 30 minutes before that deadline.
-- HTTP/authentication errors, timeouts, malformed JSON, and schema failures are
-  recorded as failed attempts. They never create a forecast.
+- A failed call is retried by the six-hourly refresh until 30 minutes before
+  the close; three consecutive failures in one run stop that run's attempts.
+- HTTP errors, timeouts, malformed JSON, and schema failures are recorded as
+  failed attempts. They never create a forecast.
 - Every request is idempotent by entrant, round, and input hash.
-- The server's receipt time controls the deadline. Client timestamps are ignored.
-
-The moment an endpoint's forecasts are due is the **batch deadline**, not the
-round's `lock_at` — see [`docs/submission-window.md`](submission-window.md).
-The call window above is the arena's buying schedule. It ends before the same
-participant-visible deadline applied to uploads and pull requests.
+- The server's receipt time controls lateness. Client timestamps are ignored.
 
 ## Contract test
 

@@ -262,16 +262,17 @@ def test_every_round_shape_builds_a_valid_envelope():
     print("ok test_every_round_shape_builds_a_valid_envelope")
 
 
-def test_the_envelope_states_the_participant_deadline_not_our_lock():
-    """A round locks 0 to 7 days after the deadline its answers were due. An
-    envelope carrying the later moment tells an endpoint it has until Wednesday
-    when its answer stopped counting on Monday."""
+def test_the_envelope_states_the_moment_an_answer_stops_counting():
+    """The envelope carries the moment an answer stops counting, which is the
+    round's own close. It is read straight from `batches.effective_deadline`
+    rather than copied from the season file, so a change to the rule reaches
+    the endpoint instead of only the validator."""
     r = _round("civiqs-2026-w38-approval")
     env = agent_api.build_envelope("acme-forecast", r)
     due = batches.effective_deadline(r["lock_at"])
     assert env["round"]["lock_at"] == due.strftime("%Y-%m-%dT%H:%M:%SZ")
-    assert env["round"]["lock_at"] < r["lock_at"], \
-        "the fixture must be a round whose lock is after its deadline"
+    assert env["round"]["lock_at"] == r["lock_at"], \
+        "the envelope must state the round's own close"
     print("ok test_the_envelope_states_the_participant_deadline_not_our_lock")
 
 
@@ -580,10 +581,10 @@ def test_the_refresh_loop_files_a_participant_with_our_models_removed():
     season = json.load(open(os.path.join(ROOT, "questions", "season0.json")))
     scalar = next(x for x in season["rounds"]
                   if x.get("target_type", "continuous_normal") == "continuous_normal")
-    # An open round inside the buy window: the loop calls an entrant only
-    # between 72 h and 30 min before the deadline, so lock is 60 h after `now`.
+    # An open round inside the call window: every entrant is called between
+    # 24 h and 30 min before the round closes, so the close is 12 h after `now`.
     now = dt.datetime(2026, 9, 1, tzinfo=dt.timezone.utc)
-    r = dict(scalar, lock_at="2026-09-03T12:00:00Z", release_at="2026-09-05T12:00:00Z",
+    r = dict(scalar, lock_at="2026-09-02T00:00:00Z", release_at="2026-09-04T00:00:00Z",
              release_estimated=True)
     series = {r["series"]: [{"date": f"2026-08-{d:02d}", "value": 40.0 + d / 10} for d in range(1, 29)]}
     scratch = tempfile.mkdtemp(prefix="ssa-loop-")
@@ -706,7 +707,7 @@ if __name__ == "__main__":
     test_a_participant_request_is_signed_over_the_bytes_sent()
     test_a_participant_has_no_standby_and_no_base_override()
     test_every_round_shape_builds_a_valid_envelope()
-    test_the_envelope_states_the_participant_deadline_not_our_lock()
+    test_the_envelope_states_the_moment_an_answer_stops_counting()
     test_the_request_id_is_stable_so_a_retry_is_the_same_question()
     test_a_reply_that_is_not_the_contract_is_refused()
     test_a_participant_may_answer_with_quantiles_on_either_shape()

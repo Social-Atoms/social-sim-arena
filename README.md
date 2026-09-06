@@ -62,10 +62,11 @@ backtest/     committed evidence of the model backtest (runs/*.jsonl)
 
 Start at [`site/submit.html`](site/submit.html) or [`docs/agent-api.md`](docs/agent-api.md).
 
-**One deadline a week: Monday 12:00Z.** Every round due at that moment is
-published together, a week ahead, as one bundle. A round's own `lock_at`
-(`release − 48h`) is the arena's clock and falls 0 to 7 days later; it is never
-a participant's deadline. See [`docs/submission-window.md`](docs/submission-window.md).
+**Every question closes on its own clock**, at its `lock_at` — `release − 48h`
+for 94 of the 116 rounds, and deliberately earlier for the 22 that ask about a
+period rather than a moment. It is listed a week before it closes, and your
+endpoint is called in the 24 hours before that. See
+[`docs/submission-window.md`](docs/submission-window.md).
 
 One route: **we call you.** You register one HTTPS endpoint by pull request
 (`site/submit.html` builds the file after your endpoint passes the browser

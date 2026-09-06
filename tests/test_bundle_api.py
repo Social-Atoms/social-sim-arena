@@ -36,9 +36,15 @@ def read(name):
         return json.load(fh)
 
 
+def _locks(bundle_doc):
+    return [datetime.fromisoformat(q["lock_at"].replace("Z", "+00:00"))
+            for q in bundle_doc["questions"]]
+
+
 def before_deadline(bundle_doc):
-    due = datetime.fromisoformat(bundle_doc["deadline"].replace("Z", "+00:00"))
-    return due - timedelta(days=2)
+    """A moment every question in the bundle is still open at: each closes at
+    its own lock, so this is before the earliest of them."""
+    return min(_locks(bundle_doc)) - timedelta(days=2)
 
 
 class BundleUpload(unittest.TestCase):
@@ -197,8 +203,8 @@ class BundleUpload(unittest.TestCase):
         self.assertEqual("submission_storage_unavailable", body["error"]["code"])
 
     def test_a_late_upload_is_receipted_with_nothing_accepted(self):
-        due = datetime.fromisoformat(
-            self.bundle["deadline"].replace("Z", "+00:00"))
+        # Past the last question's close, so every answer in the file is late.
+        due = max(_locks(self.bundle))
         status, payload = self.upload(now=due + timedelta(seconds=1))
         self.assertEqual(200, status)
         self.assertEqual(0, payload["receipt"]["accepted"])

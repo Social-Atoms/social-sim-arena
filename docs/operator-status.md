@@ -89,6 +89,6 @@ PYTHONPATH=. python tests/test_reliability.py
 It injects source 403 with and without an archive, empty-message timeouts,
 stale HTTP 200, malformed extraction, scalar and ranking archive fallbacks,
 provider 429/401 and timeout, route fallback, partial model success, spend
-withholding, and a missed batch deadline. It also proves source/round
+withholding, and a round that closed with nothing filed. It also proves source/round
 isolation, UMich composite integrity, deterministic output, second-pass state
 carry, MOCK exclusion, and the web-backtest refusals.

@@ -81,14 +81,14 @@ def batch_deadline(lock_at):
 
 
 def effective_deadline(lock_at):
-    """When a submission for this round must be in.
+    """When a submission for this round must be in: the round's own lock.
 
-    The batch deadline once the cutover applies, the round's own lock before
-    it. Rounds that closed under the per-round rule keep it: moving their
-    deadline now would invalidate forecasts already filed and scored.
+    Mirrors `ssa.batches.effective_deadline`, which carries the reasoning. The
+    weekly batch deadline that briefly sat here made the horizon a property of
+    the calendar rather than of the question -- two rounds on one board
+    forecast a day and a month ahead of their answers.
     """
-    due = batch_deadline(lock_at)
-    return due if due >= BATCH_FIRST_DEADLINE else lock_at
+    return lock_at
 
 
 def fail(msg):
