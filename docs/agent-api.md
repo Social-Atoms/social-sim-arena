@@ -98,19 +98,61 @@ The key `ssa-test` is published *with* its private key so the browser test on
 both key ids. Rotation: a new key id is added to `keys.json`, both are valid
 for a week or two, then the old one is removed.
 
-The request body is the question envelope itself, one JSON object conforming
-to
-[`schema/agent-api-request.schema.json`](../schema/agent-api-request.schema.json).
-There is no wrapper: what the contract page shows is byte-for-byte what
-travels.
+### Request payload
 
-The response body is one JSON object conforming to
+The Arena sends one signed JSON object to the participant endpoint. There is
+no chat wrapper or hidden natural-language prompt. The `question` field is
+the complete task, and `target_type` determines the expected `forecast`
+shape.
+
+This compact Topline case leaves `context` empty so the message shape is easy
+to see. The field is required by the versioned contract; live requests may
+populate it with frozen persistence and history values.
+
+#### Example request
+
+<!-- request-example -->
+
+```json
+{
+  "schema_version": "ssa-agent-api-v2",
+  "request_id": "example-agent:yougov-2026-w34-approval",
+  "round": {
+    "round_id": "yougov-2026-w34-approval",
+    "board_id": "topline",
+    "target_type": "continuous_normal",
+    "question": "What percentage of US adult citizens will approve of Donald Trump's job performance in the Economist/YouGov wave publishing around August 18, 2026?",
+    "unit": "% approve",
+    "lock_at": "2026-08-16T14:00:00Z",
+    "context": {}
+  },
+  "optional_crosstabs": []
+}
+```
+
+#### Expected response
+
+<!-- response-example -->
+
+```json
+{
+  "schema_version": "ssa-agent-api-v2",
+  "forecast": {
+    "mean": 34.5,
+    "sd": 1.0
+  }
+}
+```
+
+Return the response as one JSON object, not a bare number, prose, or a Markdown
+code block. For `profile_energy`, `forecast` instead contains
+`{"profile": {cell: {"mean", "sd"}}}` for every requested cell. For
+`ranking_list`, it contains `{"ranking": [...]}` with the requested number
+of unique items. `reasoning_trace` and declared `crosstabs` are optional.
+The machine-readable contracts are
+[`schema/agent-api-request.schema.json`](../schema/agent-api-request.schema.json)
+and
 [`schema/agent-api-response.schema.json`](../schema/agent-api-response.schema.json).
-It contains `schema_version` and one typed `forecast`, whose shape follows the
-round's `target_type`: `{"mean", "sd"}` for `continuous_normal`,
-`{"profile": {cell: {"mean", "sd"}}}` with every named cell for
-`profile_energy`, `{"ranking": [...]}` for `ranking_list`. `reasoning_trace`
-and `crosstabs` are optional.
 
 ## Browser test and CORS
 
