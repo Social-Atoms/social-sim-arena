@@ -320,11 +320,12 @@ def frozen_history(r, obs):
     the measured week lands in the archive the persistence null would be the
     very list it is scored against.
 
-    The freeze is `batches.freeze_at`, not `lock_at` -- the same correction
-    `profile_round.frozen_history` needed. The two were one instant until the
-    weekly batch calendar separated them, and a null frozen at the lock reads
-    series its entrants could not. `freeze_at` returns the lock for rounds that
-    predate the cutover, so nothing already scored moves.
+    **The date-level boundary only**, exactly as in
+    `profile_round.frozen_history`: no week dated on or after the round's close
+    is in the null. About one archive in seven lands inside the call window,
+    where a date cannot see it, so `refresh.attach_ranking` freezes the
+    observations by observation time on top of this and falls back to it for
+    rounds frozen before that existed.
     """
     lock_date = batches.freeze_at(r["lock_at"]).strftime("%Y-%m-%d")
     return [o for o in (obs or []) if o["date"] < lock_date]

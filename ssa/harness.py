@@ -721,9 +721,10 @@ NEWS_BLOCK = (
 #              with no history to reason from is not forecasting.
 #   recent10   the last ten releases, the same history the nulls read. The
 #              like-for-like comparison against persistence.
-#   news       recent10 plus a fixed news corpus frozen at the lock -- the same
-#              text for every entrant, archived, reproducible. The auditable
-#              version of "give it real-world information".
+#   news       recent10 plus a fixed news corpus frozen when the call window
+#              opened -- the same text for every entrant, archived,
+#              reproducible, and the same instant the nulls freeze at. The
+#              auditable version of "give it real-world information".
 #   web        recent10 plus live search. Live-only; see WEB_CONTEXTS.
 CONTEXT = {"none": 0, "recent10": 10, "news": 10, "web": 10}
 DEFAULT_CONTEXT = "recent10"
