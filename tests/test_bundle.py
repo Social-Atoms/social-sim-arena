@@ -548,6 +548,40 @@ def test_the_shipped_example_response_is_what_the_example_entrant_produces():
         "examples/bundle/sandbox-response.json is stale; regenerate it"
 
 
+def test_the_open_batch_is_the_one_with_an_open_round_in_it():
+    """A batch is offered while any of its rounds can still be answered.
+
+    `next_batch_id` asked whether the batch's Monday noon was still ahead. That
+    Monday stopped being when anything closes when rounds went back to their own
+    locks, and on every day but Monday morning it is in the past -- so six days
+    in seven the week in progress was reported finished and the bundle jumped to
+    the next one, hiding the questions a participant could still answer and
+    offering ones not yet listed. Walked hour by hour across a real week rather
+    than asserted at one instant, because the bug was invisible at the one
+    instant anybody checked.
+    """
+    rounds = [
+        {"round_id": "a", "lock_at": "2026-09-16T14:00:00Z"},   # Wednesday
+        {"round_id": "b", "lock_at": "2026-09-20T14:00:00Z"},   # Sunday
+        {"round_id": "c", "lock_at": "2026-09-23T14:00:00Z"},   # next week
+    ]
+    this_week = batches.batch_of("2026-09-16T14:00:00Z")
+    next_week = batches.batch_of("2026-09-23T14:00:00Z")
+    assert this_week != next_week
+
+    start = datetime(2026, 9, 14, 13, tzinfo=timezone.utc)      # Monday, 13:00Z
+    for hours in range(0, 24 * 6):
+        now = start + timedelta(hours=hours)
+        got = bundle.next_batch_id(rounds, now)
+        want = this_week if now < batches.effective_deadline("2026-09-20T14:00:00Z") \
+            else next_week
+        assert got == want, f"{now:%Y-%m-%d %H:%MZ}: offered {got}, wanted {want}"
+
+    # And when the last round of a batch has closed, the batch is done.
+    after = datetime(2026, 9, 20, 15, tzinfo=timezone.utc)
+    assert bundle.next_batch_id(rounds, after) == next_week
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:

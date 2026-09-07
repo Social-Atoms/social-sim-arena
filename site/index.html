@@ -1263,24 +1263,29 @@ function roundsList(data){
 function renderWeekly(data){
   const host=document.getElementById('weekly-content');
   const now=Date.now();
-  const open=(data.rounds||[]).filter(r=>r.status==='open'&&Date.parse(deadlineOf(r))>now);
-  if(!open.length){host.innerHTML='<div class="week-card"><h3>Nothing is open</h3><p>Questions appear here a week before they close.</p></div>';return;}
   // Each question closes at its own moment, so the week is a calendar rather
   // than a single deadline: what closes each day, and what is answered each day.
   const dayKey=iso=>new Date(iso).toISOString().slice(0,10);
   const dayName=key=>new Date(key+'T12:00:00Z').toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
-  const soonest=open.map(deadlineOf).sort()[0];
   // The grid runs three weeks from the Monday of this one, and the count under
   // the heading counts what the grid shows rather than a different window.
   const gridFrom=(()=>{ const x=new Date(); x.setUTCHours(0,0,0,0);
     x.setUTCDate(x.getUTCDate()-((x.getUTCDay()+6)%7)); return x; })();
   const gridTo=new Date(gridFrom.getTime()+21*86400000);
   const inGrid=iso=>{ const t=Date.parse(iso); return t>=gridFrom.getTime()&&t<gridTo.getTime(); };
+  const open=(data.rounds||[]).filter(r=>r.status==='open'&&Date.parse(deadlineOf(r))>now);
+  // Answers land whatever the question's status is. Keyed on `open`, the
+  // calendar showed nothing arriving for any question that had already closed
+  // -- which by Wednesday is most of the week's answers, and is exactly what a
+  // visitor mid-week is looking at the calendar to find.
+  const landing=(data.rounds||[]).filter(r=>r.release_at&&inGrid(r.release_at));
+  if(!open.length&&!landing.length){host.innerHTML='<div class="week-card"><h3>Nothing is open</h3><p>Questions appear here a week before they close.</p></div>';return;}
+  const soonest=open.map(deadlineOf).sort()[0];
   const week=open.filter(r=>inGrid(deadlineOf(r)));
   document.getElementById('weekly-title').textContent='What closes when';
   const closesBy={},releasesBy={};
   week.forEach(r=>{ (closesBy[dayKey(deadlineOf(r))] ||= []).push(r); });
-  open.forEach(r=>{ if(inGrid(r.release_at)) (releasesBy[dayKey(r.release_at)] ||= []).push(r); });
+  landing.forEach(r=>{ (releasesBy[dayKey(r.release_at)] ||= []).push(r); });
   // A real calendar: seven columns, two weeks, empty days left empty. A list
   // of only the busy days hides the shape the page exists to show -- that the
   // questions are spread across the week rather than piled on one deadline.
@@ -1332,8 +1337,8 @@ function renderWeekly(data){
     for(let i=0;i<7;i++){ const d=new Date(first); d.setUTCDate(first.getUTCDate()+offset*7+i); out+=cell(d); }
     return out;
   };
-  const ms=Date.parse(soonest)-now, dd=Math.floor(ms/86400000), hh=Math.floor(ms%86400000/3600000), mm=Math.floor(ms%3600000/60000);
-  const nextIn=ms>0?(dd?dd+'d ':'')+hh+'h '+mm+'m':'closing now';
+  const ms=soonest?Date.parse(soonest)-now:0, dd=Math.floor(ms/86400000), hh=Math.floor(ms%86400000/3600000), mm=Math.floor(ms%3600000/60000);
+  const nextIn=!soonest?'nothing open':ms>0?(dd?dd+'d ':'')+hh+'h '+mm+'m':'closing now';
   const bar=(rows)=>{ const max=Math.max(1,...rows.map(x=>x.n)); return rows.map(x=>'<div class="frow"><span class="fn" title="'+esc(x.label)+'">'+esc(x.label)+'</span><span class="fb"><i style="width:'+Math.round(100*x.n/max)+'%"></i></span><span class="fv">'+x.n+'</span></div>').join(''); };
   const fam=TASK_GROUPS.map(g=>({label:g.label,n:week.filter(r=>taskForRound(r).group===g.id).length})).filter(x=>x.n);
   const shape=[['number',r=>(r.target_type||'continuous_normal')==='continuous_normal'],['population profile',r=>r.target_type==='profile_energy'],['ranking',r=>r.target_type==='ranking_list']]

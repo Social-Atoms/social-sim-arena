@@ -85,6 +85,28 @@ if (batchIds.size) {
 } else if (!/predates the weekly calendar/.test(batchBody)) {
   problems.push('no round carries a batch_id and the calendar does not say so');
 }
+// A batch is finished when its LAST question closes. Keyed on the first,
+// `batch-2026-09-28` went grey and dropped off the calendar on 09-30 with
+// eight of its twelve questions still open, telling a participant the week was
+// over while the arena was still calling their endpoint for it.
+{
+  const now = Date.now();
+  const closeOf = r => r.deadline || r.lock_at;
+  for (const row of batchBody.split('</tr>')) {
+    const id = (row.match(/batch-\d{4}-\d{2}-\d{2}/) || [])[0];
+    if (!id) continue;
+    const rs = (data.rounds || []).filter(r => r.batch_id === id);
+    const openStill = rs.filter(r => Date.parse(closeOf(r)) > now);
+    if (openStill.length && />closed</.test(row)) {
+      problems.push(`${id} is shown as closed and ${openStill.length} of its `
+        + `${rs.length} questions are still open`);
+    }
+    if (!openStill.length && rs.length && !/>closed</.test(row)) {
+      problems.push(`${id} has no open question left and is not shown as closed`);
+    }
+  }
+}
+
 console.log(`weekly calendar: ${batchIds.size} batches, ${batchRows} rows`);
 
 // Source freshness: published since the reliability work landed, rendered

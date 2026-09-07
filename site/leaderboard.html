@@ -474,19 +474,33 @@ function render(data){
   // a last one, not "the deadline". `rs[0]` was whichever round happened to
   // sort first, which on batch-2026-09-28 advertised 10-04 while four of its
   // questions closed 09-30 -- later than the truth, the dangerous direction.
-  const dueOf = rs => rs.map(r => r.deadline || r.lock_at).sort()[0];
-  const lastDueOf = rs => rs.map(r => r.deadline || r.lock_at).sort().slice(-1)[0];
+  const closesOf = rs => rs.map(r => r.deadline || r.lock_at).sort();
+  const dueOf = rs => closesOf(rs)[0];
+  const lastDueOf = rs => closesOf(rs).slice(-1)[0];
+  // The next close still ahead. A batch spends most of its week part closed,
+  // and a countdown to the *first* close runs negative the moment one question
+  // shuts while eleven are still open.
+  const nextDueOf = rs =>
+    closesOf(rs).find(d => Date.parse(d) > nowMs) || lastDueOf(rs);
+  // A batch is done when its LAST question closes, not its first. Keyed on the
+  // first, `batch-2026-09-28` went grey and dropped off the calendar on 09-30
+  // with eight of its twelve questions still open and answerable.
+  const isDone = rs => Date.parse(lastDueOf(rs)) <= nowMs;
+  // The earliest publication in the batch. `rs[0]` was whichever round happened
+  // to sort first in the payload -- the same accident the close dates were
+  // already fixed for, left behind on this one.
+  const pubOf = rs => rs.map(r => r.published_at).filter(Boolean).sort()[0] || null;
   const all = [...byBatch.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   // Two closed batches for context, then everything ahead. A calendar that
   // shows the whole season pushes the open one off the first screen.
-  const aheadCount = all.filter(([, rs]) => Date.parse(dueOf(rs)) > nowMs).length;
+  const aheadCount = all.filter(([, rs]) => !isDone(rs)).length;
   const batchRows = all.slice(Math.max(0, all.length - aheadCount - 2));
   // "Open" is the batch that has been handed over and has not closed. Before
   // its publication date it exists but nobody has it yet, which is a different
   // thing to tell a participant than "you may answer this now".
   const openId = (batchRows.find(([, rs]) =>
-    Date.parse(dueOf(rs)) > nowMs
-    && (!rs[0].published_at || Date.parse(rs[0].published_at) <= nowMs)) || [null])[0];
+    !isDone(rs)
+    && (!pubOf(rs) || Date.parse(pubOf(rs)) <= nowMs)) || [null])[0];
   // ---- the open batch, stated once and plainly -------------------------
   // A visitor's first two questions are "what is being asked" and "by when".
   // Both were answerable only by reading the calendar table row by row, and
@@ -538,7 +552,7 @@ function render(data){
 
   // The batch to feature: the open one, or the next one to be handed over.
   const featured = openId
-    || (batchRows.find(([, rs]) => Date.parse(dueOf(rs)) > nowMs) || [null])[0];
+    || (batchRows.find(([, rs]) => !isDone(rs)) || [null])[0];
   const ob = document.getElementById('open-batch');
   const fx = document.getElementById('batch-facets');
   const frs = featured ? byBatch.get(featured) : null;
@@ -549,7 +563,7 @@ function render(data){
     fx.style.display = 'none';
   } else {
     const due = dueOf(frs);
-    const pub = frs[0].published_at;
+    const pub = pubOf(frs);
     const isOpen = featured === openId;
     const firstRelease = frs.map(r => r.release_at).filter(Boolean).sort()[0];
     const shapeCount = tally(frs, 'target_type');
@@ -577,12 +591,12 @@ function render(data){
       + esc(firstRelease ? utcDay(firstRelease) : '—') + '</div><div class="ob-v2">'
       + esc(firstRelease ? utcTime(firstRelease) : '') + '</div></div>'
       + '<div class="ob-cell now"><div class="ob-k">'
-      + (isOpen ? 'Closes in' : 'Opens in') + '</div><div class="ob-v" id="ob-tick">…</div>'
-      + '<div class="ob-v2">' + (isOpen ? 'then nothing more is accepted' : 'published a week ahead')
+      + (isOpen ? 'Next closes in' : 'Opens in') + '</div><div class="ob-v" id="ob-tick">…</div>'
+      + '<div class="ob-v2">' + (isOpen ? 'each question closes on its own clock' : 'published a week ahead')
       + '</div></div></div>';
 
     // One clock, ticking, rather than a date the reader has to subtract from.
-    const target = Date.parse(isOpen ? due : (pub || due));
+    const target = Date.parse(isOpen ? nextDueOf(frs) : (pub || due));
     const tick = () => {
       const el = document.getElementById('ob-tick');
       if (!el) return;
@@ -649,15 +663,16 @@ function render(data){
     const horizon = hs.length
       ? (Math.min(...hs).toFixed(1) + '–' + Math.max(...hs).toFixed(1) + 'd')
       : '·';
-    const ms = Date.parse(due) - nowMs;
+    const ms = Date.parse(nextDueOf(rs)) - nowMs;
     const isOpen = batchId === openId;
-    const pub = rs[0].published_at;
-    const state = ms <= 0 ? 'closed'
+    const pub = pubOf(rs);
+    const done = isDone(rs);
+    const state = done ? 'closed'
       : isOpen ? 'open now'
       : 'hands over ' + (pub ? utcDay(pub) : utcDay(due));
     // UTC, like the card above and like every deadline in the docs. The table
     // used the reader's zone, which put 05:00 next to a rule that says 12:00.
-    const when = isOpen ? 'in ' + fmtCountdown(ms)
+    const when = isOpen ? 'next in ' + fmtCountdown(ms)
       : (utcDay(due) === utcDay(lastDueOf(rs))
           ? utcDay(due) + ' · ' + utcTime(due)
           : utcDay(due) + ' – ' + utcDay(lastDueOf(rs)));
@@ -668,7 +683,7 @@ function render(data){
       + '<td class="num">' + rs.length + '</td>'
       + '<td>' + chips + '</td>'
       + '<td class="num" style="color:var(--mut);">' + esc(horizon) + '</td>'
-      + '<td><span class="status ' + (isOpen ? 'open' : ms > 0 ? 'awaiting_resolution' : 'resolved')
+      + '<td><span class="status ' + (isOpen ? 'open' : done ? 'resolved' : 'awaiting_resolution')
       + '"><span class="d"></span>' + esc(state) + '</span></td></tr>';
   }).join('') || '<tr><td colspan="6" style="color:var(--mut);">no batched rounds in this payload — every round here predates the weekly calendar</td></tr>';
 

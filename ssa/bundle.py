@@ -266,12 +266,21 @@ def batch_ids(rounds):
 
 
 def next_batch_id(rounds, now=None):
-    """The earliest batch whose deadline has not passed. Raises if none has."""
+    """The earliest batch that still has an open round. Raises if none does.
+
+    **Open is per round, not per batch.** This used to ask whether
+    `deadline_for` -- the Monday noon that groups the week -- was still ahead,
+    which stopped being the moment anything closes when rounds went back to
+    their own locks. On any day but Monday morning that Monday is in the past,
+    so the week in progress was reported as finished and the bundle skipped to
+    the next one: six days in seven it offered a batch whose rounds were not
+    open yet while hiding the ones a participant could still answer.
+    """
     now = _now(now)
     open_ids = sorted({
         batches.batch_of(r["lock_at"]) for r in rounds
         if batches.governed_by_batch(r["lock_at"])
-        and batches.deadline_for(r["lock_at"]) > now
+        and batches.effective_deadline(r["lock_at"]) > now
     })
     if not open_ids:
         raise BundleError(
