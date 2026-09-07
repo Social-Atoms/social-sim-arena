@@ -187,6 +187,50 @@ def test_every_committed_bundle_is_the_byte_identical_reviewed_projection():
         assert bundle.check_bundle(rebuilt) == [], (name, bundle.check_bundle(rebuilt))
 
 
+def test_a_withdrawn_round_keeps_its_evidence_and_leaves_the_season():
+    """`questions/legacy/` is where a round goes when it is pulled before its
+    lock. Three properties, because dropping any one of them turns a withdrawal
+    into a quiet deletion:
+
+    - it is gone from the season, so nothing calls an endpoint for it again;
+    - it says when and why it was withdrawn, in the file itself;
+    - whatever was already bought for it is still on disk. A round pulled after
+      four entrants answered it cost four calls; deleting those files would
+      throw away the only record that they were made.
+
+    The precedent this replaces: `yougov-xtab-2026-09` was withdrawn in
+    September by deleting the round, its forecast and its lock snapshot in one
+    commit, which left no trace of the question ever having been asked.
+    """
+    import glob
+    legacy = sorted(glob.glob(os.path.join(ROOT, "questions", "legacy", "*.json")))
+    if not legacy:
+        print("ok test_a_withdrawn_round_keeps_its_evidence_and_leaves_the_season "
+              "(nothing withdrawn yet)")
+        return
+    with open(os.path.join(ROOT, "questions", "season0.json")) as fh:
+        live = {r["round_id"] for r in json.load(fh)["rounds"]}
+    for path in legacy:
+        with open(path) as fh:
+            r = json.load(fh)
+        rid = r["round_id"]
+        assert rid == os.path.basename(path)[:-5], path
+        assert rid not in live, f"{rid} is in questions/legacy and still in the season"
+        assert r.get("withdrawn_at"), f"{rid} does not say when it was withdrawn"
+        assert len(r.get("withdrawn_reason") or "") > 40, \
+            f"{rid} does not say why it was withdrawn"
+        for keep in (os.path.join(ROOT, "forecasts", rid),
+                     os.path.join(ROOT, "locks", rid + ".json")):
+            if os.path.exists(keep):
+                continue
+            # A round withdrawn before anything was filed has neither, which is
+            # fine; a round that had forecasts must still have them.
+            assert not glob.glob(os.path.join(ROOT, "forecasts", rid, "*.json")), \
+                f"{rid}: forecasts were deleted with the round"
+    print(f"ok test_a_withdrawn_round_keeps_its_evidence_and_leaves_the_season "
+          f"({len(legacy)} withdrawn)")
+
+
 if __name__ == "__main__":
     tests = [value for name, value in sorted(globals().items())
              if name.startswith("test_")]
