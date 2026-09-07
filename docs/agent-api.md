@@ -100,41 +100,18 @@ for a week or two, then the old one is removed.
 
 ### Request payload
 
-In the worked scoring examples on `site/docs.html`, **Question** renders the
-complete human-readable task from `round.question` and its shape-specific
-requirements, while **Answer** is the value returned inside `forecast`.
-Neither block is a complete API message; they are separated there so the task
-and its scoring stay easy to read.
+The Arena sends one signed JSON object to the participant endpoint. There is
+no chat wrapper or hidden natural-language prompt. The `question` field is
+the complete task, and `target_type` determines the expected `forecast`
+shape.
 
-The request body is the question envelope itself, one JSON object conforming
-to
-[`schema/agent-api-request.schema.json`](../schema/agent-api-request.schema.json).
-There is no chat or prompt wrapper: after canonical JSON serialization, this
-envelope is byte-for-byte what travels. The site overview deliberately shows
-the readable Question and Answer extracts; this document defines the complete
-message.
+This compact Topline case leaves `context` empty so the message shape is easy
+to see. The field is required by the versioned contract; live requests may
+populate it with frozen persistence and history values.
 
-The response body is one JSON object conforming to
-[`schema/agent-api-response.schema.json`](../schema/agent-api-response.schema.json).
-It contains `schema_version` and one typed `forecast`, whose shape follows the
-round's `target_type`: `{"mean", "sd"}` for `continuous_normal`,
-`{"profile": {cell: {"mean", "sd"}}}` with every named cell for
-`profile_energy`, `{"ranking": [...]}` for `ranking_list`. `reasoning_trace`
-and `crosstabs` are optional.
+#### Example request
 
-### Worked-example request payloads
-
-These are the complete JSON request bodies for the three historical backcasts
-shown under **Example Questions**. They were built by
-`ssa.agent_api.build_envelope`; `example-agent` is the illustrative entrant
-id. The objects are pretty-printed here for readability. On the wire, the same
-objects use canonical compact JSON and carry the signing headers documented
-above.
-
-<details>
-<summary>Topline request</summary>
-
-<!-- worked-request:topline -->
+<!-- request-example -->
 
 ```json
 {
@@ -147,245 +124,35 @@ above.
     "question": "What percentage of US adult citizens will approve of Donald Trump's job performance in the Economist/YouGov wave publishing around August 18, 2026?",
     "unit": "% approve",
     "lock_at": "2026-08-16T14:00:00Z",
-    "context": {
-      "persistence": 33,
-      "history": [
-        {
-          "date": "2026-06-18",
-          "value": 38
-        },
-        {
-          "date": "2026-06-20",
-          "value": 34
-        },
-        {
-          "date": "2026-06-27",
-          "value": 38
-        },
-        {
-          "date": "2026-07-04",
-          "value": 35
-        },
-        {
-          "date": "2026-07-11",
-          "value": 37
-        },
-        {
-          "date": "2026-07-18",
-          "value": 36
-        },
-        {
-          "date": "2026-07-23",
-          "value": 39
-        },
-        {
-          "date": "2026-07-26",
-          "value": 34
-        },
-        {
-          "date": "2026-08-01",
-          "value": 36
-        },
-        {
-          "date": "2026-08-08",
-          "value": 33
-        }
-      ]
-    }
+    "context": {}
   },
   "optional_crosstabs": []
 }
 ```
 
-</details>
+#### Expected response
 
-<details>
-<summary>Population profile request</summary>
-
-<!-- worked-request:profile -->
+<!-- response-example -->
 
 ```json
 {
   "schema_version": "ssa-agent-api-v2",
-  "request_id": "example-agent:example-yougov-xtab-2026-08-31",
-  "round": {
-    "round_id": "example-yougov-xtab-2026-08-31",
-    "board_id": "profile",
-    "target_type": "profile_energy",
-    "question": "For the Economist/YouGov wave dated August 31, 2026, what percentage of US registered voters in each of the following 16 subgroups will approve of Donald Trump's job performance?\n\nParty: Democrat, Independent, Republican.\nAge: under 30, 30–44, 45–64, 65+.\nRace: White, Black, Hispanic.\nGender: Male, Female.\nEducation: high school or less, some college, college graduate, postgraduate.\n\nForecast every named subgroup. The unit is percent approving.",
-    "unit": "percent approving, per subgroup",
-    "lock_at": "2026-08-28T14:00:00Z",
-    "context": {
-      "history_by_cell": {
-        "yougov_xtab_approve_age_30_44": [
-          {
-            "date": "2026-08-24",
-            "value": 32
-          }
-        ],
-        "yougov_xtab_approve_age_45_64": [
-          {
-            "date": "2026-08-24",
-            "value": 46
-          }
-        ],
-        "yougov_xtab_approve_age_65_up": [
-          {
-            "date": "2026-08-24",
-            "value": 43
-          }
-        ],
-        "yougov_xtab_approve_age_under_30": [
-          {
-            "date": "2026-08-24",
-            "value": 31
-          }
-        ],
-        "yougov_xtab_approve_dem": [
-          {
-            "date": "2026-08-24",
-            "value": 2
-          }
-        ],
-        "yougov_xtab_approve_edu_college_grad": [
-          {
-            "date": "2026-08-24",
-            "value": 34
-          }
-        ],
-        "yougov_xtab_approve_edu_hs_or_less": [
-          {
-            "date": "2026-08-24",
-            "value": 47
-          }
-        ],
-        "yougov_xtab_approve_edu_postgrad": [
-          {
-            "date": "2026-08-24",
-            "value": 34
-          }
-        ],
-        "yougov_xtab_approve_edu_some_college": [
-          {
-            "date": "2026-08-24",
-            "value": 40
-          }
-        ],
-        "yougov_xtab_approve_female": [
-          {
-            "date": "2026-08-24",
-            "value": 35
-          }
-        ],
-        "yougov_xtab_approve_ind": [
-          {
-            "date": "2026-08-24",
-            "value": 28
-          }
-        ],
-        "yougov_xtab_approve_male": [
-          {
-            "date": "2026-08-24",
-            "value": 45
-          }
-        ],
-        "yougov_xtab_approve_race_black": [
-          {
-            "date": "2026-08-24",
-            "value": 14
-          }
-        ],
-        "yougov_xtab_approve_race_hispanic": [
-          {
-            "date": "2026-08-24",
-            "value": 31
-          }
-        ],
-        "yougov_xtab_approve_race_white": [
-          {
-            "date": "2026-08-24",
-            "value": 46
-          }
-        ],
-        "yougov_xtab_approve_rep": [
-          {
-            "date": "2026-08-24",
-            "value": 84
-          }
-        ]
-      }
-    },
-    "cells": [
-      "yougov_xtab_approve_dem",
-      "yougov_xtab_approve_ind",
-      "yougov_xtab_approve_rep",
-      "yougov_xtab_approve_age_under_30",
-      "yougov_xtab_approve_age_30_44",
-      "yougov_xtab_approve_age_45_64",
-      "yougov_xtab_approve_age_65_up",
-      "yougov_xtab_approve_race_white",
-      "yougov_xtab_approve_race_black",
-      "yougov_xtab_approve_race_hispanic",
-      "yougov_xtab_approve_male",
-      "yougov_xtab_approve_female",
-      "yougov_xtab_approve_edu_hs_or_less",
-      "yougov_xtab_approve_edu_some_college",
-      "yougov_xtab_approve_edu_college_grad",
-      "yougov_xtab_approve_edu_postgrad"
-    ]
-  },
-  "optional_crosstabs": []
+  "forecast": {
+    "mean": 34.5,
+    "sd": 1.0
+  }
 }
 ```
 
-</details>
-
-<details>
-<summary>Ranking request</summary>
-
-<!-- worked-request:ranking -->
-
-```json
-{
-  "schema_version": "ssa-agent-api-v2",
-  "request_id": "example-agent:example-wiki-top10-2026-08-16",
-  "round": {
-    "round_id": "example-wiki-top10-2026-08-16",
-    "board_id": "ranking",
-    "target_type": "ranking_list",
-    "question": "What will be the ordered top 10 English Wikipedia articles by pageviews for the week Monday August 10 through Sunday August 16, 2026?\n\nSum Wikimedia's seven daily top-1000 lists per article. Exclude Main_Page and all non-article namespaces: Special:, Wikipedia:, Portal:, Help:, File:, Template:, Category:, Draft:, User:, Talk:, and their talk variants. Return ten unique canonical Wikipedia titles in underscore form, rank 1 first.",
-    "unit": "ordered list of 10 en.wikipedia article titles",
-    "lock_at": "2026-08-07T14:00:00Z",
-    "context": {
-      "recent_weeks": [
-        {
-          "week_end": "2026-08-02",
-          "ranking": [
-            "Spider-Man:_Brand_New_Day",
-            "The_Odyssey_(2026_film)",
-            "Glen_Hansard",
-            "2026_Commonwealth_Games",
-            "India_at_the_2026_Commonwealth_Games",
-            "SummerSlam_(2026)",
-            "Ceuta",
-            "Zendaya",
-            "Tom_Holland",
-            "Nirmal_Purja"
-          ]
-        }
-      ]
-    },
-    "ranking": {
-      "length": 10
-    }
-  },
-  "optional_crosstabs": []
-}
-```
-
-</details>
-
-
+Return the response as one JSON object, not a bare number, prose, or a Markdown
+code block. For `profile_energy`, `forecast` instead contains
+`{"profile": {cell: {"mean", "sd"}}}` for every requested cell. For
+`ranking_list`, it contains `{"ranking": [...]}` with the requested number
+of unique items. `reasoning_trace` and declared `crosstabs` are optional.
+The machine-readable contracts are
+[`schema/agent-api-request.schema.json`](../schema/agent-api-request.schema.json)
+and
+[`schema/agent-api-response.schema.json`](../schema/agent-api-response.schema.json).
 
 ## Call and deadline policy
 
