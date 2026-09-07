@@ -16,7 +16,7 @@ import os
 import re
 from datetime import date, datetime, timedelta, timezone
 
-from .adapters import aaii, silverbulletin, umich
+from .adapters import aaii, mc_release, silverbulletin, umich
 from . import health
 from . import provenance
 from . import reliability
@@ -2198,6 +2198,22 @@ def main():
     prov = {name: block["provenance"] for name, block in loaded.items()}
     for name, block in sorted(prov.items()):
         print(f"  {name:12s} {block['bytes']:>9,}B  sha {block['sha256'][:12]}")
+    # Morning Consult's publication times, read out of the sheet's own `url`
+    # column. Nothing downstream depends on it: it accumulates the one fact
+    # that decides whether MC can ever be scheduled automatically, and the
+    # files it dates are overwritten in place, so a day not recorded is a day
+    # lost. Never fails the run -- it is evidence, not a source.
+    if "sb_approval" in sources:
+        try:
+            _, new_mc = mc_release.update(sources["sb_approval"])
+            if new_mc:
+                dated = [r for r in new_mc if r.get("wave_label")]
+                print(f"  mc_release   {len(new_mc)} new url(s), "
+                      f"{len(dated)} dated: "
+                      f"{', '.join(r['wave_label'] for r in dated) or 'none'}")
+        except Exception as e:                 # noqa: BLE001 - evidence, not a source
+            print(f"  ! mc_release: {type(e).__name__}: {e}", file=sys.stderr)
+
     approval = (silverbulletin.approval_polls(rows=sources["sb_approval"])
                 if "sb_approval" in sources else [])
     generic = (silverbulletin.generic_ballot_polls(rows=sources["sb_generic"])
