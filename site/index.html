@@ -24,19 +24,6 @@ body{margin:0;background:var(--bg);color:var(--ink2);font-family:var(--sans);fon
 a{color:inherit;}
 
 .site-header{border-bottom:1px solid var(--line);flex:0 0 auto;}
-nav.top{border-bottom:1px solid var(--line);margin-bottom:8px;}
-nav.top .in{display:flex;align-items:center;gap:20px;min-height:54px;padding:8px 16px;flex-wrap:wrap;}
-nav.top .brand{color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:9px;white-space:nowrap;}
-nav.top .brand img{width:22px;height:22px;}
-nav.top .brand h1{margin:0;font-size:17px;font-weight:800;line-height:1.25;letter-spacing:-.015em;}
-nav.top .brand .by{color:var(--mut);font-weight:400;font-size:12px;}
-.page-tabs{display:flex;gap:2px;}
-.ptab{font-family:var(--sans);font-size:14px;font-weight:700;color:var(--ink2);background:none;border:none;border-radius:4px;padding:8px 16px;cursor:pointer;white-space:nowrap;}
-.ptab.on{background:var(--ink);color:#fff;}
-nav.top .right{margin-left:auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
-nav.top a.item{color:var(--ink2);text-decoration:none;font-size:14px;white-space:nowrap;}
-nav.top a.item:hover{color:var(--link);}
-nav.top a.cta{color:var(--link);text-decoration:underline;text-underline-offset:3px;font-size:14px;font-weight:600;white-space:nowrap;}
 
 .header-status{display:flex;align-items:center;gap:6px 18px;padding:0 16px 10px;flex-wrap:wrap;}
 .exam{display:inline-flex;gap:5px;align-items:baseline;border:1px solid #cce4d3;background:#f5faf6;color:var(--accent-ink);border-radius:4px;padding:3px 9px;font:700 12.5px/1.4 var(--sans);cursor:pointer;flex-wrap:wrap;text-align:left;}
@@ -364,12 +351,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
   .page.on{display:block;}
   #page-live.on{display:block;}
   .panel-resizer{display:none;}
-  nav.top .in{padding:10px 12px 8px;gap:10px 16px;}
-  nav.top .brand{flex:1 1 auto;}
-  .page-tabs{order:3;width:100%;}
-  .page-tabs .ptab{flex:1;}
-  nav.top .right{margin-left:auto;gap:12px;}
-  .ptab{padding:6px 12px;}
+
   .header-status{padding:0 12px 10px;gap:8px 14px;}
   .header-status .updated{margin-left:0;}
   .seg{flex-wrap:wrap;}
@@ -394,13 +376,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
   .vrow .id{min-width:0;}
   .weekly-grid{grid-template-columns:1fr;grid-template-areas:"entry" "join" "overview" "calendar";}
 }
-@media (max-width:600px){
-  nav.top .brand{width:100%;}
-  nav.top .brand h1{font-size:16px;}
-  .page-tabs{order:2;}
-  nav.top .right{order:3;width:100%;}
-  nav.top a.cta{margin-left:auto;}
-}
+
 .fchips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 12px;}
 .fchips button{font:600 11px var(--sans);letter-spacing:.02em;padding:4px 9px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink2);cursor:pointer;}
 .fchips button span{color:var(--mut);font-weight:500;}
@@ -415,21 +391,20 @@ table.lb .skill.pos{color:var(--accent-ink);}
 </style>
 <script defer src="panels.js"></script>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="stylesheet" href="typography.css?v=6c87c5c715">
+<link rel="stylesheet" href="typography.css?v=510789c691">
 </head>
 <body class="site-home">
 
 <header class="site-header">
-<nav class="top" aria-label="Main navigation">
+<nav class="top site-nav" aria-label="Main navigation">
   <div class="in">
-    <a class="brand" href="#live"><img src="logo.svg" alt=""><h1>Social Simulation Arena</h1><span class="by">by MIT</span></a>
+    <a class="brand" href="#live"><img src="logo.svg" alt=""><span class="brand-name">Social Simulation Arena</span><span class="by">by MIT</span></a>
     <div class="page-tabs">
       <button class="ptab on" data-page="live">Live</button>
       <button class="ptab" data-page="rounds">Questions</button>
       <button class="ptab" data-page="weekly">Weekly</button>
     </div>
     <div class="right">
-      <a class="item" href="https://github.com/Social-Atoms/social-sim-arena#why">Background</a>
       <a class="item" href="docs.html">Docs</a>
       <a class="item" href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a>
       <a class="cta" id="nav-submit" href="#submit" data-goto="submit">Submit your agent</a>
@@ -564,7 +539,6 @@ table.lb .skill.pos{color:var(--accent-ink);}
       <div class="vlist" id="exam-rounds"></div>
     </div></div>
   </div>
-
 
 </main>
 
@@ -1194,7 +1168,7 @@ function renderTaskHeader(data,key){
   document.getElementById('task-title').textContent = d.label;
   const rs = taskRounds(d,data).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
   const active = rs.filter(r=>r.status==='open' && Date.parse(deadlineOf(r))>Date.now());
-  document.getElementById('task-meta').innerHTML = '<span><b>Population</b> '+esc(d.population)+'</span><span><b>Cadence</b> '+esc(d.cadence)+'</span><span><b>Answer</b> '+esc(d.shape)+'</span><span><b>Rounds</b> '+rs.length+'</span>';
+  document.getElementById('task-meta').innerHTML = '<span><b>Population</b> '+esc(d.population)+'</span><span><b>Cadence</b> '+esc(d.cadence)+'</span><span><b>Answer</b> '+esc(d.shape)+'</span><span><b>Rounds</b> <span class="numeric">'+rs.length+'</span></span>';
   const card = document.getElementById('task-question-card');
   if(key==='agg'){ card.style.display='none'; return; }
   card.style.display='';
@@ -1205,7 +1179,7 @@ function renderTaskHeader(data,key){
     return;
   }
   const due=deadlineOf(r), state=active.includes(r)?'OPEN':'LATEST';
-  document.getElementById('task-question-summary').innerHTML='<span class="replay-tag">'+state+'</span><span title="'+esc(r.round_id)+'">'+esc(questionText(r))+'</span><span style="margin-left:auto;color:var(--mut);font-weight:500;">due '+esc(fmtLocal(due))+'</span>';
+  document.getElementById('task-question-summary').innerHTML='<span class="replay-tag">'+state+'</span><span title="'+esc(r.round_id)+'">'+esc(questionText(r))+'</span><time datetime="'+esc(due)+'" style="margin-left:auto;color:var(--mut);font-weight:500;">due '+esc(fmtLocal(due))+'</time>';
   document.getElementById('task-question-body').innerHTML='<p>'+esc(r.question)+'</p><div class="qfoot">'
     +'<span>'+shapeChip(r)+(r.target_type==='profile_energy'?(r.cells||[]).length+' cells':r.target_type==='ranking_list'?'ordered list':'predictive distribution')+'</span>'
     +'<span>releases '+esc(fmtLocal(r.release_at))+'</span><span>'+esc(r.n_forecasts||0)+' forecasts filed</span>'
@@ -1381,14 +1355,19 @@ function renderBoard(mode){
     const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0)) : '<span class="pend">···</span>';
     const subSkill = '';
     const pos = arena!=null && arena>0;
-    const mockTag = s && s.mock ? ' · <span style="color:#96948d;">placeholder</span>' : '';
+    const setup = condTag(nameOf[id]);
+    const entryType = typeOf[id] || 'baseline';
+    const details = [
+      setup==='zs' ? 'Zero-shot' : setup==='r10' ? 'Recent-10' : '',
+      entryType==='llm' ? 'LLM' : entryType.charAt(0).toUpperCase()+entryType.slice(1),
+      id==='persistence' ? 'Reference' : '',
+      s && s.mock ? 'Placeholder' : ''
+    ].filter(Boolean);
     const refLine = ref && btMap[id] ? '<br><span class="type">last season '+((btMap[id].mean_skill>0?'+':'')+(btMap[id].mean_skill*100).toFixed(1))+'%</span>' : '';
     return '<tr><td class="rank">'+(rank||'·')+'</td>'
       + '<td><span class="who">'+avatar(id)
-      + '<span><b>'+esc((nameOf[id]||id).split(' (')[0])+'</b>'
-      + (condTag(nameOf[id])?' <span class="type">· '+(condTag(nameOf[id])==='zs'?'zero-shot':'recent-10')+'</span>':'')
-      + (id==='persistence'?' <span class="type">· reference</span>':'')
-      + '<br><span class="type">'+esc(typeOf[id]||'baseline')+mockTag+'</span></span></span></td>'
+      + '<span class="who-text"><b class="model-name">'+esc((nameOf[id]||id).split(' (')[0])+'</b>'
+      + '<span class="model-meta">'+details.map(detail=>'<span>'+esc(detail)+'</span>').join(' <span aria-hidden="true">·</span> ')+'</span></span></span></td>'
       + '<td class="num skill'+(pos?' pos':'')+'">'+skillTxt+subSkill+refLine+'</td>'
       + '<td class="num">'+(s && typeof s[metricKey]==='number' ? s[metricKey].toFixed(metricLabel==='Loss'||metricLabel==='Rank loss'?3:2) : '·')+'</td>'
       + '<td class="num">'+(s ? s.rounds : 0)+'</td></tr>';
@@ -1532,9 +1511,9 @@ function renderWeekly(data){
     +'<div class="week-actions"><a class="btn dark" href="submit.html">Test and register</a></div></section>'
     +'<section class="week-card week-join" aria-labelledby="week-join-title"><h3 id="week-join-title">Enter this week</h3><p>Answer any subset before the deadline; your latest answer per question counts. No minimum record: if you answered, you are on the board.</p><div class="week-actions"><a class="btn dark" href="submit.html">Add your agent</a></div></section>'
     +'<section class="week-card week-overview" aria-labelledby="week-questions-title">'
-    +'<div class="week-count"><h3 id="week-questions-title">'+batch.length+' questions</h3><span class="live">live · submissions open</span></div>'
+    +'<div class="week-count"><h3 id="week-questions-title"><span class="numeric">'+batch.length+'</span> questions</h3><span class="live">live · submissions open</span></div>'
     +'<p>The set is fixed for the week. A question whose release slips is held, never re-dated.</p>'
-    +'<div class="facets"><div class="facet"><h4>Task families</h4>'+bar(fam)+'</div><div class="facet"><h4>Answer shape</h4>'+bar(shape)+'</div><div class="facet"><h4>Resolves</h4>'+bar(days)+'</div></div>'
+    +'<div class="facets"><div class="facet"><h4>Task families</h4>'+bar(fam)+'</div><div class="facet"><h4>Answer shape</h4>'+bar(shape)+'</div><div class="facet facet-dates"><h4>Resolves</h4>'+bar(days)+'</div></div>'
     +'<div class="week-browse"><a class="go" href="#rounds/'+esc(batchId)+'">Browse all '+batch.length+' questions →</a>'
       +'<span>'+batch.reduce((n,r)=>n+(r.n_forecasts||0),0)+' forecasts filed so far</span></div>'
     +'</section>'
