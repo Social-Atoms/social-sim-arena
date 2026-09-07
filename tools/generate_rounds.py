@@ -1209,6 +1209,13 @@ def main():
                               "(YYYY-MM-DD), beyond the eight-week preview")
     ap.add_argument("--write", action="store_true",
                     help="write questions/candidates/<batch>.json")
+    # Only the tests pass this. They used to run the real command and then read
+    # the real directory back, which meant running the suite deleted whatever a
+    # reviewer had open in `questions/candidates/` and refilled it with rounds
+    # dated from the test's `--now`. A committed candidate file is somebody's
+    # working copy; a test may not touch it.
+    ap.add_argument("--out-dir", default=None,
+                    help="write somewhere other than questions/candidates")
     ap.add_argument("--rejects", action="store_true",
                     help="print every refused series with its evidence")
     ap.add_argument("--now", default=None, help="override the clock, for tests")
@@ -1394,7 +1401,7 @@ def main():
             print(f"   {sid:<32} {json.dumps(why, sort_keys=True)}")
 
     if args.write:
-        out_dir = os.path.join(ROOT, "questions", "candidates")
+        out_dir = args.out_dir or os.path.join(ROOT, "questions", "candidates")
         os.makedirs(out_dir, exist_ok=True)
         for b, rr in sorted(by_batch.items()):
             clean = [{k: v for k, v in r.items() if not k.startswith("_")}
