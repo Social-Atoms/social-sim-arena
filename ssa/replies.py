@@ -129,3 +129,93 @@ def lookup(round_id, entrant, ih, persona=None):
     except (OSError, ValueError):
         return None
     return got if isinstance(got, dict) else None
+
+
+# --- failures ---------------------------------------------------------------
+#
+# A call that produced no usable reply is evidence too, and until now it left
+# nothing behind: the exception went to the workflow log of an ephemeral runner
+# and died with it, so "the endpoint has been failing all week" was something an
+# operator could believe but not show. Worse, a call that was *cut off* -- the
+# hour cap, the 1 MB cap -- threw away the bytes that had arrived, which are the
+# only thing that distinguishes a slow endpoint from a proxy error page from a
+# body that never ends.
+#
+# Failures live under `failures/` inside the round's reply directory, so
+# `git add -A ... replies` in refresh.yml commits them along with the replies,
+# and so `lookup` can never reach one: its path is
+# `replies/<round>/<entrant>.<ih>.json`, never a subdirectory. That separation
+# is deliberate and load-bearing -- a failure record must never be replayable as
+# an answer, which is also why nothing written here carries a `reply` key.
+
+# Attempts kept per (round, entrant, input hash). A dead endpoint fails three
+# times a run and a run happens every six hours, so an outage that lasts a week
+# is bounded at the most recent twenty attempts rather than eighty files; the
+# running total is kept so the count stays honest after trimming.
+MAX_ATTEMPTS_KEPT = 20
+
+
+def failure_path(round_id, entrant, ih, persona=None):
+    name = f"{entrant}.{ih}.json" if persona is None else \
+        f"{entrant}.{ih}.{persona}.json"
+    return os.path.join(root(), round_id, "failures", name)
+
+
+def log_failure(round_id, entrant, ih, record):
+    """Append one failed attempt. Returns the path written, or None.
+
+    Read-modify-write, so the file holds the history of one call rather than
+    the last thing that went wrong. Two overlapping refreshes writing the same
+    (round, entrant, hash) can lose one attempt to last-writer-wins; that costs
+    a duplicate of a failure the other process also recorded, which is not worth
+    a lock file.
+
+    Like `log`, this never raises. It is called from an exception path, and an
+    unwritable directory must not replace the failure being reported with a
+    different one.
+    """
+    dest = failure_path(round_id, entrant, ih, record.get("persona"))
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    attempt = dict(record)
+    attempt.pop("reply", None)                   # never replayable, see above
+    attempt["logged_at"] = now
+    body = {"round_id": round_id, "entrant": entrant, "input_hash": ih,
+            "attempts_total": 0, "attempts": []}
+    try:
+        with open(dest) as f:
+            got = json.load(f)
+        if isinstance(got, dict) and isinstance(got.get("attempts"), list):
+            body["attempts"] = got["attempts"]
+            body["attempts_total"] = int(got.get("attempts_total") or
+                                         len(got["attempts"]))
+    except (OSError, ValueError, TypeError):
+        pass                                     # first failure, or unreadable
+    body["attempts_total"] += 1
+    body["attempts"] = (body["attempts"] + [attempt])[-MAX_ATTEMPTS_KEPT:]
+    body["last_failed_at"] = now
+    tmp = f"{dest}.{os.getpid()}.tmp"
+    try:
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        with open(tmp, "w") as f:
+            json.dump(body, f, indent=2, sort_keys=True)
+            f.write("\n")
+        os.replace(tmp, dest)
+    except OSError as e:
+        print(f"  ! failure log: {entrant} {round_id} {ih}: {type(e).__name__}: {e}",
+              file=sys.stderr)
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        return None
+    return dest
+
+
+def failures(round_id, entrant, ih, persona=None):
+    """The recorded attempts for one call, oldest first. Never raises."""
+    try:
+        with open(failure_path(round_id, entrant, ih, persona)) as f:
+            got = json.load(f)
+    except (OSError, ValueError):
+        return []
+    return got.get("attempts") or [] if isinstance(got, dict) else []

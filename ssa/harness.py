@@ -43,7 +43,9 @@ import concurrent.futures
 import hashlib
 import json
 import os
+import time
 import re
+import socket
 import threading
 from datetime import datetime, timezone
 
@@ -492,6 +494,13 @@ TIMEOUT = (15, 600)
 # hundred bytes; a reasoning trace a few kilobytes; a megabyte is a bug or
 # an attack, and either is refused rather than parsed.
 AGENT_MAX_REPLY_BYTES = 1_000_000
+
+# The most wall-clock one call may take, start to finish. `TIMEOUT` above is
+# per socket operation and cannot bound a call that keeps dribbling; this can.
+# An hour is generous on purpose -- a participant may be running a large model
+# behind their endpoint -- and it is still an hour rather than the six the job
+# would otherwise burn before committing nothing.
+CALL_DEADLINE_SECONDS = float(os.environ.get("SSA_CALL_DEADLINE_SECONDS") or 3600)
 
 # Two prompt variants, differing only in how much of the series the model sees.
 # Everything that defines *what number is being asked for* -- the pollster, the
@@ -1647,21 +1656,126 @@ def _call_openai(cfg, base, key, mid, prompt):
     return _extract_text(data, mid), _usage(data)
 
 
-def _read_capped(r, cap):
-    """The reply body, read no further than `cap` + 1 bytes.
+class PartialReply(RuntimeError):
+    """A call that ran out of time or space, carrying what had arrived.
 
-    An endpoint that streams forever or answers with a gigabyte costs the run
-    one megabyte, not its memory: the caller sees a body one byte over the cap
-    and refuses it. Falls back to `.content` for a response that was not
-    opened for streaming (the tests' fakes).
+    The bytes are kept because a reply that was cut off is the only evidence of
+    *how* an endpoint misbehaves -- a slow trickle, a body that never ends, a
+    proxy error page -- and throwing them away leaves an operator with nothing
+    but "it failed".
+    """
+
+    def __init__(self, message, partial=b""):
+        super().__init__(message)
+        self.partial = partial
+
+
+def _sockets_of(r):
+    """Every socket object a response might be holding, best effort.
+
+    urllib3 keeps one on the connection; `http.client` keeps the same one under
+    the original response's buffered reader. Both are private and both have
+    moved between versions, so this looks in both places and tolerates finding
+    neither.
+    """
+    raw = getattr(r, "raw", None)
+    found = []
+    for path in (("_connection", "sock"),
+                 ("_original_response", "fp", "raw", "_sock"),
+                 ("_fp", "fp", "raw", "_sock")):
+        node = raw
+        for name in path:
+            node = getattr(node, name, None)
+            if node is None:
+                break
+        if node is not None and node not in found:
+            found.append(node)
+    return found
+
+
+def _abandon(r):
+    """Drop a response whose body is still arriving.
+
+    **Shuts the socket down rather than closing the response.** Both
+    `Response.close()` and `raw.close()` end at `BufferedReader.close()`, which
+    takes the buffer lock -- the lock the reader thread is holding while it
+    blocks. Measured: a 2-second deadline against a dribbling endpoint returned
+    after 40.6 s, all of it inside the close, waiting for the read it was
+    supposed to interrupt. `shutdown` touches the kernel socket, takes no Python
+    lock, and hands the blocked reader an immediate EOF.
+
+    The connection is never released back to the pool: the reader may still be
+    inside it, and a reused connection would serve the tail of this reply as the
+    next request's answer.
+    """
+    for sock in _sockets_of(r):
+        try:
+            sock.shutdown(socket.SHUT_RDWR)
+        except Exception:                  # noqa: BLE001 - already dead is fine
+            pass
+        try:
+            sock.close()
+        except Exception:                  # noqa: BLE001
+            pass
+
+
+def _read_capped(r, cap, deadline=None):
+    """The reply body, read no further than `cap` + 1 bytes, and no longer than
+    `deadline`.
+
+    Two limits, because either alone is escapable. The cap stops a gigabyte; the
+    deadline stops a trickle.
+
+    **The deadline is held by a second thread on purpose.** `TIMEOUT`'s read half
+    is per socket read, and so is any check placed between reads: a body arriving
+    one byte at a time keeps resetting the socket timeout and never returns from
+    the read the check sits after. Measured against a 2-second deadline, an
+    endpoint dribbling 200 bytes at 5 B/s was cut off after 40.7 s -- the read
+    only came back when the *server* finished. So the read runs in a daemon
+    thread, the caller waits on an event for the time that is actually left, and
+    the socket is closed under the reader when it runs out. What had arrived is
+    kept and raised as `PartialReply`: a truncated body is the evidence of how
+    the endpoint misbehaves.
+
+    Falls back to `.content` for a response that was not opened for streaming
+    (the tests' fakes).
     """
     raw_stream = getattr(r, "raw", None)
     if raw_stream is None or not hasattr(raw_stream, "read"):
         return getattr(r, "content", b"") or b""
-    try:
-        return raw_stream.read(cap + 1, decode_content=True)
-    finally:
-        r.close()
+    chunks, box, done = [], {}, threading.Event()
+    # `read1` returns what has arrived; `read` waits for the full amount asked
+    # for. With `read`, a body dribbling in below the chunk size is still inside
+    # the first call when the deadline fires, so the partial we keep is empty --
+    # measured 0 bytes of the 200 that had been received. Older urllib3 has no
+    # `read1`; there the partial is whatever whole chunks completed.
+    read = getattr(raw_stream, "read1", None) or raw_stream.read
+
+    def pump():
+        got = 0
+        try:
+            while got <= cap:
+                chunk = read(min(65536, cap + 1 - got), decode_content=True)
+                if not chunk:
+                    break
+                chunks.append(chunk)           # list.append is atomic (CPython)
+                got += len(chunk)
+        except BaseException as exc:           # noqa: BLE001 - reported below
+            box["error"] = exc
+        finally:
+            done.set()
+
+    threading.Thread(target=pump, name="ssa-reply-read", daemon=True).start()
+    left = None if deadline is None else max(0.0, deadline - time.monotonic())
+    if not done.wait(left):
+        _abandon(r)
+        raise PartialReply(
+            f"reply not finished within {CALL_DEADLINE_SECONDS:.0f}s",
+            b"".join(chunks))
+    r.close()
+    if "error" in box:
+        raise box["error"]
+    return b"".join(chunks)
 
 
 def _call_agent(cfg, base, key, mid, prompt):
@@ -1692,6 +1806,7 @@ def _call_agent(cfg, base, key, mid, prompt):
     # covers the timestamp and the body, never the URL, so the forwarded copy
     # is a valid arena request for the whole 300-second skew window -- to a
     # host the participant's public record does not name.
+    deadline = time.monotonic() + CALL_DEADLINE_SECONDS
     r = requests.post(base, headers=headers, data=body, timeout=TIMEOUT,
                       stream=True, allow_redirects=False)
     what = f"{mid} @ {base}"
@@ -1703,7 +1818,10 @@ def _call_agent(cfg, base, key, mid, prompt):
             f"{target[:120]!r}. The arena does not follow redirects: a signed "
             "request must reach the URL on the public record and no other. "
             "Register the final URL.")
-    raw = _read_capped(r, AGENT_MAX_REPLY_BYTES)
+    try:
+        raw = _read_capped(r, AGENT_MAX_REPLY_BYTES, deadline)
+    except PartialReply as exc:
+        raise PartialReply(f"{what} {exc}", exc.partial) from None
     if len(raw) > AGENT_MAX_REPLY_BYTES:
         raise RuntimeError(f"{what} reply exceeds {AGENT_MAX_REPLY_BYTES} bytes")
     if r.status_code >= 400:
@@ -2093,6 +2211,43 @@ def _log_reply(round_id, entrant, ih, prompt, text, usage, via=None, persona=Non
     return replies.log(round_id, entrant, ih, rec)
 
 
+# How much of a cut-off body is written down. The reply cap is 1 MB and a
+# failure record is committed, so the whole of a runaway body is exactly what
+# must not be kept; the first 16 KB is far more than any real answer and enough
+# to recognise a proxy error page or a stalled JSON object. The true length is
+# recorded either way, so a truncated record never misrepresents what arrived.
+PARTIAL_KEEP_BYTES = 16384
+
+
+def _log_failure(round_id, entrant, ih, prompt, exc, via=None, persona=None):
+    """Write down a call that produced no forecast, and whatever had arrived.
+
+    Called on every failed call, next to the reply log and under the same key,
+    so the two halves of one call's history sit together: `replies/<round>/`
+    holds what came back, `replies/<round>/failures/` holds what went wrong.
+    Before this, a failure existed only as a line in the log of a runner that is
+    deleted minutes later, so "this endpoint has failed every run for a week"
+    was unprovable, and a body cut off by the hour cap was discarded unread.
+
+    **Nothing written here carries a `reply` key.** `_replayed` replays a stored
+    reply as an answer; a failure must never be able to become one, which is
+    why these live in a directory `replies.lookup` cannot address and why
+    `replies.log_failure` strips the key as well.
+    """
+    rec = {"model": model_id(entrant, via), "via": route(entrant, via)["via"],
+           "prompt_sha256": replies.prompt_sha256(prompt),
+           "error_type": type(exc).__name__,
+           "error": " ".join(str(exc).split())[:2000]}
+    if persona is not None:
+        rec["persona"] = persona
+    partial = getattr(exc, "partial", None)
+    if partial:
+        rec["partial_bytes"] = len(partial)
+        rec["partial"] = partial[:PARTIAL_KEEP_BYTES].decode("utf-8", "replace")
+        rec["partial_truncated"] = len(partial) > PARTIAL_KEEP_BYTES
+    return replies.log_failure(round_id, entrant, ih, rec)
+
+
 def _replayed(round_id, entrant, ih, parse, persona=None):
     """A reply already bought for this exact call, parsed, or None.
 
@@ -2182,6 +2337,7 @@ def forecast_persona(entrant, r, history=None, previous=None):
                        persona=pid)
             parsed = parse_survey_reply(reply, spec)
         except Exception as e:                 # noqa: BLE001 - collected below
+            _log_failure(r["round_id"], entrant, ih, prompts[pid], e, persona=pid)
             with lock:
                 failures.append(f"{pid}: {type(e).__name__}: {e}")
             return
@@ -2416,6 +2572,7 @@ def _ask(entrant, prompt, previous, round_id, parse=None):
             _log_reply(round_id, entrant, ih, prompt, text, usage)
             return parse(text), primary["via"], ih, False
         except Exception as e:                  # noqa: BLE001 - re-raised below
+            _log_failure(round_id, entrant, ih, prompt, e)
             if standby is None or not terminal_failure(e):
                 raise
             mark_route_down(primary, str(e))
@@ -2435,6 +2592,7 @@ def _ask(entrant, prompt, previous, round_id, parse=None):
                    via="openrouter")
         return parse(text), "openrouter", fb_hash, False
     except Exception as e:
+        _log_failure(round_id, entrant, fb_hash, prompt, e, via="openrouter")
         # Both routes are gone. Report the *first* failure as the cause, since
         # that is the account that actually needs attention, and name the
         # standby's failure too so nobody debugs a working gateway.

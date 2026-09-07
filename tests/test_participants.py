@@ -699,6 +699,144 @@ def test_an_endpoint_failing_three_times_is_not_called_again_this_run():
     print("ok test_an_endpoint_failing_three_times_is_not_called_again_this_run")
 
 
+# --- the hour cap and the failure log ---------------------------------------
+
+class trickling:
+    """A real endpoint that answers, slowly, forever.
+
+    A fake `requests.post` cannot exercise this: the whole point is that the
+    body arrives below the chunk size, so what is being tested is a blocking
+    socket read and the thread that interrupts it. So this is a real HTTP
+    server on a real loopback port.
+    """
+
+    def __init__(self, piece=b'{"mean": 5', every=0.05):
+        import http.server
+        import socketserver
+        import threading
+        import time
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):
+                self.rfile.read(int(self.headers.get("Content-Length", "0")))
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                for _ in range(10000):
+                    try:
+                        self.wfile.write(piece)
+                        self.wfile.flush()
+                        time.sleep(every)
+                    except Exception:              # the arena hung up
+                        return
+
+            def log_message(self, *a):
+                pass
+
+        self.server = socketserver.TCPServer(("127.0.0.1", 0), Handler)
+        self.url = f"http://127.0.0.1:{self.server.server_address[1]}/forecast"
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.server.shutdown()
+        self.server.server_close()
+
+
+def test_a_trickling_endpoint_is_cut_off_at_the_deadline():
+    """One call may take an hour, not a day.
+
+    `TIMEOUT`'s read half is per socket read, so an endpoint sending a few bytes
+    at a time resets it forever and holds a filing worker until the six-hour job
+    limit. The cap is wall-clock, and the bytes that did arrive are kept: a
+    truncated body is how an operator tells a slow endpoint from a proxy error
+    page.
+    """
+    import time
+
+    with_key()
+    saved = harness.CALL_DEADLINE_SECONDS
+    harness.CALL_DEADLINE_SECONDS = 1.0
+    try:
+        with trickling() as endpoint:
+            started = time.monotonic()
+            try:
+                harness._call_agent({}, endpoint.url, "", "acme", "{}")
+                raise AssertionError("a never-ending reply was accepted")
+            except harness.PartialReply as err:
+                took = time.monotonic() - started
+                assert took < 5, f"cut off after {took:.1f}s, cap was 1s"
+                assert err.partial, "the bytes that arrived were thrown away"
+                assert b'{"mean"' in err.partial, err.partial[:40]
+    finally:
+        harness.CALL_DEADLINE_SECONDS = saved
+    print("ok test_a_trickling_endpoint_is_cut_off_at_the_deadline")
+
+
+def test_a_failed_call_is_written_down_and_can_never_be_replayed():
+    """Every failure lands in `replies/<round>/failures/`, with whatever body
+    had arrived -- and can never come back as an answer.
+
+    The runner is deleted minutes after the run, so an exception that only
+    reached its log is gone. Two properties are asserted together because the
+    second is what makes the first safe: the record is durable, and it carries
+    no `reply` key and lives where `replies.lookup` cannot address it, so the
+    thing that replays paid replies can never replay a failure as a forecast.
+    """
+    from ssa import replies
+
+    saved_dir = os.environ.get("SSA_REPLIES_DIR")
+    tmp = tempfile.mkdtemp(prefix="ssa-failures-")
+    os.environ["SSA_REPLIES_DIR"] = tmp
+    saved = (harness.CALL_DEADLINE_SECONDS, harness.call_provider,
+             harness.route, harness.standby_route, harness.call_identity,
+             harness.model_id)
+    harness.CALL_DEADLINE_SECONDS = 1.0
+    try:
+        with trickling() as endpoint:
+            harness.call_identity = lambda e, via=None: f"endpoint @ {endpoint.url}"
+            harness.model_id = lambda e, via=None: "endpoint"
+            harness.route = lambda e, via=None: {
+                "base": endpoint.url, "via": "participant",
+                "env": "SSA_NO_SUCH_KEY", "model": "endpoint"}
+            harness.standby_route = lambda e: None
+            harness.call_provider = lambda e, prompt, with_usage=False, \
+                context=None, via=None: harness._call_agent(
+                    {}, endpoint.url, "", "endpoint", prompt)
+            with_key()
+            prompt = '{"round":"r1"}'
+            for _ in range(2):
+                try:
+                    harness._ask("acme-forecast", prompt, None, "r1")
+                    raise AssertionError("a cut-off reply was filed")
+                except harness.PartialReply:
+                    pass
+
+            ih = harness.prompt_hash("acme-forecast", prompt)
+            got = json.load(open(replies.failure_path("r1", "acme-forecast", ih)))
+            assert got["attempts_total"] == 2, got["attempts_total"]
+            first = got["attempts"][0]
+            assert first["error_type"] == "PartialReply", first
+            assert '{"mean"' in first["partial"], first
+            assert first["partial_bytes"] > 0, first
+            assert "reply" not in first, "a failure was stored as a reply"
+            assert replies.lookup("r1", "acme-forecast", ih) is None, \
+                "the reply log can see a failure record"
+            assert replies.failures("r1", "acme-forecast", ih), "not readable"
+    finally:
+        (harness.CALL_DEADLINE_SECONDS, harness.call_provider, harness.route,
+         harness.standby_route, harness.call_identity,
+         harness.model_id) = saved
+        shutil.rmtree(tmp, ignore_errors=True)
+        if saved_dir is None:
+            os.environ.pop("SSA_REPLIES_DIR", None)
+        else:
+            os.environ["SSA_REPLIES_DIR"] = saved_dir
+    print("ok test_a_failed_call_is_written_down_and_can_never_be_replayed")
+
+
 if __name__ == "__main__":
     test_the_registration_carries_no_credential_and_cannot_name_one()
     test_a_participant_route_is_https_only()
@@ -721,4 +859,6 @@ if __name__ == "__main__":
     test_a_registration_without_a_route_is_unchanged()
     test_a_reply_over_the_size_cap_is_refused_unread()
     test_an_endpoint_failing_three_times_is_not_called_again_this_run()
-    print("21 passed")
+    test_a_trickling_endpoint_is_cut_off_at_the_deadline()
+    test_a_failed_call_is_written_down_and_can_never_be_replayed()
+    print("23 passed")
