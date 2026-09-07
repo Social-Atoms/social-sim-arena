@@ -221,9 +221,9 @@ def _payload(text):
 
 
 def parse_scalar(text):
-    """A scalar round's answer: {mean, sd} or {quantiles}. Both are scored
-    with CRPS (`scoring.crps_forecast`), so which one an endpoint sends is
-    its own choice."""
+    """A scalar round's answer: `{mean, sd}`, scored with CRPS. One shape, so
+    that an endpoint has one thing to build and the arena one thing to check --
+    see `harness.answer` for what the second shape cost and why it went."""
     return harness.answer(_payload(text), "forecast")
 
 

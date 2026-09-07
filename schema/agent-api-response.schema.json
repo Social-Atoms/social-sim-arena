@@ -11,7 +11,7 @@
   "definitions": {
     "distribution": {
       "type": "object",
-      "description": "A normal or a quantile set, the answerer's choice. Both are scored with CRPS (a topline) or pooled into the energy score (a profile cell); a point guess is neither and is refused. Mirrors schema/forecast.schema.json, which the filed forecast is then validated against.",
+      "description": "A normal: a mean and a strictly positive sd, scored with CRPS (a topline) or pooled into the energy score (a profile cell). A point guess is not a forecast and is refused. Quantile sets are not accepted from an endpoint -- schema/forecast.schema.json still allows one in a committed file, but the live contract is one shape.",
       "additionalProperties": false,
       "properties": {
         "mean": {
@@ -21,31 +21,11 @@
           "type": "number",
           "exclusiveMinimum": 0,
           "maximum": 1000000000
-        },
-        "quantiles": {
-          "type": "object",
-          "minProperties": 3,
-          "description": "Levels as keys ('0.05' ... '0.95'), values in the round's unit. Must include '0.5'; values must not decrease as the level rises.",
-          "propertyNames": {
-            "pattern": "^0\\.\\d{1,3}$"
-          },
-          "additionalProperties": {
-            "type": "number"
-          }
         }
       },
-      "anyOf": [
-        {
-          "required": [
-            "mean",
-            "sd"
-          ]
-        },
-        {
-          "required": [
-            "quantiles"
-          ]
-        }
+      "required": [
+        "mean",
+        "sd"
       ]
     }
   },

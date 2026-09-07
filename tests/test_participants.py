@@ -302,23 +302,16 @@ def test_a_reply_that_is_not_the_contract_is_refused():
                      "forecast": {"mean": 1, "sd": 1}}), "schema_version"),
         (json.dumps({"schema_version": "ssa-agent-api-v2"}), "no `forecast`"),
         (json.dumps({"schema_version": "ssa-agent-api-v2",
-                     "forecast": {"mean": 1}}), "needs mean and sd, or quantiles"),
+                     "forecast": {"mean": 1}}), "needs mean and sd"),
         (json.dumps({"schema_version": "ssa-agent-api-v2",
-                     "forecast": {"value": 41.2}}), "needs mean and sd, or quantiles"),
-        # A quantile answer is accepted, so the rules that make one scoreable
-        # are enforced here rather than discovered when CI rejects the file.
+                     "forecast": {"value": 41.2}}), "needs mean and sd"),
+        # Refused by name rather than by "needs mean and sd", because an
+        # endpoint written against the older contract is not making a typo and
+        # should be told what changed.
         (json.dumps({"schema_version": "ssa-agent-api-v2",
-                     "forecast": {"quantiles": {"0.1": 1, "0.9": 3}}}),
-         "at least three levels"),
-        (json.dumps({"schema_version": "ssa-agent-api-v2",
-                     "forecast": {"quantiles": {"0.1": 1, "0.4": 2, "0.9": 3}}}),
-         "median"),
-        (json.dumps({"schema_version": "ssa-agent-api-v2",
-                     "forecast": {"quantiles": {"0.1": 5, "0.5": 2, "0.9": 9}}}),
-         "must not decrease"),
-        (json.dumps({"schema_version": "ssa-agent-api-v2",
-                     "forecast": {"quantiles": {".1": 1, "0.5": 2, "0.9": 3}}}),
-         "0.NNN"),
+                     "forecast": {"quantiles": {"0.05": 44.0, "0.5": 50.0,
+                                                "0.95": 58.0}}}),
+         "quantiles are no longer accepted"),
     ]:
         try:
             agent_api.parse_scalar(text)
@@ -329,33 +322,62 @@ def test_a_reply_that_is_not_the_contract_is_refused():
     print("ok test_a_reply_that_is_not_the_contract_is_refused")
 
 
-def test_a_participant_may_answer_with_quantiles_on_either_shape():
-    """The submission schema accepts a normal or a quantile set for a topline
-    and for every profile cell, and `scoring.crps_forecast` scores both. The
-    parser used to carry a quantiles branch that raised KeyError('mean'), so
-    an endpoint expressing skew was refused by the arena and never knew why."""
+def test_an_endpoint_answers_in_one_shape_and_it_is_the_filed_one():
+    """`{mean, sd}`, for a topline and for every profile cell, and nothing else.
+
+    A reply could once be a normal or a quantile set. No endpoint ever sent a
+    quantile set and no committed forecast holds one, so what the second shape
+    actually bought was a second parser to keep in step with
+    `tools/validate_submission.py`. The rule is narrower than the file schema on
+    purpose: a hand-committed file may still carry quantiles and
+    `scoring.crps_forecast` still scores them, so the claim that formats compete
+    on equal terms is untouched -- this is only what a live reply may contain.
+    """
     import jsonschema
     from ssa import scoring
     schema = json.load(open(os.path.join(ROOT, "schema", "forecast.schema.json")))
+    response_schema = json.load(open(os.path.join(
+        ROOT, "schema", "agent-api-response.schema.json")))
     q = {"0.05": 33.0, "0.5": 36.0, "0.95": 40.5}
-    top = agent_api.parse_scalar(json.dumps(
-        {"schema_version": "ssa-agent-api-v2", "forecast": {"quantiles": q}}))
-    assert top == {"quantiles": q}, top
     cells = ["civiqs_net_approval_dem", "civiqs_net_approval_rep"]
+
+    for body in ({"schema_version": "ssa-agent-api-v2",
+                  "forecast": {"quantiles": q}},
+                 {"schema_version": "ssa-agent-api-v2",
+                  "forecast": {"profile": {cells[0]: {"quantiles": q},
+                                           cells[1]: {"mean": 2.0, "sd": 1.0}}}}):
+        # The published schema and the parser have to agree, or a participant
+        # validates against the contract page and is refused by the arena.
+        assert not jsonschema.Draft7Validator(response_schema).is_valid(body), \
+            "the response schema still accepts quantiles"
+        parse = (agent_api.parse_scalar if "profile" not in body["forecast"]
+                 else lambda t: agent_api.parse_profile(t, cells))
+        try:
+            parse(json.dumps(body))
+            raise AssertionError("a quantile reply was accepted")
+        except ValueError as err:
+            assert "quantiles are no longer accepted" in str(err), err
+
+    top = agent_api.parse_scalar(json.dumps(
+        {"schema_version": "ssa-agent-api-v2",
+         "forecast": {"mean": 36.0, "sd": 1.5}}))
     prof = agent_api.parse_profile(json.dumps(
         {"schema_version": "ssa-agent-api-v2",
-         "forecast": {"profile": {cells[0]: {"quantiles": q},
+         "forecast": {"profile": {cells[0]: {"mean": -35.0, "sd": 2.0},
                                   cells[1]: {"mean": 2.0, "sd": 1.0}}}}), cells)
-    assert prof[cells[0]] == {"quantiles": q}
-    assert prof[cells[1]] == {"mean": 2.0, "sd": 1.0}
-    # Both are scoreable and both survive the schema a filed forecast faces.
+    assert top == {"mean": 36.0, "sd": 1.5}, top
     assert scoring.crps_forecast(top, 36.0) > 0
     for body in ({"round_id": "aaii-2026-09-10", "entrant": "acme-forecast",
                   "topline": top, "notes": "n"},
                  {"round_id": "aaii-2026-09-10", "entrant": "acme-forecast",
                   "profile": prof, "notes": "n"}):
         jsonschema.validate(body, schema)
-    print("ok test_a_participant_may_answer_with_quantiles_on_either_shape")
+    # …and the file schema is unchanged: a committed quantile forecast still
+    # validates and still scores, which is the half that was not narrowed.
+    jsonschema.validate({"round_id": "aaii-2026-09-10", "entrant": "human-crowd",
+                         "topline": {"quantiles": q}, "notes": "n"}, schema)
+    assert scoring.crps_forecast({"quantiles": q}, 36.0) > 0
+    print("ok test_an_endpoint_answers_in_one_shape_and_it_is_the_filed_one")
 
 
 def test_the_round_tells_a_participant_what_it_will_refuse():
@@ -848,7 +870,7 @@ if __name__ == "__main__":
     test_the_envelope_states_the_moment_an_answer_stops_counting()
     test_the_request_id_is_stable_so_a_retry_is_the_same_question()
     test_a_reply_that_is_not_the_contract_is_refused()
-    test_a_participant_may_answer_with_quantiles_on_either_shape()
+    test_an_endpoint_answers_in_one_shape_and_it_is_the_filed_one()
     test_the_round_tells_a_participant_what_it_will_refuse()
     test_the_starter_server_answers_all_three_shapes_from_the_envelope_alone()
     test_a_profile_reply_is_all_cells_or_none()

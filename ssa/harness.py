@@ -1956,65 +1956,40 @@ def _distribution(mean, sd, where=""):
     return {"mean": round(mean, 2), "sd": round(sd, 2)}
 
 
-_LEVEL = re.compile(r"^0\.\d{1,3}$")
-
-
-def _quantiles(q, where=""):
-    """A quantile map -> the stored form, or a raise.
-
-    The other half of `_distribution`: the submission schema accepts a
-    topline (and a profile cell) as either a normal or a quantile set, and
-    `scoring.crps_forecast` scores both, so a participant who can express
-    skew should be able to send it. The rules enforced here are exactly the
-    ones `tools/validate_submission.py` enforces on a committed file --
-    three or more levels, the median present, levels strictly inside (0, 1)
-    and written as the schema's `0.NNN`, values non-decreasing -- because a
-    reply this accepts becomes a file CI then judges, and a parser looser
-    than the validator files something that cannot be merged.
-    """
-    at = f"{where}: " if where else ""
-    if not isinstance(q, dict) or len(q) < 3:
-        raise ValueError(f"{at}quantiles needs at least three levels")
-    bad = [k for k in q if not (isinstance(k, str) and _LEVEL.match(k))]
-    if bad:
-        raise ValueError(
-            f"{at}quantile levels must be written as 0.NNN (e.g. \"0.05\", "
-            f"\"0.5\"); got {sorted(bad)[:4]}")
-    try:
-        items = sorted((float(k), float(v)) for k, v in q.items())
-    except (TypeError, ValueError):
-        raise ValueError(f"{at}quantile values must be numbers")
-    if any(v != v or abs(v) > 1e7 for _, v in items):
-        raise ValueError(f"{at}non-finite or implausible quantile value")
-    if not any(abs(lv - 0.5) < 1e-9 for lv, _ in items):
-        raise ValueError(f"{at}quantiles must include the median (\"0.5\")")
-    if any(lv <= 0 or lv >= 1 for lv, _ in items):
-        raise ValueError(f"{at}quantile levels must be strictly between 0 and 1")
-    vals = [v for _, v in items]
-    if any(b < a for a, b in zip(vals, vals[1:])):
-        raise ValueError(f"{at}quantile values must not decrease as the level rises")
-    return {"quantiles": {k: round(float(v), 2) for k, v in q.items()}}
-
-
 def answer(obj, where=""):
-    """One accepted distribution from a reply object: a normal or a quantile
-    set. Which one is the answerer's choice, not the round's."""
+    """One accepted distribution from a reply object: `{mean, sd}`.
+
+    **One shape, for every live answer.** A reply could once be a normal *or* a
+    quantile set, on the argument that an endpoint with a skewed belief should
+    not have to pretend otherwise. Nothing ever sent one -- not one of the
+    season's replies, not one committed forecast -- and the option was not free:
+    two shapes meant two parsers, two sets of rules to keep in step with
+    `tools/validate_submission.py`, and two ways for a round to be scored, all
+    exercised by tests and by nobody else. So the live contract asks for the
+    shape everybody uses.
+
+    This is narrower than `schema/forecast.schema.json`, deliberately. A
+    committed file may still carry quantiles and `scoring.crps_forecast` still
+    scores them, because that is the arena's published claim about how formats
+    compete and it costs nothing to keep. What changed is only what an endpoint
+    may *reply*.
+    """
     if not isinstance(obj, dict):
         at = f"{where}: " if where else ""
         raise ValueError(f"{at}expected an object, got {type(obj).__name__}")
+    at = f"{where}: " if where else ""
     if "quantiles" in obj:
-        return _quantiles(obj["quantiles"], where)
+        raise ValueError(
+            f"{at}quantiles are no longer accepted from an endpoint; answer "
+            f"with mean and sd")
     if "mean" not in obj or "sd" not in obj:
-        at = f"{where}: " if where else ""
-        raise ValueError(f"{at}needs mean and sd, or quantiles; "
-                         f"got keys {sorted(obj)}")
+        raise ValueError(f"{at}needs mean and sd; got keys {sorted(obj)}")
     return _distribution(obj["mean"], obj["sd"], where)
 
 
 def parse_forecast(text):
-    """Pull a distribution out of a model reply -- {"mean", "sd"} or
-    {"quantiles"}. Raises on anything that would not survive the submission
-    schema."""
+    """Pull a distribution out of a model reply -- `{"mean", "sd"}`. Raises on
+    anything that would not survive the submission schema."""
     return answer(_first_json_object(text))
 
 

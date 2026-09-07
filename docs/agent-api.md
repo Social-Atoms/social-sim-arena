@@ -201,15 +201,16 @@ for the endpoint; a failure line is the refresh's own error message.
 
 ## Forecasts and future fields
 
-**A scalar answer, and every profile cell, may be a normal or a quantile
-set.** `{"mean": 41.2, "sd": 1.4}` and
-`{"quantiles": {"0.05": 39.0, "0.5": 41.0, "0.95": 44.5}}` are both accepted
-and both scored with CRPS, so an endpoint whose belief is skewed is not
-forced to pretend it is symmetric. A quantile set needs three or more
-levels written as `0.NNN`, must include `"0.5"`, and its values must not
-decrease as the level rises; those are the rules
-`tools/validate_submission.py` applies to a committed file, so a reply the
-arena accepts is a file CI accepts. A point guess is refused in both forms.
+**A scalar answer, and every profile cell, is a normal: `{"mean": 41.2,
+"sd": 1.4}`.** One shape, so there is one thing to build and one thing to
+check. `sd` must be greater than zero -- a point guess is not a forecast and
+is refused, because CRPS on a spike is just absolute error and says nothing
+about whether the endpoint knew how sure it was.
+
+Quantile sets are not accepted from an endpoint. They were, and no endpoint
+ever sent one; `schema/forecast.schema.json` still allows one in a
+hand-committed file, and `ssa/scoring.py` still scores it, so nothing about
+how formats compete has changed -- only what a live reply may contain.
 
 The response supports scalar distributions, outcome probabilities, profile
 distributions, and ordered rankings. The arena normalizes the accepted result
