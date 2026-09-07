@@ -237,6 +237,33 @@ def test_left_navigation_moves_the_active_highlight():
     print("ok test_left_navigation_moves_the_active_highlight")
 
 
+def test_navigation_labels_match_their_section_titles():
+    body = SITE.read_text()
+    headings = {
+        section_id: html.unescape(label)
+        for section_id, label in re.findall(
+            r'<h[12] id="([^"]+)">([^<]+)</h[12]>', body
+        )
+    }
+    for aria_label in ("Documentation", "On this page"):
+        match = re.search(
+            rf'<aside class="(?:left|right)" aria-label="{aria_label}">'
+            r"(.*?)</aside>",
+            body,
+            re.DOTALL,
+        )
+        assert match, aria_label
+        links = re.findall(
+            r'<a[^>]*href="#([^"]+)"[^>]*>([^<]+)</a>', match.group(1)
+        )
+        assert links, aria_label
+        for section_id, label in links:
+            assert headings[section_id] == html.unescape(label), (
+                aria_label, section_id, label, headings.get(section_id)
+            )
+    print("ok test_navigation_labels_match_their_section_titles")
+
+
 if __name__ == "__main__":
     test_topline_example_uses_the_real_resolution_and_scalar_scorer()
     test_profile_example_scores_all_sixteen_real_cells_together()
@@ -244,4 +271,5 @@ if __name__ == "__main__":
     test_examples_separate_questions_from_the_http_payload()
     test_request_payload_shows_one_valid_request_and_expected_response()
     test_left_navigation_moves_the_active_highlight()
+    test_navigation_labels_match_their_section_titles()
     print("all scoring example tests pass")
