@@ -1,57 +1,50 @@
-"""The weekly submission batch: one deadline a week, for every round in it.
+"""When a round closes: its own lock, and the weekly calendar it displays on.
 
-**What this replaces.** Until season 0's batch cutover every round carried its
-own deadline -- its `lock_at`, at `release - 48h` -- and a submission was valid
-if it landed before that moment. Season 0's 89 rounds lock on six different
-weekdays (43 Wednesday, 17 Sunday, 12 Friday, 10 Monday, 5 Tuesday, 2
-Saturday), so "the deadline" was six deadlines, and an entrant had to track all
-of them. That is a bad participant experience, and it is also two measurement
-problems that no amount of documentation fixes.
+**The deadline is the round's own `lock_at`.** For 94 of season 0's 116
+rounds that is `release - 48h`; for the other 22 it is deliberately earlier,
+because the round asks about a period rather than a moment -- a Wikipedia or
+Trends week locks before the week it measures begins, and the midterm rounds
+lock four days before the polls close and resolve on certified results a month
+later. Those locks are properties of the question and no rule may override
+them.
 
-**Problem one: entrants were not answering from the same place.** A round is
-open from its listing day, so one entrant could file a week out and another
-ninety seconds before the lock. Both are legal, and the second one has up to
-seven days more news. On a 48-hour horizon that is not a rounding error; it is
-most of the question. A leaderboard built that way partly ranks patience.
+**What this replaces, and why it came back.** Season 0 briefly moved every
+round onto one weekly deadline (Monday 12:00Z). That fixed two real problems
+and created a worse one.
 
-**Problem two: the null saw data the entrant did not.** Baselines are frozen
-from history available at the lock (`refresh.update_lock_snapshot`), and the
-headline metric is `1 - CRPS(entrant)/CRPS(persistence)`. An entrant who filed
-five days before the lock is divided by a null that read five more days of the
-series. The bias is not constant either -- it scales with how early the file
-landed, which varied per entrant and per round -- so a season mean over rounds
-depended on the lock-day calendar as much as on the forecasters.
+The two it fixed, both of which came from entrants choosing *when* to answer:
+one entrant could file a week out and another ninety seconds before the lock,
+and the second had up to seven days more news; and the null, frozen at the
+lock, read data the early filer never saw. A board built that way partly ranks
+patience.
 
-**The fix is one deadline per week, and the null frozen at that same moment.**
-Every round is governed by the last batch deadline strictly before its lock.
-Entrants answer everything in a batch by that one moment; the null is frozen
-there too, so entrant and null read exactly the same history. What still varies
-is the horizon -- how long after the deadline a given round locks, 0 to 7 days
--- and that now varies *identically for everyone*, which makes it a property of
-the question and a covariate worth reporting, rather than a confound between
-competitors.
+The one it created: **the horizon stopped being a property of the question.**
+Measured on the 79 rounds open on 2026-09-06, the distance from the common
+deadline to the release ran from 2.0 days to 35.5, median 4.1, and 60 of 79
+rounds were frozen days before they needed to be. Two questions on the same
+board were forecast one day and one month ahead of their answers and then
+compared. That is not a fair comparison; it is two different tasks.
 
-Anyone may still file early. That is not unfairness: the deadline is common, so
-waiting for it is an option every entrant has. What is unfair is a deadline
-that differs per round, and a null that reads past it.
+**Why the original problems no longer bite.** Season 0 admits outside entrants
+through an endpoint the arena calls (`docs/agent-api.md`). Nobody chooses when
+to answer: every entrant for a round is called inside the same narrow window
+before that round's lock, and the null freezes at the same lock. The two
+problems above were problems of self-scheduling, and self-scheduling is gone.
+Prophet Arena reaches the same place from the other direction: its windows are
+per event and stay open only a few hours, and its weekly fixed-deadline set is
+an on-ramp, not the measurement.
 
-**Why Monday 12:00Z.** The modal round locks Wednesday 14:00Z (43 of 89), which
-puts the dominant horizon at 2.1 days -- the same distance the model harness
-already bought at under the old per-round window (`lock - 3d` to `lock - 2d`).
-So the cutover barely moves the vantage point for half the season, and rounds
-scored before and after it stay broadly comparable. Monday also leaves the
-whole preceding weekend for the buying run to retry a failed provider, which a
-common deadline needs because the insurance tail that used to run up to
-`lock - 30min` cannot reach past the deadline any more without breaking the
-equal-vantage rule that is the entire point.
+**If a human or pull-request track returns**, it needs a short window opening
+before each round's lock -- not a weekly deadline. A weekly deadline
+reintroduces the horizon spread for every round in the week, which is the
+thing this module now exists to prevent.
 
-**The cutover is dated, not retroactive.** Rounds whose governing deadline
-falls before `FIRST_DEADLINE` keep the per-round lock rule they were bought and
-scored under. Re-freezing an already-resolved round's null would silently
-rewrite published scores, which is the one thing a benchmark may never do.
-`governed_by_batch` is the single predicate for "which rule applies", so no
-caller has to reimplement the cutover and get it subtly different.
+**The weekly calendar stays, for display only.** `deadline_for` and
+`published_at` still say which week a round belongs to and when the site lists
+it. They no longer decide when a submission is late; `effective_deadline`
+does, and it returns the round's own lock.
 """
+import os
 from datetime import datetime, timedelta, timezone
 
 # Monday, as datetime.weekday() counts it (Mon=0 ... Sun=6).
@@ -62,9 +55,9 @@ BATCH_HOUR_UTC = 12
 # bought and scored under the per-round lock rule and keep it forever.
 FIRST_DEADLINE = datetime(2026, 9, 14, BATCH_HOUR_UTC, tzinfo=timezone.utc)
 
-# How long before its deadline a batch is published, so entrants get a full
-# week. Publication is a site/bundle concern, not a validity rule: a late-added
-# round is still governed by the deadline computed from its lock.
+# How long before its own deadline a round is listed, so entrants get a full
+# week. Publication is a site concern, not a validity rule: a late-added round
+# is still governed by its lock.
 PUBLISH_LEAD = timedelta(days=7)
 
 
@@ -97,47 +90,101 @@ def deadline_for(lock_at):
 
 
 def governed_by_batch(lock_at):
-    """Whether the weekly deadline, rather than the round's own lock, applies.
+    """Whether this round is listed under a weekly batch on the site.
 
-    False for every round whose deadline predates the cutover. Those rounds
-    were bought and scored under the per-round rule; re-freezing their nulls
-    now would rewrite scores that are already published.
+    A grouping question now, not a validity one: the batch deadline no longer
+    decides when anything is late. Kept because the site and the bundle tools
+    ask which week a round belongs to, and because a round locking before the
+    calendar existed belongs to no week at all.
     """
     return deadline_for(lock_at) >= FIRST_DEADLINE
 
 
 def effective_deadline(lock_at):
-    """The moment a submission for this round must be in by.
+    """The moment a submission for this round must be in by: its own lock.
 
-    The batch deadline once the cutover applies, and the round's own lock
-    before it. This is the one function a validator should call.
+    The one function a validator should call. It is the round's `lock_at`
+    unconditionally -- `release - 48h` for most rounds, and deliberately
+    earlier for the ones that ask about a period rather than a moment. See the
+    module docstring for why the weekly deadline that briefly sat here was
+    removed.
     """
-    return (deadline_for(lock_at) if governed_by_batch(lock_at)
-            else _parse(lock_at))
+    return _parse(lock_at)
+
+
+# How long before a round closes the arena starts calling endpoints. **The
+# canonical definition**: `harness.FILE_WINDOW_SECONDS` and the search
+# adapter's cache age both read it from here. It used to be spelled out in
+# `harness` and again in `ssa/adapters/search.py`, each parsing the same
+# environment variable, with a test pinning the two together because the
+# duplicate had already drifted once -- the window shrank from three days to
+# one and the search cache went on serving three-day-old replies. This module
+# imports nothing from the package, so both can read it and the duplicate goes
+# away instead of being policed.
+FILE_WINDOW = timedelta(
+    hours=float(os.environ.get("SSA_FILE_WINDOW_HOURS") or "24"))
+FILE_WINDOW_SECONDS = FILE_WINDOW.total_seconds()
+
+
+def window_opens_at(lock_at):
+    """When the arena starts calling this round's endpoints.
+
+    Every entrant is called inside `[window_opens_at, effective_deadline)`, so
+    this is the instant the round's inputs stop moving for the people answering
+    it: whoever is called first and whoever is retried last are handed the same
+    history and the same null.
+    """
+    return effective_deadline(lock_at) - FILE_WINDOW
 
 
 def freeze_at(lock_at):
-    """The moment the round's baseline history is frozen.
+    """The moment after which the round's answer already exists somewhere.
 
-    Deliberately the same instant as `effective_deadline`: the null must read
-    the history the entrant read, and nothing after it.
+    The round's own close. This is the boundary for questions of the form "had
+    this been published yet" -- what `ssa/resolve.py` treats as already seen
+    rather than as the answer, and what `ranking_round` refuses a measured week
+    for ending before.
+
+    **Not the same as the boundary the null is built on.** That one is
+    `window_opens_at`: the null must read what the entrants read, and the
+    entrants were handed their history when the window opened, up to a day
+    earlier. `refresh.update_lock_snapshot` records both -- `history` at this
+    instant, `answer_history` at the window's opening -- because only an
+    observation time can tell them apart, and a monthly value's label date
+    cannot.
     """
     return effective_deadline(lock_at)
 
 
 def published_at(lock_at):
-    """When the batch containing this round is published to entrants."""
-    return deadline_for(lock_at) - PUBLISH_LEAD
+    """When this round is listed for entrants: a week before it closes.
 
-
-def horizon_days(lock_at):
-    """Days from the governing deadline to the lock -- the forecast horizon.
-
-    Reported per round because it varies across a batch (0 to 7 days) while
-    being identical across entrants, which is exactly what makes it a question
-    property worth analysing rather than a confound worth removing.
+    Per round, like the deadline it is measured from. Publishing by batch
+    instead meant a round could appear anywhere from seven to fourteen days
+    before its own close, which is the same calendar artefact the weekly
+    deadline had.
     """
-    return (_parse(lock_at) - effective_deadline(lock_at)).total_seconds() / 86400.0
+    return _parse(lock_at) - PUBLISH_LEAD
+
+
+def horizon_days(lock_at, release_at=None):
+    """Days from the deadline to the answer -- the forecast horizon.
+
+    Measured to the release, because the deadline is now the lock and the
+    distance between them is zero by construction. This is the number that
+    makes two rounds comparable or not: 2.0 days for the 94 rounds that lock
+    at `release - 48h`, and 8, 11 or 31 for the ones that ask about a period
+    and must lock before it starts. It is identical for every entrant in a
+    round, so it is a property of the question rather than a confound between
+    competitors -- which is exactly what it stopped being when a weekly
+    deadline made it range from 2 to 35 days across one board.
+
+    `release_at` is optional only so the old one-argument call sites keep
+    working; without it there is no horizon to report and it returns None.
+    """
+    if release_at is None:
+        return None
+    return (_parse(release_at) - effective_deadline(lock_at)).total_seconds() / 86400.0
 
 
 def batch_of(lock_at):

@@ -197,6 +197,76 @@ def test_a_registration_is_edited_only_by_its_github_owner_or_a_maintainer():
     print("ok test_a_registration_is_edited_only_by_its_github_owner_or_a_maintainer")
 
 
+def test_the_arenas_own_entrant_names_cannot_be_registered_by_anyone_else():
+    """The hole this closes: `check_entrant_owner` protects an id only once a
+    file exists for it, and the harness filed under `kimi` and `kimi-zeroshot`
+    with no registration at all. A stranger adding `entrants/kimi.json` passed
+    every rule -- they are the author of a new file -- was merged by the bot
+    with nobody online, and from the next refresh the arena called their
+    server for Kimi's rounds and published the replies under Kimi's name."""
+    reserved = json.load(open(os.path.join(ROOT, "schema",
+                                           "reserved-entrant-ids.json")))
+    route = {"kind": "agent_api", "url": "https://x.test/f"}
+    with Repo() as repo:
+        for taken in ("kimi", "kimi-zeroshot", "kimi-superfc", "persistence", "crowd"):
+            doc = {"entrant_id": taken, "name": "N", "type": "participant",
+                   "github": "outsider", "route": route}
+            assert refused(vs.check_entrant_owner, f"entrants/{taken}.json",
+                           doc, "outsider", "main"), taken
+        # A maintainer must still be able to give an arena entry its record.
+        doc = {"entrant_id": "kimi", "name": "N", "type": "llm", "github": "jajamoa"}
+        assert vs.check_entrant_owner("entrants/kimi.json", doc, "jajamoa", "main") is None
+        # And a name that merely starts with the same letters is fine.
+        ok = {"entrant_id": "kimono-labs", "name": "N", "type": "participant",
+              "github": "outsider", "route": route}
+        assert vs.check_entrant_owner("entrants/kimono-labs.json", ok,
+                                      "outsider", "main") is None
+        del repo
+    # The list has to keep up with the roster on its own, or it rots.
+    from ssa import harness
+    missing = [m for m in harness.MODELS if m not in reserved["prefixes"]]
+    assert not missing, f"models the reserved list does not cover: {missing}"
+    roster = {e for e, *_ in harness.season_entrants()}
+    unreserved = [e for e in roster
+                  if not any(e == p or e.startswith(p + "-")
+                             for p in reserved["prefixes"])]
+    assert not unreserved, f"roster ids anyone could claim: {unreserved}"
+    print("ok test_the_arenas_own_entrant_names_cannot_be_registered_by_anyone_else")
+
+
+def test_a_participant_endpoint_is_never_followed_to_another_host():
+    """`allow_redirects=True` made "https only, checked twice" a suggestion: a
+    registered https endpoint answering 307 had the envelope and all three
+    signature headers replayed to any host, in cleartext, and the arena filed
+    the reply. The signature covers the timestamp and body, never the URL."""
+    import ssa.harness as h
+
+    class Redirect:
+        status_code = 307
+        headers = {"Location": "http://elsewhere.test/forecast"}
+        content = b""
+        def close(self): pass
+
+    seen = {}
+    def fake_post(url, **kw):
+        seen["allow_redirects"] = kw.get("allow_redirects")
+        return Redirect()
+
+    os.environ[signing.LIVE_KEY_ENV] = signing.generate()[0]
+    real = h.requests.post
+    h.requests.post = fake_post
+    try:
+        h._call_agent({}, "https://acme.test/forecast", "", "acme", "{}")
+        raise AssertionError("a redirect was followed")
+    except RuntimeError as err:
+        assert "does not follow redirects" in str(err), err
+        assert "elsewhere.test" in str(err), err
+    finally:
+        h.requests.post = real
+    assert seen["allow_redirects"] is False, seen
+    print("ok test_a_participant_endpoint_is_never_followed_to_another_host")
+
+
 def test_forecasts_are_filed_only_by_the_entrant_owner():
     with Repo() as repo:
         assert vs.check_forecast_owner("forecasts/r1/acme.json", "acme", "acmebot", "main") is None

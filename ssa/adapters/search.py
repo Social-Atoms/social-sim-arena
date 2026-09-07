@@ -57,6 +57,8 @@ from datetime import datetime, timezone
 
 import requests
 
+from .. import batches
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ARCHIVE = os.path.join(ROOT, "search")
 CACHE = os.path.join(ARCHIVE, "cache")
@@ -86,14 +88,27 @@ SEARCH_DEPTH = "basic"   # tavily: "basic" or "advanced"
 TOPIC = "news"
 DAYS = 14                # recency window, matched to the news corpus
 
+# The call window, `SSA_FILE_WINDOW_HOURS`, read from `ssa.batches`. Importing
+# `harness` here would be circular -- harness imports this module -- so the
+# variable name and its default used to be repeated here instead, and the
+# duplicate drifted exactly as predicted: the window shrank from three days to
+# one and this file went on serving three-day-old replies. `batches` owns the
+# round clock and imports nothing from the package, so both sides can read one
+# definition rather than have a test hold two in step.
+_FILE_WINDOW_SECONDS = batches.FILE_WINDOW_SECONDS
+
 # A cached reply older than this is a miss. The cache exists so that fifteen
 # models issuing overlapping keywords inside one round's window cost one
 # request, not fifteen -- it must not also serve last week's snippets to next
-# week's round just because two models phrased the same query. Matched to
-# SSA_FILE_WINDOW_DAYS: within one round's buying window a repeat is a hit,
-# across rounds it is not. Overwriting an aged entry loses nothing, because
-# every round's own corpus is stored in full under search/rounds/.
-CACHE_MAX_AGE_DAYS = float(os.environ.get("SSA_FILE_WINDOW_DAYS") or "3")
+# week's round just because two models phrased the same query. Matched to the
+# call window above, so that within one round's window a repeat is a hit and
+# across rounds it is not. The two were separate variables once, and when the
+# window shrank from three days to one this file went on serving replies older
+# than the window it exists to match. Overwriting an aged entry loses nothing,
+# because every round's own corpus is stored in full under search/rounds/.
+CACHE_MAX_AGE_DAYS = float(
+    os.environ.get("SSA_SEARCH_CACHE_DAYS")
+    or _FILE_WINDOW_SECONDS / 86400.0)
 
 # Tavily rate-limits per key. A refresh fans its jobs across FILING_WORKERS
 # threads and each may fire four queries at once, so one run bursts dozens of

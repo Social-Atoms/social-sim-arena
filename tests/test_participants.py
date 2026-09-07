@@ -262,16 +262,17 @@ def test_every_round_shape_builds_a_valid_envelope():
     print("ok test_every_round_shape_builds_a_valid_envelope")
 
 
-def test_the_envelope_states_the_participant_deadline_not_our_lock():
-    """A round locks 0 to 7 days after the deadline its answers were due. An
-    envelope carrying the later moment tells an endpoint it has until Wednesday
-    when its answer stopped counting on Monday."""
+def test_the_envelope_states_the_moment_an_answer_stops_counting():
+    """The envelope carries the moment an answer stops counting, which is the
+    round's own close. It is read straight from `batches.effective_deadline`
+    rather than copied from the season file, so a change to the rule reaches
+    the endpoint instead of only the validator."""
     r = _round("civiqs-2026-w38-approval")
     env = agent_api.build_envelope("acme-forecast", r)
     due = batches.effective_deadline(r["lock_at"])
     assert env["round"]["lock_at"] == due.strftime("%Y-%m-%dT%H:%M:%SZ")
-    assert env["round"]["lock_at"] < r["lock_at"], \
-        "the fixture must be a round whose lock is after its deadline"
+    assert env["round"]["lock_at"] == r["lock_at"], \
+        "the envelope must state the round's own close"
     print("ok test_the_envelope_states_the_participant_deadline_not_our_lock")
 
 
@@ -301,23 +302,16 @@ def test_a_reply_that_is_not_the_contract_is_refused():
                      "forecast": {"mean": 1, "sd": 1}}), "schema_version"),
         (json.dumps({"schema_version": "ssa-agent-api-v2"}), "no `forecast`"),
         (json.dumps({"schema_version": "ssa-agent-api-v2",
-                     "forecast": {"mean": 1}}), "needs mean and sd, or quantiles"),
+                     "forecast": {"mean": 1}}), "needs mean and sd"),
         (json.dumps({"schema_version": "ssa-agent-api-v2",
-                     "forecast": {"value": 41.2}}), "needs mean and sd, or quantiles"),
-        # A quantile answer is accepted, so the rules that make one scoreable
-        # are enforced here rather than discovered when CI rejects the file.
+                     "forecast": {"value": 41.2}}), "needs mean and sd"),
+        # Refused by name rather than by "needs mean and sd", because an
+        # endpoint written against the older contract is not making a typo and
+        # should be told what changed.
         (json.dumps({"schema_version": "ssa-agent-api-v2",
-                     "forecast": {"quantiles": {"0.1": 1, "0.9": 3}}}),
-         "at least three levels"),
-        (json.dumps({"schema_version": "ssa-agent-api-v2",
-                     "forecast": {"quantiles": {"0.1": 1, "0.4": 2, "0.9": 3}}}),
-         "median"),
-        (json.dumps({"schema_version": "ssa-agent-api-v2",
-                     "forecast": {"quantiles": {"0.1": 5, "0.5": 2, "0.9": 9}}}),
-         "must not decrease"),
-        (json.dumps({"schema_version": "ssa-agent-api-v2",
-                     "forecast": {"quantiles": {".1": 1, "0.5": 2, "0.9": 3}}}),
-         "0.NNN"),
+                     "forecast": {"quantiles": {"0.05": 44.0, "0.5": 50.0,
+                                                "0.95": 58.0}}}),
+         "quantiles are no longer accepted"),
     ]:
         try:
             agent_api.parse_scalar(text)
@@ -328,33 +322,105 @@ def test_a_reply_that_is_not_the_contract_is_refused():
     print("ok test_a_reply_that_is_not_the_contract_is_refused")
 
 
-def test_a_participant_may_answer_with_quantiles_on_either_shape():
-    """The submission schema accepts a normal or a quantile set for a topline
-    and for every profile cell, and `scoring.crps_forecast` scores both. The
-    parser used to carry a quantiles branch that raised KeyError('mean'), so
-    an endpoint expressing skew was refused by the arena and never knew why."""
+def test_a_forecast_is_stored_as_it_was_answered():
+    """No rounding on the way in, for any entrant.
+
+    `harness._distribution` rounded `mean` and `sd` to two decimals. For the
+    mean that is a silent edit to somebody's forecast; for the sd it changes
+    what the forecast says: 0.004 passes the "must be above zero" check on the
+    line above and was then written down as 0.0, which is a point guess -- the
+    one thing the arena refuses -- in a file `schema/forecast.schema.json`
+    rejects for `exclusiveMinimum: 0`. Two decimals were never a rule anywhere.
+
+    Lives here rather than in `tests/test_harness.py`, which is kept local and
+    unpublished, so CI runs it.
+    """
     import jsonschema
-    from ssa import scoring
     schema = json.load(open(os.path.join(ROOT, "schema", "forecast.schema.json")))
-    q = {"0.05": 33.0, "0.5": 36.0, "0.95": 40.5}
-    top = agent_api.parse_scalar(json.dumps(
-        {"schema_version": "ssa-agent-api-v2", "forecast": {"quantiles": q}}))
-    assert top == {"quantiles": q}, top
+
+    got = harness.answer({"mean": 41.2345, "sd": 0.004})
+    assert got == {"mean": 41.2345, "sd": 0.004}, got
+    jsonschema.validate({"round_id": "aaii-2026-09-10", "entrant": "acme-forecast",
+                         "topline": got, "notes": "n"}, schema)
+
+    # A real zero is still refused, and says so before anything is filed.
+    for sd in (0.0, -1.0):
+        try:
+            harness.answer({"mean": 41.0, "sd": sd})
+            raise AssertionError(f"sd {sd} was accepted")
+        except ValueError as err:
+            assert "sd out of schema range" in str(err), err
+
+    # Every cell of a profile goes through the same function, so the rule
+    # cannot hold for a topline and quietly not hold for a cell.
     cells = ["civiqs_net_approval_dem", "civiqs_net_approval_rep"]
     prof = agent_api.parse_profile(json.dumps(
         {"schema_version": "ssa-agent-api-v2",
-         "forecast": {"profile": {cells[0]: {"quantiles": q},
+         "forecast": {"profile": {cells[0]: {"mean": 1.005, "sd": 0.004},
                                   cells[1]: {"mean": 2.0, "sd": 1.0}}}}), cells)
-    assert prof[cells[0]] == {"quantiles": q}
-    assert prof[cells[1]] == {"mean": 2.0, "sd": 1.0}
-    # Both are scoreable and both survive the schema a filed forecast faces.
+    assert prof[cells[0]] == {"mean": 1.005, "sd": 0.004}, prof
+    jsonschema.validate({"round_id": "civiqs-profile-2026-w38",
+                         "entrant": "acme-forecast", "profile": prof,
+                         "notes": "n"}, schema)
+    print("ok test_a_forecast_is_stored_as_it_was_answered")
+
+
+def test_an_endpoint_answers_in_one_shape_and_it_is_the_filed_one():
+    """`{mean, sd}`, for a topline and for every profile cell, and nothing else.
+
+    A reply could once be a normal or a quantile set. No endpoint ever sent a
+    quantile set and no committed forecast holds one, so what the second shape
+    actually bought was a second parser to keep in step with
+    `tools/validate_submission.py`. The rule is narrower than the file schema on
+    purpose: a hand-committed file may still carry quantiles and
+    `scoring.crps_forecast` still scores them, so the claim that formats compete
+    on equal terms is untouched -- this is only what a live reply may contain.
+    """
+    import jsonschema
+    from ssa import scoring
+    schema = json.load(open(os.path.join(ROOT, "schema", "forecast.schema.json")))
+    response_schema = json.load(open(os.path.join(
+        ROOT, "schema", "agent-api-response.schema.json")))
+    q = {"0.05": 33.0, "0.5": 36.0, "0.95": 40.5}
+    cells = ["civiqs_net_approval_dem", "civiqs_net_approval_rep"]
+
+    for body in ({"schema_version": "ssa-agent-api-v2",
+                  "forecast": {"quantiles": q}},
+                 {"schema_version": "ssa-agent-api-v2",
+                  "forecast": {"profile": {cells[0]: {"quantiles": q},
+                                           cells[1]: {"mean": 2.0, "sd": 1.0}}}}):
+        # The published schema and the parser have to agree, or a participant
+        # validates against the contract page and is refused by the arena.
+        assert not jsonschema.Draft7Validator(response_schema).is_valid(body), \
+            "the response schema still accepts quantiles"
+        parse = (agent_api.parse_scalar if "profile" not in body["forecast"]
+                 else lambda t: agent_api.parse_profile(t, cells))
+        try:
+            parse(json.dumps(body))
+            raise AssertionError("a quantile reply was accepted")
+        except ValueError as err:
+            assert "quantiles are no longer accepted" in str(err), err
+
+    top = agent_api.parse_scalar(json.dumps(
+        {"schema_version": "ssa-agent-api-v2",
+         "forecast": {"mean": 36.0, "sd": 1.5}}))
+    prof = agent_api.parse_profile(json.dumps(
+        {"schema_version": "ssa-agent-api-v2",
+         "forecast": {"profile": {cells[0]: {"mean": -35.0, "sd": 2.0},
+                                  cells[1]: {"mean": 2.0, "sd": 1.0}}}}), cells)
+    assert top == {"mean": 36.0, "sd": 1.5}, top
     assert scoring.crps_forecast(top, 36.0) > 0
     for body in ({"round_id": "aaii-2026-09-10", "entrant": "acme-forecast",
                   "topline": top, "notes": "n"},
                  {"round_id": "aaii-2026-09-10", "entrant": "acme-forecast",
                   "profile": prof, "notes": "n"}):
         jsonschema.validate(body, schema)
-    print("ok test_a_participant_may_answer_with_quantiles_on_either_shape")
+    # …and the file schema is unchanged: a committed quantile forecast still
+    # validates and still scores, which is the half that was not narrowed.
+    jsonschema.validate({"round_id": "aaii-2026-09-10", "entrant": "human-crowd",
+                         "topline": {"quantiles": q}, "notes": "n"}, schema)
+    assert scoring.crps_forecast({"quantiles": q}, 36.0) > 0
+    print("ok test_an_endpoint_answers_in_one_shape_and_it_is_the_filed_one")
 
 
 def test_the_round_tells_a_participant_what_it_will_refuse():
@@ -580,10 +646,10 @@ def test_the_refresh_loop_files_a_participant_with_our_models_removed():
     season = json.load(open(os.path.join(ROOT, "questions", "season0.json")))
     scalar = next(x for x in season["rounds"]
                   if x.get("target_type", "continuous_normal") == "continuous_normal")
-    # An open round inside the buy window: the loop calls an entrant only
-    # between 72 h and 30 min before the deadline, so lock is 60 h after `now`.
+    # An open round inside the call window: every entrant is called between
+    # 24 h and 30 min before the round closes, so the close is 12 h after `now`.
     now = dt.datetime(2026, 9, 1, tzinfo=dt.timezone.utc)
-    r = dict(scalar, lock_at="2026-09-03T12:00:00Z", release_at="2026-09-05T12:00:00Z",
+    r = dict(scalar, lock_at="2026-09-02T00:00:00Z", release_at="2026-09-04T00:00:00Z",
              release_estimated=True)
     series = {r["series"]: [{"date": f"2026-08-{d:02d}", "value": 40.0 + d / 10} for d in range(1, 29)]}
     scratch = tempfile.mkdtemp(prefix="ssa-loop-")
@@ -698,6 +764,144 @@ def test_an_endpoint_failing_three_times_is_not_called_again_this_run():
     print("ok test_an_endpoint_failing_three_times_is_not_called_again_this_run")
 
 
+# --- the hour cap and the failure log ---------------------------------------
+
+class trickling:
+    """A real endpoint that answers, slowly, forever.
+
+    A fake `requests.post` cannot exercise this: the whole point is that the
+    body arrives below the chunk size, so what is being tested is a blocking
+    socket read and the thread that interrupts it. So this is a real HTTP
+    server on a real loopback port.
+    """
+
+    def __init__(self, piece=b'{"mean": 5', every=0.05):
+        import http.server
+        import socketserver
+        import threading
+        import time
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):
+                self.rfile.read(int(self.headers.get("Content-Length", "0")))
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                for _ in range(10000):
+                    try:
+                        self.wfile.write(piece)
+                        self.wfile.flush()
+                        time.sleep(every)
+                    except Exception:              # the arena hung up
+                        return
+
+            def log_message(self, *a):
+                pass
+
+        self.server = socketserver.TCPServer(("127.0.0.1", 0), Handler)
+        self.url = f"http://127.0.0.1:{self.server.server_address[1]}/forecast"
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.server.shutdown()
+        self.server.server_close()
+
+
+def test_a_trickling_endpoint_is_cut_off_at_the_deadline():
+    """One call may take an hour, not a day.
+
+    `TIMEOUT`'s read half is per socket read, so an endpoint sending a few bytes
+    at a time resets it forever and holds a filing worker until the six-hour job
+    limit. The cap is wall-clock, and the bytes that did arrive are kept: a
+    truncated body is how an operator tells a slow endpoint from a proxy error
+    page.
+    """
+    import time
+
+    with_key()
+    saved = harness.CALL_DEADLINE_SECONDS
+    harness.CALL_DEADLINE_SECONDS = 1.0
+    try:
+        with trickling() as endpoint:
+            started = time.monotonic()
+            try:
+                harness._call_agent({}, endpoint.url, "", "acme", "{}")
+                raise AssertionError("a never-ending reply was accepted")
+            except harness.PartialReply as err:
+                took = time.monotonic() - started
+                assert took < 5, f"cut off after {took:.1f}s, cap was 1s"
+                assert err.partial, "the bytes that arrived were thrown away"
+                assert b'{"mean"' in err.partial, err.partial[:40]
+    finally:
+        harness.CALL_DEADLINE_SECONDS = saved
+    print("ok test_a_trickling_endpoint_is_cut_off_at_the_deadline")
+
+
+def test_a_failed_call_is_written_down_and_can_never_be_replayed():
+    """Every failure lands in `replies/<round>/failures/`, with whatever body
+    had arrived -- and can never come back as an answer.
+
+    The runner is deleted minutes after the run, so an exception that only
+    reached its log is gone. Two properties are asserted together because the
+    second is what makes the first safe: the record is durable, and it carries
+    no `reply` key and lives where `replies.lookup` cannot address it, so the
+    thing that replays paid replies can never replay a failure as a forecast.
+    """
+    from ssa import replies
+
+    saved_dir = os.environ.get("SSA_REPLIES_DIR")
+    tmp = tempfile.mkdtemp(prefix="ssa-failures-")
+    os.environ["SSA_REPLIES_DIR"] = tmp
+    saved = (harness.CALL_DEADLINE_SECONDS, harness.call_provider,
+             harness.route, harness.standby_route, harness.call_identity,
+             harness.model_id)
+    harness.CALL_DEADLINE_SECONDS = 1.0
+    try:
+        with trickling() as endpoint:
+            harness.call_identity = lambda e, via=None: f"endpoint @ {endpoint.url}"
+            harness.model_id = lambda e, via=None: "endpoint"
+            harness.route = lambda e, via=None: {
+                "base": endpoint.url, "via": "participant",
+                "env": "SSA_NO_SUCH_KEY", "model": "endpoint"}
+            harness.standby_route = lambda e: None
+            harness.call_provider = lambda e, prompt, with_usage=False, \
+                context=None, via=None: harness._call_agent(
+                    {}, endpoint.url, "", "endpoint", prompt)
+            with_key()
+            prompt = '{"round":"r1"}'
+            for _ in range(2):
+                try:
+                    harness._ask("acme-forecast", prompt, None, "r1")
+                    raise AssertionError("a cut-off reply was filed")
+                except harness.PartialReply:
+                    pass
+
+            ih = harness.prompt_hash("acme-forecast", prompt)
+            got = json.load(open(replies.failure_path("r1", "acme-forecast", ih)))
+            assert got["attempts_total"] == 2, got["attempts_total"]
+            first = got["attempts"][0]
+            assert first["error_type"] == "PartialReply", first
+            assert '{"mean"' in first["partial"], first
+            assert first["partial_bytes"] > 0, first
+            assert "reply" not in first, "a failure was stored as a reply"
+            assert replies.lookup("r1", "acme-forecast", ih) is None, \
+                "the reply log can see a failure record"
+            assert replies.failures("r1", "acme-forecast", ih), "not readable"
+    finally:
+        (harness.CALL_DEADLINE_SECONDS, harness.call_provider, harness.route,
+         harness.standby_route, harness.call_identity,
+         harness.model_id) = saved
+        shutil.rmtree(tmp, ignore_errors=True)
+        if saved_dir is None:
+            os.environ.pop("SSA_REPLIES_DIR", None)
+        else:
+            os.environ["SSA_REPLIES_DIR"] = saved_dir
+    print("ok test_a_failed_call_is_written_down_and_can_never_be_replayed")
+
+
 if __name__ == "__main__":
     test_the_registration_carries_no_credential_and_cannot_name_one()
     test_a_participant_route_is_https_only()
@@ -706,10 +910,11 @@ if __name__ == "__main__":
     test_a_participant_request_is_signed_over_the_bytes_sent()
     test_a_participant_has_no_standby_and_no_base_override()
     test_every_round_shape_builds_a_valid_envelope()
-    test_the_envelope_states_the_participant_deadline_not_our_lock()
+    test_the_envelope_states_the_moment_an_answer_stops_counting()
     test_the_request_id_is_stable_so_a_retry_is_the_same_question()
     test_a_reply_that_is_not_the_contract_is_refused()
-    test_a_participant_may_answer_with_quantiles_on_either_shape()
+    test_an_endpoint_answers_in_one_shape_and_it_is_the_filed_one()
+    test_a_forecast_is_stored_as_it_was_answered()
     test_the_round_tells_a_participant_what_it_will_refuse()
     test_the_starter_server_answers_all_three_shapes_from_the_envelope_alone()
     test_a_profile_reply_is_all_cells_or_none()
@@ -720,4 +925,6 @@ if __name__ == "__main__":
     test_a_registration_without_a_route_is_unchanged()
     test_a_reply_over_the_size_cap_is_refused_unread()
     test_an_endpoint_failing_three_times_is_not_called_again_this_run()
-    print("21 passed")
+    test_a_trickling_endpoint_is_cut_off_at_the_deadline()
+    test_a_failed_call_is_written_down_and_can_never_be_replayed()
+    print("24 passed")

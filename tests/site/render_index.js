@@ -55,6 +55,36 @@ console.log(`shaped rounds   : ${shaped.length} in data, ${shownShaped.length} o
   + `${(list.match(/class="qshape special"/g) || []).length} shape tags rendered`);
 console.log(`footer          : ${els['foot-updated'].textContent}`);
 
+// The three-week calendar has to count every answer that lands inside it,
+// including answers to questions that already closed. Built from the open
+// rounds alone, it showed nothing arriving for anything past its close --
+// measured on the committed payload, 31 of the 54 answers landing in the
+// visible weeks were missing, and by mid-week that is most of them.
+{
+  const weekly = els['weekly-content'].innerHTML || '';
+  const from = (() => { const x = new Date(); x.setUTCHours(0, 0, 0, 0);
+    x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7)); return x.getTime(); })();
+  const to = from + 21 * 86400000;
+  const inGrid = iso => { const t = Date.parse(iso); return t >= from && t < to; };
+  const landing = data.rounds.filter(r => r.release_at && inGrid(r.release_at));
+  const tagged = [...weekly.matchAll(/<div class="wc-tag res"><b>(\d+)<\/b>/g)]
+    .reduce((n, m) => n + Number(m[1]), 0);
+  if (landing.length && tagged !== landing.length) {
+    problems.push(`the calendar counts ${tagged} answers landing in the three `
+      + `weeks it shows; ${landing.length} land there`);
+  }
+  const closing = data.rounds.filter(r =>
+    r.status === 'open' && Date.parse(r.deadline || r.lock_at) > Date.now()
+    && inGrid(r.deadline || r.lock_at));
+  const closeTagged = [...weekly.matchAll(/<div class="wc-tag close"><b>(\d+)<\/b>/g)]
+    .reduce((n, m) => n + Number(m[1]), 0);
+  if (closing.length && closeTagged !== closing.length) {
+    problems.push(`the calendar counts ${closeTagged} closes; ${closing.length} `
+      + 'questions close in the weeks it shows');
+  }
+  console.log(`calendar        : ${closeTagged} closes, ${tagged} answers land`);
+}
+
 // A rendered `undefined` or `NaN` is a bug the reader sees before anyone else
 // does, and it survives every check that only counts rows.
 for (const leak of leaks(els)) {

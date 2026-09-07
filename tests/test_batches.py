@@ -38,29 +38,105 @@ def test_every_deadline_is_strictly_before_its_lock():
     print("ok test_every_deadline_is_strictly_before_its_lock")
 
 
-def test_the_cutover_is_dated_and_not_retroactive():
-    """Rounds scored under the per-round rule keep it, or scores get rewritten."""
+def test_every_round_closes_at_its_own_lock():
+    """The rule the whole participant surface rests on. `governed_by_batch`
+    survives as a grouping question -- which week a round is listed under --
+    and decides nothing about validity."""
+    for lock in ("2026-08-28T14:00:00Z", "2026-09-16T14:00:00Z",
+                 "2026-10-30T22:00:00Z"):
+        assert iso(batches.effective_deadline(lock)) == lock
+        assert batches.freeze_at(lock) == batches.effective_deadline(lock)
     assert not batches.governed_by_batch("2026-08-28T14:00:00Z")
     assert batches.governed_by_batch("2026-09-16T14:00:00Z")
-    # A pre-cutover round's deadline is its own lock, unchanged.
-    assert iso(batches.effective_deadline("2026-08-28T14:00:00Z")) == \
-        "2026-08-28T14:00:00Z"
-    print("ok test_the_cutover_is_dated_and_not_retroactive")
+    print("ok test_every_round_closes_at_its_own_lock")
 
 
-def test_the_null_freezes_where_the_entrant_answered():
-    """The whole point: same instant, so neither reads what the other cannot."""
-    for lock in ("2026-09-16T14:00:00Z", "2026-08-28T14:00:00Z"):
-        assert batches.freeze_at(lock) == batches.effective_deadline(lock)
-    print("ok test_the_null_freezes_where_the_entrant_answered")
+def test_the_null_reads_what_the_entrants_were_handed():
+    """The whole point, and it is the window's opening, not the close.
+
+    Every endpoint is called inside `[window_opens_at, effective_deadline)` and
+    is handed the history as it stood when that window opened, so first call and
+    last retry answer the same question. A null frozen at the close is up to a
+    day better informed than the people it is the denominator for. Measured on
+    `mc-2026-w37-approval`: entrants called on a history ending at 40.0, the
+    persistence null built on the 46.0 that landed inside the window.
+
+    Three things are asserted together because the fix is only safe if all
+    three hold: the null moves back to the window, the close snapshot does not
+    (or `resolve` could no longer tell the answer from history it already had),
+    and a round with no window snapshot keeps its old numbers exactly.
+    """
+    import json as _json
+    import tempfile
+    from ssa import refresh
+
+    lock = "2026-09-20T14:00:00Z"
+    opens = batches.window_opens_at(lock)
+    assert iso(opens) == "2026-09-19T14:00:00Z"
+    assert batches.freeze_at(lock) - opens == batches.FILE_WINDOW
+
+    def at(t):
+        return datetime.fromisoformat(t.replace("Z", "+00:00"))
+
+    r = {"round_id": "w-1", "tracker": "t", "series": "s",
+         "question": "q", "unit": "%", "release_at": "2026-09-22T14:00:00Z",
+         "release_estimated": False, "lock_at": lock, "resolve": "the release"}
+    season = {"season": 0, "rounds": [r]}
+    early = [{"date": "2026-09-15", "value": 39.0},
+             {"date": "2026-09-16", "value": 39.5},
+             {"date": "2026-09-17", "value": 40.0}]
+    real_locks = refresh.LOCKS
+    refresh.LOCKS = tempfile.mkdtemp(prefix="ssa-locks-")
+    try:
+        # A refresh before the window opens. This is the freeze.
+        refresh.build_rounds(season, {"s": list(early)}, {}, at("2026-09-19T02:00:00Z"))
+
+        # A point lands inside the window: dated before the close, so the date
+        # filter admits it, and observed after every entrant was handed its
+        # history.
+        during = early + [{"date": "2026-09-19", "value": 46.0}]
+        rows, hist = refresh.build_rounds(season, {"s": during}, {},
+                                          at("2026-09-20T02:00:00Z"))
+        assert hist["w-1"] == early, "an entrant was handed the in-window point"
+        assert rows[0]["baselines"]["persistence"]["mean"] == 40.0, \
+            rows[0]["baselines"]["persistence"]
+        assert rows[0]["history_source"] == "window snapshot"
+
+        # …and the close snapshot did see it, which is what `resolve` reads to
+        # tell the round's answer from history it already had.
+        snap = refresh.read_lock_snapshot("w-1")
+        assert snap["history"][-1] == {"date": "2026-09-19", "value": 46.0}
+        assert snap["answer_history"] == early
+
+        # A round frozen before any of this existed has no `answer_history`,
+        # falls back to the close snapshot, and its numbers do not move. Every
+        # one of the 108 committed snapshots is in exactly this state.
+        old = dict(r, round_id="w-old")
+        with open(refresh.lock_snapshot_path("w-old"), "w") as fh:
+            _json.dump({"round_id": "w-old", "series": "s", "lock_at": lock,
+                        "history": during}, fh)
+        rows, hist = refresh.build_rounds({"season": 0, "rounds": [old]},
+                                          {"s": during}, {},
+                                          at("2026-09-20T02:00:00Z"))
+        assert hist["w-old"] == during
+        assert rows[0]["baselines"]["persistence"]["mean"] == 46.0
+        assert rows[0]["history_source"] == "lock snapshot"
+    finally:
+        refresh.LOCKS = real_locks
+    print("ok test_the_null_reads_what_the_entrants_were_handed")
 
 
-def test_horizon_is_between_zero_and_seven_days():
-    assert abs(batches.horizon_days("2026-09-16T14:00:00Z") - 2.083) < 0.01
-    assert abs(batches.horizon_days("2026-09-20T14:00:00Z") - 6.083) < 0.01
-    # Pre-cutover rounds have no batch horizon: deadline is the lock itself.
-    assert batches.horizon_days("2026-08-28T14:00:00Z") == 0.0
-    print("ok test_horizon_is_between_zero_and_seven_days")
+def test_the_horizon_is_the_distance_to_the_answer():
+    """Deadline to release, which is what makes two rounds comparable. It is
+    2.0 days for a round locking at release - 48h and larger for one that has
+    to lock before the period it measures."""
+    assert batches.horizon_days("2026-09-16T14:00:00Z",
+                                "2026-09-18T14:00:00Z") == 2.0
+    assert batches.horizon_days("2026-09-11T14:00:00Z",
+                                "2026-09-22T14:00:00Z") == 11.0
+    # Without a release there is no horizon to report, and none is invented.
+    assert batches.horizon_days("2026-08-28T14:00:00Z") is None
+    print("ok test_the_horizon_is_the_distance_to_the_answer")
 
 
 def test_one_batch_id_per_week():
@@ -81,42 +157,50 @@ def test_the_real_season_splits_into_weekly_batches():
     with open(os.path.join(root, "questions", "season0.json")) as fh:
         rounds = json.load(fh)
     rounds = rounds["rounds"] if isinstance(rounds, dict) else rounds
+    horizons = []
     for r in rounds:
         lock = r["lock_at"]
-        if batches.governed_by_batch(lock):
-            assert batches.effective_deadline(lock) < batches._parse(lock), \
-                f"{r['round_id']}: deadline is not before its lock"
-        else:
-            # Pre-cutover: the round is its own deadline, unchanged.
-            assert batches.effective_deadline(lock) == batches._parse(lock), \
-                f"{r['round_id']}: pre-cutover round moved off its own lock"
-        assert 0.0 <= batches.horizon_days(lock) < 7.0, \
-            f"{r['round_id']}: horizon outside one week"
+        assert batches.effective_deadline(lock) == batches._parse(lock), \
+            f"{r['round_id']}: does not close at its own lock"
+        h = batches.horizon_days(lock, r["release_at"])
+        assert h > 0, f"{r['round_id']}: closes after it releases"
+        horizons.append(h)
+    # 94 of 116 lock at release - 48h; the rest ask about a period and must
+    # lock before it starts, which is a property of those questions.
+    two_day = sum(1 for h in horizons if abs(h - 2.0) < 0.05)
+    assert two_day > len(rounds) * 0.75, two_day
+    assert max(horizons) < 40, max(horizons)
     governed = [r for r in rounds if batches.governed_by_batch(r["lock_at"])]
     print(f"ok test_the_real_season_splits_into_weekly_batches "
-          f"({len(governed)}/{len(rounds)} rounds under batch rules)")
+          f"({two_day}/{len(rounds)} at a 48-hour horizon, "
+          f"{len(governed)} listed under a week)")
 
 
-def test_our_models_are_held_to_the_same_deadline_as_everyone_else():
-    """The buy window and the filed stamp anchor on the deadline, not the lock.
+def test_every_entrant_is_called_in_the_same_window_before_the_close():
+    """The window is 24 hours before the round's own close, for everyone.
 
-    Anchored on the lock, a round locking Sunday would still be buyable all
-    week after the Monday deadline closed every external entrant out -- our own
-    models reading six days of news nobody else could use. Anchored on the
-    deadline, the window shuts when theirs does.
+    What the arena hands over is frozen at the window's opening, so when
+    inside the window an entrant is reached does not change what it saw. The
+    window bounds only what an entrant can look up for itself between the
+    first call and the last retry, which is why it is a day rather than the
+    three it used to be.
     """
     from ssa import harness, refresh
-    lock = "2026-09-20T14:00:00Z"                 # Sunday, horizon 6.1 days
-    due = batches.effective_deadline(lock)        # Monday 2026-09-14 12:00Z
+    lock = "2026-09-20T14:00:00Z"
+    due = batches.effective_deadline(lock)        # the lock itself
     r = {"round_id": "test", "lock_at": lock}
+    assert due == batches._parse(lock)
 
-    inside = due - timedelta(days=2, hours=12)    # in the 3d..2d window
-    after = due + timedelta(hours=1)              # deadline passed, lock has not
+    inside = due - timedelta(hours=12)            # inside the 24h window
+    early = due - timedelta(days=2)               # before it opens
+    after = due + timedelta(hours=1)              # closed
     assert refresh.model_jobs_due(r, inside)
+    assert not refresh.model_jobs_due(r, early), \
+        "buying before the window opens would read a corpus nobody else had"
     assert not refresh.model_jobs_due(r, after), \
-        "buying after the deadline would out-inform every external entrant"
+        "buying after the close would out-inform every external entrant"
 
-    stamped = f"filed={(due - timedelta(days=1)):%Y-%m-%dT%H:%MZ}, m"
+    stamped = f"filed={(due - timedelta(hours=6)):%Y-%m-%dT%H:%MZ}, m"
     assert harness.filed_in_window(stamped, lock)
     stale = f"filed={(due - timedelta(days=9)):%Y-%m-%dT%H:%MZ}, m"
     assert not harness.filed_in_window(stale, lock)
@@ -127,15 +211,15 @@ def test_our_models_are_held_to_the_same_deadline_as_everyone_else():
     # The web corpus must use the identical boundary. Before this regression,
     # a valid corpus gathered 2.5 days before the deadline was measured against
     # Sunday's later lock and rejected as eight days "too early".
-    gathered = {"asked_at": iso(due - timedelta(days=2, hours=12))}
+    gathered = {"asked_at": iso(due - timedelta(hours=12))}
     assert harness._gathered_in_window(gathered, r)
     gathered_after = {"asked_at": iso(due + timedelta(minutes=1))}
     assert not harness._gathered_in_window(gathered_after, r)
     asof = due - timedelta(seconds=harness.FILE_WINDOW_SECONDS)
     assert refresh.information_asof(r) == iso(asof)
-    assert asof <= due - timedelta(days=2, hours=12), \
+    assert asof <= due - timedelta(hours=12), \
         "the shared news corpus must already be complete when calls begin"
-    print("ok test_our_models_are_held_to_the_same_deadline_as_everyone_else")
+    print("ok test_every_entrant_is_called_in_the_same_window_before_the_close")
 
 
 def test_public_open_status_closes_at_the_participant_deadline():
@@ -146,36 +230,37 @@ def test_public_open_status_closes_at_the_participant_deadline():
         "lock_at": "2026-09-20T14:00:00Z",
         "release_at": "2026-09-22T14:00:00Z",
     }
-    before = datetime(2026, 9, 14, 11, 59, tzinfo=timezone.utc)
-    after = datetime(2026, 9, 14, 12, 1, tzinfo=timezone.utc)
+    due = batches.effective_deadline(r["lock_at"])
+    before = due - timedelta(minutes=1)
+    after = due + timedelta(minutes=1)
     assert refresh.round_status(r, {}, before) == "open"
     assert refresh.round_status(r, {}, after) == "locked"
-    assert after >= batches.effective_deadline(r["lock_at"]), \
-        "the submission validator already considers this round late"
-    assert after < batches._parse(r["lock_at"]), \
-        "the old status check still considered this round open"
+    assert after >= due, "the submission validator already considers this late"
     print("ok test_public_open_status_closes_at_the_participant_deadline")
 
 
-def test_pre_cutover_rounds_keep_the_window_they_were_bought_in():
-    """Anchoring moved; already-bought rounds must not notice."""
+def test_a_round_older_than_the_calendar_behaves_like_every_other():
+    """There is one rule now, so an old round needs no exception: it closes at
+    its own lock, exactly as a new one does."""
     from ssa import harness, refresh
     lock = "2026-08-28T14:00:00Z"
     assert batches.effective_deadline(lock) == batches._parse(lock)
     r = {"round_id": "old", "lock_at": lock}
-    inside = batches._parse(lock) - timedelta(days=2, hours=12)
+    inside = batches._parse(lock) - timedelta(hours=6)
     assert refresh.model_jobs_due(r, inside)
-    stamped = f"filed={(batches._parse(lock) - timedelta(days=2)):%Y-%m-%dT%H:%MZ}, m"
+    stamped = f"filed={(batches._parse(lock) - timedelta(hours=6)):%Y-%m-%dT%H:%MZ}, m"
     assert harness.filed_in_window(stamped, lock)
-    print("ok test_pre_cutover_rounds_keep_the_window_they_were_bought_in")
+    print("ok test_a_round_older_than_the_calendar_behaves_like_every_other")
 
 
 def test_every_round_type_resolves_against_the_same_instant_it_froze():
     """The twin of the freeze test, on the resolution side.
 
-    `test_every_round_type_freezes_at_the_same_instant` pins where each round
-    type stops *reading*. This pins where each one decides an outcome is new.
-    They have to be the same instant: a round that freezes Monday and refuses
+    `test_every_round_type_freezes_at_the_same_instant` pins the date filter
+    each round type stops reading at. This pins where each one decides an
+    outcome is new. Those two have to be the same instant -- the close -- or a
+    round refuses to resolve against the release it asked about: a round that
+    stops reading Monday and refuses
     any observation older than Wednesday's lock will refuse to resolve against
     Tuesday's release -- the exact release its entrants were asked to forecast,
     and one none of them could see when they answered.
@@ -189,14 +274,16 @@ def test_every_round_type_resolves_against_the_same_instant_it_froze():
     from ssa import profile_round, ranking_round
 
     lock = "2026-09-16T14:00:00Z"                  # Wednesday
-    freeze = batches.freeze_at(lock)               # Monday 2026-09-14 12:00Z
-    assert freeze.strftime("%Y-%m-%d") < lock[:10], "fixture must straddle"
+    freeze = batches.freeze_at(lock)
+    assert freeze == batches._parse(lock), \
+        "resolution reads the round's own close; nothing may sit between them"
     r = {"round_id": "profile-fixture", "lock_at": lock,
          "release_at": "2026-09-18T14:00:00Z",
          "cells": ["civiqs_net_approval_dem", "civiqs_net_approval_rep"]}
 
-    # Published Tuesday: after every entrant answered, before the round locked.
-    between = {"date": "2026-09-15", "value": -8.0}
+    # Published on the day the round closed: the first observation entrants
+    # could not see, and the one they were asked to forecast.
+    between = {"date": "2026-09-16", "value": -8.0}
     series = {c: [{"date": "2026-09-07", "value": -9.0}, between]
               for c in r["cells"]}
     out = profile_round.resolution(r, series, cells=r["cells"])
@@ -212,22 +299,21 @@ def test_every_round_type_resolves_against_the_same_instant_it_froze():
     else:
         raise AssertionError("a pre-freeze value must not resolve the round")
 
-    # The ranking guard reads the same boundary. Its measured week begins after
-    # the freeze and ends before the lock -- unreachable in season 0, where
-    # every wiki week starts days after its lock, but the guard should not be
-    # the thing that decides that.
+    # The ranking guard reads the same boundary: a week that ends on the day
+    # the round closed is the first one its entrants could not see, and is
+    # exactly what the round asks about.
     rr = {"round_id": "ranking-fixture", "lock_at": lock}
     spec = {"kind": "wiki_top10", "length": 3, "loss": "rbo", "rbo_p": 0.9,
-            "week_start": "2026-09-14", "week_end": "2026-09-15",
+            "week_start": "2026-09-16", "week_end": "2026-09-22",
             "closed_set": False, "project": "en.wikipedia",
             "access": "all-access",
             "exclusions": "main_page_and_namespaces_v1"}
-    assert spec["week_end"] < lock[:10] and \
-        spec["week_end"] >= freeze.strftime("%Y-%m-%d"), "fixture must straddle"
+    assert spec["week_start"] >= freeze.strftime("%Y-%m-%d"), \
+        "the measured week must begin no earlier than the close"
     got = ranking_round.resolution(rr, spec=spec, obs=[
-        {"date": "2026-09-15", "items": ["a", "b", "c"]}])
-    assert got["week_end"] == "2026-09-15", \
-        "the guard refused a week that began after the round froze"
+        {"date": "2026-09-22", "items": ["a", "b", "c"]}])
+    assert got["week_end"] == "2026-09-22", \
+        "the guard refused a week that began when the round closed"
     print("ok test_every_round_type_resolves_against_the_same_instant_it_froze")
 
 
@@ -258,6 +344,15 @@ def test_every_round_type_freezes_at_the_same_instant():
     """Scalar, profile and ranking nulls must freeze together, or the headline
     round type is scored against data its entrants never saw.
 
+    This pins the *date filter* the three share: nothing dated on or after the
+    round's close is in any null. On top of it each type also freezes by
+    observation time when the call window opens
+    (`refresh.freeze_for_answering`), which is what
+    `test_the_null_reads_what_the_entrants_were_handed` covers -- a date cannot
+    say what hour a point appeared, and the window is shorter than a day. The
+    filter still has to hold, because it is the fallback for every round frozen
+    before that existed.
+
     This is a regression test with a date on it. `refresh.build_rounds` moved to
     the batch deadline; `profile_round.frozen_history` and
     `ranking_round.frozen_history` kept `lock_at[:10]` through that change,
@@ -266,25 +361,25 @@ def test_every_round_type_freezes_at_the_same_instant():
     them.
     """
     from ssa import profile_round, ranking_round
-    lock = "2026-09-20T14:00:00Z"                  # Sunday, horizon 6.1 days
+    lock = "2026-09-20T14:00:00Z"
     freeze = batches.freeze_at(lock).strftime("%Y-%m-%d")
-    assert freeze == "2026-09-14", freeze          # the deadline, not the lock
+    assert freeze == "2026-09-20", freeze          # the round's own close
 
     r = {"round_id": "t", "lock_at": lock, "cells": ["a_cell", "b_cell"]}
     series = {c: [{"date": d, "value": 1.0} for d in
-                  ("2026-09-13", "2026-09-15", "2026-09-19")]
+                  ("2026-09-13", "2026-09-19", "2026-09-21")]
               for c in ("a_cell", "b_cell")}
     got = profile_round.frozen_history(r, series, cells=("a_cell", "b_cell"))
     for cell, hist in got.items():
-        assert [p["date"] for p in hist] == ["2026-09-13"], \
-            f"{cell} froze at the lock, not the deadline: {hist}"
+        assert [p["date"] for p in hist] == ["2026-09-13", "2026-09-19"], \
+            f"{cell} did not freeze at the close: {hist}"
 
     obs = [{"date": d, "items": []} for d in
-           ("2026-09-13", "2026-09-15", "2026-09-19")]
+           ("2026-09-13", "2026-09-19", "2026-09-21")]
     kept = ranking_round.frozen_history({"lock_at": lock}, obs)
-    assert [o["date"] for o in kept] == ["2026-09-13"], kept
+    assert [o["date"] for o in kept] == ["2026-09-13", "2026-09-19"], kept
 
-    # Pre-cutover rounds are untouched: freeze is still the lock.
+    # There is one rule, so an older round needs no exception.
     old = "2026-08-28T14:00:00Z"
     assert batches.freeze_at(old).strftime("%Y-%m-%d") == "2026-08-28"
     print("ok test_every_round_type_freezes_at_the_same_instant")
@@ -294,14 +389,14 @@ if __name__ == "__main__":
     test_deadline_is_the_monday_noon_before_the_lock()
     test_a_lock_on_the_deadline_falls_to_the_previous_batch()
     test_every_deadline_is_strictly_before_its_lock()
-    test_the_cutover_is_dated_and_not_retroactive()
-    test_the_null_freezes_where_the_entrant_answered()
-    test_horizon_is_between_zero_and_seven_days()
+    test_every_round_closes_at_its_own_lock()
+    test_the_null_reads_what_the_entrants_were_handed()
+    test_the_horizon_is_the_distance_to_the_answer()
     test_one_batch_id_per_week()
     test_the_real_season_splits_into_weekly_batches()
-    test_our_models_are_held_to_the_same_deadline_as_everyone_else()
+    test_every_entrant_is_called_in_the_same_window_before_the_close()
     test_public_open_status_closes_at_the_participant_deadline()
-    test_pre_cutover_rounds_keep_the_window_they_were_bought_in()
+    test_a_round_older_than_the_calendar_behaves_like_every_other()
     test_every_round_type_resolves_against_the_same_instant_it_froze()
     test_the_validators_copy_of_the_calendar_never_drifts()
     test_every_round_type_freezes_at_the_same_instant()

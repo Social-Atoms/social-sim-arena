@@ -298,11 +298,9 @@ def next_release_for(season, tracker, now):
 def round_status(r, resolved, now):
     if r["round_id"] in resolved:
         return "resolved"
-    # `open` means a participant can still file. After the weekly-calendar
-    # cutover that closes at the batch deadline, up to seven days before the
-    # arena's internal lock. The old lock comparison left the site and
-    # questionnaire advertising rounds that every validator correctly rejected
-    # as late.
+    # `open` means a participant can still file, which ends at the round's own
+    # close. Read through `batches.effective_deadline` rather than `lock_at`
+    # directly, so the page and the validator can never disagree about it.
     if now < batches.effective_deadline(r["lock_at"]):
         return "open"
     if now < parse_iso(r["release_at"]):
@@ -401,8 +399,65 @@ def season_roster():
     return roster
 
 
+def _merge_snapshot(round_id, updates):
+    """Read, merge, write. Returns True.
+
+    Merging rather than replacing, because two different freezes write into
+    this file -- the close freeze below and `freeze_for_answering` -- and a
+    whole-file rewrite by either one silently drops the other's field.
+    """
+    body = read_lock_snapshot(round_id) or {}
+    body.update(updates)
+    os.makedirs(LOCKS, exist_ok=True)
+    with open(lock_snapshot_path(round_id), "w") as f:
+        json.dump(body, f, indent=2, sort_keys=True)
+        f.write("\n")
+    return True
+
+
+def freeze_for_answering(r, field, value, now):
+    """What the entrants were handed for this round, frozen once and for all
+    when the call window opened. Returns it, or None if nothing was frozen.
+
+    **This is the boundary a null must be built on.** Every endpoint is called
+    inside `[window_opens_at, effective_deadline)`, and what it is handed is
+    fixed when that window opens, so whoever is called first and whoever is
+    retried last answer the same question. A null frozen at the *close*, up to
+    a day later, is a ruler that read what the people it measures could not:
+    on `mc-2026-w37-approval` the entrants were called on a history ending at
+    40.0 while the persistence null had already read the 46.0 that landed
+    inside the window.
+
+    Written every refresh until the window opens and never again. It has to be
+    an observation time rather than a date filter for the same reason
+    `update_lock_snapshot` exists: a monthly value is dated by its month label
+    and published weeks later, so no filter on `date` can tell "existed when
+    the window opened" from "labelled before it".
+
+    Returns None for a round whose window had already opened when this landed.
+    The callers then fall back to the older, later boundary. That is the old
+    behaviour on purpose: what a series looked like twelve hours ago cannot be
+    reconstructed, and inventing it would be worse than saying so.
+
+    `value` is never replaced by an empty one -- see `update_lock_snapshot` for
+    the build that blanked a round's history in one pass.
+    """
+    previous = (read_lock_snapshot(r["round_id"]) or {}).get(field)
+    if now >= batches.window_opens_at(r["lock_at"]):
+        return previous                   # frozen, or never taken
+    if not value and previous:
+        return previous
+    _merge_snapshot(r["round_id"], {
+        "round_id": r["round_id"],
+        "lock_at": r["lock_at"],
+        field: value,
+        "answer_frozen_at": iso(now),
+    })
+    return value
+
+
 def update_lock_snapshot(r, hist, now):
-    """Record the history a round would freeze, while it is still open.
+    """Record the history a round had at its close, while it is still open.
 
     Filtering by `date < lock_at` does not actually freeze anything for a
     monthly series, because the point's date is its month label, not its
@@ -416,12 +471,12 @@ def update_lock_snapshot(r, hist, now):
     moment is the freeze, and it is a committed artifact rather than something
     recomputed from data that has since changed underneath it.
 
-    The freeze is the round's *batch deadline*, not its lock. Under the
-    weekly batch calendar those differ by up to seven days, and a null frozen
-    at the lock would read a week of series the entrants never saw while
-    serving as the denominator of their score. `batches.freeze_at` returns the
-    lock itself for rounds that predate the cutover, so their snapshots stay
-    exactly as they were written and already-published scores do not move.
+    **This one answers "what had been published by the time answering
+    stopped".** That is what `resolve.candidate` needs, to tell the round's
+    answer from history it already had. It is *not* the boundary the nulls are
+    built on -- that is `freeze_for_answering`, up to a day earlier, because
+    entrants stop being handed new history when the window opens rather than
+    when it closes.
 
     Empty history is never written over a snapshot that has some. A series
     missing from the map produces `hist == []`, which is a caller with an
@@ -434,18 +489,13 @@ def update_lock_snapshot(r, hist, now):
         return False                      # frozen; never rewritten
     if not hist and (read_lock_snapshot(r["round_id"]) or {}).get("history"):
         return False                      # never trade a real freeze for nothing
-    os.makedirs(LOCKS, exist_ok=True)
-    body = {
+    return _merge_snapshot(r["round_id"], {
         "round_id": r["round_id"],
         "series": r["series"],
         "lock_at": r["lock_at"],
         "observed_at": iso(now),
         "history": hist[-LOCK_SNAPSHOT_POINTS:],
-    }
-    with open(lock_snapshot_path(r["round_id"]), "w") as f:
-        json.dump(body, f, indent=2)
-        f.write("\n")
-    return True
+    })
 
 
 def build_rounds(season, series, resolved, now, ranking_obs=None):
@@ -473,21 +523,17 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
         # predate target_type and are numeric distributions.
         row["target_type"] = r.get("target_type", "continuous_normal")
         row["deadline"] = iso(batches.effective_deadline(r["lock_at"]))
-        # The batch this round belongs to, and when that batch is handed over,
-        # or null for a round that predates the weekly calendar. Published
-        # rather than derived in the browser: a page that recomputes "which
-        # Monday" owns a second copy of `ssa/batches.py`, and the two would
-        # drift the first time the calendar moved. Null is load-bearing -- a
-        # pre-cutover round's deadline is its own lock, so grouping those by
-        # deadline invents one batch per round.
-        if batches.governed_by_batch(r["lock_at"]):
-            row["batch_id"] = batches.batch_of(r["lock_at"])
-            row["published_at"] = iso(batches.published_at(r["lock_at"]))
-            row["horizon_days"] = round(batches.horizon_days(r["lock_at"]), 3)
-        else:
-            row["batch_id"] = None
-            row["published_at"] = None
-            row["horizon_days"] = None
+        # When this round is listed, and which week it displays under. The
+        # deadline is its own lock; the week is only how the site groups it,
+        # and is null for a round older than the calendar. Published rather
+        # than derived in the browser: a page that recomputes "which Monday"
+        # owns a second copy of `ssa/batches.py` and drifts the first time the
+        # calendar moves.
+        row["published_at"] = iso(batches.published_at(r["lock_at"]))
+        row["horizon_days"] = round(
+            batches.horizon_days(r["lock_at"], r["release_at"]), 3)
+        row["batch_id"] = (batches.batch_of(r["lock_at"])
+                           if batches.governed_by_batch(r["lock_at"]) else None)
         # What the question is *about*, as opposed to what shape its answer
         # takes (`target_type`) or who published the figure (`tracker`). The
         # board groups on this, and it is published rather than derived in the
@@ -509,40 +555,52 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
             # freeze that does apply is the date filter in
             # `ranking_round.frozen_history`, exact here for the reason
             # `attach_ranking` gives.
-            attach_ranking(row, r, (ranking_obs or {}).get(r["round_id"]))
+            attach_ranking(row, r, (ranking_obs or {}).get(r["round_id"]), now)
             hist_by_round[r["round_id"]] = []
             if r["round_id"] in resolved:
                 row["resolution"] = resolved[r["round_id"]]
             out.append(row)
             continue
-        # Baselines are frozen where the entrants answered, and only history
-        # strictly before that date counts. Two reasons, and the second is why
-        # this is the batch deadline rather than the lock.
+        # Baselines are frozen where the entrants answered -- when the call
+        # window opened -- and only history strictly before the close counts.
+        # Three reasons, and the third is why this is the window rather than
+        # the close.
         #
         # Contamination: once a release lands in the series, a null built from
         # it would contain the outcome it is scored against.
         #
         # Comparability: the headline metric divides the entrant's CRPS by this
-        # null's. Freezing the null at the lock while entrants answered at the
-        # batch deadline hands the denominator up to seven days of series the
-        # numerator never saw, and the size of that gift varies by round, so a
-        # season mean would partly measure the lock-day calendar. `batches`
-        # returns the lock itself for pre-cutover rounds, so rounds already
-        # scored keep the history they were scored against.
-        freeze = batches.freeze_at(r["lock_at"])
-        lock_date = freeze.strftime("%Y-%m-%d")
+        # null's, so a null frozen anywhere later than the entrants answered
+        # hands the denominator series the numerator never saw.
+        #
+        # And that is not hypothetical at a day's granularity: on
+        # `mc-2026-w37-approval` the entrants were called on a history ending at
+        # 40.0, and the persistence null had read the 46.0 that landed inside
+        # the window. Every entrant was scored against a ruler that had seen the
+        # answer move and they had not.
+        close = batches.freeze_at(r["lock_at"])
+        opens = batches.window_opens_at(r["lock_at"])
+        lock_date = close.strftime("%Y-%m-%d")
         live = [p for p in (series.get(r["series"]) or []) if p["date"] < lock_date]
-        if now < freeze:
-            # Still open: use live history and keep the snapshot current.
-            hist = live
-            update_lock_snapshot(r, live, now)
+        # Runs until the close, so `history` -- what `resolve` needs -- stays
+        # current after the window has shut.
+        update_lock_snapshot(r, live, now)
+        handed = freeze_for_answering(r, "answer_history",
+                                      live[-LOCK_SNAPSHOT_POINTS:], now)
+        if now < opens:
+            hist = live                       # nobody has been called yet
         else:
-            # Locked: the frozen snapshot is the truth. Falling back to the
-            # date filter is only for rounds that locked before snapshots
-            # existed, and it carries the flaw described in update_lock_snapshot.
-            snap = read_lock_snapshot(r["round_id"])
-            hist = snap["history"] if snap else live
-            row["history_source"] = "lock snapshot" if snap else "date filter (pre-snapshot round)"
+            # In the window or past the close: whatever the entrants were
+            # handed. Failing that -- a round whose window had already opened
+            # when the two freezes were separated -- the close snapshot, and
+            # failing that the date filter, which is only for rounds predating
+            # snapshots and carries the flaw update_lock_snapshot describes.
+            snap = read_lock_snapshot(r["round_id"]) or {}
+            hist = handed or snap.get("history") or live
+            row["history_source"] = (
+                "window snapshot" if handed else
+                "lock snapshot" if snap.get("history") else
+                "date filter (pre-snapshot round)")
         hist_by_round[r["round_id"]] = hist
         if len(hist) >= 3:
             target = r["release_at"][:10]
@@ -568,41 +626,66 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
         # scalar paths off this round -- `build_leaderboard` and the scalar
         # baseline filing both key on `baselines` being present.
         if profile_round.is_profile(r):
-            attach_profile(row, r, series)
+            attach_profile(row, r, series, now)
         if r["round_id"] in resolved:
             row["resolution"] = resolved[r["round_id"]]
         out.append(row)
     return out, hist_by_round
 
 
-def attach_profile(row, r, series):
+def attach_profile(row, r, series, now=None):
     """Attach the profile block: the round's cells and their frozen nulls.
 
-    **Why the date filter is enough here, with no lock snapshot.** Snapshots
-    exist because a monthly series' point is dated by its month label and
-    published weeks later, so `date < lock_at` cannot tell "existed at lock"
-    from "labelled before lock". The Civiqs profile cells are the daily
-    dashboard, archived every day under the date it was read: label and
-    observation are the same day, and the filter is exact.
+    **The date filter alone is a day too coarse.** It is exact about what a
+    cell's series *is*: the Civiqs cells are the daily dashboard, archived every
+    day under the date it was read, so label and observation are the same day,
+    and a point dated on or after the close is excluded from every null. What a
+    date cannot say is what time of day a point appeared, and the call window is
+    shorter than a day. A cell point dated the day before the close, archived
+    in the evening, sits inside the window: the null reads it and an endpoint
+    called that afternoon did not. That is the same inequality the scalar branch
+    fixed, on the round type this module calls the headline one.
+
+    So the per-cell history is frozen by observation time too
+    (`freeze_for_answering`), and only falls back to the date filter for a round
+    whose window had already opened when this landed -- which is every round
+    scored so far, so nothing published moves.
 
     The Economist/YouGov crosstab cells are weekly waves and need no snapshot
     either, for the same reason: a wave is dated by its own field end, an
     observation date, and enters the workbook within days of it. The wave a
-    round scores is published after the batch deadline that froze it, so the
-    strict `<` on the freeze date excludes it from every entrant's null. What
-    the date filter cannot do on its own is keep the *previous* wave -- public
-    before anyone answered, and dated on the batch's Monday freeze -- from
-    resolving the round; `profile_round.resolution` adds the round's own
-    seven-day wave window for that, and `ssa/series.py`'s crosstab block says
-    where the series are declared.
+    round scores is published after the close that froze it, so the strict `<`
+    on the freeze date excludes it from every entrant's null. What the date
+    filter cannot do on its own is keep the *previous* wave from resolving the
+    round; `profile_round.resolution` adds the round's own seven-day wave
+    window for that, and `ssa/series.py`'s crosstab block says where the series
+    are declared.
     """
     cells = profile_round.cells_for(r)
     hist = profile_round.frozen_history(r, series, cells)
+    block_source = None
+    if now is not None:
+        handed = freeze_for_answering(
+            r, "answer_history_by_cell",
+            {c: hist[c][-LOCK_SNAPSHOT_POINTS:] for c in cells}, now)
+        if now >= batches.window_opens_at(r["lock_at"]):
+            # Every cell or none: a mixture of frozen and live cells is a
+            # profile no entrant was ever shown, and the energy score reads the
+            # vector as one thing.
+            if handed and all(c in handed for c in cells):
+                hist = {c: handed[c] for c in cells}
+                block_source = "window snapshot"
+            elif handed:
+                block_source = "date filter (cells changed since the freeze)"
+            else:
+                block_source = "date filter (pre-snapshot round)"
     block = {
         "cells": list(cells),
         "labels": profile_round.labels_for(cells),
         "history_points": {c: len(hist[c]) for c in cells},
     }
+    if block_source:
+        block["history_source"] = block_source
     row["baselines"] = None
     try:
         block["baselines"] = {"persistence":
@@ -619,19 +702,22 @@ def attach_profile(row, r, series):
     row["profile"] = block
 
 
-def attach_ranking(row, r, obs):
+def attach_ranking(row, r, obs, now=None):
     """Attach the ranking block: the round's spec, its frozen history, its null.
 
-    **Why the date filter is enough here, with no lock snapshot.** Snapshots
-    exist because a monthly series' point is dated by its month label and
-    published weeks later, so `date < lock_at` cannot tell "existed at lock"
-    from "labelled before lock". Neither ranking source has that gap. A
-    Wikipedia week is dated by the Sunday it ends and its seven daily counts are
-    final within about two days, computed once from the request logs and never
-    revised. A Trends week is dated by its Saturday and takes the value the
-    earliest archived snapshot containing it showed, which is fixed the first
-    time it is seen. In both cases the label and the observation are the same
-    week, and the filter is exact.
+    **The date filter is exact about the week and blind to the hour.** Neither
+    source has the month-label gap snapshots were built for: a Wikipedia week is
+    dated by the Sunday it ends and its seven daily counts are final within
+    about two days, and a Trends week is dated by its Saturday and takes the
+    value the earliest archived snapshot showed. Label and observation are the
+    same week either way.
+
+    But a week is archived at some moment, and about one archive in seven lands
+    inside a round's call window. The null would read that week and an endpoint
+    called before it arrived would not, so the observations are frozen by
+    observation time as well (`freeze_for_answering`), exactly as the scalar and
+    profile branches do. A round whose window had already opened when this
+    landed keeps the date filter alone.
 
     A round whose sources cannot answer yet is named rather than dropped: it
     keeps collecting forecasts and says in `baseline_note` why it has no skill
@@ -648,6 +734,14 @@ def attach_ranking(row, r, obs):
             if k in spec:
                 block[k] = spec[k]
         hist = ranking_round.frozen_history(r, obs)
+        if now is not None:
+            handed = freeze_for_answering(
+                r, "answer_obs", hist[-LOCK_SNAPSHOT_POINTS:], now)
+            if now >= batches.window_opens_at(r["lock_at"]):
+                if handed:
+                    hist = handed
+                block["history_source"] = ("window snapshot" if handed else
+                                           "date filter (pre-snapshot round)")
         block["history_weeks"] = len(hist)
         block["baselines"] = {
             "persistence": ranking_round.persistence_list(hist, spec)}
@@ -660,57 +754,52 @@ def attach_ranking(row, r, obs):
     row["ranking"] = block
 
 
-# Stop re-filing this long before the round's batch deadline. A refresh
-# writes to the working tree, but the commit only lands minutes later; without
-# the margin a run that starts just before the deadline could push a file that
-# the merge-time audit then (correctly) rejects as late. The name is historical
-# -- it was the lock margin before deadline and lock came apart -- and is kept
-# so the environment and the workflows do not have to be renamed in the same
-# change that moves the anchor.
+# Stop re-filing this long before the round closes. A refresh writes to the
+# working tree, but the commit only lands minutes later; without the margin a
+# run that starts just before the close could push a file that the merge-time
+# audit then (correctly) rejects as late.
 LOCK_MARGIN_SECONDS = 30 * 60
 
 # One number, one forecast, bought at one fixed vantage point.
 #
-# Every entrant's forecast for a round is bought once, inside a window every
-# round shares: between SSA_FILE_WINDOW_DAYS and SSA_BUY_BY_DAYS before its
-# **batch deadline** (3 to 2 days by default). A forecast stamped inside
-# the window (`harness.filed_stamp`) is final -- data arriving afterwards does
-# not reopen it -- so every entrant answers the same question from the same
-# distance and a round costs exactly one call per entrant per condition, ever.
+# Every entrant's forecast for a round is bought inside one window before that
+# round closes: SSA_FILE_WINDOW_HOURS wide, 24 by default, ending
+# LOCK_MARGIN_SECONDS before the close. A forecast stamped inside the window
+# (`harness.filed_stamp`) is final -- data arriving afterwards does not reopen
+# it -- so every entrant answers the same question from the same distance and a
+# round costs one call per entrant per condition, ever.
 #
-# The anchor is the deadline rather than the lock because those are no longer
-# the same moment. Under the weekly batch calendar (`ssa/batches.py`) a round
-# locks 0 to 7 days after the deadline its entrants were held to, so anchoring
-# here on the lock would let our own models keep buying for a week after every
-# external entrant was closed out -- reading news they could not. For rounds
-# that predate the batch cutover `effective_deadline` returns the lock itself,
-# so their windows and their filed stamps are exactly as they were.
+# Everything the arena hands over is frozen at the window's opening: the
+# history, the persistence null, and the news corpus (`information_asof`). So
+# an entrant reached in the first minute and one retried in the last hour were
+# shown the same thing, and the window bounds only what an entrant looks up for
+# itself. Three days of that was a real advantage to whoever happened to be
+# retried late, which is why the window is a day.
 #
-# The day-wide window spans ~4 six-hourly runs, and after it closes the runs
-# that remain up to the margin are failure insurance only: they buy a forecast
-# that is still missing and never rewrite one that exists. That insurance now
-# has to fit before the deadline instead of running up to `lock - 30min`,
-# which is the real cost of a common deadline and the reason the scheduled
-# cadence has to be healthy rather than merely eventual. Drafts from before a
-# round's window (the era that bought from listing day) carry no stamp and are
-# replaced once, inside the window, where the input hash makes the replacement
-# free if nothing actually changed.
+# The window spans ~4 six-hourly runs. Runs after the first are failure
+# insurance: they buy a forecast that is still missing and never rewrite one
+# that exists. SSA_BUY_BY_SECONDS, half the window by default, is the point
+# after which an unstamped pre-window draft stands rather than being replaced.
 #
 # Baselines are exempt: they are free and the site shows them from listing.
 # Web retrieval is scoped to the same window by construction, since the query
 # turn cannot run before the window opens. FILE_WINDOW_SECONDS lives in
 # harness because `_retrieve` and `filed_in_window` need it too.
 FILE_WINDOW_SECONDS = harness.FILE_WINDOW_SECONDS
-BUY_BY_SECONDS = float(os.environ.get("SSA_BUY_BY_DAYS") or "2") * 86400
+# The point inside the window after which an unstamped pre-window draft stands
+# rather than being replaced. Derived from the window rather than set beside
+# it: the two used to be three days and two days, and a window shorter than
+# the boundary silently means "never replace a draft".
+BUY_BY_SECONDS = float(os.environ.get("SSA_BUY_BY_SECONDS")
+                       or FILE_WINDOW_SECONDS / 2)
 
 
 def model_jobs_due(r, now):
     """True while the round's buy window (plus its insurance tail) is open.
 
-    Measured back from the batch deadline, not the lock. Our own entrants
-    are held to the deadline every external entrant is held to, so the tail
-    that used to retry up to `lock - 30min` now stops `LOCK_MARGIN_SECONDS`
-    before the deadline instead.
+    Measured back from the round's own close, so our models are called in the
+    same window every external entrant is, and the retry tail stops
+    `LOCK_MARGIN_SECONDS` before that close.
     """
     left = (batches.effective_deadline(r["lock_at"]) - now).total_seconds()
     return LOCK_MARGIN_SECONDS <= left <= FILE_WINDOW_SECONDS
@@ -1821,7 +1910,9 @@ def load_model_backtest():
 
 
 def next_operational_times(season, now):
-    """(next batch deadline, next round lock), both after ``now``.
+    """(next close, next round lock), both after ``now``. They are the same
+    instant now that a round closes on its own lock, and both are kept because
+    the operator rows name them separately.
 
     They are computed once and attached to every source row.  A source outage
     without the next moment it can hurt is an alert an operator cannot triage.

@@ -341,22 +341,27 @@ def test_it_cannot_publish():
     print("ok test_it_cannot_publish")
 
 
-def test_a_round_whose_deadline_has_passed_is_not_generated():
-    """A batch that has closed can no longer be answered, so proposing into it
-    proposes a question that would be listed, never filed against, and then
-    scored against a null nobody competed with. Before this check the generator
-    happily offered a whole batch of them on any run made after Monday noon."""
+def test_a_round_that_has_already_closed_is_not_generated():
+    """A round nobody can still answer would be listed, never filed against,
+    and then scored against a null nobody competed with.
+
+    The gate asks about the round's own close, not the Monday its week is
+    grouped under. Asking about the Monday was right while the Monday was the
+    deadline; once it became a label it silently dropped any round generated
+    later in its own week -- one closing Friday, judged on Tuesday."""
     from datetime import timezone as tz
-    now = datetime(2026, 9, 14, 13, tzinfo=tz.utc)          # Monday, past 12:00Z
+    now = datetime(2026, 9, 14, 13, tzinfo=tz.utc)
     meta = civiqs_meta()
-    # A Wednesday-publishing series: the next release is 2026-09-16, locking
-    # 09-14T14:00Z -- two days out, but governed by the deadline an hour ago.
     h = weekly(30, start="2026-01-07")
     for r in gen.candidates("civiqs_net_approval_ind", meta, h, 3, now):
-        assert gen.batches.deadline_for(r["lock_at"]) > now, r["round_id"]
-    assert not gen.publishable("2026-09-16T14:00:00Z", now)
-    assert gen.publishable("2026-09-23T14:00:00Z", now)
-    print("ok test_a_round_whose_deadline_has_passed_is_not_generated")
+        assert gen.batches.effective_deadline(r["lock_at"]) > now, r["round_id"]
+    # Closes in an hour: still answerable, still generated.
+    assert gen.publishable("2026-09-14T14:00:00Z", now)
+    # Closed an hour ago: not.
+    assert not gen.publishable("2026-09-14T12:00:00Z", now)
+    # And the week's Monday having passed refuses nothing on its own.
+    assert gen.publishable("2026-09-18T14:00:00Z", now)
+    print("ok test_a_round_that_has_already_closed_is_not_generated")
 
 
 def test_single_page_wikipedia_rounds_are_retired_not_unsupported():
@@ -850,13 +855,18 @@ def test_dedupe_is_per_board_not_per_series():
     import glob
     import shutil
     import subprocess
-    # Superseded files from an earlier run are left on disk on purpose (a
-    # reviewer may be mid-way through one), so clear them here or this test
-    # grades output the generator did not produce.
-    shutil.rmtree(os.path.join(ROOT, "questions", "candidates"), ignore_errors=True)
+    import tempfile
+    # Into a temporary directory, never `questions/candidates`. This test used
+    # to rmtree that directory and refill it from its own `--now`, so running
+    # the suite deleted a reviewer's half-reviewed candidate file and left the
+    # repository dirty with rounds nobody had asked for. An empty directory is
+    # also what the assertions want: superseded files from an earlier run would
+    # otherwise be graded as output this run produced.
+    out_dir = tempfile.mkdtemp(prefix="ssa-candidates-")
     subprocess.run(
         [sys.executable, os.path.join(ROOT, "tools", "generate_rounds.py"),
-         "--weeks", "8", "--write", "--now", "2026-09-01T12:00:00Z"],
+         "--weeks", "8", "--write", "--out-dir", out_dir,
+         "--now", "2026-09-01T12:00:00Z"],
         capture_output=True, text=True, cwd=ROOT,
         env={**os.environ, "PYTHONPATH": ROOT}, check=True)
 
@@ -876,7 +886,7 @@ def test_dedupe_is_per_board_not_per_series():
             scalar_claimed.add((r["series"], wk))
 
     clashes, n, beside_profile = [], 0, 0
-    for path in glob.glob(os.path.join(ROOT, "questions", "candidates", "*.json")):
+    for path in glob.glob(os.path.join(out_dir, "*.json")):
         for c in json.load(open(path)):
             n += 1
             key = (c["series"], week(c["release_at"]))
@@ -889,9 +899,40 @@ def test_dedupe_is_per_board_not_per_series():
         f"{len(clashes)} candidates duplicate a scalar round already asking "
         f"that series that week: {sorted(clashes)[:5]}")
     assert cell_claimed, "fixture is stale: the season has no profile cells"
+    shutil.rmtree(out_dir, ignore_errors=True)
     print(f"ok test_dedupe_is_per_board_not_per_series "
           f"({n} candidates, 0 clashing with {len(scalar_claimed)} scalar "
           f"series-weeks, {beside_profile} allowed beside a profile cell)")
+
+
+# When this module was imported. Anything under `questions/candidates` with a
+# newer mtime was written by the run itself, which is the accident the guard
+# below is looking for.
+_IMPORTED_AT = __import__("time").time()
+
+
+def test_no_test_here_writes_into_the_repositorys_candidate_directory():
+    """A guard on this file, not on the tool. Two ways, because one test broke
+    the rule by running a subprocess and the next one could break it directly.
+
+    `questions/candidates/*.json` is reviewed by hand and committed. A test here
+    used to delete that directory and refill it from its own `--now`, so running
+    the suite threw away whatever a reviewer had open and left six modified
+    files behind. `--out-dir` exists for this.
+    """
+    import glob
+    src = open(__file__).read()
+    for call in src.split("generate_rounds.py")[1:]:
+        head = call[:400]
+        if '"--write"' in head:
+            assert '"--out-dir"' in head, \
+                "a test runs the generator with --write into the repository"
+    touched = [os.path.basename(f)
+               for f in glob.glob(os.path.join(ROOT, "questions", "candidates",
+                                               "*.json"))
+               if os.path.getmtime(f) > _IMPORTED_AT]
+    assert not touched, f"this run rewrote committed candidate files: {touched}"
+    print("ok test_no_test_here_writes_into_the_repositorys_candidate_directory")
 
 
 if __name__ == "__main__":
@@ -912,7 +953,7 @@ if __name__ == "__main__":
     test_it_cannot_publish()
     test_dedupe_is_per_board_not_per_series()
     test_it_refuses_to_generate_a_round_it_cannot_publish()
-    test_a_round_whose_deadline_has_passed_is_not_generated()
+    test_a_round_that_has_already_closed_is_not_generated()
     test_single_page_wikipedia_rounds_are_retired_not_unsupported()
     test_the_wiki_week_phrase_matches_the_reviewed_wording()
     test_wiki_top10_rolls_the_reviewed_contract_forward()
@@ -928,4 +969,5 @@ if __name__ == "__main__":
     test_declined_families_carry_their_decision()
     test_the_headline_profile_round_no_longer_stops_in_september()
     test_a_sixteen_cell_question_is_not_interpolated_to_another_width()
-    print("33 passed")
+    test_no_test_here_writes_into_the_repositorys_candidate_directory()
+    print("34 passed")

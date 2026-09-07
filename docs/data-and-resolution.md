@@ -93,13 +93,12 @@ opens Friday and closes Monday, and the wave enters the sheet the next day, 84 o
 window that closed Tuesday (13 weeks of early 2025, Labor Day 2025, Memorial
 Day 2026). `PUBLICATION` in
 `ssa/series.py` records entry Tuesday and release Wednesday 14:00Z: entrants
-file by the Monday 12:00Z batch deadline while the wave is still in the field,
+file by the round's own close while the wave is still in the field,
 the wave enters Tuesday, and the round resolves on it Wednesday. A wave that
 enters late resolves the round late; nothing moves at the deadline. The twelve
 hand-written `yougov-2026-w34..w39` rounds release Tuesday 14:00Z with a
-Sunday lock; under the batch deadline that shape resolves on the wave entered
-the day after the previous Monday, which is why the calendar records
-Wednesday instead. On every
+Sunday lock; closing on that lock, the round resolves on the wave entered
+after it, which is why the calendar records Wednesday instead. On every
 run the generator re-checks the calendar against the newest archived sheet and
 refuses when the last eight waves show more than one slip: an entry off
 Tuesday, or a gap between entries that is not within eight days. The second

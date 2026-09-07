@@ -158,9 +158,21 @@ def _tally(answers, weights, key):
     Personas whose reply failed to parse are absent from `answers` and are
     excluded from both, so a partial panel yields a share of who answered
     rather than counting a missing person as a "no".
+
+    **Summed in persona-id order, not arrival order.** `answers` is filled by a
+    thread pool, so its insertion order is whichever respondent came back first
+    -- and float addition is not associative, so the same 192 answers summed in
+    two orders differ in the last bit. That was invisible while the topline was
+    rounded to two decimals and became a failing test the moment it was not: a
+    fresh panel gave 32.000000000000014 and the identical panel replayed from
+    the reply log gave 32.00000000000001, which is a different file and a
+    different canonical hash for the same answers. Reproducibility from the
+    committed history is a claim this repository makes; a sum has to be ordered
+    for it to hold.
     """
     got, total = {}, 0.0
-    for pid, ans in answers.items():
+    for pid in sorted(answers):
+        ans = answers[pid]
         w = weights.get(pid)
         if w is None:
             continue

@@ -49,19 +49,32 @@ def test_deadline_is_exposed_and_used_by_every_site_path():
     assert "deadline" not in _read("site/submit.html").split("<script>")[1]
     assert '"deadline": _iso(_round_deadline(round_data))' in api
     site = _read("site/docs.html")
-    assert "it is not a participant due date" in site
+    # The page must say when a question closes, and must not imply the close
+    # is anything other than the round's own clock.
+    assert "Each question closes on its own clock" in site
     assert "filed before the lock" not in site
+    assert "Monday 12:00" not in site
 
 
-def test_search_corpus_and_stamp_docs_use_the_participant_deadline():
+def test_the_search_corpus_and_its_cache_match_the_call_window():
     search = _read("ssa/adapters/search.py")
     conditions = _read("docs/conditions.md")
     stamps = _read("ssa/stamps.py")
     assert "filing window before the participant\ndeadline" in search
     assert "before the common\nparticipant deadline" in conditions
     assert "when submissions closed" in stamps
-    assert "common\nmodel-filing window opened" in conditions
+    # The corpus is fixed at the window's opening, so an entrant called first
+    # and one retried last were shown the same thing.
+    assert "when the\ncall window opened" in conditions
     assert "search happens at lock time" not in (search + conditions)
+    # And the cache may not outlive the window it is meant to match: they were
+    # separate variables once, and the cache went on serving three-day-old
+    # replies after the window shrank to one day.
+    assert "SSA_FILE_WINDOW_HOURS" in search
+    from ssa import harness
+    from ssa.adapters import search as search_mod
+    assert abs(search_mod.CACHE_MAX_AGE_DAYS
+               - harness.FILE_WINDOW_SECONDS / 86400.0) < 1e-9
 
 
 def test_landing_audit_contract_is_shared_by_both_workflows():

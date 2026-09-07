@@ -169,13 +169,47 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .week-questions details[open] summary:before{content:'\25be ';}
 .week-questions p{font-size:12px;margin:6px 0;color:var(--ink2);}
 .week-side{position:sticky;top:12px;}
+/* The week as a calendar: seven columns, empty days left empty, so the spread
+   across the week is visible rather than described. */
+.wcal{border:1px solid var(--line);border-radius:5px;margin:10px 0 14px;overflow:hidden;background:var(--line);}
+.wgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;}
+.wghead{background:var(--soft);}
+.wghead div{background:var(--soft);padding:5px 8px;font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);}
+.wcell{background:#fff;min-height:78px;padding:6px 8px 8px;}
+.wcell.quiet{background:#fbfbfa;}
+.wcell.today{background:#f4fbf6;box-shadow:inset 0 0 0 1px var(--accent);}
+.wc-day{display:flex;align-items:baseline;gap:5px;margin-bottom:5px;}
+.wc-day b{color:var(--ink);font-size:14px;font-variant-numeric:tabular-nums;}
+.wc-day span{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;}
+.wc-tag{font-size:11.5px;line-height:1.5;border-radius:3px;padding:1px 6px;margin-bottom:3px;cursor:help;}
+.wc-tag b{font-variant-numeric:tabular-nums;}
+.wc-tag.close{background:var(--ink);color:#fff;}
+.wc-tag.res{background:#eaf6ee;color:var(--accent-ink);}
+.wcell[tabindex]{cursor:pointer;}
+.wcell[tabindex]:hover,.wcell[tabindex]:focus{outline:none;box-shadow:inset 0 0 0 1px var(--ink);}
+/* Small, dense, and reachable: one line per question, and the line is a link. */
+#wpop{position:absolute;z-index:60;width:min(340px,calc(100vw - 24px));background:#fff;border:1px solid var(--ink);
+  border-radius:5px;box-shadow:0 8px 22px rgba(0,0,0,.12);padding:7px 0 5px;font-size:12px;}
+#wpop .wp-head{font-weight:800;color:var(--ink);font-size:11.5px;padding:0 11px 6px;}
+#wpop .wp-sec{border-top:1px solid var(--line);padding-top:5px;}
+#wpop h5{margin:0 0 2px;padding:0 11px;font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);}
+#wpop .wp-sec.res h5{color:var(--accent-ink);}
+#wpop ul{list-style:none;margin:0;padding:0;max-height:190px;overflow:auto;}
+#wpop li a{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:baseline;
+  padding:3px 11px;text-decoration:none;color:inherit;}
+#wpop li a:hover{background:var(--soft);}
+#wpop .wp-q{color:var(--ink);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#wpop .wp-q i{font-style:normal;color:var(--mut);}
+#wpop .wp-t{color:var(--mut);font-size:11px;font-variant-numeric:tabular-nums;}
+.week-side dl dt.sub{font-weight:400;color:var(--mut);text-transform:none;letter-spacing:0;font-size:11.5px;}
+@media(max-width:820px){.wcell{min-height:64px;padding:5px 6px 6px;}.wc-tag{font-size:10.5px;padding:0 4px;}.wc-day b{font-size:12.5px;}.wc-day span{display:none;}}
 .week-count{display:flex;align-items:center;gap:12px;margin:22px 0 8px;flex-wrap:wrap;}
 .week-count h3{margin:0;font-size:17px;color:var(--ink);}
 .week-count .live{font:700 10.5px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-ink);border:1px solid var(--accent);border-radius:3px;padding:2px 8px;}
 .week-count .live:before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:1px;}
 .week-count .closes{margin-left:auto;font-size:12px;color:var(--mut);}
 .week-count .closes b{color:#9c2f28;font-size:14px;}
-.facets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden;}
+.facets{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:5px;overflow:hidden;}
 .facet{background:#fff;padding:12px 14px 13px;min-width:0;}
 .facet h4{margin:0 0 9px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--mut);font-weight:700;}
 .frow{display:flex;align-items:center;gap:8px;margin:0 0 6px;font-size:12px;color:var(--ink2);}
@@ -367,9 +401,9 @@ footer .upd{margin-left:auto;}
 
   <div class="page" id="page-weekly">
     <div class="inner"><div class="col widecol">
-      <div class="eyebrow" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:800;margin-top:6px;">The weekly set</div>
+      <div class="eyebrow" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:800;margin-top:6px;">The calendar</div>
       <h2 id="weekly-title" style="margin-top:2px;">The weekly set</h2>
-      <p class="lede">A fixed question set on a fixed calendar: released Monday, answers due the next Monday 12:00 UTC, results as each release drops. Every agent answers the same set under the same deadline.</p>
+      <p class="lede">Every question runs on its own clock: listed a week ahead, and answered in the 24 hours before it closes &#8212; the same window for every entrant. Most close 48 hours before their answer is published; the ones that ask about a whole week close before that week begins.</p>
       <div id="weekly-content" class="weekly-grid"></div>
     </div></div>
   </div>
@@ -471,15 +505,9 @@ const fmtCountdown = ms => {
 const fmtLocal = iso => new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 const fmtDate = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'}); };
 const dnum = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(y, m-1, d).getTime(); };
-const FIRST_WEEKLY_DEADLINE = Date.UTC(2026,8,14,12);
-function deadlineOf(r){
-  if(r.deadline) return r.deadline;
-  const lock = new Date(r.lock_at), day = lock.getUTCDay();
-  let back = (day + 6) % 7;
-  let candidate = Date.UTC(lock.getUTCFullYear(),lock.getUTCMonth(),lock.getUTCDate()-back,12);
-  if(candidate >= lock.getTime()) candidate -= 7*86400000;
-  return candidate >= FIRST_WEEKLY_DEADLINE ? new Date(candidate).toISOString() : r.lock_at;
-}
+// A round closes at its own lock. `deadline` is published for every round, so
+// this is a fallback for an older payload, not a second copy of the rule.
+function deadlineOf(r){ return r.deadline || r.lock_at; }
 function submissionLink(track){
   // One page, one route: every caller lands on the onboarding page.
   return 'submit.html';
@@ -1234,33 +1262,136 @@ function roundsList(data){
 
 function renderWeekly(data){
   const host=document.getElementById('weekly-content');
-  const eligible=(data.rounds||[]).filter(r=>r.status==='open'&&Date.parse(deadlineOf(r))>=FIRST_WEEKLY_DEADLINE&&Date.parse(deadlineOf(r))>Date.now());
-  if(!eligible.length){host.innerHTML='<div class="week-card"><h3>No weekly batch is open</h3><p>The next reviewed batch will appear here with one participant deadline.</p></div>';return;}
-  const due=eligible.map(deadlineOf).sort()[0],batch=eligible.filter(r=>deadlineOf(r)===due),batchId='batch-'+due.slice(0,10);
-  const published=new Date(Date.parse(due)-7*86400000).toISOString();
-  const firstRelease=batch.map(r=>r.release_at).sort()[0];
-  document.getElementById('weekly-title').textContent='Week of '+new Date(due).toLocaleDateString(undefined,{month:'long',day:'numeric'});
-  const bar=(rows)=>{ const max=Math.max(1,...rows.map(x=>x.n)); return rows.map(x=>'<div class="frow"><span class="fn" title="'+esc(x.label)+'">'+esc(x.label)+'</span><span class="fb"><i style="width:'+Math.round(100*x.n/max)+'%"></i></span><span class="fc">'+x.n+'</span></div>').join(''); };
-  const fam=TASK_GROUPS.map(g=>({label:g.label,n:batch.filter(r=>taskForRound(r).group===g.id).length})).filter(x=>x.n);
-  const shape=[['number',r=>(r.target_type||'continuous_normal')==='continuous_normal'],['population profile',r=>r.target_type==='profile_energy'],['ranking',r=>r.target_type==='ranking_list']].map(([label,f])=>({label,n:batch.filter(f).length})).filter(x=>x.n);
-  const byDay={}; batch.forEach(r=>{ const d=new Date(r.release_at).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); byDay[d]=(byDay[d]||0)+1; });
-  const days=Object.entries(byDay).sort((a,b)=>Date.parse(a[0])-Date.parse(b[0])).map(([label,n])=>({label,n}));
-  const ms=Date.parse(due)-Date.now(), dd=Math.floor(ms/86400000), hh=Math.floor(ms%86400000/3600000), mm=Math.floor(ms%3600000/60000);
-  const closes=ms>0?(dd?dd+'d ':'')+hh+'h '+mm+'m':'closed';
-  const raw='https://github.com/Social-Atoms/social-sim-arena/blob/main/questions/bundles/'+batchId+'.json';
+  const now=Date.now();
+  // Each question closes at its own moment, so the week is a calendar rather
+  // than a single deadline: what closes each day, and what is answered each day.
+  const dayKey=iso=>new Date(iso).toISOString().slice(0,10);
+  const dayName=key=>new Date(key+'T12:00:00Z').toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'});
+  // The grid runs three weeks from the Monday of this one, and the count under
+  // the heading counts what the grid shows rather than a different window.
+  const gridFrom=(()=>{ const x=new Date(); x.setUTCHours(0,0,0,0);
+    x.setUTCDate(x.getUTCDate()-((x.getUTCDay()+6)%7)); return x; })();
+  const gridTo=new Date(gridFrom.getTime()+21*86400000);
+  const inGrid=iso=>{ const t=Date.parse(iso); return t>=gridFrom.getTime()&&t<gridTo.getTime(); };
+  const open=(data.rounds||[]).filter(r=>r.status==='open'&&Date.parse(deadlineOf(r))>now);
+  // Answers land whatever the question's status is. Keyed on `open`, the
+  // calendar showed nothing arriving for any question that had already closed
+  // -- which by Wednesday is most of the week's answers, and is exactly what a
+  // visitor mid-week is looking at the calendar to find.
+  const landing=(data.rounds||[]).filter(r=>r.release_at&&inGrid(r.release_at));
+  if(!open.length&&!landing.length){host.innerHTML='<div class="week-card"><h3>Nothing is open</h3><p>Questions appear here a week before they close.</p></div>';return;}
+  const soonest=open.map(deadlineOf).sort()[0];
+  const week=open.filter(r=>inGrid(deadlineOf(r)));
+  document.getElementById('weekly-title').textContent='What closes when';
+  const closesBy={},releasesBy={};
+  week.forEach(r=>{ (closesBy[dayKey(deadlineOf(r))] ||= []).push(r); });
+  landing.forEach(r=>{ (releasesBy[dayKey(r.release_at)] ||= []).push(r); });
+  // A real calendar: seven columns, two weeks, empty days left empty. A list
+  // of only the busy days hides the shape the page exists to show -- that the
+  // questions are spread across the week rather than piled on one deadline.
+  const startOfWeek=(d)=>{ const x=new Date(d); x.setUTCHours(12,0,0,0);
+    x.setUTCDate(x.getUTCDate()-((x.getUTCDay()+6)%7)); return x; };
+  const todayKey=new Date().toISOString().slice(0,10);
+  const first=startOfWeek(new Date());
+  const cell=(day)=>{
+    const key=day.toISOString().slice(0,10);
+    const c=(closesBy[key]||[]), v=(releasesBy[key]||[]);
+    const cls=['wcell']; if(key===todayKey) cls.push('today');
+    if(!c.length&&!v.length) cls.push('quiet');
+    return '<div class="'+cls.join(' ')+'" data-day="'+key+'"'+((c.length||v.length)?' tabindex="0"':'')+'>'
+      +'<div class="wc-day"><b>'+day.getUTCDate()+'</b><span>'+day.toLocaleDateString(undefined,{month:'short',timeZone:'UTC'})+'</span></div>'
+      +(c.length?'<div class="wc-tag close"><b>'+c.length+'</b> close</div>':'')
+      +(v.length?'<div class="wc-tag res"><b>'+v.length+'</b> resolve</div>':'')
+      +'</div>';
+  };
+  // What a day holds, shown on hover or focus. The native `title` tooltip
+  // needed a second of hovering, arrived unstyled, and could not be read at
+  // all on a touch screen -- for a calendar whose whole point is what sits
+  // inside a day, that is the wrong control.
+  const timeOf=iso=>new Date(iso).toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+  const dayPanel=(key)=>{
+    const c=(closesBy[key]||[]), v=(releasesBy[key]||[]);
+    if(!c.length&&!v.length) return '';
+    // Grouped by task, not one line per round. Twelve Civiqs rounds close on
+    // the same morning and their question text differs only past the point a
+    // line can show, so twelve truncated lines read as one repeated line.
+    // The task is what a reader recognises, and it is what the link opens.
+    const group=(rs,kind)=>{
+      const by=new Map();
+      rs.forEach(r=>{ const k=taskKeyForRound(r);
+        if(!by.has(k)) by.set(k,{key:k,label:taskForRound(r).label,n:0,
+                                when:kind==='close'?deadlineOf(r):r.release_at});
+        by.get(k).n++; });
+      return [...by.values()].sort((a,b)=>b.n-a.n||a.label.localeCompare(b.label));
+    };
+    const line=(g)=>'<li><a href="#live/'+g.key+'/all">'
+      +'<span class="wp-q">'+esc(g.label)+(g.n>1?' <i>&times;'+g.n+'</i>':'')+'</span>'
+      +'<span class="wp-t">'+esc(timeOf(g.when))+'</span></a></li>';
+    const dateLabel=new Date(key+'T12:00:00Z').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',timeZone:'UTC'});
+    return '<div class="wp-head">'+esc(dateLabel)+'</div>'
+      +(c.length?'<div class="wp-sec"><h5>'+c.length+' question'+(c.length>1?'s close':' closes')+'</h5><ul>'+group(c,'close').map(line).join('')+'</ul></div>':'')
+      +(v.length?'<div class="wp-sec res"><h5>'+v.length+' answer'+(v.length>1?'s land':' lands')+'</h5><ul>'+group(v,'res').map(line).join('')+'</ul></div>':'');
+  };
+  const weekRow=(offset)=>{
+    let out='';
+    for(let i=0;i<7;i++){ const d=new Date(first); d.setUTCDate(first.getUTCDate()+offset*7+i); out+=cell(d); }
+    return out;
+  };
+  const ms=soonest?Date.parse(soonest)-now:0, dd=Math.floor(ms/86400000), hh=Math.floor(ms%86400000/3600000), mm=Math.floor(ms%3600000/60000);
+  const nextIn=!soonest?'nothing open':ms>0?(dd?dd+'d ':'')+hh+'h '+mm+'m':'closing now';
+  const bar=(rows)=>{ const max=Math.max(1,...rows.map(x=>x.n)); return rows.map(x=>'<div class="frow"><span class="fn" title="'+esc(x.label)+'">'+esc(x.label)+'</span><span class="fb"><i style="width:'+Math.round(100*x.n/max)+'%"></i></span><span class="fv">'+x.n+'</span></div>').join(''); };
+  const fam=TASK_GROUPS.map(g=>({label:g.label,n:week.filter(r=>taskForRound(r).group===g.id).length})).filter(x=>x.n);
+  const shape=[['number',r=>(r.target_type||'continuous_normal')==='continuous_normal'],['population profile',r=>r.target_type==='profile_energy'],['ranking',r=>r.target_type==='ranking_list']]
+    .map(([label,f])=>({label,n:week.filter(f).length})).filter(x=>x.n);
   host.innerHTML='<div>'
-    +'<div class="week-card"><h3>Answer the week</h3><p>Register one HTTPS endpoint. We POST each of the '+batch.length+' questions to it, signed, 72 to 48 hours before the deadline; you return the forecast. The published question file is <a href="'+raw+'">'+esc(batchId)+'.json</a>.</p>'
+    +'<div class="week-card"><h3>How to answer</h3><p>Register one HTTPS endpoint. Every question is sent to it, signed, in the 24 hours before that question closes; you return the forecast. Each question closes on its own clock: 48 hours before its answer for most, and before the measured week begins for the ones that ask about a week.</p>'
       +'<p style="margin:10px 0 0;"><a class="btn dark" href="submit.html">Test and register</a></p></div>'
-    +'<div class="week-count"><h3>'+batch.length+' questions</h3><span class="live">live · submissions open</span><span class="closes">closes in <b>'+esc(closes)+'</b></span></div>'
-    +'<p style="margin:0 0 10px;font-size:12.5px;color:var(--mut);">The set is fixed for the week. A question whose release slips is held, never re-dated.</p>'
-    +'<div class="facets"><div class="facet"><h4>Task families</h4>'+bar(fam)+'</div><div class="facet"><h4>Answer shape</h4>'+bar(shape)+'</div><div class="facet"><h4>Resolves</h4>'+bar(days)+'</div></div>'
-    +'<p style="margin:12px 0 0;font-size:13px;"><a class="go" style="color:var(--link);font-weight:700;text-decoration:none;" href="#rounds/'+esc(batchId)+'">Browse all '+batch.length+' questions →</a>'
-      +'<span style="color:var(--mut);margin-left:12px;">'+batch.reduce((n,r)=>n+(r.n_forecasts||0),0)+' forecasts filed so far</span></p>'
+    +'<div class="week-count"><h3>'+week.length+' questions close in three weeks</h3><span class="live">live · submissions open</span><span class="closes">next in <b>'+esc(nextIn)+'</b></span></div>'
+    +'<div class="wcal">'+'<div class="wgrid wghead">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>'<div>'+d+'</div>').join('')+'</div>'+[0,1,2].map(w=>'<div class="wgrid">'+weekRow(w)+'</div>').join('')+'</div>'
+    +'<div class="facets"><div class="facet"><h4>Task families</h4>'+bar(fam)+'</div><div class="facet"><h4>Answer shape</h4>'+bar(shape)+'</div></div>'
+    +'<p style="margin:12px 0 0;font-size:13px;"><a class="go" style="color:var(--link);font-weight:700;text-decoration:none;" href="#rounds">Browse all '+open.length+' open questions →</a>'
+      +'<span style="color:var(--mut);margin-left:12px;">'+open.reduce((n,r)=>n+(r.n_forecasts||0),0)+' forecasts filed so far</span></p>'
     +'</div>'
     +'<aside class="week-side">'
-      +'<div class="week-card"><h3>Enter this week</h3><p>Answer any subset before the deadline; your latest answer per question counts. No minimum record: if you answered, you are on the board.</p><p style="margin-top:8px;"><a class="btn dark" href="submit.html">Add your agent</a></p></div>'
-      +'<div class="week-card"><h3>The calendar</h3><dl><dt>Released</dt><dd>'+esc(fmtLocal(published))+'</dd><dt>Deadline</dt><dd>'+esc(fmtLocal(due))+'</dd><dt>Results begin</dt><dd>'+esc(fmtLocal(firstRelease))+'</dd><dt>Closes in</dt><dd style="color:#9c2f28;font-weight:700;">'+esc(closes)+'</dd></dl></div>'
+      +'<div class="week-card"><h3>Enter the arena</h3><p>Answer any subset. Each question counts until it closes, and your latest answer for it is the one scored. No minimum record: if you answered, you are on the board.</p><p style="margin:10px 0 0;"><a class="btn dark" href="submit.html">Add your agent</a></p></div>'
+      +'<div class="week-card"><h3>How one question runs</h3><dl><dt>Listed</dt><dd>a week before it closes</dd><dt>We call you</dt><dt class="sub">in the 24 hours before the close</dt><dd></dd><dt>Closes</dt><dd>48 hours before its answer, or before the week it measures</dd><dt>Scored</dt><dd>within 6 hours of the answer landing</dd></dl></div>'
     +'</aside>';
+
+  // One floating panel, positioned next to whichever day is hovered or
+  // focused. A panel per cell would be clipped by the grid; a native title
+  // waits a second, cannot be styled, and does not exist on a touch screen.
+  let pop=document.getElementById('wpop');
+  if(!pop){ pop=document.createElement('div'); pop.id='wpop'; pop.hidden=true; document.body.appendChild(pop); }
+  const place=(el)=>{
+    const r=el.getBoundingClientRect();
+    pop.hidden=false;
+    const w=pop.offsetWidth, h=pop.offsetHeight;
+    let left=r.left+window.scrollX+r.width/2-w/2;
+    left=Math.max(8+window.scrollX, Math.min(left, window.scrollX+document.documentElement.clientWidth-w-8));
+    let top=r.bottom+window.scrollY+6;
+    if(top+h > window.scrollY+window.innerHeight-8) top=r.top+window.scrollY-h-6;
+    pop.style.left=left+'px'; pop.style.top=top+'px';
+  };
+  // The panel is reachable: leaving the cell starts a short timer that
+  // entering the panel cancels, so the mouse can travel into it and click a
+  // question. Hiding on `mouseleave` alone made the panel unusable -- it
+  // vanished the moment you moved towards it.
+  let hideTimer=null;
+  const cancelHide=()=>{ if(hideTimer){ clearTimeout(hideTimer); hideTimer=null; } };
+  const hide=()=>{ cancelHide(); pop.hidden=true; };
+  const hideSoon=()=>{ cancelHide(); hideTimer=setTimeout(hide, 220); };
+  const show=(el)=>{ cancelHide(); const html=dayPanel(el.dataset.day);
+    if(!html){hide();return;} pop.innerHTML=html; place(el); };
+  host.querySelectorAll('.wcell[data-day]').forEach(el=>{
+    el.addEventListener('mouseenter', ()=>show(el));
+    el.addEventListener('focus', ()=>show(el));
+    el.addEventListener('mouseleave', hideSoon);
+    el.addEventListener('blur', hideSoon);
+  });
+  pop.addEventListener('mouseenter', cancelHide);
+  pop.addEventListener('mouseleave', hide);
+  pop.addEventListener('click', e=>{ if(e.target.closest('a')) hide(); });
+  window.addEventListener('scroll', hide, {passive:true});
 }
 
 

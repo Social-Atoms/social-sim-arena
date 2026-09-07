@@ -63,7 +63,7 @@ def test_model_jobs_wait_for_their_window():
     from ssa.refresh import model_jobs_due
     now = datetime(2026, 8, 18, 12, 0, tzinfo=timezone.utc)
     far = {"lock_at": "2026-08-30T14:00:00Z"}     # 12 days out: wait
-    due = {"lock_at": "2026-08-20T14:00:00Z"}     # 2 days out: buy
+    due = {"lock_at": "2026-08-19T02:00:00Z"}     # 14 hours out: buy
     shut = {"lock_at": "2026-08-18T12:10:00Z"}    # inside the 30-min margin
     assert not model_jobs_due(far, now)
     assert model_jobs_due(due, now)
@@ -88,13 +88,15 @@ def test_one_number_one_forecast():
     from datetime import datetime, timezone
     from ssa.refresh import job_still_due
     r = {"round_id": "r", "lock_at": "2026-09-11T14:00:00Z"}
-    in_window = datetime(2026, 9, 8, 20, 0, tzinfo=timezone.utc)   # 2.75d left
-    tail = datetime(2026, 9, 10, 2, 0, tzinfo=timezone.utc)        # 1.5d left
+    # The window is the 24 hours before the close; the buy-by that decides
+    # whether an unstamped draft is replaced sits halfway through it.
+    in_window = datetime(2026, 9, 10, 20, 0, tzinfo=timezone.utc)  # 18h left
+    tail = datetime(2026, 9, 11, 8, 0, tzinfo=timezone.utc)        # 6h left
     with tempfile.TemporaryDirectory() as d:
         missing = d + "/nothing.json"
         assert job_still_due(r, missing, in_window)
         assert job_still_due(r, missing, tail), "insurance tail must still buy"
-        final = _forecast_file(d, "filed=2026-09-08T18:04Z, x, harness v1; in=ab")
+        final = _forecast_file(d, "filed=2026-09-10T18:04Z, x, harness v1; in=ab")
         assert not job_still_due(r, final, in_window), "stamped file reopened"
         assert not job_still_due(r, final, tail)
     with tempfile.TemporaryDirectory() as d:
@@ -106,7 +108,7 @@ def test_one_number_one_forecast():
 def test_the_stamp_reads_back_and_mocks_never_carry_one():
     from ssa import harness
     lock = "2026-09-11T14:00:00Z"
-    assert harness.filed_in_window("filed=2026-09-09T02:00Z, x; in=ab", lock)
+    assert harness.filed_in_window("filed=2026-09-11T02:00Z, x; in=ab", lock)
     assert not harness.filed_in_window("filed=2026-08-18T07:00Z, x; in=ab", lock)
     assert not harness.filed_in_window("MOCK: no API key configured; in=ab", lock)
     assert not harness.filed_in_window(None, lock)

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Social Sim Arena question bundle v1",
-  "description": "One week's questions, published together and due together. A bundle IS a batch: `deadline` is the batch deadline from ssa/batches.py (Monday 12:00Z), and it is the only moment a participant has to track. Each question still carries its own `lock_at` -- the arena's clock, 0 to 7 days after the deadline -- and the difference is reported as `horizon_days` so a participant can see which questions ask further ahead. A round's `lock_at` is never the participant's deadline.",
+  "description": "One week's questions, listed together. Each question closes at its own `lock_at` -- `release - 48h` for most, deliberately earlier for the ones that ask about a period rather than a moment -- and `horizon_days` reports the distance from that close to the answer, which is what makes two questions comparable or not. The bundle's `deadline` is the last of its questions to close; a participant tracks each question's own `lock_at`.",
   "type": "object",
   "required": [
     "schema_version",
@@ -74,13 +74,13 @@
         },
         "lock_at": {
           "$ref": "#/definitions/timestamp",
-          "description": "The arena's internal freeze, release - 48h. Informational for a participant: what an answer is due by is the bundle's `deadline`, which is earlier."
+          "description": "When this question closes: an answer must be in by this moment, and the null freezes here too. `release - 48h` for most rounds, deliberately earlier for the ones that ask about a period rather than a moment."
         },
         "horizon_days": {
           "type": "number",
           "minimum": 0,
-          "maximum": 7,
-          "description": "deadline -> lock, in days. It varies across a bundle and it varies identically for every entrant, which is what makes it a property of the question worth reporting rather than a head start worth removing."
+          "maximum": 400,
+          "description": "Days from this question's close to its release. 2.0 for a round locking at release - 48h; larger for a round that must lock before the period it measures (a Wikipedia or Trends week, the midterm specials)."
         },
         "resolve": {
           "type": "string",

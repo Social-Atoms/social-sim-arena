@@ -21,7 +21,7 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ssa import harness, profile_round, refresh, scoring
+from ssa import batches, harness, profile_round, refresh, scoring
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CELLS = list(profile_round.CELLS)
@@ -445,6 +445,58 @@ def test_the_reply_log_replays_a_profile_without_paying_again():
 
 
 # --- the freeze, the resolution, the board ---------------------------------
+
+def test_a_cell_that_arrives_inside_the_call_window_is_in_no_null():
+    """The headline round type, held to what its entrants were handed.
+
+    The date filter is exact about what a Civiqs cell *is* -- archived daily
+    under the day it was read -- and blind to the hour. A point dated the day
+    before the close, archived in the evening, is inside the call window: the
+    null would read it and an endpoint called that afternoon would not. Sixteen
+    cells, sixteen denominators, all of them a day better informed than the
+    people they measure.
+    """
+    import tempfile
+    lock = ROUND["lock_at"]                         # 2026-08-12T22:00:00Z
+    opens = batches.window_opens_at(lock)
+    assert opens.strftime("%Y-%m-%dT%H:%MZ") == "2026-08-11T22:00Z"
+
+    season = {"season": 0, "rounds": [ROUND]}
+    before = series_fixture(last_day=10)            # …through the 10th
+    during = series_fixture(last_day=11)            # the 11th lands late
+    real_locks = refresh.LOCKS
+    refresh.LOCKS = tempfile.mkdtemp(prefix="ssa-locks-")
+    try:
+        # Before the window opens: this is the freeze.
+        refresh.build_rounds(season, before, {},
+                             refresh.parse_iso("2026-08-11T02:00:00Z"))
+        # Inside the window, with the 11th now archived.
+        rows, _ = refresh.build_rounds(season, during, {},
+                                       refresh.parse_iso("2026-08-12T02:00:00Z"))
+        block = rows[0]["profile"]
+        assert block["history_source"] == "window snapshot"
+        for c in CELLS:
+            assert block["history_points"][c] == 10, c
+            # the 10th, not the 11th: the null is what the entrants read
+            assert block["baselines"]["persistence"][c]["mean"] == \
+                LEVELS[c] + 10.0, c
+
+        snap = refresh.read_lock_snapshot(ROUND["round_id"])
+        assert sorted(snap["answer_history_by_cell"]) == sorted(CELLS)
+        assert snap["answer_history_by_cell"][CELLS[0]][-1]["date"] == "2026-08-10"
+
+        # A round frozen before this existed keeps the date filter, so nothing
+        # already scored moves.
+        os.remove(refresh.lock_snapshot_path(ROUND["round_id"]))
+        rows, _ = refresh.build_rounds(season, during, {},
+                                       refresh.parse_iso("2026-08-12T02:00:00Z"))
+        block = rows[0]["profile"]
+        assert block["history_source"] == "date filter (pre-snapshot round)"
+        assert block["baselines"]["persistence"][CELLS[0]]["mean"] == \
+            LEVELS[CELLS[0]] + 11.0
+    finally:
+        refresh.LOCKS = real_locks
+
 
 def test_the_baselines_are_frozen_at_lock_cell_by_cell():
     """The scalar rounds' invariant, applied sixteen times: once a release
