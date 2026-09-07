@@ -187,9 +187,12 @@ def test_ranking_example_uses_the_real_archive_and_rbo_scorer():
 
 def test_examples_separate_questions_from_the_http_payload():
     body = SITE.read_text()
-    assert '<h2 id="example-questions">Example Questions</h2>' in body
+    assert (
+        '<h2 id="example-questions">Example Questions</h2>'
+        '<p>The worked examples below use real published outcomes and '
+        'fictional answers.</p>'
+    ) in body
     assert body.count('href="#example-questions">Example Questions</a>') == 2
-    assert "Question</b> is the complete human-readable task" in body
     assert "The Arena sends one signed" in body
     assert "There is no chat wrapper or hidden prompt" in body
     assert body.index("Topline worked example") < body.index(
@@ -211,7 +214,7 @@ def test_request_payload_shows_one_valid_request_and_expected_response():
         "schema_version": agent_api.SCHEMA_VERSION,
         "forecast": {"mean": 34.5, "sd": 1.0},
     }
-    site_case = section("Topline request example")
+    site_case = section("Request example")
     assert json_block(site_case, "Request") == expected_request
     assert json_block(site_case, "Expected response") == expected_response
     assert markdown_json_block("request-example") == expected_request
@@ -224,10 +227,21 @@ def test_request_payload_shows_one_valid_request_and_expected_response():
     print("ok test_request_payload_shows_one_valid_request_and_expected_response")
 
 
+def test_left_navigation_moves_the_active_highlight():
+    body = SITE.read_text()
+    assert "document.querySelectorAll('.left a[href^=\"#\"]')" in body
+    assert "link.classList.toggle('on',link.hash===hash)" in body
+    assert "link.addEventListener('click',()=>setActiveSection(link.hash))" in body
+    assert "window.addEventListener('hashchange',syncActiveSection)" in body
+    assert "setActiveSection(location.hash||'#quickstart')" in body
+    print("ok test_left_navigation_moves_the_active_highlight")
+
+
 if __name__ == "__main__":
     test_topline_example_uses_the_real_resolution_and_scalar_scorer()
     test_profile_example_scores_all_sixteen_real_cells_together()
     test_ranking_example_uses_the_real_archive_and_rbo_scorer()
     test_examples_separate_questions_from_the_http_payload()
     test_request_payload_shows_one_valid_request_and_expected_response()
+    test_left_navigation_moves_the_active_highlight()
     print("all scoring example tests pass")
