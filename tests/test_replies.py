@@ -381,6 +381,29 @@ def test_a_second_run_of_a_finished_panel_buys_nothing():
         assert second["topline"] == first["topline"], (first, second)
 
 
+def test_a_round_or_entrant_id_cannot_aim_the_log_somewhere_else():
+    """`os.path.join(root(), round_id, name)` writes wherever it is told.
+
+    Every id that reaches this module comes from a schema-validated file, so
+    this has never fired in practice. It is asserted anyway because "the log
+    stays inside the log directory" should be a property of this module rather
+    than of every caller: a `round_id` of `../..` put a reply, and a failure
+    record, outside the tree entirely.
+    """
+    for rid, entrant in [("../../..", "ok"), ("r1", "../../etc/passwd"),
+                         ("r1", "a/b"), (".hidden", "e"), ("", "e")]:
+        for fn in (replies.path, replies.failure_path):
+            try:
+                fn(rid, entrant, "0" * 12)
+            except ValueError:
+                continue
+            raise AssertionError(
+                f"{fn.__name__}({rid!r}, {entrant!r}) was accepted")
+    # …and a real pair still resolves, inside the log.
+    good = replies.failure_path("umich-2026-08-prelim", "claude-opus", "0" * 12)
+    assert os.path.abspath(good).startswith(os.path.abspath(replies.root()) + os.sep)
+
+
 def test_the_log_is_not_written_into_the_repository_by_a_test():
     """A guard on this file, not on the code: every test above redirects the log
     with `Sandbox`, and one that forgot would quietly start committing replies

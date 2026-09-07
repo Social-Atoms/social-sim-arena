@@ -60,7 +60,26 @@ def root():
     return os.environ.get("SSA_REPLIES_DIR") or os.path.join(ROOT, "replies")
 
 
+def _segment(value, what):
+    """One path segment, or a raise.
+
+    Every id that reaches this module comes from a schema-validated file --
+    `round_id` is `^[a-z0-9][a-z0-9-]{2,63}$` in the forecast schema, `entrant_id` likewise --
+    so this has never fired. It is here because the guarantee that a reply or a
+    failure lands inside the log should be a property of this module rather
+    than of every caller: `os.path.join(root(), "../..", name)` writes wherever
+    it is told, and a log that can be aimed is not a log.
+    """
+    text = str(value)
+    if not text or text in (".", "..") or "/" in text or "\\" in text \
+            or text.startswith("."):
+        raise ValueError(f"{what} is not a usable path segment: {value!r}")
+    return text
+
+
 def path(round_id, entrant, ih, persona=None):
+    round_id = _segment(round_id, "round_id")
+    entrant = _segment(entrant, "entrant")
     name = f"{entrant}.{ih}.json" if persona is None else \
         f"{entrant}.{ih}.{persona}.json"
     return os.path.join(root(), round_id, name)
@@ -156,6 +175,8 @@ MAX_ATTEMPTS_KEPT = 20
 
 
 def failure_path(round_id, entrant, ih, persona=None):
+    round_id = _segment(round_id, "round_id")
+    entrant = _segment(entrant, "entrant")
     name = f"{entrant}.{ih}.json" if persona is None else \
         f"{entrant}.{ih}.{persona}.json"
     return os.path.join(root(), round_id, "failures", name)
