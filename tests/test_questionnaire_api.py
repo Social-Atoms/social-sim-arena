@@ -221,14 +221,16 @@ class QuestionnaireApiContracts(unittest.TestCase):
         with self.assertRaisesRegex(SubmissionError, "manifest exactly"):
             validate_submission(envelope, self.data, NOW)
 
-    def test_stale_open_status_cannot_outlive_the_batch_deadline(self):
-        future_lock = round_data(
+    def test_a_stale_open_status_cannot_outlive_the_rounds_own_close(self):
+        """`status: open` is a published artefact; the clock is the authority.
+        A round marked open whose close has passed accepts nothing."""
+        closed = round_data(
             "deadline-passed", "continuous_normal",
             lock_at="2026-09-20T14:00:00Z", status="open")
-        after_deadline = datetime(2026, 9, 14, 12, 1, tzinfo=timezone.utc)
-        assert future_lock["lock_at"] > "2026-09-14T12:01:00Z"
-        # No `deadline` field: this is a stale pre-migration site artifact.
-        assert open_rounds({"rounds": [future_lock]}, after_deadline) == []
+        after_close = datetime(2026, 9, 20, 14, 1, tzinfo=timezone.utc)
+        before_close = datetime(2026, 9, 20, 13, 59, tzinfo=timezone.utc)
+        assert open_rounds({"rounds": [closed]}, after_close) == []
+        assert open_rounds({"rounds": [closed]}, before_close) != []
 
     def test_target_type_is_checked_against_the_live_round(self):
         envelope = agent_submission(self.data)

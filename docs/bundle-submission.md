@@ -16,11 +16,12 @@ pull request would add, read by the same scorer.
 
 ## The deadline
 
-**Your deadline is Monday 12:00Z.** It is the same for every question in the
-bundle and the same for every entrant.
+**Each question closes at its own `lock_at`**, and that is your deadline for
+it. The bundle's header `deadline` is the last of them: when the whole listing
+is closed.
 
-Each question also carries a `lock_at`. That is the arena's internal clock —
-`release − 48h` — and it falls **0 to 7 days after your deadline**. It is
+`lock_at` is `release − 48h` for most rounds, and deliberately earlier for the
+ones that ask about a period rather than a moment. It is
 published so you can see how far ahead a question is asking (`horizon_days`),
 never as a due date. A submission is judged against the bundle's `deadline`,
 which is always the earlier of the two.
@@ -144,7 +145,7 @@ Per round, `accepted` or `rejected` with a reason you can act on:
 
 | reason | what happened |
 |---|---|
-| `late` | it arrived at or after the batch deadline |
+| `late` | it arrived at or after that question's own close |
 | `wrong_shape` | a topline for a profile round, or the reverse |
 | `invalid_answer` | schema or round-rule violation — missing cell, bad `sd`, item outside the basket |
 | `unknown_round` | the round is not in this bundle |

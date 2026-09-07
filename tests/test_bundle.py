@@ -44,15 +44,23 @@ def season_rounds():
     return read(SEASON)["rounds"]
 
 
+def _locks(bundle_doc):
+    return [datetime.fromisoformat(q["lock_at"].replace("Z", "+00:00"))
+            for q in bundle_doc["questions"]]
+
+
 def before_deadline(bundle_doc):
-    """A moment safely inside the submission window."""
-    due = datetime.fromisoformat(bundle_doc["deadline"].replace("Z", "+00:00"))
-    return due - timedelta(days=2)
+    """A moment every question in the bundle is still open at.
+
+    Each question closes at its own lock, so "inside the window" is before the
+    *earliest* of them, not before the header.
+    """
+    return min(_locks(bundle_doc)) - timedelta(days=2)
 
 
 def after_deadline(bundle_doc):
-    due = datetime.fromisoformat(bundle_doc["deadline"].replace("Z", "+00:00"))
-    return due + timedelta(seconds=1)
+    """A moment every question has closed at: past the last lock."""
+    return max(_locks(bundle_doc)) + timedelta(seconds=1)
 
 
 def submission_checks():
@@ -71,20 +79,22 @@ def submission_checks():
 
 # ------------------------------------------------------- the deadline shown
 
-def test_the_deadline_a_bundle_shows_is_never_a_rounds_own_lock():
+def test_the_deadline_a_bundle_shows_is_every_questions_own_lock():
     """The one rule the whole participant surface rests on.
 
-    Season 0 locks on six weekdays; the deadline is one Monday. A bundle that
-    published `lock_at` as the due date would give participants days they do
-    not have, and the validator would then reject what it invited.
+    Each question closes at its own lock, and that is what the validator
+    enforces, so that is what the bundle must show. The header is the listing:
+    it opens when the first question is listed and closes when the last one
+    closes, and no question may close after it.
     """
     doc = bundle.build_bundle(season_rounds(), "batch-2026-09-14")
-    assert doc["deadline"] == "2026-09-14T12:00:00Z", doc["deadline"]
-    assert doc["published_at"] == "2026-09-07T12:00:00Z", doc["published_at"]
+    locks = [q["lock_at"] for q in doc["questions"]]
+    assert doc["deadline"] == max(locks), (doc["deadline"], max(locks))
     for q in doc["questions"]:
         due = bundle.iso(batches.effective_deadline(q["lock_at"]))
-        assert due == doc["deadline"], (q["round_id"], due)
-        assert q["lock_at"] > doc["deadline"], q["round_id"]
+        assert due == q["lock_at"], (q["round_id"], due)
+        assert q["lock_at"] <= doc["deadline"], q["round_id"]
+        assert q["lock_at"] > doc["published_at"], q["round_id"]
 
 
 def test_one_bundle_carries_the_whole_weeks_mixed_horizons():
@@ -107,12 +117,17 @@ def test_one_bundle_carries_the_whole_weeks_mixed_horizons():
     shapes = {q["target_type"] for q in doc["questions"]}
     assert shapes == {
         "continuous_normal", "profile_energy", "ranking_list"}, shapes
+    locks = [q["lock_at"] for q in doc["questions"]]
+    assert locks == sorted(locks), "questions are not in lock order"
+    # The horizon is now the distance from a question's close to its answer,
+    # so it is a property of the question, not of where the week's calendar
+    # happened to put it. A week mixes 48-hour rounds with the ones that must
+    # lock before the period they measure.
     horizons = [q["horizon_days"] for q in doc["questions"]]
-    assert horizons == sorted(horizons), "questions are not in lock order"
-    assert min(horizons) < 0.2 and max(horizons) > 6.0, horizons
+    assert min(horizons) == 2.0 and max(horizons) > 6.0, horizons
     for q in doc["questions"]:
-        assert abs(q["horizon_days"]
-                   - batches.horizon_days(q["lock_at"])) < 0.001
+        assert abs(q["horizon_days"] - batches.horizon_days(
+            q["lock_at"], q["release_at"])) < 0.001
 
 
 def test_a_pre_cutover_batch_is_refused_rather_than_given_a_deadline():
@@ -139,11 +154,13 @@ def test_every_generated_bundle_satisfies_its_own_schema():
 
 
 def test_a_bundle_whose_header_disagrees_with_the_calendar_is_caught():
-    """The header is what a participant reads; the calendar is what binds."""
+    """The header says when the listing closes; each question closes at its
+    own lock. A header that closes before one of its questions is a header
+    that would tell a participant they were late when they were not."""
     doc = bundle.build_bundle(season_rounds(), "batch-2026-09-14")
     doc["deadline"] = "2026-09-15T12:00:00Z"
     problems = bundle.check_bundle(doc)
-    assert problems and any("deadline" in p for p in problems), problems
+    assert problems and any("declared close" in p for p in problems), problems
 
 
 # ------------------------------------------------------ answers coming back
@@ -292,16 +309,19 @@ def test_an_unanswered_round_is_reported_and_is_not_an_error():
 # --------------------------------------------------------------- deadlines
 
 def test_a_payload_that_arrives_after_the_deadline_is_refused_by_the_batch():
-    """And the message names the batch, not the lock: the lock is days later
-    and quoting it invites the participant to argue they were in time."""
+    """And the message names the moment *this question* closed, which is its
+    own lock: quoting anything else invites the participant to argue they were
+    in time."""
     doc = read(SANDBOX)
     response = build_answers(doc)
     out = bundle.normalise(response, doc, now=after_deadline(doc))
     assert out["receipt"]["accepted"] == 0, out["results"]
+    by_round = {q["round_id"]: q["lock_at"] for q in doc["questions"]}
     for result in out["results"]:
         assert result["reason"] == "late", result
-        assert doc["batch_id"] in " ".join(result["messages"])
-        assert doc["deadline"] in " ".join(result["messages"])
+        said = " ".join(result["messages"])
+        assert doc["batch_id"] in said
+        assert by_round[result["round_id"]] in said, said
 
 
 def test_the_deadline_is_decided_per_answer_not_once_for_the_whole_file():
@@ -526,6 +546,40 @@ def test_the_shipped_example_response_is_what_the_example_entrant_produces():
                                      False, False)
     assert produced == read(SANDBOX_RESPONSE), \
         "examples/bundle/sandbox-response.json is stale; regenerate it"
+
+
+def test_the_open_batch_is_the_one_with_an_open_round_in_it():
+    """A batch is offered while any of its rounds can still be answered.
+
+    `next_batch_id` asked whether the batch's Monday noon was still ahead. That
+    Monday stopped being when anything closes when rounds went back to their own
+    locks, and on every day but Monday morning it is in the past -- so six days
+    in seven the week in progress was reported finished and the bundle jumped to
+    the next one, hiding the questions a participant could still answer and
+    offering ones not yet listed. Walked hour by hour across a real week rather
+    than asserted at one instant, because the bug was invisible at the one
+    instant anybody checked.
+    """
+    rounds = [
+        {"round_id": "a", "lock_at": "2026-09-16T14:00:00Z"},   # Wednesday
+        {"round_id": "b", "lock_at": "2026-09-20T14:00:00Z"},   # Sunday
+        {"round_id": "c", "lock_at": "2026-09-23T14:00:00Z"},   # next week
+    ]
+    this_week = batches.batch_of("2026-09-16T14:00:00Z")
+    next_week = batches.batch_of("2026-09-23T14:00:00Z")
+    assert this_week != next_week
+
+    start = datetime(2026, 9, 14, 13, tzinfo=timezone.utc)      # Monday, 13:00Z
+    for hours in range(0, 24 * 6):
+        now = start + timedelta(hours=hours)
+        got = bundle.next_batch_id(rounds, now)
+        want = this_week if now < batches.effective_deadline("2026-09-20T14:00:00Z") \
+            else next_week
+        assert got == want, f"{now:%Y-%m-%d %H:%MZ}: offered {got}, wanted {want}"
+
+    # And when the last round of a batch has closed, the batch is done.
+    after = datetime(2026, 9, 20, 15, tzinfo=timezone.utc)
+    assert bundle.next_batch_id(rounds, after) == next_week
 
 
 if __name__ == "__main__":

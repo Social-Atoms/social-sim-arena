@@ -25,7 +25,7 @@ The arena holds no key of yours, so there is nothing of yours for it to leak.
   the cron from asking twice (`ssa/agent_api.py`). The open batch is about
   twenty questions.
 - **Retries only on failure**, at the six-hourly refresh, until 30 minutes
-  before the batch deadline. A valid forecast is final and is never asked for
+  before the round closes. A valid forecast is final and is never asked for
   again (`docs/agent-api.md`, call policy).
 - **Timeouts**: 15 s to connect, 600 s to answer (`harness.TIMEOUT`).
 
@@ -42,7 +42,16 @@ The arena holds no key of yours, so there is nothing of yours for it to leak.
   endpoint registrations; a fourth is refused by CI
   (`validate_submission.MAX_ROUTES_PER_LOGIN`). Revoked ones do not count.
 - **URL rules**: public https, no query string or fragment
-  (`schema/entrant.schema.json`, `ssa/participants.py`).
+  (`schema/entrant.schema.json`, `ssa/participants.py`), called exactly as
+  registered. **Redirects are refused** (`harness._call_agent`): with them
+  followed, a registered https endpoint answering `307 Location: http://...`
+  had the envelope and all three signature headers replayed to that host in
+  cleartext, and the reply filed as the participant's forecast.
+- **Reserved names**: an entrant id the arena runs its own models or baselines
+  under cannot be registered by anyone else
+  (`schema/reserved-entrant-ids.json`). Without it, a name the harness files
+  under but has no registration for could be claimed by a stranger, and the
+  arena would call their endpoint for our model's rounds.
 - **No mock, no standby**: an unreachable participant has no forecast that
   round. The arena never invents an answer under someone else's id and never
   forwards their question to a vendor on our account (`ssa/agent_api.py`).

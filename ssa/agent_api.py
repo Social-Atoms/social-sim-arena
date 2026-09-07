@@ -36,6 +36,7 @@ What is deliberately *not* inherited
 - **No standby.** See `participants.route`.
 """
 import json
+import threading
 
 from . import batches
 from . import harness
@@ -52,7 +53,35 @@ SCHEMA_VERSION = "ssa-agent-api-v2"
 # dead or hanging endpoint can cost the run (one round's timeout, a few times)
 # and what a run can cost the endpoint (a burst of twenty calls into an outage).
 MAX_CONSECUTIVE_FAILURES = 3
+
+# One lock per participant, and the whole check-call-count sequence runs inside
+# it. The counter alone was useless: `refresh` fans a round's jobs across 20
+# threads, so all 20 read "no failures yet" before the first request came back
+# and all 20 went out. Measured on a dead endpoint: 20 questions, 20 requests,
+# against a cap of 3.
+#
+# Serialising one participant costs nothing we want: a round is one call, the
+# calls that queue behind a *working* endpoint are the ones we were going to
+# make anyway, and different participants still run in parallel because the
+# lock is per entrant.
+_failures_lock = threading.Lock()
 _failures_this_run = {}
+_entrant_locks = {}
+
+
+def _lock_for(entrant):
+    with _failures_lock:
+        return _entrant_locks.setdefault(entrant, threading.Lock())
+
+
+def _too_many_failures(entrant):
+    with _failures_lock:
+        return _failures_this_run.get(entrant, 0) >= MAX_CONSECUTIVE_FAILURES
+
+
+def _record(entrant, ok):
+    with _failures_lock:
+        _failures_this_run[entrant] = 0 if ok else _failures_this_run.get(entrant, 0) + 1
 
 BOARD = {"profile_energy": "profile", "ranking_list": "ranking"}
 
@@ -192,9 +221,9 @@ def _payload(text):
 
 
 def parse_scalar(text):
-    """A scalar round's answer: {mean, sd} or {quantiles}. Both are scored
-    with CRPS (`scoring.crps_forecast`), so which one an endpoint sends is
-    its own choice."""
+    """A scalar round's answer: `{mean, sd}`, scored with CRPS. One shape, so
+    that an endpoint has one thing to build and the arena one thing to check --
+    see `harness.answer` for what the second shape cost and why it went."""
     return harness.answer(_payload(text), "forecast")
 
 
@@ -255,17 +284,18 @@ def forecast(entrant, r, history=None, previous=None, profile_history=None,
         parse = parse_scalar
         key = "topline"
 
-    if _failures_this_run.get(entrant, 0) >= MAX_CONSECUTIVE_FAILURES:
-        raise RuntimeError(
-            f"{entrant}: not called; {MAX_CONSECUTIVE_FAILURES} consecutive "
-            "failures this run. Retried by the next refresh.")
-    try:
-        top, via, ih, replayed = harness._ask(entrant, prompt, previous,
-                                              r["round_id"], parse=parse)
-    except Exception:
-        _failures_this_run[entrant] = _failures_this_run.get(entrant, 0) + 1
-        raise
-    _failures_this_run[entrant] = 0
+    with _lock_for(entrant):
+        if _too_many_failures(entrant):
+            raise RuntimeError(
+                f"{entrant}: not called; {MAX_CONSECUTIVE_FAILURES} consecutive "
+                "failures this run. Retried by the next refresh.")
+        try:
+            top, via, ih, replayed = harness._ask(entrant, prompt, previous,
+                                                  r["round_id"], parse=parse)
+        except Exception:
+            _record(entrant, ok=False)
+            raise
+        _record(entrant, ok=True)
     if top is None:
         return previous
     return {

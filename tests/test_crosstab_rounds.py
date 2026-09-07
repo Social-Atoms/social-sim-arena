@@ -261,14 +261,13 @@ def test_every_cell_row_tells_an_entrant_what_it_is_graded_on():
 
 # --- the freeze -------------------------------------------------------------
 
-def test_the_freeze_excludes_the_wave_published_after_the_deadline():
+def test_the_freeze_excludes_the_wave_published_after_the_close():
     """The wave w39 scores is dated Monday 09-21 and published the next day.
-    Its batch froze on Monday 09-14 12:00Z, by which time the 09-14 wave was
-    not public either -- it enters the workbook on the 15th. So the frozen
-    history ends at 09-07 for w39, and for the pre-cutover w38 (freeze on its
-    own Sunday lock, 09-13) it ends at 09-07 as well."""
+    w39 closes on its own lock, 09-20 14:00Z, so its frozen history ends at
+    the 09-14 wave; w38 closes 09-13 and ends at 09-07. Neither reads the
+    wave it is scored against."""
     series, _ = built(full_waves())
-    for r, last in ((ROUND, "2026-09-07"), (PRE, "2026-09-07")):
+    for r, last in ((ROUND, "2026-09-14"), (PRE, "2026-09-07")):
         freeze = batches.freeze_at(r["lock_at"]).strftime("%Y-%m-%d")
         hist = profile_round.frozen_history(r, series, CELLS)
         for c in CELLS:
@@ -297,17 +296,19 @@ def test_the_round_builds_freezes_and_gets_a_per_cell_null():
     assert row["baselines"] is None, "a vector round has no scalar denominator"
     assert row["scoreable"] is True, row.get("baseline_note")
     assert row["profile"]["cells"] == CELLS
-    assert set(row["profile"]["history_points"].values()) == {WAVES.index("2026-09-07") + 1}
+    assert set(row["profile"]["history_points"].values()) == {WAVES.index("2026-09-14") + 1}
     got = row["profile"]["baselines"]["persistence"]
     assert got[CELLS[0]]["mean"] == per[CELLS[0]]["mean"]
     print("ok test_the_round_builds_freezes_and_gets_a_per_cell_null")
 
 
 def test_a_thin_history_refuses_the_null_instead_of_inventing_one():
-    short = ["2026-09-07", "2026-09-14", "2026-09-21"]
+    # One wave before the round closes (09-20) is not a history to baseline on.
+    short = ["2026-09-14", "2026-09-21"]
     series, _ = built(waves_for(short))
     hist = profile_round.frozen_history(ROUND, series, CELLS)
-    assert all(len(v) <= 1 for v in hist.values())
+    assert all(len(v) <= 1 for v in hist.values()), \
+        {c: [p["date"] for p in v] for c, v in hist.items()}
     try:
         profile_round.persistence_profile(hist, CELLS)
     except ValueError as e:
@@ -328,9 +329,11 @@ def test_the_prompt_asks_for_all_sixteen_cells_and_says_who_published_them():
     assert "Economist and YouGov" in prompt
     assert "not a modelled estimate" in prompt
     assert "percent approving" in prompt
-    # the history shown is the frozen one: nothing from the batch's own week
-    assert "2026-09-07" in prompt
-    assert W38_WAVE not in prompt and W39_WAVE not in prompt
+    # The history shown is the frozen one: everything up to the round's close
+    # and nothing after it. W38_WAVE (09-14) is before w39 closes and belongs;
+    # W39_WAVE (09-21) is the wave being scored and must not appear.
+    assert "2026-09-07" in prompt and W38_WAVE in prompt
+    assert W39_WAVE not in prompt
     assert '{"<subgroup id>": {"mean": <number>, "sd": <number>}, ...}' in prompt
     print("ok test_the_prompt_asks_for_all_sixteen_cells_and_says_who_published_them")
 
@@ -350,26 +353,30 @@ def test_the_round_resolves_on_its_own_wave_and_credits_the_workbook():
 
 
 def test_a_stale_archive_is_refused_by_name_never_resolved_on_last_weeks_wave():
-    """The failure this round type makes easy. w39 froze Monday 09-14; the
-    09-14 wave is dated that day, was public on the 15th -- before every
-    entrant's answer counted for nothing, after the deadline that froze the
-    null -- and is *last week's survey*. With the archive not yet carrying
-    09-21, a freeze-only guard resolves w39 against it."""
+    """The failure this round type makes easy: resolving on last week's survey
+    because this week's has not landed yet.
+
+    Two guards stop it, and with the round closing on its own lock they stop
+    it at different distances. The freeze alone now refuses the 09-14 wave,
+    because w39 closes 09-20 and that wave predates the close. The window
+    guard is what still refuses a wave that is *after* the close but outside
+    the seven days ending at the release."""
     stale = ramp([d for d in WAVES if d != W39_WAVE])
     series, _ = built(stale)
     freeze = batches.freeze_at(ROUND["lock_at"]).strftime("%Y-%m-%d")
-    # The freeze-only guard really does pass the previous wave: this is the
-    # gap the window closes, and the test has to show the gap is real.
     pts = series[CELLS[0]]
-    got = profile_round.cell_outcome(pts, ROUND["release_at"][:10], freeze,
-                                     CELLS[0])
-    assert got["date"] == W38_WAVE, got
+    try:
+        profile_round.cell_outcome(pts, ROUND["release_at"][:10], freeze,
+                                   CELLS[0])
+    except ValueError as e:
+        assert "predates the freeze" in str(e), str(e)
+    else:
+        raise AssertionError("last week's wave resolved a round it predates")
     try:
         profile_round.resolution(ROUND, series, CELLS)
     except ValueError as e:
         msg = str(e)
-        assert "not this round's wave" in msg, msg
-        assert W38_WAVE in msg and "2026-09-16 to 2026-09-22" in msg, msg
+        assert "predates the freeze" in msg or "not this round's wave" in msg, msg
     else:
         raise AssertionError("last week's wave must not resolve this round")
     # A wave dated any day of the round's week resolves it: YouGov dates 13 of
@@ -441,7 +448,9 @@ def test_a_round_whose_wave_has_not_arrived_waits_on_the_board():
         board = refresh.build_profile_leaderboard(rows, {}, series)
     assert board["scored_rounds"] == 0
     named = " ".join(f"{a} {b}" for a, b in board["skipped"])
-    assert ROUND["round_id"] in named and "not this round's wave" in named, named
+    assert ROUND["round_id"] in named, named
+    assert ("not this round's wave" in named
+            or "predates the freeze" in named), named
     print("ok test_a_round_whose_wave_has_not_arrived_waits_on_the_board")
 
 

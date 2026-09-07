@@ -126,6 +126,57 @@ def test_model_filter_selection_and_persistence():
     sys.stdout.write(got.stdout)
     assert got.returncode == 0, got.stderr or got.stdout
     print("ok test_model_filter_selection_and_persistence")
+def test_a_batch_is_open_until_its_last_question_closes():
+    """Rendered against a week that straddles now, because that is the only
+    state the bug appears in and the live payload is rarely in it.
+
+    Each question closes on its own clock, so a batch spends most of its week
+    part closed. The calendar decided the batch was finished when its *first*
+    question closed: `batch-2026-09-28` went grey and dropped off the list on
+    09-30 with eight of its twelve questions still open, and the countdown
+    beside it ran negative. Measured on this fixture before the fix: shown as
+    closed with 17 of 19 questions still open.
+    """
+    if not _node():
+        print("ok test_a_batch_is_open_until_its_last_question_closes "
+              "(skipped: no node on PATH)")
+        return
+    import tempfile
+    from datetime import datetime, timedelta, timezone
+
+    source = _fixture_data()
+    try:
+        with open(source) as fh:
+            data = json.load(fh)
+    finally:
+        if source.endswith("_render_fixture.json"):
+            os.remove(source)
+
+    now = datetime.now(timezone.utc)
+    by_batch = {}
+    for r in data.get("rounds") or []:
+        if r.get("batch_id"):
+            by_batch.setdefault(r["batch_id"], []).append(r)
+    straddled = next((rs for rs in by_batch.values() if len(rs) >= 4), None)
+    if straddled is None:
+        print("ok test_a_batch_is_open_until_its_last_question_closes "
+              "(skipped: no batched rounds in the payload)")
+        return
+    for i, r in enumerate(straddled):
+        when = now - timedelta(hours=1) if i < 2 else now + timedelta(days=3)
+        r["deadline"] = r["lock_at"] = when.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    tmp = tempfile.mkdtemp(prefix="ssa-straddle-")
+    path = os.path.join(tmp, "data.json")
+    with open(path, "w") as fh:
+        json.dump(data, fh)
+    try:
+        got = _run(BOARDS, path)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    sys.stdout.write(got.stdout)
+    assert got.returncode == 0, got.stderr or got.stdout
+    print("ok test_a_batch_is_open_until_its_last_question_closes")
 
 
 def test_the_page_reads_only_keys_the_pipeline_publishes():
@@ -304,8 +355,9 @@ if __name__ == "__main__":
     test_the_landing_page_names_each_round_shape_and_the_right_deadline()
     test_resizable_panels_and_chart_widths()
     test_model_filter_selection_and_persistence()
+    test_a_batch_is_open_until_its_last_question_closes()
     test_the_page_reads_only_keys_the_pipeline_publishes()
     test_no_page_promises_a_date_it_cannot_know()
     test_every_link_the_docs_send_a_participant_to_exists()
     test_the_publish_gate_covers_every_field_a_page_reads_unguarded()
-    print("8 passed")
+    print("9 passed")

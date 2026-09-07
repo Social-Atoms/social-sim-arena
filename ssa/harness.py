@@ -43,7 +43,9 @@ import concurrent.futures
 import hashlib
 import json
 import os
+import time
 import re
+import socket
 import threading
 from datetime import datetime, timezone
 
@@ -493,6 +495,13 @@ TIMEOUT = (15, 600)
 # an attack, and either is refused rather than parsed.
 AGENT_MAX_REPLY_BYTES = 1_000_000
 
+# The most wall-clock one call may take, start to finish. `TIMEOUT` above is
+# per socket operation and cannot bound a call that keeps dribbling; this can.
+# An hour is generous on purpose -- a participant may be running a large model
+# behind their endpoint -- and it is still an hour rather than the six the job
+# would otherwise burn before committing nothing.
+CALL_DEADLINE_SECONDS = float(os.environ.get("SSA_CALL_DEADLINE_SECONDS") or 3600)
+
 # Two prompt variants, differing only in how much of the series the model sees.
 # Everything that defines *what number is being asked for* -- the pollster, the
 # population, the question wording, the release schedule -- appears in both,
@@ -712,9 +721,10 @@ NEWS_BLOCK = (
 #              with no history to reason from is not forecasting.
 #   recent10   the last ten releases, the same history the nulls read. The
 #              like-for-like comparison against persistence.
-#   news       recent10 plus a fixed news corpus frozen at the lock -- the same
-#              text for every entrant, archived, reproducible. The auditable
-#              version of "give it real-world information".
+#   news       recent10 plus a fixed news corpus frozen when the call window
+#              opened -- the same text for every entrant, archived,
+#              reproducible, and the same instant the nulls freeze at. The
+#              auditable version of "give it real-world information".
 #   web        recent10 plus live search. Live-only; see WEB_CONTEXTS.
 CONTEXT = {"none": 0, "recent10": 10, "news": 10, "web": 10}
 DEFAULT_CONTEXT = "recent10"
@@ -1040,7 +1050,13 @@ def base_url(entrant, via=None):
     # would let an environment variable silently send their round to a host
     # their public record does not name.
     if participants.is_participant(entrant):
-        return route(entrant, via)["base"].rstrip("/")
+        # Exactly the URL on the public record, trailing slash and all. The
+        # `rstrip` the provider routes use turned `/forecast/` into
+        # `/forecast`, which is a different resource to most servers: the
+        # browser test and the probe post to the registered form, so an
+        # endpoint could pass both and then be called at a path it does not
+        # serve -- and, with redirects now refused, fail outright.
+        return route(entrant, via)["base"]
     model = resolve(entrant)[0]
     return (os.environ.get("SSA_BASE_" + _env_suffix(model))
             or route(entrant, via)["base"]).rstrip("/")
@@ -1641,21 +1657,126 @@ def _call_openai(cfg, base, key, mid, prompt):
     return _extract_text(data, mid), _usage(data)
 
 
-def _read_capped(r, cap):
-    """The reply body, read no further than `cap` + 1 bytes.
+class PartialReply(RuntimeError):
+    """A call that ran out of time or space, carrying what had arrived.
 
-    An endpoint that streams forever or answers with a gigabyte costs the run
-    one megabyte, not its memory: the caller sees a body one byte over the cap
-    and refuses it. Falls back to `.content` for a response that was not
-    opened for streaming (the tests' fakes).
+    The bytes are kept because a reply that was cut off is the only evidence of
+    *how* an endpoint misbehaves -- a slow trickle, a body that never ends, a
+    proxy error page -- and throwing them away leaves an operator with nothing
+    but "it failed".
+    """
+
+    def __init__(self, message, partial=b""):
+        super().__init__(message)
+        self.partial = partial
+
+
+def _sockets_of(r):
+    """Every socket object a response might be holding, best effort.
+
+    urllib3 keeps one on the connection; `http.client` keeps the same one under
+    the original response's buffered reader. Both are private and both have
+    moved between versions, so this looks in both places and tolerates finding
+    neither.
+    """
+    raw = getattr(r, "raw", None)
+    found = []
+    for path in (("_connection", "sock"),
+                 ("_original_response", "fp", "raw", "_sock"),
+                 ("_fp", "fp", "raw", "_sock")):
+        node = raw
+        for name in path:
+            node = getattr(node, name, None)
+            if node is None:
+                break
+        if node is not None and node not in found:
+            found.append(node)
+    return found
+
+
+def _abandon(r):
+    """Drop a response whose body is still arriving.
+
+    **Shuts the socket down rather than closing the response.** Both
+    `Response.close()` and `raw.close()` end at `BufferedReader.close()`, which
+    takes the buffer lock -- the lock the reader thread is holding while it
+    blocks. Measured: a 2-second deadline against a dribbling endpoint returned
+    after 40.6 s, all of it inside the close, waiting for the read it was
+    supposed to interrupt. `shutdown` touches the kernel socket, takes no Python
+    lock, and hands the blocked reader an immediate EOF.
+
+    The connection is never released back to the pool: the reader may still be
+    inside it, and a reused connection would serve the tail of this reply as the
+    next request's answer.
+    """
+    for sock in _sockets_of(r):
+        try:
+            sock.shutdown(socket.SHUT_RDWR)
+        except Exception:                  # noqa: BLE001 - already dead is fine
+            pass
+        try:
+            sock.close()
+        except Exception:                  # noqa: BLE001
+            pass
+
+
+def _read_capped(r, cap, deadline=None):
+    """The reply body, read no further than `cap` + 1 bytes, and no longer than
+    `deadline`.
+
+    Two limits, because either alone is escapable. The cap stops a gigabyte; the
+    deadline stops a trickle.
+
+    **The deadline is held by a second thread on purpose.** `TIMEOUT`'s read half
+    is per socket read, and so is any check placed between reads: a body arriving
+    one byte at a time keeps resetting the socket timeout and never returns from
+    the read the check sits after. Measured against a 2-second deadline, an
+    endpoint dribbling 200 bytes at 5 B/s was cut off after 40.7 s -- the read
+    only came back when the *server* finished. So the read runs in a daemon
+    thread, the caller waits on an event for the time that is actually left, and
+    the socket is closed under the reader when it runs out. What had arrived is
+    kept and raised as `PartialReply`: a truncated body is the evidence of how
+    the endpoint misbehaves.
+
+    Falls back to `.content` for a response that was not opened for streaming
+    (the tests' fakes).
     """
     raw_stream = getattr(r, "raw", None)
     if raw_stream is None or not hasattr(raw_stream, "read"):
         return getattr(r, "content", b"") or b""
-    try:
-        return raw_stream.read(cap + 1, decode_content=True)
-    finally:
-        r.close()
+    chunks, box, done = [], {}, threading.Event()
+    # `read1` returns what has arrived; `read` waits for the full amount asked
+    # for. With `read`, a body dribbling in below the chunk size is still inside
+    # the first call when the deadline fires, so the partial we keep is empty --
+    # measured 0 bytes of the 200 that had been received. Older urllib3 has no
+    # `read1`; there the partial is whatever whole chunks completed.
+    read = getattr(raw_stream, "read1", None) or raw_stream.read
+
+    def pump():
+        got = 0
+        try:
+            while got <= cap:
+                chunk = read(min(65536, cap + 1 - got), decode_content=True)
+                if not chunk:
+                    break
+                chunks.append(chunk)           # list.append is atomic (CPython)
+                got += len(chunk)
+        except BaseException as exc:           # noqa: BLE001 - reported below
+            box["error"] = exc
+        finally:
+            done.set()
+
+    threading.Thread(target=pump, name="ssa-reply-read", daemon=True).start()
+    left = None if deadline is None else max(0.0, deadline - time.monotonic())
+    if not done.wait(left):
+        _abandon(r)
+        raise PartialReply(
+            f"reply not finished within {CALL_DEADLINE_SECONDS:.0f}s",
+            b"".join(chunks))
+    r.close()
+    if "error" in box:
+        raise box["error"]
+    return b"".join(chunks)
 
 
 def _call_agent(cfg, base, key, mid, prompt):
@@ -1679,10 +1800,29 @@ def _call_agent(cfg, base, key, mid, prompt):
     body = prompt.encode("utf-8")
     headers = {"Content-Type": "application/json",
                **signing.sign(signer[0], body, signer[1])}
+    # `allow_redirects=False` is the whole of "https only". With the default,
+    # a registered https endpoint answering `307 Location: http://elsewhere`
+    # made requests replay the envelope and all three X-SSA-* headers to that
+    # host in cleartext, and the arena filed whatever came back. The signature
+    # covers the timestamp and the body, never the URL, so the forwarded copy
+    # is a valid arena request for the whole 300-second skew window -- to a
+    # host the participant's public record does not name.
+    deadline = time.monotonic() + CALL_DEADLINE_SECONDS
     r = requests.post(base, headers=headers, data=body, timeout=TIMEOUT,
-                      stream=True)
-    raw = _read_capped(r, AGENT_MAX_REPLY_BYTES)
+                      stream=True, allow_redirects=False)
     what = f"{mid} @ {base}"
+    if 300 <= r.status_code < 400:
+        target = r.headers.get("Location", "")
+        r.close()
+        raise RuntimeError(
+            f"{what} answered HTTP {r.status_code} redirecting to "
+            f"{target[:120]!r}. The arena does not follow redirects: a signed "
+            "request must reach the URL on the public record and no other. "
+            "Register the final URL.")
+    try:
+        raw = _read_capped(r, AGENT_MAX_REPLY_BYTES, deadline)
+    except PartialReply as exc:
+        raise PartialReply(f"{what} {exc}", exc.partial) from None
     if len(raw) > AGENT_MAX_REPLY_BYTES:
         raise RuntimeError(f"{what} reply exceeds {AGENT_MAX_REPLY_BYTES} bytes")
     if r.status_code >= 400:
@@ -1814,68 +1954,50 @@ def _distribution(mean, sd, where=""):
         raise ValueError(f"{at}sd out of schema range: {sd}")
     if abs(mean) > 1e7:
         raise ValueError(f"{at}implausible mean: {mean}")
-    return {"mean": round(mean, 2), "sd": round(sd, 2)}
-
-
-_LEVEL = re.compile(r"^0\.\d{1,3}$")
-
-
-def _quantiles(q, where=""):
-    """A quantile map -> the stored form, or a raise.
-
-    The other half of `_distribution`: the submission schema accepts a
-    topline (and a profile cell) as either a normal or a quantile set, and
-    `scoring.crps_forecast` scores both, so a participant who can express
-    skew should be able to send it. The rules enforced here are exactly the
-    ones `tools/validate_submission.py` enforces on a committed file --
-    three or more levels, the median present, levels strictly inside (0, 1)
-    and written as the schema's `0.NNN`, values non-decreasing -- because a
-    reply this accepts becomes a file CI then judges, and a parser looser
-    than the validator files something that cannot be merged.
-    """
-    at = f"{where}: " if where else ""
-    if not isinstance(q, dict) or len(q) < 3:
-        raise ValueError(f"{at}quantiles needs at least three levels")
-    bad = [k for k in q if not (isinstance(k, str) and _LEVEL.match(k))]
-    if bad:
-        raise ValueError(
-            f"{at}quantile levels must be written as 0.NNN (e.g. \"0.05\", "
-            f"\"0.5\"); got {sorted(bad)[:4]}")
-    try:
-        items = sorted((float(k), float(v)) for k, v in q.items())
-    except (TypeError, ValueError):
-        raise ValueError(f"{at}quantile values must be numbers")
-    if any(v != v or abs(v) > 1e7 for _, v in items):
-        raise ValueError(f"{at}non-finite or implausible quantile value")
-    if not any(abs(lv - 0.5) < 1e-9 for lv, _ in items):
-        raise ValueError(f"{at}quantiles must include the median (\"0.5\")")
-    if any(lv <= 0 or lv >= 1 for lv, _ in items):
-        raise ValueError(f"{at}quantile levels must be strictly between 0 and 1")
-    vals = [v for _, v in items]
-    if any(b < a for a, b in zip(vals, vals[1:])):
-        raise ValueError(f"{at}quantile values must not decrease as the level rises")
-    return {"quantiles": {k: round(float(v), 2) for k, v in q.items()}}
+    # Stored as answered. Both values used to be rounded to two decimals, which
+    # is a silent edit to somebody's forecast and, for `sd`, an edit that
+    # changes what it means: an answer of 0.004 passed the check above and was
+    # then written down as 0.0 -- a point guess, the one thing the arena
+    # refuses, and a file `schema/forecast.schema.json` rejects for
+    # `exclusiveMinimum: 0`. Two decimals were never a rule anywhere; the schema
+    # asks for a number.
+    return {"mean": mean, "sd": sd}
 
 
 def answer(obj, where=""):
-    """One accepted distribution from a reply object: a normal or a quantile
-    set. Which one is the answerer's choice, not the round's."""
+    """One accepted distribution from a reply object: `{mean, sd}`.
+
+    **One shape, for every live answer.** A reply could once be a normal *or* a
+    quantile set, on the argument that an endpoint with a skewed belief should
+    not have to pretend otherwise. Nothing ever sent one -- not one of the
+    season's replies, not one committed forecast -- and the option was not free:
+    two shapes meant two parsers, two sets of rules to keep in step with
+    `tools/validate_submission.py`, and two ways for a round to be scored, all
+    exercised by tests and by nobody else. So the live contract asks for the
+    shape everybody uses.
+
+    This is narrower than `schema/forecast.schema.json`, deliberately. A
+    committed file may still carry quantiles and `scoring.crps_forecast` still
+    scores them, because that is the arena's published claim about how formats
+    compete and it costs nothing to keep. What changed is only what an endpoint
+    may *reply*.
+    """
     if not isinstance(obj, dict):
         at = f"{where}: " if where else ""
         raise ValueError(f"{at}expected an object, got {type(obj).__name__}")
+    at = f"{where}: " if where else ""
     if "quantiles" in obj:
-        return _quantiles(obj["quantiles"], where)
+        raise ValueError(
+            f"{at}quantiles are no longer accepted from an endpoint; answer "
+            f"with mean and sd")
     if "mean" not in obj or "sd" not in obj:
-        at = f"{where}: " if where else ""
-        raise ValueError(f"{at}needs mean and sd, or quantiles; "
-                         f"got keys {sorted(obj)}")
+        raise ValueError(f"{at}needs mean and sd; got keys {sorted(obj)}")
     return _distribution(obj["mean"], obj["sd"], where)
 
 
 def parse_forecast(text):
-    """Pull a distribution out of a model reply -- {"mean", "sd"} or
-    {"quantiles"}. Raises on anything that would not survive the submission
-    schema."""
+    """Pull a distribution out of a model reply -- `{"mean", "sd"}`. Raises on
+    anything that would not survive the submission schema."""
     return answer(_first_json_object(text))
 
 
@@ -2072,6 +2194,43 @@ def _log_reply(round_id, entrant, ih, prompt, text, usage, via=None, persona=Non
     return replies.log(round_id, entrant, ih, rec)
 
 
+# How much of a cut-off body is written down. The reply cap is 1 MB and a
+# failure record is committed, so the whole of a runaway body is exactly what
+# must not be kept; the first 16 KB is far more than any real answer and enough
+# to recognise a proxy error page or a stalled JSON object. The true length is
+# recorded either way, so a truncated record never misrepresents what arrived.
+PARTIAL_KEEP_BYTES = 16384
+
+
+def _log_failure(round_id, entrant, ih, prompt, exc, via=None, persona=None):
+    """Write down a call that produced no forecast, and whatever had arrived.
+
+    Called on every failed call, next to the reply log and under the same key,
+    so the two halves of one call's history sit together: `replies/<round>/`
+    holds what came back, `replies/<round>/failures/` holds what went wrong.
+    Before this, a failure existed only as a line in the log of a runner that is
+    deleted minutes later, so "this endpoint has failed every run for a week"
+    was unprovable, and a body cut off by the hour cap was discarded unread.
+
+    **Nothing written here carries a `reply` key.** `_replayed` replays a stored
+    reply as an answer; a failure must never be able to become one, which is
+    why these live in a directory `replies.lookup` cannot address and why
+    `replies.log_failure` strips the key as well.
+    """
+    rec = {"model": model_id(entrant, via), "via": route(entrant, via)["via"],
+           "prompt_sha256": replies.prompt_sha256(prompt),
+           "error_type": type(exc).__name__,
+           "error": " ".join(str(exc).split())[:2000]}
+    if persona is not None:
+        rec["persona"] = persona
+    partial = getattr(exc, "partial", None)
+    if partial:
+        rec["partial_bytes"] = len(partial)
+        rec["partial"] = partial[:PARTIAL_KEEP_BYTES].decode("utf-8", "replace")
+        rec["partial_truncated"] = len(partial) > PARTIAL_KEEP_BYTES
+    return replies.log_failure(round_id, entrant, ih, rec)
+
+
 def _replayed(round_id, entrant, ih, parse, persona=None):
     """A reply already bought for this exact call, parsed, or None.
 
@@ -2161,6 +2320,7 @@ def forecast_persona(entrant, r, history=None, previous=None):
                        persona=pid)
             parsed = parse_survey_reply(reply, spec)
         except Exception as e:                 # noqa: BLE001 - collected below
+            _log_failure(r["round_id"], entrant, ih, prompts[pid], e, persona=pid)
             with lock:
                 failures.append(f"{pid}: {type(e).__name__}: {e}")
             return
@@ -2194,7 +2354,11 @@ def forecast_persona(entrant, r, history=None, previous=None):
     return {
         "round_id": r["round_id"],
         "entrant": entrant,
-        "topline": {"mean": round(mean, 2), "sd": round(sd, 2)},
+        # Through the same parser every other forecast goes through, so a
+        # panel is held to the schema's rules rather than to its own: a
+        # unanimous panel with an sd of zero is refused here instead of filed
+        # as a file CI then rejects.
+        "topline": _distribution(mean, sd, f"{entrant} panel"),
         "notes": note[:500],
     }
 
@@ -2226,11 +2390,21 @@ def _provider_text(entrant, prompt):
     return call_provider(entrant, prompt, via=sb["via"])
 
 
-# Model forecasts are bought only inside this window before a round's deadline
-# (`refresh.model_jobs_due`; the rationale is written there). It is defined
-# here rather than in refresh because `_retrieve` needs it too and refresh
-# already imports harness.
-FILE_WINDOW_SECONDS = float(os.environ.get("SSA_FILE_WINDOW_DAYS") or "3") * 86400
+# Every entrant for a round is called inside this window before the round's
+# deadline (`refresh.model_jobs_due`; the rationale is written there), and the
+# shared context is frozen at the window's opening, so when inside it a given
+# entrant is reached does not change what it was shown.
+#
+# 24 hours, down from three days. What we hand over is frozen either way, so
+# the window only bounds what an entrant can look up *for itself* between the
+# first call and the last retry -- and three days of that is a real advantage
+# to whoever happened to be retried late. Prophet Arena reaches the same place
+# with windows of a few hours and a published reliability number instead of a
+# long tail.
+# Defined in `ssa/batches.py`, which owns the round clock and imports nothing
+# from the package, so the search adapter can read the same value instead of
+# parsing the same variable a second time.
+FILE_WINDOW_SECONDS = batches.FILE_WINDOW_SECONDS
 
 
 def _gathered_in_window(frozen, r):
@@ -2276,12 +2450,9 @@ def filed_in_window(notes, lock_at):
     replaced once, inside the window, where the input hash makes the
     replacement free if nothing actually changed.
 
-    The window is measured back from the round's *batch deadline*, not its
-    lock. Under the weekly batch calendar those differ by up to seven days, and
-    anchoring on the lock would let our own entrants keep buying after the
-    deadline every external entrant was held to. `batches.effective_deadline`
-    returns the lock itself for rounds that predate the cutover, so their
-    windows are unchanged and their filed stamps stay valid.
+    The window is measured back from `batches.effective_deadline`, the round's
+    own close, so our models are held to the moment every external entrant is
+    held to.
     """
     m = re.search(r"filed=(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?Z)",
                   notes or "")
@@ -2391,6 +2562,7 @@ def _ask(entrant, prompt, previous, round_id, parse=None):
             _log_reply(round_id, entrant, ih, prompt, text, usage)
             return parse(text), primary["via"], ih, False
         except Exception as e:                  # noqa: BLE001 - re-raised below
+            _log_failure(round_id, entrant, ih, prompt, e)
             if standby is None or not terminal_failure(e):
                 raise
             mark_route_down(primary, str(e))
@@ -2410,6 +2582,7 @@ def _ask(entrant, prompt, previous, round_id, parse=None):
                    via="openrouter")
         return parse(text), "openrouter", fb_hash, False
     except Exception as e:
+        _log_failure(round_id, entrant, fb_hash, prompt, e, via="openrouter")
         # Both routes are gone. Report the *first* failure as the cause, since
         # that is the account that actually needs attention, and name the
         # standby's failure too so nobody debugs a working gateway.

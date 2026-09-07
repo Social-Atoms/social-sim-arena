@@ -20,7 +20,7 @@ A condition is a **pair**, not a name.
 |---|---|
 | `none` | the question and nothing else |
 | `recent10` | the last ten releases, the same history the nulls read |
-| `news` | `recent10` plus a fixed news corpus frozen at the lock |
+| `news` | `recent10` plus a fixed news corpus frozen when the call window opened |
 | `web` | `recent10` plus a corpus the model asked for, from one shared index |
 
 **Elicitation** — how it is asked:
@@ -176,9 +176,8 @@ rebuilds to the same string, because separating the axes must rename nothing.
 ## 3. The news corpus
 
 The `news` condition gives every entrant in a round the **same** corpus, built
-from the Wikipedia Current Events portal as those pages stood **when the common
-model-filing window opened**, three days before the participant deadline by
-default. Not a per-model search: one text, archived, reproducible, and already
+from the Wikipedia Current Events portal as those pages stood **when the
+call window opened**, 24 hours before the round closes by default. Not a per-model search: one text, archived, reproducible, and already
 complete when calls begin.
 
 - **Window.** The seven days before that fixed information boundary, up to but

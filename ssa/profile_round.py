@@ -111,13 +111,14 @@ def frozen_history(r, series, cells=None):
     in a cell's series the per-cell persistence null would contain the very
     value it is scored against.
 
-    The freeze is `batches.freeze_at`, not `lock_at`. Those were the same
-    instant until the weekly batch calendar separated them, and this function
-    kept the old spelling through that change -- so every per-cell null on the
-    round type this module calls the headline one was reading up to seven days
-    of series its entrants never saw, which is precisely the bias
-    `ssa/batches.py` exists to remove. `freeze_at` returns the lock itself for
-    rounds that predate the cutover, so nothing already scored moves.
+    **This is the date-level boundary only: nothing dated on or after the
+    round's close is in any null.** It is not the whole freeze. A date cannot
+    say what hour a point was archived, and the call window is shorter than a
+    day, so a cell archived the evening before the close is inside the window --
+    the null would read it and an endpoint called that afternoon would not.
+    `refresh.attach_profile` freezes the per-cell history by observation time on
+    top of this filter, and falls back to it for rounds frozen before that
+    existed.
     """
     cells = cells or cells_for(r)
     lock_date = batches.freeze_at(r["lock_at"]).strftime("%Y-%m-%d")

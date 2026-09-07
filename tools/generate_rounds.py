@@ -458,20 +458,19 @@ def round_id(sid, release):
 def publishable(lock, now):
     """Whether a round locking at `lock` can still reach entrants.
 
-    A round belongs to the batch whose deadline is the last Monday 12:00Z
-    before its lock, and every entrant answers that batch by that one moment.
-    Once the deadline has passed there is no longer a way for anyone to file
-    against the round, so generating it produces a question that would be
-    listed, never answered, and then scored against a null nobody competed
-    with. `docs/submission-window.md` states the rule; this is where the
-    generator obeys it.
+    A round closes at its own lock. Once that has passed there is no longer a
+    way for anyone to file against it, so generating it produces a question
+    that would be listed, never answered, and then scored against a null nobody
+    competed with. `docs/submission-window.md` states the rule; this is where
+    the generator obeys it.
 
-    Note this is strictly tighter than "the release is in the future". The old
-    check let through rounds locking two days out whose deadline was already
-    hours in the past -- a whole batch of them on any run made after Monday
-    noon.
+    This asks about the round's own close, not the Monday its week is grouped
+    under. Asking about the Monday was right while that Monday was the
+    deadline; once it became a label, it refused any round generated later in
+    its own week -- a round closing Friday, judged on Tuesday, was silently
+    dropped because the group's Monday had passed.
     """
-    return batches.deadline_for(lock) > now
+    return batches.effective_deadline(lock) > now
 
 
 def candidates(sid, meta, hist, weeks, now, through=None):
@@ -500,10 +499,12 @@ def candidates(sid, meta, hist, weeks, now, through=None):
         lock = release - timedelta(hours=48)
         # A round whose batch predates the cutover cannot be published. Its
         # deadline is its own lock, `bundle` refuses to build a batch with no
-        # common deadline, and its publication date has already passed -- so
-        # only the in-house harness could ever answer it. Generating one wastes
-        # a reviewer's attention on a round that can never reach a
-        # participant, which is the failure this whole tool exists to stop.
+        # A round older than the weekly calendar belongs to no week and cannot
+        # be listed on the site, which is a display fact rather than a
+        # validity one -- `publishable` below is what decides whether anyone
+        # can still answer it. Every generated round locks in the future, so
+        # this refuses nothing today; it is kept so a backfill cannot produce
+        # one that the site has nowhere to put.
         if not batches.governed_by_batch(lock.strftime("%Y-%m-%dT%H:%M:%SZ")):
             continue
         if not publishable(lock, now):
@@ -1208,6 +1209,13 @@ def main():
                               "(YYYY-MM-DD), beyond the eight-week preview")
     ap.add_argument("--write", action="store_true",
                     help="write questions/candidates/<batch>.json")
+    # Only the tests pass this. They used to run the real command and then read
+    # the real directory back, which meant running the suite deleted whatever a
+    # reviewer had open in `questions/candidates/` and refilled it with rounds
+    # dated from the test's `--now`. A committed candidate file is somebody's
+    # working copy; a test may not touch it.
+    ap.add_argument("--out-dir", default=None,
+                    help="write somewhere other than questions/candidates")
     ap.add_argument("--rejects", action="store_true",
                     help="print every refused series with its evidence")
     ap.add_argument("--now", default=None, help="override the clock, for tests")
@@ -1384,7 +1392,7 @@ def main():
             # week. Flag on the number that means something.
             warn = "  barely moves" if mv < 0.5 else ""
             print(f"   {mark}{r['round_id']:<40} lock {r['lock_at'][:10]} "
-                  f"h={batches.horizon_days(r['lock_at']):.1f}d "
+                  f"h={batches.horizon_days(r['lock_at'], r['release_at']):.1f}d "
                   f"S/N={cell} wk={mv:5.2f}{warn}")
 
     if args.rejects:
@@ -1393,7 +1401,7 @@ def main():
             print(f"   {sid:<32} {json.dumps(why, sort_keys=True)}")
 
     if args.write:
-        out_dir = os.path.join(ROOT, "questions", "candidates")
+        out_dir = args.out_dir or os.path.join(ROOT, "questions", "candidates")
         os.makedirs(out_dir, exist_ok=True)
         for b, rr in sorted(by_batch.items()):
             clean = [{k: v for k, v in r.items() if not k.startswith("_")}

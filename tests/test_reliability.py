@@ -13,8 +13,10 @@ from ssa.adapters import civiqs, sce, silverbulletin
 
 
 NOW = datetime(2026, 9, 12, 12, tzinfo=timezone.utc)
-LOCK = "2026-09-16T14:00:00Z"
-DEADLINE = "2026-09-14T12:00:00Z"
+# A round closes at its own lock, and every entrant is called in the 24 hours
+# before it, so the fixture's close sits inside that window from NOW.
+LOCK = "2026-09-13T00:00:00Z"
+DEADLINE = LOCK
 
 
 def source_row(doc, name):
@@ -359,7 +361,7 @@ def test_ranking_feed_failure_is_visible_and_holds_only_its_round():
         common = {
             "round_id": round_id, "tracker": kind, "series": kind,
             "question": round_id, "unit": "ordered list",
-            "release_at": "2026-09-18T14:00:00Z",
+            "release_at": "2026-09-15T00:00:00Z",
             "release_estimated": False, "lock_at": LOCK,
             "resolve": "source ranking", "target_type": "ranking_list",
         }
@@ -429,7 +431,7 @@ def test_wikitop_live_403_with_six_archived_weeks_is_degraded_not_green():
     round_ = {
         "round_id": "wiki-r1", "tracker": "wiki_top10",
         "series": "wiki_top10", "question": "top ten",
-        "unit": "ordered list", "release_at": "2026-09-18T14:00:00Z",
+        "unit": "ordered list", "release_at": "2026-09-15T00:00:00Z",
         "release_estimated": False, "lock_at": LOCK,
         "resolve": "source ranking", "target_type": "ranking_list",
         "ranking": {
@@ -581,7 +583,7 @@ class FilingPatch:
 def scalar_round():
     return {
         "round_id": "r1", "series": "yougov_approval", "status": "open",
-        "lock_at": LOCK, "release_at": "2026-09-18T14:00:00Z",
+        "lock_at": LOCK, "release_at": "2026-09-15T00:00:00Z",
         "baselines": {"persistence": {"mean": 41.0, "sd": 1.5,
                                         "method": "last value"}},
     }
@@ -678,7 +680,7 @@ def test_aaii_without_archive_holds_only_aaii_and_files_yougov_end_to_end():
         return {
             "round_id": round_id, "tracker": series_id,
             "series": series_id, "question": round_id, "unit": "points",
-            "release_at": "2026-09-18T14:00:00Z",
+            "release_at": "2026-09-15T00:00:00Z",
             "release_estimated": False, "lock_at": LOCK,
             "resolve": "next release",
         }
@@ -736,11 +738,10 @@ def test_budget_withholding_stays_queued_and_spends_nothing():
     assert row["estimated_spend"] == 4.0 and row["alert"]
 
 
-def test_a_missing_answer_after_the_batch_deadline_is_missed_lock():
-    # The round itself remains open until Wednesday, while the common filing
-    # deadline closed Monday.  That interval is the bug a status derived only
-    # from round.status cannot see.
-    after_deadline = datetime(2026, 9, 15, 12, tzinfo=timezone.utc)
+def test_a_missing_answer_after_the_round_closed_is_missed_lock():
+    # A round that closed with nothing filed for an entrant is a missed lock,
+    # not a queued job. The status has to say so; `round.status` alone cannot.
+    after_deadline = datetime(2026, 9, 14, 12, tzinfo=timezone.utc)
     roster = [("claude-opus", "claude-opus", "recent10", "direct")]
     status = reliability.RunStatus(after_deadline)
     with FilingPatch(lambda *_a, **_k: None, roster, {}) as root:
@@ -749,7 +750,7 @@ def test_a_missing_answer_after_the_batch_deadline_is_missed_lock():
         assert not os.path.exists(os.path.join(root, "r1", "claude-opus.json"))
     row = entrant_row(status.as_dict(), "r1", "claude-opus")
     assert row["state"] == "missed_lock" and row["attempts"] == 0
-    assert row["next_deadline"] == DEADLINE and "do not file late" in row["required_action"]
+    assert row["next_deadline"] == LOCK and "do not file late" in row["required_action"]
 
 
 def test_a_labelled_mock_is_visible_locally_but_never_scored():

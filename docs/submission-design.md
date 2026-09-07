@@ -73,7 +73,7 @@ idempotent by entrant, round, and input hash.
 
 The complete request/response, authentication, timing, timeout, retry, trace,
 and crosstab contract is in [`docs/agent-api.md`](agent-api.md). It intentionally
-reuses the current runner: calls begin 72–48 hours before the effective
+reuses the current runner: calls begin in the 24 hours before the effective
 participant deadline, use 15-second connect and 600-second read timeouts, and
 missing forecasts are retried by the six-hourly refresh until the 30-minute
 deadline margin. A valid in-window forecast is final. A dependency-free example

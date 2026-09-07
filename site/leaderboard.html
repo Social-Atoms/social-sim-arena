@@ -191,7 +191,7 @@ footer a{color:var(--ink2);}
 
 <section id="batches">
   <h2>The open batch</h2>
-  <p class="lede">Everything in a batch shares one deadline, Monday 12:00Z, whatever weekday each round's own release happens to be. The batch is handed over a week ahead, so there is always a full week to work on the open one.</p>
+  <p class="lede">Every question closes on its own clock, 48 hours before its answer is published, and is listed a week before it closes. Your endpoint is called in the 24 hours before that close, so every entrant answers the same question from the same place.</p>
 
   <div class="card openb" id="open-batch"><p class="ob-sum">loading…</p></div>
 
@@ -202,7 +202,7 @@ footer a{color:var(--ink2);}
   <h3 class="sub">Every batch</h3>
   <div class="card scroll">
     <table>
-      <thead><tr><th>Batch</th><th>Deadline</th><th class="num">Questions</th><th>Shapes</th><th class="num">Horizon</th><th>Status</th></tr></thead>
+      <thead><tr><th>Batch</th><th>Closes</th><th class="num">Questions</th><th>Shapes</th><th class="num">Horizon</th><th>Status</th></tr></thead>
       <tbody id="batch-body"><tr><td colspan="6" style="color:var(--mut);">loading…</td></tr></tbody>
     </table>
   </div>
@@ -225,7 +225,7 @@ footer a{color:var(--ink2);}
   <p class="lede">One round is one scheduled release. Submit before its weekly batch deadline; the later release-minus-48h lock is the Arena's internal clock.</p>
   <div class="card scroll">
     <table>
-      <thead><tr><th>Round</th><th>Status</th><th>Deadline / lock</th><th></th></tr></thead>
+      <thead><tr><th>Round</th><th>Status</th><th>Closes / answer</th><th></th></tr></thead>
       <tbody id="rounds-body"><tr><td colspan="4" style="color:var(--mut);">loading…</td></tr></tbody>
     </table>
   </div>
@@ -470,25 +470,44 @@ function render(data){
     byBatch.get(r.batch_id).push(r);
   }
   const nowMs = Date.now();
-  const dueOf = rs => rs[0].deadline;
+  // Each question closes on its own clock, so a batch has a first close and
+  // a last one, not "the deadline". `rs[0]` was whichever round happened to
+  // sort first, which on batch-2026-09-28 advertised 10-04 while four of its
+  // questions closed 09-30 -- later than the truth, the dangerous direction.
+  const closesOf = rs => rs.map(r => r.deadline || r.lock_at).sort();
+  const dueOf = rs => closesOf(rs)[0];
+  const lastDueOf = rs => closesOf(rs).slice(-1)[0];
+  // The next close still ahead. A batch spends most of its week part closed,
+  // and a countdown to the *first* close runs negative the moment one question
+  // shuts while eleven are still open.
+  const nextDueOf = rs =>
+    closesOf(rs).find(d => Date.parse(d) > nowMs) || lastDueOf(rs);
+  // A batch is done when its LAST question closes, not its first. Keyed on the
+  // first, `batch-2026-09-28` went grey and dropped off the calendar on 09-30
+  // with eight of its twelve questions still open and answerable.
+  const isDone = rs => Date.parse(lastDueOf(rs)) <= nowMs;
+  // The earliest publication in the batch. `rs[0]` was whichever round happened
+  // to sort first in the payload -- the same accident the close dates were
+  // already fixed for, left behind on this one.
+  const pubOf = rs => rs.map(r => r.published_at).filter(Boolean).sort()[0] || null;
   const all = [...byBatch.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   // Two closed batches for context, then everything ahead. A calendar that
   // shows the whole season pushes the open one off the first screen.
-  const aheadCount = all.filter(([, rs]) => Date.parse(dueOf(rs)) > nowMs).length;
+  const aheadCount = all.filter(([, rs]) => !isDone(rs)).length;
   const batchRows = all.slice(Math.max(0, all.length - aheadCount - 2));
   // "Open" is the batch that has been handed over and has not closed. Before
   // its publication date it exists but nobody has it yet, which is a different
   // thing to tell a participant than "you may answer this now".
   const openId = (batchRows.find(([, rs]) =>
-    Date.parse(dueOf(rs)) > nowMs
-    && (!rs[0].published_at || Date.parse(rs[0].published_at) <= nowMs)) || [null])[0];
+    !isDone(rs)
+    && (!pubOf(rs) || Date.parse(pubOf(rs)) <= nowMs)) || [null])[0];
   // ---- the open batch, stated once and plainly -------------------------
   // A visitor's first two questions are "what is being asked" and "by when".
   // Both were answerable only by reading the calendar table row by row, and
   // the second one needs a clock rather than a date.
   const SHAPES = [
     ['continuous_normal', 'Topline', 'CRPS',
-     'One number with an honest interval: a mean and an sd, or quantiles. A point guess is refused.',
+     'One number with an honest interval: a mean and an sd. A point guess is refused.',
      '<svg viewBox="0 0 40 16" aria-hidden="true"><path d="M1 14.4C8.5 14.4 10 2.2 20 2.2s11.5 12.2 19 12.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'],
     ['profile_energy', 'Population', 'energy score',
      'Every declared cell of a population at once, scored as one vector. All cells or none.',
@@ -533,7 +552,7 @@ function render(data){
 
   // The batch to feature: the open one, or the next one to be handed over.
   const featured = openId
-    || (batchRows.find(([, rs]) => Date.parse(dueOf(rs)) > nowMs) || [null])[0];
+    || (batchRows.find(([, rs]) => !isDone(rs)) || [null])[0];
   const ob = document.getElementById('open-batch');
   const fx = document.getElementById('batch-facets');
   const frs = featured ? byBatch.get(featured) : null;
@@ -544,7 +563,7 @@ function render(data){
     fx.style.display = 'none';
   } else {
     const due = dueOf(frs);
-    const pub = frs[0].published_at;
+    const pub = pubOf(frs);
     const isOpen = featured === openId;
     const firstRelease = frs.map(r => r.release_at).filter(Boolean).sort()[0];
     const shapeCount = tally(frs, 'target_type');
@@ -563,18 +582,21 @@ function render(data){
       + '<div class="ob-cell"><div class="ob-k">Released</div><div class="ob-v">'
       + esc(pub ? utcDay(pub) : '—') + '</div><div class="ob-v2">'
       + esc(pub ? utcTime(pub) : '') + '</div></div>'
-      + '<div class="ob-cell"><div class="ob-k">Deadline</div><div class="ob-v">'
+      + '<div class="ob-cell"><div class="ob-k">First close</div><div class="ob-v">'
       + esc(utcDay(due)) + '</div><div class="ob-v2">' + esc(utcTime(due)) + '</div></div>'
+      + '<div class="ob-cell"><div class="ob-k">Last close</div><div class="ob-v">'
+      + esc(utcDay(lastDueOf(frs))) + '</div><div class="ob-v2">'
+      + esc(utcTime(lastDueOf(frs))) + '</div></div>'
       + '<div class="ob-cell"><div class="ob-k">Results begin</div><div class="ob-v">'
       + esc(firstRelease ? utcDay(firstRelease) : '—') + '</div><div class="ob-v2">'
       + esc(firstRelease ? utcTime(firstRelease) : '') + '</div></div>'
       + '<div class="ob-cell now"><div class="ob-k">'
-      + (isOpen ? 'Closes in' : 'Opens in') + '</div><div class="ob-v" id="ob-tick">…</div>'
-      + '<div class="ob-v2">' + (isOpen ? 'then nothing more is accepted' : 'published a week ahead')
+      + (isOpen ? 'Next closes in' : 'Opens in') + '</div><div class="ob-v" id="ob-tick">…</div>'
+      + '<div class="ob-v2">' + (isOpen ? 'each question closes on its own clock' : 'published a week ahead')
       + '</div></div></div>';
 
     // One clock, ticking, rather than a date the reader has to subtract from.
-    const target = Date.parse(isOpen ? due : (pub || due));
+    const target = Date.parse(isOpen ? nextDueOf(frs) : (pub || due));
     const tick = () => {
       const el = document.getElementById('ob-tick');
       if (!el) return;
@@ -641,16 +663,19 @@ function render(data){
     const horizon = hs.length
       ? (Math.min(...hs).toFixed(1) + '–' + Math.max(...hs).toFixed(1) + 'd')
       : '·';
-    const ms = Date.parse(due) - nowMs;
+    const ms = Date.parse(nextDueOf(rs)) - nowMs;
     const isOpen = batchId === openId;
-    const pub = rs[0].published_at;
-    const state = ms <= 0 ? 'closed'
+    const pub = pubOf(rs);
+    const done = isDone(rs);
+    const state = done ? 'closed'
       : isOpen ? 'open now'
       : 'hands over ' + (pub ? utcDay(pub) : utcDay(due));
     // UTC, like the card above and like every deadline in the docs. The table
     // used the reader's zone, which put 05:00 next to a rule that says 12:00.
-    const when = isOpen ? 'in ' + fmtCountdown(ms)
-      : utcDay(due) + ' · ' + utcTime(due);
+    const when = isOpen ? 'next in ' + fmtCountdown(ms)
+      : (utcDay(due) === utcDay(lastDueOf(rs))
+          ? utcDay(due) + ' · ' + utcTime(due)
+          : utcDay(due) + ' – ' + utcDay(lastDueOf(rs)));
     return '<tr' + (isOpen ? ' style="background:var(--soft,#f6f6f4);"' : '') + '>'
       + '<td><b style="color:var(--ink);font-weight:600;">'
       + esc(batchId) + '</b></td>'
@@ -658,7 +683,7 @@ function render(data){
       + '<td class="num">' + rs.length + '</td>'
       + '<td>' + chips + '</td>'
       + '<td class="num" style="color:var(--mut);">' + esc(horizon) + '</td>'
-      + '<td><span class="status ' + (isOpen ? 'open' : ms > 0 ? 'awaiting_resolution' : 'resolved')
+      + '<td><span class="status ' + (isOpen ? 'open' : done ? 'resolved' : 'awaiting_resolution')
       + '"><span class="d"></span>' + esc(state) + '</span></td></tr>';
   }).join('') || '<tr><td colspan="6" style="color:var(--mut);">no batched rounds in this payload — every round here predates the weekly calendar</td></tr>';
 
@@ -758,7 +783,7 @@ function render(data){
       : kind==='ranking_list' ? '<span class="shape">ranking · ordered list</span>' : '';
     tr.innerHTML = '<td><b style="color:var(--ink);font-weight:600;">'+esc(r.round_id)+'</b>'+shape+'<br><span style="font-size:12px;color:var(--mut);">'+esc(r.question)+'</span>'+resultBlock(r)+'</td>'
       + '<td><span class="status '+esc(displayStatus)+'"><span class="d"></span>'+esc(displayStatus.replace('_',' '))+'</span></td>'
-      + '<td style="white-space:nowrap;">due '+esc(fmtLocal(r.deadline||r.lock_at))+'<br><span style="color:var(--mut);font-size:11px;">lock '+esc(fmtLocal(r.lock_at))+'</span></td>'
+      + '<td style="white-space:nowrap;">closes '+esc(fmtLocal(r.deadline||r.lock_at))+'<br><span style="color:var(--mut);font-size:11px;">answer '+esc(fmtLocal(r.release_at))+'</span></td>'
       + '<td>'+(link?'<a href="'+link+'" target="_blank" rel="noopener" style="font-weight:600;color:var(--ink);text-decoration:none;">submit →</a>':'')+'</td>';
     rb.appendChild(tr);
   }

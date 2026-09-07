@@ -81,14 +81,14 @@ def batch_deadline(lock_at):
 
 
 def effective_deadline(lock_at):
-    """When a submission for this round must be in.
+    """When a submission for this round must be in: the round's own lock.
 
-    The batch deadline once the cutover applies, the round's own lock before
-    it. Rounds that closed under the per-round rule keep it: moving their
-    deadline now would invalidate forecasts already filed and scored.
+    Mirrors `ssa.batches.effective_deadline`, which carries the reasoning. The
+    weekly batch deadline that briefly sat here made the horizon a property of
+    the calendar rather than of the question -- two rounds on one board
+    forecast a day and a month ahead of their answers.
     """
-    due = batch_deadline(lock_at)
-    return due if due >= BATCH_FIRST_DEADLINE else lock_at
+    return lock_at
 
 
 def fail(msg):
@@ -195,6 +195,40 @@ def _same_login(a, b):
     return bool(a) and bool(b) and a.strip().lower() == b.strip().lower()
 
 
+RESERVED_FILE = os.path.join(ROOT, "schema", "reserved-entrant-ids.json")
+
+
+def _reserved(entrant_id):
+    """Why the arena's own names are refused rather than merely unowned.
+
+    `check_entrant_owner` protects an id only once a file exists for it on the
+    base branch. The harness files under ids that have no registration at all
+    -- `kimi` and `kimi-zeroshot` were live and unprotected -- so a stranger
+    could add `entrants/kimi.json` naming their own endpoint, pass every
+    ownership rule (they *are* the author of a new file), be merged by the
+    bot with nobody online, and from the next refresh have the arena call
+    their server for Kimi's rounds and publish the replies under Kimi's name.
+
+    Prefix, not equality: a model's conditions are its id plus a suffix, so
+    reserving `kimi` reserves `kimi-news` and every arm added later without
+    anyone remembering to extend a list.
+    """
+    try:
+        with open(RESERVED_FILE) as fh:
+            doc = json.load(fh)
+    except (OSError, ValueError):
+        # A missing or broken list must not silently stop reserving names.
+        fail("schema/reserved-entrant-ids.json is unreadable; cannot check "
+             "whether this id is one the arena runs under")
+        return None
+    if entrant_id in doc.get("exact", ()):
+        return entrant_id
+    for pre in doc.get("prefixes", ()):
+        if entrant_id == pre or entrant_id.startswith(pre + "-"):
+            return pre
+    return None
+
+
 def _active_routes_of(login, base_ref):
     """How many registrations on the base branch already give this account
     an endpoint the cron calls (a route, not revoked)."""
@@ -216,6 +250,11 @@ def check_entrant_owner(rel, new_doc, author, base_ref):
         return
     old = _base_file(base_ref, rel)
     if old is None:
+        taken = _reserved(new_doc.get("entrant_id") or "")
+        if taken:
+            fail(f"{rel}: '{new_doc.get('entrant_id')}' is a name the arena "
+                 f"runs its own entries under ('{taken}'); pick another id. "
+                 "schema/reserved-entrant-ids.json lists them.")
         # A new registration must name its own author, or nobody could ever
         # edit it again except a maintainer.
         if not _same_login(new_doc.get("github"), author):

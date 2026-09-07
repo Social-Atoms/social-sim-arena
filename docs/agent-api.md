@@ -98,19 +98,61 @@ The key `ssa-test` is published *with* its private key so the browser test on
 both key ids. Rotation: a new key id is added to `keys.json`, both are valid
 for a week or two, then the old one is removed.
 
-The request body is the question envelope itself, one JSON object conforming
-to
-[`schema/agent-api-request.schema.json`](../schema/agent-api-request.schema.json).
-There is no wrapper: what the contract page shows is byte-for-byte what
-travels.
+### Request payload
 
-The response body is one JSON object conforming to
+The Arena sends one signed JSON object to the participant endpoint. There is
+no chat wrapper or hidden natural-language prompt. The `question` field is
+the complete task, and `target_type` determines the expected `forecast`
+shape.
+
+This compact Topline case leaves `context` empty so the message shape is easy
+to see. The field is required by the versioned contract; live requests may
+populate it with frozen persistence and history values.
+
+#### Example request
+
+<!-- request-example -->
+
+```json
+{
+  "schema_version": "ssa-agent-api-v2",
+  "request_id": "example-agent:yougov-2026-w34-approval",
+  "round": {
+    "round_id": "yougov-2026-w34-approval",
+    "board_id": "topline",
+    "target_type": "continuous_normal",
+    "question": "What percentage of US adult citizens will approve of Donald Trump's job performance in the Economist/YouGov wave publishing around August 18, 2026?",
+    "unit": "% approve",
+    "lock_at": "2026-08-16T14:00:00Z",
+    "context": {}
+  },
+  "optional_crosstabs": []
+}
+```
+
+#### Expected response
+
+<!-- response-example -->
+
+```json
+{
+  "schema_version": "ssa-agent-api-v2",
+  "forecast": {
+    "mean": 34.5,
+    "sd": 1.0
+  }
+}
+```
+
+Return the response as one JSON object, not a bare number, prose, or a Markdown
+code block. For `profile_energy`, `forecast` instead contains
+`{"profile": {cell: {"mean", "sd"}}}` for every requested cell. For
+`ranking_list`, it contains `{"ranking": [...]}` with the requested number
+of unique items. `reasoning_trace` and declared `crosstabs` are optional.
+The machine-readable contracts are
+[`schema/agent-api-request.schema.json`](../schema/agent-api-request.schema.json)
+and
 [`schema/agent-api-response.schema.json`](../schema/agent-api-response.schema.json).
-It contains `schema_version` and one typed `forecast`, whose shape follows the
-round's `target_type`: `{"mean", "sd"}` for `continuous_normal`,
-`{"profile": {cell: {"mean", "sd"}}}` with every named cell for
-`profile_energy`, `{"ranking": [...]}` for `ranking_list`. `reasoning_trace`
-and `crosstabs` are optional.
 
 ## Browser test and CORS
 
@@ -131,23 +173,31 @@ registration open, and `tools/probe_agent_api.py` is the check instead.
 
 ## Call and deadline policy
 
-- The first call is due between 72 and 48 hours before the round's effective
-  participant deadline (the weekly batch deadline after the dated cutover;
-  `lock_at` for older rounds).
-- The current runner uses a 15-second connection timeout and a 600-second read
-  timeout.
+- **A round closes at its own `lock_at`.** That is the moment an answer stops
+  counting. The null does not freeze there but a day earlier, when the call
+  window opens, because that is where your context freezes: a baseline that
+  read more than you did is not a fair denominator. It is `release − 48h` for most
+  rounds and deliberately earlier for the ones that ask about a period rather
+  than a moment — see [`docs/submission-window.md`](submission-window.md).
+- **The URL is called exactly as registered, and redirects are refused.** A
+  3xx is a failed call, not a hop: a signed request must reach the URL on the
+  public record and no other, because the signature covers the timestamp and
+  the body but not the destination. Register the final URL, trailing slash and
+  all -- the arena does not normalise it either.
+- **Your endpoint is called in the 24 hours before that close**, and so is
+  every other entrant's. The context in the request is frozen at the window's
+  opening, so being called first or last inside it changes nothing you see.
+- The current runner uses a 15-second connection timeout, a 600-second read
+  timeout and a one-hour cap on the whole call, and reads at most 1 MB of
+  reply. A call cut off by either cap is a failed call; what had arrived is
+  kept, so an endpoint that trickles can be shown why it was dropped.
 - A valid forecast filed in that window is final and is never called again.
-- A missing or invalid forecast is retried by the existing six-hourly refresh,
-  rather than a second retry service, until 30 minutes before that deadline.
-- HTTP/authentication errors, timeouts, malformed JSON, and schema failures are
-  recorded as failed attempts. They never create a forecast.
+- A failed call is retried by the six-hourly refresh until 30 minutes before
+  the close; three consecutive failures in one run stop that run's attempts.
+- HTTP errors, timeouts, malformed JSON, and schema failures are recorded as
+  failed attempts. They never create a forecast.
 - Every request is idempotent by entrant, round, and input hash.
-- The server's receipt time controls the deadline. Client timestamps are ignored.
-
-The moment an endpoint's forecasts are due is the **batch deadline**, not the
-round's `lock_at` — see [`docs/submission-window.md`](submission-window.md).
-The call window above is the arena's buying schedule. It ends before the same
-participant-visible deadline applied to uploads and pull requests.
+- The server's receipt time controls lateness. Client timestamps are ignored.
 
 ## Contract test
 
@@ -197,15 +247,16 @@ for the endpoint; a failure line is the refresh's own error message.
 
 ## Forecasts and future fields
 
-**A scalar answer, and every profile cell, may be a normal or a quantile
-set.** `{"mean": 41.2, "sd": 1.4}` and
-`{"quantiles": {"0.05": 39.0, "0.5": 41.0, "0.95": 44.5}}` are both accepted
-and both scored with CRPS, so an endpoint whose belief is skewed is not
-forced to pretend it is symmetric. A quantile set needs three or more
-levels written as `0.NNN`, must include `"0.5"`, and its values must not
-decrease as the level rises; those are the rules
-`tools/validate_submission.py` applies to a committed file, so a reply the
-arena accepts is a file CI accepts. A point guess is refused in both forms.
+**A scalar answer, and every profile cell, is a normal: `{"mean": 41.2,
+"sd": 1.4}`.** One shape, so there is one thing to build and one thing to
+check. `sd` must be greater than zero -- a point guess is not a forecast and
+is refused, because CRPS on a spike is just absolute error and says nothing
+about whether the endpoint knew how sure it was.
+
+Quantile sets are not accepted from an endpoint. They were, and no endpoint
+ever sent one; `schema/forecast.schema.json` still allows one in a
+hand-committed file, and `ssa/scoring.py` still scores it, so nothing about
+how formats compete has changed -- only what a live reply may contain.
 
 The response supports scalar distributions, outcome probabilities, profile
 distributions, and ordered rankings. The arena normalizes the accepted result
