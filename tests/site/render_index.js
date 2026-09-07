@@ -53,7 +53,7 @@ console.log(`question cards  : ${(list.match(/class="qcard/g) || []).length}`);
 console.log(`midterm rows    : ${(exam.match(/class="vrow"/g) || []).length}`);
 console.log(`shaped rounds   : ${shaped.length} in data, ${shownShaped.length} on the page, `
   + `${(list.match(/class="qshape special"/g) || []).length} shape tags rendered`);
-console.log(`footer          : ${els['foot-updated'].textContent}`);
+console.log(`data updated    : ${els['data-updated'].textContent}`);
 
 // A rendered `undefined` or `NaN` is a bug the reader sees before anyone else
 // does, and it survives every check that only counts rows.

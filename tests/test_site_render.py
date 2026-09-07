@@ -104,6 +104,30 @@ def test_the_landing_page_names_each_round_shape_and_the_right_deadline():
     print("ok test_the_landing_page_names_each_round_shape_and_the_right_deadline")
 
 
+def test_resizable_panels_and_chart_widths():
+    if not _node():
+        print("ok test_resizable_panels_and_chart_widths (skipped: no node on PATH)")
+        return
+    check = os.path.join(ROOT, "tests", "site", "resize_panels.js")
+    got = subprocess.run([_node(), check], capture_output=True, text=True,
+                         cwd=ROOT, timeout=120)
+    sys.stdout.write(got.stdout)
+    assert got.returncode == 0, got.stderr or got.stdout
+    print("ok test_resizable_panels_and_chart_widths")
+
+
+def test_model_filter_selection_and_persistence():
+    if not _node():
+        print("ok test_model_filter_selection_and_persistence (skipped: no node on PATH)")
+        return
+    check = os.path.join(ROOT, "tests", "site", "model_filters.js")
+    got = subprocess.run([_node(), check], capture_output=True, text=True,
+                         cwd=ROOT, timeout=120)
+    sys.stdout.write(got.stdout)
+    assert got.returncode == 0, got.stderr or got.stdout
+    print("ok test_model_filter_selection_and_persistence")
+
+
 def test_the_page_reads_only_keys_the_pipeline_publishes():
     """A renamed key is invisible until someone opens the page.
 
@@ -278,8 +302,10 @@ def test_the_publish_gate_covers_every_field_a_page_reads_unguarded():
 if __name__ == "__main__":
     test_every_leaderboard_tab_renders_something_a_participant_can_read()
     test_the_landing_page_names_each_round_shape_and_the_right_deadline()
+    test_resizable_panels_and_chart_widths()
+    test_model_filter_selection_and_persistence()
     test_the_page_reads_only_keys_the_pipeline_publishes()
     test_no_page_promises_a_date_it_cannot_know()
     test_every_link_the_docs_send_a_participant_to_exists()
     test_the_publish_gate_covers_every_field_a_page_reads_unguarded()
-    print("6 passed")
+    print("8 passed")

@@ -9,7 +9,6 @@
 <title>Leaderboard · Social Simulation Arena</title>
 <meta name="description" content="The live benchmark for social simulation. Simulators and agents forecast real public opinion before it is published. Locked, hashed, scored in public.">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700;800&display=swap');
 details.result{margin-top:6px;}
 details.result>summary{cursor:pointer;font-size:11.5px;color:var(--mut);list-style:none;}
 details.result>summary::-webkit-details-marker{display:none;}
@@ -70,7 +69,6 @@ h3.sub{margin:24px 0 8px;font-size:13px;font-weight:650;color:var(--ink);letter-
   --bg:#ffffff; --ink:#111110; --ink2:#4f4e49; --mut:#96948d; --accent:#15803d; --link:#0000ee;
   --line:#e0e0e0; --grid:#eeede9; --axis:#d6d4cd;
   --s0:#1d1d1b; --s1:#85837d; --s2:#b3b1aa; --s3:#d1cfc8; --spark:#55534e;
-  --sans:"Inconsolata",ui-monospace,SFMono-Regular,Menlo,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
@@ -148,8 +146,9 @@ footer a{color:var(--ink2);}
 }
 </style>
 <script defer src="/_vercel/insights/script.js"></script>
+<link rel="stylesheet" href="typography.css?v=6c87c5c715">
 </head>
-<body>
+<body class="site-leaderboard">
 
 <nav class="top"><div class="in"><a class="brand" href="index.html#live"><span class="dot"></span>Social Simulation Arena <span class="by">by MIT</span></a><a class="item" href="index.html#live">Live</a><a class="item" href="index.html#rounds">Questions</a><a class="item" href="index.html#weekly">Weekly</a><div class="right"><a href="docs.html">Docs</a><a href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a><a class="cta" href="submit.html">SUBMIT YOUR AGENT</a></div></div></nav>
 
@@ -248,7 +247,7 @@ const fmtCountdown = ms => {
   const d=Math.floor(ms/86400000), h=Math.floor(ms%86400000/3600000), m=Math.floor(ms%3600000/60000);
   return (d>0?d+'d ':'')+h+'h '+m+'m';
 };
-const fmtLocal = iso => new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+const fmtLocal = iso => new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 // The batch calendar is defined in UTC and the docs quote it in UTC, so the
 // open-batch card states UTC rather than the reader's zone. A deadline shown
 // in two zones on two pages is a deadline somebody will miss by an hour.
@@ -263,7 +262,7 @@ const fmtTick = ms => {
   const p2 = n => String(n).padStart(2,'0');
   return d>0 ? d+'d '+h+'h '+p2(m)+'m' : h+'h '+p2(m)+'m '+p2(sec)+'s';
 };
-const fmtDate = iso => new Date(iso+'T12:00:00Z').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'});
+const fmtDate = iso => new Date(iso+'T12:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'});
 function submissionLink(track){
   // One page, one route: every caller lands on the onboarding page.
   return 'submit.html';
@@ -347,7 +346,7 @@ function render(data){
     const parts = ['<b>season 0</b> · live rounds from Aug 11'];
     if(nextNow) parts.push('next deadline in <b>'+fmtCountdown(new Date(nextNow.deadline||nextNow.lock_at)-Date.now())+'</b>');
     parts.push(openNow.length+' rounds open · '+(data.leaderboard.resolved_rounds||0)+' resolved');
-    parts.push('updated '+esc(new Date(data.generated_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})));
+    parts.push('updated '+esc(new Date(data.generated_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})));
     document.getElementById('meta-line').innerHTML = parts.join(' &nbsp;·&nbsp; ');
   }
   meta();
