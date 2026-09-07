@@ -239,7 +239,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .qcard .qfoot .go{margin-left:auto;color:var(--link);font-weight:700;text-decoration:none;white-space:nowrap;font-size:12px;}
 .qcard .qfoot .go:hover{text-decoration:underline;}
 @media(max-width:900px){.qgrid{grid-template-columns:1fr;}}
-.weekly-grid{display:grid;grid-template-columns:minmax(0,1fr) 270px;grid-template-areas:"entry join" "calendar calendar" "overview summary";gap:16px;align-items:stretch;}
+.weekly-grid{display:grid;grid-template-columns:minmax(0,1fr) 270px;grid-template-areas:"entry join" "overview calendar";gap:16px;align-items:stretch;}
 #page-weekly .col{padding-top:24px;padding-bottom:32px;}
 #page-weekly .lede{max-width:100ch;}
 #page-weekly .week-card{min-width:0;margin:0;padding:20px;}
@@ -260,8 +260,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .week-questions summary:before{content:'\25b8 ';color:var(--mut);}
 .week-questions details[open] summary:before{content:'\25be ';}
 .week-questions p{font-size:12px;margin:6px 0;color:var(--ink2);}
-.week-calendar{grid-area:calendar;min-width:0;}
-.week-side{grid-area:summary;min-width:0;}
+.week-side{grid-area:calendar;min-width:0;}
 .week-count{display:flex;align-items:center;gap:8px 12px;margin:0 0 8px;flex-wrap:wrap;}
 /* The week as a calendar: seven columns, empty days left empty, so the spread
    across the week is visible rather than described. */
@@ -412,7 +411,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
   .vrow{flex-wrap:wrap;row-gap:2px;}
   .vrow .q{flex:1 1 100%;}
   .vrow .id{min-width:0;}
-  .weekly-grid{grid-template-columns:1fr;grid-template-areas:"entry" "join" "calendar" "overview" "summary";}
+  .weekly-grid{grid-template-columns:1fr;grid-template-areas:"entry" "join" "overview" "calendar";}
 }
 
 .fchips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 12px;}
@@ -1619,16 +1618,14 @@ function renderWeekly(data){
       +'<h3 id="week-entry-title">Answer the week</h3><p>Register one HTTPS endpoint. Every question is sent to it, signed, in the 24 hours before that question closes; you return the forecast.</p>'
       +'<div class="week-actions"><a class="btn dark" href="submit.html">Test and register</a></div></section>'
     +'<section class="week-card week-join" aria-labelledby="week-join-title">'
-      +'<h3 id="week-join-title">Enter the arena</h3><p>Answer any subset. Each question counts until it closes, and your latest answer for it is the one scored. No minimum record: if you answered, you are on the board.</p>'
+      +'<h3 id="week-join-title">Enter this week</h3><p>Answer any subset before each question closes; your latest answer per question counts. No minimum record: if you answered, you are on the board.</p>'
       +'<div class="week-actions"><a class="btn dark" href="submit.html">Add your agent</a></div></section>'
-    +'<section class="week-card week-calendar" aria-labelledby="week-calendar-title">'
-      +'<div class="week-count"><h3 id="week-calendar-title">What closes when</h3>'
+    +'<section class="week-card week-overview" aria-labelledby="week-questions-title">'
+      +'<div class="week-count"><h3 id="week-questions-title"><span class="numeric">'+week.length+'</span> questions close in the next three weeks</h3>'
       +'<span class="live">live · submissions open</span>'
       +'<span class="closes">next in <b>'+esc(nextIn)+'</b></span></div>'
       +'<div class="wcal"><div class="wgrid wghead">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>'<div>'+d+'</div>').join('')+'</div>'
-      +[0,1,2].map(w=>'<div class="wgrid">'+weekRow(w)+'</div>').join('')+'</div></section>'
-    +'<section class="week-card week-overview" aria-labelledby="week-questions-title">'
-      +'<div class="week-count"><h3 id="week-questions-title"><span class="numeric">'+week.length+'</span> questions close in the next three weeks</h3></div>'
+      +[0,1,2].map(w=>'<div class="wgrid">'+weekRow(w)+'</div>').join('')+'</div>'
       +'<p>Each one closes on its own clock, so the week is a calendar rather than a single deadline. A question whose release slips is held, never re-dated.</p>'
       +'<div class="facets"><div class="facet"><h4>Task families</h4>'+bar(fam)+'</div>'
       +'<div class="facet"><h4>Answer shape</h4>'+bar(shape)+'</div>'
