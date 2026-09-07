@@ -24,11 +24,10 @@ Each round still locks at `release âˆ’ 48h`, but that is our clock, not yours â€
 a round locks 0 to 7 days *after* the deadline you were held to. You only ever
 need to track one moment a week.
 
-Filing early is allowed and costs you nothing: the deadline is the same for
-everyone, and scores are computed against a baseline frozen at that same
-deadline, so an entrant who files on Tuesday is not compared against a
-reference that read Sunday's news. Waiting is not an edge and is not scored as
-one.
+Filing early is allowed and costs you nothing: scores are computed against a
+baseline frozen when the round's call window opened, which is the same instant
+your own context froze, so nobody is compared against a reference that read
+what they could not. Waiting is not an edge and is not scored as one.
 
 The rule, the calendar, and the dated cutover are in
 [`docs/submission-window.md`](submission-window.md).

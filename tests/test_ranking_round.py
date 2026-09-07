@@ -1317,6 +1317,54 @@ def test_the_board_publishes_nothing_when_no_round_is_due():
     assert board["board"] == [] and board["skipped"] == []
 
 
+def test_a_week_archived_inside_the_call_window_is_in_no_null():
+    """A ranking archive lands at some moment, and about one in seven lands
+    inside a round's call window. The null would read that week and an endpoint
+    called before it arrived would not."""
+    import tempfile
+    from ssa import batches, refresh
+
+    lock = WIKI_ROUND["lock_at"]                     # 2026-08-07T14:00:00Z
+    assert batches.window_opens_at(lock).strftime("%Y-%m-%dT%H:%MZ") == \
+        "2026-08-06T14:00Z"
+
+    def week(day, items):
+        return {"date": day, "items": items}
+
+    ten = [f"Article {i}" for i in range(10)]
+    early = [week("2026-07-26", list(ten)),
+             week("2026-08-02", list(reversed(ten)))]
+    late = early + [week("2026-08-05", ten[5:] + ten[:5])]
+    season = {"season": 0, "rounds": [WIKI_ROUND]}
+    real_locks = refresh.LOCKS
+    refresh.LOCKS = tempfile.mkdtemp(prefix="ssa-locks-")
+    try:
+        obs = {WIKI_ROUND["round_id"]: early}
+        refresh.build_rounds(season, {}, {},
+                             refresh.parse_iso("2026-08-06T02:00:00Z"),
+                             ranking_obs=obs)
+        obs = {WIKI_ROUND["round_id"]: late}
+        rows, _ = refresh.build_rounds(season, {}, {},
+                                       refresh.parse_iso("2026-08-07T02:00:00Z"),
+                                       ranking_obs=obs)
+        block = rows[0]["ranking"]
+        assert block["history_source"] == "window snapshot"
+        assert block["history_weeks"] == 2, block
+        assert block["baselines"]["persistence"]["items"] == list(reversed(ten)), \
+            block["baselines"]
+
+        # …and without the freeze, the in-window week becomes the null.
+        os.remove(refresh.lock_snapshot_path(WIKI_ROUND["round_id"]))
+        rows, _ = refresh.build_rounds(season, {}, {},
+                                       refresh.parse_iso("2026-08-07T02:00:00Z"),
+                                       ranking_obs=obs)
+        block = rows[0]["ranking"]
+        assert block["history_source"] == "date filter (pre-snapshot round)"
+        assert block["baselines"]["persistence"]["items"] == ten[5:] + ten[:5]
+    finally:
+        refresh.LOCKS = real_locks
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items())
              if k.startswith("test_") and callable(v)]

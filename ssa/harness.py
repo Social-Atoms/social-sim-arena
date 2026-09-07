@@ -2400,7 +2400,10 @@ def _provider_text(entrant, prompt):
 # to whoever happened to be retried late. Prophet Arena reaches the same place
 # with windows of a few hours and a published reliability number instead of a
 # long tail.
-FILE_WINDOW_SECONDS = float(os.environ.get("SSA_FILE_WINDOW_HOURS") or "24") * 3600
+# Defined in `ssa/batches.py`, which owns the round clock and imports nothing
+# from the package, so the search adapter can read the same value instead of
+# parsing the same variable a second time.
+FILE_WINDOW_SECONDS = batches.FILE_WINDOW_SECONDS
 
 
 def _gathered_in_window(frozen, r):

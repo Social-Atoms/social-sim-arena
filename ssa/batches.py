@@ -44,6 +44,7 @@ thing this module now exists to prevent.
 it. They no longer decide when a submission is late; `effective_deadline`
 does, and it returns the round's own lock.
 """
+import os
 from datetime import datetime, timedelta, timezone
 
 # Monday, as datetime.weekday() counts it (Mon=0 ... Sun=6).
@@ -111,11 +112,46 @@ def effective_deadline(lock_at):
     return _parse(lock_at)
 
 
-def freeze_at(lock_at):
-    """The moment the round's baseline history is frozen.
+# How long before a round closes the arena starts calling endpoints. **The
+# canonical definition**: `harness.FILE_WINDOW_SECONDS` and the search
+# adapter's cache age both read it from here. It used to be spelled out in
+# `harness` and again in `ssa/adapters/search.py`, each parsing the same
+# environment variable, with a test pinning the two together because the
+# duplicate had already drifted once -- the window shrank from three days to
+# one and the search cache went on serving three-day-old replies. This module
+# imports nothing from the package, so both can read it and the duplicate goes
+# away instead of being policed.
+FILE_WINDOW = timedelta(
+    hours=float(os.environ.get("SSA_FILE_WINDOW_HOURS") or "24"))
+FILE_WINDOW_SECONDS = FILE_WINDOW.total_seconds()
 
-    Deliberately the same instant as `effective_deadline`: the null must read
-    the history the entrant read, and nothing after it.
+
+def window_opens_at(lock_at):
+    """When the arena starts calling this round's endpoints.
+
+    Every entrant is called inside `[window_opens_at, effective_deadline)`, so
+    this is the instant the round's inputs stop moving for the people answering
+    it: whoever is called first and whoever is retried last are handed the same
+    history and the same null.
+    """
+    return effective_deadline(lock_at) - FILE_WINDOW
+
+
+def freeze_at(lock_at):
+    """The moment after which the round's answer already exists somewhere.
+
+    The round's own close. This is the boundary for questions of the form "had
+    this been published yet" -- what `ssa/resolve.py` treats as already seen
+    rather than as the answer, and what `ranking_round` refuses a measured week
+    for ending before.
+
+    **Not the same as the boundary the null is built on.** That one is
+    `window_opens_at`: the null must read what the entrants read, and the
+    entrants were handed their history when the window opened, up to a day
+    earlier. `refresh.update_lock_snapshot` records both -- `history` at this
+    instant, `answer_history` at the window's opening -- because only an
+    observation time can tell them apart, and a monthly value's label date
+    cannot.
     """
     return effective_deadline(lock_at)
 

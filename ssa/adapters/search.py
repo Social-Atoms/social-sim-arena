@@ -57,6 +57,8 @@ from datetime import datetime, timezone
 
 import requests
 
+from .. import batches
+
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ARCHIVE = os.path.join(ROOT, "search")
 CACHE = os.path.join(ARCHIVE, "cache")
@@ -86,14 +88,14 @@ SEARCH_DEPTH = "basic"   # tavily: "basic" or "advanced"
 TOPIC = "news"
 DAYS = 14                # recency window, matched to the news corpus
 
-# The call window, read the same way `ssa/harness.py` reads it. Importing
-# harness here would be circular -- harness imports this module -- so the
-# variable name and its default are repeated, which is a drift waiting to
-# happen: change the default there and this file silently keeps the old one.
-# `tests/test_contract_consistency.py` pins the two equal so the drift fails a
-# pull request instead of quietly serving replies older than the window.
-_FILE_WINDOW_SECONDS = float(
-    os.environ.get("SSA_FILE_WINDOW_HOURS") or "24") * 3600
+# The call window, `SSA_FILE_WINDOW_HOURS`, read from `ssa.batches`. Importing
+# `harness` here would be circular -- harness imports this module -- so the
+# variable name and its default used to be repeated here instead, and the
+# duplicate drifted exactly as predicted: the window shrank from three days to
+# one and this file went on serving three-day-old replies. `batches` owns the
+# round clock and imports nothing from the package, so both sides can read one
+# definition rather than have a test hold two in step.
+_FILE_WINDOW_SECONDS = batches.FILE_WINDOW_SECONDS
 
 # A cached reply older than this is a miss. The cache exists so that fifteen
 # models issuing overlapping keywords inside one round's window cost one

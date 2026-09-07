@@ -20,7 +20,7 @@ A condition is a **pair**, not a name.
 |---|---|
 | `none` | the question and nothing else |
 | `recent10` | the last ten releases, the same history the nulls read |
-| `news` | `recent10` plus a fixed news corpus frozen at the lock |
+| `news` | `recent10` plus a fixed news corpus frozen when the call window opened |
 | `web` | `recent10` plus a corpus the model asked for, from one shared index |
 
 **Elicitation** — how it is asked:

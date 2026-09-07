@@ -45,7 +45,8 @@ required operator action. See [`docs/operator-status.md`](docs/operator-status.m
 questions/    the season: every round, its lock and release time, frozen up front
               candidates/ proposals awaiting review; bundles/ the frozen weekly batch
 forecasts/    one file per entrant per round; the PR that adds it is the submission
-locks/        input-history snapshots frozen at the effective participant deadline
+locks/        two input-history freezes per round: what entrants were handed
+              when the call window opened, and what existed at the close
 stamps/       forecast hash manifests and OpenTimestamps proofs at submission close
 resolutions/  the published numbers rounds resolved against, with sources
 entrants/     who is competing: one registration file per entrant

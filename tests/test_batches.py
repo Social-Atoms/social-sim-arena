@@ -51,11 +51,79 @@ def test_every_round_closes_at_its_own_lock():
     print("ok test_every_round_closes_at_its_own_lock")
 
 
-def test_the_null_freezes_where_the_entrant_answered():
-    """The whole point: same instant, so neither reads what the other cannot."""
-    for lock in ("2026-09-16T14:00:00Z", "2026-08-28T14:00:00Z"):
-        assert batches.freeze_at(lock) == batches.effective_deadline(lock)
-    print("ok test_the_null_freezes_where_the_entrant_answered")
+def test_the_null_reads_what_the_entrants_were_handed():
+    """The whole point, and it is the window's opening, not the close.
+
+    Every endpoint is called inside `[window_opens_at, effective_deadline)` and
+    is handed the history as it stood when that window opened, so first call and
+    last retry answer the same question. A null frozen at the close is up to a
+    day better informed than the people it is the denominator for. Measured on
+    `mc-2026-w37-approval`: entrants called on a history ending at 40.0, the
+    persistence null built on the 46.0 that landed inside the window.
+
+    Three things are asserted together because the fix is only safe if all
+    three hold: the null moves back to the window, the close snapshot does not
+    (or `resolve` could no longer tell the answer from history it already had),
+    and a round with no window snapshot keeps its old numbers exactly.
+    """
+    import json as _json
+    import tempfile
+    from ssa import refresh
+
+    lock = "2026-09-20T14:00:00Z"
+    opens = batches.window_opens_at(lock)
+    assert iso(opens) == "2026-09-19T14:00:00Z"
+    assert batches.freeze_at(lock) - opens == batches.FILE_WINDOW
+
+    def at(t):
+        return datetime.fromisoformat(t.replace("Z", "+00:00"))
+
+    r = {"round_id": "w-1", "tracker": "t", "series": "s",
+         "question": "q", "unit": "%", "release_at": "2026-09-22T14:00:00Z",
+         "release_estimated": False, "lock_at": lock, "resolve": "the release"}
+    season = {"season": 0, "rounds": [r]}
+    early = [{"date": "2026-09-15", "value": 39.0},
+             {"date": "2026-09-16", "value": 39.5},
+             {"date": "2026-09-17", "value": 40.0}]
+    real_locks = refresh.LOCKS
+    refresh.LOCKS = tempfile.mkdtemp(prefix="ssa-locks-")
+    try:
+        # A refresh before the window opens. This is the freeze.
+        refresh.build_rounds(season, {"s": list(early)}, {}, at("2026-09-19T02:00:00Z"))
+
+        # A point lands inside the window: dated before the close, so the date
+        # filter admits it, and observed after every entrant was handed its
+        # history.
+        during = early + [{"date": "2026-09-19", "value": 46.0}]
+        rows, hist = refresh.build_rounds(season, {"s": during}, {},
+                                          at("2026-09-20T02:00:00Z"))
+        assert hist["w-1"] == early, "an entrant was handed the in-window point"
+        assert rows[0]["baselines"]["persistence"]["mean"] == 40.0, \
+            rows[0]["baselines"]["persistence"]
+        assert rows[0]["history_source"] == "window snapshot"
+
+        # …and the close snapshot did see it, which is what `resolve` reads to
+        # tell the round's answer from history it already had.
+        snap = refresh.read_lock_snapshot("w-1")
+        assert snap["history"][-1] == {"date": "2026-09-19", "value": 46.0}
+        assert snap["answer_history"] == early
+
+        # A round frozen before any of this existed has no `answer_history`,
+        # falls back to the close snapshot, and its numbers do not move. Every
+        # one of the 108 committed snapshots is in exactly this state.
+        old = dict(r, round_id="w-old")
+        with open(refresh.lock_snapshot_path("w-old"), "w") as fh:
+            _json.dump({"round_id": "w-old", "series": "s", "lock_at": lock,
+                        "history": during}, fh)
+        rows, hist = refresh.build_rounds({"season": 0, "rounds": [old]},
+                                          {"s": during}, {},
+                                          at("2026-09-20T02:00:00Z"))
+        assert hist["w-old"] == during
+        assert rows[0]["baselines"]["persistence"]["mean"] == 46.0
+        assert rows[0]["history_source"] == "lock snapshot"
+    finally:
+        refresh.LOCKS = real_locks
+    print("ok test_the_null_reads_what_the_entrants_were_handed")
 
 
 def test_the_horizon_is_the_distance_to_the_answer():
@@ -188,9 +256,11 @@ def test_a_round_older_than_the_calendar_behaves_like_every_other():
 def test_every_round_type_resolves_against_the_same_instant_it_froze():
     """The twin of the freeze test, on the resolution side.
 
-    `test_every_round_type_freezes_at_the_same_instant` pins where each round
-    type stops *reading*. This pins where each one decides an outcome is new.
-    They have to be the same instant: a round that freezes Monday and refuses
+    `test_every_round_type_freezes_at_the_same_instant` pins the date filter
+    each round type stops reading at. This pins where each one decides an
+    outcome is new. Those two have to be the same instant -- the close -- or a
+    round refuses to resolve against the release it asked about: a round that
+    stops reading Monday and refuses
     any observation older than Wednesday's lock will refuse to resolve against
     Tuesday's release -- the exact release its entrants were asked to forecast,
     and one none of them could see when they answered.
@@ -206,7 +276,7 @@ def test_every_round_type_resolves_against_the_same_instant_it_froze():
     lock = "2026-09-16T14:00:00Z"                  # Wednesday
     freeze = batches.freeze_at(lock)
     assert freeze == batches._parse(lock), \
-        "freeze and close are one instant now; nothing may sit between them"
+        "resolution reads the round's own close; nothing may sit between them"
     r = {"round_id": "profile-fixture", "lock_at": lock,
          "release_at": "2026-09-18T14:00:00Z",
          "cells": ["civiqs_net_approval_dem", "civiqs_net_approval_rep"]}
@@ -274,6 +344,15 @@ def test_every_round_type_freezes_at_the_same_instant():
     """Scalar, profile and ranking nulls must freeze together, or the headline
     round type is scored against data its entrants never saw.
 
+    This pins the *date filter* the three share: nothing dated on or after the
+    round's close is in any null. On top of it each type also freezes by
+    observation time when the call window opens
+    (`refresh.freeze_for_answering`), which is what
+    `test_the_null_reads_what_the_entrants_were_handed` covers -- a date cannot
+    say what hour a point appeared, and the window is shorter than a day. The
+    filter still has to hold, because it is the fallback for every round frozen
+    before that existed.
+
     This is a regression test with a date on it. `refresh.build_rounds` moved to
     the batch deadline; `profile_round.frozen_history` and
     `ranking_round.frozen_history` kept `lock_at[:10]` through that change,
@@ -311,7 +390,7 @@ if __name__ == "__main__":
     test_a_lock_on_the_deadline_falls_to_the_previous_batch()
     test_every_deadline_is_strictly_before_its_lock()
     test_every_round_closes_at_its_own_lock()
-    test_the_null_freezes_where_the_entrant_answered()
+    test_the_null_reads_what_the_entrants_were_handed()
     test_the_horizon_is_the_distance_to_the_answer()
     test_one_batch_id_per_week()
     test_the_real_season_splits_into_weekly_batches()

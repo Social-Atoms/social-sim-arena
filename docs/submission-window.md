@@ -15,8 +15,12 @@ reasoning.
 | **Scored** | the first refresh after the release lands, within six hours |
 
 A submission is on time if it arrives before that question closes. The null
-freezes at the same instant, so neither the entrant nor the baseline reads
-anything the other could not.
+freezes when the call window *opens*, which is where every entrant's context
+freezes too, so neither the entrant nor the baseline reads anything the other
+could not. Those are two different instants a day apart, and the day matters:
+on `mc-2026-w37-approval` the entrants answered on a history ending at 40.0
+while a null frozen at the close had read the 46.0 that landed inside the
+window.
 
 ## Why 22 rounds close earlier than `release − 48h`
 
@@ -85,7 +89,10 @@ whoever happened to be retried late, which is why it is a day.
 
 ```python
 batches.effective_deadline(lock_at)   # the round's own lock: when it closes
-batches.freeze_at(lock_at)            # the same instant, for the null
+batches.window_opens_at(lock_at)      # close - 24h: when calling starts, and
+                                      # where the null and every context freeze
+batches.freeze_at(lock_at)            # the close, for "had this been published
+                                      # yet" -- what resolution reads
 batches.published_at(lock_at)         # close − 7 days: when it is listed
 batches.horizon_days(lock_at, release_at)   # close → release, for reporting
 ```
