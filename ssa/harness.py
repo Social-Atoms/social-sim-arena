@@ -1953,7 +1953,14 @@ def _distribution(mean, sd, where=""):
         raise ValueError(f"{at}sd out of schema range: {sd}")
     if abs(mean) > 1e7:
         raise ValueError(f"{at}implausible mean: {mean}")
-    return {"mean": round(mean, 2), "sd": round(sd, 2)}
+    # Stored as answered. Both values used to be rounded to two decimals, which
+    # is a silent edit to somebody's forecast and, for `sd`, an edit that
+    # changes what it means: an answer of 0.004 passed the check above and was
+    # then written down as 0.0 -- a point guess, the one thing the arena
+    # refuses, and a file `schema/forecast.schema.json` rejects for
+    # `exclusiveMinimum: 0`. Two decimals were never a rule anywhere; the schema
+    # asks for a number.
+    return {"mean": mean, "sd": sd}
 
 
 def answer(obj, where=""):
@@ -2346,7 +2353,11 @@ def forecast_persona(entrant, r, history=None, previous=None):
     return {
         "round_id": r["round_id"],
         "entrant": entrant,
-        "topline": {"mean": round(mean, 2), "sd": round(sd, 2)},
+        # Through the same parser every other forecast goes through, so a
+        # panel is held to the schema's rules rather than to its own: a
+        # unanimous panel with an sd of zero is refused here instead of filed
+        # as a file CI then rejects.
+        "topline": _distribution(mean, sd, f"{entrant} panel"),
         "notes": note[:500],
     }
 

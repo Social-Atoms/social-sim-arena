@@ -322,6 +322,49 @@ def test_a_reply_that_is_not_the_contract_is_refused():
     print("ok test_a_reply_that_is_not_the_contract_is_refused")
 
 
+def test_a_forecast_is_stored_as_it_was_answered():
+    """No rounding on the way in, for any entrant.
+
+    `harness._distribution` rounded `mean` and `sd` to two decimals. For the
+    mean that is a silent edit to somebody's forecast; for the sd it changes
+    what the forecast says: 0.004 passes the "must be above zero" check on the
+    line above and was then written down as 0.0, which is a point guess -- the
+    one thing the arena refuses -- in a file `schema/forecast.schema.json`
+    rejects for `exclusiveMinimum: 0`. Two decimals were never a rule anywhere.
+
+    Lives here rather than in `tests/test_harness.py`, which is kept local and
+    unpublished, so CI runs it.
+    """
+    import jsonschema
+    schema = json.load(open(os.path.join(ROOT, "schema", "forecast.schema.json")))
+
+    got = harness.answer({"mean": 41.2345, "sd": 0.004})
+    assert got == {"mean": 41.2345, "sd": 0.004}, got
+    jsonschema.validate({"round_id": "aaii-2026-09-10", "entrant": "acme-forecast",
+                         "topline": got, "notes": "n"}, schema)
+
+    # A real zero is still refused, and says so before anything is filed.
+    for sd in (0.0, -1.0):
+        try:
+            harness.answer({"mean": 41.0, "sd": sd})
+            raise AssertionError(f"sd {sd} was accepted")
+        except ValueError as err:
+            assert "sd out of schema range" in str(err), err
+
+    # Every cell of a profile goes through the same function, so the rule
+    # cannot hold for a topline and quietly not hold for a cell.
+    cells = ["civiqs_net_approval_dem", "civiqs_net_approval_rep"]
+    prof = agent_api.parse_profile(json.dumps(
+        {"schema_version": "ssa-agent-api-v2",
+         "forecast": {"profile": {cells[0]: {"mean": 1.005, "sd": 0.004},
+                                  cells[1]: {"mean": 2.0, "sd": 1.0}}}}), cells)
+    assert prof[cells[0]] == {"mean": 1.005, "sd": 0.004}, prof
+    jsonschema.validate({"round_id": "civiqs-profile-2026-w38",
+                         "entrant": "acme-forecast", "profile": prof,
+                         "notes": "n"}, schema)
+    print("ok test_a_forecast_is_stored_as_it_was_answered")
+
+
 def test_an_endpoint_answers_in_one_shape_and_it_is_the_filed_one():
     """`{mean, sd}`, for a topline and for every profile cell, and nothing else.
 
@@ -871,6 +914,7 @@ if __name__ == "__main__":
     test_the_request_id_is_stable_so_a_retry_is_the_same_question()
     test_a_reply_that_is_not_the_contract_is_refused()
     test_an_endpoint_answers_in_one_shape_and_it_is_the_filed_one()
+    test_a_forecast_is_stored_as_it_was_answered()
     test_the_round_tells_a_participant_what_it_will_refuse()
     test_the_starter_server_answers_all_three_shapes_from_the_envelope_alone()
     test_a_profile_reply_is_all_cells_or_none()
@@ -883,4 +927,4 @@ if __name__ == "__main__":
     test_an_endpoint_failing_three_times_is_not_called_again_this_run()
     test_a_trickling_endpoint_is_cut_off_at_the_deadline()
     test_a_failed_call_is_written_down_and_can_never_be_replayed()
-    print("23 passed")
+    print("24 passed")
