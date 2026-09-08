@@ -9,7 +9,6 @@
 <title>Leaderboard · Social Simulation Arena</title>
 <meta name="description" content="The live benchmark for social simulation. Simulators and agents forecast real public opinion before it is published. Locked, hashed, scored in public.">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700;800&display=swap');
 details.result{margin-top:6px;}
 details.result>summary{cursor:pointer;font-size:11.5px;color:var(--mut);list-style:none;}
 details.result>summary::-webkit-details-marker{display:none;}
@@ -67,27 +66,16 @@ h3.sub{margin:24px 0 8px;font-size:13px;font-weight:650;color:var(--ink);letter-
 .shape{display:inline-block;border:1px solid var(--line,#e0e0e0);border-radius:4px;padding:0 7px;margin-left:7px;font-size:10.5px;font-weight:700;color:var(--mut);vertical-align:1px;white-space:nowrap;}
 :root{
   color-scheme: light;
-  --bg:#ffffff; --ink:#111110; --ink2:#4f4e49; --mut:#96948d; --accent:#15803d; --link:#0000ee;
+  --bg:#ffffff; --ink:#111110; --ink2:#4f4e49; --mut:#96948d; --accent:#15803d; --link:var(--accent);
   --line:#e0e0e0; --grid:#eeede9; --axis:#d6d4cd;
   --s0:#1d1d1b; --s1:#85837d; --s2:#b3b1aa; --s3:#d1cfc8; --spark:#55534e;
-  --sans:"Inconsolata",ui-monospace,SFMono-Regular,Menlo,-apple-system,sans-serif;
 }
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
 body{margin:0;background:var(--bg);color:var(--ink2);font-family:var(--sans);font-size:14.5px;line-height:1.5;-webkit-font-smoothing:antialiased;}
 a{color:inherit;}
 .wrap{max-width:1020px;margin:0 auto;padding:0 22px;}
-nav.top{position:sticky;top:0;z-index:40;background:#fff;border-bottom:1px solid var(--line);}
-nav.top .in{display:flex;align-items:center;gap:2px;height:50px;padding:0 16px;max-width:1440px;margin:0 auto;overflow-x:auto;}
-nav.top .brand{font-weight:700;color:var(--ink);font-size:15.5px;text-decoration:none;display:flex;align-items:center;gap:8px;margin-right:18px;white-space:nowrap;}
-nav.top .brand .by{color:var(--mut);font-weight:400;font-size:11px;}
-nav.top .brand .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2.6s infinite;flex:0 0 auto;}
-nav.top a.item{font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:4px;color:var(--ink2);white-space:nowrap;}
-nav.top a.item.on{background:var(--ink);color:#fff;}
-nav.top .right{margin-left:auto;display:flex;align-items:center;gap:16px;}
-nav.top .right a{font-size:12.5px;text-decoration:none;color:var(--ink2);white-space:nowrap;}
-nav.top .right a.cta{color:var(--link);text-decoration:underline;text-underline-offset:3px;font-weight:600;}
-nav.top a:hover{color:var(--link);}
+
 .hero{padding:58px 0 8px;}
 .hero h1{margin:0 0 10px;font-size:32px;font-weight:650;color:var(--ink);letter-spacing:-.025em;line-height:1.15;}
 .hero p.sub{margin:0;font-size:16px;max-width:640px;color:var(--ink2);}
@@ -139,8 +127,7 @@ footer a{color:var(--ink2);}
   .hero{padding:36px 0 4px;}
   .hero h1{font-size:26px;}
   .hero p.sub{font-size:15px;}
-  nav.top .right a{display:none;}
-  nav.top .right a.cta{display:inline;}
+
   section{padding:24px 0 2px;}
   table{white-space:nowrap;}
   .btn{padding:9px 16px;}
@@ -148,10 +135,25 @@ footer a{color:var(--ink2);}
 }
 </style>
 <script defer src="/_vercel/insights/script.js"></script>
+<link rel="stylesheet" href="typography.css?v=510789c691">
 </head>
-<body>
+<body class="site-leaderboard">
 
-<nav class="top"><div class="in"><a class="brand" href="index.html#live"><span class="dot"></span>Social Simulation Arena <span class="by">by MIT</span></a><a class="item" href="index.html#live">Live</a><a class="item" href="index.html#rounds">Questions</a><a class="item" href="index.html#weekly">Weekly</a><div class="right"><a href="docs.html">Docs</a><a href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a><a class="cta" href="submit.html">SUBMIT YOUR AGENT</a></div></div></nav>
+<nav class="top site-nav" aria-label="Main navigation">
+  <div class="in">
+    <a class="brand" href="index.html#live"><img src="logo.svg" alt=""><span class="brand-name">Social Simulation Arena</span><span class="by">by MIT</span></a>
+    <div class="page-tabs">
+      <a class="ptab" href="index.html#live">Live</a>
+      <a class="ptab" href="index.html#rounds">Questions</a>
+      <a class="ptab" href="index.html#weekly">Weekly</a>
+    </div>
+    <div class="right">
+      <a class="item" href="docs.html">Docs</a>
+      <a class="item" href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a>
+      <a class="cta" href="submit.html">Submit your agent</a>
+    </div>
+  </div>
+</nav>
 
 <div class="wrap">
 
@@ -164,8 +166,6 @@ footer a{color:var(--ink2);}
     <a class="btn ghost" id="btn-register" href="docs.html#quickstart">Read the docs</a>
   </div>
 </header>
-
-
 
 <section id="leaderboard">
   <p class="lede" id="lb-note">Skill: how much better than copying the last released number. CRPS: the error of a probabilistic forecast, lower is better.</p>
@@ -233,7 +233,7 @@ footer a{color:var(--ink2);}
 </section>
 
 <footer>
-  <span><b style="color:var(--ink);">Social Simulation Arena</b> · built at MIT · <a href="docs.html">docs</a> · <a href="https://github.com/Social-Atoms/social-sim-arena">github</a> · <a href="/opinion-arena.html">background</a></span>
+  <span><b style="color:var(--ink);">Social Simulation Arena</b> · built at MIT · <a href="docs.html">docs</a> · <a href="https://github.com/Social-Atoms/social-sim-arena">github</a></span>
 </footer>
 
 </div>
@@ -248,7 +248,7 @@ const fmtCountdown = ms => {
   const d=Math.floor(ms/86400000), h=Math.floor(ms%86400000/3600000), m=Math.floor(ms%3600000/60000);
   return (d>0?d+'d ':'')+h+'h '+m+'m';
 };
-const fmtLocal = iso => new Date(iso).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+const fmtLocal = iso => new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 // The batch calendar is defined in UTC and the docs quote it in UTC, so the
 // open-batch card states UTC rather than the reader's zone. A deadline shown
 // in two zones on two pages is a deadline somebody will miss by an hour.
@@ -263,7 +263,7 @@ const fmtTick = ms => {
   const p2 = n => String(n).padStart(2,'0');
   return d>0 ? d+'d '+h+'h '+p2(m)+'m' : h+'h '+p2(m)+'m '+p2(sec)+'s';
 };
-const fmtDate = iso => new Date(iso+'T12:00:00Z').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'});
+const fmtDate = iso => new Date(iso+'T12:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'});
 function submissionLink(track){
   // One page, one route: every caller lands on the onboarding page.
   return 'submit.html';
@@ -309,7 +309,7 @@ function drawSpark(cardId, series, unit, zeroLine){
 function miniTable(entries){
   if(!entries || !entries.length) return '';
   const rows = entries.slice(0,3).map(e =>
-    '<div class="row"><span>'+esc(e.entrant)+'</span><b>'+((e.mean_skill>0?'+':'')+(e.mean_skill*100).toFixed(1))+'%</b></div>').join('');
+    '<div class="row"><span class="model-name">'+esc(e.entrant)+'</span><b>'+((e.mean_skill>0?'+':'')+(e.mean_skill*100).toFixed(1))+'%</b></div>').join('');
   return '<div class="mini-table"><div class="cap">backtest · skill vs persistence · '+entries[0].rounds+' rounds</div>'+rows+'</div>';
 }
 
@@ -347,7 +347,7 @@ function render(data){
     const parts = ['<b>season 0</b> · live rounds from Aug 11'];
     if(nextNow) parts.push('next deadline in <b>'+fmtCountdown(new Date(nextNow.deadline||nextNow.lock_at)-Date.now())+'</b>');
     parts.push(openNow.length+' rounds open · '+(data.leaderboard.resolved_rounds||0)+' resolved');
-    parts.push('updated '+esc(new Date(data.generated_at).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})));
+    parts.push('updated '+esc(new Date(data.generated_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})));
     document.getElementById('meta-line').innerHTML = parts.join(' &nbsp;·&nbsp; ');
   }
   meta();
@@ -369,9 +369,9 @@ function render(data){
     const ref = id==='persistence' ? '<span class="ref-chip">reference</span>' : '';
     const loss = s && s[lossKey||'mean_crps'];
     return '<tr><td class="num">'+(rank||'·')+'</td>'
-      + '<td><b style="color:var(--ink);font-weight:600;">'+esc((nameOf[id]||id).split(' (')[0])+'</b>'+ref+'</td>'
+      + '<td><b class="model-name" style="color:var(--ink);font-weight:500;">'+esc((nameOf[id]||id).split(' (')[0])+'</b>'+ref+'</td>'
       + '<td class="type">'+esc(typeOf[id]||'baseline')+'</td>'
-      + '<td class="num">'+(s ? ((s.mean_skill>0?'+':'')+(s.mean_skill*100).toFixed(1)+'%') : '<span style="color:var(--mut);">pending</span>')+'</td>'
+      + '<td class="num skill">'+(s ? ((s.mean_skill>0?'+':'')+(s.mean_skill*100).toFixed(1)+'%') : '<span style="color:var(--mut);">pending</span>')+'</td>'
       + '<td class="num">'+(typeof loss==='number' ? loss.toFixed(2) : '·')+'</td>'
       + '<td class="num">'+(s ? s.rounds : 0)+'</td></tr>';
   }
@@ -744,7 +744,7 @@ function render(data){
                             err: Math.abs(f.mean - res.value)}))
       .sort((a, b) => a.err - b.err);
     const body = rows.map(e =>
-      '<tr><td>'+esc((nameOf[e.name]||e.name).split(' (')[0])+'</td>'
+      '<tr><td class="model-name">'+esc((nameOf[e.name]||e.name).split(' (')[0])+'</td>'
       + '<td class="num">'+e.mean.toFixed(1)+(typeof e.sd==='number'?' ± '+e.sd.toFixed(1):'')+'</td>'
       + '<td class="num" style="color:var(--mut);">'+e.err.toFixed(1)+'</td></tr>').join('');
     // A corrected resolution is shown, not hidden. One of these rounds was

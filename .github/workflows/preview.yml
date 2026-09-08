@@ -1,10 +1,10 @@
 name: preview
 
-# Vercel previews for pull requests, without Vercel seats.
+# Vercel previews for pull requests, dev, and manual UI reviews.
 #
 # Production stays on the Vercel Git integration (pushes to main deploy as
-# before). This workflow only builds PR previews: it deploys with the team
-# token from repo secrets, and it strips .git before deploying so the
+# before). This workflow deploys previews with the team token from repo
+# secrets, and it strips .git before deploying so the
 # deployment carries no git author for Vercel to reject.
 #
 # Requires three repository secrets (owner sets them once):
@@ -16,10 +16,11 @@ on:
   pull_request:
   push:
     branches: [dev]
-  # A push made with GITHUB_TOKEN (the refresh bot's data commit) does not
-  # trigger this workflow, so after a manual refresh on dev the preview
-  # still serves the previous data.json until someone pushes. This lets a
-  # maintainer redeploy the preview from the branch as it is.
+  # Two things need a manual preview. The refresh bot's data commit is made
+  # with GITHUB_TOKEN, which does not trigger a workflow, so after it lands on
+  # dev the preview still serves the previous data.json until somebody pushes.
+  # And a branch with no pull request open -- the UI work -- has no other way
+  # to be looked at.
   workflow_dispatch:
 
 permissions:
@@ -38,8 +39,13 @@ concurrency:
 jobs:
   preview:
     # Fork PRs get no secrets by design; forecast submissions from entrants
-    # only need validate.yml. Previews run for same-repo branches and dev.
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    # only need validate.yml. Manual UI reviews never update the dev alias.
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/dev') ||
+      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'workflow_dispatch' &&
+       (github.ref == 'refs/heads/dev' ||
+        github.ref == 'refs/heads/ui/site-refinement'))
     runs-on: ubuntu-latest
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -55,8 +61,14 @@ jobs:
           url=$(vercel deploy --yes --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
+      - name: publish the preview link in the run summary
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          echo "Preview: $PREVIEW_URL" >> "$GITHUB_STEP_SUMMARY"
+
       - name: stable alias for the dev branch
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         run: |
           vercel alias set ${{ steps.deploy.outputs.url }} social-sim-arena-dev.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
           echo "dev preview: https://social-sim-arena-dev.vercel.app" >> "$GITHUB_STEP_SUMMARY"

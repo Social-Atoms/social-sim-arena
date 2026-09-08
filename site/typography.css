@@ -1,0 +1,405 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inconsolata:wght@400;500;600;700;800&display=swap');
+
+/* Reading and interaction: DM Sans for headings, descriptions, and controls.
+   Identity and data: Inconsolata for the brand, utility navigation, model names,
+   values, dates, chart labels, compact status metadata, and code. */
+:root {
+  --font-mono: "Inconsolata", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-body: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --font-action: var(--font-body);
+  --sans: var(--font-body);
+  --mono: var(--font-mono);
+  --ink2: #454a44;
+  --mut: #697167;
+  --accent-hover: #166534;
+}
+body { font-family: var(--font-body); line-height: 1.55; font-variant-numeric: tabular-nums; }
+b, strong { font-weight: 600; }
+h1, h2, h3, h4, .tasknav-head, .navlabel,
+table, th, td, .mini-table, .chart-message,
+.model-setup, .lchip .setup {
+  font-family: var(--font-body);
+}
+/* Explanations stay in the reading face, even when they are small. */
+small, .caption, .note, .muted, .type, .lb-note,
+.taskmeta,
+.question-card .qfoot, .model-scope, .model-empty,
+.model-group legend,
+.qcard .qhead, .qcard .qfoot, .qcard .qempty,
+.week-side dt, .frow, .shape, .erow .tx .type,
+.chart-card .src, .legend, .ob-sum, .ob-k,
+.result-in .how, .result-in .corr,
+.site-submit .panelhead p, .site-submit .railbox p,
+.site-submit .result span, .site-submit .field small,
+.site-docs .card .tag, footer, .foot {
+  font-family: var(--font-body);
+}
+/* Numbers and compact data readouts use the same face as chart axes. */
+code, pre, pre.code, kbd, samp, svg text, .tooltip,
+time, td.num, .rank, .numeric, .metric-value,
+.header-status, .site-leaderboard #meta-line, .replay-tag,
+.model-count, .model-group legend>span, .task-group .tc, #task-all-count,
+.qcard .qdue, .qcard .qstats, .week-stat, .week-count .closes,
+.week-side dd, .week-browse>span, .frow .fc, .frow .fnum, .facet-dates .fn,
+.vrow .when, .vrow .q .dim, .ob-id, .ob-v, .ob-v2,
+.mini-table .row b, .result-in .out b, .site-docs .step .num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.eyebrow, .codelabel, .demo .dhead {
+  font-family: var(--font-mono);
+}
+/* Native controls use the same font instead of the browser's default. */
+button, input, select, textarea, summary,
+.btn, .go, .copy, .seg-choice span,
+nav.top a.item, nav.top .right a,
+.task-all, .task-link, .task-group summary {
+  font-family: var(--font-action);
+}
+/* Model identities keep the same face in filters, chips, and every board. */
+.model-name, .model-option-name, .model-chip-name { font-family: var(--font-mono); }
+/* The MIDTERM link is presented as a status readout. */
+#exam-chip { font-family: var(--font-mono); }
+/* Axis labels use the same readable secondary color as nearby explanations. */
+svg text[fill="#96948d"] { fill: var(--mut); }
+th {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+td.num { text-align: right; white-space: nowrap; }
+.site-home .ptab, nav.top a.item, .btn { font-weight: 500; }
+.header-status .meta b, .site-home .qcard .qstats b { font-weight: 600; }
+.site-leaderboard .ob-cell.now .ob-v2 { font-family: var(--font-body); }
+.site-leaderboard td.skill { font-weight: 600; color: var(--ink); }
+
+/* Live workspace: preserve the three aligned column headings. */
+.site-home { font-size: 14px; }
+.site-home .lbcol .lbhead h2 { font-weight: 600; letter-spacing: .01em; }
+.site-home .taskmeta { gap: 4px 14px; }
+.site-home .taskmeta b { font-weight: 500; }
+.site-home .task-all, .site-home .task-link, .site-home .task-group summary {
+  font-size: 14px;
+  line-height: 1.45;
+  min-height: 34px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+.site-home .caption { padding-top: 10px; padding-bottom: 6px; }
+.site-home .question-card summary { font-size: 14px; font-weight: 500; line-height: 1.5; }
+.site-home .question-card .qbody { font-size: 14px; line-height: 1.6; }
+.site-home .question-card .qfoot { font-size: 12px; line-height: 1.5; }
+.site-home .replay-tag { font-size: 11px; font-weight: 600; letter-spacing: .035em; }
+.site-home .model-toolbar { gap: 10px; }
+.site-home .model-chips { --chip-height: 28px; }
+.site-home .lchip { font-size: 12.5px; font-weight: 400; }
+.site-home .lchip .setup { font-size: 11.5px; }
+.site-home .model-option { font-size: 14px; line-height: 1.45; min-height: 36px; }
+.site-home .model-setup { font-size: 12px; }
+.site-home .model-group legend { font-size: 12px; letter-spacing: .01em; }
+.site-home .model-action { font-size: 12.5px; }
+.site-home .model-search-row input[type="search"] { font-size: 13px; }
+.site-home .seg.mini button, .site-home .model-setup-filter .seg-choice span { font-size: 12.5px; }
+.site-home .tooltip { font-size: 13px; line-height: 1.55; }
+.site-home table.lb th { font-size: 12px; font-weight: 500; text-transform: none; letter-spacing: 0; }
+.site-home table.lb .who b { font-family: var(--font-mono); font-size: 14px; font-weight: 500; line-height: 1.4; }
+.site-home table.lb .who-text { display: flex; flex-direction: column; gap: 3px; }
+.site-home table.lb .model-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 4px; color: var(--mut); font-size: 12px; font-weight: 400; line-height: 1.4; }
+.site-home table.lb .model-meta>span { white-space: nowrap; }
+.site-home table.lb .rank { text-align: right; font-weight: 400; }
+.site-home table.lb td.num { font-size: 14px; color: var(--mut); font-weight: 400; }
+.site-home table.lb td.skill { font-size: 16px; font-weight: 600; color: var(--ink); }
+.site-home table.lb td.skill.pos { color: var(--accent-ink); }
+.site-home .lb-note { font-size: 13px; line-height: 1.6; }
+@container leaderboard (max-width: 420px) {
+  .site-home table.lb .who b { font-size: 14px; }
+  .site-home table.lb .model-meta { font-size: 11.5px; }
+  .site-home table.lb th { font-size: 11px; }
+  .site-home table.lb td.num { font-size: 13px; }
+  .site-home table.lb td.skill { font-size: 15px; }
+  .site-home table.lb col.score-col { width: 42px; }
+  .site-home table.lb col.loss-col, .site-home table.lb col.rounds-col { width: 48px; }
+}
+
+/* Questions and weekly pages: make the question easier to read than its metadata. */
+.site-home .inner .lede { font-size: 14px; line-height: 1.6; }
+.site-home .qcard h3 { font-size: 20px; font-weight: 600; line-height: 1.3; margin-bottom: 6px; }
+.site-home .qcard .qtext { font-size: 13px; line-height: 1.55; margin-bottom: 12px; }
+.site-home .qcard .qhead { flex-wrap: wrap; font-size: 11px; font-weight: 500; text-transform: none; letter-spacing: 0; }
+.site-home .qcard .qhead .qshape { letter-spacing: 0; }
+.site-home .qcard .qfoot { flex-wrap: wrap; font-size: 12px; line-height: 1.5; }
+.site-home .qcard .qfoot .qid { font-size: 11.5px; }
+.site-home .qcard .qstats { font-size: 12.5px; }
+.site-home .week-card p, .site-home .week-route p, .site-home .svrow .tx p,
+.site-home .erow .tx p, .site-home .vrow .q { font-size: 14px; line-height: 1.6; }
+.site-home .week-route b, .site-home .svrow .tx b, .site-home .erow .tx b { font-size: 14px; font-weight: 600; }
+.site-home .facet h4, .site-home .week-side dt { font-size: 11px; letter-spacing: .04em; font-weight: 600; }
+.site-home .frow { font-size: 13px; line-height: 1.5; }
+.site-home .week-side dd { font-size: 14px; line-height: 1.5; }
+.site-home .fchips button { font-size: 12px; font-weight: 500; letter-spacing: 0; }
+.site-home #page-rounds .task-toolbar { --filter-height: 36px; align-items: center; }
+.site-home #task-search,
+.site-home #round-category-chips button,
+.site-home #round-status-seg button {
+  box-sizing: border-box;
+  height: var(--filter-height);
+  min-height: var(--filter-height);
+  max-height: var(--filter-height);
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.site-home #page-rounds .task-search {
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 0;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  line-height: calc(var(--filter-height) - 2px);
+}
+.site-home #round-category-chips { min-width: 0; align-items: center; }
+.site-home #round-category-chips button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0 10px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+.site-home #round-status-seg {
+  height: var(--filter-height);
+  padding: 0;
+  border: 0;
+  gap: 0;
+  background: transparent;
+  box-shadow: none;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  flex-shrink: 0;
+}
+.site-home #round-status-seg button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: #f5f6f5;
+  box-shadow: none;
+}
+.site-home #round-status-seg button:first-child { border-radius: 5px 0 0 5px; }
+.site-home #round-status-seg button:last-child { border-radius: 0 5px 5px 0; }
+.site-home #round-status-seg button+button { margin-left: -1px; }
+.site-home #round-status-seg button.on { background: #fff; }
+.site-home #round-status-seg button:focus-visible { position: relative; z-index: 1; }
+
+/* Weekly and its submission routes follow the Questions card hierarchy. */
+.site-home #page-submit h2 {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+.site-home #page-weekly .week-card h3, .site-home #page-weekly .week-count h3 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+.site-home #page-weekly .week-count h3 { margin: 0; }
+.site-home #page-weekly .week-route h4, .site-home #page-submit .svrow .tx>b {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 6px;
+}
+.site-home #page-weekly .week-card p,
+.site-home #page-weekly .week-route p, .site-home #page-submit .lede,
+.site-home #page-submit .svrow .tx p {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.site-home #page-weekly .facet h4 { font-size: 14px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.site-home #page-weekly .week-side dt { font-size: 12px; letter-spacing: 0; font-weight: 500; }
+
+/* Live, Questions, and Weekly share one page heading and description scale. */
+.site-home .page .page-title {
+  font-family: var(--font-body);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0;
+  color: var(--ink);
+  margin: 0 0 8px;
+}
+.site-home .page .page-description {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.55;
+  letter-spacing: 0;
+  color: var(--mut);
+  margin: 0;
+}
+.site-home .inner .page-description { margin-bottom: 20px; }
+.site-home .page .page-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--panel-title-size);
+  font-weight: 600;
+  line-height: var(--panel-title-line);
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  color: var(--mut);
+  margin: 0 0 2px;
+}
+
+/* Reading and submission routes keep their established type scale. */
+.site-docs article { font-size: 15px; line-height: 1.7; }
+.site-docs .layout>.left a, .site-docs .layout>.right a { font-size: 13px; line-height: 1.5; }
+.site-docs .left a.on { font-weight: 600; }
+.site-docs .navlabel, .site-docs .eyebrow { letter-spacing: .055em; }
+.site-docs .card p { font-size: 14px; line-height: 1.6; }
+.site-docs .step b { font-size: 15px; font-weight: 600; }
+.site-docs .step p { font-size: 14px; line-height: 1.6; }
+.site-docs .tasktable { font-size: 13px; line-height: 1.6; }
+.site-docs .tasktable th { font-size: 12px; font-weight: 500; text-transform: none; letter-spacing: 0; }
+.site-docs .tasktable td:first-child { font-weight: 600; }
+.site-docs summary { font-size: 14px; font-weight: 600; line-height: 1.5; }
+.site-submit .bar h1 { font-size: 24px; font-weight: 600; line-height: 1.3; letter-spacing: 0; }
+.site-submit .bar p { font-family: var(--font-body); font-size: 13px; line-height: 1.55; }
+.site-submit .badge { font-family: var(--font-body); font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0; }
+.site-submit .intro h2 { font-size: 20px; font-weight: 600; line-height: 1.3; margin: 0; }
+.site-submit .intro .eyebrow { font-size: 12px; line-height: 20px; font-weight: 600; margin-bottom: 4px; }
+.site-submit .panelhead h3 { font-size: 20px; font-weight: 600; line-height: 1.3; margin-bottom: 6px; }
+.site-submit .railbox h3 { font-size: 20px; font-weight: 600; line-height: 1.3; }
+.site-submit .intro p, .site-submit .steps p { font-family: var(--font-body); font-size: 13px; line-height: 1.65; }
+.site-submit .steps p { line-height: 1.5; }
+.site-submit .steps b, .site-submit .shape b, .site-submit .storage-note h4 { font-family: var(--font-body); font-size: 14px; font-weight: 600; line-height: 1.45; }
+.site-submit .steps .n, .site-submit .panelhead .mark { font-family: var(--font-mono); font-size: 13px; line-height: 1; }
+.site-submit .panelhead p, .site-submit .railbox p { font-size: 13px; line-height: 1.55; }
+.site-submit .field label, .site-submit .field legend { font-family: var(--font-action); font-size: 14px; font-weight: 500; line-height: 20px; }
+.site-submit .field>label, .site-submit .field>legend { min-height: 24px; }
+.site-submit .type-options label { font-weight: 400; }
+.site-submit .field input, .site-submit .field textarea, .site-submit .btn { font-family: var(--font-action); font-size: 14px; line-height: 20px; }
+.site-submit .btn { font-weight: 500; }
+.site-submit .field small { font-size: 13px; line-height: 1.55; }
+.site-submit .privacy { font-family: var(--font-body); font-size: 12px; font-weight: 500; line-height: 16px; letter-spacing: 0; }
+.site-submit .storage-note p, .site-submit .status, .site-submit .empty { font-family: var(--font-body); font-size: 13px; line-height: 1.55; }
+.site-submit .shape span { font-size: 12px; line-height: 1.55; }
+.site-submit .shape code { font-size: 12px; line-height: 1.6; }
+.site-submit pre.code { font-size: 13px; line-height: 1.55; }
+.site-submit .codelabel, .site-submit .eyebrow { letter-spacing: .055em; }
+.site-submit .railbox dl { font-family: var(--font-body); font-size: 14px; line-height: 1.55; }
+.site-submit .railbox dt { font-size: 12px; font-weight: 500; letter-spacing: 0; }
+.site-leaderboard .note, .site-leaderboard p.lede, .site-leaderboard .chart-card .src { font-size: 13px; line-height: 1.6; }
+.site-leaderboard .type { font-size: 12px; letter-spacing: 0; text-transform: none; }
+.site-leaderboard .ob-k, .site-leaderboard .fc h4 { font-size: 11px; letter-spacing: .04em; }
+.site-leaderboard .result-in .how, .site-leaderboard .result-in .corr { font-size: 12px; line-height: 1.5; }
+.site-crosstab .note { font-size: 13px; line-height: 1.6; color: var(--mut); }
+
+/* One navigation layout for the dashboard, registration form, and reading pages. */
+nav.top.site-nav {
+  display: block;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: auto;
+  padding: 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+.site-header > nav.site-nav { margin-bottom: 8px; }
+nav.site-nav .in {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  width: 100%;
+  min-height: 54px;
+  padding: 8px 16px;
+}
+nav.site-nav .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  text-decoration: none;
+  white-space: nowrap;
+}
+nav.site-nav .brand img { width: 22px; height: 22px; flex: 0 0 22px; }
+nav.site-nav .brand-name { font-size: 17px; font-weight: 700; line-height: 1.25; letter-spacing: -.015em; }
+nav.site-nav .brand .by { color: var(--mut); font-size: 12px; font-weight: 400; }
+nav.site-nav .page-tabs { display: flex; gap: 2px; }
+nav.site-nav .ptab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 7px 16px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink2);
+  font: 500 14px/1.4 var(--font-action);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+nav.site-nav .ptab:hover { background: #f5f6f5; color: var(--ink); }
+nav.site-nav .ptab.on { background: var(--ink); color: #fff; }
+nav.site-nav .right {
+  position: static;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+}
+nav.site-nav .right a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0;
+  color: var(--ink2);
+  font: 500 14px/1.4 var(--font-mono);
+  text-decoration: none;
+  white-space: nowrap;
+}
+nav.site-nav .right a:hover { color: var(--link); }
+nav.site-nav .right a.on { color: var(--ink); }
+nav.site-nav .right a.on { text-decoration: underline; text-underline-offset: 4px; }
+nav.site-nav .right a.cta {
+  padding: 7px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+nav.site-nav .right a.cta:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+nav.site-nav :is(a, button):focus-visible { outline: 2px solid var(--ink2); outline-offset: 3px; }
+@media (max-width: 880px) {
+  nav.site-nav .in { padding: 10px 12px 8px; gap: 10px 16px; }
+  nav.site-nav .brand { flex: 1 1 auto; }
+  nav.site-nav .page-tabs { order: 3; width: 100%; }
+  nav.site-nav .ptab { flex: 1; padding: 6px 12px; }
+  nav.site-nav .right { gap: 12px; }
+}
+@media (max-width: 600px) {
+  nav.site-nav .brand { width: 100%; }
+  nav.site-nav .brand-name { font-size: 16px; }
+  nav.site-nav .page-tabs { order: 2; }
+  nav.site-nav .right { order: 3; width: 100%; }
+  nav.site-nav .right a.cta { margin-left: auto; }
+}

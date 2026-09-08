@@ -255,10 +255,10 @@ class SubmissionPrototype(unittest.TestCase):
         # Two panels, in Prophet Arena's order: test the API, then the model
         # information, and one submit button that opens the pull request.
         for marker in ('<h3>Test your API</h3>', 'id="api-test"', 'name="endpoint_url"',
-                       '>Forecast Endpoint URL <', '>Model / Team Name <', 'id="entrant-id"',
-                       '<h3>Your details</h3>', '>Display Name <', '>Company/Organization <',
+                       '>Forecast endpoint URL <', '>Model / team name <', 'id="entrant-id"',
+                       '<h3>Your details</h3>', '>Display name <', '>Company / organization <',
                        'id="entrant-org"', 'id="entrant-github"', 'id="reg-json"',
-                       '>Submit for review</a>', '<h3>Test Results</h3>', '<h3>API Response</h3>'):
+                       '>Submit for review</a>', '<h3>Test results</h3>', '<h3>API response</h3>'):
             self.assertIn(marker, self.page)
         # Gone: the second route, the type radio, the method line, the
         # calendar, and everything from the questionnaire era.

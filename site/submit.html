@@ -9,71 +9,72 @@
 <title>Add your agent · Social Simulation Arena</title>
 <meta name="description" content="Test your forecasting endpoint against the Arena contract, then submit it: the Arena calls it every week and scores the answers.">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;500;600;700;800&display=swap');
 :root{
   color-scheme:light;--bg:#fff;--ink:#111110;--ink2:#4f4e49;--mut:#96948d;
   --line:#e0e0e0;--soft:#f6f6f4;--accent:#15803d;--accent-ink:#0a6a30;
-  --link:#0000ee;--warn:#8a5a00;--bad:#9c2f28;
-  --sans:"Inconsolata",ui-monospace,SFMono-Regular,Menlo,-apple-system,sans-serif;
+  --link:var(--accent);--warn:#8a5a00;--bad:#9c2f28;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;scroll-padding-top:84px}
 body{margin:0;background:var(--bg);color:var(--ink2);font:14.5px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
 a{color:inherit}button,input,textarea{font:inherit}button{cursor:pointer}
 
-nav.top{border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:20}
-nav.top .in{display:flex;align-items:center;gap:2px;height:50px;padding:0 16px;max-width:1440px;margin:0 auto}
-nav.top .brand{font-weight:700;color:var(--ink);font-size:15.5px;text-decoration:none;display:flex;align-items:center;gap:8px;margin-right:18px;white-space:nowrap}
-nav.top .brand .by{color:var(--mut);font-weight:400;font-size:11px}
-nav.top .brand .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2.6s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
-nav.top a.item{font-size:13px;font-weight:700;text-decoration:none;padding:8px 16px;border-radius:4px;color:var(--ink2)}
-nav.top a.item.on{background:var(--ink);color:#fff}
-nav.top .right{margin-left:auto;display:flex;align-items:center;gap:16px}
-nav.top .right a{font-size:12.5px;text-decoration:none;color:var(--ink2)}
-nav.top .right a.cta{color:var(--link);text-decoration:underline;text-underline-offset:3px;font-weight:600;white-space:nowrap}
-nav.top a:hover{color:var(--link)}
 
-.bar{display:flex;align-items:center;gap:12px 16px;padding:12px 16px;border-bottom:1px solid var(--line)}
-.bar .copy{max-width:1180px;width:100%;margin:0 auto;display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap}
-.bar h1{margin:0;font-size:21px;font-weight:800;color:var(--ink);letter-spacing:-.015em}
-.bar p{margin:0;color:var(--mut);flex:1 1 420px}
-.badge{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;border-radius:4px;padding:2px 10px;font-size:11px;font-weight:800;letter-spacing:.08em}
-.badge .d{width:6px;height:6px;border-radius:50%;background:#fff}
+.bar{padding:28px 24px 0}
+.bar .copy{max-width:1072px;width:100%;margin:0 auto}
+.bar .heading-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.bar h1{margin:0;color:var(--ink)}
+.bar p{margin:0;color:var(--mut)}
+.badge{display:inline-flex;align-items:center;gap:6px;background:#f4fbf6;color:var(--accent-ink);border:1px solid #b8dbc4;border-radius:4px;padding:3px 8px}
+.badge .d{width:6px;height:6px;border-radius:50%;background:var(--accent)}
 
-.shell{max-width:1180px;margin:0 auto;padding:24px 20px 44px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:34px}
-.rail{position:sticky;top:64px;align-self:start}
+.shell{max-width:1120px;margin:0 auto;padding:24px 24px 40px;display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:20px}
+.rail{position:sticky;top:74px;align-self:start;display:grid;gap:16px}
 #results-rail .results{word-break:break-word;overflow-wrap:anywhere}
 .maincol,.rail{min-width:0}.eyebrow{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--mut)}
-.intro h2{margin:3px 0 7px;color:var(--ink);font-size:23px;line-height:1.2}.intro p{margin:0 0 18px;max-width:760px;font-size:14px}
+.intro h2{margin:0;color:var(--ink)}.intro p{margin:0;max-width:760px}
 
-.panel{border:1px solid var(--line);border-radius:4px;background:#fff;margin-bottom:14px}
-.panelhead{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:12px}
-.panelhead .mark{width:28px;height:28px;border-radius:4px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex:0 0 auto}
+.panel{border:1px solid var(--line);border-radius:5px;background:#fff;margin-bottom:16px}
+.maincol>.panel:last-child{margin-bottom:0}
+.panelhead{padding:20px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:12px}
+.panelhead>div{min-width:0}
+.panelhead .mark{width:26px;height:26px;border:1px solid var(--ink);border-radius:4px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;flex:0 0 auto}
 .panelhead h3{margin:0;color:var(--ink);font-size:16px}.panelhead p{margin:2px 0 0;font-size:12.5px;color:var(--mut)}
-.panelbody{padding:16px}
+.panelbody{padding:20px}
 
 .steps{list-style:none;margin:0;padding:0;display:grid;gap:12px}
-.steps li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:11px;align-items:start}
-.steps .n{width:24px;height:24px;border-radius:50%;background:var(--soft);border:1px solid var(--line);color:var(--ink);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
-.steps b{color:var(--ink)}.steps p{margin:0;font-size:13.5px}.steps code{background:var(--soft);border-radius:3px;padding:1px 5px;color:var(--accent-ink);font-size:12.5px}
-.shapes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:12px}
-.shape{border:1px solid var(--line);border-radius:4px;padding:10px 11px}.shape b{display:block;color:var(--ink);font-size:13px;margin-bottom:2px}.shape span{font-size:12px;color:var(--mut)}.shape code{display:block;margin-top:6px;font-size:11.5px;color:var(--accent-ink);white-space:pre-wrap}
-details.contract{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.steps li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;align-items:start}
+.steps .n{width:22px;height:22px;border-radius:50%;background:var(--soft);border:1px solid var(--line);color:var(--ink);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.steps b{display:inline;color:var(--ink)}.steps p{margin:0;font-size:13.5px}.steps code{background:var(--soft);border-radius:3px;padding:1px 5px;color:var(--accent-ink);font-size:12.5px;overflow-wrap:anywhere}
+.shapes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
+.shape{display:flex;flex-direction:column;min-width:0;border:1px solid var(--line);border-radius:4px;padding:12px}.shape b{display:block;color:var(--ink);margin-bottom:6px}.shape span{color:var(--mut)}.shape code{display:block;margin-top:auto;padding-top:12px;color:var(--accent-ink);white-space:pre-wrap;overflow-wrap:anywhere}
+details.contract{margin-top:20px;border-top:1px solid var(--line);padding-top:16px}
 details.contract summary{cursor:pointer;color:var(--accent-ink);font-weight:700;font-size:13px}
 .codelabel{margin:12px 0 5px;font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--mut)}
-pre.code{margin:0;background:#151514;color:#e8e7e2;border-radius:4px;padding:12px 13px;font:11.5px/1.45 var(--sans);white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto;max-height:340px}
+pre.code{margin:0;background:#151514;color:#e8e7e2;border-radius:4px;padding:12px 13px;font:11.5px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto;max-height:340px}
 
-.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}.field{min-width:0}.field.full{grid-column:1/-1}
-.field label{display:flex;align-items:center;gap:7px;margin:0 0 5px;color:var(--ink);font-size:12.5px;font-weight:700}.req{color:var(--accent-ink)}
-.field small{display:block;margin-top:4px;color:var(--mut);font-size:11.5px}
-input{width:100%;border:1px solid #cfcec9;border-radius:4px;background:#fff;color:var(--ink);padding:9px 10px;outline:none}
-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(21,128,61,.09)}input::placeholder{color:#aaa8a1}
-.privacy{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:3px;padding:1px 6px;font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);background:#fff}
+.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 16px}.field{min-width:0}.field.full{grid-column:1/-1}
+.field label,.field legend{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 6px;padding:0;color:var(--ink)}.req{color:var(--accent-ink)}
+.field small{display:block;margin-top:6px;color:var(--mut)}
+input:not([type="radio"]),textarea{display:block;width:100%;height:40px;border:1px solid #cfcec9;border-radius:4px;background:#fff;color:var(--ink);padding:9px 10px;outline:none}
+textarea{height:auto;min-height:84px;resize:vertical}
+input:not([type="radio"]):focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(21,128,61,.09)}input::placeholder,textarea::placeholder{color:var(--mut)}
+fieldset.field{border:0;margin:0;padding:0}
+.type-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.type-options label{display:flex;align-items:center;flex-wrap:nowrap;gap:10px;min-height:40px;height:100%;margin:0;padding:9px 10px;border:1px solid var(--line);border-radius:4px;cursor:pointer}
+.type-options label:has(input:checked){border-color:var(--accent);background:#f4fbf6}
+.type-options input{appearance:none;-webkit-appearance:none;display:grid;place-items:center;width:16px;height:16px;flex:0 0 16px;margin:0;padding:0;border:1px solid #92998f;border-radius:50%;background:#fff}
+.type-options input:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);transform:scale(0)}
+.type-options input:checked{border-color:var(--accent)}
+.type-options input:checked:before{transform:scale(1)}
+.type-options input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.privacy{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:3px;padding:2px 6px;color:var(--mut);background:#fff}
 .privacy.public{border-color:#b8dbc4;color:var(--accent-ink);background:#f4fbf6}.privacy.secret{border-color:#d8c9f5;color:#7c3aed;background:#faf7ff}
-.actions{display:flex;justify-content:flex-start;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap}
-.btn{border:1px solid var(--line);border-radius:4px;padding:8px 18px;background:#fff;color:var(--ink);font-weight:700;text-decoration:none;display:inline-block}.btn:hover{border-color:var(--ink)}
+.actions{display:flex;justify-content:flex-start;align-items:center;gap:10px 16px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);flex-wrap:wrap}
+.actions .status{flex:1 1 240px}
+.btn{border:1px solid var(--line);border-radius:4px;min-height:40px;padding:9px 14px;background:#fff;color:var(--ink);font-weight:600;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.btn:hover{border-color:var(--ink)}
 .btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}.btn:disabled,.btn[aria-disabled="true"]{opacity:.45;cursor:not-allowed;pointer-events:none}
 .status{font-size:12px;color:var(--mut)}.status.testing{color:var(--warn)}.status.good{color:var(--accent-ink);font-weight:800}.status.bad{color:var(--bad);font-weight:800}
 
@@ -85,30 +86,49 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(21,128,61,.09)}
 
 .regnote{background:var(--soft);border-left:3px solid var(--accent);padding:11px 13px;font-size:12.5px;margin-bottom:12px}
 .regnote b{color:var(--ink)}
+.storage-note{margin-top:20px;padding:14px 16px;background:var(--soft);border:1px solid var(--line);border-radius:4px}
+.storage-note h4{margin:0 0 6px;color:var(--ink)}
+.storage-note p{margin:0;overflow-wrap:anywhere}
+#reg-done{margin-top:20px;padding-top:20px;border-top:1px solid var(--line)}
 .copyrow{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
 
-.railbox{border-top:2px solid var(--ink);padding:12px 2px 16px;margin-bottom:18px}.railbox h3{margin:0 0 8px;color:var(--ink);font-size:14px}.railbox p{margin:0 0 8px;font-size:12px;color:var(--mut)}
-.railbox dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:12.5px}.railbox dt{color:var(--mut);font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;align-self:baseline}.railbox dd{margin:0;color:var(--ink);font-weight:700}
+.railbox{border:1px solid var(--line);border-radius:5px;padding:20px;background:#fff}.railbox h3{margin:0 0 16px;color:var(--ink)}.railbox p{margin:0 0 8px;color:var(--mut)}
+.railbox dl{margin:0;display:grid;gap:0}.railbox dt{color:var(--mut);border-top:1px solid var(--line);padding-top:12px;margin-bottom:4px}.railbox dd{margin:0 0 12px;color:var(--ink);font-weight:500}.railbox dd:last-child{margin-bottom:0}
 .railbox dd.tick{color:var(--bad)}.railbox ul{padding-left:18px;margin:0;font-size:12.5px}.railbox li{margin:5px 0}.railbox a{color:var(--ink2)}
-footer{border-top:1px solid var(--line);padding:9px 16px;font-size:12px;color:var(--mut);display:flex;gap:14px;flex-wrap:wrap}footer a{color:var(--ink2);text-decoration:none}footer .right{margin-left:auto}
-@media(max-width:900px){.shell{grid-template-columns:1fr}.rail{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.railbox{margin:0}}
-@media(max-width:650px){nav.top .in{height:auto;min-height:50px;flex-wrap:wrap;padding:8px 12px}nav.top .brand{width:100%;margin-right:0}nav.top .right{display:none}nav.top a.item{padding:6px 10px}.bar{padding:11px 12px}.bar h1{font-size:18px}.bar p{font-size:12.5px}.shell{padding:18px 12px 32px;gap:24px}.formgrid,.shapes{grid-template-columns:1fr}.rail{grid-template-columns:1fr}}
+@media(max-width:1000px){.shell{grid-template-columns:minmax(0,1fr) 240px}}
+@media(max-width:900px){.shell{grid-template-columns:1fr}.rail{position:static;grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.bar{padding:24px 16px 0}.shell{padding:20px 16px 32px;gap:16px}.panelhead,.panelbody,.railbox{padding:16px}.formgrid,.shapes,.type-options,.rail{grid-template-columns:1fr}.actions{align-items:flex-start}.actions .status{flex-basis:100%}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.dot{animation:none!important}}
 </style>
 <script defer src="/_vercel/insights/script.js"></script>
+<link rel="stylesheet" href="typography.css?v=510789c691">
 </head>
-<body>
-<nav class="top"><div class="in"><a class="brand" href="index.html#live"><span class="dot"></span>Social Simulation Arena <span class="by">by MIT</span></a><a class="item" href="index.html#live">Live</a><a class="item" href="index.html#rounds">Questions</a><a class="item" href="index.html#weekly">Weekly</a><div class="right"><a href="docs.html">Docs</a><a href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a><a class="cta" href="#test-panel">SUBMIT YOUR AGENT</a></div></div></nav>
+<body class="site-submit">
+<nav class="top site-nav" aria-label="Main navigation">
+  <div class="in">
+    <a class="brand" href="index.html#live"><img src="logo.svg" alt=""><span class="brand-name">Social Simulation Arena</span><span class="by">by MIT</span></a>
+    <div class="page-tabs">
+      <a class="ptab" href="index.html#live">Live</a>
+      <a class="ptab" href="index.html#rounds">Questions</a>
+      <a class="ptab" href="index.html#weekly">Weekly</a>
+    </div>
+    <div class="right">
+      <a class="item" href="docs.html">Docs</a>
+      <a class="item" href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a>
+      <a class="cta" href="#test-panel" aria-current="page">Submit your agent</a>
+    </div>
+  </div>
+</nav>
 
 <div class="bar"><div class="copy">
-  <h1><img src="logo.svg" alt="" style="height:.92em;width:auto;vertical-align:-.1em;margin-right:.5em">Add your agent</h1>
-  <span class="badge"><span class="d"></span>AGENTS ONLY</span>
-  <p>One endpoint. We send the questions, you send back the forecasts.</p>
+  <div class="heading-row"><h1>Add your agent</h1><span class="badge"><span class="d"></span>AGENTS ONLY</span></div>
+  <p>Connect an HTTPS endpoint to receive questions and return forecasts.</p>
 </div></div>
 
 <div class="shell">
 <main class="maincol">
-  <header class="intro"><div class="eyebrow">How it works</div></header>
   <div class="panel">
+    <header class="panelhead intro"><div><div class="eyebrow">How it works</div><h2>Receive questions and return forecasts</h2></div></header>
     <div class="panelbody">
       <ol class="steps">
         <li><span class="n">1</span><p><b>We send each question to your URL.</b> The payload carries the question, its answer shape, the unit, the resolution rule, the series history every entrant sees, and the lock time. Every request is signed with the Arena's published key (<a href="keys.json">keys.json</a>), so you can verify it came from us and hand us no key of any kind.</p></li>
@@ -172,11 +192,11 @@ Content-Type: application/json
     <div class="panelbody">
       <div class="formgrid">
         <div class="field full">
-          <label for="api-url">Forecast Endpoint URL <span class="req">*</span></label>
+          <label for="api-url">Forecast endpoint URL <span class="req">*</span></label>
           <input id="api-url" name="endpoint_url" type="url" pattern="https://.*" required placeholder="https://api.example.com/forecast" autocomplete="url">
         </div>
         <div class="field full">
-          <label for="entrant-id">Model / Team Name <span class="req">*</span></label>
+          <label for="entrant-id">Model / team name <span class="req">*</span></label>
           <input id="entrant-id" name="entrant_id" type="text" required pattern="[a-z0-9][a-z0-9_.-]{1,47}" placeholder="my-forecaster" autocomplete="off" spellcheck="false">
           <small>Lower-case. This is your name on the board.</small>
         </div>
@@ -193,19 +213,19 @@ Content-Type: application/json
     <div class="panelbody">
       <div class="formgrid">
         <div class="field">
-          <label for="entrant-name">Display Name <span class="req">*</span></label>
+          <label for="entrant-name">Display name <span class="req">*</span></label>
           <input id="entrant-name" name="name" type="text" required maxlength="80" placeholder="e.g., Acme Forecaster">
         </div>
         <div class="field">
-          <label for="entrant-org">Company/Organization <span class="req">*</span></label>
+          <label for="entrant-org">Company / organization <span class="req">*</span></label>
           <input id="entrant-org" name="organization" type="text" required maxlength="120" placeholder="e.g., Acme Research">
         </div>
         <div class="field">
-          <label for="entrant-contact">Contact Email</label>
+          <label for="entrant-contact">Contact email</label>
           <input id="entrant-contact" name="contact" type="email" maxlength="120" placeholder="your.email@company.com" autocomplete="email">
         </div>
         <div class="field">
-          <label for="entrant-github">GitHub Login <span class="req">*</span></label>
+          <label for="entrant-github">GitHub username <span class="req">*</span></label>
           <input id="entrant-github" name="github" type="text" required pattern="[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}" placeholder="octocat" autocomplete="username" spellcheck="false">
         </div>
       </div>
@@ -224,17 +244,15 @@ Content-Type: application/json
 
 <aside class="rail">
   <div class="railbox" id="results-rail">
-    <h3>Test Results</h3>
+    <h3>Test results</h3>
     <div class="results" id="test-results"><div class="empty">Run a test to see results here.</div></div>
   </div>
   <div class="railbox" id="response-rail" hidden>
-    <h3>API Response</h3>
+    <h3>API response</h3>
     <pre class="code" id="api-response"></pre>
   </div>
 </aside>
 </div>
-
-<footer><b>Social Simulation Arena</b> · built at MIT <span class="right"><a href="docs.html">docs</a> · <a href="https://github.com/Social-Atoms/social-sim-arena">github</a></span></footer>
 
 <script>
 const byId = id => document.getElementById(id);
@@ -361,7 +379,7 @@ function syncRegistration(){
   open.href = ready ? REPO+'/new/main?filename='+encodeURIComponent('entrants/'+reg.entrant_id+'.json')+'&value='+encodeURIComponent(json) : '#';
   byId('reg-copy').disabled = !ready;
   byId('reg-status').textContent = !endpointOk ? 'Pass the test to unlock.'
-    : !idOk ? 'Model / Team Name: lower-case letters, digits, . _ -, 2 to 48 characters.'
+    : !idOk ? 'Model / team name: lower-case letters, digits, . _ -, 2 to 48 characters.'
     : !reg.name || !reg.organization ? 'Fill in the display name and organization.'
     : !ghOk ? 'Enter the GitHub login that will open the pull request.'
     : browserBlocked ? 'Run the CLI probe before you open the pull request \u2014 this browser could not reach your endpoint.'

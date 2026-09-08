@@ -25,6 +25,7 @@ function node(tag) {
     appendChild(c) { this.children.push(c); return c; },
     setAttribute() {}, getAttribute: () => null, removeAttribute() {},
     addEventListener() {}, removeEventListener() {},
+    focus() {}, contains: () => false,
     querySelector: () => node(), querySelectorAll: () => [],
     getContext: () => noopCtx,
     getBoundingClientRect: () => ({width: 600, height: 200, top: 0, left: 0}),
@@ -63,6 +64,7 @@ function makeDom() {
     createElement: (tag) => node(tag),
     querySelector: () => node(),
     querySelectorAll: () => [],
+    addEventListener() {}, removeEventListener() {},
     body: node('body'),
   };
   return {els, document};
