@@ -118,7 +118,8 @@ def test_a_manual_agent_probe_publishes_and_refreshes_the_dev_result():
     assert "contents: write" in agent_job and "actions: write" in agent_job
     assert 'probe.record_public_result("site/agent-probes.json", result)' in probe
     assert 'git add site/agent-probes.json' in probe
-    assert 'gh workflow run preview.yml --ref dev' in probe
+    assert '"show"' in probe and 'f"HEAD:entrants/{entrant_id}.json"' in probe
+    assert 'gh workflow run preview.yml --ref "${GITHUB_REF_NAME}"' in probe
     # A token-authored probe commit will not trigger push workflows, so the
     # dispatched run itself has to be allowed to move the stable dev alias.
     assert "github.event_name == 'workflow_dispatch'" in preview

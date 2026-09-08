@@ -19,8 +19,8 @@ on:
   # Two things need a manual preview. The refresh bot's data commit is made
   # with GITHUB_TOKEN, which does not trigger a workflow, so after it lands on
   # dev the preview still serves the previous data.json until somebody pushes.
-  # And a branch with no pull request open -- the UI work -- has no other way
-  # to be looked at. A manual dev run updates the stable dev alias too.
+  # A manually dispatched branch can be looked at before it merges. A manual
+  # dev run updates the stable dev alias too.
   workflow_dispatch:
 
 permissions:
@@ -43,9 +43,7 @@ jobs:
     if: >-
       (github.event_name == 'push' && github.ref == 'refs/heads/dev') ||
       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
-      (github.event_name == 'workflow_dispatch' &&
-       (github.ref == 'refs/heads/dev' ||
-        github.ref == 'refs/heads/ui/site-refinement'))
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

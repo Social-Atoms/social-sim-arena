@@ -18,7 +18,7 @@ on:
         required: false
         type: string
       entrant_id:
-        description: "Optional committed entrant id to probe from main"
+        description: "Optional committed entrant id to probe from this ref"
         required: false
         type: string
 
@@ -113,13 +113,13 @@ jobs:
                       [
                           "git",
                           "show",
-                          f"origin/main:entrants/{entrant_id}.json",
+                          f"HEAD:entrants/{entrant_id}.json",
                       ],
                       text=True,
                   )
               except subprocess.CalledProcessError as exc:
                   raise SystemExit(
-                      f"entrant {entrant_id!r} is not committed on main"
+                      f"entrant {entrant_id!r} is not committed on this ref"
                   ) from exc
               entrant = json.loads(raw)
               if entrant.get("status") == "revoked":
@@ -128,7 +128,10 @@ jobs:
               if route.get("kind") != "agent_api" or not route.get("url"):
                   raise SystemExit(f"entrant {entrant_id!r} has no agent_api route")
               url = route["url"]
-              print(f"Loaded endpoint from entrants/{entrant_id}.json on main")
+              print(
+                  f"Loaded endpoint from entrants/{entrant_id}.json on "
+                  f"{os.environ['GITHUB_REF_NAME']}"
+              )
           if not url:
               raise SystemExit("pass agent_url or entrant_id")
           request_id = f"github-action-{os.environ['GITHUB_RUN_ID']}"
@@ -190,10 +193,10 @@ jobs:
           git push origin "HEAD:${GITHUB_REF_NAME}"
 
       # A GITHUB_TOKEN-authored push deliberately starts no second workflow.
-      # Dispatch the preview explicitly so the stable dev URL shows the row
-      # as soon as this manually requested probe finishes.
-      - name: Refresh the stable dev preview
-        if: ${{ inputs.entrant_id != '' && github.ref == 'refs/heads/dev' }}
+      # Dispatch the preview explicitly so either a PR branch or stable dev
+      # shows the row as soon as this manually requested probe finishes.
+      - name: Deploy the published test result
+        if: ${{ inputs.entrant_id != '' }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run preview.yml --ref dev
+        run: gh workflow run preview.yml --ref "${GITHUB_REF_NAME}"
