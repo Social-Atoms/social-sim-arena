@@ -1,18 +1,74 @@
 {
   "alerts": [
     {
+      "id": "trends-basket-2026-09-19/claude-opus-5-web",
+      "kind": "entrant_round",
+      "last_error": "configured direct route failed terminally; standby used",
+      "required_action": "none",
+      "state": "succeeded"
+    },
+    {
+      "id": "trends-basket-2026-09-19/claude-opus-5-web-superfc",
+      "kind": "entrant_round",
+      "last_error": "configured direct route failed terminally; standby used",
+      "required_action": "none",
+      "state": "succeeded"
+    },
+    {
+      "id": "trends-basket-2026-09-19/claude-sonnet-web",
+      "kind": "entrant_round",
+      "last_error": "configured direct route failed terminally; standby used",
+      "required_action": "none",
+      "state": "succeeded"
+    },
+    {
+      "id": "trends-basket-2026-09-19/claude-sonnet-web-superfc",
+      "kind": "entrant_round",
+      "last_error": "configured direct route failed terminally; standby used",
+      "required_action": "none",
+      "state": "succeeded"
+    },
+    {
+      "id": "wiki-top10-2026-09-20/claude-opus-5-web",
+      "kind": "entrant_round",
+      "last_error": "configured direct route failed terminally; standby used",
+      "required_action": "none",
+      "state": "succeeded"
+    },
+    {
+      "id": "wiki-top10-2026-09-20/claude-opus-5-web-superfc",
+      "kind": "entrant_round",
+      "last_error": "configured direct route failed terminally; standby used",
+      "required_action": "none",
+      "state": "succeeded"
+    },
+    {
+      "id": "wiki-top10-2026-09-20/claude-sonnet-web",
+      "kind": "entrant_round",
+      "last_error": "configured direct route failed terminally; standby used",
+      "required_action": "none",
+      "state": "succeeded"
+    },
+    {
+      "id": "wiki-top10-2026-09-20/claude-sonnet-web-superfc",
+      "kind": "entrant_round",
+      "last_error": "configured direct route failed terminally; standby used",
+      "required_action": "none",
+      "state": "succeeded"
+    },
+    {
       "id": "civiqs",
       "kind": "source",
       "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/app",
-      "required_action": "restore live access now or hold affected rounds before the deadline; the same-source archive is not a new release",
-      "state": "deadline_risk"
+      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
+      "state": "stale"
     },
     {
       "id": "ranking_wikitop",
       "kind": "source",
       "last_error": "wiki-top10-2026-10-25: RuntimeError: no complete pre-lock ranking observation is available",
-      "required_action": "retry now or hold affected rounds before the filing deadline",
-      "state": "deadline_risk"
+      "required_action": "retry on the next refresh; preserve the last valid vintage",
+      "state": "retryable_failure"
     }
   ],
   "counts": {
@@ -21,426 +77,18 @@
       "queued": 0,
       "retryable_failure": 0,
       "running": 0,
-      "succeeded": 312,
+      "succeeded": 336,
       "terminal_failure": 0
     },
     "sources": {
-      "deadline_risk": 2,
+      "deadline_risk": 0,
       "healthy": 11,
-      "retryable_failure": 0,
-      "stale": 0,
+      "retryable_failure": 1,
+      "stale": 1,
       "unresolvable": 0
     }
   },
   "entrant_round_states": [
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "claude-opus-5-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/claude-opus-5-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "openrouter:openrouter.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "claude-opus-5-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/claude-opus-5-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "openrouter:openrouter.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "claude-sonnet-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/claude-sonnet-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "openrouter:openrouter.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "claude-sonnet-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/claude-sonnet-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "openrouter:openrouter.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "deepseek-flash-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/deepseek-flash-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "direct:api.deepseek.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "deepseek-flash-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/deepseek-flash-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "direct:api.deepseek.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "deepseek-pro-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/deepseek-pro-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "direct:api.deepseek.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "deepseek-pro-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/deepseek-pro-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "direct:api.deepseek.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gemini-flash-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/gemini-flash-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "direct:generativelanguage.googleapis.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gemini-flash-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/gemini-flash-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "direct:generativelanguage.googleapis.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gemini-pro-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/gemini-pro-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "direct:generativelanguage.googleapis.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gemini-pro-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/gemini-pro-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "direct:generativelanguage.googleapis.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "glm-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/glm-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "glm-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/glm-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gpt-5.6-luna-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/gpt-5.6-luna-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "direct:api.openai.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gpt-5.6-luna-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/gpt-5.6-luna-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "direct:api.openai.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gpt-5.6-terra-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/gpt-5.6-terra-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "direct:api.openai.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gpt-5.6-terra-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/gpt-5.6-terra-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "direct:api.openai.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "grok-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/grok-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "direct:api.x.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "grok-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/grok-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "direct:api.x.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "kimi-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/kimi-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "openrouter:openrouter.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "kimi-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/kimi-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "openrouter:openrouter.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "qwen-3.8-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/qwen-3.8-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "openrouter:openrouter.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "qwen-3.8-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/aaii-2026-09-10/qwen-3.8-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "aaii-2026-09-10",
-      "route": "openrouter:openrouter.ai",
-      "state": "succeeded"
-    },
     {
       "alert": false,
       "attempts": 0,
@@ -3706,6 +3354,418 @@
       "state": "succeeded"
     },
     {
+      "alert": true,
+      "attempts": 2,
+      "entrant": "claude-opus-5-web",
+      "estimated_spend": 0.11775,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/claude-opus-5-web.json",
+        "standby route preserved the forecast"
+      ],
+      "last_error": "configured direct route failed terminally; standby used",
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "openrouter:openrouter.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": true,
+      "attempts": 2,
+      "entrant": "claude-opus-5-web-superfc",
+      "estimated_spend": 0.11775,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/claude-opus-5-web-superfc.json",
+        "standby route preserved the forecast"
+      ],
+      "last_error": "configured direct route failed terminally; standby used",
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "openrouter:openrouter.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": true,
+      "attempts": 2,
+      "entrant": "claude-sonnet-web",
+      "estimated_spend": 0.07065,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/claude-sonnet-web.json",
+        "standby route preserved the forecast"
+      ],
+      "last_error": "configured direct route failed terminally; standby used",
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "openrouter:openrouter.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": true,
+      "attempts": 2,
+      "entrant": "claude-sonnet-web-superfc",
+      "estimated_spend": 0.07065,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/claude-sonnet-web-superfc.json",
+        "standby route preserved the forecast"
+      ],
+      "last_error": "configured direct route failed terminally; standby used",
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "openrouter:openrouter.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "deepseek-flash-web",
+      "estimated_spend": 0.002037,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/deepseek-flash-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "direct:api.deepseek.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "deepseek-flash-web-superfc",
+      "estimated_spend": 0.002037,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/deepseek-flash-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "direct:api.deepseek.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "deepseek-pro-web",
+      "estimated_spend": 0.010348,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/deepseek-pro-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "direct:api.deepseek.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "deepseek-pro-web-superfc",
+      "estimated_spend": 0.010348,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/deepseek-pro-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "direct:api.deepseek.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gemini-flash-web",
+      "estimated_spend": 0.011715,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/gemini-flash-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "direct:generativelanguage.googleapis.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gemini-flash-web-superfc",
+      "estimated_spend": 0.011715,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/gemini-flash-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "direct:generativelanguage.googleapis.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gemini-pro-web",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/gemini-pro-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "direct:generativelanguage.googleapis.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gemini-pro-web-superfc",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/gemini-pro-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "direct:generativelanguage.googleapis.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "glm-web",
+      "estimated_spend": 0.01041,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/glm-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "glm-web-superfc",
+      "estimated_spend": 0.01041,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/glm-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gpt-5.6-luna-web",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/gpt-5.6-luna-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "direct:api.openai.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gpt-5.6-luna-web-superfc",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/gpt-5.6-luna-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "direct:api.openai.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gpt-5.6-terra-web",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/gpt-5.6-terra-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "direct:api.openai.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gpt-5.6-terra-web-superfc",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/gpt-5.6-terra-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "direct:api.openai.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "grok-web",
+      "estimated_spend": 0.07065,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/grok-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "direct:api.x.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "grok-web-superfc",
+      "estimated_spend": 0.07065,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/grok-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "direct:api.x.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "kimi-web",
+      "estimated_spend": 0.02355,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/kimi-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "openrouter:openrouter.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "kimi-web-superfc",
+      "estimated_spend": 0.02355,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/kimi-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "openrouter:openrouter.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "qwen-3.8-web",
+      "estimated_spend": 0.03024,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/qwen-3.8-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "openrouter:openrouter.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "qwen-3.8-web-superfc",
+      "estimated_spend": 0.03024,
+      "evidence": [
+        "forecast=forecasts/trends-basket-2026-09-19/qwen-3.8-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "trends-basket-2026-09-19",
+      "route": "openrouter:openrouter.ai",
+      "state": "succeeded"
+    },
+    {
       "alert": false,
       "attempts": 0,
       "entrant": "claude-opus-5-web",
@@ -5336,9 +5396,421 @@
       "round_id": "umich-party-2026-09-rep",
       "route": "openrouter:openrouter.ai",
       "state": "succeeded"
+    },
+    {
+      "alert": true,
+      "attempts": 2,
+      "entrant": "claude-opus-5-web",
+      "estimated_spend": 0.11775,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/claude-opus-5-web.json",
+        "standby route preserved the forecast"
+      ],
+      "last_error": "configured direct route failed terminally; standby used",
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "openrouter:openrouter.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": true,
+      "attempts": 2,
+      "entrant": "claude-opus-5-web-superfc",
+      "estimated_spend": 0.11775,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/claude-opus-5-web-superfc.json",
+        "standby route preserved the forecast"
+      ],
+      "last_error": "configured direct route failed terminally; standby used",
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "openrouter:openrouter.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": true,
+      "attempts": 2,
+      "entrant": "claude-sonnet-web",
+      "estimated_spend": 0.07065,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/claude-sonnet-web.json",
+        "standby route preserved the forecast"
+      ],
+      "last_error": "configured direct route failed terminally; standby used",
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "openrouter:openrouter.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": true,
+      "attempts": 2,
+      "entrant": "claude-sonnet-web-superfc",
+      "estimated_spend": 0.07065,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/claude-sonnet-web-superfc.json",
+        "standby route preserved the forecast"
+      ],
+      "last_error": "configured direct route failed terminally; standby used",
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "openrouter:openrouter.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "deepseek-flash-web",
+      "estimated_spend": 0.002037,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/deepseek-flash-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "direct:api.deepseek.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "deepseek-flash-web-superfc",
+      "estimated_spend": 0.002037,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/deepseek-flash-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "direct:api.deepseek.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "deepseek-pro-web",
+      "estimated_spend": 0.010348,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/deepseek-pro-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "direct:api.deepseek.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "deepseek-pro-web-superfc",
+      "estimated_spend": 0.010348,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/deepseek-pro-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "direct:api.deepseek.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gemini-flash-web",
+      "estimated_spend": 0.011715,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/gemini-flash-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "direct:generativelanguage.googleapis.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gemini-flash-web-superfc",
+      "estimated_spend": 0.011715,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/gemini-flash-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "direct:generativelanguage.googleapis.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gemini-pro-web",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/gemini-pro-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "direct:generativelanguage.googleapis.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gemini-pro-web-superfc",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/gemini-pro-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "direct:generativelanguage.googleapis.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "glm-web",
+      "estimated_spend": 0.01041,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/glm-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "glm-web-superfc",
+      "estimated_spend": 0.01041,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/glm-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "direct:llm-zla1i8y168bg33qj.cn-beijing.maas.aliyuncs.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gpt-5.6-luna-web",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/gpt-5.6-luna-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "direct:api.openai.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gpt-5.6-luna-web-superfc",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/gpt-5.6-luna-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "direct:api.openai.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gpt-5.6-terra-web",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/gpt-5.6-terra-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "direct:api.openai.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gpt-5.6-terra-web-superfc",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/gpt-5.6-terra-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "direct:api.openai.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "grok-web",
+      "estimated_spend": 0.07065,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/grok-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "direct:api.x.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "grok-web-superfc",
+      "estimated_spend": 0.07065,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/grok-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "direct:api.x.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "kimi-web",
+      "estimated_spend": 0.02355,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/kimi-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "openrouter:openrouter.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "kimi-web-superfc",
+      "estimated_spend": 0.02355,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/kimi-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "openrouter:openrouter.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "qwen-3.8-web",
+      "estimated_spend": 0.03024,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/qwen-3.8-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "openrouter:openrouter.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "qwen-3.8-web-superfc",
+      "estimated_spend": 0.03024,
+      "evidence": [
+        "forecast=forecasts/wiki-top10-2026-09-20/qwen-3.8-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-11T14:00:00Z",
+      "next_lock": "2026-09-11T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "wiki-top10-2026-09-20",
+      "route": "openrouter:openrouter.ai",
+      "state": "succeeded"
     }
   ],
-  "generated_at": "2026-09-08T11:16:16Z",
+  "generated_at": "2026-09-08T16:52:26Z",
   "source_states": [
     {
       "alert": false,
@@ -5346,11 +5818,11 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=12",
-        "sources/aaii/2026-09-08.html sha256=858496731f308c49a0e3060ffac0f042e95ec2278573f2788ef28b97c60e9479"
+        "sources/aaii/2026-09-08.html sha256=897e5f42b19bb8107b24eddb53b46bf9a85ad87c4fd89019c181f48fb9a6d25f"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
+      "next_deadline": "2026-09-09T14:00:00Z",
+      "next_lock": "2026-09-09T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "https://www.aaii.com/sentimentsurvey/sent_results",
@@ -5363,17 +5835,17 @@
       "estimated_spend": 0.0,
       "evidence": [
         "civiqs/approve_president_trump_2025 (23 snapshots; newest 2026-09-07); civiqs/approve_president_trump_2025.age-18-34 (19 snapshots; newest 2026-09-07); civiqs/approve_president_trump_2025.age-35-49 (19 snapshots; newest 2026-09-07); civiqs/approve_president_trump_2025.age-50-64 (20 snapshots; newest 2026-09-07); civiqs/approve_president_trump_2025.age-65_ (19 snapshots; newest 2026-09-07); civiqs/approve_president_trump_2025.education-College_Graduate (20 snapshots; newest 2026-09-07); civiqs/approve_president_trump_2025.education-Non-College_Graduate (20 snapshots; newest 2026-09-07); civiqs/approve_president_trump_2025.education-Postgraduate (20 snapshots; newest 2026-09-07); civiqs/approve_president_trump_2025.gender-Female (20 snapshots; newest 2026-09-07); civiqs/approve_president_trump_2025.gender-Male (20 snapshots; newest 2026-09-07); civiqs/approve_president_trump_2025.party-Democrat (20 snapshots; newest 2026-09-07); civiqs/approve_president_trump_2025.party-Independent (19 snapshots; newest 2026-09-07); civiqs/approve_president_trump_2025.party-Republican (23 snapshots; newest 2026-09-07); civiqs/approve_president_trump_2025.race-Black_or_African-American (20 snapshots; newest 2026-09-07); civiqs/approve_president_trump_2025.race-Hispanic_Latino (20 snapshots; newest 2026-09-07); civiqs/approve_president_trump_2025.race-Other (20 snapshots; newest 2026-09-07); civiqs/approve_president_trump_2025.race-White (19 snapshots; newest 2026-09-07); civiqs/describe_feeling_us (20 snapshots; newest 2026-09-07); civiqs/economy_family_retro (21 snapshots; newest 2026-09-07); civiqs/economy_us_direction (21 snapshots; newest 2026-09-07); civiqs/economy_us_now (21 snapshots; newest 2026-09-07); civiqs/inflation_impact (21 snapshots; newest 2026-09-07)",
-        "fetched_days=1.5; changed_days=7.5; fetch_budget=2; change_budget=4; stale_keys=describe_feeling_us,economy_family_retro,economy_us_direction,inflation_impact",
+        "fetched_days=1.7; changed_days=7.7; fetch_budget=2; change_budget=4; stale_keys=describe_feeling_us,economy_family_retro,economy_us_direction,inflation_impact",
         "live attempt failed; same-source archive used"
       ],
       "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/app",
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": "2026-09-08T17:16:16Z",
-      "required_action": "restore live access now or hold affected rounds before the deadline; the same-source archive is not a new release",
+      "next_deadline": "2026-09-09T14:00:00Z",
+      "next_lock": "2026-09-09T14:00:00Z",
+      "next_retry": "2026-09-08T22:52:26Z",
+      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
       "route": "ssa.series:civiqs",
       "source": "civiqs",
-      "state": "deadline_risk"
+      "state": "stale"
     },
     {
       "alert": false,
@@ -5383,8 +5855,8 @@
         "1 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
+      "next_deadline": "2026-09-09T14:00:00Z",
+      "next_lock": "2026-09-09T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:hhpoll",
@@ -5399,13 +5871,13 @@
         "affected_rounds=wiki-top10-2026-10-25"
       ],
       "last_error": "wiki-top10-2026-10-25: RuntimeError: no complete pre-lock ranking observation is available",
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
-      "next_retry": "2026-09-08T17:16:16Z",
-      "required_action": "retry now or hold affected rounds before the filing deadline",
+      "next_deadline": "2026-09-09T14:00:00Z",
+      "next_lock": "2026-09-09T14:00:00Z",
+      "next_retry": "2026-09-08T22:52:26Z",
+      "required_action": "retry on the next refresh; preserve the last valid vintage",
       "route": "ssa.ranking:ranking_wikitop",
       "source": "ranking_wikitop",
-      "state": "deadline_risk"
+      "state": "retryable_failure"
     },
     {
       "alert": false,
@@ -5413,11 +5885,11 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
-        "sources/sb_approval/2026-09-08.csv sha256=f37ee2e2b7c11d57d3f38480aeebd1919e6de6c1d7f1ae030194d90aa98c6661"
+        "sources/sb_approval/2026-09-08.csv sha256=c36c45ecd79ad4104f1b307c47e1c3765c8da460675f518ef2ffb30f9b4026e7"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
+      "next_deadline": "2026-09-09T14:00:00Z",
+      "next_lock": "2026-09-09T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
@@ -5430,11 +5902,11 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=10",
-        "sources/sb_generic/2026-09-08.csv sha256=b6bde1474b21f079eff2cd5103417e19ff7ba57775b275b23c77f873b97c4eeb"
+        "sources/sb_generic/2026-09-08.csv sha256=32ef16485cbf641a030dc14c47cf5fcbefa3a21f73c8c230d9206fc5d85f415f"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
+      "next_deadline": "2026-09-09T14:00:00Z",
+      "next_lock": "2026-09-09T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
@@ -5449,8 +5921,8 @@
         "2 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
+      "next_deadline": "2026-09-09T14:00:00Z",
+      "next_lock": "2026-09-09T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:sce",
@@ -5465,8 +5937,8 @@
         "2 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
+      "next_deadline": "2026-09-09T14:00:00Z",
+      "next_lock": "2026-09-09T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:trends",
@@ -5481,8 +5953,8 @@
         "5 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
+      "next_deadline": "2026-09-09T14:00:00Z",
+      "next_lock": "2026-09-09T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:trends_basket",
@@ -5494,12 +5966,12 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=3.4; fetch_budget=3; change_budget=40",
+        "fetched_days=-0.0; changed_days=3.6; fetch_budget=3; change_budget=40",
         "sources/umich/2026-09-08.json sha256=a4e677722ac5addd704db9b2dd1081cc19192972b543781c0c9354568a63e59f"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
+      "next_deadline": "2026-09-09T14:00:00Z",
+      "next_lock": "2026-09-09T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "http://www.sca.isr.umich.edu/files/tbmics.csv",
@@ -5514,8 +5986,8 @@
         "3 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
+      "next_deadline": "2026-09-09T14:00:00Z",
+      "next_lock": "2026-09-09T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:umichparty",
@@ -5530,8 +6002,8 @@
         "2 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
+      "next_deadline": "2026-09-09T14:00:00Z",
+      "next_lock": "2026-09-09T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:wikipedia",
@@ -5546,8 +6018,8 @@
         "16 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-09-08T14:00:00Z",
-      "next_lock": "2026-09-08T14:00:00Z",
+      "next_deadline": "2026-09-09T14:00:00Z",
+      "next_lock": "2026-09-09T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:yougov_xtab",
