@@ -82,7 +82,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -92,14 +92,29 @@ jobs:
           python - <<'PY'
           import json
           import os
+          import re
+          import subprocess
           from tools import probe_agent_api as probe
 
           url = os.environ["AGENT_URL"].strip()
           entrant_id = os.environ["ENTRANT_ID"].strip()
           if entrant_id:
-              entrant = probe.load_entrant(entrant_id)
-              if entrant is None:
-                  raise SystemExit(f"entrant {entrant_id!r} is not committed on main")
+              if not re.fullmatch(r"[a-z0-9][a-z0-9_-]{1,62}", entrant_id):
+                  raise SystemExit("entrant_id has an invalid format")
+              try:
+                  raw = subprocess.check_output(
+                      [
+                          "git",
+                          "show",
+                          f"origin/main:entrants/{entrant_id}.json",
+                      ],
+                      text=True,
+                  )
+              except subprocess.CalledProcessError as exc:
+                  raise SystemExit(
+                      f"entrant {entrant_id!r} is not committed on main"
+                  ) from exc
+              entrant = json.loads(raw)
               if entrant.get("status") == "revoked":
                   raise SystemExit(f"entrant {entrant_id!r} is revoked")
               route = entrant.get("route") or {}
