@@ -12,9 +12,15 @@ name: source-probe
 # around; the next source to refuse us will pose the same question.
 on:
   workflow_dispatch:
+    inputs:
+      agent_url:
+        description: "Optional HTTPS Arena endpoint to probe once"
+        required: false
+        type: string
 
 jobs:
   probe:
+    if: ${{ inputs.agent_url == '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -61,4 +67,51 @@ jobs:
                   print(f"{name:30s} HTTP {r.status_code}  {len(r.content)/1e6:.2f} MB")
               except Exception as e:
                   print(f"{name:30s} {type(e).__name__}: {e}")
+          PY
+
+  agent-endpoint-probe:
+    if: ${{ inputs.agent_url != '' }}
+    runs-on: ubuntu-latest
+    env:
+      AGENT_URL: ${{ inputs.agent_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install cryptography jsonschema
+      - name: Send one signed, non-scored Arena request
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from tools import probe_agent_api as probe
+
+          url = os.environ["AGENT_URL"]
+          request_id = f"github-action-{os.environ['GITHUB_RUN_ID']}"
+          body = probe.envelope("scalar", request_id)
+          signer = probe.make_signer(
+              probe.TEST_PRIVATE_KEY,
+              probe.TEST_KEY_ID,
+          )
+          reply = probe.call(
+              url,
+              body,
+              signer=signer,
+              timeout=60,
+              retries=0,
+          )
+          probe.check_content(reply, "scalar")
+          repeated = probe.call(
+              url,
+              body,
+              signer=signer,
+              timeout=60,
+              retries=0,
+          )
+          if repeated != reply:
+              raise SystemExit("idempotency check failed")
+          print("Arena endpoint reply:")
+          print(json.dumps(reply, indent=2, sort_keys=True))
+          print("PASS: signed scalar reply and idempotency")
           PY
