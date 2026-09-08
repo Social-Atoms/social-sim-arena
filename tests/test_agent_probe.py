@@ -22,6 +22,7 @@ The four that matter:
 """
 import importlib.util
 import json
+import math
 import os
 import socket
 import sys
@@ -232,6 +233,86 @@ def test_the_registered_entrants_all_satisfy_the_schema_with_status_added():
     for name in names:
         with open(os.path.join(directory, name), encoding="utf-8") as fh:
             jsonschema.validate(json.load(fh), schema)
+
+
+def test_the_public_result_contains_only_the_checked_reply_and_upserts():
+    """The shareable proof must show the answer without publishing its URL.
+
+    Free-form reasoning is participant-controlled and may also contain a
+    provider response id, so neither it nor registration/contact fields are
+    copied into the static dev feed.
+    """
+    entrant = {
+        "entrant_id": "probe_demo",
+        "name": "Probe demo",
+        "type": "participant",
+        "contact": "secret@example.test",
+        "route": {"kind": "agent_api",
+                  "url": "https://secret.example.test/forecast"},
+    }
+    reply = {
+        "schema_version": "ssa-agent-api-v2",
+        "forecast": {"mean": 50, "sd": 1},
+        "reasoning_trace": "provider secret and response id",
+    }
+    first = probe_tool.public_probe_result(
+        entrant, reply, "github-action-1", "2026-09-08T17:00:00Z",
+        "https://github.com/Social-Atoms/social-sim-arena/actions/runs/1")
+    assert first["response"]["forecast"] == {"mean": 50, "sd": 1}
+    assert first["round"]["round_id"] == "ssa-contract-test"
+
+    root = tempfile.mkdtemp(prefix="ssa-public-probe-")
+    try:
+        path = os.path.join(root, "agent-probes.json")
+        probe_tool.record_public_result(path, first)
+        second = probe_tool.public_probe_result(
+            entrant, {**reply, "forecast": {"mean": 51.25, "sd": 2}},
+            "github-action-2", "2026-09-08T17:05:00Z")
+        feed = probe_tool.record_public_result(path, second)
+        assert len(feed["probes"]) == 1
+        assert feed["probes"][0]["request_id"] == "github-action-2"
+        assert feed["probes"][0]["response"]["forecast"]["mean"] == 51.25
+        with open(path, encoding="utf-8") as fh:
+            raw = fh.read()
+        for secret in ("secret.example", "secret@example", "reasoning_trace",
+                       "provider secret", "response id"):
+            assert secret not in raw, secret
+    finally:
+        import shutil
+        shutil.rmtree(root)
+
+
+def test_a_historical_demo_uses_the_real_lock_and_production_score():
+    """Immediate scoring is retrospective, but its inputs and metric are real."""
+    case = probe_tool.historical_demo_case(
+        ROOT, "probe_demo", "yougov-2026-w34-approval")
+    request = case["request"]
+    assert request["request_id"] == "probe_demo:yougov-2026-w34-approval"
+    assert request["round"]["question"] == (
+        "Economist/YouGov wave publishing ~Aug 18, Trump % approve among US "
+        "adult citizens")
+    assert request["round"]["context"]["persistence"] == 33.0
+    history = request["round"]["context"]["history"]
+    assert len(history) == 24 and history[-1] == {
+        "date": "2026-08-08", "value": 33.0}
+    assert "resolution" not in request["round"]
+
+    reply = {"schema_version": "ssa-agent-api-v2",
+             "forecast": {"mean": 34.5, "sd": 1.0},
+             "reasoning_trace": "not public"}
+    result = probe_tool.public_historical_demo_result(
+        {"entrant_id": "probe_demo", "name": "Probe demo",
+         "type": "participant"},
+        reply, case, tested_at="2026-09-08T22:00:00Z")
+    score = result["evaluation"]
+    assert result["kind"] == "historical_demo" and score["retrospective"] is True
+    assert score["outcome"] == 35.0 and score["rounds"] == 1
+    assert math.isclose(score["loss"], 0.331403531254856, abs_tol=1e-12)
+    assert math.isclose(score["persistence_loss"], 1.280900969802875,
+                        abs_tol=1e-12)
+    assert math.isclose(score["arena_score"], 74.1273104582115,
+                        abs_tol=1e-10)
+    assert "context" not in result["round"] and "reasoning_trace" not in result
 
 
 if __name__ == "__main__":

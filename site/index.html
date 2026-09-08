@@ -195,6 +195,10 @@ table.lb thead th[title]{cursor:help;text-decoration:underline dotted var(--mut)
 table.lb .skill{font-weight:800;color:var(--ink);font-size:15px;}
 table.lb .pend{color:#c9c7c0;font-weight:600;letter-spacing:.15em;}
 table.lb .skill.pos{color:var(--accent-ink);}
+table.lb tr.probe-row td{background:#f7fbf7;}
+table.lb .probe-pass{display:inline-block;color:#176b3a;background:#e5f5e9;border:1px solid #b8ddc2;border-radius:999px;padding:2px 6px;font-size:10px;font-weight:800;letter-spacing:.04em;white-space:nowrap;}
+table.lb .probe-run{color:var(--accent-ink);font-weight:700;text-decoration:none;}
+table.lb .probe-run:hover{text-decoration:underline;}
 .av{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;border-radius:4px;color:#fff;font-weight:800;font-size:10.5px;flex:0 0 auto;position:relative;overflow:hidden;}
 .av .lg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:4px;background:inherit;}
 .lchip .av,.model-option .av{width:18px;height:18px;border-radius:3px;font-size:8px;}
@@ -1335,6 +1339,27 @@ function renderTaskChart(key){
 }
 
 const SPANLABEL = {all:'the releases every entrant answered', m6:'the releases every entrant answered', d30:'the releases every entrant answered', last:'the releases every entrant answered'};
+function applyAgentProbes(data,payload){
+  const probes=(payload&&payload.schema_version==='ssa-agent-probes-v1'&&Array.isArray(payload.probes))?payload.probes:[];
+  window.__agentProbes={};
+  data.entrants=Array.isArray(data.entrants)?data.entrants.slice():[];
+  const known=new Set(data.entrants.map(e=>e.entrant_id));
+  probes.forEach(p=>{
+    const f=p&&p.response&&p.response.forecast;
+    if(!p||p.status!=='passed'||!p.entrant_id||!f||typeof f.mean!=='number'||typeof f.sd!=='number'||!(f.sd>0))return;
+    window.__agentProbes[p.entrant_id]=p;
+    if(!known.has(p.entrant_id)){
+      data.entrants.push({entrant_id:p.entrant_id,name:p.name||p.entrant_id,type:p.type||'participant'});
+      known.add(p.entrant_id);
+    }
+  });
+  return data;
+}
+function probeActionUrl(p){
+  const u=(p&&p.action_url)||'';
+  return /^https:\/\/github\.com\/Social-Atoms\/social-sim-arena\/actions\/runs\/\d+$/.test(u)?u:'';
+}
+function probeNumber(x){return Number.isInteger(x)?String(x):String(+x.toFixed(3));}
 function renderBoard(mode){
   const data = window.__data; if(!data) return;
   window.__board = mode; if(typeof syncHash==='function') syncHash();
@@ -1384,8 +1409,13 @@ function renderBoard(mode){
   const roundsHead=document.getElementById('lb-rounds-head');
   if(roundsHead) roundsHead.title='How many resolved rounds this row is averaged over. Fewer rounds, noisier score.';
   function row(id, s, rank, ref){
-    const arena = s ? 100*s.mean_skill : null;
-    const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0)) : '<span class="pend">···</span>';
+    const probe=!s&&((window.__agentProbes||{})[id]);
+    const forecast=probe&&probe.response&&probe.response.forecast;
+    const demo=probe&&probe.kind==='historical_demo'&&probe.evaluation;
+    const arena = s ? 100*s.mean_skill : demo&&typeof demo.arena_score==='number' ? demo.arena_score : null;
+    const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0))
+      : probe ? '<span class="probe-pass" title="Passed a non-scored endpoint contract test">TEST ✓</span>'
+      : '<span class="pend">···</span>';
     const subSkill = '';
     const pos = arena!=null && arena>0;
     const setup = condTag(nameOf[id]);
@@ -1394,28 +1424,50 @@ function renderBoard(mode){
       setup==='zs' ? 'Zero-shot' : setup==='r10' ? 'Recent-10' : '',
       entryType==='llm' ? 'LLM' : entryType.charAt(0).toUpperCase()+entryType.slice(1),
       id==='persistence' ? 'Reference' : '',
-      s && s.mock ? 'Placeholder' : ''
+      s && s.mock ? 'Placeholder' : '',
+      demo ? 'Historical demo' : probe ? 'API test passed' : '',
+      demo ? '1 resolved question' : '',
+      forecast ? 'μ '+probeNumber(forecast.mean) : '',
+      forecast ? 'σ '+probeNumber(forecast.sd) : ''
     ].filter(Boolean);
+    const action=probeActionUrl(probe);
+    const actionLink=action?' <span aria-hidden="true">·</span> <a class="probe-run" href="'+action+'" target="_blank" rel="noopener">Action ↗</a>':'';
     const refLine = ref && btMap[id] ? '<br><span class="type">last season '+((btMap[id].mean_skill>0?'+':'')+(btMap[id].mean_skill*100).toFixed(1))+'%</span>' : '';
-    return '<tr><td class="rank">'+(rank||'·')+'</td>'
+    const probeTitle=demo&&probe.round&&probe.round.question?' title="Historical demo: '+esc(probe.round.question)+'"':'';
+    const loss=s&&typeof s[metricKey]==='number'?s[metricKey]:demo&&metricLabel==='CRPS'?demo.loss:null;
+    const rounds=s?s.rounds:demo?1:0;
+    return '<tr'+(probe?' class="probe-row"':'')+probeTitle+'><td class="rank">'+(rank||'·')+'</td>'
       + '<td><span class="who">'+avatar(id)
       + '<span class="who-text"><b class="model-name">'+esc((nameOf[id]||id).split(' (')[0])+'</b>'
-      + '<span class="model-meta">'+details.map(detail=>'<span>'+esc(detail)+'</span>').join(' <span aria-hidden="true">·</span> ')+'</span></span></span></td>'
+      + '<span class="model-meta">'+details.map(detail=>'<span>'+esc(detail)+'</span>').join(' <span aria-hidden="true">·</span> ')+actionLink+'</span></span></span></td>'
       + '<td class="num skill'+(pos?' pos':'')+'">'+skillTxt+subSkill+refLine+'</td>'
-      + '<td class="num">'+(s && typeof s[metricKey]==='number' ? s[metricKey].toFixed(metricLabel==='Loss'||metricLabel==='Rank loss'?3:2) : '·')+'</td>'
-      + '<td class="num">'+(s ? s.rounds : 0)+'</td></tr>';
+      + '<td class="num">'+(loss!=null ? loss.toFixed(metricLabel==='Loss'||metricLabel==='Rank loss'?3:2) : '·')+'</td>'
+      + '<td class="num">'+rounds+'</td></tr>';
   }
   const body = document.getElementById('lb-body');
   window.__perRow = entries.find(e=>e.entrant==='persistence') || null;
   const seen = new Set(entries.map(e=>e.entrant));
   const orderT = {llm:0, baseline:1};
   const rest = appendPending ? (data.entrants||[]).filter(e=>e.type!=='human'&&!seen.has(e.entrant_id))
-    .sort((a,b)=>(orderT[a.type]??3)-(orderT[b.type]??3) || a.name.localeCompare(b.name))
+    .sort((a,b)=>(((window.__agentProbes||{})[a.entrant_id]?0:1)-((window.__agentProbes||{})[b.entrant_id]?0:1)) || (orderT[a.type]??3)-(orderT[b.type]??3) || a.name.localeCompare(b.name))
     : [];
-  body.innerHTML = entries.map((e,i)=>row(e.entrant,e,i+1)).join('')+rest.map(e=>row(e.entrant_id,null,null)).join('');
+  const tested=rest.filter(e=>(window.__agentProbes||{})[e.entrant_id]);
+  const pending=rest.filter(e=>!(window.__agentProbes||{})[e.entrant_id]);
+  // Keep a freshly tested participant above the ranked rows so the operator
+  // can share the page immediately without scrolling through the full model
+  // replay. Its dot rank keeps a retrospective demo out of the competition.
+  body.innerHTML = tested.map(e=>row(e.entrant_id,null,null)).join('')
+    +entries.map((e,i)=>row(e.entrant,e,i+1)).join('')
+    +pending.map(e=>row(e.entrant_id,null,null)).join('');
   if(!body.innerHTML){
     const nx=taskRounds(d,data).filter(r=>r.status!=='resolved').sort((a,b)=>a.release_at.localeCompare(b.release_at))[0];
     body.innerHTML='<tr><td colspan="5" style="padding:18px;color:var(--mut);">No defensible historical replay is available for this task.'+(nx?' The first live result is '+esc(nx.round_id)+' on '+esc(fmtDate(nx.release_at))+'.':'')+'</td></tr>';
+  }
+  const shownProbes=rest.map(e=>(window.__agentProbes||{})[e.entrant_id]).filter(Boolean);
+  if(appendPending&&shownProbes.some(p=>p.kind==='historical_demo')){
+    note+=' Historical demo rows answer one already-resolved real question from its committed lock snapshot. Their loss is real, but they are retrospective and receive no official rank.';
+  }else if(appendPending&&shownProbes.length){
+    note+=' TEST ✓ is a non-scored endpoint check; it receives no rank, loss, or Arena score until a real round resolves.';
   }
   document.getElementById('lb-note').textContent=note;
 }
@@ -1853,14 +1905,19 @@ addEventListener('resize', scheduleRedraw);
 new ResizeObserver(scheduleRedraw).observe(document.querySelector('#chartpane svg'));
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>setTimeout(redraw, 50));
 
-Promise.allSettled([
+const previewHost=(()=>{const h=(location.hostname||'').toLowerCase();return h==='localhost'||h==='127.0.0.1'||h==='social-sim-arena-dev.vercel.app'||h.endsWith('.vercel.app');})();
+const loads=[
   fetch('data.json', {cache:'no-store'}).then(r => { if(!r.ok) throw 0; return r.json(); }),
   fetch(RAW, {cache:'no-store'}).then(r => { if(!r.ok) throw 0; return r.json(); }),
-]).then(results => {
-  const ok = results.filter(x => x.status==='fulfilled').map(x => x.value);
+];
+if(previewHost)loads.push(fetch('agent-probes.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json();}));
+Promise.allSettled(loads).then(results => {
+  const ok = results.slice(0,2).filter(x => x.status==='fulfilled').map(x => x.value);
   if(!ok.length) throw new Error('no data source reachable');
   ok.sort((a,b) => (b.generated_at||'').localeCompare(a.generated_at||''));
-  render(ok[0]);
+  const data=ok[0];
+  applyAgentProbes(data,results[2]&&results[2].status==='fulfilled'?results[2].value:null);
+  render(data);
 }).catch(err => {
   document.getElementById('caption').textContent = 'could not load data ('+err+')';
 });

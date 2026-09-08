@@ -39,10 +39,14 @@ this probe is a rehearsal for.
 Exit status is 0 only when every selected check passed.
 """
 import argparse
+from datetime import datetime, timezone
+import hashlib
 import json
+import math
 import os
 import socket
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -123,6 +127,8 @@ FIXTURES = {
                     "items": ["probe_a", "probe_b", "probe_c", "probe_d"]},
     },
 }
+
+PUBLIC_FEED_VERSION = "ssa-agent-probes-v1"
 
 
 class ProbeFailure(RuntimeError):
@@ -235,6 +241,173 @@ def check_content(content, shape):
                 f"a fixed-basket ranking round takes a permutation of "
                 f"{wanted}, not a free choice; got {got}")
     return content
+
+
+def public_probe_result(entrant, reply, request_id, tested_at=None,
+                        action_url=None):
+    """Return the deliberately small, publishable part of a passed probe.
+
+    Endpoint URLs, signatures, contacts and free-form reasoning never belong
+    in the site feed.  The reply has already passed ``check_content``; copy
+    only the scalar forecast fields the contract test actually checked.
+    """
+    entrant_id = entrant.get("entrant_id")
+    if not isinstance(entrant_id, str) or not entrant_id:
+        raise ProbeFailure("a public probe result needs an entrant_id")
+    forecast = (reply.get("forecast") or {})
+    mean, sd = forecast.get("mean"), forecast.get("sd")
+    if (not isinstance(mean, (int, float)) or isinstance(mean, bool)
+            or not math.isfinite(mean)):
+        raise ProbeFailure("a public scalar probe result needs a numeric mean")
+    if (not isinstance(sd, (int, float)) or isinstance(sd, bool)
+            or not math.isfinite(sd) or not sd > 0):
+        raise ProbeFailure("a public scalar probe result needs a positive sd")
+    tested_at = tested_at or datetime.now(timezone.utc).isoformat().replace(
+        "+00:00", "Z")
+    result = {
+        "kind": "contract_test",
+        "entrant_id": entrant_id,
+        "name": entrant.get("name") or entrant_id,
+        "type": entrant.get("type") or "participant",
+        "status": "passed",
+        "tested_at": tested_at,
+        "request_id": request_id,
+        "round": {
+            key: FIXTURES["scalar"][key]
+            for key in ("round_id", "target_type", "question", "unit")
+        },
+        "response": {
+            "schema_version": reply.get("schema_version"),
+            "forecast": {"mean": mean, "sd": sd},
+        },
+    }
+    if action_url:
+        result["action_url"] = action_url
+    return result
+
+
+def historical_demo_case(root, entrant_id, round_id):
+    """Build one real, resolved scalar request from its committed lock.
+
+    The outcome is returned beside the request for scoring, never inside it.
+    Hash-checking the lock against its stamp makes the retrospective input the
+    same frozen artifact the real forecasts used rather than today's history.
+    """
+    def read(*parts):
+        with open(os.path.join(root, *parts), encoding="utf-8") as fh:
+            return json.load(fh)
+
+    season = read("questions", "season0.json")
+    rounds = season.get("rounds") if isinstance(season, dict) else season
+    round_row = next((r for r in rounds if r.get("round_id") == round_id), None)
+    if round_row is None:
+        raise ProbeFailure(f"historical demo round {round_id!r} does not exist")
+    if round_row.get("target_type", "continuous_normal") != "continuous_normal":
+        raise ProbeFailure("the one-round historical demo currently requires a scalar round")
+
+    lock = read("locks", round_id + ".json")
+    stamp = read("stamps", round_id + ".json")
+    canonical = json.dumps(lock, sort_keys=True, separators=(",", ":")).encode()
+    if hashlib.sha256(canonical).hexdigest() != stamp.get("lock_snapshot_sha256"):
+        raise ProbeFailure(f"{round_id}: committed lock does not match its stamp")
+    if lock.get("round_id") != round_id or lock.get("series") != round_row.get("series"):
+        raise ProbeFailure(f"{round_id}: lock snapshot belongs to a different round")
+    history = lock.get("history")
+    if not isinstance(history, list) or not history:
+        raise ProbeFailure(f"{round_id}: lock snapshot has no history")
+
+    resolutions = read("resolutions", "resolved.json")
+    resolution = resolutions.get(round_id)
+    if not resolution or not isinstance(resolution.get("value"), (int, float)):
+        raise ProbeFailure(f"{round_id}: no numeric published outcome")
+    persistence_file = read("forecasts", round_id, "persistence.json")
+    persistence = persistence_file.get("topline") or {}
+    if not isinstance(persistence.get("mean"), (int, float)) \
+            or not isinstance(persistence.get("sd"), (int, float)):
+        raise ProbeFailure(f"{round_id}: no scored persistence forecast")
+
+    # Use the production request builder, including its current deadline and
+    # history-window rules. Only the committed lock is supplied as context.
+    from ssa import agent_api
+    enriched = dict(round_row)
+    enriched["baselines"] = {"persistence": persistence}
+    request = agent_api.build_envelope(entrant_id, enriched, history=history)
+    return {
+        "request": request,
+        "outcome": float(resolution["value"]),
+        "observed_date": resolution.get("observed_date"),
+        "persistence": {"mean": float(persistence["mean"]),
+                        "sd": float(persistence["sd"])},
+        "lock_snapshot_sha256": stamp["lock_snapshot_sha256"],
+    }
+
+
+def public_historical_demo_result(entrant, reply, case, tested_at=None,
+                                  action_url=None):
+    """Sanitize and score one endpoint reply with the production scorer."""
+    request = case["request"]
+    result = public_probe_result(
+        entrant, reply, request["request_id"], tested_at=tested_at,
+        action_url=action_url)
+    forecast = result["response"]["forecast"]
+    from ssa import scoring
+    loss = scoring.crps_forecast(forecast, case["outcome"])
+    persistence_loss = scoring.crps_forecast(case["persistence"],
+                                             case["outcome"])
+    skill_value = scoring.skill(loss, persistence_loss)
+    round_block = request["round"]
+    result.update({
+        "kind": "historical_demo",
+        "round": {
+            key: round_block[key]
+            for key in ("round_id", "target_type", "question", "unit")
+        },
+        "evaluation": {
+            "metric": "CRPS",
+            "loss": loss,
+            "persistence_loss": persistence_loss,
+            "skill": skill_value,
+            "arena_score": 100.0 * skill_value,
+            "outcome": case["outcome"],
+            "observed_date": case["observed_date"],
+            "rounds": 1,
+            "retrospective": True,
+        },
+    })
+    return result
+
+
+def record_public_result(path, result):
+    """Upsert one entrant's latest passed probe into the static site feed."""
+    feed = {"schema_version": PUBLIC_FEED_VERSION,
+            "updated_at": None, "probes": []}
+    try:
+        with open(path, encoding="utf-8") as fh:
+            existing = json.load(fh)
+        if (existing.get("schema_version") == PUBLIC_FEED_VERSION
+                and isinstance(existing.get("probes"), list)):
+            feed = existing
+    except FileNotFoundError:
+        pass
+    feed["probes"] = [p for p in feed["probes"] if isinstance(p, dict)
+                      and p.get("entrant_id") != result["entrant_id"]]
+    feed["probes"].append(result)
+    feed["probes"].sort(key=lambda p: p["entrant_id"])
+    feed["updated_at"] = result["tested_at"]
+
+    directory = os.path.dirname(os.path.abspath(path))
+    os.makedirs(directory, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(prefix=".agent-probes-", suffix=".json",
+                               dir=directory, text=True)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(feed, fh, indent=2, sort_keys=True)
+            fh.write("\n")
+        os.replace(tmp, path)
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+    return feed
 
 
 def load_entrant(entrant_id):
