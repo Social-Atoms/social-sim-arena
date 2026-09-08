@@ -21,6 +21,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BOARDS = os.path.join(ROOT, "tests", "site", "render_boards.js")
 INDEX = os.path.join(ROOT, "tests", "site", "render_index.js")
+AGENT_PROBE = os.path.join(ROOT, "tests", "site", "agent_probe.js")
 
 
 def _node():
@@ -102,6 +103,18 @@ def test_the_landing_page_names_each_round_shape_and_the_right_deadline():
     sys.stdout.write(got.stdout)
     assert got.returncode == 0, got.stderr or got.stdout
     print("ok test_the_landing_page_names_each_round_shape_and_the_right_deadline")
+
+
+def test_a_passed_agent_probe_is_visible_but_never_scored():
+    if not _node():
+        print("ok test_a_passed_agent_probe_is_visible_but_never_scored "
+              "(skipped: no node on PATH)")
+        return
+    got = subprocess.run([_node(), AGENT_PROBE], capture_output=True, text=True,
+                         cwd=ROOT, timeout=120)
+    sys.stdout.write(got.stdout)
+    assert got.returncode == 0, got.stderr or got.stdout
+    print("ok test_a_passed_agent_probe_is_visible_but_never_scored")
 
 
 def test_resizable_panels_and_chart_widths():
@@ -353,6 +366,7 @@ def test_the_publish_gate_covers_every_field_a_page_reads_unguarded():
 if __name__ == "__main__":
     test_every_leaderboard_tab_renders_something_a_participant_can_read()
     test_the_landing_page_names_each_round_shape_and_the_right_deadline()
+    test_a_passed_agent_probe_is_visible_but_never_scored()
     test_resizable_panels_and_chart_widths()
     test_model_filter_selection_and_persistence()
     test_a_batch_is_open_until_its_last_question_closes()
@@ -360,4 +374,4 @@ if __name__ == "__main__":
     test_no_page_promises_a_date_it_cannot_know()
     test_every_link_the_docs_send_a_participant_to_exists()
     test_the_publish_gate_covers_every_field_a_page_reads_unguarded()
-    print("9 passed")
+    print("10 passed")

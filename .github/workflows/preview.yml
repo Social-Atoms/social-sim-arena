@@ -20,7 +20,7 @@ on:
   # with GITHUB_TOKEN, which does not trigger a workflow, so after it lands on
   # dev the preview still serves the previous data.json until somebody pushes.
   # And a branch with no pull request open -- the UI work -- has no other way
-  # to be looked at.
+  # to be looked at. A manual dev run updates the stable dev alias too.
   workflow_dispatch:
 
 permissions:
@@ -39,7 +39,7 @@ concurrency:
 jobs:
   preview:
     # Fork PRs get no secrets by design; forecast submissions from entrants
-    # only need validate.yml. Manual UI reviews never update the dev alias.
+    # only need validate.yml.
     if: >-
       (github.event_name == 'push' && github.ref == 'refs/heads/dev') ||
       (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) ||
@@ -68,7 +68,9 @@ jobs:
           echo "Preview: $PREVIEW_URL" >> "$GITHUB_STEP_SUMMARY"
 
       - name: stable alias for the dev branch
-        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        if: >-
+          github.ref == 'refs/heads/dev' &&
+          (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         run: |
           vercel alias set ${{ steps.deploy.outputs.url }} social-sim-arena-dev.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
           echo "dev preview: https://social-sim-arena-dev.vercel.app" >> "$GITHUB_STEP_SUMMARY"

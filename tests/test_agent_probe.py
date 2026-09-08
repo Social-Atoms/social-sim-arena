@@ -234,6 +234,53 @@ def test_the_registered_entrants_all_satisfy_the_schema_with_status_added():
             jsonschema.validate(json.load(fh), schema)
 
 
+def test_the_public_result_contains_only_the_checked_reply_and_upserts():
+    """The shareable proof must show the answer without publishing its URL.
+
+    Free-form reasoning is participant-controlled and may also contain a
+    provider response id, so neither it nor registration/contact fields are
+    copied into the static dev feed.
+    """
+    entrant = {
+        "entrant_id": "probe_demo",
+        "name": "Probe demo",
+        "type": "participant",
+        "contact": "secret@example.test",
+        "route": {"kind": "agent_api",
+                  "url": "https://secret.example.test/forecast"},
+    }
+    reply = {
+        "schema_version": "ssa-agent-api-v2",
+        "forecast": {"mean": 50, "sd": 1},
+        "reasoning_trace": "provider secret and response id",
+    }
+    first = probe_tool.public_probe_result(
+        entrant, reply, "github-action-1", "2026-09-08T17:00:00Z",
+        "https://github.com/Social-Atoms/social-sim-arena/actions/runs/1")
+    assert first["response"]["forecast"] == {"mean": 50, "sd": 1}
+    assert first["round"]["round_id"] == "ssa-contract-test"
+
+    root = tempfile.mkdtemp(prefix="ssa-public-probe-")
+    try:
+        path = os.path.join(root, "agent-probes.json")
+        probe_tool.record_public_result(path, first)
+        second = probe_tool.public_probe_result(
+            entrant, {**reply, "forecast": {"mean": 51.25, "sd": 2}},
+            "github-action-2", "2026-09-08T17:05:00Z")
+        feed = probe_tool.record_public_result(path, second)
+        assert len(feed["probes"]) == 1
+        assert feed["probes"][0]["request_id"] == "github-action-2"
+        assert feed["probes"][0]["response"]["forecast"]["mean"] == 51.25
+        with open(path, encoding="utf-8") as fh:
+            raw = fh.read()
+        for secret in ("secret.example", "secret@example", "reasoning_trace",
+                       "provider secret", "response id"):
+            assert secret not in raw, secret
+    finally:
+        import shutil
+        shutil.rmtree(root)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:

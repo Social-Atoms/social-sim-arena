@@ -22,6 +22,9 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   probe:
     if: ${{ inputs.agent_url == '' && inputs.entrant_id == '' }}
@@ -75,6 +78,9 @@ jobs:
 
   agent-endpoint-probe:
     if: ${{ inputs.agent_url != '' || inputs.entrant_id != '' }}
+    permissions:
+      contents: write
+      actions: write
     runs-on: ubuntu-latest
     env:
       AGENT_URL: ${{ inputs.agent_url }}
@@ -98,6 +104,7 @@ jobs:
 
           url = os.environ["AGENT_URL"].strip()
           entrant_id = os.environ["ENTRANT_ID"].strip()
+          entrant = None
           if entrant_id:
               if not re.fullmatch(r"[a-z0-9][a-z0-9_-]{1,62}", entrant_id):
                   raise SystemExit("entrant_id has an invalid format")
@@ -150,4 +157,43 @@ jobs:
           print("Arena endpoint reply:")
           print(json.dumps(reply, indent=2, sort_keys=True))
           print("PASS: signed scalar reply and idempotency")
+          if entrant is not None:
+              action_url = (
+                  f"{os.environ['GITHUB_SERVER_URL']}/"
+                  f"{os.environ['GITHUB_REPOSITORY']}/actions/runs/"
+                  f"{os.environ['GITHUB_RUN_ID']}"
+              )
+              result = probe.public_probe_result(
+                  entrant,
+                  reply,
+                  request_id,
+                  action_url=action_url,
+              )
+              probe.record_public_result("site/agent-probes.json", result)
+              print("Recorded a sanitized, non-scored result for the dev site")
           PY
+
+      - name: Publish the passed test result
+        if: ${{ inputs.entrant_id != '' }}
+        env:
+          PROBED_ENTRANT: ${{ inputs.entrant_id }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/agent-probes.json
+          if git diff --cached --quiet; then
+            echo "The published result is already current"
+            exit 0
+          fi
+          git commit -m "Record ${PROBED_ENTRANT} endpoint test (run ${GITHUB_RUN_ID})"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      # A GITHUB_TOKEN-authored push deliberately starts no second workflow.
+      # Dispatch the preview explicitly so the stable dev URL shows the row
+      # as soon as this manually requested probe finishes.
+      - name: Refresh the stable dev preview
+        if: ${{ inputs.entrant_id != '' && github.ref == 'refs/heads/dev' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run preview.yml --ref dev
