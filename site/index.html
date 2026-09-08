@@ -325,6 +325,9 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .week-browse .go{color:var(--link);font-size:14px;font-weight:600;text-decoration:none;}
 .week-browse .go:hover{text-decoration:underline;}
 .week-browse span{color:var(--mut);font:13px/1.5 var(--mono);}
+.lifecycle{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;margin:12px 0 0;align-items:baseline;}
+.lifecycle dt{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);white-space:nowrap;}
+.lifecycle dd{margin:0;color:var(--ink2);font-size:12.5px;}
 .week-side dl{margin:16px 0 0;}
 .week-date{padding:12px 0;border-top:1px solid var(--line);}
 .week-date:last-child{padding-bottom:0;}
@@ -1615,6 +1618,13 @@ function renderWeekly(data){
   const when=iso=>iso?esc(fmtLocal(iso)):'—';
   host.innerHTML='<section class="week-card week-entry" aria-labelledby="week-entry-title">'
       +'<h3 id="week-entry-title">Answer the week</h3><p>Register one HTTPS endpoint. Every question is sent to it, signed, in the 24 hours before that question closes; you return the forecast.</p>'
+      // The four steps a newcomer needs and cannot get anywhere else on the
+      // site. They lived in a card of their own on the old weekly screen and
+      // were dropped when this one was rebuilt; the wording is that card's.
+      +'<dl class="lifecycle"><dt>Listed</dt><dd>a week before it closes</dd>'
+      +'<dt>We call you</dt><dd>in the 24 hours before the close</dd>'
+      +'<dt>Closes</dt><dd>48 hours before its answer, or before the week it measures</dd>'
+      +'<dt>Scored</dt><dd>within 6 hours of the answer landing</dd></dl>'
       +'<div class="week-actions"><a class="btn dark" href="submit.html">Test and register</a></div></section>'
     +'<section class="week-card week-join" aria-labelledby="week-join-title">'
       +'<h3 id="week-join-title">Enter this week</h3><p>Answer any subset before each question closes; your latest answer per question counts. No minimum record: if you answered, you are on the board.</p>'
