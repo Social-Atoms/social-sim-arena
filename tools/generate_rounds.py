@@ -366,9 +366,21 @@ def schedule_contract(sid, meta, hist):
                 "Silver Bulletin series dates are poll field midpoints, not "
                 "publication dates; no publication calendar is recorded for "
                 f"{meta.get('tracker')}")
-        # The round releases the day after the wave enters: any later and
-        # its lock, 48 hours earlier, falls on or after the entry.
-        if (calendar["release"] - calendar["entry"]) % 7 != 1:
+        # The lock, 48 hours before the release, must fall strictly before the
+        # wave enters the sheet. That admits releasing on the entry day itself
+        # (lock two days earlier) and on the day after (lock one day earlier),
+        # and refuses anything later, where the lock lands on the entry day or
+        # after it.
+        #
+        # This used to demand the day after, exactly, with "the lock must
+        # precede the entry" as the reason -- which the entry day itself also
+        # satisfies. The stricter rule moved Economist/YouGov releases from
+        # Tuesday to Wednesday for every newly generated round while the twelve
+        # reviewed rounds and seven crosstab rounds stayed on Tuesday, so one
+        # survey wave sat in the season under two release dates. Tuesday is the
+        # accurate one: measured over six resolved rounds, every one resolved on
+        # its stated Tuesday, 2.9 to 5.1 hours after 14:00Z.
+        if not 0 <= (calendar["release"] - calendar["entry"]) % 7 <= 1:
             raise ValueError(
                 f"{meta['tracker']} would release on weekday "
                 f"{calendar['release']} but its wave enters on "

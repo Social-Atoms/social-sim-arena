@@ -176,7 +176,19 @@ def test_the_economist_series_carry_only_economist_waves():
 
 
 def test_a_recorded_publication_calendar_schedules_the_tracker():
-    """Economist/YouGov enters the sheet on Tuesdays and is scheduled from it."""
+    """Economist/YouGov enters the sheet on Tuesdays and is scheduled from it.
+
+    The release is that same Tuesday, not the day after. The calendar demanded
+    the day after for a while, with "the lock must precede the entry" as the
+    reason -- which a Tuesday release also satisfies, since its lock is the
+    Sunday. The stricter rule put newly generated rounds on Wednesday while the
+    twelve reviewed rounds and every rolled-forward crosstab round stayed on
+    Tuesday, so one survey wave sat in the season under two release dates.
+
+    Tuesday is the accurate one, measured rather than assumed: all six resolved
+    Economist/YouGov rounds resolved on their stated Tuesday, between 2.9 and
+    5.1 hours after 14:00Z.
+    """
     import re
     from ssa.series import SERIES
     history = gen.load_history()["yougov_approval"]
@@ -193,11 +205,14 @@ def test_a_recorded_publication_calendar_schedules_the_tracker():
     for r in out:
         rel = datetime.fromisoformat(r["release_at"].replace("Z", "+00:00"))
         lock = datetime.fromisoformat(r["lock_at"].replace("Z", "+00:00"))
-        assert (rel.weekday(), rel.hour) == (2, 14), r["release_at"]
+        assert (rel.weekday(), rel.hour) == (1, 14), r["release_at"]
         assert rel - lock == timedelta(hours=48)
-        # Entrants file Monday 12:00Z, while the wave is still in the field.
+        # The lock is the Sunday, two days before the wave enters the sheet,
+        # and it is the same Sunday the twelve reviewed rounds already close on.
+        assert lock.weekday() == 6, r["lock_at"]
+        # It groups under the Monday that opened its own week, for display.
         deadline = gen.batches.deadline_for(r["lock_at"])
-        assert lock - deadline == timedelta(hours=2)
+        assert timedelta(0) <= lock - deadline < timedelta(days=7)
         assert r["resolve"] == reviewed["resolve"]
         assert re.fullmatch(r"yougov-\d{4}-w\d{2}-approval", r["round_id"])
     for sid, row in SERIES.items():
@@ -823,14 +838,26 @@ def test_it_refuses_to_generate_a_round_it_cannot_publish():
     """A pre-cutover batch has no common deadline, so `ssa.bundle` will not
     build it and its publication date has already passed -- only the in-house
     harness could answer it. Fifteen such rounds were being generated."""
+    import json as _json
     from ssa import batches
     rows = _generated()
-    assert rows, "the generator printed nothing; the harness for this test broke"
     for rid, lock in rows:
         assert batches.governed_by_batch(lock + "T14:00:00Z"), \
             f"{rid} lands in a batch that cannot be published"
+    # An empty draft is the steady state of a fully reviewed season, not a
+    # broken harness: the generator looks MAX_WEEKS_AHEAD weeks out and every
+    # round inside that window is already in `season0.json`. The property still
+    # has to hold, so it is checked where those rounds now live.
+    with open(os.path.join(ROOT, "questions", "season0.json")) as fh:
+        season = _json.load(fh)["rounds"]
+    post = [r for r in season
+            if batches._parse(r["lock_at"]) >= batches.FIRST_DEADLINE]
+    unpublishable = [r["round_id"] for r in post
+                     if not batches.governed_by_batch(r["lock_at"])]
+    assert not unpublishable, \
+        f"{len(unpublishable)} rounds land in a batch that cannot be published"
     print(f"ok test_it_refuses_to_generate_a_round_it_cannot_publish "
-          f"({len(rows)} candidates)")
+          f"({len(rows)} drafted, {len(post)} in the season)")
 
 
 def test_dedupe_is_per_board_not_per_series():
@@ -894,7 +921,19 @@ def test_dedupe_is_per_board_not_per_series():
                 clashes.append(c["round_id"])
             if key in cell_claimed:
                 beside_profile += 1
-    assert n, "no candidates were written"
+    # Zero is a real answer, not a broken harness: the generator drafts at most
+    # MAX_WEEKS_AHEAD weeks out, and once every round inside that window has
+    # been reviewed into the season there is nothing left to draft. When that
+    # happens the rule is checked against the season itself, which is where it
+    # has to hold anyway.
+    if not n:
+        twins = [r["round_id"] for r in season
+                 if r.get("series") and not r.get("cells")
+                 and sum(1 for other in season
+                         if other.get("series") == r["series"]
+                         and not other.get("cells")
+                         and week(other["release_at"]) == week(r["release_at"])) > 1]
+        assert not twins, f"two scalar rounds ask one series in one week: {twins[:5]}"
     assert not clashes, (
         f"{len(clashes)} candidates duplicate a scalar round already asking "
         f"that series that week: {sorted(clashes)[:5]}")

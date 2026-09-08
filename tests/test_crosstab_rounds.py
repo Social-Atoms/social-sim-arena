@@ -579,8 +579,14 @@ def test_the_season_carries_the_family_weekly_and_the_generator_rolls_it_forward
     # Rolled forward from the newest reviewed round, in its shape.
     now = datetime(2026, 9, 4, 12, tzinfo=timezone.utc)
     nxt = gen.xtab_candidates(season_rounds(), 3, now, through=date(2026, 11, 10))
-    assert [r["round_id"] for r in nxt] == [
-        "yougov-xtab-2026-w44", "yougov-xtab-2026-w45", "yougov-xtab-2026-w46"]
+    # The weeks after the newest reviewed one, contiguous, and never a week the
+    # season already has. Computed rather than listed: the reviewed set grows
+    # every time somebody promotes a batch, and a hard-coded trio pins the test
+    # to the day it was written.
+    newest = max(int(r["round_id"].rsplit("-w", 1)[1]) for r in rounds)
+    want = [f"yougov-xtab-2026-w{newest + i}" for i in range(1, len(nxt) + 1)]
+    assert nxt, "the roller offered nothing after the newest reviewed week"
+    assert [r["round_id"] for r in nxt] == want, [r["round_id"] for r in nxt]
     for r in nxt:
         assert r["cells"] == CELLS and r["resolve"] == rounds[-1]["resolve"]
         assert r["profile_noun"] == "subgroup"
