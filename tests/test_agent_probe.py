@@ -22,6 +22,7 @@ The four that matter:
 """
 import importlib.util
 import json
+import math
 import os
 import socket
 import sys
@@ -279,6 +280,39 @@ def test_the_public_result_contains_only_the_checked_reply_and_upserts():
     finally:
         import shutil
         shutil.rmtree(root)
+
+
+def test_a_historical_demo_uses_the_real_lock_and_production_score():
+    """Immediate scoring is retrospective, but its inputs and metric are real."""
+    case = probe_tool.historical_demo_case(
+        ROOT, "probe_demo", "yougov-2026-w34-approval")
+    request = case["request"]
+    assert request["request_id"] == "probe_demo:yougov-2026-w34-approval"
+    assert request["round"]["question"] == (
+        "Economist/YouGov wave publishing ~Aug 18, Trump % approve among US "
+        "adult citizens")
+    assert request["round"]["context"]["persistence"] == 33.0
+    history = request["round"]["context"]["history"]
+    assert len(history) == 24 and history[-1] == {
+        "date": "2026-08-08", "value": 33.0}
+    assert "resolution" not in request["round"]
+
+    reply = {"schema_version": "ssa-agent-api-v2",
+             "forecast": {"mean": 34.5, "sd": 1.0},
+             "reasoning_trace": "not public"}
+    result = probe_tool.public_historical_demo_result(
+        {"entrant_id": "probe_demo", "name": "Probe demo",
+         "type": "participant"},
+        reply, case, tested_at="2026-09-08T22:00:00Z")
+    score = result["evaluation"]
+    assert result["kind"] == "historical_demo" and score["retrospective"] is True
+    assert score["outcome"] == 35.0 and score["rounds"] == 1
+    assert math.isclose(score["loss"], 0.331403531254856, abs_tol=1e-12)
+    assert math.isclose(score["persistence_loss"], 1.280900969802875,
+                        abs_tol=1e-12)
+    assert math.isclose(score["arena_score"], 74.1273104582115,
+                        abs_tol=1e-10)
+    assert "context" not in result["round"] and "reasoning_trace" not in result
 
 
 if __name__ == "__main__":

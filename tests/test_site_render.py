@@ -105,16 +105,16 @@ def test_the_landing_page_names_each_round_shape_and_the_right_deadline():
     print("ok test_the_landing_page_names_each_round_shape_and_the_right_deadline")
 
 
-def test_a_passed_agent_probe_is_visible_but_never_scored():
+def test_agent_results_are_visible_without_getting_an_official_rank():
     if not _node():
-        print("ok test_a_passed_agent_probe_is_visible_but_never_scored "
+        print("ok test_agent_results_are_visible_without_getting_an_official_rank "
               "(skipped: no node on PATH)")
         return
     got = subprocess.run([_node(), AGENT_PROBE], capture_output=True, text=True,
                          cwd=ROOT, timeout=120)
     sys.stdout.write(got.stdout)
     assert got.returncode == 0, got.stderr or got.stdout
-    print("ok test_a_passed_agent_probe_is_visible_but_never_scored")
+    print("ok test_agent_results_are_visible_without_getting_an_official_rank")
 
 
 def test_resizable_panels_and_chart_widths():
@@ -366,7 +366,7 @@ def test_the_publish_gate_covers_every_field_a_page_reads_unguarded():
 if __name__ == "__main__":
     test_every_leaderboard_tab_renders_something_a_participant_can_read()
     test_the_landing_page_names_each_round_shape_and_the_right_deadline()
-    test_a_passed_agent_probe_is_visible_but_never_scored()
+    test_agent_results_are_visible_without_getting_an_official_rank()
     test_resizable_panels_and_chart_widths()
     test_model_filter_selection_and_persistence()
     test_a_batch_is_open_until_its_last_question_closes()

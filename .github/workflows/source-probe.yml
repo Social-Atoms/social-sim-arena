@@ -21,6 +21,10 @@ on:
         description: "Optional committed entrant id to probe from this ref"
         required: false
         type: string
+      historical_round_id:
+        description: "Optional resolved scalar round to answer and score once"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -85,6 +89,7 @@ jobs:
     env:
       AGENT_URL: ${{ inputs.agent_url }}
       ENTRANT_ID: ${{ inputs.entrant_id }}
+      HISTORICAL_ROUND_ID: ${{ inputs.historical_round_id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -92,8 +97,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install cryptography jsonschema
-      - name: Send one signed, non-scored Arena request
+      - run: pip install cryptography jsonschema requests
+      - name: Send one signed Arena request
         run: |
           python - <<'PY'
           import json
@@ -104,6 +109,7 @@ jobs:
 
           url = os.environ["AGENT_URL"].strip()
           entrant_id = os.environ["ENTRANT_ID"].strip()
+          demo_round_id = os.environ["HISTORICAL_ROUND_ID"].strip()
           entrant = None
           if entrant_id:
               if not re.fullmatch(r"[a-z0-9][a-z0-9_-]{1,62}", entrant_id):
@@ -134,8 +140,20 @@ jobs:
               )
           if not url:
               raise SystemExit("pass agent_url or entrant_id")
-          request_id = f"github-action-{os.environ['GITHUB_RUN_ID']}"
-          body = probe.envelope("scalar", request_id)
+          if demo_round_id and entrant is None:
+              raise SystemExit("historical_round_id requires entrant_id")
+          if demo_round_id:
+              case = probe.historical_demo_case(".", entrant_id, demo_round_id)
+              body = case["request"]
+              request_id = body["request_id"]
+              print(
+                  f"Historical demo: {demo_round_id} using its hash-verified "
+                  "committed lock snapshot"
+              )
+          else:
+              case = None
+              request_id = f"github-action-{os.environ['GITHUB_RUN_ID']}"
+              body = probe.envelope("scalar", request_id)
           signer = probe.make_signer(
               probe.TEST_PRIVATE_KEY,
               probe.TEST_KEY_ID,
@@ -148,32 +166,41 @@ jobs:
               retries=0,
           )
           probe.check_content(reply, "scalar")
-          repeated = probe.call(
-              url,
-              body,
-              signer=signer,
-              timeout=60,
-              retries=0,
-          )
-          if repeated != reply:
-              raise SystemExit("idempotency check failed")
           print("Arena endpoint reply:")
           print(json.dumps(reply, indent=2, sort_keys=True))
-          print("PASS: signed scalar reply and idempotency")
+          if case is None:
+              repeated = probe.call(
+                  url,
+                  body,
+                  signer=signer,
+                  timeout=60,
+                  retries=0,
+              )
+              if repeated != reply:
+                  raise SystemExit("idempotency check failed")
+              print("PASS: signed scalar reply and idempotency")
           if entrant is not None:
               action_url = (
                   f"{os.environ['GITHUB_SERVER_URL']}/"
                   f"{os.environ['GITHUB_REPOSITORY']}/actions/runs/"
                   f"{os.environ['GITHUB_RUN_ID']}"
               )
-              result = probe.public_probe_result(
-                  entrant,
-                  reply,
-                  request_id,
-                  action_url=action_url,
-              )
+              if case is not None:
+                  result = probe.public_historical_demo_result(
+                      entrant, reply, case, action_url=action_url)
+                  score = result["evaluation"]
+                  print(
+                      f"SCORE: outcome={score['outcome']:g}, "
+                      f"CRPS={score['loss']:.6f}, "
+                      f"skill={score['skill']:+.6f}, "
+                      f"Arena={score['arena_score']:+.2f}"
+                  )
+                  print("PASS: one real historical question answered and scored")
+              else:
+                  result = probe.public_probe_result(
+                      entrant, reply, request_id, action_url=action_url)
               probe.record_public_result("site/agent-probes.json", result)
-              print("Recorded a sanitized, non-scored result for the dev site")
+              print("Recorded a sanitized result for the preview site")
           PY
 
       - name: Publish the passed test result

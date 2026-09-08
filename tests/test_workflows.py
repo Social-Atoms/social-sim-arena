@@ -117,6 +117,9 @@ def test_a_manual_agent_probe_publishes_and_refreshes_the_dev_result():
     agent_job = probe.split("agent-endpoint-probe:", 1)[1]
     assert "contents: write" in agent_job and "actions: write" in agent_job
     assert 'probe.record_public_result("site/agent-probes.json", result)' in probe
+    assert "historical_round_id" in probe
+    assert "probe.historical_demo_case" in probe
+    assert "probe.public_historical_demo_result" in probe
     assert 'git add site/agent-probes.json' in probe
     assert '"show"' in probe and 'f"HEAD:entrants/{entrant_id}.json"' in probe
     assert 'gh workflow run preview.yml --ref "${GITHUB_REF_NAME}"' in probe

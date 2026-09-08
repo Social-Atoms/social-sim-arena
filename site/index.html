@@ -1411,7 +1411,8 @@ function renderBoard(mode){
   function row(id, s, rank, ref){
     const probe=!s&&((window.__agentProbes||{})[id]);
     const forecast=probe&&probe.response&&probe.response.forecast;
-    const arena = s ? 100*s.mean_skill : null;
+    const demo=probe&&probe.kind==='historical_demo'&&probe.evaluation;
+    const arena = s ? 100*s.mean_skill : demo&&typeof demo.arena_score==='number' ? demo.arena_score : null;
     const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0))
       : probe ? '<span class="probe-pass" title="Passed a non-scored endpoint contract test">TEST ✓</span>'
       : '<span class="pend">···</span>';
@@ -1424,20 +1425,24 @@ function renderBoard(mode){
       entryType==='llm' ? 'LLM' : entryType.charAt(0).toUpperCase()+entryType.slice(1),
       id==='persistence' ? 'Reference' : '',
       s && s.mock ? 'Placeholder' : '',
-      probe ? 'API test passed' : '',
+      demo ? 'Historical demo' : probe ? 'API test passed' : '',
+      demo ? '1 resolved question' : '',
       forecast ? 'μ '+probeNumber(forecast.mean) : '',
       forecast ? 'σ '+probeNumber(forecast.sd) : ''
     ].filter(Boolean);
     const action=probeActionUrl(probe);
     const actionLink=action?' <span aria-hidden="true">·</span> <a class="probe-run" href="'+action+'" target="_blank" rel="noopener">Action ↗</a>':'';
     const refLine = ref && btMap[id] ? '<br><span class="type">last season '+((btMap[id].mean_skill>0?'+':'')+(btMap[id].mean_skill*100).toFixed(1))+'%</span>' : '';
-    return '<tr'+(probe?' class="probe-row"':'')+'><td class="rank">'+(rank||'·')+'</td>'
+    const probeTitle=demo&&probe.round&&probe.round.question?' title="Historical demo: '+esc(probe.round.question)+'"':'';
+    const loss=s&&typeof s[metricKey]==='number'?s[metricKey]:demo&&metricLabel==='CRPS'?demo.loss:null;
+    const rounds=s?s.rounds:demo?1:0;
+    return '<tr'+(probe?' class="probe-row"':'')+probeTitle+'><td class="rank">'+(rank||'·')+'</td>'
       + '<td><span class="who">'+avatar(id)
       + '<span class="who-text"><b class="model-name">'+esc((nameOf[id]||id).split(' (')[0])+'</b>'
       + '<span class="model-meta">'+details.map(detail=>'<span>'+esc(detail)+'</span>').join(' <span aria-hidden="true">·</span> ')+actionLink+'</span></span></span></td>'
       + '<td class="num skill'+(pos?' pos':'')+'">'+skillTxt+subSkill+refLine+'</td>'
-      + '<td class="num">'+(s && typeof s[metricKey]==='number' ? s[metricKey].toFixed(metricLabel==='Loss'||metricLabel==='Rank loss'?3:2) : '·')+'</td>'
-      + '<td class="num">'+(s ? s.rounds : 0)+'</td></tr>';
+      + '<td class="num">'+(loss!=null ? loss.toFixed(metricLabel==='Loss'||metricLabel==='Rank loss'?3:2) : '·')+'</td>'
+      + '<td class="num">'+rounds+'</td></tr>';
   }
   const body = document.getElementById('lb-body');
   window.__perRow = entries.find(e=>e.entrant==='persistence') || null;
@@ -1450,7 +1455,7 @@ function renderBoard(mode){
   const pending=rest.filter(e=>!(window.__agentProbes||{})[e.entrant_id]);
   // Keep a freshly tested participant above the ranked rows so the operator
   // can share the page immediately without scrolling through the full model
-  // replay. Its dot rank and zero rounds keep it out of the competition.
+  // replay. Its dot rank keeps a retrospective demo out of the competition.
   body.innerHTML = tested.map(e=>row(e.entrant_id,null,null)).join('')
     +entries.map((e,i)=>row(e.entrant,e,i+1)).join('')
     +pending.map(e=>row(e.entrant_id,null,null)).join('');
@@ -1458,7 +1463,10 @@ function renderBoard(mode){
     const nx=taskRounds(d,data).filter(r=>r.status!=='resolved').sort((a,b)=>a.release_at.localeCompare(b.release_at))[0];
     body.innerHTML='<tr><td colspan="5" style="padding:18px;color:var(--mut);">No defensible historical replay is available for this task.'+(nx?' The first live result is '+esc(nx.round_id)+' on '+esc(fmtDate(nx.release_at))+'.':'')+'</td></tr>';
   }
-  if(appendPending&&rest.some(e=>(window.__agentProbes||{})[e.entrant_id])){
+  const shownProbes=rest.map(e=>(window.__agentProbes||{})[e.entrant_id]).filter(Boolean);
+  if(appendPending&&shownProbes.some(p=>p.kind==='historical_demo')){
+    note+=' Historical demo rows answer one already-resolved real question from its committed lock snapshot. Their loss is real, but they are retrospective and receive no official rank.';
+  }else if(appendPending&&shownProbes.length){
     note+=' TEST ✓ is a non-scored endpoint check; it receives no rank, loss, or Arena score until a real round resolves.';
   }
   document.getElementById('lb-note').textContent=note;
