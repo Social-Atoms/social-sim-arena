@@ -125,6 +125,8 @@ def test_a_manual_agent_probe_publishes_and_refreshes_the_dev_result():
     assert "github.event_name == 'workflow_dispatch'" in preview
     alias = preview.split("- name: stable alias for the dev branch", 1)[1]
     assert "workflow_dispatch" in alias.split("- name:", 1)[0]
+    assert "PREVIEW_BRANCH" in preview
+    assert "github.rest.pulls.list" in preview
     print("ok test_a_manual_agent_probe_publishes_and_refreshes_the_dev_result")
 
 

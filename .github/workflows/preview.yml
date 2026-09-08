@@ -74,18 +74,33 @@ jobs:
           echo "dev preview: https://social-sim-arena-dev.vercel.app" >> "$GITHUB_STEP_SUMMARY"
 
       - name: comment the preview url
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
         uses: actions/github-script@v7
+        env:
+          PREVIEW_BRANCH: ${{ github.ref_name }}
         with:
           script: |
             const url = `${{ steps.deploy.outputs.url }}`;
             const marker = '<!-- vercel-preview -->';
             const body = `${marker}\nPreview: ${url}`;
+            let issueNumber = context.issue.number;
+            if (!issueNumber) {
+              const {data: pulls} = await github.rest.pulls.list({
+                ...context.repo,
+                state: 'open',
+                head: `${context.repo.owner}:${process.env.PREVIEW_BRANCH}`,
+              });
+              issueNumber = pulls[0]?.number;
+            }
+            if (!issueNumber) {
+              core.notice(`No open pull request for ${process.env.PREVIEW_BRANCH}`);
+              return;
+            }
             const {data: comments} = await github.rest.issues.listComments({
-              ...context.repo, issue_number: context.issue.number});
+              ...context.repo, issue_number: issueNumber});
             const prev = comments.find(c => c.body.includes(marker));
             if (prev) {
               await github.rest.issues.updateComment({...context.repo, comment_id: prev.id, body});
             } else {
-              await github.rest.issues.createComment({...context.repo, issue_number: context.issue.number, body});
+              await github.rest.issues.createComment({...context.repo, issue_number: issueNumber, body});
             }
