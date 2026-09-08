@@ -451,7 +451,6 @@ table.lb .skill.pos{color:var(--accent-ink);}
 
 <div class="header-status" aria-label="Arena status">
   <div class="meta" id="meta-line">Loading…</div>
-  <button class="exam" id="exam-chip" type="button">MIDTERM EXAM · Nov 3</button>
   <time class="updated" id="data-updated" title="Data refreshed every 6 hours"></time>
 </div>
 </header>
@@ -1736,10 +1735,6 @@ function render(data){
     parts.push('<b>'+openNow.length+'</b> open');
     parts.push('<b>'+(lb.resolved_rounds||0)+'</b> resolved');
     document.getElementById('meta-line').innerHTML = parts.map(p=>'<span>'+p+'</span>').join('');
-    const days = Math.max(0, Math.ceil((new Date(2026,10,3) - Date.now())/86400000));
-    const mids = data.rounds.filter(r=>r.round_id.indexOf('midterm-')===0);
-    const nf = mids.reduce((a,r)=>a+(r.n_forecasts||0), 0);
-    document.getElementById('exam-chip').innerHTML = 'MIDTERM · Nov 3 · <b>'+days+'d</b> · <b>'+nf+'</b> forecasts locked';
   }
   meta();
   clearInterval(window.__metaInt); window.__metaInt = setInterval(meta, 30000);
@@ -1822,7 +1817,6 @@ window.addEventListener('hashchange', applyHash);
 
 document.querySelectorAll('.ptab').forEach(b=> b.onclick = ()=> showPage(b.dataset.page));
 document.getElementById('nav-submit').onclick = e=>{ e.preventDefault(); showPage('submit'); };
-document.getElementById('exam-chip').onclick = ()=>showPage('exam');
 document.querySelector('.task-all').onclick=()=>{setTab('agg');renderBoard(window.__board||'all');};
 document.getElementById('task-search').oninput=e=>{window.__roundQuery=e.target.value;roundsList(window.__data);};
 document.querySelectorAll('#round-status-seg button').forEach(b=>b.onclick=()=>{window.__roundStatus=b.dataset.status;roundsList(window.__data);});
