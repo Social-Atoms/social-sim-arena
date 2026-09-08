@@ -167,6 +167,55 @@ RETIRED_TEMPLATES = {
         "top-10 ranking round. See `wiki_views_trump`.",
 }
 
+# The sixteen-cell Civiqs profile round asks every one of these subgroups
+# jointly, on the same day, and runs later into the season: it is a strict
+# superset of the scalar twin. The pair was deliberate once -- the same numbers
+# elicited marginally and jointly, scored on two boards, CRPS per cell against
+# an energy score over the vector -- and it cost one call per subgroup per
+# entrant per week to keep asking a question the profile round already answers.
+# Rounds already closed keep their scores; the ones withdrawn before their lock
+# are in `questions/legacy/`.
+#
+# To bring one back: delete its line here. Nothing else is required, and the
+# profile round is unaffected either way.
+for _cell in ("age_35_49", "age_50_64", "ind", "male", "race_hispanic", "rep",
+              "dem", "age_18_34", "age_65_up", "race_white", "race_black",
+              "race_other", "edu_noncollege", "edu_college", "edu_postgrad",
+              "female"):
+    RETIRED_TEMPLATES[f"civiqs_net_approval_{_cell}"] = (
+        "the sixteen-cell Civiqs profile round asks this subgroup jointly with "
+        "the other fifteen, on the same day and through a later week, so a "
+        "scalar twin is the same number under a second scoring rule. Withdrawn "
+        "2026-09-07; see questions/legacy/ for the rounds that were pulled and "
+        "the eight that had already closed and were left alone.")
+
+# Series whose cadence is not what a weekly round needs, parked with the
+# measurement that decided it.
+#
+# These are not refusals on rights, history or noise: the question is good and
+# the data is there. They are asked too irregularly for a weekly round, so a
+# week's round would frequently have no answer to resolve against. Restoring
+# one is deleting its line here *and* giving the Silver Bulletin family a
+# monthly template -- the parked entry says which, so the next reader does not
+# have to re-measure.
+PARKED_CADENCE = {
+    "yougov_econ_approval":
+        "monthly, not weekly: the last eight entries are 21, 7, 14, 14, 28, 35, "
+        "28 and 28 days apart -- median 24.5, longest 35. Measured 2026-09-07. "
+        "A weekly round would spend most weeks with nothing to resolve against. "
+        "To restore: delete this line and add a monthly Silver Bulletin "
+        "template, the shape `sce_candidates` already uses for the NY Fed.",
+    "yougov_immig_approval":
+        "monthly, not weekly: 7, 21, 7, 28, 28, 35, 35, 21 days apart -- median "
+        "24.5, longest 35. Measured 2026-09-07. See `yougov_econ_approval`.",
+    "yougov_cost_approval":
+        "monthly, not weekly: 7, 14, 14, 28, 28, 7, 28, 28 days apart -- median "
+        "21, longest 28. Measured 2026-09-07. See `yougov_econ_approval`.",
+    "yougov_trade_approval":
+        "monthly, not weekly: 42, 28, 28, 28, 35, 21, 14, 21 days apart -- "
+        "median 28, longest 42. Measured 2026-09-07. See `yougov_econ_approval`.",
+}
+
 # Families this generator deliberately has no template for, and why.
 #
 # Like RETIRED_TEMPLATES these are decisions, not gaps. Reporting them as
@@ -317,9 +366,21 @@ def schedule_contract(sid, meta, hist):
                 "Silver Bulletin series dates are poll field midpoints, not "
                 "publication dates; no publication calendar is recorded for "
                 f"{meta.get('tracker')}")
-        # The round releases the day after the wave enters: any later and
-        # its lock, 48 hours earlier, falls on or after the entry.
-        if (calendar["release"] - calendar["entry"]) % 7 != 1:
+        # The lock, 48 hours before the release, must fall strictly before the
+        # wave enters the sheet. That admits releasing on the entry day itself
+        # (lock two days earlier) and on the day after (lock one day earlier),
+        # and refuses anything later, where the lock lands on the entry day or
+        # after it.
+        #
+        # This used to demand the day after, exactly, with "the lock must
+        # precede the entry" as the reason -- which the entry day itself also
+        # satisfies. The stricter rule moved Economist/YouGov releases from
+        # Tuesday to Wednesday for every newly generated round while the twelve
+        # reviewed rounds and seven crosstab rounds stayed on Tuesday, so one
+        # survey wave sat in the season under two release dates. Tuesday is the
+        # accurate one: measured over six resolved rounds, every one resolved on
+        # its stated Tuesday, 2.9 to 5.1 hours after 14:00Z.
+        if not 0 <= (calendar["release"] - calendar["entry"]) % 7 <= 1:
             raise ValueError(
                 f"{meta['tracker']} would release on weekday "
                 f"{calendar['release']} but its wave enters on "
@@ -421,6 +482,10 @@ def gate(sid, meta, hist):
         return False, {"gate": "retired_template",
                        "source": meta.get("source"),
                        "detail": RETIRED_TEMPLATES[sid]}
+    if sid in PARKED_CADENCE:
+        return False, {"gate": "parked_cadence",
+                       "source": meta.get("source"),
+                       "detail": PARKED_CADENCE[sid]}
     if meta.get("source") in DECLINED_FAMILIES:
         return False, {"gate": "declined_family",
                        "source": meta.get("source"),

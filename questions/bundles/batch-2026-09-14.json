@@ -8,7 +8,7 @@
       "lock_at": "2026-09-14T14:00:00Z",
       "question": "Morning Consult weekly tracker: percent of US registered voters who approve of Donald Trump's job performance",
       "release_at": "2026-09-16T14:00:00Z",
-      "resolve": "adjusted average at the release date",
+      "resolve": "first Morning Consult wave to enter the archived Silver Bulletin sheet after the round froze",
       "round_id": "mc-2026-w38-approval",
       "series": "mc_approval",
       "target_type": "continuous_normal",
@@ -66,6 +66,18 @@
     {
       "horizon_days": 2.0,
       "lock_at": "2026-09-16T14:00:00Z",
+      "question": "Civiqs daily tracker: net rating of the condition of the national economy among US registered voters (very or fairly good, minus very or fairly bad), as the dashboard shows it on Friday",
+      "release_at": "2026-09-18T14:00:00Z",
+      "resolve": "dashboard Friday value, from the daily archive",
+      "round_id": "civiqs-2026-w38-econ-now",
+      "series": "civiqs_net_econ_now",
+      "target_type": "continuous_normal",
+      "tracker": "civiqs",
+      "unit": "net points (good minus bad)"
+    },
+    {
+      "horizon_days": 2.0,
+      "lock_at": "2026-09-16T14:00:00Z",
       "question": "Civiqs daily tracker: net change in the respondent's own family finances over the last year among US registered voters (gotten better minus gotten worse), as the dashboard shows it on Friday",
       "release_at": "2026-09-18T14:00:00Z",
       "resolve": "dashboard Friday value, from the daily archive",
@@ -78,74 +90,14 @@
     {
       "horizon_days": 2.0,
       "lock_at": "2026-09-16T14:00:00Z",
-      "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, adults 35-49 only, as the dashboard shows it on Friday",
+      "question": "Civiqs daily tracker: net concern about the impact of inflation on consumer goods among US registered voters (very or somewhat concerned, minus a little or not at all concerned), as the dashboard shows it on Friday",
       "release_at": "2026-09-18T14:00:00Z",
-      "resolve": "dashboard Friday value, adults 35-49 filter, from the daily archive",
-      "round_id": "civiqs-age3549-2026-w38",
-      "series": "civiqs_net_approval_age_35_49",
+      "resolve": "dashboard Friday value, from the daily archive",
+      "round_id": "civiqs-2026-w38-inflation-concern",
+      "series": "civiqs_net_inflation_concern",
       "target_type": "continuous_normal",
       "tracker": "civiqs",
-      "unit": "net points (approve minus disapprove)"
-    },
-    {
-      "horizon_days": 2.0,
-      "lock_at": "2026-09-16T14:00:00Z",
-      "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, adults 50-64 only, as the dashboard shows it on Friday",
-      "release_at": "2026-09-18T14:00:00Z",
-      "resolve": "dashboard Friday value, adults 50-64 filter, from the daily archive",
-      "round_id": "civiqs-age5064-2026-w38",
-      "series": "civiqs_net_approval_age_50_64",
-      "target_type": "continuous_normal",
-      "tracker": "civiqs",
-      "unit": "net points (approve minus disapprove)"
-    },
-    {
-      "horizon_days": 2.0,
-      "lock_at": "2026-09-16T14:00:00Z",
-      "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, Hispanic/Latino registered voters only, as the dashboard shows it on Friday",
-      "release_at": "2026-09-18T14:00:00Z",
-      "resolve": "dashboard Friday value, Hispanic/Latino filter, from the daily archive",
-      "round_id": "civiqs-hisp-2026-w38",
-      "series": "civiqs_net_approval_race_hispanic",
-      "target_type": "continuous_normal",
-      "tracker": "civiqs",
-      "unit": "net points (approve minus disapprove)"
-    },
-    {
-      "horizon_days": 2.0,
-      "lock_at": "2026-09-16T14:00:00Z",
-      "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters who identify as independents, as the dashboard shows it on Friday",
-      "release_at": "2026-09-18T14:00:00Z",
-      "resolve": "dashboard Friday value, independents filter, from the daily archive",
-      "round_id": "civiqs-ind-2026-w38",
-      "series": "civiqs_net_approval_ind",
-      "target_type": "continuous_normal",
-      "tracker": "civiqs",
-      "unit": "net points (approve minus disapprove)"
-    },
-    {
-      "horizon_days": 2.0,
-      "lock_at": "2026-09-16T14:00:00Z",
-      "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters, men only, as the dashboard shows it on Friday",
-      "release_at": "2026-09-18T14:00:00Z",
-      "resolve": "dashboard Friday value, men filter, from the daily archive",
-      "round_id": "civiqs-male-2026-w38",
-      "series": "civiqs_net_approval_male",
-      "target_type": "continuous_normal",
-      "tracker": "civiqs",
-      "unit": "net points (approve minus disapprove)"
-    },
-    {
-      "horizon_days": 2.0,
-      "lock_at": "2026-09-16T14:00:00Z",
-      "question": "Civiqs daily tracker: Donald Trump's net job approval (percent approve minus percent disapprove) among US registered voters who identify as Republicans, as the dashboard shows it on Friday",
-      "release_at": "2026-09-18T14:00:00Z",
-      "resolve": "dashboard Friday value, Republicans filter, from the daily archive",
-      "round_id": "civiqs-rep-2026-w38",
-      "series": "civiqs_net_approval_rep",
-      "target_type": "continuous_normal",
-      "tracker": "civiqs",
-      "unit": "net points (approve minus disapprove)"
+      "unit": "net points (concerned minus not concerned)"
     },
     {
       "cells": [
@@ -245,6 +197,30 @@
       "target_type": "continuous_normal",
       "tracker": "economist_yougov",
       "unit": "net points, Democratic minus Republican"
+    },
+    {
+      "horizon_days": 2.0,
+      "lock_at": "2026-09-20T14:00:00Z",
+      "question": "Economist/YouGov weekly tracker: percent of US registered voters who approve of Donald Trump's job performance, from the same waves as the adult-base tracker",
+      "release_at": "2026-09-22T14:00:00Z",
+      "resolve": "topline PDF of the wave",
+      "round_id": "yougov-2026-w39-rv-approval",
+      "series": "yougov_rv_approval",
+      "target_type": "continuous_normal",
+      "tracker": "economist_yougov",
+      "unit": "% approve"
+    },
+    {
+      "horizon_days": 2.0,
+      "lock_at": "2026-09-20T14:00:00Z",
+      "question": "Economist/YouGov weekly tracker: percent of US adults who strongly approve of Donald Trump's job performance",
+      "release_at": "2026-09-22T14:00:00Z",
+      "resolve": "topline PDF of the wave",
+      "round_id": "yougov-2026-w39-strong-approval",
+      "series": "yougov_strong_approval",
+      "target_type": "continuous_normal",
+      "tracker": "economist_yougov",
+      "unit": "% approve"
     },
     {
       "cells": [

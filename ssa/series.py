@@ -533,7 +533,7 @@ SERIES["mc_generic_margin"] = {
 # Morning Consult rounds use. A wave that enters late resolves the round late,
 # which is what `release_estimated` means; nothing moves at the deadline.
 PUBLICATION = {
-    "economist_yougov": {"entry": 1, "release": 2, "hour": 14,
+    "economist_yougov": {"entry": 1, "release": 1, "hour": 14,
                          "resolve": "topline PDF of the wave"},
 }
 
