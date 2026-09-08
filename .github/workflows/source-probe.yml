@@ -17,10 +17,14 @@ on:
         description: "Optional HTTPS Arena endpoint to probe once"
         required: false
         type: string
+      entrant_id:
+        description: "Optional committed entrant id to probe from main"
+        required: false
+        type: string
 
 jobs:
   probe:
-    if: ${{ inputs.agent_url == '' }}
+    if: ${{ inputs.agent_url == '' && inputs.entrant_id == '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -70,12 +74,15 @@ jobs:
           PY
 
   agent-endpoint-probe:
-    if: ${{ inputs.agent_url != '' }}
+    if: ${{ inputs.agent_url != '' || inputs.entrant_id != '' }}
     runs-on: ubuntu-latest
     env:
       AGENT_URL: ${{ inputs.agent_url }}
+      ENTRANT_ID: ${{ inputs.entrant_id }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -87,7 +94,21 @@ jobs:
           import os
           from tools import probe_agent_api as probe
 
-          url = os.environ["AGENT_URL"]
+          url = os.environ["AGENT_URL"].strip()
+          entrant_id = os.environ["ENTRANT_ID"].strip()
+          if entrant_id:
+              entrant = probe.load_entrant(entrant_id)
+              if entrant is None:
+                  raise SystemExit(f"entrant {entrant_id!r} is not committed on main")
+              if entrant.get("status") == "revoked":
+                  raise SystemExit(f"entrant {entrant_id!r} is revoked")
+              route = entrant.get("route") or {}
+              if route.get("kind") != "agent_api" or not route.get("url"):
+                  raise SystemExit(f"entrant {entrant_id!r} has no agent_api route")
+              url = route["url"]
+              print(f"Loaded endpoint from entrants/{entrant_id}.json on main")
+          if not url:
+              raise SystemExit("pass agent_url or entrant_id")
           request_id = f"github-action-{os.environ['GITHUB_RUN_ID']}"
           body = probe.envelope("scalar", request_id)
           signer = probe.make_signer(
