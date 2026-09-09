@@ -3,9 +3,9 @@
     {
       "id": "civiqs",
       "kind": "source",
-      "last_error": null,
-      "required_action": "inspect upstream freshness; do not resolve a new round until the source moves",
-      "state": "stale"
+      "last_error": "economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us",
+      "required_action": "restore live access now or hold affected rounds before the deadline; the same-source archive is not a new release",
+      "state": "deadline_risk"
     },
     {
       "id": "ranking_wikitop",
@@ -25,10 +25,10 @@
       "terminal_failure": 0
     },
     "sources": {
-      "deadline_risk": 1,
+      "deadline_risk": 2,
       "healthy": 11,
       "retryable_failure": 0,
-      "stale": 1,
+      "stale": 0,
       "unresolvable": 0
     }
   },
@@ -1258,7 +1258,7 @@
       "state": "succeeded"
     }
   ],
-  "generated_at": "2026-09-09T16:37:03Z",
+  "generated_at": "2026-09-09T20:56:09Z",
   "source_states": [
     {
       "alert": false,
@@ -1266,7 +1266,7 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=12",
-        "sources/aaii/2026-09-09.html sha256=a35f7af9501bd01b37a505f35a9f16357538eb8466f93e5879292205a7e512a0"
+        "sources/aaii/2026-09-09.html sha256=fe6b65264354488b689db4244fdd564887d8c825aa07f0d8ce7175a9ed03d6d7"
       ],
       "last_error": null,
       "next_deadline": "2026-09-09T22:00:00Z",
@@ -1282,17 +1282,18 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "22 validated non-empty series",
-        "fetched_days=0.7; changed_days=8.7; fetch_budget=2; change_budget=4; stale_keys=describe_feeling_us,economy_family_retro,economy_us_direction,economy_us_now"
+        "civiqs/describe_feeling_us (22 snapshots; newest 2026-09-09); civiqs/economy_family_retro (23 snapshots; newest 2026-09-09); civiqs/economy_us_direction (23 snapshots; newest 2026-09-09); civiqs/economy_us_now (23 snapshots; newest 2026-09-09); civiqs/inflation_impact (23 snapshots; newest 2026-09-09)",
+        "fetched_days=0.9; changed_days=8.9; fetch_budget=2; change_budget=4; stale_keys=describe_feeling_us,economy_family_retro,economy_us_direction,economy_us_now",
+        "live attempt failed; same-source archive used"
       ],
-      "last_error": null,
+      "last_error": "economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us",
       "next_deadline": "2026-09-09T22:00:00Z",
       "next_lock": "2026-09-09T22:00:00Z",
-      "next_retry": null,
-      "required_action": "inspect upstream freshness; do not resolve a new round until the source moves",
+      "next_retry": "2026-09-10T02:56:09Z",
+      "required_action": "restore live access now or hold affected rounds before the deadline; the same-source archive is not a new release",
       "route": "ssa.series:civiqs",
       "source": "civiqs",
-      "state": "stale"
+      "state": "deadline_risk"
     },
     {
       "alert": false,
@@ -1320,7 +1321,7 @@
       "last_error": "wiki-top10-2026-10-25: RuntimeError: no complete pre-lock ranking observation is available",
       "next_deadline": "2026-09-09T22:00:00Z",
       "next_lock": "2026-09-09T22:00:00Z",
-      "next_retry": "2026-09-09T22:37:03Z",
+      "next_retry": "2026-09-10T02:56:09Z",
       "required_action": "retry now or hold affected rounds before the filing deadline",
       "route": "ssa.ranking:ranking_wikitop",
       "source": "ranking_wikitop",
@@ -1332,7 +1333,7 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
-        "sources/sb_approval/2026-09-09.csv sha256=e3ce5d6c04b7359d9b3d8fed42a1ac0fdd80dafd410774cc9afcf0dd55417943"
+        "sources/sb_approval/2026-09-09.csv sha256=7a2fba8f874128dabbcf97096be13eb053a8bf7200ad169e03fc4fbeb6a9e0e4"
       ],
       "last_error": null,
       "next_deadline": "2026-09-09T22:00:00Z",
@@ -1349,7 +1350,7 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=10",
-        "sources/sb_generic/2026-09-09.csv sha256=fc08c4500136db0b3ea70d6b2f972578e7f8adccf33a2f7e88738f8a073422ba"
+        "sources/sb_generic/2026-09-09.csv sha256=4c2c8509514b6ee2391fb6cc44f3ed05714a34842d339a5df9c4fb31a6013ee3"
       ],
       "last_error": null,
       "next_deadline": "2026-09-09T22:00:00Z",
@@ -1413,7 +1414,7 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=4.6; fetch_budget=3; change_budget=40",
+        "fetched_days=-0.0; changed_days=4.8; fetch_budget=3; change_budget=40",
         "sources/umich/2026-09-09.json sha256=a4e677722ac5addd704db9b2dd1081cc19192972b543781c0c9354568a63e59f"
       ],
       "last_error": null,
