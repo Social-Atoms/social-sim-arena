@@ -28,14 +28,20 @@ a{color:inherit;}
 .header-status{display:flex;align-items:center;gap:6px 18px;padding:0 16px 8px;flex-wrap:wrap;}
 /* The live light sits at the head of the status line: the arena is running, and this is when. */
 .header-status .meta .live{display:inline-flex;align-items:center;gap:6px;color:var(--accent-ink);font-weight:700;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;}
-.livedot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:0 0 auto;animation:breathe 2.6s ease-out infinite;}
-@keyframes breathe{0%{box-shadow:0 0 0 0 rgba(21,128,61,.45);}70%{box-shadow:0 0 0 7px rgba(21,128,61,0);}100%{box-shadow:0 0 0 0 rgba(21,128,61,0);}}
-@media(prefers-reduced-motion:reduce){.livedot{animation:none;}}
+/* The live signal is the mark's own story: three published points, and every few seconds the next
+   one lands, drawn in green. No halo, no blink. */
+.livesig{display:block;width:28px;height:13px;overflow:visible;flex:0 0 auto;}
+.livesig .seg{stroke-dasharray:1;stroke-dashoffset:1;animation:sig-draw 5s cubic-bezier(.4,0,.2,1) infinite;}
+.livesig .tip{transform-origin:24px 3.5px;opacity:0;animation:sig-land 5s cubic-bezier(.4,0,.2,1) infinite;}
+.livesig .ring{transform-origin:24px 3.5px;opacity:0;animation:sig-ring 5s ease-out infinite;}
+@keyframes sig-draw{0%,8%{stroke-dashoffset:1;}20%,90%{stroke-dashoffset:0;}97%,100%{stroke-dashoffset:1;}}
+@keyframes sig-land{0%,18%{opacity:0;transform:scale(.3);}25%{opacity:1;transform:scale(1.3);}31%,90%{opacity:1;transform:scale(1);}97%,100%{opacity:0;transform:scale(.3);}}
+@keyframes sig-ring{0%,22%{opacity:0;transform:scale(.4);}26%{opacity:.55;transform:scale(.6);}48%,100%{opacity:0;transform:scale(2.2);}}
+@media(prefers-reduced-motion:reduce){.livesig .seg,.livesig .tip,.livesig .ring{animation:none;}.livesig .seg{stroke-dashoffset:0;}.livesig .tip{opacity:1;transform:none;}}
 .exam{display:inline-flex;gap:5px;align-items:baseline;border:1px solid #cce4d3;background:#f5faf6;color:var(--accent-ink);border-radius:4px;padding:3px 9px;font:700 12.5px/1.4 var(--sans);cursor:pointer;flex-wrap:wrap;text-align:left;}
 .exam:hover{border-color:var(--accent);}
 .exam b{color:var(--accent-ink);font-variant-numeric:tabular-nums;}
 .header-status .meta{display:flex;align-items:center;gap:4px 14px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);}
-html:not([data-page="leaderboard"]) .header-status .meta{display:none;}
 .header-status .meta span{white-space:nowrap;}
 .header-status .meta b{color:var(--ink2);font-weight:700;}
 .header-status .updated{margin-left:auto;font-size:12px;color:var(--mut);white-space:nowrap;}
@@ -448,8 +454,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 .week-count{display:flex;align-items:center;gap:8px 14px;margin:0 0 2px;flex-wrap:wrap;}
 .week-count h3{margin:0;font-size:17px;color:var(--ink);}
 #page-calendar .week-sub{margin:0 0 10px;font-size:12.5px;color:var(--mut);}
-.week-count .live{display:inline-flex;align-items:center;font:600 12px/1.4 var(--sans);color:var(--accent-ink);position:relative;top:1px;}
-.week-count .live:before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:1px;}
+.week-count .open-note{display:inline-flex;align-items:center;font:600 12px/1.4 var(--sans);color:var(--accent-ink);position:relative;top:1px;}
 .facets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin:16px 0 20px;padding-top:16px;border-top:1px solid var(--line);}
 .facet{min-width:0;}
 .week-count .closes{margin-left:auto;font-size:12px;font-family:var(--sans);color:var(--mut);}
@@ -831,6 +836,13 @@ const fmtCountdown = ms => {
   const d=Math.floor(ms/86400000), h=Math.floor(ms%86400000/3600000), m=Math.floor(ms%3600000/60000);
   return (d>0?d+'d ':'')+h+'h '+m+'m';
 };
+// Three published points and the next one landing: the header's live signal (styles under .livesig).
+const LIVE_SIGNAL='<svg class="livesig" viewBox="0 0 28 13" aria-hidden="true">'
+  +'<path d="M2.5 10.5 L9.5 6.5 L16.5 8.5" fill="none" stroke="#b3b1aa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'
+  +'<path class="seg" d="M16.5 8.5 L24 3.5" fill="none" stroke="#15803d" stroke-width="1.5" stroke-linecap="round" pathLength="1"/>'
+  +'<circle cx="2.5" cy="10.5" r="1.8" fill="#b3b1aa"/><circle cx="9.5" cy="6.5" r="1.8" fill="#b3b1aa"/><circle cx="16.5" cy="8.5" r="1.8" fill="#b3b1aa"/>'
+  +'<circle class="ring" cx="24" cy="3.5" r="3.2" fill="none" stroke="#22c55e" stroke-width="1"/>'
+  +'<circle class="tip" cx="24" cy="3.5" r="2.4" fill="#22c55e"/></svg>';
 const fmtLocal = iso => new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 // The same, naming the zone: every time on the site is the reader's local time, and this says which.
 const fmtLocalZ = iso => new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
@@ -2364,7 +2376,7 @@ function renderWeekly(data){
       +'<div class="week-actions"><a class="btn dark" href="submit.html">Test and register</a></div></section>'
     +'<section class="week-card week-overview" aria-labelledby="week-questions-title">'
       +'<div class="week-count"><h3 id="week-questions-title">Calendar</h3>'
-      +'<span class="live">live · submissions open</span>'
+      +'<span class="open-note">submissions open</span>'
       +'<span class="closes">next in <b>'+esc(nextIn)+'</b></span></div>'
       +'<p class="week-sub"><span class="numeric">'+week.length+'</span> questions close in the next three weeks</p>'
       +'<div class="wcal"><div class="wgrid wghead">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>'<div>'+d+'</div>').join('')+'</div>'
@@ -2480,7 +2492,7 @@ function render(data){
     if(nx) parts.push('Next deadline <b>'+fmtCountdown(new Date(deadlineOf(nx))-Date.now())+'</b>');
     parts.push('<b>'+openNow.length+'</b> open');
     parts.push('<b>'+(lb.resolved_rounds||0)+'</b> resolved');
-    document.getElementById('meta-line').innerHTML = '<span class="live"><span class="livedot" aria-hidden="true"></span>Live</span>'+parts.map(p=>'<span>'+p+'</span>').join('');
+    document.getElementById('meta-line').innerHTML = '<span class="live">'+LIVE_SIGNAL+'Live</span>'+parts.map(p=>'<span>'+p+'</span>').join('');
   }
   meta();
   clearInterval(window.__metaInt); window.__metaInt = setInterval(meta, 30000);
