@@ -302,12 +302,20 @@ nav.site-nav :is(a, button):focus-visible { outline: 2px solid var(--ink2); outl
   nav.site-nav .ptab { flex: 1; padding: 6px 12px; font-size: 13px; }
   nav.site-nav .right { gap: 12px; }
 }
+/* A phone: the brand and the one call to action on the first row, the three tabs as equal
+   cells on the second, Background / Docs / GitHub as equal cells on the third. Every target is
+   at least 40px tall. The .right wrapper dissolves so its links can take their own rows. */
 @media (max-width: 600px) {
-  nav.site-nav .brand { width: 100%; }
+  nav.site-nav .in { padding: 4px 12px 0; gap: 2px 0; }
+  nav.site-nav .brand { width: auto; flex: 1 1 auto; min-height: 40px; order: 1; }
   nav.site-nav .brand-name { font-size: 15px; }
-  nav.site-nav .page-tabs { order: 2; }
-  nav.site-nav .right { order: 3; width: 100%; }
-  nav.site-nav .right a.cta { margin-left: auto; }
+  nav.site-nav .by { display: none; }
+  nav.site-nav .right { display: contents; }
+  nav.site-nav .right a.cta { order: 2; margin-left: auto; padding: 10px 0 10px 10px; font-size: 13px; }
+  nav.site-nav .page-tabs { order: 3; flex: 0 0 100%; width: 100%; margin: 2px 0 0; }   /* no shrinking, so nothing shares its row */
+  nav.site-nav .ptab { flex: 1 1 0; text-align: center; padding: 10px 4px; font-size: 13px; }
+  nav.site-nav .right a.item { order: 4; flex: 1 1 33.333%; min-width: 0; text-align: center; padding: 10px 0 11px; font-size: 13px; border-top: 1px solid var(--line); margin: 4px 0 0; }   /* a third each: a zero basis would let one squeeze onto the tab row */
+  nav.site-nav .right a.item + a.item { border-left: 1px solid var(--line); }
 }
 
 /* Every expander on the site opens with + and closes with -, on every page: no disclosure triangle. */

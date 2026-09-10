@@ -26,6 +26,13 @@ a{color:inherit;}
 .site-header{border-bottom:1px solid var(--line);flex:0 0 auto;}
 
 .header-status{display:flex;align-items:center;gap:6px 18px;padding:0 16px 10px;flex-wrap:wrap;}
+/* The leaderboard's one line of pitch, with the live light. Questions and Calendar do without. */
+.strap{display:flex;align-items:center;flex-wrap:wrap;gap:4px 9px;margin:0 0 12px;font-size:12.5px;line-height:1.45;color:var(--mut);}
+.strap b{color:var(--ink);font-weight:800;}
+.strap .live-word{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink);}
+.livedot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:0 0 auto;animation:breathe 2.6s ease-out infinite;}
+@keyframes breathe{0%{box-shadow:0 0 0 0 rgba(21,128,61,.45);}70%{box-shadow:0 0 0 7px rgba(21,128,61,0);}100%{box-shadow:0 0 0 0 rgba(21,128,61,0);}}
+@media(prefers-reduced-motion:reduce){.livedot{animation:none;}}
 .exam{display:inline-flex;gap:5px;align-items:baseline;border:1px solid #cce4d3;background:#f5faf6;color:var(--accent-ink);border-radius:4px;padding:3px 9px;font:700 12.5px/1.4 var(--sans);cursor:pointer;flex-wrap:wrap;text-align:left;}
 .exam:hover{border-color:var(--accent);}
 .exam b{color:var(--accent-ink);font-variant-numeric:tabular-nums;}
@@ -481,6 +488,20 @@ table.ent td a.row{color:inherit;text-decoration:none;}
   .weekly-grid{grid-template-columns:minmax(0,1fr) 240px;}
 }
 @media(max-width:600px){
+  /* phones: one line of status, a small avatar beside the name, one tile per row, wide tables scroll */
+  .header-status{padding:0 12px 8px;gap:4px 12px;}
+  .header-status .meta{font-size:12px;gap:4px 10px;}
+  .header-status .updated{white-space:normal;font-size:11.5px;}
+  .strap{font-size:12px;}
+  .taskhead{padding-left:12px;padding-right:12px;}
+  .ent-head{column-gap:14px;row-gap:8px;align-items:start;}
+  .ent-head .ent-avatar{align-self:start;}
+  .ent-head .ent-avatar .av{height:64px;width:64px;font-size:22px;border-radius:14px;}
+  .tiles,.tiles-2,.ent-cov{grid-template-columns:1fr;}
+  .tile .k{flex-wrap:wrap;}
+  .ent-sec{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .ent-sec table.ent{min-width:560px;}
+  .inner .col{padding:14px 12px 28px;}
   #page-calendar .col{padding:20px 16px 28px;}
   #page-calendar .week-card{padding:16px;}
   .week-routes,.facets{grid-template-columns:1fr;}
@@ -574,7 +595,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 </style>
 <script defer src="panels.js?v=91f5d3557c"></script>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=eecbd8e909">
+<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=28f62ae0c4">
 </head>
 <body class="site-home">
 
@@ -627,6 +648,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
         <div class="panel-resizer" data-panel-resizer="tasks" role="separator" tabindex="0" aria-label="Resize tasks" aria-orientation="vertical" aria-controls="task-panel" title="Drag to resize · double-click to reset"></div>
         <section class="taskview" id="benchmark-panel">
           <div class="taskhead">
+            <p class="strap"><span class="livedot" aria-hidden="true"></span><span class="live-word">Live</span><b>Social Simulation vs. The Real Future</b><span class="strap-text">Live benchmark for social simulation: models forecast the next public release before it is published. Locked, hashed, scored in public.</span></p>
             <div class="eyebrow page-eyebrow" id="task-eyebrow">BENCHMARK OVERVIEW</div>
             <div class="task-picker" id="task-picker">
               <h2 class="page-title"><button type="button" class="task-trigger" id="task-trigger" aria-expanded="false" aria-controls="task-pop" aria-haspopup="listbox" title="Choose a task"><span id="task-title">Overall</span><span class="task-trigger-count" id="task-trigger-count"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6l-6 6"/></svg></button></h2>
@@ -794,6 +816,8 @@ const fmtCountdown = ms => {
   return (d>0?d+'d ':'')+h+'h '+m+'m';
 };
 const fmtLocal = iso => new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+// The same, naming the zone: every time on the site is the reader's local time, and this says which.
+const fmtLocalZ = iso => new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
 const fmtDate = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'}); };
 const dnum = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(y, m-1, d).getTime(); };
 // A round closes at its own lock. `deadline` is published for every round, so
@@ -1109,7 +1133,7 @@ function renderForecast(roundId, entrantId){
     const err=(typeof rel==='number'&&typeof f.mean==='number')?Math.abs(f.mean-rel):null, crps=(err!==null&&typeof f.sd==='number')?crpsNormal(f.mean,f.sd,rel):null;
     h+='<div class="tiles">'
       +tile('Forecast', what, whatSub)
-      +tile('Filed', f.filed?esc(fmtLocal(f.filed)):'·', 'lock at '+esc(fmtLocal(r.lock_at||deadlineOf(r))))
+      +tile('Filed', f.filed?esc(fmtLocalZ(f.filed)):'·', 'lock at '+esc(fmtLocal(r.lock_at||deadlineOf(r))))
       +tile('Released', typeof rel==='number'?fmtNum(rel,u):'·', typeof rel==='number'?esc(fmtLocal((r.resolution||{}).resolved_at||r.release_at)):(active?'not yet':'expected '+esc(fmtLocal(r.release_at))))
       +tile('Error', err!==null?fmtNum(err,u):'·', crps!==null?'CRPS '+crps.toFixed(2):(err!==null?'absolute error':'scored once the answer lands'))
       +'</div>';
@@ -2446,7 +2470,7 @@ function render(data){
   document.getElementById('btn-register-2').href = submissionLink('agent');
   const updated = document.getElementById('data-updated');
   updated.dateTime = data.generated_at;
-  updated.innerHTML = 'Updated <b>'+new Date(data.generated_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})+'</b>';
+  updated.innerHTML = 'data updated <b>'+fmtLocalZ(data.generated_at)+'</b> · refreshed every 6 hours';
 
   requestAnimationFrame(()=>setTab(window.__tab || 'agg'));
   applyHash();
