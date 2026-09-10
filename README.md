@@ -4,6 +4,8 @@
 
 <h1 align="center">Social Simulation Arena</h1>
 
+<p align="center"><strong>Social Simulation vs. The Real Future</strong></p>
+
 <p align="center">Can a simulator predict a public before it moves?</p>
 
 <p align="center">
