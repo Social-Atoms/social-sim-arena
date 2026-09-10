@@ -191,7 +191,12 @@ table.lb .who>span:last-child{min-width:0;overflow-wrap:anywhere;}
 table.lb .who b{color:var(--ink);font-weight:700;font-size:15px;}
 table.lb .who .type{font-size:11px;color:var(--mut);}
 /* A heading with a title= explanation says so, rather than hiding it. */
-table.lb thead th[title]{cursor:help;text-decoration:underline dotted var(--mut);text-underline-offset:3px;}
+table.lb thead th.has-help{cursor:help;}
+th.has-help .th-label{text-decoration:underline dotted var(--mut);text-underline-offset:3px;}
+/* the hover box: white, one thin dark border, a soft shadow, the page's own face */
+th .th-help{visibility:hidden;opacity:0;position:absolute;top:calc(100% + 6px);right:6px;width:min(280px,60vw);padding:7px 10px;background:#fff;color:var(--ink2);border:1px solid #333;box-shadow:0 2px 8px rgba(0,0,0,.08);font:400 12.5px/1.45 var(--sans);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;z-index:6;pointer-events:none;transition:opacity .2s,visibility .2s;}
+th:hover .th-help,th:focus-within .th-help,th:focus .th-help{visibility:visible;opacity:1;}
+th.has-help:focus{outline:none;}
 table.lb .skill{font-weight:800;color:var(--ink);font-size:15px;}
 table.lb .pend{color:#c9c7c0;font-weight:600;letter-spacing:.15em;}
 table.lb .skill.pos{color:var(--accent-ink);}
@@ -1371,9 +1376,10 @@ function renderBoard(mode){
     note=model.length?'Model walk-forward replay for this task only; every forecast is after its own training cutoff.':'A small walk-forward baseline replay from the task history currently published to the site. It is not a Season 0 model result.';
   }
   document.getElementById('lb-title').textContent=title;
-  document.getElementById('lb-score-head').textContent=replay?'Skill':'Score';
+  // A heading with help renders its label plus a hover box; the browser's
+  // own title tooltip is too slow and cannot be styled.
+  const headWithHelp=(el,label,help)=>{ if(!el) return; el.innerHTML='<span class="th-label">'+esc(label)+'</span>'+(help?'<span class="th-help" role="tooltip">'+esc(help)+'</span>':''); el.classList.toggle('has-help',!!help); el.removeAttribute('title'); if(help) el.tabIndex=0; };
   const lossHead=document.getElementById('lb-loss-head');
-  lossHead.textContent=metricLabel;
   // Three column headings nobody outside forecasting reads at a glance. The
   // explanation hangs off the heading on hover rather than sitting under the
   // table, so it is there when wanted and takes no room when not.
@@ -1381,13 +1387,13 @@ function renderBoard(mode){
     'CRPS':'CRPS \u2014 how far the whole forecast distribution sat from the published answer, in the question\u2019s own unit. Lower is better, and being confidently wrong costs more than being unsure.',
     'Energy':'Energy score \u2014 CRPS for a whole population at once: one number for all sixteen subgroups together, so getting the pattern right counts, not just the average. Lower is better.',
     'Profile RMSE':'Profile RMSE \u2014 the average error per subgroup. Lower is better.'};
-  lossHead.title=METRIC_HELP[metricLabel]||'';
+  headWithHelp(lossHead, metricLabel, METRIC_HELP[metricLabel]||'');
   const scoreHead=document.getElementById('lb-score-head');
-  scoreHead.title=replay
+  headWithHelp(scoreHead, replay?'Skill':'Score', replay
     ? 'Skill \u2014 how much of persistence\u2019s error this forecaster removed. 0 is persistence, above 0 beats it.'
-    : 'Arena score \u2014 0 is persistence (copying the last release), 100 is a perfect oracle. Higher is better.';
+    : 'Arena score \u2014 0 is persistence (copying the last release), 100 is a perfect oracle. Higher is better.');
   const roundsHead=document.getElementById('lb-rounds-head');
-  if(roundsHead) roundsHead.title='How many resolved rounds this row is averaged over. Fewer rounds, noisier score.';
+  headWithHelp(roundsHead, 'Rounds', 'How many resolved rounds this row is averaged over. Fewer rounds, noisier score.');
   function row(id, s, rank, ref){
     const arena = s ? 100*s.mean_skill : null;
     const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0)) : '<span class="pend">···</span>';
