@@ -10,6 +10,7 @@ VoteHub for the Congress and Supreme Court trackers), round status computed agai
 forecasts (persistence, trend) computed from the real series.
 """
 import concurrent.futures
+import subprocess
 import threading
 import json
 import os
@@ -1247,7 +1248,8 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
                 "round_id": r["round_id"],
                 "entrant": name,
                 **answer,
-                "notes": ("auto-filed baseline (" + method
+                "notes": ("filed=" + now.strftime("%Y-%m-%dT%H:%MZ")
+                          + ", auto-filed baseline (" + method
                           + "), frozen at participant deadline"),
             }
             with open(path, "w") as f:
@@ -1444,12 +1446,30 @@ def stamp_locked_rounds(rounds):
     return out
 
 
-# The arena's own reference forecasters. Their forecasts are published as soon as they are
-# filed: each is a function of the series everyone can already see.
-BASELINE_FORECASTERS = frozenset({"persistence", "trend", "ewma", "climatology"})
+def first_commit_times(root):
+    """When each file under root first entered git, as the filing stamp the notes carry
+    (UTC, to the minute). For forecasts written before the harness stamped filed= into
+    its notes. Empty on a checkout without history or a root outside the repository."""
+    rel = os.path.relpath(root, ROOT)
+    if rel.startswith(".."):
+        return {}
+    try:
+        out = subprocess.run(["git", "log", "--diff-filter=A", "--name-only", "--format=%x00%cI", "--", rel],
+                             capture_output=True, text=True, check=True, cwd=ROOT).stdout
+    except (OSError, subprocess.CalledProcessError):
+        return {}
+    times, when = {}, None
+    for line in out.splitlines():
+        if line.startswith("\x00"):
+            iso = line[1:].strip().replace("Z", "+00:00")     # git writes Z for UTC; 3.9's fromisoformat does not read it
+            when = datetime.fromisoformat(iso).astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
+        elif line.strip() and when:
+            times[line.strip()] = when      # newest first, so the last write is the first add
+    return times
 
 
 def count_forecasts(rounds):
+    added = first_commit_times(FORECASTS)
     """Attach filed forecasts to each round: count + per-entrant toplines
     (the page overlays them on the target charts)."""
     for r in rounds:
@@ -1463,29 +1483,22 @@ def count_forecasts(rounds):
                             fc = json.load(f)
                         if not scoreable_forecast(fc):
                             continue
-                        # Every filed forecast is published with its shape and filing
-                        # time. Its contents are published only once the question has
-                        # locked: before that, a forecast on the site would be a
-                        # forecast anyone else could copy. After the lock a number
-                        # carries mean and sd, a profile every cell, a ranking its list.
+                        # Every filed forecast is published in full the moment it lands,
+                        # with its filing time: the arena calls every endpoint at the same
+                        # moment, so there is no window in which to copy (issue #119 holds
+                        # the commit-reveal design for the retry gap). A number carries
+                        # mean and sd, a profile every cell, a ranking its list.
                         filed = re.search(r"filed=(\S+?)(?:[,\s]|$)", fc.get("notes") or "")
-                        entry = {"filed": filed.group(1)} if filed else {}
-                        # A baseline is a function of the published series, so sealing it would hide nothing.
-                        revealed = (r.get("status") in ("locked", "awaiting_resolution", "resolved")
-                                    or fc["entrant"] in BASELINE_FORECASTERS)
+                        stamp = filed.group(1) if filed else added.get(os.path.relpath(os.path.join(rdir, fn), ROOT))
+                        entry = {"filed": stamp} if stamp else {}
                         if isinstance(fc.get("topline"), dict) and "mean" in fc["topline"]:
-                            entry["shape"] = "number"
-                            if revealed:
-                                entry.update({"mean": fc["topline"]["mean"], "sd": fc["topline"].get("sd", 2.0)})
+                            entry.update({"shape": "number", "mean": fc["topline"]["mean"], "sd": fc["topline"].get("sd", 2.0)})
                         elif isinstance(fc.get("profile"), dict):
-                            entry.update({"shape": "profile", "cells_n": len(fc["profile"])})
-                            if revealed:
-                                entry["cells"] = {k: ({"mean": v.get("mean"), "sd": v.get("sd")} if isinstance(v, dict) else v)
-                                                  for k, v in fc["profile"].items()}
+                            entry.update({"shape": "profile", "cells_n": len(fc["profile"]),
+                                          "cells": {k: ({"mean": v.get("mean"), "sd": v.get("sd")} if isinstance(v, dict) else v)
+                                                    for k, v in fc["profile"].items()}})
                         elif isinstance(fc.get("ranking"), list):
-                            entry.update({"shape": "ranking", "items_n": len(fc["ranking"])})
-                            if revealed:
-                                entry["items"] = list(fc["ranking"])
+                            entry.update({"shape": "ranking", "items_n": len(fc["ranking"]), "items": list(fc["ranking"])})
                         else:
                             continue
                         fcs[fc["entrant"]] = entry

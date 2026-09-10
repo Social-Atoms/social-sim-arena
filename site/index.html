@@ -902,7 +902,11 @@ function renderEntrant(id){
   const data=window.__data, host=document.getElementById('entrant-col'); if(!data||!host) return;
   // The board and the harness know entrants the registration folder does not: the arena's
   // own runs and their variants. A page renders for any id something on the site knows.
+  // A harness variant (web, sfc, zs, news, persona) is its base model in another setup: it
+  // borrows the base record's description, links and type, and says which setup it runs.
+  const baseId = id.replace(/-(web|superfc|zeroshot|news|persona)/g,''), baseRec = baseId!==id ? (data.entrants||[]).find(x=>x.entrant_id===baseId) : null;
   const known = (data.entrants||[]).find(x=>x.entrant_id===id)
+    || (baseRec ? Object.assign({}, baseRec, {entrant_id:id, name:forecasterName(id,data), base:baseId, inherited:true}) : null)
     || (((data.leaderboard||{}).entries||[]).some(x=>x.entrant===id) || ((data.backtest||{}).overall||[]).some(x=>x.entrant===id) || (data.rounds||[]).some(r=>r.forecasts&&r.forecasts[id]) || (data.entrant_status||{})[id]
         ? {entrant_id:id, name:forecasterName(id,data), type:isBaseline(id)?'baseline':'llm', unregistered:true} : null);
   const e = known;
@@ -940,13 +944,13 @@ function renderEntrant(id){
   // ---- header ----
   let h='<div class="ent-head"><span class="ent-avatar">'+avatar(id)+'</span><div class="ent-id"><div class="eyebrow page-eyebrow">Entrant</div><h2 class="page-title">'+esc(name)+'</h2>'
     +'<div class="ent-meta"><span><b>'+esc(e.type==='llm'?'LLM':e.type==='baseline'?'Baseline':(e.type||'entrant'))+'</b></span>'
-    +((e.arms||[]).length?'<span>setup '+esc((e.arms||[]).join(', '))+'</span>':'')
+    +(e.inherited?'<span>setup '+esc(variantWords(id))+'</span>':(e.arms||[]).length?'<span>setup '+esc((e.arms||[]).join(', '))+'</span>':'')
     +(()=>{ const own = e.homepage && !/social-sim-arena/.test(e.homepage) ? ['homepage', e.homepage] : null;
             const v = vendorOf(id), home = own || (v && VENDOR_HOME[v]) || null;
             return home ? '<span><a href="'+esc(home[1])+'" target="_blank" rel="noopener">'+esc(home[0])+'</a></span>' : ''; })()
-    +(e.unregistered?'<span class="dim">run by the arena</span>':'<span><a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/entrants/'+esc(id)+'.json" target="_blank" rel="noopener">registration file</a></span>')
+    +(e.unregistered?'<span class="dim">run by the arena</span>':'<span><a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/entrants/'+esc(e.base||id)+'.json" target="_blank" rel="noopener">registration file'+(e.inherited?' (base model)':'')+'</a></span>')
     +'<span class="dim">id '+esc(id)+'</span></div></div>'
-    +(e.method?'<p class="ent-method">'+esc(e.method)+'</p>':'')+'</div>';
+    +(e.method?'<p class="ent-method">'+esc(e.method)+(e.inherited?' <span class="dim">That describes the base model, <a href="#entrant/'+esc(e.base)+'">'+esc(forecasterName(e.base,data))+'</a>; this entry runs it with '+esc(variantWords(id))+'.</span>':'')+'</p>':'')+'</div>';
   // ---- left: how it performs ----
   let left='<div class="tiles tiles-2">'
     +tile('Score', score&&typeof score.mean_skill==='number'?((score.mean_skill>0?'+':'')+Math.round(100*score.mean_skill)):'·', score?scoreSrc+' · '+(score.rounds||0)+' question'+(score.rounds===1?'':'s')+(live&&bt&&typeof bt.mean_skill==='number'?' · backtest '+(bt.mean_skill>0?'+':'')+Math.round(100*bt.mean_skill):''):'no scored questions yet')
@@ -1034,13 +1038,13 @@ function subsList(host, rows, id){
   pager.onclick=ev=>{ const b=ev.target.closest('button[data-page]'); if(!b||b.disabled) return; st.page+=b.dataset.page==='next'?1:-1; draw(); list.scrollIntoView({block:'nearest'}); };
   draw();
 }
-// What a published forecast says, in a few words: its contents after the lock, its shape before.
+// What a published forecast says, in a few words.
 function forecastSummary(f, u, active){
   if(!f) return '·';
   if(typeof f.mean==='number') return '<b>'+fmtNum(f.mean,u)+'</b>'+(typeof f.sd==='number'?' <span class="dim">± '+fmtNum(f.sd,'')+'</span>':'');
-  if(f.shape==='profile') return '<b>profile</b> <span class="dim">'+(f.cells_n||Object.keys(f.cells||{}).length)+' cells'+(f.cells?'':(active?' · sealed':''))+'</span>';
-  if(f.shape==='ranking') return '<b>ranking</b> <span class="dim">'+(f.items?f.items.slice(0,3).map(x=>String(x).replace(/_/g,' ')).join(', ')+(f.items.length>3?' …':''):(f.items_n||0)+' items'+(active?' · sealed':''))+'</span>';
-  return active ? '<span class="dim">sealed until the lock</span>' : '<b>filed</b>';
+  if(f.shape==='profile') return '<b>profile</b> <span class="dim">'+(f.cells_n||Object.keys(f.cells||{}).length)+' cells</span>';
+  if(f.shape==='ranking') return '<b>ranking</b> <span class="dim">'+(f.items?f.items.slice(0,3).map(x=>String(x).replace(/_/g,' ')).join(', ')+(f.items.length>3?' …':''):(f.items_n||0)+' items')+'</span>';
+  return '<b>filed</b>';
 }
 // ---- one question: what was asked, who answered when, what came out, who was closest ----
 function renderQuestion(roundId){
@@ -1071,7 +1075,7 @@ function renderQuestion(roundId){
     +tile('Timestamp', !st||!st.manifest?'not yet':(st.bitcoin_attested?'on-chain':'stamped'), !st||!st.manifest?(active?'every forecast is hashed and stamped at the lock':'no manifest on record'):(st.bitcoin_attested?'the manifest of forecast hashes is attested in a Bitcoin block':'OpenTimestamps receipt held; the Bitcoin block follows in hours'))
     +'</div>';
   if(mm.length) h+='<div class="ent-sec"><h3>Where the answers sit</h3><div class="qstrip" data-strip="'+esc(r.round_id)+'"></div></div>';
-  h+='<div class="ent-sec"><h3>Every forecast</h3><p class="sub">'+(resolved?'Closest first, by CRPS where the forecast carried an uncertainty, else by error.':active?'Sealed until the lock: who has filed, and when. The forecasts themselves appear once the question locks.':'In the order they were filed; scored once the answer lands.')+' Open a row for the forecast and its timestamp proof.</p>'
+  h+='<div class="ent-sec"><h3>Every forecast</h3><p class="sub">'+(resolved?'Closest first, by CRPS where the forecast carried an uncertainty, else by error.':'In the order they were filed; scored once the answer lands.')+' Open a row for the forecast and its timestamp proof.</p>'
     +'<table class="ent"><thead><tr><th class="num">#</th><th>Entrant</th><th>Filed</th><th class="num">Forecast</th><th class="num">Error</th><th class="num">CRPS</th></tr></thead><tbody>'
     +rows.map((row,i)=>{ const x=row.x; const href='#forecast/'+esc(r.round_id)+'/'+esc(row.k);
       const what=forecastSummary(x,u,active);
@@ -1095,14 +1099,13 @@ function renderForecast(roundId, entrantId){
   const rel=(r.resolution||{}).value, active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
   const state=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">locked · releases '+esc(fmtLocal(r.release_at))+'</span>';
   const tile=(k,v,sub)=>'<div class="tile"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="s">'+sub+'</div></div>';
-  let h='<div class="eyebrow page-eyebrow">Forecast</div><h2 class="page-title"><a href="#entrant/'+esc(entrantId)+'">'+esc(name)+'</a> on '+esc(t.label)+'</h2>'
+  let h='<div class="eyebrow page-eyebrow">Forecast</div><h2 class="page-title"><a href="#entrant/'+esc(entrantId)+'">'+esc(name)+'</a> on <a href="#leaderboard/'+esc(taskKeyForRound(r))+'/all">'+esc(t.label)+'</a></h2>'
     +'<p class="lede page-description">'+esc(r.question)+'</p><p class="ent-meta">'+state+'<span>question <b>'+esc(r.round_id)+'</b></span><span>entrant <b>'+esc(entrantId)+'</b></span></p>';
   if(!f){
     h+='<div class="ent-sec"><p class="sub">No forecast from this entrant on this question.</p></div>';
   } else {
-    const sealed = active && typeof f.mean!=='number' && !f.cells && !f.items;
-    const what = sealed ? 'sealed' : typeof f.mean==='number' ? fmtNum(f.mean,u)+(typeof f.sd==='number'?' <span class="s" style="font-size:14px;color:var(--mut)">± '+fmtNum(f.sd,'')+'</span>':'') : esc(f.shape||'filed');
-    const whatSub = sealed ? 'published when the question locks' : typeof f.mean==='number' ? 'mean and standard deviation' : (f.shape==='profile'?(f.cells_n||Object.keys(f.cells||{}).length)+' cells, one number each':f.shape==='ranking'?'an ordered list of '+(f.items_n||(f.items||[]).length):'');
+    const what = typeof f.mean==='number' ? fmtNum(f.mean,u)+(typeof f.sd==='number'?' <span class="s" style="font-size:14px;color:var(--mut)">± '+fmtNum(f.sd,'')+'</span>':'') : esc(f.shape||'filed');
+    const whatSub = typeof f.mean==='number' ? 'mean and standard deviation' : (f.shape==='profile'?(f.cells_n||Object.keys(f.cells||{}).length)+' cells, one number each':f.shape==='ranking'?'an ordered list of '+(f.items_n||(f.items||[]).length):'');
     const err=(typeof rel==='number'&&typeof f.mean==='number')?Math.abs(f.mean-rel):null, crps=(err!==null&&typeof f.sd==='number')?crpsNormal(f.mean,f.sd,rel):null;
     h+='<div class="tiles">'
       +tile('Forecast', what, whatSub)
@@ -1571,8 +1574,8 @@ function seriesChart(key, data){
   if(!series || series.length<2){ svg.style.display='none'; return; }
   const pw = svg.clientWidth, ph = svg.clientHeight;
   if(pw < 80 || ph < 80){ svg.style.display='none'; return; }
-  // A round is drawn once its forecasts are published (locked, awaiting its number, or resolved);
-  // an open round is sealed. Baselines file like anyone else, so they sit in the picker too.
+  // Every round with published forecasts is drawn (a filed forecast is public at once); of the
+  // open ones only the next, below. Baselines file like anyone else, so they sit in the picker too.
   let upcoming = taskRounds(d,data).filter(r => r.forecasts && Object.values(r.forecasts).some(f=>typeof f.mean==='number'));
   const months = window.__range || 0;
   if(months > 0){
@@ -1981,8 +1984,7 @@ function renderBoard(mode){
     const setup = condTag(nameOf[id]), variant = variantOf(id);
     const entryType = typeOf[id] || (isBaseline(id) ? 'baseline' : 'llm');
     const details = [
-      setup==='zs' ? 'Zero-shot' : setup==='r10' ? 'Recent-10' : '',
-      variant,
+      setup==='zs' ? 'Zero-shot' : setup==='r10' ? 'Recent-10' : variant,   // the registered name's setup, else the id's
       entryType==='llm' ? 'LLM' : entryType.charAt(0).toUpperCase()+entryType.slice(1),
       id==='persistence' ? 'Reference' : '',
       s && s.mock ? 'Placeholder' : ''
@@ -2001,10 +2003,9 @@ function renderBoard(mode){
   window.__perRow = entries.find(e=>e.entrant==='persistence') || null;
   const seen = new Set(entries.map(e=>e.entrant));
   const orderT = {llm:0, baseline:1};
-  const rest = appendPending ? (data.entrants||[]).filter(e=>e.type!=='human'&&!seen.has(e.entrant_id))
-    .sort((a,b)=>(orderT[a.type]??3)-(orderT[b.type]??3) || a.name.localeCompare(b.name))
-    : [];
-  body.innerHTML = entries.map((e,i)=>row(e.entrant,e,i+1)).join('')+rest.map(e=>row(e.entrant_id,null,null)).join('');
+  // An entrant with nothing scored yet has no row: the board ranks results, the Questions page lists who is in.
+  entries = entries.filter(e=>(e.rounds||0)>0);
+  body.innerHTML = entries.map((e,i)=>row(e.entrant,e,i+1)).join('');
   if(!body.innerHTML){
     const nx=taskRounds(d,data).filter(r=>r.status!=='resolved').sort((a,b)=>a.release_at.localeCompare(b.release_at))[0];
     body.innerHTML='<tr><td colspan="6" style="padding:18px;color:var(--mut);">No defensible historical replay is available for this task.'+(nx?' The first live result is '+esc(nx.round_id)+' on '+esc(fmtDate(nx.release_at))+'.':'')+'</td></tr>';
@@ -2046,6 +2047,9 @@ function questionText(r){
 }
 // The harness variant in an id (web, sfc, zs), as the site writes it; the model's name is separate.
 function variantOf(id){ return [/-web/.test(id)?'web':'', /-superfc/.test(id)?'sfc':'', /-zeroshot/.test(id)?'zs':''].filter(Boolean).join('+'); }
+// The same setups in words, for an entrant page.
+const VARIANT_WORDS=[[/-web/,'web search context'],[/-news/,'news digest context'],[/-zeroshot/,'no series history (zero-shot)'],[/-superfc/,'the superforecaster prompt'],[/-persona/,'persona prompting']];
+function variantWords(id){ const w=VARIANT_WORDS.filter(([re])=>re.test(id)).map(([,t])=>t); return w.length?w.join(', '):'the default setup'; }
 function forecasterName(id, data){
   const ents = data.__byId || (data.__byId = Object.fromEntries((data.entrants||[]).map(e=>[e.entrant_id,e])));
   const base = id.replace(/-(web|superfc|zeroshot|news|persona)/g,'');
@@ -2201,7 +2205,7 @@ function roundsList(data){
     const kind=r.target_type||((r.cells&&r.cells.length)?'profile_energy':'continuous_normal');
     const shape=kind==='profile_energy'?'profile · '+(r.cells||[]).length+' cells':kind==='ranking_list'?'ranking':'number';
     const when=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">locked · releases '+esc(fmtLocal(r.release_at))+'</span>';
-    const strip=forecastStrip(r,t,data)||'<div class="qempty">'+(r.n_forecasts?esc(r.n_forecasts)+' forecast'+(r.n_forecasts===1?'':'s')+' filed'+(active?' · sealed until the lock':'')+' · '+esc(shape):'No forecasts filed yet · '+esc(shape))+'</div>';
+    const strip=forecastStrip(r,t,data)||'<div class="qempty">'+(r.n_forecasts?esc(r.n_forecasts)+' forecast'+(r.n_forecasts===1?'':'s')+' filed · '+esc(shape):'No forecasts filed yet · '+esc(shape))+'</div>';
     return '<div class="qcard'+(active?' live':'')+'"><div class="qhead"><span>'+esc(g?g.label:'Task')+'</span><span class="qshape'+(kind!=='continuous_normal'?' special':'')+'">'+esc(shape)+'</span>'+when+'</div>'
       +'<h3><a class="qlink" href="#question/'+esc(r.round_id)+'">'+esc(t.label)+'</a>'+(()=>{const o=roundOrdinal(r,data); return o?' <span class="ord">round '+o.n+' of '+o.of+'</span>':'';})()+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
       +'<div class="qfoot"><span class="qid">Source '+(t.srcUrl?'<a class="src" href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span>'+esc(t.population)+'</span><a class="go" href="#question/'+esc(r.round_id)+'">open question →</a><a class="go" href="#leaderboard/'+taskKeyForRound(r)+'/all">open task →</a></div>'
