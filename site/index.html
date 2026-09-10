@@ -267,6 +267,46 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .qcard .qstats{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;font-size:12px;color:var(--mut);margin-top:6px;}
 .qcard .qstats b{font-size:19px;color:var(--ink);font-weight:700;}
 .qcard .qstats .hit{color:var(--accent-ink);font-weight:700;}
+.ent-head{display:flex;align-items:flex-start;gap:14px;margin:0 0 16px;}
+.ent-head .ent-avatar{flex:0 0 auto;margin-top:2px;}
+.ent-head .ent-avatar .avatar{width:40px;height:40px;font-size:15px;border-radius:9px;}
+.ent-head h2{margin:0 0 3px;}
+.ent-meta{font-size:12.5px;color:var(--mut);display:flex;flex-wrap:wrap;gap:4px 12px;}
+.ent-meta b{color:var(--ink2);font-weight:700;}
+.ent-meta a{color:var(--accent-ink);text-decoration:underline;text-underline-offset:2px;}
+.ent-method{font-size:13px;color:var(--ink2);margin:6px 0 0;max-width:100ch;}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 6px;}
+.tile{border:1px solid var(--line);border-radius:5px;padding:12px 14px;background:#fff;min-width:0;}
+.tile .k{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:700;}
+.tile .v{font-size:22px;font-weight:700;color:var(--ink);margin:4px 0 2px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tile .s{font-size:12px;color:var(--mut);}
+.tile .ok{color:var(--accent-ink);}
+.tile .bad{color:#9c2f28;}
+.ent-sec{margin:20px 0 0;}
+.ent-sec h3{margin:0 0 8px;font-size:14px;color:var(--ink);}
+.ent-sec .sub{font-size:12.5px;color:var(--mut);margin:0 0 10px;}
+.ent-cov{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;}
+table.ent{width:100%;border-collapse:collapse;font-size:12.5px;}
+table.ent th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);font-weight:700;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap;}
+table.ent td{padding:7px 8px;border-bottom:1px solid #eeede9;vertical-align:top;color:var(--ink2);}
+table.ent td.num,table.ent th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+table.ent td b{color:var(--ink);font-weight:700;}
+table.ent .q{color:var(--ink);}
+table.ent .dim{color:var(--mut);font-size:12px;}
+table.ent .pos{color:var(--accent-ink);font-weight:700;}
+table.lb col.go-col{width:24px;}
+table.lb td.go-cell{text-align:right;padding-left:0;padding-right:4px;}
+table.lb td.go-cell a{color:var(--mut);text-decoration:none;font-weight:700;}
+table.lb tr:hover td.go-cell a{color:var(--accent-ink);}
+table.lb .model-name a{color:inherit;text-decoration:none;}
+table.lb .model-name a:hover{text-decoration:underline;text-underline-offset:2px;}
+.chartpane svg a text{cursor:pointer;}
+.chartpane svg a:hover text{text-decoration:underline;}
+@media (max-width:880px){ .tiles,.ent-cov{grid-template-columns:repeat(2,minmax(0,1fr));} }
+.qmore{display:flex;justify-content:center;margin:16px 0 8px;}
+.qmore .btn{font:700 12.5px/1.4 var(--sans);padding:7px 16px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink);cursor:pointer;}
+.qmore .btn:hover{border-color:var(--ink);}
+.qmore .dim{color:var(--mut);font-weight:500;}
 .qcard .qempty{flex:1 1 auto;min-height:108px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12.5px;color:var(--mut);padding:10px 0 6px;border-top:1px dashed var(--line);margin-top:auto;}
 .qcard .qfoot{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid #eeede9;font-size:11.5px;color:var(--mut);}
 .qcard .qfoot .qid{font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -555,9 +595,9 @@ table.lb .skill.pos{color:var(--accent-ink);}
       </div>
       <div class="scroll">
         <table class="lb">
-          <colgroup><col class="rank-col"><col><col class="score-col"><col class="loss-col"><col class="rounds-col"></colgroup>
-          <thead><tr><th></th><th>Entrant</th><th class="num" id="lb-score-head">Score</th><th class="num" id="lb-loss-head">CRPS</th><th class="num" id="lb-rounds-head">Rounds</th></tr></thead>
-          <tbody id="lb-body"><tr><td colspan="5" style="color:var(--mut);">loading…</td></tr></tbody>
+          <colgroup><col class="rank-col"><col><col class="score-col"><col class="loss-col"><col class="rounds-col"><col class="go-col"></colgroup>
+          <thead><tr><th></th><th>Entrant</th><th class="num" id="lb-score-head">Score</th><th class="num" id="lb-loss-head">CRPS</th><th class="num" id="lb-rounds-head">Rounds</th><th></th></tr></thead>
+          <tbody id="lb-body"><tr><td colspan="6" style="color:var(--mut);">loading…</td></tr></tbody>
         </table>
       </div>
       <details class="lb-note" id="lb-about"><summary>How this board is scored</summary><p id="lb-note"></p></details>
@@ -580,6 +620,10 @@ table.lb .skill.pos{color:var(--accent-ink);}
     <div class="inner"><div class="col widecol">
       <div id="weekly-content" class="weekly-grid"></div>
     </div></div>
+  </div>
+
+  <div class="page" id="page-entrant">
+    <div class="inner"><div class="col widecol" id="entrant-col"></div></div>
   </div>
 
   <div class="page" id="page-submit">
@@ -742,6 +786,77 @@ function applyTaskRegistry(data){
     d.kind = t.question_type === 'number' ? undefined : t.question_type;
     d.retired = t.status !== 'active';
   });
+}
+// ---- the entrant page: one entrant, what it was asked, what it answered, how it scored, and
+// whether its endpoint is alive. Coverage and call health come from data.entrant_status, which
+// refresh.py builds from the forecasts on disk and the harness's reply and failure logs.
+function erf(x){ const t=1/(1+0.3275911*Math.abs(x)); const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x); return x<0?-y:y; }
+function crpsNormal(mu, sd, y){
+  if(!(sd>0)) return Math.abs(y-mu);
+  const z=(y-mu)/sd, phi=Math.exp(-z*z/2)/Math.sqrt(2*Math.PI), Phi=0.5*(1+erf(z/Math.SQRT2));
+  return sd*(z*(2*Phi-1)+2*phi-1/Math.sqrt(Math.PI));
+}
+const DOMAIN_LABEL={'public-opinion':'Public opinion',consumer:'Sentiment & expectations',attention:'Collective attention',elections:'Elections'};
+function renderEntrant(id){
+  const data=window.__data, host=document.getElementById('entrant-col'); if(!data||!host) return;
+  const e=(data.entrants||[]).find(x=>x.entrant_id===id);
+  if(!e){
+    window.__entrantName='';
+    host.innerHTML='<div class="eyebrow page-eyebrow">Entrant</div><h2 class="page-title">No entrant called '+esc(id||'(none)')+'</h2><p class="lede page-description">Pick one from the <a href="#leaderboard">leaderboard</a>; every row links here.</p>';
+    if(typeof syncHash==='function') syncHash(); return;
+  }
+  const name=(e.name||id).split(' (')[0]; window.__entrantName=name;
+  const st=(data.entrant_status||{})[id]||null;
+  const live=((data.leaderboard||{}).entries||[]).find(x=>x.entrant===id);
+  const bt=((data.backtest||{}).overall||[]).find(x=>x.entrant===id);
+  const score=live||bt, scoreSrc=live?'Season 0':(bt?'backtest':'');
+  const rows=(data.rounds||[]).filter(r=>r.forecasts&&r.forecasts[id]).map(r=>{
+    const f=r.forecasts[id], t=taskForRound(r), rel=(r.resolution||{}).value;
+    const err=(typeof rel==='number'&&typeof f.mean==='number')?Math.abs(f.mean-rel):null;
+    const crps=(err!==null&&typeof f.sd==='number')?crpsNormal(f.mean,f.sd,rel):null;
+    return {r,t,f,rel,err,crps};
+  }).sort((a,b)=>deadlineOf(b.r).localeCompare(deadlineOf(a.r)));
+  const pct=(a,b)=>b?Math.round(100*a/b)+'%':'·';
+  const tile=(k,v,sub,cls)=>'<div class="tile"><div class="k">'+k+'</div><div class="v'+(cls?' '+cls:'')+'">'+v+'</div><div class="s">'+sub+'</div></div>';
+  const health = !st ? tile('Last call','·','not published yet')
+    : !st.last_call_at ? tile('Last call','none','no call recorded for this entrant')
+    : tile('Last call', esc(fmtLocal(st.last_call_at)), st.last_call_ok ? '<span class="ok">answered</span> · '+st.calls+' call'+(st.calls===1?'':'s')+(st.failures?' · '+st.failures+' failed':'')
+                                                              : '<span class="bad">failed</span> · '+st.failures+' failed attempt'+(st.failures===1?'':'s'), st.last_call_ok?'':'');
+  let h='<div class="ent-head"><span class="ent-avatar">'+avatar(id)+'</span><div><div class="eyebrow page-eyebrow">Entrant</div><h2 class="page-title">'+esc(name)+'</h2>'
+    +'<div class="ent-meta"><span><b>'+esc(e.type==='llm'?'LLM':e.type==='baseline'?'Baseline':(e.type||'entrant'))+'</b></span>'
+    +((e.arms||[]).length?'<span>setup '+esc((e.arms||[]).join(', '))+'</span>':'')
+    +(e.homepage?'<span><a href="'+esc(e.homepage)+'" target="_blank" rel="noopener">homepage</a></span>':'')
+    +'<span><a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/entrants/'+esc(id)+'.json" target="_blank" rel="noopener">registration file</a></span>'
+    +'<span class="dim">id '+esc(id)+'</span></div>'
+    +(e.method?'<p class="ent-method">'+esc(e.method)+'</p>':'')+'</div></div>';
+  h+='<div class="tiles">'
+    +tile('Score', score&&typeof score.mean_skill==='number'?((score.mean_skill>0?'+':'')+Math.round(100*score.mean_skill)):'·', score?scoreSrc+' · '+(score.rounds||0)+' question'+(score.rounds===1?'':'s')+(live&&bt&&typeof bt.mean_skill==='number'?' · backtest '+(bt.mean_skill>0?'+':'')+Math.round(100*bt.mean_skill):''):'no scored questions yet')
+    +tile('CRPS', score&&typeof score.mean_crps==='number'?score.mean_crps.toFixed(2):'·', 'average error, lower is better')
+    +tile('Answered', st?st.answered+' of '+st.asked:'·', st?pct(st.answered,st.asked)+' of the questions whose window has closed':'not published yet')
+    +health+'</div>';
+  if(st&&st.asked){
+    const doms=Object.keys(st.by_domain||{}).sort((a,b)=>(st.by_domain[b].asked-st.by_domain[a].asked));
+    h+='<div class="ent-sec"><h3>Coverage by category</h3><div class="ent-cov">'+doms.map(d=>{const c=st.by_domain[d]; return '<div class="frow"><span class="fn">'+esc(DOMAIN_LABEL[d]||d)+'</span><span class="fv">'+c.answered+' / '+c.asked+'</span><span class="fb"><i style="width:'+(c.asked?Math.round(100*c.answered/c.asked):0)+'%"></i></span></div>';}).join('')+'</div></div>';
+  }
+  const byTask={};
+  rows.forEach(x=>{ const k=x.t.label; const g=byTask[k]||(byTask[k]={n:0,res:0,err:0,crps:0,nc:0}); g.n++; if(x.err!==null){g.res++; g.err+=x.err;} if(x.crps!==null){g.nc++; g.crps+=x.crps;} });
+  const taskKeys=Object.keys(byTask).sort();
+  if(taskKeys.length){
+    h+='<div class="ent-sec"><h3>By task</h3><p class="sub">Number questions this entrant answered, scored against the released value where one exists.</p><table class="ent"><thead><tr><th>Task</th><th class="num">Answered</th><th class="num">Resolved</th><th class="num">Mean error</th><th class="num">CRPS</th></tr></thead><tbody>'
+      +taskKeys.map(k=>{const g=byTask[k]; return '<tr><td class="q">'+esc(k)+'</td><td class="num">'+g.n+'</td><td class="num">'+g.res+'</td><td class="num">'+(g.res?(g.err/g.res).toFixed(2):'·')+'</td><td class="num">'+(g.nc?(g.crps/g.nc).toFixed(2):'·')+'</td></tr>';}).join('')+'</tbody></table></div>';
+    h+='<div class="ent-sec"><h3>Every forecast</h3><p class="sub">Newest first. A number is the forecast mean with its uncertainty; the released value follows once the source publishes.</p><table class="ent"><thead><tr><th>Question</th><th>State</th><th class="num">Forecast</th><th class="num">Released</th><th class="num">Error</th></tr></thead><tbody>'
+      +rows.map(x=>{const r=x.r, u=(x.t.unit||'').trim()==='%'?'%':''; const active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
+        const state=active?'<span class="qdue live">open</span>':r.status==='resolved'?'<span class="qdue done">resolved</span>':'<span class="qdue closed">locked</span>';
+        return '<tr><td><span class="q">'+esc(x.t.label)+'</span><br><span class="dim">'+esc(questionText(r))+'</span></td><td>'+state+'</td><td class="num"><b>'+fmtNum(x.f.mean,u)+'</b>'+(typeof x.f.sd==='number'?' <span class="dim">± '+fmtNum(x.f.sd,'')+'</span>':'')+'</td><td class="num">'+(typeof x.rel==='number'?fmtNum(x.rel,u):'·')+'</td><td class="num">'+(x.err!==null?fmtNum(x.err,u):'·')+'</td></tr>';}).join('')+'</tbody></table></div>';
+  } else {
+    h+='<div class="ent-sec"><h3>Every forecast</h3><p class="sub">No number forecasts on record for this entrant yet.</p></div>';
+  }
+  if(st&&st.recent_failures&&st.recent_failures.length){
+    h+='<div class="ent-sec"><h3>Recent failed calls</h3><table class="ent"><thead><tr><th>Question</th><th>When</th><th>What went wrong</th></tr></thead><tbody>'
+      +st.recent_failures.slice().reverse().map(f=>'<tr><td class="q">'+esc(f.round_id)+'</td><td class="num">'+esc(fmtLocal(f.at))+'</td><td class="dim">'+esc(f.error)+'</td></tr>').join('')+'</tbody></table></div>';
+  }
+  host.innerHTML=h;
+  if(typeof syncHash==='function') syncHash();
 }
 function taskKeyForRound(r){ return Object.keys(TASKS).find(k=>k!=='agg' && TASKS[k].match && TASKS[k].match(r)) || 'agg'; }
 function taskForRound(r){ return TASKS[taskKeyForRound(r)] || TASKS.agg; }
@@ -1138,7 +1253,7 @@ function aggChart(traj, nameOf, unit){
     } else {
       g += `<text x="${X(traj.length-1)+17.5}" y="${ly+3.5}" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">${initOf(s)}</text>`;
     }
-    g += `<text x="${X(traj.length-1)+31}" y="${ly+4}" font-size="12.5" font-weight="${heavy?800:600}" fill="${heavy?'#0a6a30':'#4f4e49'}">${esc(nm)} ${fmtV(last)}</text>`;
+    g += `<a href="#entrant/${esc(s)}"><text x="${X(traj.length-1)+31}" y="${ly+4}" font-size="12.5" font-weight="${heavy?800:600}" fill="${heavy?'#0a6a30':'#4f4e49'}">${esc(nm)} ${fmtV(last)}</text></a>`;
   });
   g += `<line class="xh" x1="0" x2="0" y1="${P.t}" y2="${H-P.b}" stroke="#96948d" stroke-dasharray="3 3" style="display:none"/>`;
   svg.innerHTML = g;
@@ -1515,11 +1630,12 @@ function renderBoard(mode){
     const refLine = ref && btMap[id] ? '<br><span class="type">last season '+((btMap[id].mean_skill>0?'+':'')+(btMap[id].mean_skill*100).toFixed(1))+'%</span>' : '';
     return '<tr><td class="rank">'+(rank||'·')+'</td>'
       + '<td><span class="who">'+avatar(id)
-      + '<span class="who-text"><b class="model-name">'+esc((nameOf[id]||id).split(' (')[0])+'</b>'
+      + '<span class="who-text"><b class="model-name"><a href="#entrant/'+esc(id)+'">'+esc((nameOf[id]||id).split(' (')[0])+'</a></b>'
       + '<span class="model-meta">'+details.map(detail=>'<span>'+esc(detail)+'</span>').join(' <span aria-hidden="true">·</span> ')+'</span></span></span></td>'
       + '<td class="num skill'+(pos?' pos':'')+'">'+skillTxt+subSkill+refLine+'</td>'
       + '<td class="num">'+(s && typeof s[metricKey]==='number' ? s[metricKey].toFixed(metricLabel==='Loss'||metricLabel==='Rank loss'?3:2) : '·')+'</td>'
-      + '<td class="num">'+(s ? s.rounds : 0)+'</td></tr>';
+      + '<td class="num">'+(s ? s.rounds : 0)+'</td>'
+      + '<td class="go-cell"><a href="#entrant/'+esc(id)+'" aria-label="Open the entrant page">&rarr;</a></td></tr>';
   }
   const body = document.getElementById('lb-body');
   window.__perRow = entries.find(e=>e.entrant==='persistence') || null;
@@ -1531,7 +1647,7 @@ function renderBoard(mode){
   body.innerHTML = entries.map((e,i)=>row(e.entrant,e,i+1)).join('')+rest.map(e=>row(e.entrant_id,null,null)).join('');
   if(!body.innerHTML){
     const nx=taskRounds(d,data).filter(r=>r.status!=='resolved').sort((a,b)=>a.release_at.localeCompare(b.release_at))[0];
-    body.innerHTML='<tr><td colspan="5" style="padding:18px;color:var(--mut);">No defensible historical replay is available for this task.'+(nx?' The first live result is '+esc(nx.round_id)+' on '+esc(fmtDate(nx.release_at))+'.':'')+'</td></tr>';
+    body.innerHTML='<tr><td colspan="6" style="padding:18px;color:var(--mut);">No defensible historical replay is available for this task.'+(nx?' The first live result is '+esc(nx.round_id)+' on '+esc(fmtDate(nx.release_at))+'.':'')+'</td></tr>';
   }
   document.getElementById('lb-note').textContent=note;
 }
@@ -1712,8 +1828,10 @@ function roundsList(data){
     // Alphabetical by task, so one task's questions sit together; within a task, by deadline.
     const la=taskForRound(a).label, lb=taskForRound(b).label;
     return la.localeCompare(lb) || deadlineOf(a).localeCompare(deadlineOf(b));
-  }).slice(0,200);
-  el.innerHTML='<div class="qgrid">'+rows.map(r=>{
+  });
+  const sig=cat+'|'+status+'|'+query; if(sig!==window.__roundSig){ window.__roundSig=sig; window.__roundLimit=24; }
+  const limit=window.__roundLimit||24, total=rows.length, shown=rows.slice(0,limit);
+  el.innerHTML='<div class="qgrid">'+shown.map(r=>{
     const t=taskForRound(r),g=TASK_GROUPS.find(x=>x.id===t.group),active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
     const kind=r.target_type||((r.cells&&r.cells.length)?'profile_energy':'continuous_normal');
     const shape=kind==='profile_energy'?'profile · '+(r.cells||[]).length+' cells':kind==='ranking_list'?'ranking':'number';
@@ -1722,8 +1840,9 @@ function roundsList(data){
     return '<div class="qcard'+(active?' live':'')+'"><div class="qhead"><span>'+esc(g?g.label:'Task')+'</span><span class="qshape'+(kind!=='continuous_normal'?' special':'')+'">'+esc(shape)+'</span>'+when+'</div>'
       +'<h3>'+esc(t.label)+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
       +'<div class="qfoot"><span class="qid" title="'+esc(r.round_id)+'">Source '+(t.srcUrl?'<a class="src" href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span>'+esc(t.population)+'</span><a class="go" href="#live/'+taskKeyForRound(r)+'/all">open task →</a></div></div>';
-  }).join('')+'</div>'||'';
+  }).join('')+'</div>'+(total>limit?'<div class="qmore"><button type="button" class="btn soft" id="rounds-more">Show 24 more <span class="dim">· '+(total-limit)+' left</span></button></div>':'')||'';
   if(!rows.length) el.innerHTML='<div class="week-card"><h3>No matching questions</h3><p>Try another category, status, or search term.</p></div>';
+  const more=document.getElementById('rounds-more'); if(more) more.onclick=()=>{ window.__roundLimit=limit+24; roundsList(data); };
   drawStrips(el, data);
 }
 
@@ -1986,8 +2105,8 @@ function examRounds(data){
   }
 }
 
-const PAGES=['leaderboard','questions','calendar','submit','exam'];
-const PAGE_TITLES={leaderboard:'Leaderboard',questions:'Questions',calendar:'Calendar',submit:'Submit your agent',exam:'The Midterm Exam'};
+const PAGES=['leaderboard','questions','calendar','entrant','submit','exam'];
+const PAGE_TITLES={leaderboard:'Leaderboard',questions:'Questions',calendar:'Calendar',entrant:'Entrant',submit:'Submit your agent',exam:'The Midterm Exam'};
 // Pre-release names. Kept so a link written before the rename still lands.
 const HASH_ALIASES={live:'leaderboard',rounds:'questions',weekly:'calendar'};
 function showPage(k){
@@ -1998,6 +2117,7 @@ function showPage(k){
   window.__page = k;
   if(k==='leaderboard' && window.__data) requestAnimationFrame(()=>setTab(window.__tab||'agg'));
   if(k==='calendar' && window.__data) renderWeekly(window.__data);
+  if(k==='entrant' && window.__data) renderEntrant(window.__entrant||'');
   if(k==='questions' && window.__data) requestAnimationFrame(()=>drawStrips(document.getElementById('rounds-list'), window.__data));
   if(typeof syncHash==='function') syncHash();
 }
@@ -2024,8 +2144,10 @@ function syncHash(){
     const q = chartUrlState();
     if(tab !== 'agg' || span !== 'all' || q) h = 'leaderboard/' + tab + '/' + span + q;
   }
+  if(pg === 'entrant') h = 'entrant/' + (window.__entrant || '');
   history.replaceState(null, '', '#' + h);
-  const scope = pg === 'leaderboard' && tab !== 'agg' && TASKS[tab] ? TASKS[tab].label + ' · ' : '';
+  const scope = pg === 'leaderboard' && tab !== 'agg' && TASKS[tab] ? TASKS[tab].label + ' · '
+    : pg === 'entrant' && window.__entrantName ? window.__entrantName + ' · ' : '';
   document.title = scope + (PAGE_TITLES[pg] || PAGE_TITLES.leaderboard) + ' · Social Simulation Arena';
 }
 function applyHash(){
@@ -2043,6 +2165,7 @@ function applyHash(){
     if(['arena','crps','level'].includes(unit)){ window.__unitAgg = unit === 'level' ? 'arena' : unit; window.__unitSer = unit; }
     window.__urlEntrants = q.get('entrants') ? q.get('entrants').split(',').filter(Boolean) : null;
   }
+  if(pg === 'entrant') window.__entrant = parts[1] || '';
   if(pg === 'questions' && /^batch-\d{4}-\d{2}-\d{2}$/.test(parts[1]||'')){
     // #questions/batch-2026-09-14: the week's set, as a search a reader can clear
     window.__roundQuery = parts[1]; window.__roundStatus = 'all';

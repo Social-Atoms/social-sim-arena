@@ -27,6 +27,7 @@ from . import profile_round
 from . import ranking_round
 from . import series as series_registry
 from . import task_registry
+from . import entrant_status
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 QUESTIONS = os.path.join(ROOT, "questions", "season0.json")
@@ -2410,6 +2411,7 @@ def main():
         "charts": charts,
         "series_tail": {k: v[-8:] for k, v in series.items()},
         "tasks": task_rows,
+        "entrant_status": entrant_status.build(rounds, load_entrants()),
         # Which URL, fetched when, and where the saved raw body is -- per
         # upstream file, and per series through its `source` key. A page can
         # then say "this figure came from that file at that time" instead of
