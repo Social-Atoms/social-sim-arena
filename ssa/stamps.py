@@ -174,14 +174,24 @@ def upgrade(path):
     return (rc == 0 and file_sha256(ots) != before), out
 
 
+# The tag OpenTimestamps writes before a Bitcoin block-header attestation inside a proof.
+BITCOIN_ATTESTATION_TAG = bytes.fromhex("0588960d73d71901")
+
+
 def attested(path):
     """True when the proof carries a Bitcoin attestation rather than only a
-    calendar's word. Read from `ots info`, which needs no network."""
+    calendar's word. `ots info` reads it when the client is installed; without
+    the client the proof's bytes say the same thing, so a machine that only
+    publishes (a laptop running tools/publish_forecast_meta.py) does not report
+    every round as calendar-only when the bot has long since upgraded it."""
     ots = path + ".ots"
-    if not have_client() or not os.path.exists(ots):
+    if not os.path.exists(ots):
         return False
-    rc, out = _run(["ots", "info", ots])
-    return rc == 0 and "verify BitcoinBlockHeaderAttestation" in out
+    if have_client():
+        rc, out = _run(["ots", "info", ots])
+        return rc == 0 and "verify BitcoinBlockHeaderAttestation" in out
+    with open(ots, "rb") as f:
+        return BITCOIN_ATTESTATION_TAG in f.read()
 
 
 def status(round_id):
