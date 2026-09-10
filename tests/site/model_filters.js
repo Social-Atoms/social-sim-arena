@@ -105,7 +105,9 @@ assert.ok(points.length > 1);
 assert.ok(points.every(p=>Number(p[2])>=18 && Number(p[2])<=334),
   'the selected model stays inside the chart even when its score is below -30');
 f.api.renderLegend([], {});
-assert.equal(f.els['legend-strip'].style.display, 'none');
+assert.equal(f.els['legend-strip'].style.display, '', 'the picker stays in place with nothing to draw');
+assert.match(f.els['model-chips'].innerHTML, /No published forecasts to draw/);
+assert.equal(f.els['model-selected-count'].textContent, '0');
 const scalar = Object.keys(f.api.TASKS).find(k=>k!=='agg' && f.api.TASKS[k].per);
 f.win.__tab = scalar;
 f.api.renderTaskChart(scalar);

@@ -111,6 +111,8 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .taskhead h2{margin:2px 0 3px;color:var(--ink);font-size:19px;line-height:1.25;}
 .taskmeta{display:flex;flex-wrap:wrap;gap:5px 12px;color:var(--mut);font-size:12.5px;}
 .taskmeta b{color:var(--ink2);font-weight:700;}
+.taskmeta a.go{color:var(--link);font-weight:700;text-decoration:none;margin-left:14px;}
+.taskmeta a.go:hover{text-decoration:underline;text-underline-offset:2px;}
 .question-card{margin:2px 12px 8px;border:1px solid var(--line);border-radius:5px;background:#fff;flex:0 0 auto;}
 .question-card summary{padding:6px 10px;font-size:13px;color:var(--ink);font-weight:700;display:flex;gap:8px;align-items:baseline;}
 .question-card summary .qtext{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -275,9 +277,10 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .qcard .qstats{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;font-size:12px;color:var(--mut);margin-top:6px;}
 .qcard .qstats b{font-size:19px;color:var(--ink);font-weight:700;}
 .qcard .qstats .hit{color:var(--accent-ink);font-weight:700;}
-.ent-head{display:flex;align-items:flex-start;gap:22px;margin:4px 0 24px;}
-.ent-head .ent-avatar{flex:0 0 auto;margin-top:2px;}
-.ent-head .ent-avatar .avatar{width:56px;height:56px;font-size:20px;border-radius:12px;}
+.ent-head{display:flex;align-items:flex-start;gap:24px;margin:4px 0 26px;}
+.ent-head .ent-avatar{flex:0 0 auto;margin-top:0;}
+.ent-head .ent-avatar .avatar{width:92px;height:92px;font-size:34px;border-radius:18px;}
+.ent-head .ent-avatar .avatar .lg{width:56%;height:56%;}
 .ent-head h2{margin:0 0 6px;}
 .ent-meta{font-size:12.5px;color:var(--mut);display:flex;flex-wrap:wrap;gap:6px 14px;}
 .ent-meta b{color:var(--ink2);font-weight:700;}
@@ -302,10 +305,6 @@ table.ent td b{color:var(--ink);font-weight:700;}
 table.ent .q{color:var(--ink);}
 table.ent .dim{color:var(--mut);font-size:12px;}
 table.ent .pos{color:var(--accent-ink);font-weight:700;}
-table.lb col.go-col{width:24px;}
-table.lb td.go-cell{text-align:right;padding-left:0;padding-right:4px;}
-table.lb td.go-cell a{color:var(--mut);text-decoration:none;font-weight:700;}
-table.lb tr:hover td.go-cell a{color:var(--accent-ink);}
 table.lb .model-name a{color:inherit;text-decoration:none;}
 table.lb .model-name a:hover{text-decoration:underline;text-underline-offset:2px;}
 .chartpane svg a text{cursor:pointer;}
@@ -334,15 +333,27 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 .tiles-2{grid-template-columns:repeat(2,minmax(0,1fr));}
 .rankchart{display:block;width:100%;height:auto;max-height:180px;border:1px solid var(--line);border-radius:5px;background:#fff;padding:6px 4px;}
 .ent-cov .frow{margin-bottom:12px;}
+.tile .waffle{display:block;margin:2px 0 7px;}
 .subs{list-style:none;margin:0;padding:0;}
 .subs li{border-top:1px solid #eeede9;}
 .subs li:first-child{border-top:0;}
 .subs a{display:block;padding:9px 0;color:inherit;text-decoration:none;border-radius:3px;}
-.subs a:hover b{text-decoration:underline;text-underline-offset:2px;}
+.subs a:hover .top b{text-decoration:underline;text-underline-offset:2px;}
 .subs .top{display:flex;align-items:center;gap:8px;font-size:12.5px;}
 .subs .top b{color:var(--ink);font-weight:700;}
-.subs .top .qdue{margin:0;font-size:0;}
-.subs .when{margin-left:auto;color:var(--mut);font-size:11.5px;white-space:nowrap;}
+.subs .top b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.subs .when{margin-left:auto;color:var(--mut);font-size:11.5px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;}
+.subs .when:before{content:'';display:block;width:6px;height:6px;border-radius:50%;background:var(--mut);}
+.subs .when.live:before{background:var(--accent);}
+.subs .when.closed:before{background:transparent;box-shadow:inset 0 0 0 1.5px var(--mut);}
+.subs-bar{display:flex;align-items:center;gap:8px;margin:0 0 8px;}
+.subs-search{flex:1 1 auto;min-width:0;height:25px;border:1px solid var(--line);border-radius:4px;padding:0 9px;font:12.5px var(--sans);color:var(--ink);background:#fff;}
+.subs-search:focus{outline:1px solid var(--ink2);outline-offset:0;}
+.subs-empty{padding:14px 0;color:var(--mut);font-size:12.5px;}
+.subs-pager{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid #eeede9;font-size:12px;color:var(--mut);}
+.subs-pager .nav{margin-left:auto;display:flex;gap:14px;}
+.subs-pager button{border:0;background:none;padding:0;color:var(--link);font:600 12px var(--sans);cursor:pointer;}
+.subs-pager button:disabled{color:var(--mut);cursor:default;}
 .subs .q{display:block;font-size:12px;color:var(--mut);margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .subs .vals{display:block;font-size:12px;color:var(--ink2);margin-top:3px;font-variant-numeric:tabular-nums;}
 .subs .vals b{color:var(--ink);}
@@ -646,9 +657,9 @@ table.ent td a.row{color:inherit;text-decoration:none;}
       </div>
       <div class="scroll">
         <table class="lb">
-          <colgroup><col class="rank-col"><col><col class="score-col"><col class="loss-col"><col class="rounds-col"><col class="go-col"></colgroup>
-          <thead><tr><th></th><th>Entrant</th><th class="num" id="lb-score-head">Score</th><th class="num" id="lb-loss-head">CRPS</th><th class="num" id="lb-rounds-head">Rounds</th><th></th></tr></thead>
-          <tbody id="lb-body"><tr><td colspan="6" style="color:var(--mut);">loading…</td></tr></tbody>
+          <colgroup><col class="rank-col"><col><col class="score-col"><col class="loss-col"><col class="rounds-col"></colgroup>
+          <thead><tr><th></th><th>Entrant</th><th class="num" id="lb-score-head">Score</th><th class="num" id="lb-loss-head">CRPS</th><th class="num" id="lb-rounds-head">Rounds</th></tr></thead>
+          <tbody id="lb-body"><tr><td colspan="5" style="color:var(--mut);">loading…</td></tr></tbody>
         </table>
       </div>
       <details class="lb-note" id="lb-about"><summary>How this board is scored</summary><p id="lb-note"></p></details>
@@ -861,6 +872,8 @@ function crpsNormal(mu, sd, y){
   const z=(y-mu)/sd, phi=Math.exp(-z*z/2)/Math.sqrt(2*Math.PI), Phi=0.5*(1+erf(z/Math.SQRT2));
   return sd*(z*(2*Phi-1)+2*phi-1/Math.sqrt(Math.PI));
 }
+// Where a vendor's model comes from, for the entrant page; a registration's own homepage wins when it names one.
+const VENDOR_HOME={claude:['Anthropic','https://www.anthropic.com'], openai:['OpenAI','https://openai.com'], gemini:['Google DeepMind','https://deepmind.google'], grok:['xAI','https://x.ai'], deepseek:['DeepSeek','https://www.deepseek.com'], qwen:['Qwen','https://qwen.ai'], zhipu:['Zhipu AI','https://www.zhipuai.cn'], kimi:['Moonshot AI','https://www.moonshot.ai']};
 const DOMAIN_LABEL={'public-opinion':'Public opinion',consumer:'Sentiment & expectations',attention:'Collective attention',elections:'Elections'};
 function rankChart(traj, id){
   // The entrant's rank at each checkpoint of the backtest, 1 at the top. Drawn at a fixed
@@ -904,6 +917,10 @@ function renderEntrant(id){
     return {r,t,f,rel,err,crps};
   }).sort((a,b)=>deadlineOf(b.r).localeCompare(deadlineOf(a.r)));
   const pct=(a,b)=>b?Math.round(100*a/b):0;
+  // Which tasks this entrant has answered, against the tasks whose questions have closed so far.
+  const closed=r=>r.status==='locked'||r.status==='awaiting_resolution'||r.status==='resolved';
+  const askedTasks=new Set((data.rounds||[]).filter(closed).map(r=>taskKeyForRound(r))), doneTasks=new Set(rows.filter(x=>closed(x.r)).map(x=>taskKeyForRound(x.r)));
+  const taskSpan=askedTasks.size?'<br>across '+doneTasks.size+' of '+askedTasks.size+' task'+(askedTasks.size===1?'':'s'):'';
   const tile=(k,v,sub,cls)=>'<div class="tile"><div class="k">'+k+'</div><div class="v'+(cls?' '+cls:'')+'">'+v+'</div><div class="s">'+sub+'</div></div>';
   const health = !st ? tile('Last call','·','not published yet')
     : !st.last_call_at ? tile('Last call','none','no call recorded for this entrant')
@@ -913,7 +930,9 @@ function renderEntrant(id){
   let h='<div class="ent-head"><span class="ent-avatar">'+avatar(id)+'</span><div><div class="eyebrow page-eyebrow">Entrant</div><h2 class="page-title">'+esc(name)+'</h2>'
     +'<div class="ent-meta"><span><b>'+esc(e.type==='llm'?'LLM':e.type==='baseline'?'Baseline':(e.type||'entrant'))+'</b></span>'
     +((e.arms||[]).length?'<span>setup '+esc((e.arms||[]).join(', '))+'</span>':'')
-    +(e.homepage?'<span><a href="'+esc(e.homepage)+'" target="_blank" rel="noopener">homepage</a></span>':'')
+    +(()=>{ const own = e.homepage && !/social-sim-arena/.test(e.homepage) ? ['homepage', e.homepage] : null;
+            const v = vendorOf(id), home = own || (v && VENDOR_HOME[v]) || null;
+            return home ? '<span><a href="'+esc(home[1])+'" target="_blank" rel="noopener">'+esc(home[0])+'</a></span>' : ''; })()
     +(e.unregistered?'<span class="dim">run by the arena</span>':'<span><a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/entrants/'+esc(id)+'.json" target="_blank" rel="noopener">registration file</a></span>')
     +'<span class="dim">id '+esc(id)+'</span></div>'
     +(e.method?'<p class="ent-method">'+esc(e.method)+'</p>':'')+'</div></div>';
@@ -921,7 +940,7 @@ function renderEntrant(id){
   let left='<div class="tiles tiles-2">'
     +tile('Score', score&&typeof score.mean_skill==='number'?((score.mean_skill>0?'+':'')+Math.round(100*score.mean_skill)):'·', score?scoreSrc+' · '+(score.rounds||0)+' question'+(score.rounds===1?'':'s')+(live&&bt&&typeof bt.mean_skill==='number'?' · backtest '+(bt.mean_skill>0?'+':'')+Math.round(100*bt.mean_skill):''):'no scored questions yet')
     +tile('CRPS', score&&typeof score.mean_crps==='number'?score.mean_crps.toFixed(2):'·', 'average error, lower is better')
-    +tile('Answered', st?st.answered+' of '+st.asked:'·', st?pct(st.answered,st.asked)+'% of the questions whose window has closed':'not published yet')
+    +tile('Answered', st?st.answered+' of '+st.asked:'·', (st?waffle(st.answered,st.asked)+pct(st.answered,st.asked)+'% of the questions whose window has closed':'not published yet')+taskSpan)
     +health+'</div>';
   const traj=((data.backtest||{}).trajectory)||[];
   left+='<div class="ent-sec"><h3>Rank over time</h3><p class="sub">Overall standings at each checkpoint of the backtest; 1 is the top.</p>'+rankChart(traj,id)+'</div>';
@@ -943,18 +962,53 @@ function renderEntrant(id){
     left+='<div class="ent-sec"><h3>Recent failed calls</h3><table class="ent"><thead><tr><th>Question</th><th>When</th><th>What went wrong</th></tr></thead><tbody>'
       +st.recent_failures.slice().reverse().map(f=>'<tr><td class="q">'+esc(f.round_id)+'</td><td class="num">'+esc(fmtLocal(f.at))+'</td><td class="dim">'+esc(f.error)+'</td></tr>').join('')+'</tbody></table></div>';
   }
-  // ---- right: every submission, newest first ----
-  let right='<h3>Submissions</h3><p class="sub">'+(rows.length? rows.length+' forecast'+(rows.length===1?'':'s')+', newest first. Open one for its filing time and timestamp proof.' : 'No forecasts on record yet.')+'</p>';
-  if(rows.length){
-    right+='<ol class="subs">'+rows.map(x=>{const r=x.r, u=(x.t.unit||'').trim()==='%'?'%':''; const active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
-      const cls=active?'live':r.status==='resolved'?'done':'closed', when=active?'due '+fmtLocal(deadlineOf(r)):r.status==='resolved'?'resolved '+fmtLocal(r.release_at):'answer '+fmtLocal(r.release_at);
-      const fc=forecastSummary(x.f,u,active);
-      const out=typeof x.rel==='number'?' &rarr; <b>'+fmtNum(x.rel,u)+'</b>'+(x.err!==null?' <span class="dim">off by '+fmtNum(x.err,u)+'</span>':''):'';
-      return '<li><a href="#forecast/'+esc(r.round_id)+'/'+esc(id)+'"><span class="top"><span class="qdue '+cls+'"></span><b>'+esc(x.t.label)+'</b><span class="when">'+esc(when)+'</span></span><span class="q">'+esc(questionText(r))+'</span><span class="vals">'+fc+out+'</span></a></li>';}).join('')+'</ol>';
-  }
+  // ---- right: every submission; the list searches, flips order and pages (subsList) ----
+  const right='<h3>Submissions</h3>'
+    +'<div class="subs-bar"><input type="search" id="subs-search" class="subs-search" placeholder="Search task or question" aria-label="Search this entrant\'s forecasts" autocomplete="off">'
+    +'<div class="seg mini" id="subs-order" role="group" aria-label="Order"><button type="button" data-order="new" class="on">Newest</button><button type="button" data-order="old">Oldest</button></div></div>'
+    +'<ol class="subs" id="subs-list"></ol><div class="subs-pager" id="subs-pager"></div>';
   h+='<div class="ent-grid"><div class="ent-main">'+left+'</div><aside class="ent-side">'+right+'</aside></div>';
   host.innerHTML=h;
+  subsList(host, rows, id);
   if(typeof syncHash==='function') syncHash();
+}
+// Coverage as a dot grid: one dot per closed question, filled when this entrant answered it.
+function waffle(done, total){
+  if(!total) return '';
+  const cols=total>60?20:10, d=total>60?5:7, gap=3, rows=Math.ceil(total/cols), w=cols*(d+gap)-gap, h=rows*(d+gap)-gap;
+  let g='';
+  for(let i=0;i<total;i++){ const x=(i%cols)*(d+gap), y=Math.floor(i/cols)*(d+gap);
+    g+='<rect x="'+x+'" y="'+y+'" width="'+d+'" height="'+d+'" rx="1.5" fill="'+(i<done?'#111110':'#e6e5e0')+'"/>'; }
+  return '<svg class="waffle" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+done+' of '+total+' answered">'+g+'</svg>';
+}
+// The submissions list on an entrant page: a search box, newest or oldest first, ten to a page.
+// It renders for an entrant with nothing on record too, so the column keeps its shape.
+const SUBS_PAGE=10;
+function subsList(host, rows, id){
+  const list=host.querySelector('#subs-list'), pager=host.querySelector('#subs-pager'), search=host.querySelector('#subs-search'), order=host.querySelector('#subs-order');
+  if(!list||!pager) return;
+  const st={q:'', order:'new', page:0};
+  const hay=x=>(x.t.label+' '+questionText(x.r)+' '+x.r.round_id).toLowerCase();
+  const item=x=>{ const r=x.r, u=(x.t.unit||'').trim()==='%'?'%':'', active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
+    // The question's state in the site's words (open, locked, resolved); an open one here is answered by definition.
+    const cls=active?'live':r.status==='resolved'?'done':'closed', when=active?'answered · due '+fmtLocal(deadlineOf(r)):r.status==='resolved'?'resolved · '+fmtLocal((r.resolution||{}).resolved_at||r.release_at):'locked · answer '+fmtLocal(r.release_at);
+    const out=typeof x.rel==='number'?' &rarr; <b>'+fmtNum(x.rel,u)+'</b>'+(x.err!==null?' <span class="dim">off by '+fmtNum(x.err,u)+'</span>':''):'';
+    return '<li><a href="#forecast/'+esc(r.round_id)+'/'+esc(id)+'"><span class="top"><b>'+esc(x.t.label)+'</b><span class="when '+cls+'">'+esc(when)+'</span></span><span class="q">'+esc(questionText(r))+'</span><span class="vals">'+forecastSummary(x.f,u,active)+out+'</span></a></li>'; };
+  const draw=()=>{
+    const words=st.q.toLowerCase().split(/\s+/).filter(Boolean);
+    let hits=rows.filter(x=>{ const h=hay(x); return words.every(w=>h.includes(w)); });
+    if(st.order==='old') hits=hits.slice().reverse();
+    const pages=Math.max(1,Math.ceil(hits.length/SUBS_PAGE)); st.page=Math.min(st.page,pages-1);
+    const from=st.page*SUBS_PAGE, show=hits.slice(from,from+SUBS_PAGE);
+    list.innerHTML=show.map(item).join('')||'<li class="subs-empty">'+(rows.length?'No forecast matches.':'No forecasts on record yet.')+'</li>';
+    const n=hits.length, count=!rows.length?'0 forecasts':words.length&&n!==rows.length?n+' of '+rows.length+' match':n+' forecast'+(n===1?'':'s');
+    pager.innerHTML='<span>'+(n>SUBS_PAGE?(from+1)+'–'+Math.min(n,from+SUBS_PAGE)+' of '+count:count)+'</span>'
+      +(n>SUBS_PAGE?'<span class="nav"><button type="button" data-page="prev"'+(st.page===0?' disabled':'')+'>‹ prev</button><button type="button" data-page="next"'+(st.page>=pages-1?' disabled':'')+'>next ›</button></span>':'');
+  };
+  if(search) search.oninput=ev=>{ st.q=ev.target.value; st.page=0; draw(); };
+  if(order) order.onclick=ev=>{ const b=ev.target.closest('button[data-order]'); if(!b) return; st.order=b.dataset.order; st.page=0; order.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); draw(); };
+  pager.onclick=ev=>{ const b=ev.target.closest('button[data-page]'); if(!b||b.disabled) return; st.page+=b.dataset.page==='next'?1:-1; draw(); list.scrollIntoView({block:'nearest'}); };
+  draw();
 }
 // What a published forecast says, in a few words: its contents after the lock, its shape before.
 function forecastSummary(f, u, active){
@@ -1074,7 +1128,7 @@ function roundOrdinal(r, data){
 function taskKeyForRound(r){ return Object.keys(TASKS).find(k=>k!=='agg' && TASKS[k].match && TASKS[k].match(r)) || 'agg'; }
 function taskForRound(r){ return TASKS[taskKeyForRound(r)] || TASKS.agg; }
 function pointsFor(data, key){ return ((data.charts||{})[key] || (data.series_tail||{})[key] || []).filter(p=>p && typeof p.value==='number'); }
-function cellLabel(key){ return String(key).replace(/^(civiqs_net_approval_|yougov_xtab_approve_|trends_share_|umich_party_)/,'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); }
+function cellLabel(key){ return String(key).replace(/^(civiqs_net_approval_|yougov_xtab_approve_|trends_share_|umich_party_)/,'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()).replace(/^Iphone$/,'iPhone'); }
 function niceTicks(lo, hi, n){
   if(!(hi>lo)){ const c=lo||0; lo=c-0.5; hi=c+0.5; }
   const span=hi-lo, raw=span/(n-1), mag=Math.pow(10,Math.floor(Math.log10(raw)));
@@ -1294,7 +1348,7 @@ function renderModelOptions(){
         '<label class="model-option"><span class="model-check"><input type="checkbox" data-model="'+modelAttr(m.id)+'"'+(!hidden.has(m.id)?' checked':'')+'>'+modelCheck+'</span>'
         + avatar(m.id,colorOf(m.id))+'<span class="model-option-name">'+esc(m.label)+'</span>'
         + (m.setupLabel?'<span class="model-setup">'+m.setupLabel+'</span>':'')+'</label>').join('')+'</fieldset>').join('')
-      || '<p class="model-empty">No entrants match. Try another name or setup.</p>';
+      || '<p class="model-empty">'+(ids.length?'No entrants match. Try another name or setup.':'No published forecasts on this task yet.')+'</p>';
     list.scrollTop = 0;
   }
   list.querySelectorAll('input[data-model]').forEach(input=>{input.checked=!hidden.has(input.dataset.model);});
@@ -1303,19 +1357,15 @@ function renderModelOptions(){
   document.getElementById('model-select-results').disabled = !matches.some(m=>hidden.has(m.id));
   document.getElementById('model-clear-results').disabled = !matches.some(m=>!hidden.has(m.id));
 }
+// The picker stays on the page even when a task has nothing to draw yet, so the controls keep their places.
 function renderLegend(ids, nameOf){
   const strip = document.getElementById('legend-strip'), toolbar = document.getElementById('model-toolbar');
-  if(!ids || !ids.length){
-    strip.style.display='none'; toolbar.style.display='none';
-    if(modelPicker.ready) openModelPicker(false);
-    return;
-  }
   ensureModelPicker();
-  modelPicker.ids = [...new Set(ids)]; modelPicker.nameOf = nameOf;
+  modelPicker.ids = [...new Set(ids||[])]; modelPicker.nameOf = nameOf||{};
   const hidden = coerceUnknown(modelPicker.ids), selected = modelPicker.ids.filter(id=>!hidden.has(id));
   strip.style.display=''; toolbar.style.display='';
-  document.getElementById('model-selected-count').textContent = selected.length+'/'+modelPicker.ids.length;
-  const chips = document.getElementById('model-chips'), key=JSON.stringify(selected.map(id=>[id,nameOf[id]]));
+  document.getElementById('model-selected-count').textContent = modelPicker.ids.length ? selected.length+'/'+modelPicker.ids.length : '0';
+  const chips = document.getElementById('model-chips'), key=JSON.stringify([modelPicker.ids.length, selected.map(id=>[id,modelPicker.nameOf[id]])]);
   if(key!==modelPicker.chipKey){
     modelPicker.chipKey = key;
     const scroll = chips.scrollTop;
@@ -1324,7 +1374,7 @@ function renderLegend(ids, nameOf){
       return '<button type="button" class="lchip" data-model="'+modelAttr(id)+'" aria-label="'+modelAttr('Remove '+m.name)+'" title="'+modelAttr(m.name)+'">'
         + avatar(id,colorOf(id))+'<span class="model-chip-name">'+esc(m.label)+'</span>'
         + (m.setup?'<span class="setup">'+m.setup+'</span>':'')+modelRemove+'</button>';
-    }).join('') || '<p class="model-empty">Choose entrants to start comparing.</p>';
+    }).join('') || '<p class="model-empty">'+(modelPicker.ids.length?'Choose entrants to start comparing.':'No published forecasts to draw on this task yet.')+'</p>';
     chips.scrollTop = scroll;
   }
   if(modelPicker.open) renderModelOptions();
@@ -1497,19 +1547,19 @@ function seriesChart(key, data){
   if(!series || series.length<2){ svg.style.display='none'; return; }
   const pw = svg.clientWidth, ph = svg.clientHeight;
   if(pw < 80 || ph < 80){ svg.style.display='none'; return; }
-  // Forecasts are sealed until the lock, so only a locked question's forecasts can be drawn here.
-  const upcoming = taskRounds(d,data).filter(r =>
-    r.forecasts && Object.values(r.forecasts).some(f=>typeof f.mean==='number') &&
-    (r.status==='open' || r.status==='locked'));
-  const hidden = coerceUnknown(upcoming.flatMap(r=>Object.keys(r.forecasts).filter(id=>typeof r.forecasts[id].mean==='number')));
-  const W = pw, small = W < 640, H = ph, P = {t:20,r:70,b:26,l:14};
-  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  // A round is drawn once its forecasts are published (locked, awaiting its number, or resolved);
+  // an open round is sealed. Baselines file like anyone else, so they sit in the picker too.
+  let upcoming = taskRounds(d,data).filter(r => r.forecasts && Object.values(r.forecasts).some(f=>typeof f.mean==='number'));
   const months = window.__range || 0;
   if(months > 0){
     const cutoff = dnum(series[series.length-1].date) - months*30.44*86400000;
     const f = series.filter(pt => dnum(pt.date) >= cutoff);
     series = f.length >= 2 ? f : series.slice(-2);
   }
+  upcoming = nextOpenOnly(upcoming.filter(r => dnum(r.release_at.slice(0,10)) >= dnum(series[0].date)));
+  const hidden = coerceUnknown(upcoming.flatMap(r=>Object.keys(r.forecasts).filter(id=>typeof r.forecasts[id].mean==='number')));
+  const W = pw, small = W < 640, H = ph, P = {t:20,r:70,b:26,l:14};
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
   const xs = series.map(p => dnum(p.date));
   const ys = series.map(p => p.value);
   let xmax = xs[xs.length-1];
@@ -1538,7 +1588,7 @@ function seriesChart(key, data){
   }
   if(d.zero && lo<0 && hi>0) g += `<line x1="${P.l}" x2="${W-P.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="#96948d" stroke-dasharray="2 5"/>`;
   const nx = small?3:5, seenX = new Set();
-  const alld = series.map(p=>p.date).concat(upcoming.map(r=>r.release_at.slice(0,10)));
+  const alld = [...new Set(series.map(p=>p.date).concat(upcoming.map(r=>r.release_at.slice(0,10))))].sort();
   for(let k=0;k<nx;k++){
     const i = Math.round(k*(alld.length-1)/(nx-1));
     if(seenX.has(i)) continue; seenX.add(i);
@@ -1553,12 +1603,13 @@ function seriesChart(key, data){
   const lx = X(xs[xs.length-1]), lyv = Y(ys[ys.length-1]);
   g += `<circle cx="${lx}" cy="${lyv}" r="3.4" fill="#111110" stroke="#fff" stroke-width="1.6"/>`;
   g += `<text x="${lx-8}" y="${lyv-9}" font-size="12.5" font-weight="800" fill="#111110" text-anchor="end">${ys[ys.length-1]}${d.unit==='%'?'%':''}</text>`;
-  // forecast overlays for upcoming rounds
+  // forecast overlays, one column per published round; a date label only where it has room
+  let lastLabelX = -1e9;
   upcoming.forEach(r => {
     const rx = X(dnum(r.release_at));
     g += `<rect x="${rx-11}" y="${P.t}" width="22" height="${H-P.t-P.b}" fill="#15803d" opacity=".05"/>`;
     g += `<line x1="${rx}" x2="${rx}" y1="${P.t}" y2="${H-P.b}" stroke="#c9e5d2" stroke-width="1"/>`;
-    g += `<text x="${rx}" y="${P.t-3}" font-size="9.5" fill="#0a6a30" font-weight="700" text-anchor="middle">${fmtDate(r.release_at)}</text>`;
+    if(rx - lastLabelX > 44){ g += `<text x="${rx}" y="${P.t-3}" font-size="9.5" fill="#0a6a30" font-weight="700" text-anchor="middle">${fmtDate(r.release_at)}</text>`; lastLabelX = rx; }
     const ids = Object.keys(r.forecasts).filter(id=>!hidden.has(id) && typeof r.forecasts[id].mean==='number').sort();
     ids.forEach((id,j)=>{
       const f = r.forecasts[id];
@@ -1628,7 +1679,7 @@ function renderTaskHeader(data,key){
   document.getElementById('task-meta').innerHTML = '<span>'+lab('population','Population')+' '+esc(d.population)+'</span>'
     +'<span>'+lab('answer','Question type')+' '+answers.map(chip).join('')+'</span>'
     +(key==='agg' ? '' : '<span>'+lab('cadence','Cadence')+' '+esc(cadence)+'</span>')
-    +'<span>'+lab('questions','Questions')+' <span class="numeric">'+rs.length+'</span></span>';
+    +'<span>'+lab('questions','Questions')+' <span class="numeric">'+rs.length+'</span><a class="go" href="'+(key==='agg'?'#questions':'#questions/task/'+esc(key))+'">'+(key==='agg'?'see all questions':'see all rounds')+' →</a></span>';
   const card = document.getElementById('task-question-card');
   card.style.display='';
   const r = active[0] || rs.slice(-1)[0];
@@ -1642,7 +1693,7 @@ function renderTaskHeader(data,key){
   document.getElementById('task-question-body').innerHTML='<p>'+esc(r.question)+'</p><div class="qfoot">'
     +'<span>'+shapeChip(r)+(r.target_type==='profile_energy'?(r.cells||[]).length+' cells':r.target_type==='ranking_list'?'ordered list':'predictive distribution')+'</span>'
     +'<span>releases '+esc(fmtLocal(r.release_at))+'</span><span>'+esc(r.n_forecasts||0)+' forecasts filed</span>'
-    +'<a class="go" href="'+(key==='agg'?'#questions':'#questions/task/'+esc(key))+'">'+(key==='agg'?'every question':'every round of this task')+' →</a><a class="go" href="#calendar" style="margin-left:14px;">calendar →</a></div>';
+    +'<a class="go" href="'+(key==='agg'?'#questions':'#questions/task/'+esc(key))+'">'+(key==='agg'?'every question':'every round of this task')+' →</a></div>';
 }
 
 function alignedVectors(data,cells){
@@ -1685,28 +1736,97 @@ function scalarReplay(d,data){
 function profileReplay(d,data){ return replayRows(alignedVectors(data,d.cells||[]),false); }
 function rankingReplay(d,data){ return d.cells ? replayRows(alignedVectors(data,d.cells),true) : []; }
 
+const CELL_COLORS=['#1f2937','#b45309','#0f766e','#1d4ed8','#7e22ce','#be185d','#4d7c0f','#6b7280'];
+// A profile task as lines: one per measured cell over its published history, the latest value
+// labelled at the end, and every published profile forecast drawn on its cell at the release date.
+// More cells than colours (Civiqs' sixteen) share one grey; the labels and hover tell them apart.
 function profileChart(d,data){
-  const svg=clearChart(), rows=(d.cells||[]).map(c=>{
-    const ps=pointsFor(data,c); return ps.length?{key:c,value:ps[ps.length-1].value,prev:ps.length>1?ps[ps.length-2].value:null,date:ps[ps.length-1].date}:null;
-  }).filter(Boolean);
-  renderLegend([],{});
-  if(!rows.length){svg.innerHTML='<text x="50%" y="48%" text-anchor="middle" fill="#96948d" font-size="13">No profile history is published yet</text>';return;}
-  const minHeight=Math.max(250,rows.length*21+48);
-  svg.style.minHeight=minHeight+'px';
-  const W=svg.clientWidth,H=Math.max(svg.clientHeight,minHeight),P={t:18,r:45,b:25,l:Math.min(150,Math.round(W*.36))};
-  const vals=rows.flatMap(r=>r.prev==null?[r.value]:[r.value,r.prev]); let lo=Math.min(...vals),hi=Math.max(...vals); if(lo>0)lo=0; if(hi<0)hi=0; const span=hi-lo||1;
-  const X=v=>P.l+(v-lo)/span*(W-P.l-P.r), RH=(H-P.t-P.b)/rows.length;
+  const svg=clearChart(), tip=pane().querySelector('.tooltip');
+  const nameOf={}; (data.entrants||[]).forEach(e=>nameOf[e.entrant_id]=e.name);
+  let cells=(d.cells||[]).map(c=>({key:c,label:cellLabel(c),pts:pointsFor(data,c)})).filter(c=>c.pts.length);
+  if(!cells.length){ renderLegend([],nameOf); svg.innerHTML='<text x="50%" y="48%" text-anchor="middle" fill="#96948d" font-size="13">No profile history is published yet</text>'; return; }
+  const W=svg.clientWidth, H=svg.clientHeight;
+  if(W<80||H<80){ renderLegend([],nameOf); svg.style.display='none'; return; }
+  const months=window.__range||0, lastDate=Math.max(...cells.map(c=>dnum(c.pts[c.pts.length-1].date)));
+  const cutoff=months>0 ? lastDate-months*30.44*86400000 : -Infinity;
+  if(months>0) cells=cells.map(c=>{ const f=c.pts.filter(p=>dnum(p.date)>=cutoff); return Object.assign({},c,{pts:f.length>=2?f:c.pts.slice(-2)}); });
+  const x0=Math.min(...cells.map(c=>dnum(c.pts[0].date)));
+  const cv=v=>typeof v==='number'?v:(v&&typeof v.mean==='number'?v.mean:null);
+  const rounds=nextOpenOnly(taskRounds(d,data).filter(r=>r.forecasts&&Object.values(r.forecasts).some(f=>f&&f.cells)&&dnum(r.release_at.slice(0,10))>=x0));
+  const ids=[...new Set(rounds.flatMap(r=>Object.keys(r.forecasts).filter(id=>r.forecasts[id].cells)))].sort();
+  const hidden=coerceUnknown(ids), unit=(d.unit||'').trim()==='%'?'%':'';
+  const P={t:20,r:Math.min(170,Math.round(W*.24)),b:26,l:44}, small=W<640;
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  let x1=lastDate; rounds.forEach(r=>{ x1=Math.max(x1,dnum(r.release_at.slice(0,10))); });
+  const vals=cells.flatMap(c=>c.pts.map(p=>p.value));
+  rounds.forEach(r=>Object.entries(r.forecasts).forEach(([id,f])=>{ if(hidden.has(id)||!f.cells) return; cells.forEach(c=>{ const v=cv(f.cells[c.key]); if(v!==null) vals.push(v); }); }));
+  let lo=Math.min(...vals), hi=Math.max(...vals); const pad=(hi-lo)*0.08||1; lo-=pad; hi+=pad;
+  const X=t=>P.l+(t-x0)/((x1-x0)||1)*(W-P.l-P.r), Y=v=>P.t+(hi-v)/(hi-lo)*(H-P.t-P.b);
   let g='<rect x="'+P.l+'" y="'+P.t+'" width="'+(W-P.l-P.r)+'" height="'+(H-P.t-P.b)+'" fill="none" stroke="#e0e0e0"/>';
-  if(lo<0&&hi>0)g+='<line x1="'+X(0)+'" x2="'+X(0)+'" y1="'+P.t+'" y2="'+(H-P.b)+'" stroke="#96948d" stroke-dasharray="2 4"/>';
-  rows.forEach((r,i)=>{const y=P.t+(i+.5)*RH,base=X(0),x=X(r.value),c=r.value>=0?'#15803d':'#8b897f';
-    const label=cellLabel(r.key),maxChars=Math.max(10,Math.floor((P.l-12)/5.8));
-    g+='<text x="'+(P.l-8)+'" y="'+(y+3.5)+'" font-size="10.5" fill="#4f4e49" text-anchor="end"><title>'+esc(label)+'</title>'+esc(label.length>maxChars?label.slice(0,maxChars-1)+'…':label)+'</text>';
-    g+='<rect x="'+Math.min(base,x)+'" y="'+(y-4)+'" width="'+Math.max(1,Math.abs(x-base))+'" height="8" rx="2" fill="'+c+'" opacity=".72"/>';
-    if(r.prev!=null)g+='<circle cx="'+X(r.prev)+'" cy="'+y+'" r="2.2" fill="#fff" stroke="#111110" stroke-width="1"/>';
-    g+='<text x="'+(x+(r.value>=0?5:-5))+'" y="'+(y+3.5)+'" font-size="10" font-weight="700" fill="#111110" text-anchor="'+(r.value>=0?'start':'end')+'">'+r.value+'</text>';
+  for(const v of niceTicks(lo,hi,6)){
+    g+='<line x1="'+P.l+'" x2="'+(W-P.r)+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'" stroke="rgba(0,0,0,.05)"/>';
+    g+='<line x1="'+(P.l-4)+'" x2="'+P.l+'" y1="'+Y(v).toFixed(1)+'" y2="'+Y(v).toFixed(1)+'" stroke="#c9c7c0"/>';
+    g+='<text x="'+(P.l-8)+'" y="'+(Y(v)+3.5).toFixed(1)+'" font-size="11" fill="#96948d" text-anchor="end">'+(Math.round(v*10)/10)+'</text>';
+  }
+  if(lo<0&&hi>0) g+='<line x1="'+P.l+'" x2="'+(W-P.r)+'" y1="'+Y(0)+'" y2="'+Y(0)+'" stroke="#96948d" stroke-dasharray="2 5"/>';
+  const alld=[...new Set(cells.flatMap(c=>c.pts.map(p=>p.date)).concat(rounds.map(r=>r.release_at.slice(0,10))))].sort();
+  const nx=small?3:5, seenX=new Set();
+  for(let k=0;k<nx;k++){
+    const i=Math.round(k*(alld.length-1)/(nx-1)); if(seenX.has(i)) continue; seenX.add(i);
+    const t0=dnum(alld[i]), anchor=k===0?'start':(k===nx-1?'end':'middle');
+    g+='<line x1="'+X(t0)+'" x2="'+X(t0)+'" y1="'+(H-P.b)+'" y2="'+(H-P.b+4)+'" stroke="#c9c7c0"/>';
+    g+='<text x="'+X(t0)+'" y="'+(H-8)+'" font-size="11" fill="#96948d" text-anchor="'+anchor+'">'+fmtDate(alld[i])+'</text>';
+  }
+  const many=cells.length>CELL_COLORS.length, colorAt=i=>many?'#8b897f':CELL_COLORS[i];
+  const dots=[];
+  cells.forEach((c,i)=>{
+    const pts=c.pts.map(p=>[X(dnum(p.date)),Y(p.value)]);
+    g+='<path data-cell="'+esc(c.key)+'" d="'+smoothPath(pts)+'" fill="none" stroke="'+colorAt(i)+'" stroke-width="'+(many?1.4:1.9)+'" stroke-linecap="round" stroke-linejoin="round"'+(many?' opacity=".8"':'')+'/>';
+    c.pts.forEach((p,j)=>dots.push({x:pts[j][0],y:pts[j][1],key:c.key,cell:c.label,value:p.value,date:p.date}));
   });
-  g+='<text x="'+P.l+'" y="'+(H-6)+'" font-size="10.5" fill="#96948d">bars = latest · dots = previous · '+fmtDate(rows[0].date)+'</text>';
-  svg.setAttribute('viewBox','0 0 '+W+' '+H); svg.innerHTML=g;
+  // forecast marks: every visible entrant's published profile, one mark per cell at the release date
+  const marks=[]; let lastLabelX=-1e9;
+  rounds.forEach(r=>{
+    const rx=X(dnum(r.release_at.slice(0,10)));
+    const vis=Object.keys(r.forecasts).filter(id=>!hidden.has(id)&&r.forecasts[id].cells).sort();
+    if(!vis.length) return;
+    g+='<line x1="'+rx+'" x2="'+rx+'" y1="'+P.t+'" y2="'+(H-P.b)+'" stroke="#c9e5d2" stroke-width="1"/>';
+    if(rx-lastLabelX>44){ g+='<text x="'+rx+'" y="'+(P.t-3)+'" font-size="9.5" fill="#0a6a30" font-weight="700" text-anchor="middle">'+fmtDate(r.release_at)+'</text>'; lastLabelX=rx; }
+    vis.forEach((id,j)=>{
+      const dx=(j-(vis.length-1)/2)*4, c=colorOf(id);
+      cells.forEach(cell=>{ const v=cv(r.forecasts[id].cells[cell.key]); if(v===null) return;
+        g+='<circle cx="'+(rx+dx)+'" cy="'+Y(v)+'" r="2.8" fill="'+c+'" stroke="#fff" stroke-width="1.2"/>';
+        marks.push({x:rx+dx,y:Y(v),id:id,cell:cell.label,value:v,round:r.round_id}); });
+    });
+  });
+  // end labels: every cell's latest value, spaced apart and centred on the endpoints (as on Overall)
+  const order=cells.map((c,i)=>({i:i,c:c,y:Y(c.pts[c.pts.length-1].value),x:X(dnum(c.pts[c.pts.length-1].date))})).sort((a,b)=>a.y-b.y);
+  const LH=many?13:16, yTop=P.t+LH/2, yBot=H-P.b-LH/2, target=order.map(o=>o.y), slots=target.slice();
+  for(let i=1;i<slots.length;i++) slots[i]=Math.max(slots[i],slots[i-1]+LH);
+  if(slots.length){ let shift=target.reduce((a,t,i)=>a+(t-slots[i]),0)/slots.length; shift=Math.max(yTop-slots[0],Math.min(yBot-slots[slots.length-1],shift)); for(let i=0;i<slots.length;i++) slots[i]+=shift; }
+  const maxCh=Math.max(6,Math.floor((P.r-14)/(many?5.2:6.1))-1);
+  order.forEach((o,k)=>{
+    const ly=slots[k], lx=W-P.r, val=o.c.pts[o.c.pts.length-1].value, tail=' '+val+unit;
+    let nm=o.c.label; if((nm+tail).length>maxCh) nm=nm.slice(0,Math.max(3,maxCh-tail.length-1))+'…';
+    g+='<line x1="'+o.x+'" x2="'+(lx+6)+'" y1="'+o.y+'" y2="'+ly+'" stroke="'+colorAt(o.i)+'" stroke-width="1" opacity=".5"/>';
+    g+='<circle cx="'+o.x+'" cy="'+o.y+'" r="2.8" fill="'+colorAt(o.i)+'" stroke="#fff" stroke-width="1.4"/>';
+    g+='<text x="'+(lx+9)+'" y="'+(ly+3.5)+'" font-size="'+(many?10:11)+'" fill="#111110"><title>'+esc(o.c.label)+tail+'</title>'+esc(nm)+' <tspan font-weight="700">'+val+unit+'</tspan></text>';
+  });
+  svg.innerHTML=g;
+  const lines=()=>svg.querySelectorAll('path[data-cell]');
+  const calm=()=>{ tip.style.display='none'; lines().forEach(p=>{ p.style.opacity=''; p.style.strokeWidth=''; }); };
+  svg.onmousemove=ev=>{
+    const rct=svg.getBoundingClientRect(), mx=(ev.clientX-rct.left)*(W/rct.width), my=(ev.clientY-rct.top)*(H/rct.height);
+    let best=null, bd=196;
+    marks.forEach(m=>{ const dd=(m.x-mx)**2+(m.y-my)**2; if(dd<bd){bd=dd;best=m;} });
+    if(best){ tipShow(tip,ev,'<b>'+esc((nameOf[best.id]||best.id).split(' (')[0])+'</b> · '+esc(best.cell)+' '+best.value+unit+'<br><span style="color:#96948d;">'+esc(best.round)+'</span>'); return; }
+    bd=400; dots.forEach(p=>{ const dd=(p.x-mx)**2+(p.y-my)**2; if(dd<bd){bd=dd;best=p;} });
+    if(!best){ calm(); return; }
+    tipShow(tip,ev,'<b>'+esc(best.cell)+'</b> '+best.value+unit+' · '+fmtDate(best.date));
+    lines().forEach(p=>{ const on=p.getAttribute('data-cell')===best.key; p.style.opacity=on?'1':'.22'; p.style.strokeWidth=on?'2.6':''; });
+  };
+  svg.onmouseleave=calm;
+  renderLegend(ids,nameOf);
 }
 function rankingChart(d,data){
   const svg=clearChart(); renderLegend([],{}); const r=taskRounds(d,data).slice(-1)[0];
@@ -1728,7 +1848,7 @@ function setTab(key){
 function renderTaskChart(key){
   const data=window.__data;if(!data)return; const d=TASKS[key],bt=data.backtest||{},nameOf={};
   window.__matched='';  // set by the branches that score over matched releases; the board note reads it
-  document.getElementById('chart-filters').style.visibility=(d.kind==='profile'||d.kind==='ranking')?'hidden':'';
+  document.getElementById('chart-filters').style.visibility=d.kind==='ranking'?'hidden':'';
   (data.entrants||[]).forEach(e=>nameOf[e.entrant_id]=e.name);
   const unitSeg=document.getElementById('unit-seg'),rangeSeg=document.getElementById('range-seg');
   const roster=['climatology','trend','ewma'].concat(bt.model_entrants||bt.mock_models||[]).concat(['crowd']);
@@ -1743,8 +1863,8 @@ function renderTaskChart(key){
     aggChart(bt.trajectory,nameOf,unit);renderLegend(legendFor(bt.trajectory),nameOf);return;
   }
   if(d.kind==='profile'){
-    unitSeg.style.display='none';rangeSeg.style.display='none';
-    window.__caption='<span class="replay-tag">LATEST PROFILE</span> · every bar is a measured population cell, not a model estimate · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
+    unitSeg.style.display='none';rangeSeg.style.display='';
+    window.__caption='<span class="replay-tag">MEASURED CELLS</span> · every line is a measured population cell, not a model estimate · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
     profileChart(d,data);return;
   }
   if(d.kind==='ranking'){
@@ -1834,10 +1954,11 @@ function renderBoard(mode){
     const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0)) : '<span class="pend">···</span>';
     const subSkill = '';
     const pos = arena!=null && arena>0;
-    const setup = condTag(nameOf[id]);
-    const entryType = typeOf[id] || 'baseline';
+    const setup = condTag(nameOf[id]), variant = variantOf(id);
+    const entryType = typeOf[id] || (isBaseline(id) ? 'baseline' : 'llm');
     const details = [
       setup==='zs' ? 'Zero-shot' : setup==='r10' ? 'Recent-10' : '',
+      variant,
       entryType==='llm' ? 'LLM' : entryType.charAt(0).toUpperCase()+entryType.slice(1),
       id==='persistence' ? 'Reference' : '',
       s && s.mock ? 'Placeholder' : ''
@@ -1845,12 +1966,12 @@ function renderBoard(mode){
     const refLine = ref && btMap[id] ? '<br><span class="type">last season '+((btMap[id].mean_skill>0?'+':'')+(btMap[id].mean_skill*100).toFixed(1))+'%</span>' : '';
     return '<tr><td class="rank">'+(rank||'·')+'</td>'
       + '<td><span class="who">'+avatar(id)
-      + '<span class="who-text"><b class="model-name"><a href="#entrant/'+esc(id)+'">'+esc((nameOf[id]||id).split(' (')[0])+'</a></b>'
+      + '<span class="who-text"><b class="model-name"><a href="#entrant/'+esc(id)+'">'+esc((nameOf[id]||forecasterName(id,data)).split(' (')[0].split(' · ')[0])+'</a></b>'
       + '<span class="model-meta">'+details.map(detail=>'<span>'+esc(detail)+'</span>').join(' <span aria-hidden="true">·</span> ')+'</span></span></span></td>'
       + '<td class="num skill'+(pos?' pos':'')+'">'+skillTxt+subSkill+refLine+'</td>'
       + '<td class="num">'+(s && typeof s[metricKey]==='number' ? s[metricKey].toFixed(metricLabel==='Loss'||metricLabel==='Rank loss'?3:2) : '·')+'</td>'
       + '<td class="num">'+(s ? s.rounds : 0)+'</td>'
-      + '<td class="go-cell"><a href="#entrant/'+esc(id)+'" aria-label="Open the entrant page">&rarr;</a></td></tr>';
+      + '</tr>';
   }
   const body = document.getElementById('lb-body');
   window.__perRow = entries.find(e=>e.entrant==='persistence') || null;
@@ -1899,6 +2020,8 @@ function questionText(r){
   }
   return q.charAt(0).toUpperCase()+q.slice(1);
 }
+// The harness variant in an id (web, sfc, zs), as the site writes it; the model's name is separate.
+function variantOf(id){ return [/-web/.test(id)?'web':'', /-superfc/.test(id)?'sfc':'', /-zeroshot/.test(id)?'zs':''].filter(Boolean).join('+'); }
 function forecasterName(id, data){
   const ents = data.__byId || (data.__byId = Object.fromEntries((data.entrants||[]).map(e=>[e.entrant_id,e])));
   const base = id.replace(/-(web|superfc|zeroshot|news|persona)/g,'');
@@ -1908,6 +2031,12 @@ function forecasterName(id, data){
   return name + (cond ? ' · '+cond : '');
 }
 function isBaseline(id){ return /^(persistence|trend|ewma|climatology)$/.test(id); }
+// Of the open questions, only the next one is drawn ahead of the series: the ones behind it
+// carry nothing but the baselines, which file on every open question the moment it is listed.
+function nextOpenOnly(rounds){
+  const open=rounds.filter(r=>r.status==='open').sort((a,b)=>String(a.release_at).localeCompare(String(b.release_at)));
+  return rounds.filter(r=>r.status!=='open'||r===open[0]);
+}
 function fmtNum(v, unit){
   const a = Math.abs(v), d = a>=100?0:a>=10?1:2;
   return (typeof v==='number' ? v.toFixed(d) : '·') + (unit||'');

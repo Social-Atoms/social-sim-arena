@@ -13,6 +13,10 @@
   <a href="https://social-simulation-arena.com/index.html#leaderboard">Leaderboard</a>
 </p>
 
+<p align="center">
+  <img src="assets/teaser.png" width="100%" alt="The published past on the left; the lock; then the real future, where forecasts are filed before the answer exists and graded in public.">
+</p>
+
 A live benchmark for social simulation. Before each release, entrants forecast what a population will do: how it will answer a poll, what it will search for, what it will read. Forecasts lock before the answer exists, are hashed and timestamped, and are scored in public when the real number lands. No one sees the answer first, including us.
 
 ## Enter
@@ -68,20 +72,18 @@ six hours, resolves what has been published, stamps what has locked, and commits
 
 ## Organizer
 
-<a href="https://social-atoms.com"><img src="brand/png/ssa-mark-512-light.png" width="40" align="left" alt=""></a>
-Social Simulation Arena is a project of [Social Atoms](https://social-atoms.com) at MIT, with collaborators at Stanford, Carnegie Mellon, UC Berkeley, and beyond.
+<a href="https://social-atoms.com"><img src="brand/social-atoms/social-atoms-icon-light-512.png" width="72" align="left" alt="Social Atoms"></a>
+
+Social Simulation Arena is a project initiated by [Social Atoms](https://social-atoms.com) at MIT, with collaborators from Stanford, Carnegie Mellon, UC Berkeley, UCSD, and beyond.
+
 <br clear="left">
+
+<p align="center">
+  <img src="brand/institutions/collaborators.png" width="720" alt="MIT, Stanford, Carnegie Mellon, UC Berkeley, UC San Diego">
+</p>
 
 ## Contributors
 
-<table>
-  <tr>
-    <td align="center"><a href="https://github.com/jajamoa"><img src="https://github.com/jajamoa.png?size=96" width="72" alt=""><br><sub>jajamoa</sub></a></td>
-    <td align="center"><a href="https://github.com/assassin808"><img src="https://github.com/assassin808.png?size=96" width="72" alt=""><br><sub>assassin808</sub></a></td>
-    <td align="center"><a href="https://github.com/jayzou3773"><img src="https://github.com/jayzou3773.png?size=96" width="72" alt=""><br><sub>jayzou3773</sub></a></td>
-    <td align="center"><a href="https://github.com/ZhenzeMo"><img src="https://github.com/ZhenzeMo.png?size=96" width="72" alt=""><br><sub>ZhenzeMo</sub></a></td>
-    <td align="center"><a href="https://github.com/XuanL17"><img src="https://github.com/XuanL17.png?size=96" width="72" alt=""><br><sub>XuanL17</sub></a></td>
-  </tr>
-</table>
+<a href="https://github.com/Social-Atoms/social-sim-arena/graphs/contributors"><img src="brand/contributors/wall.svg" alt="Contributors"></a>
 
-The arena's own refreshes are committed by `actions-user` on the arena's behalf.
+The wall is drawn by `tools/contributors_wall.py` from the GitHub roster; run it when someone new lands a commit. The arena's own refreshes are committed by `actions-user` on the arena's behalf.

@@ -1444,6 +1444,11 @@ def stamp_locked_rounds(rounds):
     return out
 
 
+# The arena's own reference forecasters. Their forecasts are published as soon as they are
+# filed: each is a function of the series everyone can already see.
+BASELINE_FORECASTERS = frozenset({"persistence", "trend", "ewma", "climatology"})
+
+
 def count_forecasts(rounds):
     """Attach filed forecasts to each round: count + per-entrant toplines
     (the page overlays them on the target charts)."""
@@ -1465,19 +1470,21 @@ def count_forecasts(rounds):
                         # carries mean and sd, a profile every cell, a ranking its list.
                         filed = re.search(r"filed=(\S+?)(?:[,\s]|$)", fc.get("notes") or "")
                         entry = {"filed": filed.group(1)} if filed else {}
-                        sealed = r.get("status") in ("locked", "awaiting_resolution", "resolved")
+                        # A baseline is a function of the published series, so sealing it would hide nothing.
+                        revealed = (r.get("status") in ("locked", "awaiting_resolution", "resolved")
+                                    or fc["entrant"] in BASELINE_FORECASTERS)
                         if isinstance(fc.get("topline"), dict) and "mean" in fc["topline"]:
                             entry["shape"] = "number"
-                            if sealed:
+                            if revealed:
                                 entry.update({"mean": fc["topline"]["mean"], "sd": fc["topline"].get("sd", 2.0)})
                         elif isinstance(fc.get("profile"), dict):
                             entry.update({"shape": "profile", "cells_n": len(fc["profile"])})
-                            if sealed:
+                            if revealed:
                                 entry["cells"] = {k: ({"mean": v.get("mean"), "sd": v.get("sd")} if isinstance(v, dict) else v)
                                                   for k, v in fc["profile"].items()}
                         elif isinstance(fc.get("ranking"), list):
                             entry.update({"shape": "ranking", "items_n": len(fc["ranking"])})
-                            if sealed:
+                            if revealed:
                                 entry["items"] = list(fc["ranking"])
                         else:
                             continue
