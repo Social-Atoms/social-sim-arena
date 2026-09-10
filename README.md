@@ -80,6 +80,14 @@ Social Simulation Arena is a project initiated by [Social Atoms](https://github.
 
 ## Contributors
 
-<a href="https://github.com/Social-Atoms/social-sim-arena/graphs/contributors"><img src="brand/contributors/wall.svg" alt="Contributors"></a>
+<!-- contributors:start -->
+<p>
+<a href="https://github.com/jajamoa" title="jajamoa"><img src="brand/contributors/jajamoa.svg" width="64" height="64" alt="jajamoa"></a>
+<a href="https://github.com/assassin808" title="assassin808"><img src="brand/contributors/assassin808.svg" width="64" height="64" alt="assassin808"></a>
+<a href="https://github.com/jayzou3773" title="jayzou3773"><img src="brand/contributors/jayzou3773.svg" width="64" height="64" alt="jayzou3773"></a>
+<a href="https://github.com/ZhenzeMo" title="ZhenzeMo"><img src="brand/contributors/ZhenzeMo.svg" width="64" height="64" alt="ZhenzeMo"></a>
+<a href="https://github.com/XuanL17" title="XuanL17"><img src="brand/contributors/XuanL17.svg" width="64" height="64" alt="XuanL17"></a>
+</p>
+<!-- contributors:end -->
 
-The wall is drawn by `tools/contributors_wall.py` from the GitHub roster; run it when someone new lands a commit. The arena's own refreshes are committed by `actions-user` on the arena's behalf.
+Every avatar links to its profile. The wall is drawn by `tools/contributors_wall.py` from the GitHub roster; run it when someone new lands a commit. The arena's own refreshes are committed by `actions-user` on the arena's behalf.

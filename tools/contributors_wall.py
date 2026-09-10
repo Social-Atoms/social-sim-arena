@@ -1,24 +1,30 @@
-"""Draw the contributors wall for the README: round avatars in a grid, as one SVG.
+"""Draw the contributors wall for the README: round avatars, each one a link to its profile.
 
-GitHub's README renderer loads images through a proxy that blocks external references inside an
-SVG, so every avatar is embedded (base64) rather than linked. Bots are left out; people are ordered
-by their commit count on GitHub. Run it when the roster changes:
+GitHub renders an SVG in a README as one inert image, so a single wall could not link
+anywhere. Each contributor therefore gets an SVG of their own (the avatar clipped to a
+circle, embedded as base64 because the README image proxy blocks external references
+inside an SVG), and the README wraps each in a link. The block between the markers in
+README.md is rewritten; bots are left out; people are ordered by commit count.
 
-    python -m tools.contributors_wall            # writes brand/contributors/wall.svg
+    python -m tools.contributors_wall
 """
 from __future__ import annotations
 
 import base64
 import json
 import os
+import re
 import subprocess
 import sys
 import urllib.request
 
 REPO = "Social-Atoms/social-sim-arena"
-OUT = os.path.join(os.path.dirname(__file__), "..", "brand", "contributors", "wall.svg")
+ROOT = os.path.join(os.path.dirname(__file__), "..")
+OUT = os.path.join(ROOT, "brand", "contributors")
+README = os.path.join(ROOT, "README.md")
 BOTS = {"actions-user", "github-actions[bot]", "dependabot[bot]"}
-SIZE, GAP, COLUMNS = 64, 10, 10
+SIZE = 64
+START, END = "<!-- contributors:start -->", "<!-- contributors:end -->"
 
 
 def contributors():
@@ -33,34 +39,40 @@ def avatar_png(url: str) -> bytes:
         return resp.read()
 
 
-def wall(rows) -> str:
-    cols = min(COLUMNS, max(1, len(rows)))
-    lines = (len(rows) + cols - 1) // cols
-    w = cols * SIZE + (cols - 1) * GAP
-    h = lines * SIZE + (lines - 1) * GAP
-    parts = [f'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
-             f'width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img" aria-label="Contributors">',
-             "<defs>"]
-    for i in range(len(rows)):
-        parts.append(f'<clipPath id="c{i}"><circle cx="{SIZE / 2}" cy="{SIZE / 2}" r="{SIZE / 2}"/></clipPath>')
-    parts.append("</defs>")
-    for i, r in enumerate(rows):
-        x = (i % cols) * (SIZE + GAP)
-        y = (i // cols) * (SIZE + GAP)
-        data = base64.b64encode(avatar_png(r["avatar_url"])).decode()
-        parts.append(f'<a xlink:href="{r["html_url"]}" target="_blank"><title>{r["login"]}</title>'
-                     f'<g transform="translate({x} {y})" clip-path="url(#c{i})">'
-                     f'<image width="{SIZE}" height="{SIZE}" xlink:href="data:image/png;base64,{data}"/></g></a>')
-    parts.append("</svg>")
-    return "\n".join(parts) + "\n"
+def round_avatar(login: str, png: bytes) -> str:
+    data = base64.b64encode(png).decode()
+    r = SIZE / 2
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
+            f'width="{SIZE}" height="{SIZE}" viewBox="0 0 {SIZE} {SIZE}" role="img" aria-label="{login}">'
+            f'<clipPath id="c"><circle cx="{r}" cy="{r}" r="{r}"/></clipPath>'
+            f'<image width="{SIZE}" height="{SIZE}" clip-path="url(#c)" xlink:href="data:image/png;base64,{data}"/>'
+            f'</svg>\n')
+
+
+def readme_block(rows) -> str:
+    links = [f'<a href="{r["html_url"]}" title="{r["login"]}"><img src="brand/contributors/{r["login"]}.svg" '
+             f'width="{SIZE}" height="{SIZE}" alt="{r["login"]}"></a>' for r in rows]
+    return START + "\n<p>\n" + "\n".join(links) + "\n</p>\n" + END
 
 
 def main():
     rows = contributors()
-    svg = wall(rows)
-    with open(OUT, "w") as f:
-        f.write(svg)
-    print(f"{OUT}: {len(rows)} contributors, {len(svg) // 1024} KB")
+    os.makedirs(OUT, exist_ok=True)
+    keep = {f"{r['login']}.svg" for r in rows}
+    for name in os.listdir(OUT):
+        if name.endswith(".svg") and name not in keep:
+            os.remove(os.path.join(OUT, name))
+    for r in rows:
+        with open(os.path.join(OUT, f"{r['login']}.svg"), "w") as f:
+            f.write(round_avatar(r["login"], avatar_png(r["avatar_url"])))
+    with open(README) as f:
+        text = f.read()
+    if START not in text or END not in text:
+        sys.exit(f"README.md needs the markers {START} and {END}")
+    text = re.sub(re.escape(START) + r".*?" + re.escape(END), lambda _: readme_block(rows), text, flags=re.S)
+    with open(README, "w") as f:
+        f.write(text)
+    print(f"{len(rows)} contributors drawn into {OUT} and README.md")
     for r in rows:
         print(f"  {r['login']:<16} {r['contributions']:>4} commits")
 

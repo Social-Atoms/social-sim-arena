@@ -24,4 +24,4 @@ Rasters were exported with macOS QuickLook (`qlmanage -t -s <size>`); re-export 
 | Folder | What | Source |
 | --- | --- | --- |
 | `social-atoms/` | the Social Atoms atoms mark (three discs on ink), the organizer's mark in the README | a copy of the master in the Social Atoms brand folder; do not edit here |
-| `contributors/` | `wall.svg`, the round-avatar wall in the README | drawn by `python -m tools.contributors_wall` from the GitHub roster, avatars embedded, bots left out |
+| `contributors/` | one round avatar per contributor (`<login>.svg`), the wall in the README, each linked to its profile | drawn by `python -m tools.contributors_wall` from the GitHub roster, avatars embedded, bots left out; the tool also rewrites the README block |
