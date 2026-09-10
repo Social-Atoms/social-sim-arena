@@ -884,11 +884,11 @@ function ensureModelPicker(){
   modelPicker.ready = true;
   const strip = document.getElementById('legend-strip');
   const toolbar = document.getElementById('model-toolbar'), controls = document.getElementById('chart-filters');
-  strip.innerHTML = '<div class="model-chips" id="model-chips" role="group" aria-label="Selected chart models"></div>';
-  toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop">Models <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
-    + '<button type="button" class="model-action" id="model-reset" title="Show the top 6 models and EWMA">Reset</button>'
-    + '<section class="model-pop" id="model-pop" aria-label="Choose chart models" hidden>'
-    + '<div class="model-search-row"><input type="search" id="model-search" placeholder="Search models or labs" aria-label="Search models or labs" autocomplete="off">'
+  strip.innerHTML = '<div class="model-chips" id="model-chips" role="group" aria-label="Selected chart entrants"></div>';
+  toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop">Entrants <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
+    + '<button type="button" class="model-action" id="model-reset" title="Show the top 6 entrants and EWMA">Reset</button>'
+    + '<section class="model-pop" id="model-pop" aria-label="Choose chart entrants" hidden>'
+    + '<div class="model-search-row"><input type="search" id="model-search" placeholder="Search entrants or labs" aria-label="Search entrants or labs" autocomplete="off">'
     + '<div class="seg model-setup-filter" id="model-setup" role="radiogroup" aria-label="Information setup">'
     + [['all','All setups'],['r10','Recent-10'],['zs','Zero-shot']].map(([value,label])=>'<label class="seg-choice"><input type="radio" name="model-setup" value="'+value+'"'+(value==='all'?' checked':'')+'><span>'+label+'</span></label>').join('')+'</div></div>'
     + '<div class="model-bulk"><span class="model-count" id="model-result-count" role="status"></span><button type="button" class="model-action" id="model-select-results">Select results</button><button type="button" class="model-action" id="model-clear-results">Clear results</button></div>'
@@ -941,7 +941,7 @@ function renderModelOptions(){
         '<label class="model-option"><span class="model-check"><input type="checkbox" data-model="'+modelAttr(m.id)+'"'+(!hidden.has(m.id)?' checked':'')+'>'+modelCheck+'</span>'
         + avatar(m.id,colorOf(m.id))+'<span class="model-option-name">'+esc(m.label)+'</span>'
         + (m.setupLabel?'<span class="model-setup">'+m.setupLabel+'</span>':'')+'</label>').join('')+'</fieldset>').join('')
-      || '<p class="model-empty">No models match. Try another name or setup.</p>';
+      || '<p class="model-empty">No entrants match. Try another name or setup.</p>';
     list.scrollTop = 0;
   }
   list.querySelectorAll('input[data-model]').forEach(input=>{input.checked=!hidden.has(input.dataset.model);});
@@ -971,7 +971,7 @@ function renderLegend(ids, nameOf){
       return '<button type="button" class="lchip" data-model="'+modelAttr(id)+'" aria-label="'+modelAttr('Remove '+m.name)+'" title="'+modelAttr(m.name)+'">'
         + avatar(id,colorOf(id))+'<span class="model-chip-name">'+esc(m.label)+'</span>'
         + (m.setup?'<span class="setup">'+m.setup+'</span>':'')+modelRemove+'</button>';
-    }).join('') || '<p class="model-empty">Choose models to start comparing.</p>';
+    }).join('') || '<p class="model-empty">Choose entrants to start comparing.</p>';
     chips.scrollTop = scroll;
   }
   if(modelPicker.open) renderModelOptions();
@@ -1001,7 +1001,7 @@ function aggChart(traj, nameOf, unit){
   const series = scored.filter(s => !hiddenA.has(s));
   if(!series.length){
     svg.setAttribute('viewBox',`0 0 ${pw} ${ph}`);
-    svg.innerHTML=`<text x="${pw/2}" y="${ph/2}" text-anchor="middle" fill="#96948d" font-size="13">Choose models above to compare.</text>`;
+    svg.innerHTML=`<text x="${pw/2}" y="${ph/2}" text-anchor="middle" fill="#96948d" font-size="13">Choose entrants above to compare.</text>`;
     tip.style.display='none';
     return;
   }

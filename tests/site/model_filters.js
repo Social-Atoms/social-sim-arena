@@ -77,7 +77,7 @@ assert.ok(matching.every(input=>!input.checked));
 assert.equal(f.els['lb-body'].innerHTML, originalBoard, 'chart selection does not change leaderboard');
 
 f.els['model-search'].oninput({target:{value:'no-such-model'}});
-assert.match(f.options.innerHTML, /No models match/);
+assert.match(f.options.innerHTML, /No entrants match/);
 assert.equal(f.els['model-select-results'].disabled, true);
 assert.equal(f.els['model-clear-results'].disabled, true);
 f.stripEvents.keydown({key:'Escape', preventDefault(){}});
@@ -95,8 +95,8 @@ console.log('ok search, labs, setup variants, scoped bulk actions, and keyboard 
 // tasks or hiding the chooser on a profile never silently resets it.
 const ids = [...f.api.modelPicker.ids];
 f.api.selectModels(ids, false);
-assert.match(f.svg.innerHTML, /Choose models above to compare/);
-assert.match(f.els['model-chips'].innerHTML, /Choose models to start comparing/);
+assert.match(f.svg.innerHTML, /Choose entrants above to compare/);
+assert.match(f.els['model-chips'].innerHTML, /Choose entrants to start comparing/);
 f.api.selectModels(['gpt-5.6-luna-zeroshot'], true);
 assert.match(f.svg.innerHTML, /<title>GPT-5.6 Luna \(zero-shot\)<\/title>/);
 const curve = f.svg.innerHTML.match(/<g clip-path="url\(#clip-agg\)"><path d="([^"]+)"/)[1];
