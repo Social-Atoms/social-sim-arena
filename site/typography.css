@@ -264,6 +264,11 @@ nav.site-nav .ptab {
 }
 nav.site-nav .ptab:hover { background: #f5f6f5; color: var(--ink); }
 nav.site-nav .ptab.on { background: var(--ink); color: #fff; }
+/* The live light: the arena is running. It sits with the secondary links, ahead of Background. */
+nav.site-nav .nav-live { display: inline-flex; align-items: center; gap: 6px; color: var(--accent-ink); font-weight: 800; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; margin-right: 2px; cursor: default; }
+.livedot { width:7px;height:7px;border-radius:50%;background:var(--accent);flex:0 0 auto;animation:breathe 3.6s ease-in-out infinite; }
+@keyframes breathe{0%{box-shadow:0 0 0 0 rgba(21,128,61,.22);opacity:1; }50%{opacity:.75; }70%{box-shadow:0 0 0 4px rgba(21,128,61,0); }100%{box-shadow:0 0 0 0 rgba(21,128,61,0);opacity:1; }}
+@media(prefers-reduced-motion:reduce){.livedot { animation:none; }}
 nav.site-nav .right {
   position: static;
   display: flex;
@@ -309,7 +314,7 @@ nav.site-nav :is(a, button):focus-visible { outline: 2px solid var(--ink2); outl
   nav.site-nav .in { padding: 4px 12px 0; gap: 2px 0; }
   nav.site-nav .brand { width: auto; flex: 1 1 auto; min-height: 40px; order: 1; }
   nav.site-nav .brand-name { font-size: 15px; }
-  nav.site-nav .by { display: none; }
+  nav.site-nav .by, nav.site-nav .nav-live { display: none; }
   nav.site-nav .right { display: contents; }
   nav.site-nav .right a.cta { order: 2; margin-left: auto; padding: 10px 0 10px 10px; font-size: 13px; }
   nav.site-nav .page-tabs { order: 3; flex: 0 0 100%; width: 100%; margin: 2px 0 0; }   /* no shrinking, so nothing shares its row */

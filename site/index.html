@@ -26,13 +26,9 @@ a{color:inherit;}
 .site-header{flex:0 0 auto;}
 
 /* The live light sits at the head of the status line: the arena is running, and this is when. */
-/* The live light and the data's age are the board head's second line: the numbers they describe are the board's. */
+/* The data's age is the board head's second line: the numbers it describes are the board's. */
 .task-live{flex-basis:100%;display:inline-flex;align-items:center;gap:10px;margin-top:-2px;font-size:12px;color:var(--mut);white-space:nowrap;line-height:1.5;}
-.task-live .live{display:inline-flex;align-items:center;gap:6px;color:var(--accent-ink);font-weight:800;font-size:12px;letter-spacing:.1em;text-transform:uppercase;}
 .task-live b{color:var(--ink2);font-weight:600;}
-.livedot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:0 0 auto;animation:breathe 3.6s ease-in-out infinite;}
-@keyframes breathe{0%{box-shadow:0 0 0 0 rgba(21,128,61,.22);opacity:1;}50%{opacity:.75;}70%{box-shadow:0 0 0 4px rgba(21,128,61,0);}100%{box-shadow:0 0 0 0 rgba(21,128,61,0);opacity:1;}}
-@media(prefers-reduced-motion:reduce){.livedot{animation:none;}}
 .exam{display:inline-flex;gap:5px;align-items:baseline;border:1px solid #cce4d3;background:#f5faf6;color:var(--accent-ink);border-radius:4px;padding:3px 9px;font:700 12.5px/1.4 var(--sans);cursor:pointer;flex-wrap:wrap;text-align:left;}
 .exam:hover{border-color:var(--accent);}
 .exam b{color:var(--accent-ink);font-variant-numeric:tabular-nums;}
@@ -611,7 +607,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 </style>
 <script defer src="panels.js?v=91f5d3557c"></script>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=2daf9565be">
+<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=d2bed5f61b">
 </head>
 <body class="site-home">
 
@@ -625,6 +621,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
       <a class="ptab" href="#calendar" data-page="calendar">Calendar</a>
     </div>
     <div class="right">
+      <span class="nav-live" title="The arena is running: questions are being called, locked and scored"><span class="livedot" aria-hidden="true"></span>Live</span>
       <a class="item" href="background.html">Background</a>
       <a class="item" href="docs.html">Docs</a>
       <a class="item" href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a>
@@ -693,7 +690,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
     <aside class="lbcol" id="leaderboard-panel" aria-label="Leaderboard">
       <div class="lbhead">
         <h2 class="has-help" id="lb-how"><b>Leaderboard</b> <span id="lb-title">Overall</span><span class="th-help" id="lb-note" role="tooltip"></span></h2>
-        <div class="task-live"><span class="live"><span class="livedot" aria-hidden="true"></span>Live</span><time id="data-updated" title="Data refreshed every 6 hours"></time></div>
+        <div class="task-live"><time id="data-updated" title="Data refreshed every 6 hours"></time></div>
       </div>
       <div class="scroll">
         <table class="lb">
