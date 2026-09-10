@@ -924,10 +924,10 @@ function renderEntrant(id){
   const covTile=days=>{
     const c=coverage(data,id,rows,days), n=c.asked.length, k=c.answered.length;
     const tasks=new Set(c.asked.map(taskKeyForRound)).size, done=new Set(c.answered.map(taskKeyForRound)).size;
-    const span=days?'in the past '+days+' days':(isFinite(c.from)?'since '+fmtDate(new Date(c.from).toISOString().slice(0,10)):'so far');
+    const span=days?'in the past '+days+' days':(isFinite(c.from)?'since '+new Date(c.from).toLocaleString('en-US',{month:'short',day:'numeric'}):'so far');
     const seg='<span class="seg mini cov-seg" role="group" aria-label="Window">'+[[7,'7D'],[30,'30D'],[0,'All']].map(([d,l])=>'<button type="button" data-win="'+d+'"'+(d===days?' class="on"':'')+'>'+l+'</button>').join('')+'</span>';
-    return '<div class="tile" id="cov-tile"><div class="k">Answered'+seg+'</div><div class="v">'+k+' of '+n+'</div>'+waffle(c.asked.map(r=>c.answered.includes(r)))
-      +'<div class="s">'+(n?pct(k,n)+'% of the '+n+' question'+(n===1?'':'s')+' closed '+span+'<br>'+done+' of '+tasks+' task'+(tasks===1?'':'s'):'no question has closed '+span)+'</div></div>';
+    return '<div class="tile" id="cov-tile"><div class="k">Answered'+seg+'</div><div class="v">'+k+' of '+n+'</div>'+waffle(k,n)
+      +'<div class="s">'+(n?pct(k,n)+'% of the '+n+' question'+(n===1?'':'s')+' closed '+span+', across '+done+' of '+tasks+' task'+(tasks===1?'':'s'):'no question has closed '+span)+'</div></div>';
   };
   const tile=(k,v,sub,cls)=>'<div class="tile"><div class="k">'+k+'</div><div class="v'+(cls?' '+cls:'')+'">'+v+'</div><div class="s">'+sub+'</div></div>';
   const health = !st ? tile('Last call','·','not published yet')
@@ -992,14 +992,15 @@ function coverage(data, id, rows, days){
   const asked=(data.rounds||[]).filter(r=>closed(r)&&dl(r)>=from).sort((a,b)=>dl(a)-dl(b));
   return {asked, answered:asked.filter(r=>mine.has(r.round_id)), from};
 }
-// Coverage as a dot grid: one cell per closed question in time order, filled when it was answered.
-function waffle(cells){
-  const total=cells.length; if(!total) return '';
-  const cols=20, d=5, gap=2, rows=Math.ceil(total/cols), w=cols*(d+gap)-gap, h=rows*(d+gap)-gap;
+// Coverage as a dot grid, to scale rather than to the count: a fixed 3 x 20 grid, filled in the
+// share answered (1 of 6 shows as 10 of 60). The real numbers sit above it.
+function waffle(done, total){
+  const cols=20, rows=3, d=5, gap=2, cells=cols*rows, w=cols*(d+gap)-gap, h=rows*(d+gap)-gap;
+  const filled=total?Math.round(cells*done/total):0;
   let g='';
-  cells.forEach((on,i)=>{ const x=(i%cols)*(d+gap), y=Math.floor(i/cols)*(d+gap);
-    g+='<rect x="'+x+'" y="'+y+'" width="'+d+'" height="'+d+'" rx="1" fill="'+(on?'#111110':'#e6e5e0')+'"/>'; });
-  return '<svg class="waffle" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+cells.filter(Boolean).length+' of '+total+' answered">'+g+'</svg>';
+  for(let i=0;i<cells;i++){ const x=(i%cols)*(d+gap), y=Math.floor(i/cols)*(d+gap);
+    g+='<rect x="'+x+'" y="'+y+'" width="'+d+'" height="'+d+'" rx="1" fill="'+(i<filled?'#111110':'#e6e5e0')+'"/>'; }
+  return '<svg class="waffle" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+done+' of '+total+' answered">'+g+'</svg>';
 }
 // The submissions list on an entrant page: a search box, newest or oldest first, ten to a page.
 // It renders for an entrant with nothing on record too, so the column keeps its shape.
