@@ -7,7 +7,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Social Simulation Arena</title>
-<meta name="description" content="Can AI predict what the public will think next week? Live benchmark: simulated audiences and agents forecast real public-opinion releases before publication.">
+<meta name="description" content="Live benchmark for social simulation: models forecast the next public release before it is published. Locked, hashed, scored in public.">
 <meta property="og:title" content="Social Simulation Arena">
 <meta property="og:description" content="Live benchmark for social simulation: models forecast the next public-opinion release before it is published. Locked, hashed, scored in public.">
 <meta property="og:image" content="https://social-simulation-arena.com/card.png">
@@ -26,10 +26,8 @@ a{color:inherit;}
 .site-header{border-bottom:1px solid var(--line);flex:0 0 auto;}
 
 .header-status{display:flex;align-items:center;gap:6px 18px;padding:0 16px 10px;flex-wrap:wrap;}
-/* The leaderboard's one line of pitch, with the live light. Questions and Calendar do without. */
-.strap{display:flex;align-items:center;flex-wrap:wrap;gap:4px 9px;margin:0 0 12px;font-size:12.5px;line-height:1.45;color:var(--mut);}
-.strap b{color:var(--ink);font-weight:800;}
-.strap .live-word{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink);}
+/* The live light sits at the head of the status line: the arena is running, and this is when. */
+.header-status .meta .live{display:inline-flex;align-items:center;gap:6px;color:var(--accent-ink);font-weight:700;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;}
 .livedot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:0 0 auto;animation:breathe 2.6s ease-out infinite;}
 @keyframes breathe{0%{box-shadow:0 0 0 0 rgba(21,128,61,.45);}70%{box-shadow:0 0 0 7px rgba(21,128,61,0);}100%{box-shadow:0 0 0 0 rgba(21,128,61,0);}}
 @media(prefers-reduced-motion:reduce){.livedot{animation:none;}}
@@ -492,7 +490,6 @@ table.ent td a.row{color:inherit;text-decoration:none;}
   .header-status{padding:0 12px 8px;gap:4px 12px;}
   .header-status .meta{font-size:12px;gap:4px 10px;}
   .header-status .updated{white-space:normal;font-size:11.5px;}
-  .strap{font-size:12px;}
   .taskhead{padding-left:12px;padding-right:12px;}
   .ent-head{column-gap:14px;row-gap:8px;align-items:start;}
   .ent-head .ent-avatar{align-self:start;}
@@ -595,14 +592,14 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 </style>
 <script defer src="panels.js?v=91f5d3557c"></script>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=28f62ae0c4">
+<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=707b666439">
 </head>
 <body class="site-home">
 
 <header class="site-header">
 <nav class="top site-nav" aria-label="Main navigation">
   <div class="in">
-    <a class="brand" href="#leaderboard"><img src="logo.svg" alt=""><span class="brand-name">Social Simulation Arena</span><span class="by">by MIT</span></a>
+    <a class="brand" href="#leaderboard"><img src="logo.svg" alt=""><span class="brand-text"><span class="brand-line"><span class="brand-name">Social Simulation Arena</span><span class="by">by MIT</span></span><span class="brand-tag">Social simulation vs. the real future</span></span></a>
     <div class="page-tabs">
       <a class="ptab on" href="#leaderboard" data-page="leaderboard">Leaderboard</a>
       <a class="ptab" href="#questions" data-page="questions">Questions</a>
@@ -648,7 +645,6 @@ table.ent td a.row{color:inherit;text-decoration:none;}
         <div class="panel-resizer" data-panel-resizer="tasks" role="separator" tabindex="0" aria-label="Resize tasks" aria-orientation="vertical" aria-controls="task-panel" title="Drag to resize · double-click to reset"></div>
         <section class="taskview" id="benchmark-panel">
           <div class="taskhead">
-            <p class="strap"><span class="livedot" aria-hidden="true"></span><span class="live-word">Live</span><b>Social Simulation vs. The Real Future</b><span class="strap-text">Live benchmark for social simulation: models forecast the next public release before it is published. Locked, hashed, scored in public.</span></p>
             <div class="eyebrow page-eyebrow" id="task-eyebrow">BENCHMARK OVERVIEW</div>
             <div class="task-picker" id="task-picker">
               <h2 class="page-title"><button type="button" class="task-trigger" id="task-trigger" aria-expanded="false" aria-controls="task-pop" aria-haspopup="listbox" title="Choose a task"><span id="task-title">Overall</span><span class="task-trigger-count" id="task-trigger-count"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6l-6 6"/></svg></button></h2>
@@ -2461,7 +2457,7 @@ function render(data){
     if(nx) parts.push('Next deadline <b>'+fmtCountdown(new Date(deadlineOf(nx))-Date.now())+'</b>');
     parts.push('<b>'+openNow.length+'</b> open');
     parts.push('<b>'+(lb.resolved_rounds||0)+'</b> resolved');
-    document.getElementById('meta-line').innerHTML = parts.map(p=>'<span>'+p+'</span>').join('');
+    document.getElementById('meta-line').innerHTML = '<span class="live"><span class="livedot" aria-hidden="true"></span>Live</span>'+parts.map(p=>'<span>'+p+'</span>').join('');
   }
   meta();
   clearInterval(window.__metaInt); window.__metaInt = setInterval(meta, 30000);
