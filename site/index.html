@@ -207,14 +207,15 @@ table.lb .who .type{font-size:11px;color:var(--mut);}
 /* A heading with a title= explanation says so, rather than hiding it. */
 table.lb thead th.has-help{cursor:help;}
 .seg button{position:relative;}
-th.has-help .th-label{text-decoration:underline dotted var(--mut);text-underline-offset:3px;}
+th.has-help .th-label{text-decoration:underline dotted #d0cec7;text-underline-offset:3px;}
 /* the hover box: white, one thin dark border, a soft shadow, the page's own face */
 th .th-help,.seg button .th-help,.taskmeta b .th-help{visibility:hidden;opacity:0;position:absolute;top:calc(100% + 6px);right:6px;width:min(280px,60vw);padding:7px 10px;background:#fff;color:var(--ink2);border:1px solid #333;box-shadow:0 2px 8px rgba(0,0,0,.08);font:400 12.5px/1.45 var(--sans);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;z-index:6;pointer-events:none;transition:opacity .2s,visibility .2s;}
 th:hover .th-help,th:focus-within .th-help,th:focus .th-help{visibility:visible;opacity:1;}
 .seg button .th-help{left:auto;right:0;top:calc(100% + 8px);width:min(300px,60vw);font-weight:400;text-align:left;text-transform:none;}
 .seg button:hover .th-help,.seg button:focus-visible .th-help{visibility:visible;opacity:1;}
 .taskmeta b{position:relative;}
-.taskmeta b.has-help{cursor:help;text-decoration:underline dotted var(--mut);text-underline-offset:3px;outline:none;}
+.taskmeta b.has-help{cursor:help;outline:none;}
+.taskmeta b.has-help:hover{color:var(--ink);}
 .taskmeta b .th-help{left:0;right:auto;top:calc(100% + 6px);width:min(300px,60vw);font-weight:400;text-align:left;text-transform:none;}
 .taskmeta b:hover .th-help,.taskmeta b:focus .th-help{visibility:visible;opacity:1;}
 th.has-help:focus{outline:none;}
@@ -388,7 +389,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .vrow .go{color:var(--link);font-weight:700;font-size:13.5px;text-decoration:none;white-space:nowrap;}
 .vrow .go:hover{text-decoration:underline;}
 .vrow .when{color:var(--mut);font-size:11.5px;white-space:nowrap;}
-.shape{display:inline-block;text-transform:uppercase;border:1px solid var(--line,#e0e0e0);border-radius:999px;padding:0 7px;margin-right:6px;font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--mut);vertical-align:1px;white-space:nowrap;}
+.shape{display:inline-block;text-transform:uppercase;border:1px solid var(--line);border-radius:3px;padding:0 6px;margin-right:4px;background:#fff;font-size:10.5px;line-height:1.6;font-weight:700;letter-spacing:.04em;color:var(--mut);vertical-align:1px;white-space:nowrap;}
 .svrow{display:flex;gap:14px;padding:12px 2px;border-bottom:1px solid #eeede9;align-items:flex-start;}
 .svrow:last-child{border-bottom:none;}
 .svrow .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:3px;background:var(--ink);color:#fff;font-size:11px;font-weight:700;flex:0 0 auto;margin-top:1px;}
@@ -573,7 +574,6 @@ table.lb .skill.pos{color:var(--accent-ink);}
   <div class="page" id="page-calendar">
     <div class="inner"><div class="col widecol">
         <h2 class="page-title" id="weekly-title">Calendar</h2>
-        <p class="lede page-description">Every question runs on its own clock: listed a week ahead, and answered in the 24 hours before it closes &#8212; the same window for every entrant. Most close 48 hours before their answer is published; the ones that ask about a whole week close before that week begins.</p>
       <div id="weekly-content" class="weekly-grid"></div>
     </div></div>
   </div>
@@ -702,7 +702,7 @@ const YOUGOV_PROFILE_CELLS = [
 ];
 const TREND_CELLS = ['trends_share_tesla','trends_share_iphone','trends_share_samsung','trends_share_netflix','trends_share_disney'];
 const TASKS = {
-  agg:{label:'Overall', group:null, population:'All measured populations', cadence:'weekly + release calendar', shape:'three task shapes'},
+  agg:{label:'Overall', group:null, population:'All measured populations', cadence:'weekly + release calendar', shape:'three answer types'},
   yougov_approval:{label:'Economist / YouGov approval',group:'opinion',population:'US adult citizens',cadence:'weekly',shape:'topline distribution',chart:'yougov_approval',unit:'%',tracker:'yougov_approval',per:'yougov_approval',srcName:'YouGov',srcUrl:'https://yougov.com/en-us/topics/topic/The_Economist_YouGov_polls',match:r=>r.series==='yougov_approval'},
   mc_approval:{label:'Morning Consult approval',group:'opinion',population:'US registered voters',cadence:'weekly',shape:'topline distribution',chart:'mc_approval',unit:'%',tracker:'mc_approval',per:'mc_approval',srcName:'Morning Consult',srcUrl:'https://pro.morningconsult.com/trackers/donald-trump-congress-policy-republicans-polling',match:r=>r.series==='mc_approval'},
   civiqs_approval:{label:'Civiqs approval',group:'opinion',population:'US registered voters',cadence:'weekly snapshot',shape:'topline distribution',chart:'civiqs_net_approval',unit:' pts',zero:true,per:'civiqs_net_approval',srcName:'Civiqs',srcUrl:'https://civiqs.com/results/approve_president_trump_2025',match:r=>r.series==='civiqs_net_approval' && (r.target_type||'continuous_normal')==='continuous_normal'},
@@ -1075,7 +1075,7 @@ function aggChart(traj, nameOf, unit){
     g += `<path d="${smoothPath(pts)}" fill="none" stroke="${colorOf(s)}" stroke-width="${heavy?2.8:(isModel?1.6:1.9)}" ${isModel?'opacity=".9"':''} stroke-linecap="round" stroke-linejoin="round"><title>${esc(nameOf[s]||s)}</title></path>`;
   }
   g += '</g>';
-  const avail = P.r - 33, maxCh = Math.max(4, Math.floor(avail/7.2) - 7);
+  const avail = P.r - 33, maxCh = Math.max(4, Math.floor(avail/5.7) - 5);  // 11px Inconsolata is ~5.5px a character; 5 covers the gap and the value
   // strict ranking layout: best at the top, monotonic downward, no shuffling
   // Only entrants with a value at the final checkpoint get a label -- an
   // absent one has no endpoint to point at, and ranking it as 0 would place it
@@ -1265,17 +1265,15 @@ function renderTaskHeader(data,key){
   const tc=document.getElementById('task-trigger-count'); if(tc) tc.textContent = key==='agg' ? (Object.keys(TASKS).length-1)+' tasks' : '';
   const rs = (key==='agg' ? (data.rounds||[]).slice() : taskRounds(d,data)).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
   const active = rs.filter(r=>r.status==='open' && Date.parse(deadlineOf(r))>Date.now());
+  const cadence = key==='agg' ? 'most weekly, some monthly' : String(d.cadence).replace(' + election', ', plus the election result').replace(' + release calendar', '');
   const helpOf={population:'The people the released number describes. Every question on this task is about them.',
-    cadence:'How often the source publishes, so how often a question on this task closes.',
-    answer:'The shape a forecast takes: a number with an uncertainty range, a profile (one number per cell), or a ranked list.',
-    questions:'Questions asked on this task this season, open and resolved.'};
+    answer:'What a forecast is on this task: a number with an uncertainty range, a profile (one number per cell), or a ranked list.',
+    questions:rs.length+' asked this season, '+active.length+' open now. Cadence: '+cadence+'.'};
   const lab=(k,text)=>'<b class="has-help" tabindex="0">'+text+'<span class="th-help" role="tooltip">'+esc(helpOf[k])+'</span></b>';
   const chip=t=>'<span class="shape">'+esc(t)+'</span>';
-  const cadences = key==='agg' ? ['weekly','monthly','election'] : String(d.cadence).split(' + ');
   const answers = key==='agg' ? ['number','profile','ranking'] : [d.kind==='ranking' ? 'ranking' : d.kind==='profile' ? 'profile'+(d.cells ? ' · '+d.cells.length+' cells' : '') : 'number'];
   document.getElementById('task-meta').innerHTML = '<span>'+lab('population','Population')+' '+esc(d.population)+'</span>'
-    +'<span>'+lab('cadence','Cadence')+' '+cadences.map(chip).join('')+'</span>'
-    +'<span>'+lab('answer','Answer')+' '+answers.map(chip).join('')+'</span>'
+    +'<span>'+lab('answer','Answer type')+' '+answers.map(chip).join('')+'</span>'
     +'<span>'+lab('questions','Questions')+' <span class="numeric">'+rs.length+'</span></span>';
   const card = document.getElementById('task-question-card');
   card.style.display='';

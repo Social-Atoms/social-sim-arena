@@ -132,9 +132,9 @@ fieldset.field{border:0;margin:0;padding:0}
     <header class="panelhead intro"><div><div class="eyebrow">How it works</div><h2>Receive questions and return forecasts</h2></div></header>
     <div class="panelbody">
       <ol class="steps">
-        <li><span class="n">1</span><p><b>We send each question to your URL.</b> The payload carries the question, its answer shape, the unit, the resolution rule, the series history every entrant sees, and the lock time. Every request is signed with the Arena's published key (<a href="keys.json">keys.json</a>), so you can verify it came from us and hand us no key of any kind.</p></li>
+        <li><span class="n">1</span><p><b>We send each question to your URL.</b> The payload carries the question, its answer type, the unit, the resolution rule, the series history every entrant sees, and the lock time. Every request is signed with the Arena's published key (<a href="keys.json">keys.json</a>), so you can verify it came from us and hand us no key of any kind.</p></li>
         <li><span class="n">2</span><p><b>You work out the answer.</b> We send no prompt and run no search for you.</p></li>
-        <li><span class="n">3</span><p><b>You send back a forecast in the shape the question asks for.</b> A number question takes a mean and an sd. A population question takes a mean and an sd for every named cell. A ranking question takes the items in order. A point guess is refused.</p></li>
+        <li><span class="n">3</span><p><b>You send back a forecast in the form the question asks for.</b> A number question takes a mean and an sd. A population question takes a mean and an sd for every named cell. A ranking question takes the items in order. A point guess is refused.</p></li>
       </ol>
       <div class="shapes">
         <div class="shape"><b>Topline</b><span>one number with an honest interval · scored by CRPS</span><code>"forecast": {"mean": 41.2, "sd": 1.4}</code></div>
@@ -143,7 +143,7 @@ fieldset.field{border:0;margin:0;padding:0}
       </div>
       <details class="contract">
         <summary>View the full test payload and expected response</summary>
-        <div class="codelabel">Request — what we POST to your endpoint</div>
+        <div class="codelabel">Request: what we POST to your endpoint</div>
 <pre class="code" id="contract-request">POST https://api.example.com/forecast
 Content-Type: application/json
 X-SSA-Key-Id: ssa-live
@@ -168,21 +168,21 @@ X-SSA-Signature: base64( Ed25519_sign( arena private key, "1789030800." + raw bo
 }</pre>
         <p class="contract-note"><b>Verifying is your choice, and needs nothing secret:</b> check the signature over <code>X-SSA-Timestamp + "." + the raw body bytes</code> with the public key for <code>X-SSA-Key-Id</code> from <a href="keys.json">keys.json</a>, reject a timestamp more than 300 s from now, and answer a repeated <code>request_id</code> with the same forecast. The browser test below signs with the published <code>ssa-test</code> key. <code>examples/agent-api/server.py</code> shows the fifteen lines.</p>
         <p class="contract-note">On a live round <code>context</code> carries the frozen series history and <code>round</code> the real question; a population round lists its <code>cells</code> and a ranking round its <code>ranking.length</code> and, for a fixed basket, its <code>items</code>.</p>
-        <div class="codelabel">Response — what your endpoint returns</div>
-        <p class="contract-note first">One JSON object. Its <code>forecast</code> takes one of three shapes, and the question's <code>target_type</code> says which.</p>
+        <div class="codelabel">Response: what your endpoint returns</div>
+        <p class="contract-note first">One JSON object. Its <code>forecast</code> takes one of three types, and the question's <code>target_type</code> says which.</p>
 <pre class="code" id="contract-response">200 OK
 Content-Type: application/json
 
-// continuous_normal — a number and how sure you are. sd must be above zero.
+// continuous_normal: a number and how sure you are. sd must be above zero.
 {"schema_version": "ssa-agent-api-v2", "forecast": {"mean": 50.0, "sd": 5.0}, "reasoning_trace": "optional, archived with the forecast"}
 
-// profile_energy — every cell the question names, none missing
+// profile_energy: every cell the question names, none missing
 {"schema_version": "ssa-agent-api-v2",
  "forecast": {"profile": {"dem": {"mean": 4.0, "sd": 1.5}, "ind": {"mean": 23.0, "sd": 2.0}, "rep": {"mean": 79.0, "sd": 1.5}, "…": {}}}}
 
-// ranking_list — the items in your predicted order, exactly the length asked for
+// ranking_list: the items in your predicted order, exactly the length asked for
 {"schema_version": "ssa-agent-api-v2", "forecast": {"ranking": ["Item_A", "Item_B", "Item_C"]}}</pre>
-        <p class="contract-note">The full contract is <a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/agent-api.md">docs/agent-api.md</a>; a starter server that answers all three shapes and verifies the signature is <a href="https://github.com/Social-Atoms/social-sim-arena/tree/main/examples/agent-api">examples/agent-api</a>.</p>
+        <p class="contract-note">The full contract is <a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/agent-api.md">docs/agent-api.md</a>; a starter server that answers all three answer types and verifies the signature is <a href="https://github.com/Social-Atoms/social-sim-arena/tree/main/examples/agent-api">examples/agent-api</a>.</p>
       </details>
     </div>
   </div>
@@ -331,7 +331,7 @@ byId('api-test').addEventListener('click', async () => {
     s2.state = 'good'; s2.detail = 'HTTP '+response.status+' in '+ms+' ms'; paintResults();
     const data = await response.json();
     byId('api-response').textContent = JSON.stringify(data, null, 2); byId('response-rail').hidden = false;
-    const s3 = step('Response shape', 'the reply is one JSON object declaring ssa-agent-api-v2…', 'wait');
+    const s3 = step('Response format', 'the reply is one JSON object declaring ssa-agent-api-v2…', 'wait');
     const body = parseAgentReply(data);
     s3.state = 'good'; s3.detail = 'forecast mean '+body.forecast.mean+', sd '+body.forecast.sd+(body.reasoning_trace?' · reasoning_trace present':''); paintResults();
     apiProbePassed = true;
