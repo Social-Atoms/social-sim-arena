@@ -259,7 +259,8 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .qcard h3{margin:8px 0 3px;font-size:17px;line-height:1.25;color:var(--ink);}
 .qcard .qtext{margin:0 0 10px;font-size:13px;line-height:1.45;color:var(--ink2);}
 .qcard .qstrip{margin:auto -4px 0;}
-.qcard .qstrip svg{display:block;width:100%;height:58px;overflow:visible;}
+.qcard .qstrip{min-height:74px;}
+.qcard .qstrip svg{display:block;width:100%;height:74px;overflow:visible;}
 .qcard .qstats{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;font-size:12px;color:var(--mut);margin-top:6px;}
 .qcard .qstats b{font-size:19px;color:var(--ink);font-weight:700;}
 .qcard .qstats .hit{color:var(--accent-ink);font-weight:700;}
@@ -272,12 +273,11 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .qcard .qfoot .go{margin-left:auto;color:var(--link);font-weight:700;text-decoration:none;white-space:nowrap;font-size:12px;}
 .qcard .qfoot .go:hover{text-decoration:underline;}
 @media(max-width:900px){.qgrid{grid-template-columns:1fr;}}
-.weekly-grid{display:grid;grid-template-columns:minmax(0,1fr) 270px;grid-template-areas:"entry join" "overview calendar";gap:16px;align-items:stretch;}
+.weekly-grid{display:grid;grid-template-columns:minmax(0,1fr) 270px;grid-template-areas:"overview calendar" "entry entry";gap:16px;align-items:stretch;}
 #page-calendar .col{padding-top:24px;padding-bottom:32px;}
 #page-calendar .lede{max-width:100ch;}
 #page-calendar .week-card{min-width:0;margin:0;padding:20px;}
 .week-entry{grid-area:entry;display:flex;flex-direction:column;}
-.week-join{grid-area:join;display:flex;flex-direction:column;}
 .week-overview{grid-area:overview;display:flex;flex-direction:column;}
 .week-empty{grid-column:1/-1;}
 .week-card{border:1px solid var(--line);border-radius:5px;background:#fff;padding:14px 16px;margin:0 0 12px;}
@@ -1545,13 +1545,14 @@ function fmtNum(v, unit){
   const a = Math.abs(v), d = a>=100?0:a>=10?1:2;
   return (typeof v==='number' ? v.toFixed(d) : '·') + (unit||'');
 }
-function forecastStrip(r, t, data){
+function stripFacts(r, t){
   const f = r.forecasts||{}, ids = Object.keys(f).filter(k=>typeof (f[k]||{}).mean==='number');
+  return { f, ids, unit: (t.unit||'').trim()==='%' ? '%' : '', models: ids.filter(k=>!isBaseline(k)), bases: ids.filter(isBaseline),
+    per: (f.persistence||(r.baselines||{}).persistence||{}).mean, rel: (r.resolution||{}).value };
+}
+function forecastStrip(r, t, data){
+  const {f, ids, unit, models, per, rel} = stripFacts(r, t);
   if(!ids.length) return '';
-  const unit = (t.unit||'').trim()==='%' ? '%' : '';
-  const models = ids.filter(k=>!isBaseline(k)), bases = ids.filter(isBaseline);
-  const per = (f.persistence||(r.baselines||{}).persistence||{}).mean;
-  const rel = (r.resolution||{}).value;
   if(!models.length){
     // Nothing to compare yet: the strip would show only unlabeled reference
     // circles. Say the one fact a reader can use, and nothing else.
@@ -1559,21 +1560,8 @@ function forecastStrip(r, t, data){
       : (typeof per==='number' ? '<span>last release <b>'+fmtNum(per,unit)+'</b></span>' : '') + '<span>no model answers yet</span>';
     return '<div class="qstats qstats-empty">'+line+'</div>';
   }
-  const means = ids.map(k=>f[k].mean).concat(typeof per==='number'?[per]:[], typeof rel==='number'?[rel]:[]);
-  let lo = Math.min(...means), hi = Math.max(...means);
-  const pad = Math.max((hi-lo)*0.18, 0.6); lo -= pad; hi += pad;
-  const W = 600, H = 58, L = 8, R = 8, y0 = 30;
-  const x = v => L + (v-lo)/(hi-lo)*(W-L-R);
   const mm = models.map(k=>f[k].mean).sort((a,b)=>a-b);
   const cons = mm.length ? mm[Math.floor(mm.length/2)] : null;
-  let g = '';
-  g += '<line x1="'+L+'" y1="'+y0+'" x2="'+(W-R)+'" y2="'+y0+'" stroke="#dcdbd6" stroke-width="1"/>';
-  // model dots, spread a little so a crowd does not collapse into one point
-  models.forEach((k,i)=>{ const dy = ((i%5)-2)*3.2; g += '<circle cx="'+x(f[k].mean).toFixed(1)+'" cy="'+(y0+dy).toFixed(1)+'" r="3.4" fill="#111110" fill-opacity=".72"><title>'+esc(forecasterName(k,data))+': '+fmtNum(f[k].mean,unit)+' ± '+fmtNum(f[k].sd,'')+'</title></circle>'; });
-  bases.forEach(k=>{ g += '<circle cx="'+x(f[k].mean).toFixed(1)+'" cy="'+y0+'" r="3.6" fill="#fff" stroke="#96948d" stroke-width="1.4"><title>'+esc(forecasterName(k,data))+' (reference): '+fmtNum(f[k].mean,unit)+'</title></circle>'; });
-  if(typeof per==='number'){ g += '<line x1="'+x(per).toFixed(1)+'" y1="'+(y0-14)+'" x2="'+x(per).toFixed(1)+'" y2="'+(y0+14)+'" stroke="#96948d" stroke-width="1" stroke-dasharray="2 2"/><text x="'+x(per).toFixed(1)+'" y="'+(y0+26)+'" font-size="9.5" fill="#96948d" text-anchor="middle">last release '+fmtNum(per,unit)+'</text>'; }
-  if(cons!==null){ g += '<line x1="'+x(cons).toFixed(1)+'" y1="'+(y0-16)+'" x2="'+x(cons).toFixed(1)+'" y2="'+(y0+16)+'" stroke="#111110" stroke-width="2"/><text x="'+x(cons).toFixed(1)+'" y="'+(y0-20)+'" font-size="10" font-weight="700" fill="#111110" text-anchor="middle">models '+fmtNum(cons,unit)+'</text>'; }
-  if(typeof rel==='number'){ g += '<line x1="'+x(rel).toFixed(1)+'" y1="'+(y0-18)+'" x2="'+x(rel).toFixed(1)+'" y2="'+(y0+18)+'" stroke="#15803d" stroke-width="2"/><text x="'+x(rel).toFixed(1)+'" y="'+(y0-21)+'" font-size="10" font-weight="700" fill="#0a6a30" text-anchor="middle">released '+fmtNum(rel,unit)+'</text>'; }
   let stats = cons!==null
     ? '<b>'+fmtNum(cons,unit)+'</b><span>what the models say · '+models.length+' answers</span>'
     : '<span>No model answers yet</span><span>reference forecasts only</span>';
@@ -1581,7 +1569,60 @@ function forecastStrip(r, t, data){
     let best=null, bd=Infinity; models.forEach(k=>{ const d=Math.abs(f[k].mean-rel); if(d<bd){bd=d;best=k;} });
     stats += '<span class="hit">released '+fmtNum(rel,unit)+'</span>' + (best?'<span>closest: '+esc(forecasterName(best,data))+'</span>':'');
   }
-  return '<div class="qstrip"><svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">'+g+'</svg></div><div class="qstats">'+stats+'</div>';
+  // The SVG is drawn by drawStrips once the card has a width: a viewBox stretched to
+  // whatever width the card gets squashed every circle and label.
+  return '<div class="qstrip" data-strip="'+esc(r.round_id)+'"></div><div class="qstats">'+stats+'</div>';
+}
+function stripSvg(r, t, data, W){
+  const {f, unit, models, bases, per, rel} = stripFacts(r, t);
+  const H = 74, L = 10, R = 10, y0 = 38, RAD = 3.4, ROW = 7.6;
+  // The scale covers the forecasts inside Tukey's fences plus the reference marks;
+  // one stray answer no longer squeezes thirty others into a smudge. Strays sit
+  // hollow at the edge with their value in the tooltip.
+  const vals = models.concat(bases).map(k=>f[k].mean), refs = [per, rel].filter(v=>typeof v==='number');
+  const sorted = vals.slice().sort((a,b)=>a-b), q = p => sorted[Math.min(sorted.length-1, Math.max(0, Math.round(p*(sorted.length-1))))];
+  const iqr = q(.75)-q(.25), loF = q(.25)-1.5*iqr, hiF = q(.75)+1.5*iqr;
+  const inside = vals.filter(v=>v>=loF && v<=hiF).concat(refs);
+  let lo = Math.min(...inside), hi = Math.max(...inside);
+  if(!(hi>lo)){ lo -= 1; hi += 1; }
+  const pad = Math.max((hi-lo)*0.12, 0.3); lo -= pad; hi += pad;
+  const x = v => L + (Math.min(hi, Math.max(lo, v))-lo)/(hi-lo)*(W-L-R);
+  const off = v => v<lo || v>hi;
+  // A beeswarm: sorted by value, each dot takes the first row, out from the axis, where it
+  // does not touch that row's last dot.
+  const lastAt = {};
+  const rowFor = px => { for(let k=0;k<12;k++){ const row = k===0 ? 0 : (k%2 ? Math.ceil(k/2) : -Math.ceil(k/2)); if(lastAt[row]==null || px-lastAt[row] >= 2*RAD+1.2){ lastAt[row]=px; return row; } } return 0; };
+  const mono = ' font-family="Inconsolata, ui-monospace, monospace"';
+  let g = '<line x1="'+L+'" y1="'+y0+'" x2="'+(W-R)+'" y2="'+y0+'" stroke="#dcdbd6" stroke-width="1"/>';
+  g += '<text x="'+L+'" y="'+(H-3)+'" font-size="9.5" fill="#b8b6ae"'+mono+'>'+fmtNum(lo+pad,unit)+'</text>';
+  g += '<text x="'+(W-R)+'" y="'+(H-3)+'" font-size="9.5" fill="#b8b6ae" text-anchor="end"'+mono+'>'+fmtNum(hi-pad,unit)+'</text>';
+  const strays = {below:[], above:[]};
+  models.slice().sort((a,b)=>f[a].mean-f[b].mean).forEach(k=>{
+    const v = f[k].mean;
+    if(off(v)){ strays[v<lo?'below':'above'].push(forecasterName(k,data)+' '+fmtNum(v,unit)); return; }
+    const px = x(v), cy = y0 + rowFor(px)*ROW;
+    g += '<circle cx="'+px.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+RAD+'" fill="#111110" fill-opacity=".72"><title>'+esc(forecasterName(k,data))+': '+fmtNum(v,unit)+' ± '+fmtNum(f[k].sd,'')+'</title></circle>';
+  });
+  // Strays are one hollow mark at the edge with a count; their values are in the tooltip.
+  [['below', L, 'start'], ['above', W-R, 'end']].forEach(([side, px, anchor])=>{
+    const n = strays[side].length; if(!n) return;
+    g += '<circle cx="'+px+'" cy="'+y0+'" r="'+RAD+'" fill="#fff" stroke="#111110" stroke-width="1.2" stroke-dasharray="2 1.5"><title>'+esc(strays[side].join(', '))+'</title></circle>';
+    g += '<text x="'+px+'" y="'+(y0-8)+'" font-size="9.5" fill="#96948d" text-anchor="'+anchor+'"'+mono+'>'+n+' '+side+'</text>';
+  });
+  bases.forEach(k=>{ g += '<circle cx="'+x(f[k].mean).toFixed(1)+'" cy="'+y0+'" r="3.6" fill="#fff" stroke="#96948d" stroke-width="1.4"><title>'+esc(forecasterName(k,data))+' (reference): '+fmtNum(f[k].mean,unit)+'</title></circle>'; });
+  const mm = models.map(k=>f[k].mean).sort((a,b)=>a-b), cons = mm.length ? mm[Math.floor(mm.length/2)] : null;
+  if(typeof per==='number'){ g += '<line x1="'+x(per).toFixed(1)+'" y1="'+(y0-14)+'" x2="'+x(per).toFixed(1)+'" y2="'+(y0+14)+'" stroke="#96948d" stroke-width="1" stroke-dasharray="2 2"/><text x="'+x(per).toFixed(1)+'" y="'+(y0+27)+'" font-size="9.5" fill="#96948d" text-anchor="middle"'+mono+'>last release '+fmtNum(per,unit)+'</text>'; }
+  if(cons!==null){ g += '<line x1="'+x(cons).toFixed(1)+'" y1="'+(y0-17)+'" x2="'+x(cons).toFixed(1)+'" y2="'+(y0+17)+'" stroke="#111110" stroke-width="2"/><text x="'+x(cons).toFixed(1)+'" y="'+(y0-21)+'" font-size="10" font-weight="700" fill="#111110" text-anchor="middle"'+mono+'>models '+fmtNum(cons,unit)+'</text>'; }
+  if(typeof rel==='number'){ g += '<line x1="'+x(rel).toFixed(1)+'" y1="'+(y0-19)+'" x2="'+x(rel).toFixed(1)+'" y2="'+(y0+19)+'" stroke="#15803d" stroke-width="2"/><text x="'+x(rel).toFixed(1)+'" y="'+(y0-23)+'" font-size="10" font-weight="700" fill="#0a6a30" text-anchor="middle"'+mono+'>released '+fmtNum(rel,unit)+'</text>'; }
+  return '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-hidden="true">'+g+'</svg>';
+}
+function drawStrips(scope, data){
+  if(!scope || !scope.querySelectorAll || !data) return;
+  const byId = {}; (data.rounds||[]).forEach(r=>{ byId[r.round_id]=r; });
+  scope.querySelectorAll('.qstrip[data-strip]').forEach(host=>{
+    const r = byId[host.getAttribute('data-strip')]; if(!r) return;
+    host.innerHTML = stripSvg(r, taskForRound(r), data, Math.max(240, host.clientWidth||560));
+  });
 }
 function roundsList(data){
   const el = document.getElementById('rounds-list');
@@ -1608,6 +1649,7 @@ function roundsList(data){
       +'<div class="qfoot"><span class="qid" title="'+esc(r.round_id)+'">Source '+(t.srcUrl?'<a class="src" href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span>'+esc(t.population)+'</span><a class="go" href="#live/'+taskKeyForRound(r)+'/all">open task →</a></div></div>';
   }).join('')+'</div>'||'';
   if(!rows.length) el.innerHTML='<div class="week-card"><h3>No matching questions</h3><p>Try another category, status, or search term.</p></div>';
+  drawStrips(el, data);
 }
 
 function renderWeekly(data){
@@ -1704,7 +1746,7 @@ function renderWeekly(data){
   const firstLanding=landing.map(r=>r.release_at).sort()[0];
   const when=iso=>iso?esc(fmtLocal(iso)):'—';
   host.innerHTML='<section class="week-card week-entry" aria-labelledby="week-entry-title">'
-      +'<h3 id="week-entry-title">Answer the week</h3><p>Register one HTTPS endpoint. Every question is sent to it, signed, in the 24 hours before that question closes; you return the forecast.</p>'
+      +'<h3 id="week-entry-title">Answer the week</h3><p>Register one HTTPS endpoint. Every question is sent to it, signed, in the 24 hours before that question closes; you return the forecast. Answer any subset; your latest answer per question counts, and one answer puts you on the board.</p>'
       // The four steps a newcomer needs and cannot get anywhere else on the
       // site. They lived in a card of their own on the old weekly screen and
       // were dropped when this one was rebuilt; the wording is that card's.
@@ -1713,9 +1755,6 @@ function renderWeekly(data){
       +'<dt>Closes</dt><dd>48 hours before its answer, or before the week it measures</dd>'
       +'<dt>Scored</dt><dd>within 6 hours of the answer landing</dd></dl>'
       +'<div class="week-actions"><a class="btn dark" href="submit.html">Test and register</a></div></section>'
-    +'<section class="week-card week-join" aria-labelledby="week-join-title">'
-      +'<h3 id="week-join-title">Enter this week</h3><p>Answer any subset before each question closes; your latest answer per question counts. No minimum record: if you answered, you are on the board.</p>'
-      +'<div class="week-actions"><a class="btn dark" href="submit.html">Add your agent</a></div></section>'
     +'<section class="week-card week-overview" aria-labelledby="week-questions-title">'
       +'<div class="week-count"><h3 id="week-questions-title"><span class="numeric">'+week.length+'</span> questions close in the next three weeks</h3>'
       +'<span class="live">live · submissions open</span>'
@@ -1724,7 +1763,7 @@ function renderWeekly(data){
       +[0,1,2].map(w=>'<div class="wgrid">'+weekRow(w)+'</div>').join('')+'</div>'
       +'<p>Each one closes on its own clock, so the week is a calendar rather than a single deadline. A question whose release slips is held, never re-dated.</p>'
       +'<div class="facets"><div class="facet"><h4>Categories</h4>'+bar(fam)+'</div>'
-      +'<div class="facet"><h4>Answer shape</h4>'+bar(shape)+'</div>'
+      +'<div class="facet"><h4>Question type</h4>'+bar(shape)+'</div>'
       +'<div class="facet"><h4>Horizon</h4>'+bar(horizon)+'</div></div>'
       +'<div class="week-browse"><a class="go" href="#questions">Browse all '+open.length+' open questions →</a>'
       +'<span>'+open.reduce((n,r)=>n+(r.n_forecasts||0),0)+' forecasts filed so far</span></div></section>'
@@ -1882,6 +1921,7 @@ function showPage(k){
   window.__page = k;
   if(k==='leaderboard' && window.__data) requestAnimationFrame(()=>setTab(window.__tab||'agg'));
   if(k==='calendar' && window.__data) renderWeekly(window.__data);
+  if(k==='questions' && window.__data) requestAnimationFrame(()=>drawStrips(document.getElementById('rounds-list'), window.__data));
   if(typeof syncHash==='function') syncHash();
 }
 
@@ -1947,7 +1987,7 @@ document.querySelectorAll('#span-seg button').forEach(b=> b.onclick = ()=>{
   renderBoard(b.dataset.span);
 });
 let rsz;
-function redraw(){ if(window.__data && (window.__page||'leaderboard')==='leaderboard') renderTaskChart(window.__tab||'agg'); }
+function redraw(){ if(!window.__data) return; const pg=window.__page||'leaderboard'; if(pg==='leaderboard') renderTaskChart(window.__tab||'agg'); if(pg==='questions') drawStrips(document.getElementById('rounds-list'), window.__data); }
 function scheduleRedraw(){
   if(rsz)return;
   rsz=requestAnimationFrame(()=>{rsz=0;redraw();});
