@@ -26,10 +26,8 @@ a{color:inherit;}
 .site-header{flex:0 0 auto;}
 
 /* The live light sits at the head of the status line: the arena is running, and this is when. */
-/* The live light and the data's age are pinned to the head's top-right corner, level with the eyebrow;
-   the eyebrow and the title keep their own places. */
-.taskhead{position:relative;}
-.task-live{position:absolute;right:16px;top:var(--panel-head-top);display:inline-flex;align-items:center;gap:10px;font-size:12.5px;color:var(--mut);white-space:nowrap;line-height:16px;}   /* the eyebrow's line box, so the two sit level */
+/* The live light and the data's age are the board head's second line: the numbers they describe are the board's. */
+.task-live{flex-basis:100%;display:inline-flex;align-items:center;gap:10px;margin-top:-2px;font-size:12px;color:var(--mut);white-space:nowrap;line-height:1.5;}
 .task-live .live{display:inline-flex;align-items:center;gap:6px;color:var(--accent-ink);font-weight:800;font-size:12px;letter-spacing:.1em;text-transform:uppercase;}
 .task-live b{color:var(--ink2);font-weight:600;}
 .livedot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:0 0 auto;animation:breathe 3.6s ease-in-out infinite;}
@@ -496,7 +494,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 @media(max-width:600px){
   /* phones: one line of status, a small avatar beside the name, one tile per row, wide tables scroll */
   .taskhead{padding-left:12px;padding-right:12px;}
-  .task-live{position:static;margin-top:6px;font-size:12px;}
+  .task-live{white-space:normal;}
   .ent-head{column-gap:14px;row-gap:8px;align-items:start;}
   .ent-head .ent-avatar{align-self:start;}
   .ent-head .ent-avatar .av{height:64px;width:64px;font-size:22px;border-radius:14px;}
@@ -663,7 +661,6 @@ table.ent td a.row{color:inherit;text-decoration:none;}
         <section class="taskview" id="benchmark-panel">
           <div class="taskhead">
             <div class="eyebrow page-eyebrow" id="task-eyebrow">BENCHMARK OVERVIEW</div>
-            <div class="task-live"><span class="live"><span class="livedot" aria-hidden="true"></span>Live</span><time id="data-updated" title="Data refreshed every 6 hours"></time></div>
             <div class="task-picker" id="task-picker">
               <h2 class="page-title"><button type="button" class="task-trigger" id="task-trigger" aria-expanded="false" aria-controls="task-pop" aria-haspopup="listbox" title="Choose a task"><span id="task-title">Overall</span><span class="task-trigger-count" id="task-trigger-count"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6l-6 6"/></svg></button></h2>
               <section class="model-pop task-pop" id="task-pop" aria-label="Choose a task" hidden>
@@ -696,6 +693,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
     <aside class="lbcol" id="leaderboard-panel" aria-label="Leaderboard">
       <div class="lbhead">
         <h2 class="has-help" id="lb-how"><b>Leaderboard</b> <span id="lb-title">Overall</span><span class="th-help" id="lb-note" role="tooltip"></span></h2>
+        <div class="task-live"><span class="live"><span class="livedot" aria-hidden="true"></span>Live</span><time id="data-updated" title="Data refreshed every 6 hours"></time></div>
       </div>
       <div class="scroll">
         <table class="lb">
