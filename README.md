@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="brand/png/ssa-mark-192.png" width="88" alt="">
+  <img src="brand/png/ssa-mark-192.png" width="120" alt="">
 </p>
 
 <h1 align="center">Social Simulation Arena</h1>
