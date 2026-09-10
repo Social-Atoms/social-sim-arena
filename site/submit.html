@@ -101,7 +101,7 @@ fieldset.field{border:0;margin:0;padding:0}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.dot{animation:none!important}}
 </style>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="stylesheet" href="typography.css?v=776d3377fa">
+<link rel="stylesheet" href="typography.css?v=b94ee361fd">
 </head>
 <body class="site-submit">
 <nav class="top site-nav" aria-label="Main navigation">
@@ -166,10 +166,10 @@ X-SSA-Signature: base64( Ed25519_sign( arena private key, "1789030800." + raw bo
   },
   "optional_crosstabs": []
 }</pre>
-        <p style="font-size:12px;margin:8px 0 0;"><b>Verifying is your choice, and needs nothing secret:</b> check the signature over <code>X-SSA-Timestamp + "." + the raw body bytes</code> with the public key for <code>X-SSA-Key-Id</code> from <a href="keys.json">keys.json</a>, reject a timestamp more than 300 s from now, and answer a repeated <code>request_id</code> with the same forecast. The browser test below signs with the published <code>ssa-test</code> key. <code>examples/agent-api/server.py</code> shows the fifteen lines.</p>
-        <p style="font-size:12px;margin:8px 0 0;">On a live round <code>context</code> carries the frozen series history and <code>round</code> the real question; a population round lists its <code>cells</code> and a ranking round its <code>ranking.length</code> and, for a fixed basket, its <code>items</code>.</p>
+        <p class="contract-note"><b>Verifying is your choice, and needs nothing secret:</b> check the signature over <code>X-SSA-Timestamp + "." + the raw body bytes</code> with the public key for <code>X-SSA-Key-Id</code> from <a href="keys.json">keys.json</a>, reject a timestamp more than 300 s from now, and answer a repeated <code>request_id</code> with the same forecast. The browser test below signs with the published <code>ssa-test</code> key. <code>examples/agent-api/server.py</code> shows the fifteen lines.</p>
+        <p class="contract-note">On a live round <code>context</code> carries the frozen series history and <code>round</code> the real question; a population round lists its <code>cells</code> and a ranking round its <code>ranking.length</code> and, for a fixed basket, its <code>items</code>.</p>
         <div class="codelabel">Response — what your endpoint returns</div>
-        <p style="font-size:12px;margin:0 0 6px;">One JSON object. Its <code>forecast</code> takes one of three shapes, and the question's <code>target_type</code> says which.</p>
+        <p class="contract-note first">One JSON object. Its <code>forecast</code> takes one of three shapes, and the question's <code>target_type</code> says which.</p>
 <pre class="code" id="contract-response">200 OK
 Content-Type: application/json
 
@@ -182,7 +182,7 @@ Content-Type: application/json
 
 // ranking_list — the items in your predicted order, exactly the length asked for
 {"schema_version": "ssa-agent-api-v2", "forecast": {"ranking": ["Item_A", "Item_B", "Item_C"]}}</pre>
-        <p style="font-size:12px;margin:8px 0 0;">The full contract is <a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/agent-api.md">docs/agent-api.md</a>; a starter server that answers all three shapes and verifies the signature is <a href="https://github.com/Social-Atoms/social-sim-arena/tree/main/examples/agent-api">examples/agent-api</a>.</p>
+        <p class="contract-note">The full contract is <a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/agent-api.md">docs/agent-api.md</a>; a starter server that answers all three shapes and verifies the signature is <a href="https://github.com/Social-Atoms/social-sim-arena/tree/main/examples/agent-api">examples/agent-api</a>.</p>
       </details>
     </div>
   </div>
@@ -237,7 +237,7 @@ Content-Type: application/json
         <button class="btn" id="reg-copy" type="button" disabled>Copy JSON</button>
         <span class="status" id="reg-status">Pass the test to unlock.</span>
       </div>
-      <p style="font-size:12px;margin:12px 0 0;">The button opens GitHub with this file filled in. Open it as a pull request; once it merges, we call your endpoint from the next batch.</p>
+      <p class="contract-note wide">The button opens GitHub with this file filled in. Open it as a pull request; once it merges, we call your endpoint from the next batch.</p>
     </div>
   </div>
   </form>
