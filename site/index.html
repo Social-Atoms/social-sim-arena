@@ -687,7 +687,7 @@ const CIVIQS_PROFILE_CELLS = [
   'civiqs_net_approval_dem','civiqs_net_approval_ind','civiqs_net_approval_rep',
   'civiqs_net_approval_age_18_34','civiqs_net_approval_age_35_49','civiqs_net_approval_age_50_64','civiqs_net_approval_age_65_up',
   'civiqs_net_approval_race_white','civiqs_net_approval_race_black','civiqs_net_approval_race_hispanic','civiqs_net_approval_race_other',
-  'civiqs_net_approval_edu_college','civiqs_net_approval_edu_noncollege','civiqs_net_approval_edu_postgrad',
+  'civiqs_net_approval_edu_noncollege','civiqs_net_approval_edu_college','civiqs_net_approval_edu_postgrad',  // registry order (series.PROFILE_CELLS)
   'civiqs_net_approval_male','civiqs_net_approval_female'
 ];
 const CIVIQS_SUBGROUP_CELLS = [
@@ -1081,23 +1081,20 @@ function aggChart(traj, nameOf, unit){
   // Only entrants with a value at the final checkpoint get a label -- an
   // absent one has no endpoint to point at, and ranking it as 0 would place it
   // mid-table among entrants that were actually measured.
-  const labelOrder = series.filter(s => val(lastCk,s) != null).sort((a,b)=>{
-    const va = val(lastCk,a), vb = val(lastCk,b);
-    return unit==='crps' ? va-vb : vb-va;
-  });
+  // Labels follow the endpoints down the screen, whichever way the unit reads
+  // (a low CRPS is best but sits at the bottom), so the leader lines never cross.
+  const labelOrder = series.filter(s => val(lastCk,s) != null).sort((a,b)=>Y(val(lastCk,a)) - Y(val(lastCk,b)));
   const LH = 17;
-  const slots = [];
-  let prevY = yTop - LH;
-  for(const s of labelOrder){
-    let y = Math.max(Y(val(lastCk,s)), prevY + LH);
-    slots.push(y); prevY = y;
-  }
-  // if the stack ran past the bottom, shift the whole tail back up
-  const over = slots.length ? slots[slots.length-1] - yBot : 0;
-  if(over > 0){
-    for(let i=slots.length-1;i>=0;i--){
-      slots[i] = Math.min(slots[i], yBot - (slots.length-1-i)*LH);
-    }
+  // Each label wants its own endpoint's height. Space them at least LH apart from the top
+  // down, then slide the whole stack so the displacement averages zero: a crowded cluster
+  // fans out above and below its endpoints instead of hanging beneath them. Clamped to the plot.
+  const target = labelOrder.map(s => Y(val(lastCk,s)));
+  const slots = target.slice();
+  for(let i=1;i<slots.length;i++) slots[i] = Math.max(slots[i], slots[i-1] + LH);
+  if(slots.length){
+    let shift = target.reduce((a,t,i)=>a + (t - slots[i]), 0) / slots.length;
+    shift = Math.max(yTop - slots[0], Math.min(yBot - slots[slots.length-1], shift));
+    for(let i=0;i<slots.length;i++) slots[i] += shift;
   }
   labelOrder.forEach((s, i)=>{
     const last = val(lastCk,s), ly = slots[i];
