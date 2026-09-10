@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" type="image/svg+xml" href="/logo.svg">
+<title>404 · Social Simulation Arena</title><meta name="robots" content="noindex">
+<style>
+:root{--bg:#fff;--ink:#111110;--ink2:#4f4e49;--mut:#96948d;--line:#e0e0e0;--soft:#f6f6f3;--accent:#15803d;--accent-ink:#0a6a30;--link:var(--accent);--sans:"Inconsolata",ui-monospace,SFMono-Regular,Menlo,monospace;--mono:var(--sans);}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink2);font:15.5px/1.65 var(--sans);-webkit-font-smoothing:antialiased}
+.essay{max-width:620px;margin:0 auto;padding:56px 24px 96px}
+.essay .eyebrow{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.essay h1{font-size:19px;line-height:1.35;color:var(--ink);margin:6px 0 18px}
+.essay p{margin:0 0 18px;font-size:16px;line-height:1.7;color:var(--ink)}
+.essay p.ask{margin-bottom:12px}
+.essay a{color:var(--accent-ink);text-decoration:underline;text-underline-offset:2px}.essay a:hover{color:var(--accent)}
+.game{margin:0 0 26px;border:1px solid var(--line);border-radius:5px;background:#fff;overflow:hidden}
+.game svg{display:block;width:100%;height:auto;cursor:crosshair;touch-action:none;user-select:none}
+.game .bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 12px;border-top:1px solid var(--line);font-size:13px;line-height:1.5;color:var(--ink2);min-height:40px}
+.game .bar #verdict{flex:1 1 300px}
+.game .bar b{color:var(--ink)}
+.game .tally{margin-left:auto;color:var(--mut);white-space:nowrap}
+.game button{font:700 12.5px/normal var(--sans);color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:4px;padding:4px 11px;cursor:pointer;white-space:nowrap}
+.game button:hover{border-color:var(--ink)}
+.game .keys{font-size:12px;color:var(--mut);margin:0 0 26px}
+.where{list-style:none;padding:0;margin:0 0 18px}
+.where li{margin:0 0 6px;font-size:15px;color:var(--ink2)}
+footer.foot{border-top:1px solid var(--line);padding:10px 16px;font-size:12.5px;color:var(--mut)}
+</style><link rel="preload" href="/fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="/typography.css?v=09be152762">
+</head><body class="site-docs site-404">
+<nav class="top site-nav" aria-label="Main navigation">
+  <div class="in">
+    <a class="brand" href="/index.html#leaderboard"><img src="/logo.svg" alt=""><span class="brand-name">Social Simulation Arena</span><span class="by">by MIT</span></a>
+    <div class="page-tabs">
+      <a class="ptab" href="/index.html#leaderboard">Leaderboard</a>
+      <a class="ptab" href="/index.html#questions">Questions</a>
+      <a class="ptab" href="/index.html#calendar">Calendar</a>
+    </div>
+    <div class="right">
+      <a class="item" href="/background.html">Background</a>
+      <a class="item" href="/docs.html">Docs</a>
+      <a class="item" href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a>
+      <a class="cta" href="/submit.html">Submit your agent</a>
+    </div>
+  </div>
+</nav>
+<main class="essay">
+<div class="eyebrow">404</div>
+<h1>This page never resolved.</h1>
+<p>Nothing was scheduled at this address, so there is no release to score it against. There is still one question here you can answer.</p>
+<p class="ask"><b>Where does the next point land?</b> Move over the chart to place your forecast and click to lock it. The real number lands right after. Persistence, the baseline every entrant has to beat, just repeats the last release.</p>
+<div class="game" id="game">
+  <svg viewBox="0 0 560 220" role="img" aria-label="A short series of weekly releases with an empty column for the next one"></svg>
+  <div class="bar"><span id="verdict">Place your forecast in the shaded column.</span><span class="tally" id="tally"></span><button type="button" id="next" hidden>Next round</button></div>
+</div>
+<p class="keys">Keys: up and down move the forecast, space locks it, N is the next round, R resets the tally.</p>
+<p>Where to go instead:</p>
+<ul class="where">
+  <li><a href="/background.html">Background</a> · why this arena exists</li>
+  <li><a href="/index.html#leaderboard">Leaderboard</a> · who forecasts the public best</li>
+  <li><a href="/index.html#questions">Questions</a> · everything open this season</li>
+  <li><a href="/index.html#calendar">Calendar</a> · what closes and what lands this week</li>
+  <li><a href="/docs.html">Docs</a> · how to enter a simulator</li>
+</ul>
+</main>
+
+<script>
+(function(){
+  const svg = document.querySelector('#game svg'), NS = 'http://www.w3.org/2000/svg';
+  const verdict = document.getElementById('verdict'), tallyEl = document.getElementById('tally'), nextBtn = document.getElementById('next');
+  const W = 560, H = 220, L = 40, R = 50, T = 16, B = 28, N = 8;
+  const tally = { rounds: 0, you: 0, base: 0 };
+  let series = [], truth = 0, forecast = 0, locked = false, lo = 0, hi = 100;
+  const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+  const X = i => L + (W - L - R) * i / N;
+  const Y = v => T + (H - T - B) * (hi - v) / (hi - lo);
+  const fromY = y => hi - (y - T) / (H - T - B) * (hi - lo);
+  const el = (tag, attrs, text) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; svg.appendChild(e); return e; };
+  const fmt = v => (Math.round(v * 10) / 10).toFixed(1);
+  function newRound() {
+    // a slow random walk that leans back toward 50, like a poll series: the last step is the answer
+    series = []; let x = 42 + Math.random() * 16; const drift = (Math.random() - 0.5) * 1.4;
+    for (let i = 0; i < N; i++) { series.push(x); x = x + drift + gauss() * 2.4 + (50 - x) * 0.06; }
+    truth = x; forecast = series[N - 1]; locked = false;
+    const all = series.concat([truth]); lo = Math.floor(Math.min(...all) - 6); hi = Math.ceil(Math.max(...all) + 6);
+    nextBtn.hidden = true; verdict.innerHTML = 'Place your forecast in the shaded column.'; draw();
+  }
+  function draw() {
+    svg.innerHTML = '';
+    el('rect', { x: X(N) - 20, y: T - 6, width: 40, height: H - T - B + 12, rx: 4, fill: '#f6f6f3' });
+    for (const v of [lo + (hi - lo) * 0.25, lo + (hi - lo) * 0.5, lo + (hi - lo) * 0.75]) {
+      el('line', { x1: L, x2: W - R + 12, y1: Y(v), y2: Y(v), stroke: '#ececea', 'stroke-width': 1 });
+      el('text', { x: L - 8, y: Y(v) + 3.5, 'text-anchor': 'end', 'font-size': 10.5, fill: '#96948d', 'font-family': 'Inconsolata, monospace' }, Math.round(v));
+    }
+    for (let i = 0; i < N; i++) el('text', { x: X(i), y: H - 9, 'text-anchor': 'middle', 'font-size': 10.5, fill: '#96948d', 'font-family': 'Inconsolata, monospace' }, 'w' + (i + 1));
+    el('text', { x: X(N), y: H - 9, 'text-anchor': 'middle', 'font-size': 10.5, fill: '#4f4e49', 'font-weight': 700, 'font-family': 'Inconsolata, monospace' }, 'next');
+    const last = series[N - 1];
+    el('line', { x1: X(N - 1), x2: X(N), y1: Y(last), y2: Y(last), stroke: '#b8b6ae', 'stroke-width': 1.5, 'stroke-dasharray': '3 3' });
+    el('path', { d: series.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join(' '), fill: 'none', stroke: '#111110', 'stroke-width': 1.8, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' });
+    series.forEach((v, i) => el('circle', { cx: X(i), cy: Y(v), r: 3, fill: '#111110', stroke: '#fff', 'stroke-width': 1.5 }));
+    if (locked) {
+      el('line', { x1: X(N - 1), x2: X(N), y1: Y(last), y2: Y(truth), stroke: '#111110', 'stroke-width': 1.8, 'stroke-linecap': 'round' });
+      el('circle', { cx: X(N), cy: Y(truth), r: 4, fill: '#111110', stroke: '#fff', 'stroke-width': 1.5 });
+      el('text', { x: X(N) + 10, y: Y(truth) + 3.5, 'font-size': 11, fill: '#111110', 'font-weight': 700, 'font-family': 'Inconsolata, monospace' }, fmt(truth));
+    }
+    el('circle', { cx: X(N), cy: Y(forecast), r: 5.5, fill: '#22c55e', stroke: '#fff', 'stroke-width': 1.5 });
+    if (!locked) el('text', { x: X(N) + 10, y: Y(forecast) + 3.5, 'font-size': 11, fill: '#15803d', 'font-weight': 700, 'font-family': 'Inconsolata, monospace' }, fmt(forecast));
+  }
+  function place(clientY) {
+    if (locked) return;
+    const pt = svg.createSVGPoint(); pt.x = 0; pt.y = clientY;
+    const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+    forecast = Math.max(lo, Math.min(hi, fromY(p.y))); draw();
+  }
+  function lock() {
+    if (locked) return; locked = true;
+    const you = Math.abs(forecast - truth), base = Math.abs(series[N - 1] - truth);
+    tally.rounds++; if (you < base) tally.you++; else if (base < you) tally.base++;
+    verdict.innerHTML = 'Truth <b>' + fmt(truth) + '</b> \u00b7 you ' + fmt(you) + ' off \u00b7 persistence ' + fmt(base) + ' off \u00b7 ' + (you < base ? '<b>you beat the baseline</b>' : you > base ? 'persistence takes this one' : 'a tie');
+    tallyEl.textContent = tally.rounds + (tally.rounds === 1 ? ' round' : ' rounds') + ' · you ' + tally.you + ' · persistence ' + tally.base;
+    nextBtn.hidden = false; draw();
+  }
+  svg.addEventListener('pointermove', e => place(e.clientY));
+  svg.addEventListener('pointerdown', e => { place(e.clientY); lock(); });
+  nextBtn.addEventListener('click', newRound);
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { if (!locked) { forecast = Math.max(lo, Math.min(hi, forecast + (e.key === 'ArrowUp' ? 0.5 : -0.5))); draw(); } e.preventDefault(); }
+    else if (e.key === ' ' || e.key === 'Enter') { if (locked) newRound(); else lock(); e.preventDefault(); }
+    else if (e.key === 'n' || e.key === 'N') newRound();
+    else if (e.key === 'r' || e.key === 'R') { tally.rounds = tally.you = tally.base = 0; tallyEl.textContent = ''; newRound(); }
+  });
+  newRound();
+})();
+</script>
+<script>
+console.log("%c\n              \u25cf\n       /\\    /     Social Simulation Arena\n      /  \\  /      Can a simulator predict a public before it speaks?\n     /    \\/\n    /\n","color:#15803d;font-family:monospace;font-size:12px");
+console.log("%cYou looked behind the board. Join us: cli@mit.edu \u00b7 github.com/Social-Atoms/social-sim-arena","color:#4f4e49;font-family:monospace");
+</script>
+</body></html>

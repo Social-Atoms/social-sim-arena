@@ -351,6 +351,14 @@ def test_the_publish_gate_covers_every_field_a_page_reads_unguarded():
           f"{len(refresh.SITE_ROUND_TYPES)} type-checked)")
 
 
+def test_the_404_page_is_the_same_file_at_the_root():
+    # Vercel serves a custom 404 from the output root; the page is authored in
+    # site/ like every other page and copied to the root. The copy must not drift.
+    with open(os.path.join(ROOT, "site", "404.html"), "rb") as a, open(os.path.join(ROOT, "404.html"), "rb") as b:
+        assert a.read() == b.read(), "404.html at the root differs from site/404.html; copy it again"
+    print("ok test_the_404_page_is_the_same_file_at_the_root")
+
+
 if __name__ == "__main__":
     test_every_leaderboard_tab_renders_something_a_participant_can_read()
     test_the_landing_page_names_each_round_shape_and_the_right_deadline()
@@ -361,4 +369,5 @@ if __name__ == "__main__":
     test_no_page_promises_a_date_it_cannot_know()
     test_every_link_the_docs_send_a_participant_to_exists()
     test_the_publish_gate_covers_every_field_a_page_reads_unguarded()
-    print("9 passed")
+    test_the_404_page_is_the_same_file_at_the_root()
+    print("10 passed")

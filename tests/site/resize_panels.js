@@ -85,7 +85,7 @@ usable(1440, f.sizes());
 assert.equal(Math.round(1440 - 16 - f.sizes().tasks - f.sizes().board), 320);
 f.tasks.emit('pointerup');
 assert.ok(!f.body.classList.contains('resizing-panels'));
-assert.deepEqual(fixture(1440, f.storage).sizes(), f.sizes(), 'reload restores widths');
+{ const again = fixture(1440, f.storage).sizes(), now = f.sizes(); for (const k of ['tasks', 'board']) assert.ok(Math.abs(again[k] - now[k]) < 1e-6, 'reload restores widths (' + k + ')'); }
 console.log('ok drag boundaries, pointer capture, and saved widths');
 
 f.board.emit('dblclick');

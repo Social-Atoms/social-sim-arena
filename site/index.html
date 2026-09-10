@@ -40,10 +40,10 @@ main{flex:1 1 auto;min-height:0;display:flex;width:100%;margin:0 auto;}
 
 /* LIVE: task map left, evidence in the middle, leaderboard right */
 #page-leaderboard{--panel-head-top:14px;--panel-title-size:14px;--panel-title-line:28px;}
-#page-leaderboard.on{display:grid;grid-template-columns:var(--task-width,clamp(180px,18vw,252px)) 8px minmax(320px,1fr) 8px var(--board-width,clamp(300px,24vw,400px));grid-template-rows:minmax(0,1fr);}
-#page-leaderboard.tasks-collapsed{grid-template-columns:44px 0 minmax(320px,1fr) 8px var(--board-width,clamp(300px,24vw,400px));}
+#page-leaderboard.on{display:grid;grid-template-columns:var(--task-width,clamp(180px,18vw,252px)) 8px minmax(320px,1fr) 8px var(--board-width,clamp(300px,22vw,380px));grid-template-rows:minmax(0,1fr);}
+#page-leaderboard.tasks-collapsed{grid-template-columns:44px 0 minmax(320px,1fr) 8px var(--board-width,clamp(300px,22vw,380px));}
 /* The task tree left the page: the title is a picker (search, categories, counts), and the chart takes the column. */
-#page-leaderboard.on,#page-leaderboard.tasks-collapsed{grid-template-columns:minmax(320px,1fr) 8px var(--board-width,clamp(300px,24vw,400px));}
+#page-leaderboard.on,#page-leaderboard.tasks-collapsed{grid-template-columns:minmax(320px,1fr) 8px var(--board-width,clamp(300px,22vw,380px));}
 #page-leaderboard .tasknav,#page-leaderboard [data-panel-resizer="tasks"]{display:none;}
 .task-picker{position:relative;display:block;}
 .task-trigger{display:inline-flex;align-items:center;gap:6px;margin:0;padding:0 4px 0 0;border:0;border-radius:4px;background:none;color:inherit;font:inherit;cursor:pointer;}
@@ -98,17 +98,17 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .task-link.on{background:#f0f2f0;color:var(--ink);font-weight:600;}
 .task-all:focus-visible,.task-link:focus-visible,.task-group summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
 .taskview{min-width:0;display:flex;flex-direction:column;overflow-y:auto;overflow-wrap:anywhere;}
-.taskhead{padding:var(--panel-head-top) 16px 7px;border-bottom:1px solid #efefec;flex:0 0 auto;}
+.taskhead{padding:var(--panel-head-top) 16px 6px;border-bottom:1px solid #efefec;flex:0 0 auto;}
 .taskhead .eyebrow{font-size:var(--panel-title-size);line-height:var(--panel-title-line);letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:800;}
 .taskhead h2{margin:2px 0 3px;color:var(--ink);font-size:19px;line-height:1.25;}
 .taskmeta{display:flex;flex-wrap:wrap;gap:5px 12px;color:var(--mut);font-size:12.5px;}
 .taskmeta b{color:var(--ink2);font-weight:700;}
-.question-card{margin:4px 16px 14px;border:1px solid var(--line);border-radius:5px;background:#fff;flex:0 0 auto;}
-.question-card summary{padding:9px 11px;font-size:13px;color:var(--ink);font-weight:700;display:flex;gap:8px;align-items:baseline;}
+.question-card{margin:2px 12px 8px;border:1px solid var(--line);border-radius:5px;background:#fff;flex:0 0 auto;}
+.question-card summary{padding:6px 10px;font-size:13px;color:var(--ink);font-weight:700;display:flex;gap:8px;align-items:baseline;}
 .question-card summary .qtext{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .question-card[open] summary .qtext{white-space:normal;}
 .question-card summary time{margin-left:auto;white-space:nowrap;color:var(--mut);font-weight:500;}
-.question-card .qbody{border-top:1px solid #eeede9;padding:10px 11px 11px 31px;font-size:13.5px;color:var(--ink2);}
+.question-card .qbody{border-top:1px solid #eeede9;padding:8px 10px 10px 30px;font-size:13.5px;color:var(--ink2);}
 .question-card .qbody p{margin:0 0 7px;}
 .question-card .qfoot{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;color:var(--mut);font-size:11px;}
 .question-card .qfoot .go{margin-left:auto;color:var(--link);font-weight:700;text-decoration:none;}
@@ -123,8 +123,7 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .seg-choice{position:relative;display:flex;flex:1;min-width:0;}
 .seg-choice input{position:absolute;width:1px;height:1px;margin:0;opacity:0;}
 .seg-choice span{width:100%;text-align:center;}
-.caption{font-size:13.5px;color:var(--mut);padding:8px 16px 4px;flex:0 0 auto;min-height:32px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.chart-filters{padding:6px 16px 4px;flex:0 0 auto;min-width:0;}
+.chart-filters{padding:4px 16px 2px;flex:0 0 auto;min-width:0;}
 .legend-strip{min-width:0;}
 .model-toolbar{display:flex;align-items:center;gap:12px;min-height:0;margin-right:auto;}
 .model-trigger{display:inline-flex;align-items:center;gap:8px;min-height:25px;padding:0 9px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink2);font:500 12.5px/1.3 var(--sans);cursor:pointer;}
@@ -174,7 +173,7 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .model-pop-foot{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid #eeede9;flex:0 0 auto;}
 .model-pop-foot .model-action{margin-left:auto;font-weight:600;}
 #chartpane{min-height:340px;}
-.chartpane{flex:0 0 auto;height:max(340px,calc(100vh - 310px));position:relative;padding:2px 10px 6px;display:flex;flex-direction:column;}
+.chartpane{flex:0 0 auto;height:clamp(340px,calc(100vh - 258px),720px);position:relative;padding:0 4px 2px 6px;display:flex;flex-direction:column;}
 .chartctl{display:flex;align-items:center;flex-wrap:wrap;gap:8px;position:relative;min-height:25px;}
 .chartctl>.seg{flex-wrap:wrap;}
 .seg.mini button{font-size:12px;padding:3px 11px;}
@@ -210,10 +209,14 @@ table.lb thead th.has-help{cursor:help;}
 .seg button{position:relative;}
 th.has-help .th-label{text-decoration:underline dotted var(--mut);text-underline-offset:3px;}
 /* the hover box: white, one thin dark border, a soft shadow, the page's own face */
-th .th-help,.seg button .th-help{visibility:hidden;opacity:0;position:absolute;top:calc(100% + 6px);right:6px;width:min(280px,60vw);padding:7px 10px;background:#fff;color:var(--ink2);border:1px solid #333;box-shadow:0 2px 8px rgba(0,0,0,.08);font:400 12.5px/1.45 var(--sans);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;z-index:6;pointer-events:none;transition:opacity .2s,visibility .2s;}
+th .th-help,.seg button .th-help,.taskmeta b .th-help{visibility:hidden;opacity:0;position:absolute;top:calc(100% + 6px);right:6px;width:min(280px,60vw);padding:7px 10px;background:#fff;color:var(--ink2);border:1px solid #333;box-shadow:0 2px 8px rgba(0,0,0,.08);font:400 12.5px/1.45 var(--sans);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;z-index:6;pointer-events:none;transition:opacity .2s,visibility .2s;}
 th:hover .th-help,th:focus-within .th-help,th:focus .th-help{visibility:visible;opacity:1;}
 .seg button .th-help{left:auto;right:0;top:calc(100% + 8px);width:min(300px,60vw);font-weight:400;text-align:left;text-transform:none;}
 .seg button:hover .th-help,.seg button:focus-visible .th-help{visibility:visible;opacity:1;}
+.taskmeta b{position:relative;}
+.taskmeta b.has-help{cursor:help;text-decoration:underline dotted var(--mut);text-underline-offset:3px;outline:none;}
+.taskmeta b .th-help{left:0;right:auto;top:calc(100% + 6px);width:min(300px,60vw);font-weight:400;text-align:left;text-transform:none;}
+.taskmeta b:hover .th-help,.taskmeta b:focus .th-help{visibility:visible;opacity:1;}
 th.has-help:focus{outline:none;}
 table.lb .skill{font-weight:800;color:var(--ink);font-size:15px;}
 table.lb .pend{color:#c9c7c0;font-weight:600;letter-spacing:.15em;}
@@ -385,7 +388,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .vrow .go{color:var(--link);font-weight:700;font-size:13.5px;text-decoration:none;white-space:nowrap;}
 .vrow .go:hover{text-decoration:underline;}
 .vrow .when{color:var(--mut);font-size:11.5px;white-space:nowrap;}
-.shape{display:inline-block;border:1px solid var(--line,#e0e0e0);border-radius:999px;padding:0 7px;margin-right:6px;font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--mut);vertical-align:1px;white-space:nowrap;}
+.shape{display:inline-block;text-transform:uppercase;border:1px solid var(--line,#e0e0e0);border-radius:999px;padding:0 7px;margin-right:6px;font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--mut);vertical-align:1px;white-space:nowrap;}
 .svrow{display:flex;gap:14px;padding:12px 2px;border-bottom:1px solid #eeede9;align-items:flex-start;}
 .svrow:last-child{border-bottom:none;}
 .svrow .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:3px;background:var(--ink);color:#fff;font-size:11px;font-weight:700;flex:0 0 auto;margin-top:1px;}
@@ -455,7 +458,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .pager button{border:1px solid var(--line);background:#fff;border-radius:4px;padding:3px 10px;cursor:pointer;}
 .pager button:disabled{opacity:.35;cursor:default;}
 </style>
-<script defer src="panels.js?v=a01d556f72"></script>
+<script defer src="panels.js?v=f543e7f90e"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 <link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=09be152762">
 </head>
@@ -520,7 +523,6 @@ table.lb .skill.pos{color:var(--accent-ink);}
             </div>
             <div class="taskmeta page-description" id="task-meta"><span>Loading task map…</span></div>
           </div>
-          <div class="caption page-description" id="caption">Cumulative skill against the persistence baseline across all backtest rounds.</div>
           <div class="chart-filters" id="chart-filters">
             <div class="chartctl" role="group" aria-label="Chart filters">
               <div class="model-toolbar" id="model-toolbar" style="display:none;"></div>
@@ -1263,7 +1265,18 @@ function renderTaskHeader(data,key){
   const tc=document.getElementById('task-trigger-count'); if(tc) tc.textContent = key==='agg' ? (Object.keys(TASKS).length-1)+' tasks' : '';
   const rs = (key==='agg' ? (data.rounds||[]).slice() : taskRounds(d,data)).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
   const active = rs.filter(r=>r.status==='open' && Date.parse(deadlineOf(r))>Date.now());
-  document.getElementById('task-meta').innerHTML = '<span><b>Population</b> '+esc(d.population)+'</span><span><b>Cadence</b> '+esc(d.cadence)+'</span><span><b>Answer</b> '+esc(d.shape)+'</span><span><b>Rounds</b> <span class="numeric">'+rs.length+'</span></span>';
+  const helpOf={population:'The people the released number describes. Every question on this task is about them.',
+    cadence:'How often the source publishes, so how often a question on this task closes.',
+    answer:'The shape a forecast takes: a number with an uncertainty range, a profile (one number per cell), or a ranked list.',
+    questions:'Questions asked on this task this season, open and resolved.'};
+  const lab=(k,text)=>'<b class="has-help" tabindex="0">'+text+'<span class="th-help" role="tooltip">'+esc(helpOf[k])+'</span></b>';
+  const chip=t=>'<span class="shape">'+esc(t)+'</span>';
+  const cadences = key==='agg' ? ['weekly','monthly','election'] : String(d.cadence).split(' + ');
+  const answers = key==='agg' ? ['number','profile','ranking'] : [d.kind==='ranking' ? 'ranking' : d.kind==='profile' ? 'profile'+(d.cells ? ' · '+d.cells.length+' cells' : '') : 'number'];
+  document.getElementById('task-meta').innerHTML = '<span>'+lab('population','Population')+' '+esc(d.population)+'</span>'
+    +'<span>'+lab('cadence','Cadence')+' '+cadences.map(chip).join('')+'</span>'
+    +'<span>'+lab('answer','Answer')+' '+answers.map(chip).join('')+'</span>'
+    +'<span>'+lab('questions','Questions')+' <span class="numeric">'+rs.length+'</span></span>';
   const card = document.getElementById('task-question-card');
   card.style.display='';
   const r = active[0] || rs.slice(-1)[0];
@@ -1362,6 +1375,7 @@ function setTab(key){
 }
 function renderTaskChart(key){
   const data=window.__data;if(!data)return; const d=TASKS[key],bt=data.backtest||{},nameOf={};
+  window.__matched='';  // set by the branches that score over matched releases; the board note reads it
   document.getElementById('chart-filters').style.visibility=(d.kind==='profile'||d.kind==='ranking')?'hidden':'';
   (data.entrants||[]).forEach(e=>nameOf[e.entrant_id]=e.name);
   const unitSeg=document.getElementById('unit-seg'),rangeSeg=document.getElementById('range-seg');
@@ -1373,28 +1387,28 @@ function renderTaskChart(key){
     unitSeg.querySelector('[data-unit="level"]').style.display='none';unitSeg.querySelector('[data-unit="arena"]').style.display='';unitSeg.querySelector('[data-unit="crps"]').style.display='';
     const unit=window.__unitAgg||'arena';unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.unit===unit));
     const tj=bt.trajectory||[], span=tj.length?fmtDate(tj[0].date)+' to '+fmtDate(tj[tj.length-1].date):'';
-    document.getElementById('caption').textContent=(bt.n_rounds||tj.length)+' matched releases'+(span?', '+span:'');
+    window.__matched=(bt.n_rounds||tj.length)+' matched releases'+(span?', '+span:'');
     aggChart(bt.trajectory,nameOf,unit);renderLegend(legendFor(bt.trajectory),nameOf);return;
   }
   if(d.kind==='profile'){
     unitSeg.style.display='none';rangeSeg.style.display='none';
-    document.getElementById('caption').innerHTML='<span class="replay-tag">LATEST PROFILE</span> · every bar is a measured population cell, not a model estimate · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
+    window.__caption='<span class="replay-tag">LATEST PROFILE</span> · every bar is a measured population cell, not a model estimate · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
     profileChart(d,data);return;
   }
   if(d.kind==='ranking'){
     unitSeg.style.display='none';rangeSeg.style.display='none';
-    document.getElementById('caption').innerHTML='<span class="replay-tag">RANKING TASK</span> · the exact question and scoring object are shown before any leaderboard number';rankingChart(d,data);return;
+    window.__caption='<span class="replay-tag">RANKING TASK</span> · the exact question and scoring object are shown before any leaderboard number';rankingChart(d,data);return;
   }
   const psTraj=(bt.per_series_trajectory||{})[d.per],hasModel=psTraj&&psTraj.length>1;
   let unit=hasModel?(window.__unitSer||'arena'):'level'; unitSeg.style.display='';rangeSeg.style.display='';
   unitSeg.querySelector('[data-unit="level"]').style.display='';unitSeg.querySelector('[data-unit="arena"]').style.display=hasModel?'':'none';unitSeg.querySelector('[data-unit="crps"]').style.display=hasModel?'':'none';
   unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.unit===unit));
   if(unit!=='level'&&hasModel){
-    document.getElementById('caption').innerHTML=esc(d.label)+' · '+psTraj[psTraj.length-1].n+' matched releases · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
+    window.__matched=psTraj[psTraj.length-1].n+' matched releases';window.__caption=esc(d.label)+' · '+psTraj[psTraj.length-1].n+' matched releases · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
     aggChart(psTraj,nameOf,unit);renderLegend(legendFor(psTraj),nameOf);return;
   }
   const pts=pointsFor(data,d.chart),last=pts.slice(-1)[0];
-  document.getElementById('caption').innerHTML='<span class="replay-tag">OBSERVED HISTORY</span> · '+esc(d.label)+(last?' · latest '+last.value+esc(d.unit||'')+' on '+fmtDate(last.date):'')+' · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
+  window.__caption='<span class="replay-tag">OBSERVED HISTORY</span> · '+esc(d.label)+(last?' · latest '+last.value+esc(d.unit||'')+' on '+fmtDate(last.date):'')+' · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
   seriesChart(key,data);
 }
 
@@ -1411,7 +1425,7 @@ function renderBoard(mode){
     const spans=(data.backtest&&data.backtest.spans)||{};
     entries=spans[mode]||(data.backtest&&data.backtest.overall)||[];appendPending=true;
     title='Overall'; tag='backtest';
-    note='Walk-forward model replay on matched historical releases. Arena score 0 is persistence and 100 is a perfect oracle.';
+    note=(window.__matched?'Scored over '+window.__matched+'. ':'')+'Walk-forward model replay: every forecast was made from data available before its release. Arena score 0 is persistence and 100 is a perfect oracle.';
     const same=JSON.stringify(entries)===JSON.stringify((data.backtest&&data.backtest.overall)||[]);
     if(mode!=='all' && same) note+=' The backtest window is four weeks, so every range shows the same rounds until the season adds more.';
   }else if(d.kind==='profile'){
@@ -1427,7 +1441,7 @@ function renderBoard(mode){
     const base=(data.backtest&&data.backtest.baseline_replay&&data.backtest.baseline_replay.per_series&&data.backtest.baseline_replay.per_series[d.per])||[];
     entries=model.length?model:(base.length?base:scalarReplay(d,data));
     tag=model.length?'backtest':'baseline replay'; replay=!model.length;
-    note=model.length?'Model walk-forward replay for this task only; every forecast is after its own training cutoff.':'A small walk-forward baseline replay from the task history currently published to the site. It is not a Season 0 model result.';
+    note=model.length?(window.__matched?'Scored over '+window.__matched+'. ':'')+'Model walk-forward replay for this task only; every forecast is after its own training cutoff.':'A small walk-forward baseline replay from the task history currently published to the site. It is not a Season 0 model result.';
   }
   document.getElementById('lb-title').textContent=title;
   // A heading with help renders its label plus a hover box; the browser's
@@ -1950,8 +1964,12 @@ Promise.allSettled([
   ok.sort((a,b) => (b.generated_at||'').localeCompare(a.generated_at||''));
   render(ok[0]);
 }).catch(err => {
-  document.getElementById('caption').textContent = 'could not load data ('+err+')';
+  document.getElementById('task-meta').textContent = 'could not load data ('+err+')';
 });
+</script>
+<script>
+console.log("%c\n              \u25cf\n       /\\    /     Social Simulation Arena\n      /  \\  /      Can a simulator predict a public before it speaks?\n     /    \\/\n    /\n","color:#15803d;font-family:monospace;font-size:12px");
+console.log("%cYou looked behind the board. Join us: cli@mit.edu \u00b7 github.com/Social-Atoms/social-sim-arena","color:#4f4e49;font-family:monospace");
 </script>
 </body>
 </html>
