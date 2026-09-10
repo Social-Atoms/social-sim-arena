@@ -326,6 +326,25 @@ table.lb .model-name a:hover{text-decoration:underline;text-underline-offset:2px
 table.ent tr.link{cursor:pointer;}
 table.ent tr.link:hover td{background:#fafaf8;}
 table.ent td a.row{color:inherit;text-decoration:none;}
+.ent-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.85fr);gap:28px;align-items:start;}
+.ent-side{border-left:1px solid var(--line);padding-left:24px;}
+.ent-side h3{margin:0 0 6px;font-size:14px;color:var(--ink);}
+.tiles-2{grid-template-columns:repeat(2,minmax(0,1fr));}
+.rankchart{display:block;width:100%;height:auto;max-height:180px;border:1px solid var(--line);border-radius:5px;background:#fff;padding:6px 4px;}
+.ent-cov .frow{margin-bottom:12px;}
+.subs{list-style:none;margin:0;padding:0;}
+.subs li{border-top:1px solid #eeede9;}
+.subs li:first-child{border-top:0;}
+.subs a{display:block;padding:9px 0;color:inherit;text-decoration:none;border-radius:3px;}
+.subs a:hover b{text-decoration:underline;text-underline-offset:2px;}
+.subs .top{display:flex;align-items:center;gap:8px;font-size:12.5px;}
+.subs .top b{color:var(--ink);font-weight:700;}
+.subs .top .qdue{margin:0;font-size:0;}
+.subs .when{margin-left:auto;color:var(--mut);font-size:11.5px;white-space:nowrap;}
+.subs .q{display:block;font-size:12px;color:var(--mut);margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.subs .vals{display:block;font-size:12px;color:var(--ink2);margin-top:3px;font-variant-numeric:tabular-nums;}
+.subs .vals b{color:var(--ink);}
+@media (max-width:880px){ .ent-grid{grid-template-columns:minmax(0,1fr);} .ent-side{border-left:0;padding-left:0;} }
 .qcard .qempty{flex:1 1 auto;min-height:108px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12.5px;color:var(--mut);padding:10px 0 6px;border-top:1px dashed var(--line);margin-top:auto;}
 .qcard .qfoot{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid #eeede9;font-size:11.5px;color:var(--mut);}
 .qcard .qfoot .qid{font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -827,6 +846,23 @@ function crpsNormal(mu, sd, y){
   return sd*(z*(2*Phi-1)+2*phi-1/Math.sqrt(Math.PI));
 }
 const DOMAIN_LABEL={'public-opinion':'Public opinion',consumer:'Sentiment & expectations',attention:'Collective attention',elections:'Elections'};
+function rankChart(traj, id){
+  // The entrant's rank at each checkpoint of the backtest, 1 at the top. Drawn at a fixed
+  // viewBox; the page scales it. Below two points there is nothing to draw.
+  const pts=(traj||[]).map((t,i)=>({i, date:t.date, rank:(t.ranks||{})[id], n:Object.keys(t.ranks||{}).length})).filter(p=>typeof p.rank==='number');
+  if(pts.length<2) return '<p class="sub">No ranking history yet.</p>';
+  const W=560,H=150,L=34,R=44,T=14,B=26, n=Math.max(...pts.map(p=>p.n), ...pts.map(p=>p.rank));
+  const X=k=>L+(W-L-R)*k/Math.max(1,pts.length-1), Y=r=>T+(H-T-B)*(r-1)/Math.max(1,n-1);
+  const mono=' font-family="Inconsolata, ui-monospace, monospace"';
+  let g='';
+  [1, Math.round((n+1)/2), n].forEach(r=>{ g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(r).toFixed(1)+'" y2="'+Y(r).toFixed(1)+'" stroke="#ececea"/><text x="'+(L-6)+'" y="'+(Y(r)+3.5).toFixed(1)+'" text-anchor="end" font-size="10.5" fill="#96948d"'+mono+'>'+r+'</text>'; });
+  g+='<text x="'+L+'" y="'+(H-8)+'" font-size="10.5" fill="#96948d"'+mono+'>'+esc(fmtDate(pts[0].date))+'</text><text x="'+(W-R)+'" y="'+(H-8)+'" text-anchor="end" font-size="10.5" fill="#96948d"'+mono+'>'+esc(fmtDate(pts[pts.length-1].date))+'</text>';
+  g+='<path d="'+pts.map((p,k)=>(k?'L':'M')+X(k).toFixed(1)+' '+Y(p.rank).toFixed(1)).join(' ')+'" fill="none" stroke="#111110" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>';
+  pts.forEach((p,k)=>{ g+='<circle cx="'+X(k).toFixed(1)+'" cy="'+Y(p.rank).toFixed(1)+'" r="2.6" fill="#111110" stroke="#fff" stroke-width="1.2"><title>'+esc(fmtDate(p.date))+': rank '+p.rank+' of '+p.n+'</title></circle>'; });
+  const last=pts[pts.length-1];
+  g+='<circle cx="'+X(pts.length-1).toFixed(1)+'" cy="'+Y(last.rank).toFixed(1)+'" r="4" fill="#22c55e" stroke="#fff" stroke-width="1.5"/><text x="'+(X(pts.length-1)+9).toFixed(1)+'" y="'+(Y(last.rank)+3.5).toFixed(1)+'" font-size="11" font-weight="700" fill="#111110"'+mono+'>#'+last.rank+'</text>';
+  return '<svg class="rankchart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Rank over time">'+g+'</svg>';
+}
 function renderEntrant(id){
   const data=window.__data, host=document.getElementById('entrant-col'); if(!data||!host) return;
   const e=(data.entrants||[]).find(x=>x.entrant_id===id);
@@ -846,12 +882,13 @@ function renderEntrant(id){
     const crps=(err!==null&&typeof f.sd==='number')?crpsNormal(f.mean,f.sd,rel):null;
     return {r,t,f,rel,err,crps};
   }).sort((a,b)=>deadlineOf(b.r).localeCompare(deadlineOf(a.r)));
-  const pct=(a,b)=>b?Math.round(100*a/b)+'%':'·';
+  const pct=(a,b)=>b?Math.round(100*a/b):0;
   const tile=(k,v,sub,cls)=>'<div class="tile"><div class="k">'+k+'</div><div class="v'+(cls?' '+cls:'')+'">'+v+'</div><div class="s">'+sub+'</div></div>';
   const health = !st ? tile('Last call','·','not published yet')
     : !st.last_call_at ? tile('Last call','none','no call recorded for this entrant')
     : tile('Last call', esc(fmtLocal(st.last_call_at)), st.last_call_ok ? '<span class="ok">answered</span> · '+st.calls+' call'+(st.calls===1?'':'s')+(st.failures?' · '+st.failures+' failed':'')
-                                                              : '<span class="bad">failed</span> · '+st.failures+' failed attempt'+(st.failures===1?'':'s'), st.last_call_ok?'':'');
+                                                              : '<span class="bad">failed</span> · '+st.failures+' failed attempt'+(st.failures===1?'':'s'));
+  // ---- header ----
   let h='<div class="ent-head"><span class="ent-avatar">'+avatar(id)+'</span><div><div class="eyebrow page-eyebrow">Entrant</div><h2 class="page-title">'+esc(name)+'</h2>'
     +'<div class="ent-meta"><span><b>'+esc(e.type==='llm'?'LLM':e.type==='baseline'?'Baseline':(e.type||'entrant'))+'</b></span>'
     +((e.arms||[]).length?'<span>setup '+esc((e.arms||[]).join(', '))+'</span>':'')
@@ -859,36 +896,43 @@ function renderEntrant(id){
     +'<span><a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/entrants/'+esc(id)+'.json" target="_blank" rel="noopener">registration file</a></span>'
     +'<span class="dim">id '+esc(id)+'</span></div>'
     +(e.method?'<p class="ent-method">'+esc(e.method)+'</p>':'')+'</div></div>';
-  h+='<div class="tiles">'
+  // ---- left: how it performs ----
+  let left='<div class="tiles tiles-2">'
     +tile('Score', score&&typeof score.mean_skill==='number'?((score.mean_skill>0?'+':'')+Math.round(100*score.mean_skill)):'·', score?scoreSrc+' · '+(score.rounds||0)+' question'+(score.rounds===1?'':'s')+(live&&bt&&typeof bt.mean_skill==='number'?' · backtest '+(bt.mean_skill>0?'+':'')+Math.round(100*bt.mean_skill):''):'no scored questions yet')
     +tile('CRPS', score&&typeof score.mean_crps==='number'?score.mean_crps.toFixed(2):'·', 'average error, lower is better')
-    +tile('Answered', st?st.answered+' of '+st.asked:'·', st?pct(st.answered,st.asked)+' of the questions whose window has closed':'not published yet')
+    +tile('Answered', st?st.answered+' of '+st.asked:'·', st?pct(st.answered,st.asked)+'% of the questions whose window has closed':'not published yet')
     +health+'</div>';
+  const traj=((data.backtest||{}).trajectory)||[];
+  left+='<div class="ent-sec"><h3>Rank over time</h3><p class="sub">Overall standings at each checkpoint of the backtest; 1 is the top.</p>'+rankChart(traj,id)+'</div>';
   if(st&&st.asked){
     const doms=Object.keys(st.by_domain||{}).sort((a,b)=>(st.by_domain[b].asked-st.by_domain[a].asked));
-    h+='<div class="ent-sec"><h3>Coverage by category</h3><div class="ent-cov">'+doms.map(d=>{const c=st.by_domain[d]; return '<div class="frow"><span class="fn">'+esc(DOMAIN_LABEL[d]||d)+'</span><span class="fv">'+c.answered+' / '+c.asked+'</span><span class="fb"><i style="width:'+(c.asked?Math.round(100*c.answered/c.asked):0)+'%"></i></span></div>';}).join('')+'</div></div>';
+    const bar=(label,a,b)=>'<div class="frow"><span class="fn">'+label+'</span><span class="fc">'+a+' / '+b+' <span class="dim">'+pct(a,b)+'%</span></span><span class="fb"><i style="width:'+pct(a,b)+'%"></i></span></div>';
+    left+='<div class="ent-sec"><h3>Coverage</h3><p class="sub">Questions answered against questions asked, once each window closed.</p><div class="ent-cov">'
+      +bar('<b>All questions</b>',st.answered,st.asked)
+      +doms.map(d=>{const c=st.by_domain[d]; return bar(esc(DOMAIN_LABEL[d]||d),c.answered,c.asked);}).join('')+'</div></div>';
   }
   const byTask={};
   rows.forEach(x=>{ const k=x.t.label; const g=byTask[k]||(byTask[k]={n:0,res:0,err:0,crps:0,nc:0}); g.n++; if(x.err!==null||x.r.status==='resolved'){g.res++; if(x.err!==null) g.err+=x.err;} if(x.crps!==null){g.nc++; g.crps+=x.crps;} });
   const taskKeys=Object.keys(byTask).sort();
   if(taskKeys.length){
-    h+='<div class="ent-sec"><h3>By task</h3><p class="sub">Every question this entrant answered; error and CRPS for number questions with a released value.</p><table class="ent"><thead><tr><th>Task</th><th class="num">Answered</th><th class="num">Resolved</th><th class="num">Mean error</th><th class="num">CRPS</th></tr></thead><tbody>'
-      +taskKeys.map(k=>{const g=byTask[k]; return '<tr><td class="q">'+esc(k)+'</td><td class="num">'+g.n+'</td><td class="num">'+g.res+'</td><td class="num">'+(g.res?(g.err/g.res).toFixed(2):'·')+'</td><td class="num">'+(g.nc?(g.crps/g.nc).toFixed(2):'·')+'</td></tr>';}).join('')+'</tbody></table></div>';
-    h+='<div class="ent-sec"><h3>Every forecast</h3><p class="sub">Newest first. Open a row for the forecast itself, its filing time and its timestamp proof.</p><table class="ent"><thead><tr><th>Question</th><th>State</th><th class="num">Forecast</th><th class="num">Released</th><th class="num">Error</th></tr></thead><tbody>'
-      +rows.map(x=>{const r=x.r, u=(x.t.unit||'').trim()==='%'?'%':''; const active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
-        const state=active?'<span class="qdue live">open</span>':r.status==='resolved'?'<span class="qdue done">resolved</span>':'<span class="qdue closed">locked</span>';
-        const href='#forecast/'+esc(r.round_id)+'/'+esc(id);
-        const what=typeof x.f.mean==='number' ? '<b>'+fmtNum(x.f.mean,u)+'</b>'+(typeof x.f.sd==='number'?' <span class="dim">± '+fmtNum(x.f.sd,'')+'</span>':'') : '<b>'+esc(x.f.shape||'filed')+'</b> <span class="dim">'+(x.f.cells?x.f.cells+' cells':x.f.items?x.f.items+' items':'')+'</span>';
-        return '<tr class="link" data-href="'+href+'"><td><a class="row" href="'+href+'"><span class="q">'+esc(x.t.label)+'</span><br><span class="dim">'+esc(questionText(r))+'</span></a></td><td>'+state+'</td><td class="num">'+what+'</td><td class="num">'+(typeof x.rel==='number'?fmtNum(x.rel,u):'·')+'</td><td class="num">'+(x.err!==null?fmtNum(x.err,u):'·')+'</td></tr>';}).join('')+'</tbody></table></div>';
-  } else {
-    h+='<div class="ent-sec"><h3>Every forecast</h3><p class="sub">No forecasts on record for this entrant yet.</p></div>';
+    left+='<div class="ent-sec"><h3>By task</h3><p class="sub">Every question this entrant answered; error and CRPS for number questions with a released value.</p><table class="ent"><thead><tr><th>Task</th><th class="num">Answered</th><th class="num">Resolved</th><th class="num">Mean error</th><th class="num">CRPS</th></tr></thead><tbody>'
+      +taskKeys.map(k=>{const g=byTask[k]; return '<tr><td class="q">'+esc(k)+'</td><td class="num">'+g.n+'</td><td class="num">'+g.res+'</td><td class="num">'+(g.res&&g.err?(g.err/g.res).toFixed(2):'·')+'</td><td class="num">'+(g.nc?(g.crps/g.nc).toFixed(2):'·')+'</td></tr>';}).join('')+'</tbody></table></div>';
   }
   if(st&&st.recent_failures&&st.recent_failures.length){
-    h+='<div class="ent-sec"><h3>Recent failed calls</h3><table class="ent"><thead><tr><th>Question</th><th>When</th><th>What went wrong</th></tr></thead><tbody>'
+    left+='<div class="ent-sec"><h3>Recent failed calls</h3><table class="ent"><thead><tr><th>Question</th><th>When</th><th>What went wrong</th></tr></thead><tbody>'
       +st.recent_failures.slice().reverse().map(f=>'<tr><td class="q">'+esc(f.round_id)+'</td><td class="num">'+esc(fmtLocal(f.at))+'</td><td class="dim">'+esc(f.error)+'</td></tr>').join('')+'</tbody></table></div>';
   }
+  // ---- right: every submission, newest first ----
+  let right='<h3>Submissions</h3><p class="sub">'+(rows.length? rows.length+' forecast'+(rows.length===1?'':'s')+', newest first. Open one for its filing time and timestamp proof.' : 'No forecasts on record yet.')+'</p>';
+  if(rows.length){
+    right+='<ol class="subs">'+rows.map(x=>{const r=x.r, u=(x.t.unit||'').trim()==='%'?'%':''; const active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
+      const cls=active?'live':r.status==='resolved'?'done':'closed', when=active?'due '+fmtLocal(deadlineOf(r)):r.status==='resolved'?'resolved '+fmtLocal(r.release_at):'answer '+fmtLocal(r.release_at);
+      const fc=typeof x.f.mean==='number'?fmtNum(x.f.mean,u)+(typeof x.f.sd==='number'?' ± '+fmtNum(x.f.sd,''):''):(x.f.shape||'filed')+(x.f.cells?' · '+x.f.cells+' cells':x.f.items?' · '+x.f.items+' items':'');
+      const out=typeof x.rel==='number'?' &rarr; <b>'+fmtNum(x.rel,u)+'</b>'+(x.err!==null?' <span class="dim">off by '+fmtNum(x.err,u)+'</span>':''):'';
+      return '<li><a href="#forecast/'+esc(r.round_id)+'/'+esc(id)+'"><span class="top"><span class="qdue '+cls+'"></span><b>'+esc(x.t.label)+'</b><span class="when">'+esc(when)+'</span></span><span class="q">'+esc(questionText(r))+'</span><span class="vals">'+fc+out+'</span></a></li>';}).join('')+'</ol>';
+  }
+  h+='<div class="ent-grid"><div class="ent-main">'+left+'</div><aside class="ent-side">'+right+'</aside></div>';
   host.innerHTML=h;
-  host.querySelectorAll('tr.link').forEach(tr=>{ tr.onclick=ev=>{ if(ev.target.closest('a')) return; location.hash=tr.dataset.href; }; });
   if(typeof syncHash==='function') syncHash();
 }
 // ---- one forecast: what was filed, when, against what, and the proof that it existed before the answer ----

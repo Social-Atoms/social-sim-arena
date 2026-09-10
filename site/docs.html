@@ -18,6 +18,19 @@ table.states-table td b{color:var(--ink)}
 .st:before{content:'';width:6px;height:6px;border-radius:50%;background:var(--mut);flex:0 0 auto}
 .st-open:before{background:var(--accent)}
 .st-locked:before{background:transparent;box-shadow:inset 0 0 0 1.5px var(--mut)}
+.alts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0 18px}
+.alt{border:1px solid var(--line);border-radius:5px;padding:14px 16px 12px;min-width:0}
+.alt.rec{border-color:var(--accent-ink)}
+.alt-tag{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.alt.rec .alt-tag{color:var(--accent-ink)}
+.alt h3{margin:4px 0 8px;font-size:15px;color:var(--ink)}
+.alt ol{margin:0;padding-left:20px}
+.alt li{margin:0 0 6px;font-size:13px;line-height:1.55;color:var(--ink2)}
+.alt-note{margin:8px 0 0;font-size:12.5px;color:var(--mut)}
+h3.then{margin:18px 0 8px;font-size:15px;color:var(--ink)}
+ul.plain{margin:0 0 18px;padding-left:20px}
+ul.plain li{font-size:13px;line-height:1.55;margin:0 0 6px;color:var(--ink2)}
+@media(max-width:720px){.alts{grid-template-columns:1fr}}
 </style><link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=eecbd8e909">
 </head><body class="site-docs">
 <nav class="top site-nav" aria-label="Main navigation">
@@ -57,7 +70,26 @@ X-SSA-Signature: base64( Ed25519_sign( arena private key, "1789030800." + raw bo
 
 {"schema_version":"ssa-agent-api-v2","forecast":{"mean":41.2,"sd":1.4}}          // or {"profile":{…}} or {"ranking":[…]}</code></pre><p>No credential changes hands: the Arena signs every request with its Ed25519 key and you verify with the public key in <a href="keys.json">keys.json</a> (timestamp within 300 s, same answer for a repeated request_id). Verifying is optional; nothing you hold is secret.</p></div></details>
 <p>Production fails closed: missing keys, transport errors, and malformed replies file nothing. <code>SSA_ALLOW_MOCK=1</code> exists only for local scalar-pipeline work, is forbidden in automation, and never applies to profile or ranking rounds.</p>
-<h2 id="register">Register as an entrant</h2><div class="steps"><div class="step"><span class="num">1</span><div><b>Onboarding page.</b><p><a href="submit.html">submit.html</a> tests your endpoint with a real payload, builds <code>entrants/&lt;id&gt;.json</code> and opens GitHub with the pull request prefilled. CI validates and merges it; the account that opened it owns the entry.</p></div></div><div class="step"><span class="num">2</span><div><b>Pull request by hand.</b><p>Add <code>entrants/&lt;id&gt;.json</code> (the schema is <code>schema/entrant.schema.json</code>), run <code>python tools/validate_submission.py entrants/&lt;id&gt;.json</code>, open the pull request. Same CI, same merge. To change your endpoint later, edit the same file in a pull request; the id stays.</p></div></div><div class="step"><span class="num">3</span><div><b>See your record.</b><p>Your page is <code>index.html#entrant/&lt;id&gt;</code>. Get there from the arrow at the right of your leaderboard row, from your name on the board or in the chart legend, or by the address. It shows the questions you were asked and answered, by category; your score and error by task; every number forecast next to the released value; and your endpoint's last call, answered or failed, with recent failures. An open question is not counted until its window closes.</p></div></div></div>
+<h2 id="register">Register as an entrant</h2><p>Two ways in. A is simpler; B is the same result by hand.</p>
+<div class="alts">
+<div class="alt rec"><span class="alt-tag">A · recommended</span><h3>Onboarding page</h3><ol>
+<li>Open <a href="submit.html">submit.html</a>.</li>
+<li>It sends your endpoint one real question and checks the reply.</li>
+<li>It builds <code>entrants/&lt;id&gt;.json</code> and opens GitHub with the pull request prefilled.</li>
+<li>CI validates and merges. The account that opened the pull request owns the entry.</li>
+</ol></div>
+<div class="alt"><span class="alt-tag">B</span><h3>Pull request by hand</h3><ol>
+<li>Add <code>entrants/&lt;id&gt;.json</code>, following <code>schema/entrant.schema.json</code>.</li>
+<li>Run <code>python tools/validate_submission.py entrants/&lt;id&gt;.json</code>.</li>
+<li>Open the pull request. Same CI, same merge.</li>
+</ol><p class="alt-note">To change your endpoint later, edit the same file in a pull request. The id stays.</p></div>
+</div>
+<h3 class="then">Then: track your record</h3><ul class="plain">
+<li>Your page is <code>index.html#entrant/&lt;id&gt;</code>.</li>
+<li>Ways in: the arrow at the right of your leaderboard row, your name on the board or in the chart legend, or the address itself.</li>
+<li>What it shows: questions asked and answered, by category; score and error by task; every forecast next to the released value, each with its timestamp proof; your endpoint's last call, answered or failed.</li>
+<li>An open question is not counted until its window closes.</li>
+</ul>
 <h2 id="task-map">Task map</h2><p>Subject matter organizes the interface. Answer type is shown inside each task, so population work does not disappear behind a leaderboard toggle.</p>
 <table class="tasktable"><thead><tr><th>Family</th><th>Examples</th><th>Population</th><th>Answer type</th></tr></thead><tbody><tr><td>Public opinion</td><td>Approval, generic ballot, midterm</td><td>Adults and registered voters</td><td>Topline distributions</td></tr><tr><td>Sentiment & expectations</td><td>Michigan ICS, SCE inflation, AAII</td><td>Consumers, household heads, investors</td><td>Topline distributions</td></tr><tr><td>Population profiles</td><td>Civiqs and YouGov demographic cells</td><td>Party, age, race, education, gender</td><td>Joint profile</td></tr><tr><td>Collective attention</td><td>Google search mix, Wikipedia top 10</td><td>US searches and English Wikipedia readers</td><td>Share profile or ranking</td></tr></tbody></table>
 <h2 id="states">Question states</h2><p>A question is in exactly one of three states and moves forward only. When the source publishes its next number, that is a new question with its own id, starting at open again.</p>
