@@ -1268,13 +1268,15 @@ function renderTaskHeader(data,key){
   const active = rs.filter(r=>r.status==='open' && Date.parse(deadlineOf(r))>Date.now());
   const cadence = key==='agg' ? 'most weekly, some monthly' : String(d.cadence).replace(' + election', ', plus the election result').replace(' + release calendar', '');
   const helpOf={population:'The people the released number describes. Every question on this task is about them.',
-    answer:'What a forecast is on this task: a number with an uncertainty range, a profile (one number per cell), or a ranked list.',
-    questions:rs.length+' asked this season, '+active.length+' open now. Cadence: '+cadence+'.'};
+    answer:'What a question on this task asks for: a number with an uncertainty range, a profile (one number per cell), or a ranked list.',
+    cadence:'How often the source publishes, so how often a question on this task closes.',
+    questions:rs.length+' asked this season, '+active.length+' open now.'};
   const lab=(k,text)=>'<b class="has-help" tabindex="0">'+text+'<span class="th-help" role="tooltip">'+esc(helpOf[k])+'</span></b>';
   const chip=t=>'<span class="shape">'+esc(t)+'</span>';
   const answers = key==='agg' ? ['number','profile','ranking'] : [d.kind==='ranking' ? 'ranking' : d.kind==='profile' ? 'profile'+(d.cells ? ' · '+d.cells.length+' cells' : '') : 'number'];
   document.getElementById('task-meta').innerHTML = '<span>'+lab('population','Population')+' '+esc(d.population)+'</span>'
-    +'<span>'+lab('answer','Answer type')+' '+answers.map(chip).join('')+'</span>'
+    +'<span>'+lab('answer','Question type')+' '+answers.map(chip).join('')+'</span>'
+    +(key==='agg' ? '' : '<span>'+lab('cadence','Cadence')+' '+esc(cadence)+'</span>')
     +'<span>'+lab('questions','Questions')+' <span class="numeric">'+rs.length+'</span></span>';
   const card = document.getElementById('task-question-card');
   card.style.display='';
