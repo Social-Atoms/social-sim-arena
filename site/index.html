@@ -48,7 +48,6 @@ main{flex:1 1 auto;min-height:0;display:flex;width:100%;margin:0 auto;}
 .task-picker{position:relative;display:block;}
 .task-trigger{display:inline-flex;align-items:center;gap:6px;margin:0;padding:0 4px 0 0;border:0;border-radius:4px;background:none;color:inherit;font:inherit;cursor:pointer;}
 .task-trigger-count{color:var(--mut);font-size:12.5px;font-weight:400;margin-left:2px;}
-.lb-tag{display:inline-block;margin-left:8px;padding:1px 7px;border:1px solid var(--line);border-radius:3px;color:var(--mut);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;vertical-align:middle;}
 .task-trigger svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;color:var(--mut);transition:transform .15s;}
 .task-trigger:hover svg,.task-trigger[aria-expanded="true"] svg{color:var(--accent-ink);}
 .task-trigger[aria-expanded="true"] svg{transform:rotate(90deg);}
@@ -1428,7 +1427,7 @@ function renderBoard(mode){
     tag=model.length?'backtest':'baseline replay'; replay=!model.length;
     note=model.length?'Model walk-forward replay for this task only; every forecast is after its own training cutoff.':'A small walk-forward baseline replay from the task history currently published to the site. It is not a Season 0 model result.';
   }
-  document.getElementById('lb-title').innerHTML=esc(title)+(tag?' <span class="lb-tag">'+esc(tag)+'</span>':'');
+  document.getElementById('lb-title').textContent=title;
   // A heading with help renders its label plus a hover box; the browser's
   // own title tooltip is too slow and cannot be styled.
   const headWithHelp=(el,label,help)=>{ if(!el) return; el.innerHTML='<span class="th-label">'+esc(label)+'</span>'+(help?'<span class="th-help" role="tooltip">'+esc(help)+'</span>':''); el.classList.toggle('has-help',!!help); el.removeAttribute('title'); if(help) el.tabIndex=0; };
