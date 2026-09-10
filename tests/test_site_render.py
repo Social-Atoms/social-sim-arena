@@ -359,6 +359,13 @@ def test_the_404_page_is_the_same_file_at_the_root():
     print("ok test_the_404_page_is_the_same_file_at_the_root")
 
 
+def test_the_site_logo_is_the_brand_folder_s_64_cut():
+    # brand/ holds the mark's sources; site/logo.svg is the served copy of the 64-unit cut.
+    with open(os.path.join(ROOT, "brand", "ssa-mark-64-dark.svg"), "rb") as a, open(os.path.join(ROOT, "site", "logo.svg"), "rb") as b:
+        assert a.read() == b.read(), "site/logo.svg differs from brand/ssa-mark-64-dark.svg; copy the brand file over"
+    print("ok test_the_site_logo_is_the_brand_folder_s_64_cut")
+
+
 if __name__ == "__main__":
     test_every_leaderboard_tab_renders_something_a_participant_can_read()
     test_the_landing_page_names_each_round_shape_and_the_right_deadline()
@@ -370,4 +377,5 @@ if __name__ == "__main__":
     test_every_link_the_docs_send_a_participant_to_exists()
     test_the_publish_gate_covers_every_field_a_page_reads_unguarded()
     test_the_404_page_is_the_same_file_at_the_root()
-    print("10 passed")
+    test_the_site_logo_is_the_brand_folder_s_64_cut()
+    print("11 passed")
