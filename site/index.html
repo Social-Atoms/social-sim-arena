@@ -432,7 +432,6 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 .wc-legend{display:none;}
 .wc-tag.close{background:var(--ink);color:#fff;}
 .wc-tag.res{background:#eaf6ee;color:var(--accent-ink);}
-.wc-tag.close.past{background:#5b5a55;}
 .wc-tag.res.past{background:#dff0e5;}
 .wcell[tabindex]{cursor:pointer;}
 .wcell[tabindex]:hover,.wcell[tabindex]:focus{outline:none;box-shadow:inset 0 0 0 1px var(--ink);}
@@ -2300,13 +2299,12 @@ function renderWeekly(data){
   const cell=(day)=>{
     const key=day.toISOString().slice(0,10);
     const c=(closesBy[key]||[]), l=(lockedBy[key]||[]), v=(releasesBy[key]||[]), vd=(landedBy[key]||[]);
-    const busy=c.length||l.length||v.length||vd.length;
+    const busy=c.length||v.length||vd.length;
     const cls=['wcell']; if(key===todayKey) cls.push('today');
     if(!busy) cls.push('quiet');
     return '<div class="'+cls.join(' ')+'" data-day="'+key+'"'+(busy?' tabindex="0"':'')+'>'
       +'<div class="wc-day"><b>'+day.getUTCDate()+'</b><span>'+day.toLocaleDateString(undefined,{month:'short',timeZone:'UTC'})+'</span></div>'
       +(c.length?'<div class="wc-tag close"><b>'+c.length+'</b><i>close</i></div>':'')
-      +(l.length?'<div class="wc-tag close past"><b>'+l.length+'</b><i>locked</i></div>':'')
       +(v.length?'<div class="wc-tag res"><b>'+v.length+'</b><i>resolve</i></div>':'')
       +(vd.length?'<div class="wc-tag res past"><b>'+vd.length+'</b><i>resolved</i></div>':'')
       +'</div>';
@@ -2337,7 +2335,6 @@ function renderWeekly(data){
     const dateLabel=new Date(key+'T12:00:00Z').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',timeZone:'UTC'});
     return '<div class="wp-head">'+esc(dateLabel)+'</div>'
       +(c.length?'<div class="wp-sec"><h5>'+c.length+' question'+(c.length>1?'s close':' closes')+'</h5><ul>'+group(c,'close').map(line).join('')+'</ul></div>':'')
-      +(l.length?'<div class="wp-sec"><h5>'+l.length+' question'+(l.length>1?'s':'')+' locked</h5><ul>'+group(l,'close').map(line).join('')+'</ul></div>':'')
       +(v.length?'<div class="wp-sec res"><h5>'+v.length+' answer'+(v.length>1?'s land':' lands')+'</h5><ul>'+group(v,'res').map(line).join('')+'</ul></div>':'')
       +(vd.length?'<div class="wp-sec res"><h5>'+vd.length+' answer'+(vd.length>1?'s':'')+' landed</h5><ul>'+group(vd,'res').map(line).join('')+'</ul></div>':'');
   };
@@ -2381,7 +2378,7 @@ function renderWeekly(data){
       +'<p class="week-sub"><span class="numeric">'+week.length+'</span> questions close in the next three weeks</p>'
       +'<div class="wcal"><div class="wgrid wghead">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>'<div>'+d+'</div>').join('')+'</div>'
       +[0,1,2].map(w=>'<div class="wgrid">'+weekRow(w)+'</div>').join('')+'</div>'
-      +'<div class="wc-legend" aria-hidden="true"><span class="wc-tag close"><b>n</b></span> questions close, or locked, that day <span class="wc-tag res"><b>n</b></span> answers land, or landed</div>'
+      +'<div class="wc-legend" aria-hidden="true"><span class="wc-tag close"><b>n</b></span> questions close that day <span class="wc-tag res"><b>n</b></span> answers land, or landed</div>'
       +'<p>Each one closes on its own clock, so the week is a calendar rather than a single deadline. A question whose release slips is held, never re-dated.</p>'
       +'<div class="facets"><div class="facet"><h4>Categories</h4>'+bar(fam)+'</div>'
       +'<div class="facet"><h4>Question type</h4>'+bar(shape)+'</div>'
