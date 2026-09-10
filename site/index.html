@@ -279,8 +279,8 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .qcard .qstats .hit{color:var(--accent-ink);font-weight:700;}
 .ent-head{display:flex;align-items:flex-start;gap:24px;margin:4px 0 26px;}
 .ent-head .ent-avatar{flex:0 0 auto;margin-top:0;}
-.ent-head .ent-avatar .avatar{width:92px;height:92px;font-size:34px;border-radius:18px;}
-.ent-head .ent-avatar .avatar .lg{width:56%;height:56%;}
+.ent-head .ent-avatar .av{width:112px;height:112px;font-size:40px;border-radius:22px;}
+.ent-head .ent-avatar .av .lg{padding:24px;}
 .ent-head h2{margin:0 0 6px;}
 .ent-meta{font-size:12.5px;color:var(--mut);display:flex;flex-wrap:wrap;gap:6px 14px;}
 .ent-meta b{color:var(--ink2);font-weight:700;}
@@ -333,7 +333,10 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 .tiles-2{grid-template-columns:repeat(2,minmax(0,1fr));}
 .rankchart{display:block;width:100%;height:auto;max-height:180px;border:1px solid var(--line);border-radius:5px;background:#fff;padding:6px 4px;}
 .ent-cov .frow{margin-bottom:12px;}
-.tile .waffle{display:block;margin:2px 0 7px;}
+.tile .waffle{display:block;margin:4px 0 8px;}
+.tile .k{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.tile .cov-seg{padding:1px;gap:1px;}
+.tile .cov-seg button{font-size:10.5px;padding:1px 7px;letter-spacing:0;text-transform:none;}
 .subs{list-style:none;margin:0;padding:0;}
 .subs li{border-top:1px solid #eeede9;}
 .subs li:first-child{border-top:0;}
@@ -917,10 +920,15 @@ function renderEntrant(id){
     return {r,t,f,rel,err,crps};
   }).sort((a,b)=>deadlineOf(b.r).localeCompare(deadlineOf(a.r)));
   const pct=(a,b)=>b?Math.round(100*a/b):0;
-  // Which tasks this entrant has answered, against the tasks whose questions have closed so far.
-  const closed=r=>r.status==='locked'||r.status==='awaiting_resolution'||r.status==='resolved';
-  const askedTasks=new Set((data.rounds||[]).filter(closed).map(r=>taskKeyForRound(r))), doneTasks=new Set(rows.filter(x=>closed(x.r)).map(x=>taskKeyForRound(x.r)));
-  const taskSpan=askedTasks.size?'<br>across '+doneTasks.size+' of '+askedTasks.size+' task'+(askedTasks.size===1?'':'s'):'';
+  // Coverage inside a window: the questions that closed in it, against the ones this entrant answered.
+  const covTile=days=>{
+    const c=coverage(data,id,rows,days), n=c.asked.length, k=c.answered.length;
+    const tasks=new Set(c.asked.map(taskKeyForRound)).size, done=new Set(c.answered.map(taskKeyForRound)).size;
+    const span=days?'in the past '+days+' days':(isFinite(c.from)?'since '+fmtDate(new Date(c.from).toISOString().slice(0,10)):'so far');
+    const seg='<span class="seg mini cov-seg" role="group" aria-label="Window">'+[[7,'7D'],[30,'30D'],[0,'All']].map(([d,l])=>'<button type="button" data-win="'+d+'"'+(d===days?' class="on"':'')+'>'+l+'</button>').join('')+'</span>';
+    return '<div class="tile" id="cov-tile"><div class="k">Answered'+seg+'</div><div class="v">'+k+' of '+n+'</div>'+waffle(c.asked.map(r=>c.answered.includes(r)))
+      +'<div class="s">'+(n?pct(k,n)+'% of the '+n+' question'+(n===1?'':'s')+' closed '+span+'<br>'+done+' of '+tasks+' task'+(tasks===1?'':'s'):'no question has closed '+span)+'</div></div>';
+  };
   const tile=(k,v,sub,cls)=>'<div class="tile"><div class="k">'+k+'</div><div class="v'+(cls?' '+cls:'')+'">'+v+'</div><div class="s">'+sub+'</div></div>';
   const health = !st ? tile('Last call','·','not published yet')
     : !st.last_call_at ? tile('Last call','none','no call recorded for this entrant')
@@ -940,7 +948,7 @@ function renderEntrant(id){
   let left='<div class="tiles tiles-2">'
     +tile('Score', score&&typeof score.mean_skill==='number'?((score.mean_skill>0?'+':'')+Math.round(100*score.mean_skill)):'·', score?scoreSrc+' · '+(score.rounds||0)+' question'+(score.rounds===1?'':'s')+(live&&bt&&typeof bt.mean_skill==='number'?' · backtest '+(bt.mean_skill>0?'+':'')+Math.round(100*bt.mean_skill):''):'no scored questions yet')
     +tile('CRPS', score&&typeof score.mean_crps==='number'?score.mean_crps.toFixed(2):'·', 'average error, lower is better')
-    +tile('Answered', st?st.answered+' of '+st.asked:'·', (st?waffle(st.answered,st.asked)+pct(st.answered,st.asked)+'% of the questions whose window has closed':'not published yet')+taskSpan)
+    +covTile(window.__covWin||0)
     +health+'</div>';
   const traj=((data.backtest||{}).trajectory)||[];
   left+='<div class="ent-sec"><h3>Rank over time</h3><p class="sub">Overall standings at each checkpoint of the backtest; 1 is the top.</p>'+rankChart(traj,id)+'</div>';
@@ -969,17 +977,29 @@ function renderEntrant(id){
     +'<ol class="subs" id="subs-list"></ol><div class="subs-pager" id="subs-pager"></div>';
   h+='<div class="ent-grid"><div class="ent-main">'+left+'</div><aside class="ent-side">'+right+'</aside></div>';
   host.innerHTML=h;
+  const wireCov=()=>{ const seg=host.querySelector('#cov-tile .cov-seg'); if(!seg) return; seg.onclick=ev=>{ const b=ev.target.closest('button[data-win]'); if(!b) return; window.__covWin=+b.dataset.win; host.querySelector('#cov-tile').outerHTML=covTile(window.__covWin); wireCov(); }; };
+  wireCov();
   subsList(host, rows, id);
   if(typeof syncHash==='function') syncHash();
 }
-// Coverage as a dot grid: one dot per closed question, filled when this entrant answered it.
-function waffle(done, total){
-  if(!total) return '';
-  const cols=total>60?20:10, d=total>60?5:7, gap=3, rows=Math.ceil(total/cols), w=cols*(d+gap)-gap, h=rows*(d+gap)-gap;
+// The questions that closed inside a window (7 or 30 days, or 0 for the entrant's whole run, which
+// starts with the first question it answered), in time order, and the ones this entrant answered.
+function coverage(data, id, rows, days){
+  const closed=r=>r.status==='locked'||r.status==='awaiting_resolution'||r.status==='resolved';
+  const dl=r=>Date.parse(deadlineOf(r)), mine=new Set(rows.map(x=>x.r.round_id));
+  const first=rows.length?Math.min(...rows.map(x=>dl(x.r))):-Infinity;
+  const from=Math.max(first, days?Date.now()-days*86400000:-Infinity);
+  const asked=(data.rounds||[]).filter(r=>closed(r)&&dl(r)>=from).sort((a,b)=>dl(a)-dl(b));
+  return {asked, answered:asked.filter(r=>mine.has(r.round_id)), from};
+}
+// Coverage as a dot grid: one cell per closed question in time order, filled when it was answered.
+function waffle(cells){
+  const total=cells.length; if(!total) return '';
+  const cols=20, d=5, gap=2, rows=Math.ceil(total/cols), w=cols*(d+gap)-gap, h=rows*(d+gap)-gap;
   let g='';
-  for(let i=0;i<total;i++){ const x=(i%cols)*(d+gap), y=Math.floor(i/cols)*(d+gap);
-    g+='<rect x="'+x+'" y="'+y+'" width="'+d+'" height="'+d+'" rx="1.5" fill="'+(i<done?'#111110':'#e6e5e0')+'"/>'; }
-  return '<svg class="waffle" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+done+' of '+total+' answered">'+g+'</svg>';
+  cells.forEach((on,i)=>{ const x=(i%cols)*(d+gap), y=Math.floor(i/cols)*(d+gap);
+    g+='<rect x="'+x+'" y="'+y+'" width="'+d+'" height="'+d+'" rx="1" fill="'+(on?'#111110':'#e6e5e0')+'"/>'; });
+  return '<svg class="waffle" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+cells.filter(Boolean).length+' of '+total+' answered">'+g+'</svg>';
 }
 // The submissions list on an entrant page: a search box, newest or oldest first, ten to a page.
 // It renders for an entrant with nothing on record too, so the column keeps its shape.
@@ -991,7 +1011,7 @@ function subsList(host, rows, id){
   const hay=x=>(x.t.label+' '+questionText(x.r)+' '+x.r.round_id).toLowerCase();
   const item=x=>{ const r=x.r, u=(x.t.unit||'').trim()==='%'?'%':'', active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
     // The question's state in the site's words (open, locked, resolved); an open one here is answered by definition.
-    const cls=active?'live':r.status==='resolved'?'done':'closed', when=active?'answered · due '+fmtLocal(deadlineOf(r)):r.status==='resolved'?'resolved · '+fmtLocal((r.resolution||{}).resolved_at||r.release_at):'locked · answer '+fmtLocal(r.release_at);
+    const cls=active?'live':r.status==='resolved'?'done':'closed', when=active?'answered · due '+fmtLocal(deadlineOf(r)):r.status==='resolved'?'resolved · '+fmtLocal((r.resolution||{}).resolved_at||r.release_at):'locked · releases '+fmtLocal(r.release_at);
     const out=typeof x.rel==='number'?' &rarr; <b>'+fmtNum(x.rel,u)+'</b>'+(x.err!==null?' <span class="dim">off by '+fmtNum(x.err,u)+'</span>':''):'';
     return '<li><a href="#forecast/'+esc(r.round_id)+'/'+esc(id)+'"><span class="top"><b>'+esc(x.t.label)+'</b><span class="when '+cls+'">'+esc(when)+'</span></span><span class="q">'+esc(questionText(r))+'</span><span class="vals">'+forecastSummary(x.f,u,active)+out+'</span></a></li>'; };
   const draw=()=>{
@@ -1028,7 +1048,7 @@ function renderQuestion(roundId){
   window.__questionName=t.label+(o?' · round '+o.n:'');
   const rel=(r.resolution||{}).value, active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
   const listed=isListed(r);
-  const state=!listed?'<span class="qdue closed">scheduled · listed '+esc(fmtLocal(r.published_at))+'</span>':active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">locked · answer '+esc(fmtLocal(r.release_at))+'</span>';
+  const state=!listed?'<span class="qdue closed">scheduled · listed '+esc(fmtLocal(r.published_at))+'</span>':active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">locked · releases '+esc(fmtLocal(r.release_at))+'</span>';
   const f=r.forecasts||{}, ids=Object.keys(f), models=ids.filter(k=>!isBaseline(k));
   const nameOf=k=>forecasterName(k,data);
   const rows=ids.map(k=>{ const x=f[k]; const err=(typeof rel==='number'&&typeof x.mean==='number')?Math.abs(x.mean-rel):null; const crps=(err!==null&&typeof x.sd==='number')?crpsNormal(x.mean,x.sd,rel):null; return {k,x,err,crps,base:isBaseline(k)}; });
@@ -1069,7 +1089,7 @@ function renderForecast(roundId, entrantId){
   const name=forecasterName(entrantId,data).split(' (')[0], t=taskForRound(r), f=(r.forecasts||{})[entrantId]||null, u=(t.unit||'').trim()==='%'?'%':'';
   window.__forecastName=name+' on '+t.label;
   const rel=(r.resolution||{}).value, active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
-  const state=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">locked · answer '+esc(fmtLocal(r.release_at))+'</span>';
+  const state=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">locked · releases '+esc(fmtLocal(r.release_at))+'</span>';
   const tile=(k,v,sub)=>'<div class="tile"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="s">'+sub+'</div></div>';
   let h='<div class="eyebrow page-eyebrow">Forecast</div><h2 class="page-title"><a href="#entrant/'+esc(entrantId)+'">'+esc(name)+'</a> on '+esc(t.label)+'</h2>'
     +'<p class="lede page-description">'+esc(r.question)+'</p><p class="ent-meta">'+state+'<span>question <b>'+esc(r.round_id)+'</b></span><span>entrant <b>'+esc(entrantId)+'</b></span></p>';
@@ -2176,7 +2196,7 @@ function roundsList(data){
     const t=taskForRound(r),g=TASK_GROUPS.find(x=>x.id===t.group),active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
     const kind=r.target_type||((r.cells&&r.cells.length)?'profile_energy':'continuous_normal');
     const shape=kind==='profile_energy'?'profile · '+(r.cells||[]).length+' cells':kind==='ranking_list'?'ranking':'number';
-    const when=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">locked · answer '+esc(fmtLocal(r.release_at))+'</span>';
+    const when=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">locked · releases '+esc(fmtLocal(r.release_at))+'</span>';
     const strip=forecastStrip(r,t,data)||'<div class="qempty">'+(r.n_forecasts?esc(r.n_forecasts)+' forecast'+(r.n_forecasts===1?'':'s')+' filed'+(active?' · sealed until the lock':'')+' · '+esc(shape):'No forecasts filed yet · '+esc(shape))+'</div>';
     return '<div class="qcard'+(active?' live':'')+'"><div class="qhead"><span>'+esc(g?g.label:'Task')+'</span><span class="qshape'+(kind!=='continuous_normal'?' special':'')+'">'+esc(shape)+'</span>'+when+'</div>'
       +'<h3><a class="qlink" href="#question/'+esc(r.round_id)+'">'+esc(t.label)+'</a>'+(()=>{const o=roundOrdinal(r,data); return o?' <span class="ord">round '+o.n+' of '+o.of+'</span>':'';})()+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
@@ -2633,7 +2653,7 @@ Promise.allSettled([
 });
 </script>
 <script>
-console.log("%c\n              \u25cf\n       /\\    /     Social Simulation Arena\n      /  \\  /      Can a simulator predict a public before it speaks?\n     /    \\/\n    /\n","color:#15803d;font-family:monospace;font-size:12px");
+console.log("%c\n              \u25cf\n       /\\    /     Social Simulation Arena\n      /  \\  /      Can a simulator predict a public before it moves?\n     /    \\/\n    /\n","color:#15803d;font-family:monospace;font-size:12px");
 console.log("%cYou looked behind the board. Join us: cli@mit.edu \u00b7 github.com/Social-Atoms/social-sim-arena","color:#4f4e49;font-family:monospace");
 </script>
 </body>
