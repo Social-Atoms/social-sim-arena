@@ -353,6 +353,14 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 .qcard .qstats-empty{flex:1 1 auto;min-height:108px;display:flex;align-items:center;justify-content:center;gap:4px 14px;margin-top:auto;border-top:1px dashed var(--line);padding:10px 0 6px;}
 .qcard .qstats-empty b{font-size:12px;color:var(--ink2);}
 .qcard .qfoot .go{margin-left:auto;color:var(--link);font-weight:700;text-decoration:none;white-space:nowrap;font-size:12px;}
+.qcard h3 a.qlink{color:inherit;text-decoration:none;}
+.qcard h3 a.qlink:hover{text-decoration:underline;text-underline-offset:3px;}
+#question-col .qstrip{min-height:82px;margin:0;}
+#question-col .qstrip svg{display:block;width:100%;height:82px;overflow:visible;}
+.qcard .qref{margin-top:6px;font-size:10.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.qcard .qref a{color:var(--mut);text-decoration:underline;text-underline-offset:2px;}
+.qcard .qref a:hover{color:var(--accent-ink);}
+.qcard .qref code{font-size:10.5px;background:none;border:0;padding:0;color:var(--mut);}
 .qcard .qfoot .go:hover{text-decoration:underline;}
 @media(max-width:900px){.qgrid{grid-template-columns:1fr;}}
 .weekly-grid{display:grid;grid-template-columns:minmax(0,1fr) 270px;grid-template-areas:"overview calendar" "entry entry";gap:16px;align-items:stretch;}
@@ -671,6 +679,10 @@ table.ent td a.row{color:inherit;text-decoration:none;}
     <div class="inner"><div class="col widecol" id="entrant-col"></div></div>
   </div>
 
+  <div class="page" id="page-question">
+    <div class="inner"><div class="col widecol" id="question-col"></div></div>
+  </div>
+
   <div class="page" id="page-forecast">
     <div class="inner"><div class="col widecol" id="forecast-col"></div></div>
   </div>
@@ -935,6 +947,46 @@ function renderEntrant(id){
   host.innerHTML=h;
   if(typeof syncHash==='function') syncHash();
 }
+// ---- one question: what was asked, who answered when, what came out, who was closest ----
+function renderQuestion(roundId){
+  const data=window.__data, host=document.getElementById('question-col'); if(!data||!host) return;
+  const r=(data.rounds||[]).find(x=>x.round_id===roundId);
+  window.__questionName='';
+  if(!r){ host.innerHTML='<div class="eyebrow page-eyebrow">Question</div><h2 class="page-title">No question called '+esc(roundId||'(none)')+'</h2><p class="lede page-description">Start from <a href="#questions">every question</a>.</p>'; if(typeof syncHash==='function') syncHash(); return; }
+  const t=taskForRound(r), key=taskKeyForRound(r), u=(t.unit||'').trim()==='%'?'%':'', o=roundOrdinal(r,data);
+  window.__questionName=t.label+(o?' · round '+o.n:'');
+  const rel=(r.resolution||{}).value, active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
+  const state=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">locked · answer '+esc(fmtLocal(r.release_at))+'</span>';
+  const f=r.forecasts||{}, ids=Object.keys(f), models=ids.filter(k=>!isBaseline(k));
+  const nameOf=k=>forecasterName(k,data);
+  const rows=ids.map(k=>{ const x=f[k]; const err=(typeof rel==='number'&&typeof x.mean==='number')?Math.abs(x.mean-rel):null; const crps=(err!==null&&typeof x.sd==='number')?crpsNormal(x.mean,x.sd,rel):null; return {k,x,err,crps,base:isBaseline(k)}; });
+  const resolved=typeof rel==='number';
+  rows.sort((a,b)=> resolved ? ((a.crps??a.err??Infinity)-(b.crps??b.err??Infinity)) || String(a.x.filed||'').localeCompare(String(b.x.filed||'')) : String(a.x.filed||'zz').localeCompare(String(b.x.filed||'zz')));
+  const mm=models.map(k=>f[k].mean).filter(v=>typeof v==='number').sort((a,b)=>a-b), cons=mm.length?mm[Math.floor(mm.length/2)]:null;
+  const tile=(k,v,sub)=>'<div class="tile"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="s">'+sub+'</div></div>';
+  const st=(data.stamps||{})[r.round_id];
+  let h='<div class="eyebrow page-eyebrow">Question'+(o?' · round '+o.n+' of '+o.of:'')+'</div><h2 class="page-title"><a href="#leaderboard/'+esc(key)+'/all">'+esc(t.label)+'</a></h2>'
+    +'<p class="lede page-description">'+esc(r.question)+'</p>'
+    +'<p class="ent-meta">'+state+(r.batch_id?'<span><a href="#questions/'+esc(r.batch_id)+'">week of '+esc(fmtDate(r.batch_id.replace('batch-','')))+'</a></span>':'')+'<span>source '+(t.srcUrl?'<a href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span class="dim">'+esc(r.round_id)+'</span></p>';
+  h+='<div class="tiles">'
+    +tile('Released', resolved?fmtNum(rel,u):'·', resolved?esc(fmtLocal((r.resolution||{}).resolved_at||r.release_at)):(active?'after the lock at '+esc(fmtLocal(deadlineOf(r))):'expected '+esc(fmtLocal(r.release_at))))
+    +tile('What the models say', cons!==null?fmtNum(cons,u):'·', cons!==null?'median of '+mm.length+' number forecast'+(mm.length===1?'':'s'):'no number forecasts')
+    +tile('Forecasts', String(ids.length), models.length+' entrant'+(models.length===1?'':'s')+' · '+(ids.length-models.length)+' baseline'+(ids.length-models.length===1?'':'s'))
+    +tile('Timestamp', !st||!st.manifest?'·':(st.bitcoin_attested?'Bitcoin':'calendars'), !st||!st.manifest?(active?'stamped at the lock':'no manifest'):(st.bitcoin_attested?'attested in a Bitcoin block':'attested by the calendars, block pending'))
+    +'</div>';
+  if(mm.length) h+='<div class="ent-sec"><h3>Where the answers sit</h3><div class="qstrip" data-strip="'+esc(r.round_id)+'"></div></div>';
+  h+='<div class="ent-sec"><h3>Every forecast</h3><p class="sub">'+(resolved?'Closest first, by CRPS where the forecast carried an uncertainty, else by error.':'In the order they were filed; scored once the answer lands.')+' Open a row for the forecast and its timestamp proof.</p>'
+    +'<table class="ent"><thead><tr><th class="num">#</th><th>Entrant</th><th>Filed</th><th class="num">Forecast</th><th class="num">Error</th><th class="num">CRPS</th></tr></thead><tbody>'
+    +rows.map((row,i)=>{ const x=row.x; const href='#forecast/'+esc(r.round_id)+'/'+esc(row.k);
+      const what=typeof x.mean==='number'?'<b>'+fmtNum(x.mean,u)+'</b>'+(typeof x.sd==='number'?' <span class="dim">± '+fmtNum(x.sd,'')+'</span>':''):'<b>'+esc(x.shape||'filed')+'</b>'+(x.cells?' <span class="dim">'+x.cells+' cells</span>':x.items?' <span class="dim">'+x.items+' items</span>':'');
+      return '<tr class="link" data-href="'+href+'"><td class="num dim">'+(resolved&&(row.err!==null)?i+1:'·')+'</td><td><a class="row" href="#entrant/'+esc(row.k)+'"><span class="q">'+esc(nameOf(row.k))+'</span></a>'+(row.base?' <span class="dim">baseline</span>':'')+'</td><td class="dim">'+(x.filed?esc(fmtLocal(x.filed)):'·')+'</td><td class="num">'+what+'</td><td class="num">'+(row.err!==null?fmtNum(row.err,u):'·')+'</td><td class="num">'+(row.crps!==null?row.crps.toFixed(2):'·')+'</td></tr>'; }).join('')
+    +'</tbody></table></div>';
+  if(!ids.length) h+='<div class="ent-sec"><p class="sub">No forecasts filed yet.</p></div>';
+  host.innerHTML=h;
+  host.querySelectorAll('tr.link').forEach(tr=>{ tr.onclick=ev=>{ if(ev.target.closest('a')) return; location.hash=tr.dataset.href; }; });
+  requestAnimationFrame(()=>drawStrips(host, data));
+  if(typeof syncHash==='function') syncHash();
+}
 // ---- one forecast: what was filed, when, against what, and the proof that it existed before the answer ----
 const REPO='https://github.com/Social-Atoms/social-sim-arena/blob/main/';
 function renderForecast(roundId, entrantId){
@@ -961,7 +1013,7 @@ function renderForecast(roundId, entrantId){
       +tile('Released', typeof rel==='number'?fmtNum(rel,u):'·', typeof rel==='number'?esc(fmtLocal((r.resolution||{}).resolved_at||r.release_at)):(active?'not yet':'expected '+esc(fmtLocal(r.release_at))))
       +tile('Error', err!==null?fmtNum(err,u):'·', crps!==null?'CRPS '+crps.toFixed(2):(err!==null?'absolute error':'scored once the answer lands'))
       +'</div>';
-    h+='<p class="ent-meta"><span><a href="'+REPO+'forecasts/'+esc(r.round_id)+'/'+esc(entrantId)+'.json" target="_blank" rel="noopener">the forecast file</a></span><span><a href="#questions">every question</a></span></p>';
+    h+='<p class="ent-meta"><span><a href="#question/'+esc(r.round_id)+'">this question, every forecast</a></span><span><a href="'+REPO+'forecasts/'+esc(r.round_id)+'/'+esc(entrantId)+'.json" target="_blank" rel="noopener">the forecast file</a></span></p>';
   }
   const st=(data.stamps||{})[r.round_id];
   h+='<div class="ent-sec"><h3>Timestamp</h3>';
@@ -982,6 +1034,12 @@ function renderForecast(roundId, entrantId){
   h+='</div>';
   host.innerHTML=h;
   if(typeof syncHash==='function') syncHash();
+}
+function roundOrdinal(r, data){
+  // "round 3 of 7": this question's place among its task's questions, by deadline.
+  const t=taskForRound(r); if(!t||!t.match) return null;
+  const sib=taskRounds(t,data).slice().sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
+  const i=sib.findIndex(x=>x.round_id===r.round_id); return i<0?null:{n:i+1,of:sib.length};
 }
 function taskKeyForRound(r){ return Object.keys(TASKS).find(k=>k!=='agg' && TASKS[k].match && TASKS[k].match(r)) || 'agg'; }
 function taskForRound(r){ return TASKS[taskKeyForRound(r)] || TASKS.agg; }
@@ -1959,8 +2017,10 @@ function roundsList(data){
     const when=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">locked · answer '+esc(fmtLocal(r.release_at))+'</span>';
     const strip=forecastStrip(r,t,data)||'<div class="qempty">'+(r.n_forecasts?esc(r.n_forecasts)+' forecasts filed · '+esc(shape):'No forecasts filed yet · '+esc(shape))+'</div>';
     return '<div class="qcard'+(active?' live':'')+'"><div class="qhead"><span>'+esc(g?g.label:'Task')+'</span><span class="qshape'+(kind!=='continuous_normal'?' special':'')+'">'+esc(shape)+'</span>'+when+'</div>'
-      +'<h3>'+esc(t.label)+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
-      +'<div class="qfoot"><span class="qid" title="'+esc(r.round_id)+'">Source '+(t.srcUrl?'<a class="src" href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span>'+esc(t.population)+'</span><a class="go" href="#live/'+taskKeyForRound(r)+'/all">open task →</a></div></div>';
+      +'<h3><a class="qlink" href="#question/'+esc(r.round_id)+'">'+esc(t.label)+'</a></h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
+      +'<div class="qfoot"><span class="qid">Source '+(t.srcUrl?'<a class="src" href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span>'+esc(t.population)+'</span><a class="go" href="#leaderboard/'+taskKeyForRound(r)+'/all">open task →</a></div>'
+      // Where this question sits in the season: its week, as a link to that week's set, and its id, which the search box also matches.
+      +'<div class="qref">'+(()=>{const o=roundOrdinal(r,data); return o?'round '+o.n+' of '+o.of+' · ':'';})()+(r.batch_id?'<a href="#questions/'+esc(r.batch_id)+'" title="Every question in this week\'s set">week of '+esc(fmtDate(r.batch_id.replace('batch-','')))+'</a> · ':'')+'<a href="#question/'+esc(r.round_id)+'"><code>'+esc(r.round_id)+'</code></a></div></div>';
   }).join('')+'</div>'+(total>limit?'<div class="qmore"><button type="button" class="btn soft" id="rounds-more">Show 24 more <span class="dim">· '+(total-limit)+' left</span></button></div>':'')||'';
   if(!rows.length) el.innerHTML='<div class="week-card"><h3>No matching questions</h3><p>Try another category, status, or search term.</p></div>';
   const more=document.getElementById('rounds-more'); if(more) more.onclick=()=>{ window.__roundLimit=limit+24; roundsList(data); };
@@ -2226,8 +2286,8 @@ function examRounds(data){
   }
 }
 
-const PAGES=['leaderboard','questions','calendar','entrant','forecast','submit','exam'];
-const PAGE_TITLES={leaderboard:'Leaderboard',questions:'Questions',calendar:'Calendar',entrant:'Entrant',forecast:'Forecast',submit:'Submit your agent',exam:'The Midterm Exam'};
+const PAGES=['leaderboard','questions','calendar','entrant','question','forecast','submit','exam'];
+const PAGE_TITLES={leaderboard:'Leaderboard',questions:'Questions',calendar:'Calendar',entrant:'Entrant',question:'Question',forecast:'Forecast',submit:'Submit your agent',exam:'The Midterm Exam'};
 // Pre-release names. Kept so a link written before the rename still lands.
 const HASH_ALIASES={live:'leaderboard',rounds:'questions',weekly:'calendar'};
 function showPage(k){
@@ -2240,6 +2300,7 @@ function showPage(k){
   if(k==='calendar' && window.__data) renderWeekly(window.__data);
   if(k==='entrant' && window.__data) renderEntrant(window.__entrant||'');
   if(k==='forecast' && window.__data) renderForecast(window.__forecastRound||'', window.__forecastEntrant||'');
+  if(k==='question' && window.__data) renderQuestion(window.__question||'');
   if(k==='questions' && window.__data) requestAnimationFrame(()=>drawStrips(document.getElementById('rounds-list'), window.__data));
   if(typeof syncHash==='function') syncHash();
 }
@@ -2268,10 +2329,12 @@ function syncHash(){
   }
   if(pg === 'entrant') h = 'entrant/' + (window.__entrant || '');
   if(pg === 'forecast') h = 'forecast/' + (window.__forecastRound || '') + '/' + (window.__forecastEntrant || '');
+  if(pg === 'question') h = 'question/' + (window.__question || '');
   history.replaceState(null, '', '#' + h);
   const scope = pg === 'leaderboard' && tab !== 'agg' && TASKS[tab] ? TASKS[tab].label + ' · '
     : pg === 'entrant' && window.__entrantName ? window.__entrantName + ' · '
-    : pg === 'forecast' && window.__forecastName ? window.__forecastName + ' · ' : '';
+    : pg === 'forecast' && window.__forecastName ? window.__forecastName + ' · '
+    : pg === 'question' && window.__questionName ? window.__questionName + ' · ' : '';
   document.title = scope + (PAGE_TITLES[pg] || PAGE_TITLES.leaderboard) + ' · Social Simulation Arena';
 }
 function applyHash(){
@@ -2291,6 +2354,7 @@ function applyHash(){
   }
   if(pg === 'entrant') window.__entrant = parts[1] || '';
   if(pg === 'forecast'){ window.__forecastRound = parts[1] || ''; window.__forecastEntrant = parts[2] || ''; }
+  if(pg === 'question') window.__question = parts[1] || '';
   if(pg === 'questions' && /^batch-\d{4}-\d{2}-\d{2}$/.test(parts[1]||'')){
     // #questions/batch-2026-09-14: the week's set, as a search a reader can clear
     window.__roundQuery = parts[1]; window.__roundStatus = 'all';
@@ -2378,7 +2442,7 @@ document.querySelectorAll('#span-seg button').forEach(b=> b.onclick = ()=>{
   renderBoard(b.dataset.span);
 });
 let rsz;
-function redraw(){ if(!window.__data) return; const pg=window.__page||'leaderboard'; if(pg==='leaderboard') renderTaskChart(window.__tab||'agg'); if(pg==='questions') drawStrips(document.getElementById('rounds-list'), window.__data); }
+function redraw(){ if(!window.__data) return; const pg=window.__page||'leaderboard'; if(pg==='leaderboard') renderTaskChart(window.__tab||'agg'); if(pg==='questions') drawStrips(document.getElementById('rounds-list'), window.__data); if(pg==='question') drawStrips(document.getElementById('question-col'), window.__data); }
 function scheduleRedraw(){
   if(rsz)return;
   rsz=requestAnimationFrame(()=>{rsz=0;redraw();});
