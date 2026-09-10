@@ -26,6 +26,7 @@ from . import participants
 from . import profile_round
 from . import ranking_round
 from . import series as series_registry
+from . import task_registry
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 QUESTIONS = os.path.join(ROOT, "questions", "season0.json")
@@ -2383,6 +2384,9 @@ def main():
             charts[name] = (series[name][-48:]
                             if name == "umich_sentiment" else series[name])
 
+    # The task registry is checked before anything is written: a task that names a
+    # series the pipeline does not know is a registry bug, not a data hole.
+    task_rows = task_registry.publish_or_raise()
     data = {
         "generated_at": iso(now),
         "season": season["season"],
@@ -2405,6 +2409,7 @@ def main():
         "backtest": bt,
         "charts": charts,
         "series_tail": {k: v[-8:] for k, v in series.items()},
+        "tasks": task_rows,
         # Which URL, fetched when, and where the saved raw body is -- per
         # upstream file, and per series through its `source` key. A page can
         # then say "this figure came from that file at that time" instead of

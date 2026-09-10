@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SSA task registry",
+  "type": "object",
+  "required": [
+    "tasks"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "group",
+          "domain",
+          "population",
+          "cadence",
+          "question_type",
+          "unit",
+          "source",
+          "match",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "group": {
+            "enum": [
+              "opinion",
+              "sentiment",
+              "population",
+              "attention"
+            ]
+          },
+          "domain": {
+            "enum": [
+              "public-opinion",
+              "consumer",
+              "attention",
+              "elections"
+            ]
+          },
+          "population": {
+            "type": "string",
+            "minLength": 1
+          },
+          "cadence": {
+            "type": "string",
+            "minLength": 1
+          },
+          "question_type": {
+            "enum": [
+              "number",
+              "profile",
+              "ranking"
+            ]
+          },
+          "unit": {
+            "type": "string"
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "url"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "url": {
+                "type": "string",
+                "pattern": "^https://"
+              }
+            }
+          },
+          "match": {
+            "type": "object",
+            "additionalProperties": false,
+            "minProperties": 1,
+            "properties": {
+              "series": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "series_prefix": {
+                "type": "string",
+                "minLength": 1
+              },
+              "target_type": {
+                "enum": [
+                  "continuous_normal",
+                  "profile_energy",
+                  "ranking_list"
+                ]
+              }
+            }
+          },
+          "cells": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "enum": [
+              "active",
+              "retired",
+              "declined"
+            ]
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

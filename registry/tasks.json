@@ -1,0 +1,482 @@
+{
+  "$schema": "../schema/tasks.schema.json",
+  "note": "The one place a task is described: what the site shows in a task header and on a question card, and which series ids belong to it. Edit here; refresh.py publishes it as data.tasks and the site reads that. Order is display order; the site matches a round against tasks in this order, first match wins.",
+  "tasks": [
+    {
+      "id": "yougov_approval",
+      "label": "Economist / YouGov approval",
+      "group": "opinion",
+      "domain": "public-opinion",
+      "population": "US adult citizens",
+      "cadence": "weekly, fielded over a weekend and published midweek",
+      "question_type": "number",
+      "unit": "%",
+      "source": {
+        "name": "YouGov",
+        "url": "https://yougov.com/en-us/topics/topic/The_Economist_YouGov_polls"
+      },
+      "match": {
+        "series": [
+          "yougov_approval"
+        ]
+      },
+      "status": "active"
+    },
+    {
+      "id": "mc_approval",
+      "label": "Morning Consult approval",
+      "group": "opinion",
+      "domain": "public-opinion",
+      "population": "US registered voters",
+      "cadence": "weekly",
+      "question_type": "number",
+      "unit": "%",
+      "source": {
+        "name": "Morning Consult",
+        "url": "https://pro.morningconsult.com/trackers/donald-trump-congress-policy-republicans-polling"
+      },
+      "match": {
+        "series": [
+          "mc_approval"
+        ]
+      },
+      "status": "active"
+    },
+    {
+      "id": "civiqs_approval",
+      "label": "Civiqs approval",
+      "group": "opinion",
+      "domain": "public-opinion",
+      "population": "US registered voters",
+      "cadence": "daily tracker; the Friday reading is the one scored",
+      "question_type": "number",
+      "unit": " pts",
+      "source": {
+        "name": "Civiqs",
+        "url": "https://civiqs.com/results/approve_president_trump_2025"
+      },
+      "match": {
+        "series": [
+          "civiqs_net_approval"
+        ],
+        "target_type": "continuous_normal"
+      },
+      "status": "active"
+    },
+    {
+      "id": "hh_approval",
+      "label": "Harvard / Harris approval",
+      "group": "opinion",
+      "domain": "public-opinion",
+      "population": "US registered voters",
+      "cadence": "roughly monthly, no preannounced schedule",
+      "question_type": "number",
+      "unit": "%",
+      "source": {
+        "name": "Harvard CAPS / Harris Poll",
+        "url": "https://harvardharrispoll.com/"
+      },
+      "match": {
+        "series": [
+          "hh_trump_approval"
+        ]
+      },
+      "status": "active"
+    },
+    {
+      "id": "generic_margin",
+      "label": "Generic ballot & midterm",
+      "group": "opinion",
+      "domain": "elections",
+      "population": "US voters",
+      "cadence": "weekly, plus the election result",
+      "question_type": "number",
+      "unit": " pts",
+      "source": {
+        "name": "Silver Bulletin",
+        "url": "https://www.natesilver.net/p/generic-ballot-average-2026-nate-silver-bulletin-congress-polls"
+      },
+      "match": {
+        "series": [
+          "yougov_generic_margin",
+          "generic_ballot_margin",
+          "house_seats"
+        ]
+      },
+      "status": "active"
+    },
+    {
+      "id": "umich_sentiment",
+      "label": "Michigan consumer sentiment",
+      "group": "sentiment",
+      "domain": "consumer",
+      "population": "US adults",
+      "cadence": "monthly, a preliminary print mid-month and the final at month end",
+      "question_type": "number",
+      "unit": "",
+      "source": {
+        "name": "University of Michigan",
+        "url": "https://www.sca.isr.umich.edu/"
+      },
+      "match": {
+        "series": [
+          "umich_sentiment"
+        ]
+      },
+      "status": "active"
+    },
+    {
+      "id": "sce_inflation",
+      "label": "Household inflation expectations",
+      "group": "sentiment",
+      "domain": "consumer",
+      "population": "US household heads",
+      "cadence": "monthly",
+      "question_type": "number",
+      "unit": "%",
+      "source": {
+        "name": "New York Fed SCE",
+        "url": "https://www.newyorkfed.org/microeconomics/sce"
+      },
+      "match": {
+        "series_prefix": "sce_inflation_"
+      },
+      "status": "active"
+    },
+    {
+      "id": "civiqs_angry",
+      "label": "Civiqs: angry about the country",
+      "group": "opinion",
+      "domain": "public-opinion",
+      "population": "US registered voters",
+      "cadence": "daily tracker; the Friday reading is the one scored",
+      "question_type": "number",
+      "unit": "%",
+      "source": {
+        "name": "Civiqs",
+        "url": "https://civiqs.com/results/describe_feeling_us"
+      },
+      "match": {
+        "series": [
+          "civiqs_angry_share"
+        ]
+      },
+      "status": "active"
+    },
+    {
+      "id": "civiqs_econ_direction",
+      "label": "Civiqs: economy direction",
+      "group": "sentiment",
+      "domain": "consumer",
+      "population": "US registered voters",
+      "cadence": "daily tracker; the Friday reading is the one scored",
+      "question_type": "number",
+      "unit": " pts",
+      "source": {
+        "name": "Civiqs",
+        "url": "https://civiqs.com/results/economy_us_direction"
+      },
+      "match": {
+        "series": [
+          "civiqs_net_econ_direction"
+        ]
+      },
+      "status": "active"
+    },
+    {
+      "id": "civiqs_econ_now",
+      "label": "Civiqs: economy today",
+      "group": "sentiment",
+      "domain": "consumer",
+      "population": "US registered voters",
+      "cadence": "daily tracker; the Friday reading is the one scored",
+      "question_type": "number",
+      "unit": " pts",
+      "source": {
+        "name": "Civiqs",
+        "url": "https://civiqs.com/results/economy_us_now"
+      },
+      "match": {
+        "series": [
+          "civiqs_net_econ_now"
+        ]
+      },
+      "status": "active"
+    },
+    {
+      "id": "civiqs_family_finances",
+      "label": "Civiqs: family finances",
+      "group": "sentiment",
+      "domain": "consumer",
+      "population": "US registered voters",
+      "cadence": "daily tracker; the Friday reading is the one scored",
+      "question_type": "number",
+      "unit": " pts",
+      "source": {
+        "name": "Civiqs",
+        "url": "https://civiqs.com/results/economy_family_retro"
+      },
+      "match": {
+        "series": [
+          "civiqs_net_family_finances"
+        ]
+      },
+      "status": "active"
+    },
+    {
+      "id": "civiqs_inflation_concern",
+      "label": "Civiqs: inflation concern",
+      "group": "sentiment",
+      "domain": "consumer",
+      "population": "US registered voters",
+      "cadence": "daily tracker; the Friday reading is the one scored",
+      "question_type": "number",
+      "unit": " pts",
+      "source": {
+        "name": "Civiqs",
+        "url": "https://civiqs.com/results/inflation_impact"
+      },
+      "match": {
+        "series": [
+          "civiqs_net_inflation_concern"
+        ]
+      },
+      "status": "active"
+    },
+    {
+      "id": "aaii_sentiment",
+      "label": "Investor sentiment",
+      "group": "sentiment",
+      "domain": "consumer",
+      "population": "AAII members",
+      "cadence": "weekly",
+      "question_type": "number",
+      "unit": " pts",
+      "source": {
+        "name": "AAII",
+        "url": "https://www.aaii.com/sentimentsurvey"
+      },
+      "match": {
+        "series": [
+          "aaii_bull_bear_spread"
+        ]
+      },
+      "status": "active"
+    },
+    {
+      "id": "civiqs_profile",
+      "label": "Civiqs 16-cell profile",
+      "group": "population",
+      "domain": "public-opinion",
+      "population": "US registered voters, 16 cells jointly",
+      "cadence": "weekly, the Friday reading",
+      "question_type": "profile",
+      "unit": " net pts",
+      "source": {
+        "name": "Civiqs",
+        "url": "https://civiqs.com/results/approve_president_trump_2025"
+      },
+      "match": {
+        "series": [
+          "civiqs_net_approval"
+        ],
+        "target_type": "profile_energy"
+      },
+      "cells": [
+        "civiqs_net_approval_dem",
+        "civiqs_net_approval_ind",
+        "civiqs_net_approval_rep",
+        "civiqs_net_approval_age_18_34",
+        "civiqs_net_approval_age_35_49",
+        "civiqs_net_approval_age_50_64",
+        "civiqs_net_approval_age_65_up",
+        "civiqs_net_approval_race_white",
+        "civiqs_net_approval_race_black",
+        "civiqs_net_approval_race_hispanic",
+        "civiqs_net_approval_race_other",
+        "civiqs_net_approval_edu_noncollege",
+        "civiqs_net_approval_edu_college",
+        "civiqs_net_approval_edu_postgrad",
+        "civiqs_net_approval_male",
+        "civiqs_net_approval_female"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "civiqs_subgroups",
+      "label": "Civiqs subgroup toplines",
+      "group": "population",
+      "domain": "public-opinion",
+      "population": "Six registered-voter subgroups",
+      "cadence": "weekly",
+      "question_type": "profile",
+      "unit": " net pts",
+      "source": {
+        "name": "Civiqs",
+        "url": "https://civiqs.com/results/approve_president_trump_2025"
+      },
+      "match": {
+        "series_prefix": "civiqs_net_approval_",
+        "target_type": "continuous_normal"
+      },
+      "cells": [
+        "civiqs_net_approval_rep",
+        "civiqs_net_approval_ind",
+        "civiqs_net_approval_male",
+        "civiqs_net_approval_age_35_49",
+        "civiqs_net_approval_age_50_64",
+        "civiqs_net_approval_race_hispanic"
+      ],
+      "status": "retired",
+      "note": "The scalar subgroup templates were retired on 2026-09-07; the rounds moved to questions/legacy."
+    },
+    {
+      "id": "yougov_profile",
+      "label": "YouGov measured crosstabs",
+      "group": "population",
+      "domain": "public-opinion",
+      "population": "US registered voters, 16 cells",
+      "cadence": "weekly wave",
+      "question_type": "profile",
+      "unit": "%",
+      "source": {
+        "name": "Economist / YouGov",
+        "url": "https://yougov.com/en-us/topics/topic/The_Economist_YouGov_polls"
+      },
+      "match": {
+        "series_prefix": "yougov_xtab_",
+        "target_type": "profile_energy"
+      },
+      "cells": [
+        "yougov_xtab_approve_dem",
+        "yougov_xtab_approve_ind",
+        "yougov_xtab_approve_rep",
+        "yougov_xtab_approve_age_under_30",
+        "yougov_xtab_approve_age_30_44",
+        "yougov_xtab_approve_age_45_64",
+        "yougov_xtab_approve_age_65_up",
+        "yougov_xtab_approve_race_white",
+        "yougov_xtab_approve_race_black",
+        "yougov_xtab_approve_race_hispanic",
+        "yougov_xtab_approve_male",
+        "yougov_xtab_approve_female",
+        "yougov_xtab_approve_edu_hs_or_less",
+        "yougov_xtab_approve_edu_some_college",
+        "yougov_xtab_approve_edu_college_grad",
+        "yougov_xtab_approve_edu_postgrad"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "umich_party",
+      "label": "Sentiment by party",
+      "group": "population",
+      "domain": "consumer",
+      "population": "US adults by party, 3 groups",
+      "cadence": "monthly",
+      "question_type": "profile",
+      "unit": " index",
+      "source": {
+        "name": "University of Michigan",
+        "url": "https://www.sca.isr.umich.edu/"
+      },
+      "match": {
+        "series_prefix": "umich_party_"
+      },
+      "cells": [
+        "umich_party_dem",
+        "umich_party_ind",
+        "umich_party_rep"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "trends_basket",
+      "label": "Brand search-interest mix",
+      "group": "attention",
+      "domain": "attention",
+      "population": "US Google searches, 5 brands",
+      "cadence": "weekly",
+      "question_type": "profile",
+      "unit": "%",
+      "source": {
+        "name": "Google Trends",
+        "url": "https://trends.google.com/trends/"
+      },
+      "match": {
+        "series": [
+          "trends_share_iphone"
+        ]
+      },
+      "cells": [
+        "trends_share_tesla",
+        "trends_share_iphone",
+        "trends_share_samsung",
+        "trends_share_netflix",
+        "trends_share_disney"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "wiki_top10",
+      "label": "Wikipedia weekly top 10",
+      "group": "attention",
+      "domain": "attention",
+      "population": "English Wikipedia readers",
+      "cadence": "weekly",
+      "question_type": "ranking",
+      "unit": "",
+      "source": {
+        "name": "Wikimedia",
+        "url": "https://pageviews.wmcloud.org/topviews/"
+      },
+      "match": {
+        "series": [
+          "wiki_top10_en"
+        ]
+      },
+      "status": "active"
+    },
+    {
+      "id": "search_interest",
+      "label": "Search interest levels",
+      "group": "attention",
+      "domain": "attention",
+      "population": "US Google searches",
+      "cadence": "weekly",
+      "question_type": "number",
+      "unit": "",
+      "source": {
+        "name": "Google Trends",
+        "url": "https://trends.google.com/trends/"
+      },
+      "match": {
+        "series": [
+          "trends_iphone",
+          "trends_tesla"
+        ]
+      },
+      "status": "declined",
+      "note": "The trends family is declined for round generation (generate_rounds.DECLINED_FAMILIES)."
+    },
+    {
+      "id": "wiki_views",
+      "label": "Wikipedia pageviews",
+      "group": "attention",
+      "domain": "attention",
+      "population": "English Wikipedia readers",
+      "cadence": "weekly",
+      "question_type": "number",
+      "unit": "k",
+      "source": {
+        "name": "Wikimedia",
+        "url": "https://pageviews.wmcloud.org/"
+      },
+      "match": {
+        "series_prefix": "wiki_views_"
+      },
+      "status": "retired",
+      "note": "Both wiki_views templates are retired (generate_rounds.RETIRED_TEMPLATES)."
+    }
+  ]
+}
