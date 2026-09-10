@@ -40,10 +40,10 @@ main{flex:1 1 auto;min-height:0;display:flex;width:100%;margin:0 auto;}
 
 /* LIVE: task map left, evidence in the middle, leaderboard right */
 #page-leaderboard{--panel-head-top:14px;--panel-title-size:14px;--panel-title-line:28px;}
-#page-leaderboard.on{display:grid;grid-template-columns:var(--task-width,clamp(180px,18vw,252px)) 8px minmax(320px,1fr) 8px var(--board-width,clamp(300px,22vw,380px));grid-template-rows:minmax(0,1fr);}
-#page-leaderboard.tasks-collapsed{grid-template-columns:44px 0 minmax(320px,1fr) 8px var(--board-width,clamp(300px,22vw,380px));}
+#page-leaderboard.on{display:grid;grid-template-columns:var(--task-width,clamp(180px,18vw,252px)) 8px minmax(320px,1fr) 8px var(--board-width,clamp(320px,25vw,440px));grid-template-rows:minmax(0,1fr);}
+#page-leaderboard.tasks-collapsed{grid-template-columns:44px 0 minmax(320px,1fr) 8px var(--board-width,clamp(320px,25vw,440px));}
 /* The task tree left the page: the title is a picker (search, categories, counts), and the chart takes the column. */
-#page-leaderboard.on,#page-leaderboard.tasks-collapsed{grid-template-columns:minmax(320px,1fr) 8px var(--board-width,clamp(300px,22vw,380px));}
+#page-leaderboard.on,#page-leaderboard.tasks-collapsed{grid-template-columns:minmax(320px,1fr) 8px var(--board-width,clamp(320px,25vw,440px));}
 #page-leaderboard .tasknav,#page-leaderboard [data-panel-resizer="tasks"]{display:none;}
 .task-picker{position:relative;display:block;}
 .task-trigger{display:inline-flex;align-items:center;gap:6px;margin:0;padding:0 4px 0 0;border:0;border-radius:4px;background:none;color:inherit;font:inherit;cursor:pointer;}
@@ -192,7 +192,7 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .lbhead .seg{flex-wrap:wrap;}
 .lbcol .scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding:0 6px;}
 table.lb{width:100%;border-collapse:collapse;font-size:14.5px;table-layout:fixed;}
-table.lb col.rank-col{width:28px;}
+table.lb col.rank-col{width:34px;}
 table.lb col.score-col{width:56px;}
 table.lb col.loss-col{width:58px;}
 table.lb col.rounds-col{width:56px;}
@@ -200,7 +200,7 @@ table.lb th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:v
 table.lb td{padding:10px 8px;border-bottom:1px solid #eeede9;vertical-align:middle;}
 table.lb tr:last-child td{border-bottom:none;}
 table.lb td.num,table.lb th.num{text-align:right;font-variant-numeric:tabular-nums;}
-table.lb .rank{color:var(--mut);width:24px;font-variant-numeric:tabular-nums;}
+table.lb .rank{color:var(--mut);width:30px;padding-right:6px;font-variant-numeric:tabular-nums;}
 table.lb .who{display:flex;align-items:center;gap:9px;}
 table.lb .who>span:last-child{min-width:0;overflow-wrap:anywhere;}
 table.lb .who b{color:var(--ink);font-weight:700;font-size:15px;}
@@ -210,7 +210,8 @@ table.lb thead th.has-help{cursor:help;}
 .seg button{position:relative;}
 th.has-help .th-label{text-decoration:underline dotted #d0cec7;text-underline-offset:3px;}
 /* the hover box: white, one thin dark border, a soft shadow, the page's own face */
-th .th-help,.seg button .th-help,.taskmeta b .th-help{visibility:hidden;opacity:0;position:absolute;top:calc(100% + 6px);right:6px;width:min(280px,60vw);padding:7px 10px;background:#fff;color:var(--ink2);border:1px solid #333;box-shadow:0 2px 8px rgba(0,0,0,.08);font:400 12.5px/1.45 var(--sans);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;z-index:6;pointer-events:none;transition:opacity .2s,visibility .2s;}
+th .th-help,.seg button .th-help,.taskmeta b .th-help{visibility:hidden;opacity:0;position:absolute;z-index:40;top:calc(100% + 6px);right:6px;width:min(280px,60vw);padding:7px 10px;background:#fff;color:var(--ink2);border:1px solid #333;box-shadow:0 2px 8px rgba(0,0,0,.08);font:400 12.5px/1.45 var(--sans);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;z-index:6;pointer-events:none;transition:opacity .2s,visibility .2s;}
+th .th-help{width:min(280px,calc(var(--board-width,320px) - 110px));}
 th:hover .th-help,th:focus-within .th-help,th:focus .th-help{visibility:visible;opacity:1;}
 .seg button .th-help{left:auto;right:0;top:calc(100% + 8px);width:min(300px,60vw);font-weight:400;text-align:left;text-transform:none;}
 .seg button:hover .th-help,.seg button:focus-visible .th-help{visibility:visible;opacity:1;}
@@ -463,7 +464,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .pager button{border:1px solid var(--line);background:#fff;border-radius:4px;padding:3px 10px;cursor:pointer;}
 .pager button:disabled{opacity:.35;cursor:default;}
 </style>
-<script defer src="panels.js?v=f543e7f90e"></script>
+<script defer src="panels.js?v=91f5d3557c"></script>
 <script defer src="/_vercel/insights/script.js"></script>
 <link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=09be152762">
 </head>
@@ -783,7 +784,8 @@ function tipShow(tip, ev, html){
 // Start with a small comparison, chosen from the published standings.
 const DEFAULT_VISIBLE_MODELS = 6;
 const MODEL_SELECTION_KEY = 'ssa.chart-models.v1';
-function defaultHidden(data){
+function defaultKeep(data){
+  // The default comparison: the top models on the overall backtest, persistence and EWMA. Pure.
   const board = ((data||{}).backtest||{}).overall || [];
   const keep = new Set(['persistence','ewma']);
   let n = 0;
@@ -792,6 +794,11 @@ function defaultHidden(data){
     keep.add(row.entrant);
     if(++n >= DEFAULT_VISIBLE_MODELS) break;
   }
+  return keep;
+}
+function defaultHidden(data){
+  const board = ((data||{}).backtest||{}).overall || [];
+  const keep = defaultKeep(data);
   const all = new Set(board.map(r=>r.entrant));
   ((data||{}).entrants||[]).forEach(e=>all.add(e.entrant_id));
   window.__keep = keep;
@@ -828,12 +835,14 @@ function selectModels(ids, selected){
   });
   saveModelSelection();
   renderTaskChart(window.__tab || 'agg');
+  if(typeof syncHash==='function') syncHash();
 }
 function resetModels(){
   window.__hidden = defaultHidden(window.__data);
   window.__seenIds = new Set();
   saveModelSelection();
   renderTaskChart(window.__tab || 'agg');
+  if(typeof syncHash==='function') syncHash();
 }
 function condTag(nm){
   if(/\(zero-shot\)/.test(nm||'')) return 'zs';
@@ -1465,14 +1474,14 @@ function renderBoard(mode){
   // explanation hangs off the heading on hover rather than sitting under the
   // table, so it is there when wanted and takes no room when not.
   const METRIC_HELP={
-    'CRPS':'CRPS \u2014 how far the whole forecast distribution sat from the published answer, in the question\u2019s own unit. Lower is better, and being confidently wrong costs more than being unsure.',
-    'Energy':'Energy score \u2014 CRPS for a whole population at once: one number for all sixteen subgroups together, so getting the pattern right counts, not just the average. Lower is better.',
-    'Profile RMSE':'Profile RMSE \u2014 the average error per subgroup. Lower is better.'};
+    'CRPS':'CRPS: how far the whole forecast distribution sat from the published answer, in the question\u2019s own unit. Lower is better, and being confidently wrong costs more than being unsure.',
+    'Energy':'Energy score: CRPS for a whole population at once: one number for all sixteen subgroups together, so getting the pattern right counts, not just the average. Lower is better.',
+    'Profile RMSE':'Profile RMSE: the average error per subgroup. Lower is better.'};
   headWithHelp(lossHead, metricLabel, METRIC_HELP[metricLabel]||'');
   const scoreHead=document.getElementById('lb-score-head');
   headWithHelp(scoreHead, replay?'Skill':'Score', replay
-    ? 'Skill \u2014 how much of persistence\u2019s error this forecaster removed. 0 is persistence, above 0 beats it.'
-    : 'Arena score \u2014 0 is persistence (copying the last release), 100 is a perfect oracle. Higher is better.');
+    ? 'Skill: how much of persistence\u2019s error this forecaster removed. 0 is persistence, above 0 beats it.'
+    : 'Arena score: 0 is persistence (copying the last release), 100 is a perfect oracle. Higher is better.');
   const roundsHead=document.getElementById('lb-rounds-head');
   headWithHelp(roundsHead, 'Rounds', 'How many resolved rounds this row is averaged over. Fewer rounds, noisier score.');
   function row(id, s, rank, ref){
@@ -1955,16 +1964,33 @@ function showPage(k){
 
 const CHART_KEYS = Object.keys(TASKS);
 const SPAN_KEYS = ['all','m6','d30','last'];
+function chartUrlState(){
+  // What the chart shows beyond scope and window: the metric when it is not Score, and the
+  // entrant selection when it differs from the default, so a shared link shows the same lines.
+  const tab = window.__tab || 'agg', p = new URLSearchParams();
+  const unit = tab === 'agg' ? (window.__unitAgg || 'arena') : (window.__unitSer || 'arena');
+  if(unit !== 'arena') p.set('unit', unit);
+  if(window.__data && modelPicker.ids && modelPicker.ids.length){
+    const hidden = window.__hidden || new Set(), keep = defaultKeep(window.__data);
+    const now = modelPicker.ids.filter(id => !hidden.has(id)), dflt = modelPicker.ids.filter(id => keep.has(id));
+    if(now.join(',') !== dflt.join(',')) p.set('entrants', now.join(','));
+  }
+  const q = p.toString(); return q ? '?' + q : '';
+}
 function syncHash(){
   const pg = window.__page || 'leaderboard', tab = window.__tab || 'agg', span = window.__board || 'all';
   let h = pg;
-  if(pg === 'leaderboard' && (tab !== 'agg' || span !== 'all')) h = 'leaderboard/' + tab + '/' + span;
+  if(pg === 'leaderboard'){
+    const q = chartUrlState();
+    if(tab !== 'agg' || span !== 'all' || q) h = 'leaderboard/' + tab + '/' + span + q;
+  }
   history.replaceState(null, '', '#' + h);
   const scope = pg === 'leaderboard' && tab !== 'agg' && TASKS[tab] ? TASKS[tab].label + ' · ' : '';
   document.title = scope + (PAGE_TITLES[pg] || PAGE_TITLES.leaderboard) + ' · Social Simulation Arena';
 }
 function applyHash(){
-  const parts = (location.hash || '').slice(1).split('/');
+  const raw = (location.hash || '').slice(1), qi = raw.indexOf('?');
+  const parts = (qi < 0 ? raw : raw.slice(0, qi)).split('/'), q = new URLSearchParams(qi < 0 ? '' : raw.slice(qi + 1));
   parts[0] = HASH_ALIASES[parts[0]] || parts[0];
   const pg = PAGES.includes(parts[0]) ? parts[0] : null;
   if(!pg) return;
@@ -1973,6 +1999,9 @@ function applyHash(){
     window.__tab = CHART_KEYS.includes(parts[1]) ? parts[1] : 'agg';
     const span = SPAN_KEYS.includes(parts[2]) ? parts[2] : 'all';
     window.__board = span; if(typeof setRange==='function') setRange(SPAN_TO_RANGE[span]||0);
+    const unit = q.get('unit');
+    if(['arena','crps','level'].includes(unit)){ window.__unitAgg = unit === 'level' ? 'arena' : unit; window.__unitSer = unit; }
+    window.__urlEntrants = q.get('entrants') ? q.get('entrants').split(',').filter(Boolean) : null;
   }
   if(pg === 'questions' && /^batch-\d{4}-\d{2}-\d{2}$/.test(parts[1]||'')){
     // #questions/batch-2026-09-14: the week's set, as a search a reader can clear
@@ -1981,7 +2010,12 @@ function applyHash(){
     if(window.__data) roundsList(window.__data);
   }
   showPage(pg);
-  if(pg === 'leaderboard' && window.__data){ setTab(window.__tab || 'agg'); renderBoard(window.__board || 'all'); }
+  if(pg === 'leaderboard' && window.__data){
+    setTab(window.__tab || 'agg'); renderBoard(window.__board || 'all');
+    // A link that names its entrants shows exactly those, whatever this browser had selected.
+    const want = window.__urlEntrants; window.__urlEntrants = null;
+    if(want && modelPicker.ids && modelPicker.ids.length){ selectModels(modelPicker.ids, false); selectModels(want.filter(id => modelPicker.ids.includes(id)), true); }
+  }
 }
 window.addEventListener('hashchange', applyHash);
 
