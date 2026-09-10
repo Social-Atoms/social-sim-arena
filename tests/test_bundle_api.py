@@ -395,7 +395,9 @@ class Deployment(unittest.TestCase):
         for name in ("tools/validate_submission.py", "entrants/*.json",
                      "questions/bundles/*.json"):
             self.assertIn(name, build["config"]["includeFiles"])
-        routes = {r["source"]: r["destination"] for r in config["rewrites"]}
+        # vercel.json moved from `rewrites` to `routes` so the custom 404 page can be served;
+        # the API paths are the `src` -> `dest` entries in that list.
+        routes = {r["src"]: r["dest"] for r in config["routes"] if "dest" in r}
         self.assertEqual("/api/bundle_submissions.py",
                          routes["/api/v1/bundle-submissions"])
 
