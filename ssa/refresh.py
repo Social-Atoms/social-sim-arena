@@ -1458,18 +1458,27 @@ def count_forecasts(rounds):
                             fc = json.load(f)
                         if not scoreable_forecast(fc):
                             continue
-                        # Every filed forecast is published, with its shape and filing
-                        # time, so an entrant's page can list a profile or a ranking
-                        # next to a number. Only toplines carry a mean; the strip and
-                        # the crowd read those and skip the rest.
+                        # Every filed forecast is published with its shape and filing
+                        # time. Its contents are published only once the question has
+                        # locked: before that, a forecast on the site would be a
+                        # forecast anyone else could copy. After the lock a number
+                        # carries mean and sd, a profile every cell, a ranking its list.
                         filed = re.search(r"filed=(\S+?)(?:[,\s]|$)", fc.get("notes") or "")
                         entry = {"filed": filed.group(1)} if filed else {}
+                        sealed = r.get("status") in ("locked", "awaiting_resolution", "resolved")
                         if isinstance(fc.get("topline"), dict) and "mean" in fc["topline"]:
-                            entry.update({"mean": fc["topline"]["mean"], "sd": fc["topline"].get("sd", 2.0)})
+                            entry["shape"] = "number"
+                            if sealed:
+                                entry.update({"mean": fc["topline"]["mean"], "sd": fc["topline"].get("sd", 2.0)})
                         elif isinstance(fc.get("profile"), dict):
-                            entry.update({"shape": "profile", "cells": len(fc["profile"])})
+                            entry.update({"shape": "profile", "cells_n": len(fc["profile"])})
+                            if sealed:
+                                entry["cells"] = {k: ({"mean": v.get("mean"), "sd": v.get("sd")} if isinstance(v, dict) else v)
+                                                  for k, v in fc["profile"].items()}
                         elif isinstance(fc.get("ranking"), list):
-                            entry.update({"shape": "ranking", "items": len(fc["ranking"])})
+                            entry.update({"shape": "ranking", "items_n": len(fc["ranking"])})
+                            if sealed:
+                                entry["items"] = list(fc["ranking"])
                         else:
                             continue
                         fcs[fc["entrant"]] = entry
