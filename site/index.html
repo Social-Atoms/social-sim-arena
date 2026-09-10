@@ -115,19 +115,19 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .replay-tag{display:inline-flex;align-items:center;gap:5px;color:var(--accent-ink);font-size:10.5px;font-weight:800;letter-spacing:.05em;}
 .replay-tag:before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);}
 .chartcol .tabs-row{display:flex;padding:10px 14px 0;overflow-x:auto;flex:0 0 auto;}
-.seg{display:inline-flex;align-items:stretch;background:#f5f6f5;border:1px solid var(--line);border-radius:5px;padding:2px;gap:2px;}
-.seg button,.seg-choice span{display:block;font:500 13px/1.4 var(--sans);color:var(--ink2);background:none;border:none;border-radius:3px;padding:5px 12px;cursor:pointer;white-space:nowrap;}
+.seg{display:inline-flex;align-items:center;background:#f5f5f5;border:1px solid var(--line);border-radius:4px;padding:2px;gap:2px;}
+.seg button,.seg-choice span{display:block;font:700 13px/1.25 var(--sans);color:var(--ink2);background:none;border:none;border-radius:3px;padding:4px 12px;cursor:pointer;white-space:nowrap;}
 .seg button:hover,.seg-choice:hover span{color:var(--ink);background:#edeeed;}
-.seg button.on,.seg-choice input:checked+span{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.seg button.on,.seg-choice input:checked+span{background:#fff;color:var(--ink);outline:1px solid var(--line);}
 .seg button:focus-visible,.seg-choice input:focus-visible+span{outline:1px solid var(--ink2);outline-offset:1px;}
 .seg-choice{position:relative;display:flex;flex:1;min-width:0;}
 .seg-choice input{position:absolute;width:1px;height:1px;margin:0;opacity:0;}
 .seg-choice span{width:100%;text-align:center;}
-.caption{font-size:13.5px;color:var(--mut);padding:8px 16px 4px;flex:0 0 auto;}
+.caption{font-size:13.5px;color:var(--mut);padding:8px 16px 4px;flex:0 0 auto;min-height:32px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .chart-filters{padding:6px 16px 4px;flex:0 0 auto;min-width:0;}
 .legend-strip{min-width:0;}
-.model-toolbar{display:flex;align-items:center;gap:12px;min-height:32px;margin-right:auto;}
-.model-trigger{display:inline-flex;align-items:center;gap:8px;min-height:32px;padding:4px 9px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink2);font:500 13px/1.4 var(--sans);cursor:pointer;}
+.model-toolbar{display:flex;align-items:center;gap:12px;min-height:0;margin-right:auto;}
+.model-trigger{display:inline-flex;align-items:center;gap:8px;min-height:0;padding:3px 9px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink2);font:500 13px/1.3 var(--sans);cursor:pointer;}
 .model-trigger:hover,.model-trigger[aria-expanded="true"]{border-color:#c3c6c2;background:#f5f6f5;color:var(--ink);}
 .model-trigger svg{width:14px;height:14px;transform:rotate(90deg);}
 .model-trigger[aria-expanded="true"] svg{transform:rotate(-90deg);}
@@ -148,7 +148,7 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .model-pop{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:30;background:#fff;border:1px solid var(--line);border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.06);display:flex;flex-direction:column;max-height:min(440px,65vh);overflow:hidden;}
 .model-pop[hidden]{display:none;}
 .model-search-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:12px 12px 8px;flex:0 0 auto;}
-.model-search-row input[type="search"]{min-width:0;min-height:32px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink2);font:400 13px/1.4 var(--sans);padding:6px 9px;flex:1 1 160px;width:100%;appearance:none;}
+.model-search-row input[type="search"]{min-width:0;min-height:30px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink2);font:400 13px/1.4 var(--sans);padding:6px 9px;flex:1 1 160px;width:100%;appearance:none;}
 .model-search-row input[type="search"]::placeholder{color:var(--mut);}
 .model-search-row input[type="search"]:focus-visible{border-color:#969b94;outline:0;box-shadow:0 0 0 2px #f0f2ef;}
 .model-setup-filter{flex:1 0 auto;max-width:100%;}
@@ -174,8 +174,8 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .model-pop-foot{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid #eeede9;flex:0 0 auto;}
 .model-pop-foot .model-action{margin-left:auto;font-weight:600;}
 #chartpane{min-height:340px;}
-.chartpane{flex:1 0 340px;min-height:340px;position:relative;padding:2px 10px 6px;display:flex;flex-direction:column;}
-.chartctl{display:flex;align-items:center;flex-wrap:wrap;gap:8px;position:relative;}
+.chartpane{flex:0 0 auto;height:max(340px,calc(100vh - 310px));position:relative;padding:2px 10px 6px;display:flex;flex-direction:column;}
+.chartctl{display:flex;align-items:center;flex-wrap:wrap;gap:8px;position:relative;min-height:32px;}
 .chartctl>.seg{flex-wrap:wrap;min-height:32px;align-items:center;}
 .chartctl>.seg.mini button{padding:4px 9px;}
 .seg.mini button{font-size:12px;padding:3px 11px;}
@@ -208,10 +208,13 @@ table.lb .who b{color:var(--ink);font-weight:700;font-size:15px;}
 table.lb .who .type{font-size:11px;color:var(--mut);}
 /* A heading with a title= explanation says so, rather than hiding it. */
 table.lb thead th.has-help{cursor:help;}
+.seg button{position:relative;}
 th.has-help .th-label{text-decoration:underline dotted var(--mut);text-underline-offset:3px;}
 /* the hover box: white, one thin dark border, a soft shadow, the page's own face */
-th .th-help{visibility:hidden;opacity:0;position:absolute;top:calc(100% + 6px);right:6px;width:min(280px,60vw);padding:7px 10px;background:#fff;color:var(--ink2);border:1px solid #333;box-shadow:0 2px 8px rgba(0,0,0,.08);font:400 12.5px/1.45 var(--sans);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;z-index:6;pointer-events:none;transition:opacity .2s,visibility .2s;}
+th .th-help,.seg button .th-help{visibility:hidden;opacity:0;position:absolute;top:calc(100% + 6px);right:6px;width:min(280px,60vw);padding:7px 10px;background:#fff;color:var(--ink2);border:1px solid #333;box-shadow:0 2px 8px rgba(0,0,0,.08);font:400 12.5px/1.45 var(--sans);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;z-index:6;pointer-events:none;transition:opacity .2s,visibility .2s;}
 th:hover .th-help,th:focus-within .th-help,th:focus .th-help{visibility:visible;opacity:1;}
+.seg button .th-help{left:auto;right:0;top:calc(100% + 8px);width:min(300px,60vw);font-weight:400;text-align:left;text-transform:none;}
+.seg button:hover .th-help,.seg button:focus-visible .th-help{visibility:visible;opacity:1;}
 th.has-help:focus{outline:none;}
 table.lb .skill{font-weight:800;color:var(--ink);font-size:15px;}
 table.lb .pend{color:#c9c7c0;font-weight:600;letter-spacing:.15em;}
@@ -220,7 +223,12 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .av .lg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:4px;background:inherit;}
 .lchip .av,.model-option .av{width:18px;height:18px;border-radius:3px;font-size:8px;}
 .lchip .av .lg,.model-option .av .lg{padding:2px;}
-.lb-note{font-size:12px;color:var(--mut);padding:8px 14px 10px;flex:0 0 auto;border-top:1px solid var(--line);}
+.lb-note{font-size:12px;color:var(--mut);padding:6px 14px 8px;flex:0 0 auto;border-top:1px solid var(--line);}
+.lb-note summary{cursor:pointer;list-style:none;font-weight:700;color:var(--mut);}
+.lb-note summary::-webkit-details-marker{display:none;}
+.lb-note summary:before{content:"+";display:inline-block;width:12px;color:var(--mut);}
+.lb-note[open] summary:before{content:"\2212";}
+.lb-note p{margin:6px 0 0;line-height:1.55;}
 @container leaderboard (max-width:420px){
   .lbhead h2{flex-basis:100%;}
   .lbhead .seg{width:100%;}
@@ -431,7 +439,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
   .tasknav-toggle .collapse-icon,.tasknav-toggle .expand-icon{transform:rotate(90deg);}
   .taskview{min-height:560px;}
   .chartctl{gap:6px;}
-  .chartpane{flex:0 0 auto;}
+  .chartpane{flex:0 0 auto;height:420px;}
   .chartpane svg{height:380px;flex:none;}
   .lbcol{max-width:none;}
   .lbcol .lbhead{flex-wrap:wrap;}
@@ -456,7 +464,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 </style>
 <script defer src="panels.js?v=0618292d06"></script>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="stylesheet" href="typography.css?v=624deecf14">
+<link rel="stylesheet" href="typography.css?v=132a6a9e3f">
 </head>
 <body class="site-home">
 
@@ -523,7 +531,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
           <div class="chart-filters" id="chart-filters">
             <div class="chartctl" role="group" aria-label="Chart filters">
               <div class="model-toolbar" id="model-toolbar" style="display:none;"></div>
-              <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker</button><button data-unit="arena" class="on">Score</button><button data-unit="crps">Error pts</button></div>
+              <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker<span class="th-help" role="tooltip">The published series itself, with each round's forecasts drawn on it.</span></button><button data-unit="arena" class="on">Score<span class="th-help" role="tooltip">Arena score: 0 is persistence (copying the last release), 100 is a perfect oracle. Averaged over every matched release in the window. Higher is better.</span></button><button data-unit="crps">Error pts<span class="th-help" role="tooltip">CRPS in the question's own unit: how far the whole forecast distribution sat from the published number. Lower is better.</span></button></div>
               <div class="seg mini" id="range-seg" role="group" aria-label="Time window for the chart and the board"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0" class="on">All</button></div>
             </div>
             <div class="legend-strip" id="legend-strip" style="display:none;"></div>
@@ -551,7 +559,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
           <tbody id="lb-body"><tr><td colspan="5" style="color:var(--mut);">loading…</td></tr></tbody>
         </table>
       </div>
-      <div class="lb-note" id="lb-note"></div>
+      <details class="lb-note" id="lb-about"><summary>How this board is scored</summary><p id="lb-note"></p></details>
     </aside>
   </div>
 
@@ -1258,14 +1266,13 @@ function renderTaskNav(data,key){
 function renderTaskHeader(data,key){
   const d = TASKS[key]||TASKS.agg;
   const group = TASK_GROUPS.find(g=>g.id===d.group);
-  document.getElementById('task-eyebrow').textContent = group ? group.label : 'Benchmark overview';
+  document.getElementById('task-eyebrow').textContent = group ? group.label : 'All categories';
   document.getElementById('task-title').textContent = d.label;
   const tc=document.getElementById('task-trigger-count'); if(tc) tc.textContent = key==='agg' ? (Object.keys(TASKS).length-1)+' tasks' : '';
-  const rs = taskRounds(d,data).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
+  const rs = (key==='agg' ? (data.rounds||[]).slice() : taskRounds(d,data)).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
   const active = rs.filter(r=>r.status==='open' && Date.parse(deadlineOf(r))>Date.now());
   document.getElementById('task-meta').innerHTML = '<span><b>Population</b> '+esc(d.population)+'</span><span><b>Cadence</b> '+esc(d.cadence)+'</span><span><b>Answer</b> '+esc(d.shape)+'</span><span><b>Rounds</b> <span class="numeric">'+rs.length+'</span></span>';
   const card = document.getElementById('task-question-card');
-  if(key==='agg'){ card.style.display='none'; return; }
   card.style.display='';
   const r = active[0] || rs.slice(-1)[0];
   if(!r){
@@ -1273,12 +1280,12 @@ function renderTaskHeader(data,key){
     document.getElementById('task-question-body').innerHTML='<p>This registered task has historical data but no reviewed Season 0 round.</p>';
     return;
   }
-  const due=deadlineOf(r), state=active.includes(r)?'OPEN':'LATEST';
+  const due=deadlineOf(r), state=active.includes(r)?(key==='agg'?'NEXT TO CLOSE':'OPEN'):'LATEST';
   document.getElementById('task-question-summary').innerHTML='<span class="replay-tag">'+state+'</span><span title="'+esc(r.round_id)+'">'+esc(questionText(r))+'</span><time datetime="'+esc(due)+'" style="margin-left:auto;color:var(--mut);font-weight:500;">due '+esc(fmtLocal(due))+'</time>';
   document.getElementById('task-question-body').innerHTML='<p>'+esc(r.question)+'</p><div class="qfoot">'
     +'<span>'+shapeChip(r)+(r.target_type==='profile_energy'?(r.cells||[]).length+' cells':r.target_type==='ranking_list'?'ordered list':'predictive distribution')+'</span>'
     +'<span>releases '+esc(fmtLocal(r.release_at))+'</span><span>'+esc(r.n_forecasts||0)+' forecasts filed</span>'
-    +'<a class="go" href="#rounds">view every question →</a></div>';
+    +'<a class="go" href="#rounds">every question →</a><a class="go" href="#weekly" style="margin-left:14px;">weekly calendar →</a></div>';
 }
 
 function alignedVectors(data,cells){
@@ -1363,15 +1370,18 @@ function setTab(key){
 }
 function renderTaskChart(key){
   const data=window.__data;if(!data)return; const d=TASKS[key],bt=data.backtest||{},nameOf={};
-  document.getElementById('chart-filters').style.display=(d.kind==='profile'||d.kind==='ranking')?'none':'';
+  document.getElementById('chart-filters').style.visibility=(d.kind==='profile'||d.kind==='ranking')?'hidden':'';
   (data.entrants||[]).forEach(e=>nameOf[e.entrant_id]=e.name);
   const unitSeg=document.getElementById('unit-seg'),rangeSeg=document.getElementById('range-seg');
   const roster=['climatology','trend','ewma'].concat(bt.model_entrants||bt.mock_models||[]).concat(['crowd']);
   const legendFor=traj=>!traj||!traj.length?[]:roster.filter(s=>traj.some(t=>(t.skills&&t.skills[s]!=null)||(t.crps&&t.crps[s]!=null)));
   if(key==='agg'){
-    unitSeg.style.display='';rangeSeg.style.display='';unitSeg.querySelector('[data-unit="level"]').style.display='none';
+    unitSeg.style.display='';rangeSeg.style.display='';
+    // A topline task without model rounds hides Score and Error pts (line below); Overall always has them, so restore both here.
+    unitSeg.querySelector('[data-unit="level"]').style.display='none';unitSeg.querySelector('[data-unit="arena"]').style.display='';unitSeg.querySelector('[data-unit="crps"]').style.display='';
     const unit=window.__unitAgg||'arena';unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.unit===unit));
-    document.getElementById('caption').textContent=unit==='crps'?'Model backtest · average CRPS, lower is better.':'Model backtest · Arena score over every matched historical release. 0 is persistence; 100 is a perfect oracle.';
+    const tj=bt.trajectory||[], span=tj.length?fmtDate(tj[0].date)+' to '+fmtDate(tj[tj.length-1].date):'';
+    document.getElementById('caption').textContent=(bt.n_rounds||tj.length)+' matched releases'+(span?', '+span:'')+(unit==='crps'?' · average CRPS, lower is better':'');
     aggChart(bt.trajectory,nameOf,unit);renderLegend(legendFor(bt.trajectory),nameOf);return;
   }
   if(d.kind==='profile'){
@@ -1388,7 +1398,7 @@ function renderTaskChart(key){
   unitSeg.querySelector('[data-unit="level"]').style.display='';unitSeg.querySelector('[data-unit="arena"]').style.display=hasModel?'':'none';unitSeg.querySelector('[data-unit="crps"]').style.display=hasModel?'':'none';
   unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.unit===unit));
   if(unit!=='level'&&hasModel){
-    document.getElementById('caption').innerHTML='<span class="replay-tag">MODEL BACKTEST</span> · '+esc(d.label)+' · '+psTraj[psTraj.length-1].n+' matched releases · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
+    document.getElementById('caption').innerHTML=esc(d.label)+' · '+psTraj[psTraj.length-1].n+' matched releases · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
     aggChart(psTraj,nameOf,unit);renderLegend(legendFor(psTraj),nameOf);return;
   }
   const pts=pointsFor(data,d.chart),last=pts.slice(-1)[0];
@@ -1409,7 +1419,7 @@ function renderBoard(mode){
     const spans=(data.backtest&&data.backtest.spans)||{};
     entries=spans[mode]||(data.backtest&&data.backtest.overall)||[];appendPending=true;
     title='Overall'; tag='backtest';
-    note='Walk-forward model replay on matched historical releases. Arena score 0 is persistence and 100 is a perfect oracle. Each task has its own board: pick one from the title.';
+    note='Walk-forward model replay on matched historical releases. Arena score 0 is persistence and 100 is a perfect oracle.';
     const same=JSON.stringify(entries)===JSON.stringify((data.backtest&&data.backtest.overall)||[]);
     if(mode!=='all' && same) note+=' The backtest window is four weeks, so every range shows the same rounds until the season adds more.';
   }else if(d.kind==='profile'){
