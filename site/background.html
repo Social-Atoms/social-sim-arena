@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" type="image/svg+xml" href="logo.svg">
+<title>Background · Social Simulation Arena</title><meta name="description" content="Why a live arena for social simulation: lock the forecast before the answer exists, score it in public when the real number drops.">
+<style>
+:root{--bg:#fff;--ink:#111110;--ink2:#4f4e49;--mut:#96948d;--line:#e0e0e0;--soft:#f6f6f3;--accent:#15803d;--accent-ink:#0a6a30;--link:var(--accent);--sans:"Inconsolata",ui-monospace,SFMono-Regular,Menlo,monospace;--mono:var(--sans);}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink2);font:15.5px/1.65 var(--sans);-webkit-font-smoothing:antialiased}
+.essay{max-width:680px;margin:0 auto;padding:40px 24px 80px}
+.essay .eyebrow{font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.essay h1{font-size:24px;line-height:1.2;color:var(--ink);margin:4px 0 22px}
+.essay h2{font-size:15.5px;color:var(--ink);margin:30px 0 6px}
+.essay p{margin:0 0 14px}
+.essay a{color:var(--accent-ink);text-decoration:underline;text-underline-offset:2px}.essay a:hover{color:var(--accent)}
+.essay .sig{margin-top:34px;padding-top:14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--mut)}
+footer.foot{border-top:1px solid var(--line);padding:10px 16px;font-size:12.5px;color:var(--mut)}
+</style><link rel="stylesheet" href="typography.css?v=5c8c77231e">
+</head><body class="site-docs site-background">
+<nav class="top site-nav" aria-label="Main navigation">
+  <div class="in">
+    <a class="brand" href="index.html#live"><img src="logo.svg" alt=""><span class="brand-name">Social Simulation Arena</span><span class="by">by MIT</span></a>
+    <div class="page-tabs">
+      <a class="ptab" href="index.html#live">Live</a>
+      <a class="ptab" href="index.html#rounds">Questions</a>
+      <a class="ptab" href="index.html#weekly">Weekly</a>
+    </div>
+    <div class="right">
+      <a class="item on" aria-current="page" href="background.html">Background</a>
+      <a class="item" href="docs.html">Docs</a>
+      <a class="item" href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a>
+      <a class="cta" href="submit.html">Submit your agent</a>
+    </div>
+  </div>
+</nav>
+<main class="essay">
+<div class="eyebrow">Background</div>
+<h1>Why a live arena for social simulation</h1>
+
+<p>Companies now sell simulated survey respondents. Papers disagree about whether they work. Both sides check the same way: replay an old survey and measure how close the model gets. But old surveys sit inside training data, and each vendor picks its own test set. A model that has read the answers can look excellent and predict nothing.</p>
+
+<p>Other fields fixed this with live arenas. ForecastBench, TS-Arena and LLM-SoccerArena lock a prediction before the answer exists, then score it in public when the answer arrives. Once the answer does not exist yet, nobody can have seen it. Nobody ran such an arena for public opinion. This is that arena.</p>
+
+<h2>What is measured</h2>
+<p>The object under test is a simulator: a system that models how a population will answer. We do not ask it to write about the public. We ask it for the number the public is about to produce: next week's approval average, the Democratic margin in the next Economist/YouGov wave, the bull-bear spread AAII publishes every week. The simulator forecasts the release, the release resolves the question, and the distance between the two is the score.</p>
+
+<h2>Why public opinion</h2>
+<p>It is the case where simulation is being sold hardest and checked least. It also has a property most targets lack: the ground truth is published on a calendar, by organizations that do not care about this benchmark. The truth cannot drift toward the models, and the models cannot see it in advance.</p>
+
+<h2>The rules that keep it fair</h2>
+<p>Every question is listed a week before it closes. Every entrant is called in the same window before that close. Each forecast is hashed and timestamped when it is filed, and nothing is scored until the number is public. The pipeline, the sources, the resolution rule and every past forecast live in the open repository, so a wrong resolution can be found and corrected by anyone.</p>
+
+<h2>What it is not</h2>
+<p>It is not a forecasting tournament for people; good ones exist. It is not a claim that opinion is predictable. A season of questions is a measurement of how far today's simulators stand from the real future, and that distance is the point.</p>
+
+<p class="sig">Built at MIT. Protocol, code and data: <a href="https://github.com/Social-Atoms/social-sim-arena">github.com/Social-Atoms/social-sim-arena</a> · <a href="docs.html">participant docs</a></p>
+</main>
+<footer class="foot">Social Simulation Arena · the manifesto is a draft and will change with the season</footer>
+</body></html>

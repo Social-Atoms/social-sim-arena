@@ -222,10 +222,10 @@ table.lb .skill.pos{color:var(--accent-ink);}
 /* question cards: the question first, then every answer on one scale */
 .qgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
 .qcard{border:1px solid var(--line);border-radius:5px;background:#fff;padding:14px 16px 12px;display:flex;flex-direction:column;min-width:0;}
-.qcard .qhead{display:flex;align-items:center;gap:8px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);font-weight:700;}
+.qcard .qhead{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);font-weight:700;}
 .qcard .qhead .qshape{border:1px solid var(--line);border-radius:3px;padding:0 5px;letter-spacing:.04em;}
-.qcard .qhead .qdue{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink2);}
-.qcard .qhead .qdue.live:before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:1px;}
+.qcard .qhead .qdue{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:12px;text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink2);}
+.qcard .qhead .qdue.live:before{content:'';display:block;width:6px;height:6px;border-radius:50%;background:var(--accent);flex:0 0 auto;}
 .qcard h3{margin:8px 0 3px;font-size:17px;line-height:1.25;color:var(--ink);}
 .qcard .qtext{margin:0 0 10px;font-size:13px;line-height:1.45;color:var(--ink2);}
 .qcard .qstrip{margin:auto -4px 0;}
@@ -234,8 +234,11 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .qcard .qstats b{font-size:19px;color:var(--ink);font-weight:700;}
 .qcard .qstats .hit{color:var(--accent-ink);font-weight:700;}
 .qcard .qempty{font-size:12.5px;color:var(--mut);padding:10px 0 6px;border-top:1px dashed var(--line);margin-top:auto;}
-.qcard .qfoot{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid #eeede9;font-size:11px;color:var(--mut);}
+.qcard .qfoot{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid #eeede9;font-size:11.5px;color:var(--mut);}
 .qcard .qfoot .qid{font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.qcard .qfoot a.src{color:var(--ink2);text-decoration:underline;text-underline-offset:2px;}
+.qcard .qfoot a.src:hover{color:var(--accent-ink);}
+.qcard .qstats-empty b{font-size:12px;color:var(--ink2);}
 .qcard .qfoot .go{margin-left:auto;color:var(--link);font-weight:700;text-decoration:none;white-space:nowrap;font-size:12px;}
 .qcard .qfoot .go:hover{text-decoration:underline;}
 @media(max-width:900px){.qgrid{grid-template-columns:1fr;}}
@@ -446,6 +449,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
       <button class="ptab" data-page="weekly">Weekly</button>
     </div>
     <div class="right">
+      <a class="item" href="background.html">Background</a>
       <a class="item" href="docs.html">Docs</a>
       <a class="item" href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a>
       <a class="cta" id="nav-submit" href="#submit" data-goto="submit">Submit your agent</a>
@@ -1473,6 +1477,13 @@ function forecastStrip(r, t, data){
   const models = ids.filter(k=>!isBaseline(k)), bases = ids.filter(isBaseline);
   const per = (f.persistence||(r.baselines||{}).persistence||{}).mean;
   const rel = (r.resolution||{}).value;
+  if(!models.length){
+    // Nothing to compare yet: the strip would show only unlabeled reference
+    // circles. Say the one fact a reader can use, and nothing else.
+    const line = typeof rel==='number' ? '<span class="hit">released '+fmtNum(rel,unit)+'</span><span>no model answers</span>'
+      : (typeof per==='number' ? '<span>last release <b>'+fmtNum(per,unit)+'</b></span>' : '') + '<span>no model answers yet</span>';
+    return '<div class="qstats qstats-empty">'+line+'</div>';
+  }
   const means = ids.map(k=>f[k].mean).concat(typeof per==='number'?[per]:[], typeof rel==='number'?[rel]:[]);
   let lo = Math.min(...means), hi = Math.max(...means);
   const pad = Math.max((hi-lo)*0.18, 0.6); lo -= pad; hi += pad;
@@ -1519,7 +1530,7 @@ function roundsList(data){
     const strip=forecastStrip(r,t,data)||'<div class="qempty">'+(r.n_forecasts?esc(r.n_forecasts)+' forecasts filed · '+esc(shape):'No forecasts filed yet · '+esc(shape))+'</div>';
     return '<div class="qcard'+(active?' live':'')+'"><div class="qhead"><span>'+esc(g?g.label:'Task')+'</span><span class="qshape'+(kind!=='continuous_normal'?' special':'')+'">'+esc(shape)+'</span>'+when+'</div>'
       +'<h3>'+esc(t.label)+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
-      +'<div class="qfoot"><span class="qid" title="'+esc(r.round_id)+'">'+esc(t.srcName||t.label)+'</span><span>'+esc(t.population)+'</span><a class="go" href="#live/'+taskKeyForRound(r)+'/all">open task →</a></div></div>';
+      +'<div class="qfoot"><span class="qid" title="'+esc(r.round_id)+'">Source '+(t.srcUrl?'<a class="src" href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span>'+esc(t.population)+'</span><a class="go" href="#live/'+taskKeyForRound(r)+'/all">open task →</a></div></div>';
   }).join('')+'</div>'||'';
   if(!rows.length) el.innerHTML='<div class="week-card"><h3>No matching questions</h3><p>Try another task family, status, or search term.</p></div>';
 }
