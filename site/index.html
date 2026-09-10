@@ -980,7 +980,7 @@ function renderQuestion(roundId){
   const st=(data.stamps||{})[r.round_id];
   let h='<div class="eyebrow page-eyebrow">Question'+(o?' · round '+o.n+' of '+o.of:'')+'</div><h2 class="page-title"><a href="#leaderboard/'+esc(key)+'/all">'+esc(t.label)+'</a></h2>'
     +'<p class="lede page-description">'+esc(r.question)+'</p>'
-    +'<p class="ent-meta">'+state+(r.batch_id?'<span><a href="#questions/'+esc(r.batch_id)+'">week of '+esc(fmtDate(r.batch_id.replace('batch-','')))+'</a></span>':'')+'<span>source '+(t.srcUrl?'<a href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span class="dim">'+esc(r.round_id)+'</span></p>';
+    +'<p class="ent-meta">'+state+(key!=='agg'?'<span><a href="#questions/task/'+esc(key)+'">every round of this task</a></span>':'')+(r.batch_id?'<span><a href="#questions/'+esc(r.batch_id)+'">week of '+esc(fmtDate(r.batch_id.replace('batch-','')))+'</a></span>':'')+'<span>source '+(t.srcUrl?'<a href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span class="dim">'+esc(r.round_id)+'</span></p>';
   h+='<div class="tiles">'
     +tile('Released', resolved?fmtNum(rel,u):'·', resolved?esc(fmtLocal((r.resolution||{}).resolved_at||r.release_at)):(active?'after the lock at '+esc(fmtLocal(deadlineOf(r))):'expected '+esc(fmtLocal(r.release_at))))
     +tile('What the models say', cons!==null?fmtNum(cons,u):'·', cons!==null?'median of '+mm.length+' number forecast'+(mm.length===1?'':'s'):'no number forecasts')
@@ -1006,8 +1006,8 @@ function renderForecast(roundId, entrantId){
   const data=window.__data, host=document.getElementById('forecast-col'); if(!data||!host) return;
   const r=(data.rounds||[]).find(x=>x.round_id===roundId), e=(data.entrants||[]).find(x=>x.entrant_id===entrantId);
   window.__forecastName='';
-  if(!r||!e){ host.innerHTML='<div class="eyebrow page-eyebrow">Forecast</div><h2 class="page-title">Nothing at this address</h2><p class="lede page-description">The question or the entrant is unknown. Start from the <a href="#leaderboard">leaderboard</a>.</p>'; if(typeof syncHash==='function') syncHash(); return; }
-  const name=(e.name||entrantId).split(' (')[0], t=taskForRound(r), f=(r.forecasts||{})[entrantId]||null, u=(t.unit||'').trim()==='%'?'%':'';
+  if(!r||!entrantId){ host.innerHTML='<div class="eyebrow page-eyebrow">Forecast</div><h2 class="page-title">Nothing at this address</h2><p class="lede page-description">The question is unknown. Start from <a href="#questions">every question</a>.</p>'; if(typeof syncHash==='function') syncHash(); return; }
+  const name=forecasterName(entrantId,data).split(' (')[0], t=taskForRound(r), f=(r.forecasts||{})[entrantId]||null, u=(t.unit||'').trim()==='%'?'%':'';
   window.__forecastName=name+' on '+t.label;
   const rel=(r.resolution||{}).value, active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
   const state=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">locked · answer '+esc(fmtLocal(r.release_at))+'</span>';
@@ -1637,7 +1637,7 @@ function renderTaskHeader(data,key){
   document.getElementById('task-question-body').innerHTML='<p>'+esc(r.question)+'</p><div class="qfoot">'
     +'<span>'+shapeChip(r)+(r.target_type==='profile_energy'?(r.cells||[]).length+' cells':r.target_type==='ranking_list'?'ordered list':'predictive distribution')+'</span>'
     +'<span>releases '+esc(fmtLocal(r.release_at))+'</span><span>'+esc(r.n_forecasts||0)+' forecasts filed</span>'
-    +'<a class="go" href="#questions">every question →</a><a class="go" href="#calendar" style="margin-left:14px;">calendar →</a></div>';
+    +'<a class="go" href="'+(key==='agg'?'#questions':'#questions/task/'+esc(key))+'">'+(key==='agg'?'every question':'every round of this task')+' →</a><a class="go" href="#calendar" style="margin-left:14px;">calendar →</a></div>';
 }
 
 function alignedVectors(data,cells){
@@ -2048,7 +2048,7 @@ function roundsList(data){
       +'<h3><a class="qlink" href="#question/'+esc(r.round_id)+'">'+esc(t.label)+'</a>'+(()=>{const o=roundOrdinal(r,data); return o?' <span class="ord">round '+o.n+' of '+o.of+'</span>':'';})()+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
       +'<div class="qfoot"><span class="qid">Source '+(t.srcUrl?'<a class="src" href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span>'+esc(t.population)+'</span><a class="go" href="#question/'+esc(r.round_id)+'">open question →</a><a class="go" href="#leaderboard/'+taskKeyForRound(r)+'/all">open task →</a></div>'
       // Where this question sits in the season: its week, as a link to that week's set, and its id, which the search box also matches.
-      +'<div class="qref">'+(r.batch_id?'<a href="#questions/'+esc(r.batch_id)+'" title="Every question in this week\'s set">week of '+esc(fmtDate(r.batch_id.replace('batch-','')))+'</a> · ':'')+'<a href="#question/'+esc(r.round_id)+'"><code>'+esc(r.round_id)+'</code></a></div></div>';
+      +(r.batch_id?'<div class="qref"><a href="#questions/'+esc(r.batch_id)+'" title="Every question in this week\'s set">week of '+esc(fmtDate(r.batch_id.replace('batch-','')))+'</a></div>':'')+'</div>';
   }).join('')+'</div>'+(total>limit?'<div class="qmore"><button type="button" class="btn soft" id="rounds-more">Show 24 more <span class="dim">· '+(total-limit)+' left</span></button></div>':'')||'';
   if(!rows.length) el.innerHTML='<div class="week-card"><h3>No matching questions</h3><p>Try another category, status, or search term.</p></div>';
   const more=document.getElementById('rounds-more'); if(more) more.onclick=()=>{ window.__roundLimit=limit+24; roundsList(data); };
@@ -2355,6 +2355,7 @@ function syncHash(){
     const q = chartUrlState();
     if(tab !== 'agg' || span !== 'all' || q) h = 'leaderboard/' + tab + '/' + span + q;
   }
+  if(pg === 'questions' && typeof qf !== 'undefined' && qf.sel.size === 1) h = 'questions/task/' + [...qf.sel][0];
   if(pg === 'entrant') h = 'entrant/' + (window.__entrant || '');
   if(pg === 'forecast') h = 'forecast/' + (window.__forecastRound || '') + '/' + (window.__forecastEntrant || '');
   if(pg === 'question') h = 'question/' + (window.__question || '');
@@ -2383,6 +2384,12 @@ function applyHash(){
   if(pg === 'entrant') window.__entrant = parts[1] || '';
   if(pg === 'forecast'){ window.__forecastRound = parts[1] || ''; window.__forecastEntrant = parts[2] || ''; }
   if(pg === 'question') window.__question = parts[1] || '';
+  if(pg === 'questions' && parts[1] === 'task' && TASKS[parts[2]] && parts[2] !== 'agg'){
+    // #questions/task/civiqs_approval: every round of one task
+    qf.sel = new Set([parts[2]]); window.__roundQuery = ''; window.__roundStatus = 'all';
+    const box = document.getElementById('task-search'); if(box) box.value = '';
+    if(window.__data) roundsList(window.__data);
+  }
   if(pg === 'questions' && /^batch-\d{4}-\d{2}-\d{2}$/.test(parts[1]||'')){
     // #questions/batch-2026-09-14: the week's set, as a search a reader can clear
     window.__roundQuery = parts[1]; window.__roundStatus = 'all';
