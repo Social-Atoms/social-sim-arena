@@ -53,6 +53,14 @@ main{flex:1 1 auto;min-height:0;display:flex;width:100%;margin:0 auto;}
 .task-trigger[aria-expanded="true"] svg{transform:rotate(90deg);}
 .task-trigger:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 .task-pop{left:0;right:auto;width:min(460px,calc(100vw - 48px));}
+.qf-picker{position:relative;flex:0 0 auto;}
+.qf-picker .qf-pop{left:auto;right:0;width:min(440px,calc(100vw - 48px));}
+.qf-pop .model-options{padding:4px 8px 6px;}
+.qf-pop label.model-option{cursor:pointer;}
+.qf-pop input[type="checkbox"]{margin:0;width:14px;height:14px;accent-color:var(--ink);flex:0 0 auto;}
+.qf-pop .model-group legend label{display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--ink2);font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+.qf-pop .model-group legend label span{margin-left:auto;font-weight:400;color:var(--mut);}
+.qf-pop .model-pop-foot #qf-done{margin-left:auto;font-weight:600;}
 .task-option{width:100%;text-align:left;border:0;background:none;font:inherit;}
 .task-option:hover{background:#f5f6f5;color:var(--ink);}
 .task-option.on{background:#f0f2f0;color:var(--ink);font-weight:700;}
@@ -506,7 +514,7 @@ table.lb .model-name a:hover{text-decoration:underline;text-underline-offset:2px
 </style>
 <script defer src="panels.js?v=91f5d3557c"></script>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=6015085340">
+<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=eecbd8e909">
 </head>
 <body class="site-home">
 
@@ -609,7 +617,13 @@ table.lb .model-name a:hover{text-decoration:underline;text-underline-offset:2px
       <h2 class="page-title">Questions</h2>
       <div class="task-toolbar">
         <input class="task-search" id="task-search" type="search" placeholder="Search questions…" aria-label="Search tasks">
-        <select id="round-category" class="round-select" aria-label="Category"></select>
+        <div class="qf-picker" id="qf-picker">
+          <button type="button" class="model-trigger" id="qf-trigger" aria-expanded="false" aria-controls="qf-pop"><span id="qf-label">All categories</span></button>
+          <section class="model-pop qf-pop" id="qf-pop" aria-label="Filter by category or task" hidden>
+            <div class="model-options" id="qf-options"></div>
+            <div class="model-pop-foot"><span class="model-count" id="qf-count"></span><button type="button" class="model-action" id="qf-clear">Clear</button><button type="button" class="model-action" id="qf-done">Done</button></div>
+          </section>
+        </div>
         <div class="seg mini" id="round-status-seg" role="group" aria-label="Question status"><button data-status="all" class="on">All</button><button data-status="active">Open</button><button data-status="resolved">Resolved</button></div>
       </div>
       <div id="rounds-list"></div>
@@ -1810,18 +1824,14 @@ function drawStrips(scope, data){
 }
 function roundsList(data){
   const el = document.getElementById('rounds-list');
-  const cat=window.__roundCategory||'all',status=window.__roundStatus||'all',query=(window.__roundQuery||'').toLowerCase();
-  const sel=document.getElementById('round-category');
-  if(sel){
-    sel.innerHTML=[['all','All categories']].concat(TASK_GROUPS.map(g=>[g.id,g.label])).map(([k,n])=>'<option value="'+k+'"'+(cat===k?' selected':'')+'>'+esc(n)+'</option>').join('');
-    sel.onchange=()=>{window.__roundCategory=sel.value;roundsList(data);};
-  }
+  const status=window.__roundStatus||'all',query=(window.__roundQuery||'').toLowerCase(), picked=qf.sel;
+  qfLabel();
   document.querySelectorAll('#round-status-seg button').forEach(b=>b.classList.toggle('on',b.dataset.status===status));
   const rows=(data.rounds||[]).filter(r=>{
     const t=taskForRound(r),active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
     if(status==='active'&&!active)return false;
     if(status==='resolved'&&r.status!=='resolved')return false;
-    if(cat!=='all'&&t.group!==cat)return false;
+    if(picked.size && !picked.has(taskKeyForRound(r))) return false;
     const hay=(r.round_id+' '+r.question+' '+t.label+' '+t.population+' '+(r.batch_id||'')).toLowerCase();
     return !query||hay.includes(query);
   }).sort((a,b)=>{
@@ -1829,7 +1839,7 @@ function roundsList(data){
     const la=taskForRound(a).label, lb=taskForRound(b).label;
     return la.localeCompare(lb) || deadlineOf(a).localeCompare(deadlineOf(b));
   });
-  const sig=cat+'|'+status+'|'+query; if(sig!==window.__roundSig){ window.__roundSig=sig; window.__roundLimit=24; }
+  const sig=[...picked].sort().join(',')+'|'+status+'|'+query; if(sig!==window.__roundSig){ window.__roundSig=sig; window.__roundLimit=24; }
   const limit=window.__roundLimit||24, total=rows.length, shown=rows.slice(0,limit);
   el.innerHTML='<div class="qgrid">'+shown.map(r=>{
     const t=taskForRound(r),g=TASK_GROUPS.find(x=>x.id===t.group),active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
@@ -2191,6 +2201,47 @@ document.querySelector('.task-all').onclick=()=>{setTab('agg');renderBoard(windo
   document.getElementById('task-options').onclick=ev=>{ const b=ev.target.closest('[data-task]'); if(!b) return; setTab(b.dataset.task); renderBoard(window.__board||'all'); taskPicker.query=''; openTaskPicker(false,true); };
   host.addEventListener('keydown',ev=>{ if(ev.key==='Escape'&&taskPicker.open){ ev.preventDefault(); openTaskPicker(false,true); } });
   document.addEventListener('pointerdown',ev=>{ if(taskPicker.open && !withinTaskPicker(ev.target)) openTaskPicker(false); });
+})();
+// The question filter: categories and the tasks under them, any mix, counts beside each.
+const qf = { open:false, sel:new Set() };
+function qfGroupKeys(gid){ return Object.keys(TASKS).filter(k=>TASKS[k].group===gid && !TASKS[k].retired); }
+function qfLabel(){
+  const el=document.getElementById('qf-label'), count=document.getElementById('qf-count'); if(!el) return;
+  const n=qf.sel.size;
+  const full=TASK_GROUPS.filter(g=>{ const ks=qfGroupKeys(g.id); return ks.length && ks.every(k=>qf.sel.has(k)); });
+  const fullKeys=new Set(full.flatMap(g=>qfGroupKeys(g.id)));
+  const rest=[...qf.sel].filter(k=>!fullKeys.has(k));
+  const parts = full.map(g=>g.label).concat(rest.map(k=>TASKS[k]?TASKS[k].label:k));
+  el.textContent = !n ? 'All categories' : parts.length===1 ? parts[0] : parts.length===2 && !rest.length ? parts.join(', ') : parts[0]+' +'+(parts.length-1);
+  if(count) count.textContent = n ? n+' task'+(n===1?'':'s')+' selected' : 'everything';
+}
+function qfRender(){
+  const data=window.__data||{}, list=document.getElementById('qf-options'); if(!list) return;
+  const counts={}; (data.rounds||[]).forEach(r=>{ const k=taskKeyForRound(r); counts[k]=(counts[k]||0)+1; });
+  list.innerHTML=TASK_GROUPS.map(g=>{
+    const keys=qfGroupKeys(g.id); if(!keys.length) return '';
+    const all=keys.every(k=>qf.sel.has(k)), some=keys.some(k=>qf.sel.has(k));
+    return '<fieldset class="model-group"><legend><label><input type="checkbox" data-group="'+g.id+'"'+(all?' checked':'')+(some&&!all?' data-mixed="1"':'')+'>'+esc(g.label)+'<span>'+keys.reduce((n,k)=>n+(counts[k]||0),0)+'</span></label></legend>'
+      + keys.map(k=>'<label class="model-option"><input type="checkbox" data-task="'+k+'"'+(qf.sel.has(k)?' checked':'')+'><span class="model-option-name">'+esc(TASKS[k].label)+'</span><span class="model-count">'+(counts[k]||0)+'</span></label>').join('')+'</fieldset>';
+  }).join('');
+  list.querySelectorAll('input[data-mixed]').forEach(i=>{ i.indeterminate=true; });
+  qfLabel();
+}
+function qfOpen(on){ qf.open=on; const pop=document.getElementById('qf-pop'), t=document.getElementById('qf-trigger'); if(!pop||!t) return; pop.hidden=!on; t.setAttribute('aria-expanded', on?'true':'false'); if(on) qfRender(); }
+(function(){
+  const host=document.getElementById('qf-picker'), trigger=document.getElementById('qf-trigger'); if(!host||!trigger) return;
+  trigger.innerHTML='<span id="qf-label">All categories</span>'+modelChevron;
+  trigger.onclick=()=>qfOpen(!qf.open);
+  document.getElementById('qf-options').addEventListener('change', ev=>{
+    const i=ev.target; if(!(i instanceof HTMLInputElement)) return;
+    if(i.dataset.group){ const ks=qfGroupKeys(i.dataset.group); ks.forEach(k=>{ if(i.checked) qf.sel.add(k); else qf.sel.delete(k); }); }
+    else if(i.dataset.task){ if(i.checked) qf.sel.add(i.dataset.task); else qf.sel.delete(i.dataset.task); }
+    qfRender(); roundsList(window.__data);
+  });
+  document.getElementById('qf-clear').onclick=()=>{ qf.sel.clear(); qfRender(); roundsList(window.__data); };
+  document.getElementById('qf-done').onclick=()=>qfOpen(false);
+  host.addEventListener('keydown',ev=>{ if(ev.key==='Escape'&&qf.open){ ev.preventDefault(); qfOpen(false); trigger.focus(); } });
+  document.addEventListener('pointerdown',ev=>{ if(qf.open && !host.contains(ev.target)) qfOpen(false); });
 })();
 document.getElementById('task-search').oninput=e=>{window.__roundQuery=e.target.value;roundsList(window.__data);};
 document.querySelectorAll('#round-status-seg button').forEach(b=>b.onclick=()=>{window.__roundStatus=b.dataset.status;roundsList(window.__data);});
