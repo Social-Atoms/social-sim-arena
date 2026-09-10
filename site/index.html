@@ -277,10 +277,13 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .qcard .qstats{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;font-size:12px;color:var(--mut);margin-top:6px;}
 .qcard .qstats b{font-size:19px;color:var(--ink);font-weight:700;}
 .qcard .qstats .hit{color:var(--accent-ink);font-weight:700;}
-.ent-head{display:flex;align-items:flex-start;gap:24px;margin:4px 0 26px;}
-.ent-head .ent-avatar{flex:0 0 auto;margin-top:0;}
-.ent-head .ent-avatar .av{width:112px;height:112px;font-size:40px;border-radius:22px;}
-.ent-head .ent-avatar .av .lg{padding:24px;}
+/* The avatar is exactly as tall as the eyebrow, name and meta lines, whatever the entrant; the method text sits under them. */
+.ent-head{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:24px;row-gap:12px;margin:4px 0 26px;align-items:stretch;}
+.ent-head .ent-avatar{grid-row:1;grid-column:1;display:flex;align-self:stretch;}
+.ent-head .ent-avatar .av{height:100%;width:auto;aspect-ratio:1/1;font-size:28px;border-radius:18px;}
+.ent-head .ent-avatar .av .lg{padding:20%;}
+.ent-head .ent-id{grid-row:1;grid-column:2;min-width:0;}
+.ent-head .ent-method{grid-row:2;grid-column:2;margin:0;}
 .ent-head h2{margin:0 0 6px;}
 .ent-meta{font-size:12.5px;color:var(--mut);display:flex;flex-wrap:wrap;gap:6px 14px;}
 .ent-meta b{color:var(--ink2);font-weight:700;}
@@ -935,15 +938,15 @@ function renderEntrant(id){
     : tile('Last call', esc(fmtLocal(st.last_call_at)), st.last_call_ok ? '<span class="ok">answered</span> · '+st.calls+' call'+(st.calls===1?'':'s')+(st.failures?' · '+st.failures+' failed':'')
                                                               : '<span class="bad">failed</span> · '+st.failures+' failed attempt'+(st.failures===1?'':'s'));
   // ---- header ----
-  let h='<div class="ent-head"><span class="ent-avatar">'+avatar(id)+'</span><div><div class="eyebrow page-eyebrow">Entrant</div><h2 class="page-title">'+esc(name)+'</h2>'
+  let h='<div class="ent-head"><span class="ent-avatar">'+avatar(id)+'</span><div class="ent-id"><div class="eyebrow page-eyebrow">Entrant</div><h2 class="page-title">'+esc(name)+'</h2>'
     +'<div class="ent-meta"><span><b>'+esc(e.type==='llm'?'LLM':e.type==='baseline'?'Baseline':(e.type||'entrant'))+'</b></span>'
     +((e.arms||[]).length?'<span>setup '+esc((e.arms||[]).join(', '))+'</span>':'')
     +(()=>{ const own = e.homepage && !/social-sim-arena/.test(e.homepage) ? ['homepage', e.homepage] : null;
             const v = vendorOf(id), home = own || (v && VENDOR_HOME[v]) || null;
             return home ? '<span><a href="'+esc(home[1])+'" target="_blank" rel="noopener">'+esc(home[0])+'</a></span>' : ''; })()
     +(e.unregistered?'<span class="dim">run by the arena</span>':'<span><a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/entrants/'+esc(id)+'.json" target="_blank" rel="noopener">registration file</a></span>')
-    +'<span class="dim">id '+esc(id)+'</span></div>'
-    +(e.method?'<p class="ent-method">'+esc(e.method)+'</p>':'')+'</div></div>';
+    +'<span class="dim">id '+esc(id)+'</span></div></div>'
+    +(e.method?'<p class="ent-method">'+esc(e.method)+'</p>':'')+'</div>';
   // ---- left: how it performs ----
   let left='<div class="tiles tiles-2">'
     +tile('Score', score&&typeof score.mean_skill==='number'?((score.mean_skill>0?'+':'')+Math.round(100*score.mean_skill)):'·', score?scoreSrc+' · '+(score.rounds||0)+' question'+(score.rounds===1?'':'s')+(live&&bt&&typeof bt.mean_skill==='number'?' · backtest '+(bt.mean_skill>0?'+':'')+Math.round(100*bt.mean_skill):''):'no scored questions yet')
