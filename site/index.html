@@ -47,6 +47,8 @@ main{flex:1 1 auto;min-height:0;display:flex;width:100%;margin:0 auto;}
 #page-live .tasknav,#page-live [data-panel-resizer="tasks"]{display:none;}
 .task-picker{position:relative;display:block;}
 .task-trigger{display:inline-flex;align-items:center;gap:6px;margin:0;padding:0 4px 0 0;border:0;border-radius:4px;background:none;color:inherit;font:inherit;cursor:pointer;}
+.task-trigger-count{color:var(--mut);font-size:12.5px;font-weight:400;margin-left:2px;}
+.lb-tag{display:inline-block;margin-left:8px;padding:1px 7px;border:1px solid var(--line);border-radius:3px;color:var(--mut);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;vertical-align:middle;}
 .task-trigger svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;color:var(--mut);transition:transform .15s;}
 .task-trigger:hover svg,.task-trigger[aria-expanded="true"] svg{color:var(--accent-ink);}
 .task-trigger[aria-expanded="true"] svg{transform:rotate(90deg);}
@@ -102,7 +104,7 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .taskhead h2{margin:2px 0 3px;color:var(--ink);font-size:19px;line-height:1.25;}
 .taskmeta{display:flex;flex-wrap:wrap;gap:5px 12px;color:var(--mut);font-size:12.5px;}
 .taskmeta b{color:var(--ink2);font-weight:700;}
-.question-card{margin:9px 16px 0;border:1px solid var(--line);border-radius:5px;background:#fff;flex:0 0 auto;}
+.question-card{margin:4px 16px 14px;border:1px solid var(--line);border-radius:5px;background:#fff;flex:0 0 auto;}
 .question-card summary{cursor:pointer;list-style:none;padding:9px 11px;font-size:13px;color:var(--ink);font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
 .question-card summary::-webkit-details-marker{display:none;}
 .question-card summary:before{content:'\25b8';color:var(--mut);}
@@ -510,7 +512,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
           <div class="taskhead">
             <div class="eyebrow page-eyebrow" id="task-eyebrow">BENCHMARK OVERVIEW</div>
             <div class="task-picker" id="task-picker">
-              <h2 class="page-title"><button type="button" class="task-trigger" id="task-trigger" aria-expanded="false" aria-controls="task-pop" aria-haspopup="listbox" title="Choose a task"><span id="task-title">Overall</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6l-6 6"/></svg></button></h2>
+              <h2 class="page-title"><button type="button" class="task-trigger" id="task-trigger" aria-expanded="false" aria-controls="task-pop" aria-haspopup="listbox" title="Choose a task"><span id="task-title">Overall</span><span class="task-trigger-count" id="task-trigger-count"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6l-6 6"/></svg></button></h2>
               <section class="model-pop task-pop" id="task-pop" aria-label="Choose a task" hidden>
                 <div class="model-search-row"><input type="search" id="task-pick-search" placeholder="Search tasks or categories" aria-label="Search tasks" autocomplete="off"></div>
                 <div class="model-options task-options" id="task-options" role="listbox"></div>
@@ -518,16 +520,12 @@ table.lb .skill.pos{color:var(--accent-ink);}
             </div>
             <div class="taskmeta page-description" id="task-meta"><span>Loading task map…</span></div>
           </div>
-          <details class="question-card" id="task-question-card" open>
-            <summary id="task-question-summary">Current question</summary>
-            <div class="qbody" id="task-question-body"></div>
-          </details>
           <div class="caption page-description" id="caption">Cumulative skill against the persistence baseline across all backtest rounds.</div>
           <div class="chart-filters" id="chart-filters">
             <div class="chartctl" role="group" aria-label="Chart filters">
               <div class="model-toolbar" id="model-toolbar" style="display:none;"></div>
               <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker</button><button data-unit="arena" class="on">Score</button><button data-unit="crps">Error pts</button></div>
-              <div class="seg mini" id="range-seg"><button data-range="3">3M</button><button data-range="6">6M</button><button data-range="12">1Y</button><button data-range="0" class="on">All</button></div>
+              <div class="seg mini" id="range-seg" role="group" aria-label="Time window for the chart and the board"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0" class="on">All</button></div>
             </div>
             <div class="legend-strip" id="legend-strip" style="display:none;"></div>
           </div>
@@ -535,14 +533,17 @@ table.lb .skill.pos{color:var(--accent-ink);}
             <div class="tooltip"></div>
             <svg preserveAspectRatio="none"></svg>
           </div>
+          <details class="question-card" id="task-question-card">
+            <summary id="task-question-summary">Current question</summary>
+            <div class="qbody" id="task-question-body"></div>
+          </details>
         </section>
       </div>
     </div>
     <div class="panel-resizer" data-panel-resizer="board" role="separator" tabindex="0" aria-label="Resize leaderboard" aria-orientation="vertical" aria-controls="leaderboard-panel" title="Drag to resize · double-click to reset"></div>
     <aside class="lbcol" id="leaderboard-panel" aria-label="Leaderboard">
       <div class="lbhead">
-        <h2 id="lb-title">LEADERBOARD</h2>
-        <div class="seg" id="span-seg"><button data-span="all" class="on">All time</button><button data-span="m6">6M</button><button data-span="d30">30D</button><button data-span="last">Last round</button></div>
+        <h2 id="lb-title">Overall</h2>
       </div>
       <div class="scroll">
         <table class="lb">
@@ -1260,6 +1261,7 @@ function renderTaskHeader(data,key){
   const group = TASK_GROUPS.find(g=>g.id===d.group);
   document.getElementById('task-eyebrow').textContent = group ? group.label : 'Benchmark overview';
   document.getElementById('task-title').textContent = d.label;
+  const tc=document.getElementById('task-trigger-count'); if(tc) tc.textContent = key==='agg' ? (Object.keys(TASKS).length-1)+' tasks' : '';
   const rs = taskRounds(d,data).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
   const active = rs.filter(r=>r.status==='open' && Date.parse(deadlineOf(r))>Date.now());
   document.getElementById('task-meta').innerHTML = '<span><b>Population</b> '+esc(d.population)+'</span><span><b>Cadence</b> '+esc(d.cadence)+'</span><span><b>Answer</b> '+esc(d.shape)+'</span><span><b>Rounds</b> <span class="numeric">'+rs.length+'</span></span>';
@@ -1399,34 +1401,34 @@ const SPANLABEL = {all:'the releases every entrant answered', m6:'the releases e
 function renderBoard(mode){
   const data = window.__data; if(!data) return;
   window.__board = mode; if(typeof syncHash==='function') syncHash();
-  const key=window.__tab||'agg',d=TASKS[key]||TASKS.agg, span=document.getElementById('span-seg');
-  span.style.display=key==='agg'?'':'none';
-  document.querySelectorAll('#span-seg button').forEach(b=>b.classList.toggle('on', b.dataset.span===mode));
+  const key=window.__tab||'agg',d=TASKS[key]||TASKS.agg;
   const nameOf = {}, typeOf = {};
   (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; });
   const btMap = {}; ((data.backtest&&data.backtest.overall)||[]).forEach(e=>btMap[e.entrant]=e);
-  let entries=[],metricKey='mean_crps',metricLabel='CRPS',title='LEADERBOARD',note='',appendPending=false,replay=false;
+  let entries=[],metricKey='mean_crps',metricLabel='CRPS',title=d.label,tag='',note='',appendPending=false,replay=false;
   if(key==='agg'){
     const spans=(data.backtest&&data.backtest.spans)||{};
     entries=spans[mode]||(data.backtest&&data.backtest.overall)||[];appendPending=true;
-    title='OVERALL \u00b7 MODEL BACKTEST';
-    note='Walk-forward model replay on matched historical releases. Arena score 0 is persistence and 100 is a perfect oracle.';
+    title='Overall'; tag='backtest';
+    note='Walk-forward model replay on matched historical releases. Arena score 0 is persistence and 100 is a perfect oracle. Each task has its own board: pick one from the title.';
+    const same=JSON.stringify(entries)===JSON.stringify((data.backtest&&data.backtest.overall)||[]);
+    if(mode!=='all' && same) note+=' The backtest window is four weeks, so every range shows the same rounds until the season adds more.';
   }else if(d.kind==='profile'){
     const live=((data.profile||{}).matched||[]).length?(data.profile||{}).matched:(data.profile||{}).board||[];
-    if(live.length){entries=live;metricKey='mean_energy';metricLabel='Energy';title='PROFILE LEADERBOARD';note=(data.profile||{}).note||'';}
-    else{entries=profileReplay(d,data);metricLabel='Profile RMSE';title='BASELINE REPLAY';replay=true;note='Historical walk-forward replay over aligned population snapshots. Baselines only; this is context while Season 0 profile rounds await resolution, not a live model rank.';}
+    if(live.length){entries=live;metricKey='mean_energy';metricLabel='Energy';tag='live';note=(data.profile||{}).note||'';}
+    else{entries=profileReplay(d,data);metricLabel='Profile RMSE';tag='baseline replay';replay=true;note='Historical walk-forward replay over aligned population snapshots. Baselines only; this is context while Season 0 profile rounds await resolution, not a live model rank.';}
   }else if(d.kind==='ranking'){
     const live=((data.ranking||{}).matched||[]).length?(data.ranking||{}).matched:(data.ranking||{}).board||[];
-    if(live.length){entries=live;metricKey='mean_loss';metricLabel='Loss';title='RANKING LEADERBOARD';note=(data.ranking||{}).note||'';}
-    else{entries=rankingReplay(d,data);metricLabel='Rank loss';title='BASELINE REPLAY';replay=true;note='A ranking replay needs archived historical lists. The UI does not invent one when the published payload has none.';}
+    if(live.length){entries=live;metricKey='mean_loss';metricLabel='Loss';tag='live';note=(data.ranking||{}).note||'';}
+    else{entries=rankingReplay(d,data);metricLabel='Rank loss';tag='baseline replay';replay=true;note='A ranking replay needs archived historical lists. The UI does not invent one when the published payload has none.';}
   }else{
     const model=(data.backtest&&data.backtest.per_series&&data.backtest.per_series[d.per])||[];
     const base=(data.backtest&&data.backtest.baseline_replay&&data.backtest.baseline_replay.per_series&&data.backtest.baseline_replay.per_series[d.per])||[];
     entries=model.length?model:(base.length?base:scalarReplay(d,data));
-    title=model.length?'TASK MODEL BACKTEST':'BASELINE REPLAY'; replay=!model.length;
+    tag=model.length?'backtest':'baseline replay'; replay=!model.length;
     note=model.length?'Model walk-forward replay for this task only; every forecast is after its own training cutoff.':'A small walk-forward baseline replay from the task history currently published to the site. It is not a Season 0 model result.';
   }
-  document.getElementById('lb-title').textContent=title;
+  document.getElementById('lb-title').innerHTML=esc(title)+(tag?' <span class="lb-tag">'+esc(tag)+'</span>':'');
   // A heading with help renders its label plus a hover box; the browser's
   // own title tooltip is too slow and cannot be styled.
   const headWithHelp=(el,label,help)=>{ if(!el) return; el.innerHTML='<span class="th-label">'+esc(label)+'</span>'+(help?'<span class="th-help" role="tooltip">'+esc(help)+'</span>':''); el.classList.toggle('has-help',!!help); el.removeAttribute('title'); if(help) el.tabIndex=0; };
@@ -1881,7 +1883,7 @@ function applyHash(){
   if(!pg) return;
   if(pg === 'live'){
     if(CHART_KEYS.includes(parts[1])) window.__tab = parts[1];
-    if(SPAN_KEYS.includes(parts[2])) window.__board = parts[2];
+    if(SPAN_KEYS.includes(parts[2])){ window.__board = parts[2]; if(typeof setRange==='function') setRange(SPAN_TO_RANGE[parts[2]]||0); }
   }
   if(pg === 'rounds' && /^batch-\d{4}-\d{2}-\d{2}$/.test(parts[1]||'')){
     // #rounds/batch-2026-09-14: the week's set, as a search a reader can clear
@@ -1908,10 +1910,14 @@ document.querySelector('.task-all').onclick=()=>{setTab('agg');renderBoard(windo
 })();
 document.getElementById('task-search').oninput=e=>{window.__roundQuery=e.target.value;roundsList(window.__data);};
 document.querySelectorAll('#round-status-seg button').forEach(b=>b.onclick=()=>{window.__roundStatus=b.dataset.status;roundsList(window.__data);});
+const RANGE_TO_SPAN = {0:'all', 6:'m6', 1:'d30'}, SPAN_TO_RANGE = {all:0, m6:6, d30:1, last:0};
+function setRange(months){
+  window.__range = months;
+  document.querySelectorAll('#range-seg button').forEach(x=>x.classList.toggle('on', Number(x.dataset.range)===months));
+}
 document.querySelectorAll('#range-seg button').forEach(b=> b.onclick = ()=>{
-  window.__range = Number(b.dataset.range);
-  document.querySelectorAll('#range-seg button').forEach(x=>x.classList.toggle('on', x===b));
-  if(window.__data) setTab(window.__tab||'agg');
+  setRange(Number(b.dataset.range));
+  if(window.__data){ setTab(window.__tab||'agg'); renderBoard(RANGE_TO_SPAN[window.__range]||'all'); }
 });
 document.querySelectorAll('#unit-seg button').forEach(b=> b.onclick = ()=>{
   const tab = window.__tab || 'agg';
