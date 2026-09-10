@@ -1458,9 +1458,21 @@ def count_forecasts(rounds):
                             fc = json.load(f)
                         if not scoreable_forecast(fc):
                             continue
+                        # Every filed forecast is published, with its shape and filing
+                        # time, so an entrant's page can list a profile or a ranking
+                        # next to a number. Only toplines carry a mean; the strip and
+                        # the crowd read those and skip the rest.
+                        filed = re.search(r"filed=(\S+?)(?:[,\s]|$)", fc.get("notes") or "")
+                        entry = {"filed": filed.group(1)} if filed else {}
                         if isinstance(fc.get("topline"), dict) and "mean" in fc["topline"]:
-                            fcs[fc["entrant"]] = {"mean": fc["topline"]["mean"],
-                                                  "sd": fc["topline"].get("sd", 2.0)}
+                            entry.update({"mean": fc["topline"]["mean"], "sd": fc["topline"].get("sd", 2.0)})
+                        elif isinstance(fc.get("profile"), dict):
+                            entry.update({"shape": "profile", "cells": len(fc["profile"])})
+                        elif isinstance(fc.get("ranking"), list):
+                            entry.update({"shape": "ranking", "items": len(fc["ranking"])})
+                        else:
+                            continue
+                        fcs[fc["entrant"]] = entry
                     except (ValueError, KeyError):
                         continue
         r["n_forecasts"] = len(fcs)

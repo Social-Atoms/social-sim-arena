@@ -189,7 +189,7 @@ def status(round_id):
     m, p = manifest_path(round_id), proof_path(round_id)
     if not os.path.exists(m):
         return {"round_id": round_id, "manifest": False}
-    return {
+    row = {
         "round_id": round_id,
         "manifest": True,
         "manifest_file": os.path.relpath(m, ROOT),
@@ -198,6 +198,17 @@ def status(round_id):
         "proof_file": os.path.relpath(p, ROOT) if os.path.exists(p) else None,
         "bitcoin_attested": attested(m),
     }
+    # The manifest's own facts travel with the row, so a forecast's page can show
+    # the hash that was stamped for it without fetching the file.
+    try:
+        with open(m) as fh:
+            body = json.load(fh)
+        row["lock_at"] = body.get("lock_at")
+        row["built_at"] = body.get("built_at")
+        row["forecast_sha256"] = body.get("forecasts") or {}
+    except (OSError, ValueError):
+        pass
+    return row
 
 
 def ensure(round_id, lock_at, now=None):
