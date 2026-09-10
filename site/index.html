@@ -42,6 +42,21 @@ main{flex:1 1 auto;min-height:0;display:flex;width:100%;margin:0 auto;}
 #page-live{--panel-head-top:14px;--panel-title-size:14px;--panel-title-line:28px;}
 #page-live.on{display:grid;grid-template-columns:var(--task-width,clamp(180px,18vw,252px)) 8px minmax(320px,1fr) 8px var(--board-width,clamp(300px,24vw,400px));grid-template-rows:minmax(0,1fr);}
 #page-live.tasks-collapsed{grid-template-columns:44px 0 minmax(320px,1fr) 8px var(--board-width,clamp(300px,24vw,400px));}
+/* The task tree left the page: the title is a picker (search, categories, counts), and the chart takes the column. */
+#page-live.on,#page-live.tasks-collapsed{grid-template-columns:minmax(320px,1fr) 8px var(--board-width,clamp(300px,24vw,400px));}
+#page-live .tasknav,#page-live [data-panel-resizer="tasks"]{display:none;}
+.task-picker{position:relative;display:block;}
+.task-trigger{display:inline-flex;align-items:center;gap:6px;margin:0;padding:0 4px 0 0;border:0;border-radius:4px;background:none;color:inherit;font:inherit;cursor:pointer;}
+.task-trigger svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;color:var(--mut);transition:transform .15s;}
+.task-trigger:hover svg,.task-trigger[aria-expanded="true"] svg{color:var(--accent-ink);}
+.task-trigger[aria-expanded="true"] svg{transform:rotate(90deg);}
+.task-trigger:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.task-pop{left:0;right:auto;width:min(460px,calc(100vw - 48px));}
+.task-option{width:100%;text-align:left;border:0;background:none;font:inherit;}
+.task-option:hover{background:#f5f6f5;color:var(--ink);}
+.task-option.on{background:#f0f2f0;color:var(--ink);font-weight:700;}
+.task-option .task-pop-count{color:var(--mut);font-size:11px;font-weight:400;margin-left:8px;font-variant-numeric:tabular-nums;}
+.task-option .task-pop-meta{margin-left:auto;color:var(--mut);font-size:11px;font-weight:400;white-space:nowrap;flex-shrink:0;}
 .chartcol,.task-shell{display:contents;}
 .tasknav{min-width:0;overflow-y:auto;padding:var(--panel-head-top) 10px 18px;background:#fff;}
 .panel-resizer{position:relative;cursor:col-resize;touch-action:none;outline:none;z-index:6;}
@@ -494,7 +509,13 @@ table.lb .skill.pos{color:var(--accent-ink);}
         <section class="taskview" id="benchmark-panel">
           <div class="taskhead">
             <div class="eyebrow page-eyebrow" id="task-eyebrow">BENCHMARK OVERVIEW</div>
-            <h2 class="page-title" id="task-title">Overall</h2>
+            <div class="task-picker" id="task-picker">
+              <h2 class="page-title"><button type="button" class="task-trigger" id="task-trigger" aria-expanded="false" aria-controls="task-pop" aria-haspopup="listbox" title="Choose a task"><span id="task-title">Overall</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6l-6 6"/></svg></button></h2>
+              <section class="model-pop task-pop" id="task-pop" aria-label="Choose a task" hidden>
+                <div class="model-search-row"><input type="search" id="task-pick-search" placeholder="Search tasks or categories" aria-label="Search tasks" autocomplete="off"></div>
+                <div class="model-options task-options" id="task-options" role="listbox"></div>
+              </section>
+            </div>
             <div class="taskmeta page-description" id="task-meta"><span>Loading task map…</span></div>
           </div>
           <details class="question-card" id="task-question-card" open>
@@ -830,6 +851,31 @@ function openModelPicker(open, restoreFocus=false){
   document.getElementById('model-pop').hidden = !open;
   if(open){ renderModelOptions(); document.getElementById('model-search').focus(); }
   else if(restoreFocus) trigger.focus();
+}
+const taskPicker = {open:false, query:''};
+function withinTaskPicker(el){ const host=document.getElementById('task-picker'); return !!(host && el && host.contains(el)); }
+function openTaskPicker(open, restoreFocus=false){
+  const trigger=document.getElementById('task-trigger'), pop=document.getElementById('task-pop');
+  if(!trigger||!pop) return;
+  taskPicker.open=open; trigger.setAttribute('aria-expanded',String(open)); pop.hidden=!open;
+  if(open){ renderTaskOptions(); const s=document.getElementById('task-pick-search'); if(s){ s.value=taskPicker.query; s.focus(); } }
+  else if(restoreFocus) trigger.focus();
+}
+function renderTaskOptions(){
+  const list=document.getElementById('task-options'); if(!list) return;
+  const data=window.__data||{}, key=window.__tab||'agg';
+  const words=(taskPicker.query||'').toLowerCase().split(/\s+/).filter(Boolean);
+  const hit=(...parts)=>{ const hay=parts.join(' ').toLowerCase(); return words.every(w=>hay.includes(w)); };
+  const option=(k,label,meta,count)=>'<button type="button" class="model-option task-option'+(k===key?' on':'')+'" data-task="'+k+'" role="option" aria-selected="'+(k===key)+'"><span class="model-option-name">'+esc(label)+(count!=null?'<span class="task-pop-count">'+count+'</span>':'')+'</span>'+(meta?'<span class="task-pop-meta">'+esc(meta)+'</span>':'')+'</button>';
+  const groups=[];
+  if(hit('overall all tasks')) groups.push('<fieldset class="model-group"><legend>Everything</legend>'+option('agg','Overall','all tasks',(data.rounds||[]).length)+'</fieldset>');
+  TASK_GROUPS.forEach(g=>{
+    const keys=Object.keys(TASKS).filter(k=>TASKS[k].group===g.id && hit(TASKS[k].label,TASKS[k].population||'',g.label));
+    if(!keys.length) return;
+    const count=keys.reduce((n,k)=>n+taskRounds(TASKS[k],data).length,0);
+    groups.push('<fieldset class="model-group"><legend>'+esc(g.label)+'<span>'+count+'</span></legend>'+keys.map(k=>option(k,TASKS[k].label,TASKS[k].population||'',taskRounds(TASKS[k],data).length)).join('')+'</fieldset>');
+  });
+  list.innerHTML=groups.join('')||'<p class="model-empty">No task matches.</p>';
 }
 function ensureModelPicker(){
   if(modelPicker.ready) return;
@@ -1851,6 +1897,15 @@ window.addEventListener('hashchange', applyHash);
 document.querySelectorAll('.ptab').forEach(b=> b.onclick = ()=> showPage(b.dataset.page));
 document.getElementById('nav-submit').onclick = e=>{ e.preventDefault(); showPage('submit'); };
 document.querySelector('.task-all').onclick=()=>{setTab('agg');renderBoard(window.__board||'all');};
+(function(){
+  const trigger=document.getElementById('task-trigger'), host=document.getElementById('task-picker');
+  if(!trigger||!host) return;
+  trigger.onclick=()=>openTaskPicker(!taskPicker.open);
+  document.getElementById('task-pick-search').oninput=e=>{ taskPicker.query=e.target.value; renderTaskOptions(); };
+  document.getElementById('task-options').onclick=ev=>{ const b=ev.target.closest('[data-task]'); if(!b) return; setTab(b.dataset.task); renderBoard(window.__board||'all'); taskPicker.query=''; openTaskPicker(false,true); };
+  host.addEventListener('keydown',ev=>{ if(ev.key==='Escape'&&taskPicker.open){ ev.preventDefault(); openTaskPicker(false,true); } });
+  document.addEventListener('pointerdown',ev=>{ if(taskPicker.open && !withinTaskPicker(ev.target)) openTaskPicker(false); });
+})();
 document.getElementById('task-search').oninput=e=>{window.__roundQuery=e.target.value;roundsList(window.__data);};
 document.querySelectorAll('#round-status-seg button').forEach(b=>b.onclick=()=>{window.__roundStatus=b.dataset.status;roundsList(window.__data);});
 document.querySelectorAll('#range-seg button').forEach(b=> b.onclick = ()=>{
