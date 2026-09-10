@@ -23,21 +23,20 @@ html,body{height:100%;}
 body{margin:0;background:var(--bg);color:var(--ink2);font-family:var(--sans);font-size:15.5px;line-height:1.5;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;overflow:hidden;}
 a{color:inherit;}
 
-.site-header{border-bottom:1px solid var(--line);flex:0 0 auto;}
+.site-header{flex:0 0 auto;}
 
-.header-status{display:flex;align-items:center;gap:6px 18px;padding:0 16px 8px;flex-wrap:wrap;}
 /* The live light sits at the head of the status line: the arena is running, and this is when. */
-.header-status .meta .live{display:inline-flex;align-items:center;gap:6px;color:var(--accent-ink);font-weight:700;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;}
+/* The live light and the data's age sit at the right of the board's title row. */
+.task-titlerow{display:flex;align-items:center;justify-content:space-between;gap:8px 14px;flex-wrap:wrap;}
+.task-live{display:inline-flex;align-items:center;gap:10px;font-size:12px;color:var(--mut);white-space:nowrap;}
+.task-live .live{display:inline-flex;align-items:center;gap:6px;color:var(--accent-ink);font-weight:700;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;}
+.task-live b{color:var(--ink2);font-weight:600;}
 .livedot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:0 0 auto;animation:breathe 3.6s ease-in-out infinite;}
 @keyframes breathe{0%{box-shadow:0 0 0 0 rgba(21,128,61,.22);opacity:1;}50%{opacity:.75;}70%{box-shadow:0 0 0 4px rgba(21,128,61,0);}100%{box-shadow:0 0 0 0 rgba(21,128,61,0);opacity:1;}}
 @media(prefers-reduced-motion:reduce){.livedot{animation:none;}}
 .exam{display:inline-flex;gap:5px;align-items:baseline;border:1px solid #cce4d3;background:#f5faf6;color:var(--accent-ink);border-radius:4px;padding:3px 9px;font:700 12.5px/1.4 var(--sans);cursor:pointer;flex-wrap:wrap;text-align:left;}
 .exam:hover{border-color:var(--accent);}
 .exam b{color:var(--accent-ink);font-variant-numeric:tabular-nums;}
-.header-status .meta{display:flex;align-items:center;gap:4px 14px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);}
-.header-status .meta span{white-space:nowrap;}
-.header-status .meta b{color:var(--ink2);font-weight:700;}
-.header-status .updated{margin-left:auto;font-size:12px;color:var(--mut);white-space:nowrap;}
 
 main{flex:1 1 auto;min-height:0;display:flex;width:100%;margin:0 auto;}
 .page{flex:1;min-width:0;display:none;}
@@ -188,7 +187,7 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .model-pop-foot{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid #eeede9;flex:0 0 auto;}
 .model-pop-foot .model-action{margin-left:auto;font-weight:600;}
 #chartpane{min-height:340px;}
-.chartpane{flex:0 0 auto;height:clamp(340px,calc(100vh - 258px),720px);position:relative;padding:0 4px 2px 6px;display:flex;flex-direction:column;}
+.chartpane{flex:0 0 auto;height:clamp(340px,calc(100vh - 224px),720px);position:relative;padding:0 4px 2px 6px;display:flex;flex-direction:column;}
 .chartctl{display:flex;align-items:center;flex-wrap:wrap;gap:8px;position:relative;min-height:25px;}
 .chartctl>.seg{flex-wrap:wrap;}
 .seg.mini button{font-size:12px;padding:3px 11px;}
@@ -494,9 +493,6 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 }
 @media(max-width:600px){
   /* phones: one line of status, a small avatar beside the name, one tile per row, wide tables scroll */
-  .header-status{padding:0 12px 8px;gap:4px 12px;}
-  .header-status .meta{font-size:12px;gap:4px 10px;}
-  .header-status .updated{white-space:normal;font-size:11.5px;}
   .taskhead{padding-left:12px;padding-right:12px;}
   .ent-head{column-gap:14px;row-gap:8px;align-items:start;}
   .ent-head .ent-avatar{align-self:start;}
@@ -577,8 +573,6 @@ table.ent td a.row{color:inherit;text-decoration:none;}
   #page-leaderboard.on{display:block;}
   .panel-resizer{display:none;}
 
-  .header-status{padding:0 12px 10px;gap:8px 14px;}
-  .header-status .updated{margin-left:0;}
   .seg{flex-wrap:wrap;}
   .chartcol .tabs-row{overflow:visible;flex-wrap:wrap;}
   .chartcol{display:flex;flex-direction:column;border-bottom:1px solid var(--line);}
@@ -616,7 +610,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 </style>
 <script defer src="panels.js?v=91f5d3557c"></script>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=af3fa838de">
+<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=cda5431586">
 </head>
 <body class="site-home">
 
@@ -638,10 +632,6 @@ table.ent td a.row{color:inherit;text-decoration:none;}
   </div>
 </nav>
 
-<div class="header-status" aria-label="Arena status">
-  <div class="meta" id="meta-line">Loading…</div>
-  <time class="updated" id="data-updated" title="Data refreshed every 6 hours"></time>
-</div>
 </header>
 
 <main>
@@ -670,13 +660,13 @@ table.ent td a.row{color:inherit;text-decoration:none;}
         <section class="taskview" id="benchmark-panel">
           <div class="taskhead">
             <div class="eyebrow page-eyebrow" id="task-eyebrow">BENCHMARK OVERVIEW</div>
-            <div class="task-picker" id="task-picker">
+            <div class="task-titlerow"><div class="task-picker" id="task-picker">
               <h2 class="page-title"><button type="button" class="task-trigger" id="task-trigger" aria-expanded="false" aria-controls="task-pop" aria-haspopup="listbox" title="Choose a task"><span id="task-title">Overall</span><span class="task-trigger-count" id="task-trigger-count"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6l-6 6"/></svg></button></h2>
               <section class="model-pop task-pop" id="task-pop" aria-label="Choose a task" hidden>
                 <div class="model-search-row"><input type="search" id="task-pick-search" placeholder="Search tasks or categories" aria-label="Search tasks" autocomplete="off"></div>
                 <div class="model-options task-options" id="task-options" role="listbox"></div>
               </section>
-            </div>
+            </div><div class="task-live"><span class="live"><span class="livedot" aria-hidden="true"></span>Live</span><time id="data-updated" title="Data refreshed every 6 hours"></time></div></div>
             <div class="taskmeta page-description" id="task-meta"><span>Loading task map…</span></div>
           </div>
           <div class="chart-filters" id="chart-filters">
@@ -2386,7 +2376,6 @@ function renderWeekly(data){
       +'<span>'+open.reduce((n,r)=>n+(r.n_forecasts||0),0)+' forecasts filed so far</span></div></section>'
     +'<aside class="week-card week-side" aria-labelledby="week-summary-title">'
       +'<h3 id="week-summary-title">This week</h3><dl>'
-      +'<div class="week-date"><dt>Season</dt><dd>'+esc(String(data.season ?? 0))+' <span class="dim">· live</span></dd></div>'
       +'<div class="week-date"><dt>Next close</dt><dd>'+when(soonest)+'</dd></div>'
       +'<div class="week-date"><dt>Last close in view</dt><dd>'+when(lastClose)+'</dd></div>'
       +'<div class="week-date"><dt>Answers begin</dt><dd>'+when(firstLanding)+'</dd></div>'
@@ -2482,20 +2471,12 @@ function render(data){
   computeNoise(data);
   const lb = data.leaderboard || {};
 
-  function meta(){
-    const openNow = data.rounds.filter(r=>isListed(r)&&r.status==='open'&&Date.parse(deadlineOf(r))>Date.now()).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
-    const nx = openNow[0];
-    const parts = [];
-    document.getElementById('meta-line').innerHTML = '<span class="live"><span class="livedot" aria-hidden="true"></span>Live</span>'+parts.map(p=>'<span>'+p+'</span>').join('');
-  }
-  meta();
-  clearInterval(window.__metaInt); window.__metaInt = setInterval(meta, 30000);
 
   const openNow = data.rounds.filter(r=>r.status==='open'&&Date.parse(deadlineOf(r))>Date.now()).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
   document.getElementById('btn-register-2').href = submissionLink('agent');
   const updated = document.getElementById('data-updated');
   updated.dateTime = data.generated_at;
-  updated.innerHTML = 'data updated <b>'+fmtLocalZ(data.generated_at)+'</b> · refreshed every 6 hours';
+  updated.innerHTML = 'data updated <b>'+fmtLocalZ(data.generated_at)+'</b>';
 
   requestAnimationFrame(()=>setTab(window.__tab || 'agg'));
   applyHash();
