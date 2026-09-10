@@ -27,7 +27,7 @@ a{color:inherit;}
 
 /* The live light sits at the head of the status line: the arena is running, and this is when. */
 /* The data's age is the board head's second line: the numbers it describes are the board's. */
-.task-live{flex-basis:100%;display:inline-flex;align-items:center;gap:10px;margin-top:-2px;font-size:12px;color:var(--mut);white-space:nowrap;line-height:1.5;}
+.task-live{flex-basis:100%;display:inline-flex;align-items:center;gap:10px;margin-top:-6px;font-size:12px;color:var(--mut);white-space:nowrap;line-height:1.4;}   /* tucked under the title, inside its leading */
 .task-live b{color:var(--ink2);font-weight:600;}
 .exam{display:inline-flex;gap:5px;align-items:baseline;border:1px solid #cce4d3;background:#f5faf6;color:var(--accent-ink);border-radius:4px;padding:3px 9px;font:700 12.5px/1.4 var(--sans);cursor:pointer;flex-wrap:wrap;text-align:left;}
 .exam:hover{border-color:var(--accent);}
@@ -195,7 +195,7 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .tooltip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:4px;padding:6px 11px;font-size:12px;color:var(--ink);box-shadow:0 2px 10px rgba(0,0,0,.08);display:none;max-width:calc(100% - 12px);overflow-wrap:anywhere;z-index:5;line-height:1.45;}
 
 .lbcol{min-width:0;display:flex;flex-direction:column;container-type:inline-size;container-name:leaderboard;}
-.lbcol .lbhead{display:flex;align-items:flex-start;gap:8px;padding:var(--panel-head-top) 16px 8px;flex:0 0 auto;flex-wrap:wrap;}
+.lbcol .lbhead{display:flex;align-items:flex-start;gap:0 8px;padding:var(--panel-head-top) 16px 6px;flex:0 0 auto;flex-wrap:wrap;}
 .lbcol .lbhead h2{margin:0;font-size:var(--panel-title-size);line-height:var(--panel-title-line);font-weight:800;color:var(--ink);letter-spacing:.03em;flex:1 1 200px;overflow-wrap:anywhere;}
 .lbcol .lbhead h2 span{font-weight:400;font-size:13px;color:var(--ink2);margin-left:2px;}
 .lbhead .seg{flex-wrap:wrap;}
@@ -205,7 +205,7 @@ table.lb col.rank-col{width:34px;}
 table.lb col.score-col{width:56px;}
 table.lb col.loss-col{width:58px;}
 table.lb col.rounds-col{width:56px;}
-table.lb th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);font-weight:700;text-align:left;padding:8px;border-bottom:none;box-shadow:0 1px 0 var(--line);position:sticky;top:0;background:#fff;z-index:2;}
+table.lb th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);font-weight:700;text-align:left;padding:10px 8px 8px;border-bottom:none;box-shadow:0 1px 0 var(--line);position:sticky;top:0;background:#fff;z-index:2;}
 table.lb td{padding:10px 8px;border-bottom:1px solid #eeede9;vertical-align:middle;}
 table.lb tr:last-child td{border-bottom:none;}
 table.lb td.num,table.lb th.num{text-align:right;font-variant-numeric:tabular-nums;}
