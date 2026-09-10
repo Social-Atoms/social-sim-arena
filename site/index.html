@@ -1469,6 +1469,21 @@ function renderBoard(mode){
   // A heading with help renders its label plus a hover box; the browser's
   // own title tooltip is too slow and cannot be styled.
   const headWithHelp=(el,label,help)=>{ if(!el) return; el.innerHTML='<span class="th-label">'+esc(label)+'</span>'+(help?'<span class="th-help" role="tooltip">'+esc(help)+'</span>':''); el.classList.toggle('has-help',!!help); el.removeAttribute('title'); if(help) el.tabIndex=0; };
+
+  // The board's list clips whatever hangs past its edge, so a heading's note is placed with
+  // fixed coordinates while it shows: under its heading, right-aligned to it, and never past
+  // the board's left edge.
+  if(!window.__helpPlaced){
+    window.__helpPlaced = true;
+    const show = ev => { const th = ev.target.closest && ev.target.closest('th.has-help'); if(!th) return; const box = th.querySelector('.th-help'); if(!box) return;
+      const t = th.getBoundingClientRect(), panel = th.closest('.lbcol') || th.closest('table'), pr = panel.getBoundingClientRect();
+      const w = Math.min(280, pr.width - 24); box.style.width = w + 'px';
+      box.style.position = 'fixed'; box.style.top = (t.bottom + 6) + 'px'; box.style.right = 'auto';
+      box.style.left = Math.max(pr.left + 12, Math.min(t.right - w, pr.right - 12 - w)) + 'px'; };
+    const hide = ev => { const th = ev.target.closest && ev.target.closest('th.has-help'); if(!th) return; const box = th.querySelector('.th-help'); if(box) box.removeAttribute('style'); };
+    document.addEventListener('mouseover', show); document.addEventListener('focusin', show);
+    document.addEventListener('mouseout', hide); document.addEventListener('focusout', hide);
+  }
   const lossHead=document.getElementById('lb-loss-head');
   // Three column headings nobody outside forecasting reads at a glance. The
   // explanation hangs off the heading on hover rather than sitting under the
