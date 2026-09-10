@@ -42,7 +42,7 @@ let f = fixture();
 const selected = f.api.modelPicker.ids.filter(id=>!f.win.__hidden.has(id));
 assert.equal(selected.length, 7, 'default comparison is six entrants and EWMA');
 assert.ok(selected.includes('ewma'));
-assert.equal(f.els['model-selected-count'].textContent, '7/29');
+assert.equal(f.els['model-selected-count'].textContent, '7 of 29 entrants');
 const originalBoard = f.els['lb-body'].innerHTML;
 const originalSelection = [...f.win.__keep];
 f.els['model-trigger'].onclick();
@@ -107,7 +107,7 @@ assert.ok(points.every(p=>Number(p[2])>=18 && Number(p[2])<=334),
 f.api.renderLegend([], {});
 assert.equal(f.els['legend-strip'].style.display, '', 'the picker stays in place with nothing to draw');
 assert.match(f.els['model-chips'].innerHTML, /No published forecasts to draw/);
-assert.equal(f.els['model-selected-count'].textContent, '0');
+assert.equal(f.els['model-selected-count'].textContent, 'no entrants');
 const scalar = Object.keys(f.api.TASKS).find(k=>k!=='agg' && f.api.TASKS[k].per);
 f.win.__tab = scalar;
 f.api.renderTaskChart(scalar);
@@ -117,7 +117,7 @@ assert.ok(!f.win.__hidden.has('gpt-5.6-luna-zeroshot'));
 assert.ok(f.win.__hidden.has('ewma'));
 const saved = f.storage;
 f = fixture(saved);
-assert.equal(f.els['model-selected-count'].textContent, '1/29');
+assert.equal(f.els['model-selected-count'].textContent, '1 of 29 entrants');
 assert.ok(!f.win.__hidden.has('gpt-5.6-luna-zeroshot'));
 f.api.coerceUnknown(['future-entrant']);
 assert.ok(f.win.__hidden.has('future-entrant'), 'new models do not flood a saved comparison');
@@ -126,13 +126,13 @@ f = fixture(saved);
 f.api.coerceUnknown(['future-entrant']);
 assert.ok(!f.win.__hidden.has('future-entrant'), 'explicit choices for new entrants persist');
 f.els['model-reset'].onclick();
-assert.equal(f.els['model-selected-count'].textContent, '7/29');
+assert.equal(f.els['model-selected-count'].textContent, '7 of 29 entrants');
 assert.deepEqual(leaks(f.els), []);
 console.log('ok chart updates, empty state, task switching, reset, and selection persistence');
 
 for(const value of ['{broken', '{}', '[123]']) {
   f = fixture(new Map([[storageKey,value]]));
-  assert.equal(f.els['model-selected-count'].textContent, '7/29');
+  assert.equal(f.els['model-selected-count'].textContent, '7 of 29 entrants');
 }
 f = fixture({get(){throw Error('denied');}, set(){throw Error('denied');}});
 f.api.selectModels(['ewma'],false);

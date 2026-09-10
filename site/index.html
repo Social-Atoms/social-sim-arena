@@ -1357,7 +1357,7 @@ function ensureModelPicker(){
   const strip = document.getElementById('legend-strip');
   const toolbar = document.getElementById('model-toolbar'), controls = document.getElementById('chart-filters');
   strip.innerHTML = '<div class="model-chips" id="model-chips" role="group" aria-label="Selected chart entrants"></div>';
-  toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop">Entrants <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
+  toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop" title="Which entrants the chart draws; the board beside it always lists everyone">Chart: <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
     + '<button type="button" class="model-action" id="model-reset" title="Show the top 6 entrants and EWMA">Reset</button>'
     + '<section class="model-pop" id="model-pop" aria-label="Choose chart entrants" hidden>'
     + '<div class="model-search-row"><input type="search" id="model-search" placeholder="Search entrants or labs" aria-label="Search entrants or labs" autocomplete="off">'
@@ -1429,7 +1429,8 @@ function renderLegend(ids, nameOf){
   modelPicker.ids = [...new Set(ids||[])]; modelPicker.nameOf = nameOf||{};
   const hidden = coerceUnknown(modelPicker.ids), selected = modelPicker.ids.filter(id=>!hidden.has(id));
   strip.style.display=''; toolbar.style.display='';
-  document.getElementById('model-selected-count').textContent = modelPicker.ids.length ? selected.length+'/'+modelPicker.ids.length : '0';
+  // The count says what the picker governs: the lines on the chart, never the board's rows.
+  document.getElementById('model-selected-count').textContent = modelPicker.ids.length ? selected.length+' of '+modelPicker.ids.length+' entrants' : 'no entrants';
   const chips = document.getElementById('model-chips'), key=JSON.stringify([modelPicker.ids.length, selected.map(id=>[id,modelPicker.nameOf[id]])]);
   if(key!==modelPicker.chipKey){
     modelPicker.chipKey = key;
