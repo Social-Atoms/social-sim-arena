@@ -144,7 +144,7 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .lchip .model-icon{width:12px;height:12px;color:var(--mut);}
 .model-empty{color:var(--mut);font-size:12px;margin:0;padding:8px 0;}
 .chart-filters :is(button,input):focus-visible{outline:1px solid var(--ink2);outline-offset:2px;}
-.model-pop{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:30;background:#fff;border:1px solid var(--line);border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.06);display:flex;flex-direction:column;max-height:min(440px,65vh);overflow:hidden;}
+.model-pop{position:absolute;top:calc(100% + 6px);left:0;width:min(560px,100%);z-index:30;background:#fff;border:1px solid var(--line);border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.06);display:flex;flex-direction:column;max-height:min(440px,65vh);overflow:hidden;}
 .model-pop[hidden]{display:none;}
 .model-search-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:12px 12px 8px;flex:0 0 auto;}
 .model-search-row input[type="search"]{min-width:0;min-height:30px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink2);font:400 13px/1.4 var(--sans);padding:6px 9px;flex:1 1 160px;width:100%;appearance:none;}
@@ -255,12 +255,14 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .qcard .qhead{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);font-weight:700;}
 .qcard .qhead .qshape{border:1px solid var(--line);border-radius:3px;padding:0 5px;letter-spacing:.04em;}
 .qcard .qhead .qdue{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:12px;text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink2);}
-.qcard .qhead .qdue.live:before{content:'';display:block;width:6px;height:6px;border-radius:50%;background:var(--accent);flex:0 0 auto;}
+.qcard .qhead .qdue:before{content:'';display:block;width:6px;height:6px;border-radius:50%;background:var(--mut);flex:0 0 auto;}
+.qcard .qhead .qdue.live:before{background:var(--accent);}
+.qcard .qhead .qdue.closed:before{background:transparent;box-shadow:inset 0 0 0 1.5px var(--mut);}
 .qcard h3{margin:8px 0 3px;font-size:17px;line-height:1.25;color:var(--ink);}
 .qcard .qtext{margin:0 0 10px;font-size:13px;line-height:1.45;color:var(--ink2);}
 .qcard .qstrip{margin:auto -4px 0;}
-.qcard .qstrip{min-height:74px;}
-.qcard .qstrip svg{display:block;width:100%;height:74px;overflow:visible;}
+.qcard .qstrip{min-height:82px;}
+.qcard .qstrip svg{display:block;width:100%;height:82px;overflow:visible;}
 .qcard .qstats{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;font-size:12px;color:var(--mut);margin-top:6px;}
 .qcard .qstats b{font-size:19px;color:var(--ink);font-weight:700;}
 .qcard .qstats .hit{color:var(--accent-ink);font-weight:700;}
@@ -567,7 +569,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
       <div class="task-toolbar">
         <input class="task-search" id="task-search" type="search" placeholder="Search questions…" aria-label="Search tasks">
         <div class="fchips" id="round-category-chips" style="margin:0;"></div>
-        <div class="seg mini" id="round-status-seg"><button data-status="active" class="on">Active</button><button data-status="all">All</button></div>
+        <div class="seg mini" id="round-status-seg" role="group" aria-label="Question status"><button data-status="all" class="on">All</button><button data-status="active">Open</button><button data-status="resolved">Resolved</button></div>
       </div>
       <div id="rounds-list"></div>
     </div></div>
@@ -1585,7 +1587,7 @@ function forecastStrip(r, t, data){
 }
 function stripSvg(r, t, data, W){
   const {f, unit, models, bases, per, rel} = stripFacts(r, t);
-  const H = 74, L = 10, R = 10, y0 = 38, RAD = 3.4, ROW = 7.6;
+  const H = 82, L = 10, R = 10, y0 = 46, RAD = 3.4, ROW = 7.6;
   // The scale covers the forecasts inside Tukey's fences plus the reference marks;
   // one stray answer no longer squeezes thirty others into a smudge. Strays sit
   // hollow at the edge with their value in the tooltip.
@@ -1623,7 +1625,12 @@ function stripSvg(r, t, data, W){
   const mm = models.map(k=>f[k].mean).sort((a,b)=>a-b), cons = mm.length ? mm[Math.floor(mm.length/2)] : null;
   if(typeof per==='number'){ g += '<line x1="'+x(per).toFixed(1)+'" y1="'+(y0-14)+'" x2="'+x(per).toFixed(1)+'" y2="'+(y0+14)+'" stroke="#96948d" stroke-width="1" stroke-dasharray="2 2"/><text x="'+x(per).toFixed(1)+'" y="'+(y0+27)+'" font-size="9.5" fill="#96948d" text-anchor="middle"'+mono+'>last release '+fmtNum(per,unit)+'</text>'; }
   if(cons!==null){ g += '<line x1="'+x(cons).toFixed(1)+'" y1="'+(y0-17)+'" x2="'+x(cons).toFixed(1)+'" y2="'+(y0+17)+'" stroke="#111110" stroke-width="2"/><text x="'+x(cons).toFixed(1)+'" y="'+(y0-21)+'" font-size="10" font-weight="700" fill="#111110" text-anchor="middle"'+mono+'>models '+fmtNum(cons,unit)+'</text>'; }
-  if(typeof rel==='number'){ g += '<line x1="'+x(rel).toFixed(1)+'" y1="'+(y0-19)+'" x2="'+x(rel).toFixed(1)+'" y2="'+(y0+19)+'" stroke="#15803d" stroke-width="2"/><text x="'+x(rel).toFixed(1)+'" y="'+(y0-23)+'" font-size="10" font-weight="700" fill="#0a6a30" text-anchor="middle"'+mono+'>released '+fmtNum(rel,unit)+'</text>'; }
+  if(typeof rel==='number'){
+    // When the answer landed next to the models' median, the two top labels would sit on
+    // top of each other; the released label then takes the row above.
+    const near = cons!==null && Math.abs(x(rel)-x(cons)) < 96, ry = near ? y0-35 : y0-23;
+    g += '<line x1="'+x(rel).toFixed(1)+'" y1="'+(ry+4)+'" x2="'+x(rel).toFixed(1)+'" y2="'+(y0+19)+'" stroke="#15803d" stroke-width="2"/><text x="'+x(rel).toFixed(1)+'" y="'+ry+'" font-size="10" font-weight="700" fill="#0a6a30" text-anchor="middle"'+mono+'>released '+fmtNum(rel,unit)+'</text>';
+  }
   return '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-hidden="true">'+g+'</svg>';
 }
 function drawStrips(scope, data){
@@ -1636,7 +1643,7 @@ function drawStrips(scope, data){
 }
 function roundsList(data){
   const el = document.getElementById('rounds-list');
-  const cat=window.__roundCategory||'all',status=window.__roundStatus||'active',query=(window.__roundQuery||'').toLowerCase();
+  const cat=window.__roundCategory||'all',status=window.__roundStatus||'all',query=(window.__roundQuery||'').toLowerCase();
   const chips=document.getElementById('round-category-chips');
   chips.innerHTML=[['all','All']].concat(TASK_GROUPS.map(g=>[g.id,g.label])).map(([k,n])=>'<button data-cat="'+k+'" class="'+(cat===k?'on':'')+'">'+esc(n)+'</button>').join('');
   chips.querySelectorAll('button').forEach(b=>b.onclick=()=>{window.__roundCategory=b.dataset.cat;roundsList(data);});
@@ -1644,15 +1651,24 @@ function roundsList(data){
   const rows=(data.rounds||[]).filter(r=>{
     const t=taskForRound(r),active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
     if(status==='active'&&!active)return false;
+    if(status==='resolved'&&r.status!=='resolved')return false;
     if(cat!=='all'&&t.group!==cat)return false;
     const hay=(r.round_id+' '+r.question+' '+t.label+' '+t.population+' '+(r.batch_id||'')).toLowerCase();
     return !query||hay.includes(query);
-  }).sort((a,b)=>status==='active'?deadlineOf(a).localeCompare(deadlineOf(b)):deadlineOf(b).localeCompare(deadlineOf(a))).slice(0,60);
+  }).sort((a,b)=>{
+    // What a visitor can still act on comes first: open questions by deadline, then the ones
+    // waiting for their answer by release, then resolved ones, newest first.
+    const rank=r=>r.status==='resolved'?2:(r.status==='open'&&Date.parse(deadlineOf(r))>Date.now())?0:1;
+    const ra=rank(a), rb=rank(b); if(ra!==rb) return ra-rb;
+    if(ra===0) return deadlineOf(a).localeCompare(deadlineOf(b));
+    if(ra===1) return String(a.release_at||'').localeCompare(String(b.release_at||''));
+    return String(b.release_at||'').localeCompare(String(a.release_at||''));
+  }).slice(0,200);
   el.innerHTML='<div class="qgrid">'+rows.map(r=>{
     const t=taskForRound(r),g=TASK_GROUPS.find(x=>x.id===t.group),active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
     const kind=r.target_type||((r.cells&&r.cells.length)?'profile_energy':'continuous_normal');
     const shape=kind==='profile_energy'?'profile · '+(r.cells||[]).length+' cells':kind==='ranking_list'?'ranking':'number';
-    const when=active?'<span class="qdue live">due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue">resolved '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue">releases '+esc(fmtLocal(r.release_at))+'</span>';
+    const when=active?'<span class="qdue live">due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">closed · answer '+esc(fmtLocal(r.release_at))+'</span>';
     const strip=forecastStrip(r,t,data)||'<div class="qempty">'+(r.n_forecasts?esc(r.n_forecasts)+' forecasts filed · '+esc(shape):'No forecasts filed yet · '+esc(shape))+'</div>';
     return '<div class="qcard'+(active?' live':'')+'"><div class="qhead"><span>'+esc(g?g.label:'Task')+'</span><span class="qshape'+(kind!=='continuous_normal'?' special':'')+'">'+esc(shape)+'</span>'+when+'</div>'
       +'<h3>'+esc(t.label)+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
@@ -1756,7 +1772,7 @@ function renderWeekly(data){
   const firstLanding=landing.map(r=>r.release_at).sort()[0];
   const when=iso=>iso?esc(fmtLocal(iso)):'—';
   host.innerHTML='<section class="week-card week-entry" aria-labelledby="week-entry-title">'
-      +'<h3 id="week-entry-title">Answer the week</h3><p>Register one HTTPS endpoint. Every question is sent to it, signed, in the 24 hours before that question closes; you return the forecast. Answer any subset; your latest answer per question counts, and one answer puts you on the board.</p>'
+      +'<h3 id="week-entry-title">How a question runs</h3><p>Register one HTTPS endpoint. Every question is sent to it, signed, in the 24 hours before that question closes; you return the forecast. Answer any subset; your latest answer per question counts, and one answer puts you on the board.</p>'
       // The four steps a newcomer needs and cannot get anywhere else on the
       // site. They lived in a card of their own on the old weekly screen and
       // were dropped when this one was rebuilt; the wording is that card's.
