@@ -25,7 +25,7 @@ a{color:inherit;}
 
 .site-header{border-bottom:1px solid var(--line);flex:0 0 auto;}
 
-.header-status{display:flex;align-items:center;gap:6px 18px;padding:0 16px 10px;flex-wrap:wrap;}
+.header-status{display:flex;align-items:center;gap:6px 18px;padding:0 16px 8px;flex-wrap:wrap;}
 /* The live light sits at the head of the status line: the arena is running, and this is when. */
 .header-status .meta .live{display:inline-flex;align-items:center;gap:6px;color:var(--accent-ink);font-weight:700;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;}
 .livedot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:0 0 auto;animation:breathe 2.6s ease-out infinite;}
@@ -35,6 +35,7 @@ a{color:inherit;}
 .exam:hover{border-color:var(--accent);}
 .exam b{color:var(--accent-ink);font-variant-numeric:tabular-nums;}
 .header-status .meta{display:flex;align-items:center;gap:4px 14px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);}
+html:not([data-page="leaderboard"]) .header-status .meta{display:none;}
 .header-status .meta span{white-space:nowrap;}
 .header-status .meta b{color:var(--ink2);font-weight:700;}
 .header-status .updated{margin-left:auto;font-size:12px;color:var(--mut);white-space:nowrap;}
@@ -44,7 +45,7 @@ main{flex:1 1 auto;min-height:0;display:flex;width:100%;margin:0 auto;}
 .page.on{display:flex;}
 
 /* LIVE: task map left, evidence in the middle, leaderboard right */
-#page-leaderboard{--panel-head-top:14px;--panel-title-size:14px;--panel-title-line:28px;}
+#page-leaderboard{--panel-head-top:10px;--panel-title-size:14px;--panel-title-line:28px;}
 #page-leaderboard.on{display:grid;grid-template-columns:var(--task-width,clamp(180px,18vw,252px)) 8px minmax(320px,1fr) 8px var(--board-width,clamp(320px,25vw,440px));grid-template-rows:minmax(0,1fr);}
 #page-leaderboard.tasks-collapsed{grid-template-columns:44px 0 minmax(320px,1fr) 8px var(--board-width,clamp(320px,25vw,440px));}
 /* The task tree left the page: the title is a picker (search, categories, counts), and the chart takes the column. */
@@ -111,7 +112,7 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .task-link.on{background:#f0f2f0;color:var(--ink);font-weight:600;}
 .task-all:focus-visible,.task-link:focus-visible,.task-group summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
 .taskview{min-width:0;display:flex;flex-direction:column;overflow-y:auto;overflow-wrap:anywhere;}
-.taskhead{padding:var(--panel-head-top) 16px 6px;border-bottom:1px solid #efefec;flex:0 0 auto;}
+.taskhead{padding:var(--panel-head-top) 16px 10px;border-bottom:1px solid #efefec;flex:0 0 auto;}
 .taskhead .eyebrow{font-size:var(--panel-title-size);line-height:var(--panel-title-line);letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:800;}
 .taskhead h2{margin:2px 0 3px;color:var(--ink);font-size:19px;line-height:1.25;}
 .taskmeta{display:flex;flex-wrap:wrap;gap:5px 12px;color:var(--mut);font-size:12.5px;}
@@ -138,7 +139,7 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .seg-choice{position:relative;display:flex;flex:1;min-width:0;}
 .seg-choice input{position:absolute;width:1px;height:1px;margin:0;opacity:0;}
 .seg-choice span{width:100%;text-align:center;}
-.chart-filters{padding:4px 16px 2px;flex:0 0 auto;min-width:0;}
+.chart-filters{padding:10px 16px 8px;flex:0 0 auto;min-width:0;}
 .legend-strip{min-width:0;}
 .model-toolbar{display:flex;align-items:center;gap:12px;min-height:0;margin-right:auto;}
 .model-trigger{display:inline-flex;align-items:center;gap:8px;min-height:25px;padding:0 9px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink2);font:500 12.5px/1.3 var(--sans);cursor:pointer;}
@@ -422,6 +423,8 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 .wc-day span{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;}
 .wc-tag{font-size:11.5px;line-height:1.5;border-radius:3px;padding:1px 6px;margin-bottom:3px;cursor:help;}
 .wc-tag b{font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
+.wc-tag i{font-style:normal;margin-left:4px;}
+.wc-legend{display:none;}
 .wc-tag.close{background:var(--ink);color:#fff;}
 .wc-tag.res{background:#eaf6ee;color:var(--accent-ink);}
 .wcell[tabindex]{cursor:pointer;}
@@ -497,7 +500,24 @@ table.ent td a.row{color:inherit;text-decoration:none;}
   .tiles,.tiles-2,.ent-cov{grid-template-columns:1fr;}
   .tile .k{flex-wrap:wrap;}
   .ent-sec{overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  .ent-sec table.ent{min-width:560px;}
+  .col-filed{display:none;}
+  /* question cards: the state on its own line, the chips never break inside */
+  .qcard{padding:12px 12px 10px;}
+  .qcard .qhead{flex-wrap:wrap;gap:5px 8px;}
+  .qcard .qhead .qshape{white-space:nowrap;}
+  .qcard .qhead .qdue{flex:0 0 100%;margin-left:0;}
+  .qcard h3{font-size:16px;}
+  .qcard .qfoot{flex-wrap:wrap;gap:6px 12px;}
+  /* the calendar: numbers only in the cells, the words in a legend under the grid */
+  .wcell{min-height:52px;padding:5px 4px 5px;}
+  .wc-day{gap:3px;margin-bottom:4px;}
+  .wc-day b{font-size:12.5px;}
+  .wc-day span{display:none;}
+  .wc-tag{padding:1px 0;text-align:center;font-size:11px;margin-bottom:2px;}
+  .wc-tag i{display:none;}
+  .wc-legend{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:8px 0 0;font-size:11.5px;color:var(--mut);}
+  .wc-legend .wc-tag{display:inline-block;padding:0 6px;margin:0;}
+  .wghead div{font-size:10px;}
   .inner .col{padding:14px 12px 28px;}
   #page-calendar .col{padding:20px 16px 28px;}
   #page-calendar .week-card{padding:16px;}
@@ -575,7 +595,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
   .vrow{flex-wrap:wrap;row-gap:2px;}
   .vrow .q{flex:1 1 100%;}
   .vrow .id{min-width:0;}
-  .weekly-grid{grid-template-columns:1fr;grid-template-areas:"entry" "join" "overview" "calendar";}
+  .weekly-grid{grid-template-columns:1fr;grid-template-areas:"overview" "calendar" "entry";}
 }
 
 .fchips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 12px;}
@@ -592,7 +612,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 </style>
 <script defer src="panels.js?v=91f5d3557c"></script>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=707b666439">
+<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=af3fa838de">
 </head>
 <body class="site-home">
 
@@ -1096,10 +1116,10 @@ function renderQuestion(roundId){
     +'</div>';
   if(mm.length) h+='<div class="ent-sec"><h3>Where the answers sit</h3><div class="qstrip" data-strip="'+esc(r.round_id)+'"></div></div>';
   h+='<div class="ent-sec"><h3>Every forecast</h3><p class="sub">'+(resolved?'Closest first, by CRPS where the forecast carried an uncertainty, else by error.':'In the order they were filed; scored once the answer lands.')+' Open a row for the forecast and its timestamp proof.</p>'
-    +'<table class="ent"><thead><tr><th class="num">#</th><th>Entrant</th><th>Filed</th><th class="num">Forecast</th><th class="num">Error</th><th class="num">CRPS</th></tr></thead><tbody>'
+    +'<table class="ent"><thead><tr><th class="num">#</th><th>Entrant</th><th class="col-filed">Filed</th><th class="num">Forecast</th><th class="num">Error</th><th class="num">CRPS</th></tr></thead><tbody>'
     +rows.map((row,i)=>{ const x=row.x; const href='#forecast/'+esc(r.round_id)+'/'+esc(row.k);
       const what=forecastSummary(x,u,active);
-      return '<tr class="link" data-href="'+href+'"><td class="num dim">'+(resolved&&(row.err!==null)?i+1:'·')+'</td><td><a class="row" href="#entrant/'+esc(row.k)+'"><span class="q">'+esc(nameOf(row.k))+'</span></a>'+(row.base?' <span class="dim">baseline</span>':'')+'</td><td class="dim">'+(x.filed?esc(fmtLocal(x.filed)):'·')+'</td><td class="num">'+what+'</td><td class="num">'+(row.err!==null?fmtNum(row.err,u):'·')+'</td><td class="num">'+(row.crps!==null?row.crps.toFixed(2):'·')+'</td></tr>'; }).join('')
+      return '<tr class="link" data-href="'+href+'"><td class="num dim">'+(resolved&&(row.err!==null)?i+1:'·')+'</td><td><a class="row" href="#entrant/'+esc(row.k)+'"><span class="q">'+esc(nameOf(row.k))+'</span></a>'+(row.base?' <span class="dim">baseline</span>':'')+'</td><td class="dim col-filed">'+(x.filed?esc(fmtLocal(x.filed)):'·')+'</td><td class="num">'+what+'</td><td class="num">'+(row.err!==null?fmtNum(row.err,u):'·')+'</td><td class="num">'+(row.crps!==null?row.crps.toFixed(2):'·')+'</td></tr>'; }).join('')
     +'</tbody></table></div>';
   if(!ids.length) h+='<div class="ent-sec"><p class="sub">No forecasts filed yet.</p></div>';
   host.innerHTML=h;
@@ -2177,11 +2197,13 @@ function stripSvg(r, t, data, W){
   });
   bases.forEach(k=>{ g += '<circle cx="'+x(f[k].mean).toFixed(1)+'" cy="'+y0+'" r="3.6" fill="#fff" stroke="#96948d" stroke-width="1.4"><title>'+esc(forecasterName(k,data))+' (reference): '+fmtNum(f[k].mean,unit)+'</title></circle>'; });
   const mm = models.map(k=>f[k].mean).sort((a,b)=>a-b), cons = mm.length ? mm[Math.floor(mm.length/2)] : null;
-  if(typeof per==='number'){ g += '<line x1="'+x(per).toFixed(1)+'" y1="'+(y0-14)+'" x2="'+x(per).toFixed(1)+'" y2="'+(y0+14)+'" stroke="#96948d" stroke-width="1" stroke-dasharray="2 2"/><text x="'+x(per).toFixed(1)+'" y="'+(y0+27)+'" font-size="9.5" fill="#96948d" text-anchor="middle"'+mono+'>last release '+fmtNum(per,unit)+'</text>'; }
+  if(typeof per==='number'){ g += '<line x1="'+x(per).toFixed(1)+'" y1="'+(y0-14)+'" x2="'+x(per).toFixed(1)+'" y2="'+(y0+14)+'" stroke="#96948d" stroke-width="1" stroke-dasharray="2 2"/><text x="'+edge('middle', x(per))[1].toFixed(1)+'" y="'+(y0+27)+'" font-size="9.5" fill="#96948d" text-anchor="'+edge('middle', x(per))[0]+'"'+mono+'>last release '+fmtNum(per,unit)+'</text>'; }
   // When the answer landed near the models' median the two labels split left and right of
   // their lines instead of piling up; otherwise each is centred on its own line.
   const near = cons!==null && typeof rel==='number' && Math.abs(x(rel)-x(cons)) < 110;
-  const side = (px, leftward) => near ? (leftward ? ['end', px-5] : ['start', px+5]) : ['middle', px];
+  // A label near either edge anchors inward so it stays inside the strip (a card on a phone is narrow).
+  const edge = (anc, tx) => tx < 48 ? ['start', Math.max(tx, 1)] : tx > W-48 ? ['end', Math.min(tx, W-1)] : [anc, tx];
+  const side = (px, leftward) => edge(...(near ? (leftward ? ['end', px-5] : ['start', px+5]) : ['middle', px]));
   if(cons!==null){
     const [anc, tx] = side(x(cons), typeof rel==='number' && cons < rel);
     g += '<line x1="'+x(cons).toFixed(1)+'" y1="'+(y0-17)+'" x2="'+x(cons).toFixed(1)+'" y2="'+(y0+17)+'" stroke="#111110" stroke-width="2"/><text x="'+tx.toFixed(1)+'" y="'+(y0-21)+'" font-size="10" font-weight="700" fill="#111110" text-anchor="'+anc+'"'+mono+'>models '+fmtNum(cons,unit)+'</text>';
@@ -2275,8 +2297,8 @@ function renderWeekly(data){
     if(!c.length&&!v.length) cls.push('quiet');
     return '<div class="'+cls.join(' ')+'" data-day="'+key+'"'+((c.length||v.length)?' tabindex="0"':'')+'>'
       +'<div class="wc-day"><b>'+day.getUTCDate()+'</b><span>'+day.toLocaleDateString(undefined,{month:'short',timeZone:'UTC'})+'</span></div>'
-      +(c.length?'<div class="wc-tag close"><b>'+c.length+'</b> close</div>':'')
-      +(v.length?'<div class="wc-tag res"><b>'+v.length+'</b> resolve</div>':'')
+      +(c.length?'<div class="wc-tag close"><b>'+c.length+'</b><i>close</i></div>':'')
+      +(v.length?'<div class="wc-tag res"><b>'+v.length+'</b><i>resolve</i></div>':'')
       +'</div>';
   };
   // What a day holds, shown on hover or focus. The native `title` tooltip
@@ -2347,6 +2369,7 @@ function renderWeekly(data){
       +'<p class="week-sub"><span class="numeric">'+week.length+'</span> questions close in the next three weeks</p>'
       +'<div class="wcal"><div class="wgrid wghead">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>'<div>'+d+'</div>').join('')+'</div>'
       +[0,1,2].map(w=>'<div class="wgrid">'+weekRow(w)+'</div>').join('')+'</div>'
+      +'<div class="wc-legend" aria-hidden="true"><span class="wc-tag close"><b>n</b></span> questions close that day <span class="wc-tag res"><b>n</b></span> answers land</div>'
       +'<p>Each one closes on its own clock, so the week is a calendar rather than a single deadline. A question whose release slips is held, never re-dated.</p>'
       +'<div class="facets"><div class="facet"><h4>Categories</h4>'+bar(fam)+'</div>'
       +'<div class="facet"><h4>Question type</h4>'+bar(shape)+'</div>'
@@ -2501,6 +2524,7 @@ const PAGE_TITLES={leaderboard:'Leaderboard',questions:'Questions',calendar:'Cal
 // Pre-release names. Kept so a link written before the rename still lands.
 const HASH_ALIASES={live:'leaderboard',rounds:'questions',weekly:'calendar'};
 function showPage(k){
+  document.documentElement.dataset.page=k;   // the status line's season and counts show on the leaderboard only
   PAGES.forEach(pg=>{
     document.getElementById('page-'+pg).classList.toggle('on', pg===k);
     const b=document.querySelector('.ptab[data-page="'+pg+'"]'); if(b) b.classList.toggle('on', pg===k);
