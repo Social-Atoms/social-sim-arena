@@ -23,8 +23,5 @@ Rasters were exported with macOS QuickLook (`qlmanage -t -s <size>`); re-export 
 
 | Folder | What | Source |
 | --- | --- | --- |
-| `social-atoms/` | the Social Atoms mark (opened sphere, light) and the small three-disc cut | copies of the masters in the Social Atoms brand folder; do not edit here |
-| `institutions/` | the wordmarks of the collaborating universities, and `collaborators.png`, the strip the README shows | the SVGs are the Wikimedia Commons files (public domain as text marks); the marks themselves belong to their universities and appear here only to name collaborators |
+| `social-atoms/` | the Social Atoms atoms mark (three discs on ink), the organizer's mark in the README | a copy of the master in the Social Atoms brand folder; do not edit here |
 | `contributors/` | `wall.svg`, the round-avatar wall in the README | drawn by `python -m tools.contributors_wall` from the GitHub roster, avatars embedded, bots left out |
-
-The strip was captured from a plain HTML row (the five SVGs at 23 px on a white card, 2x) so it reads the same on GitHub's light and dark themes.
