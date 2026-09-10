@@ -202,8 +202,8 @@ registration open, and `tools/probe_agent_api.py` is the check instead.
 ## Contract test
 
 ```bash
-python examples/agent-api/server.py
-python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast
+python3 examples/agent-api/server.py
+python3 tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast
 ```
 
 `tools/probe_agent_api.py` is the runnable contract test: standard library
@@ -239,7 +239,7 @@ Then the cron's own path, against a real open round of each shape, signed
 with the test key, filing nothing:
 
 ```bash
-python tools/rehearse_endpoint.py --url https://your-host/forecast
+python3 tools/rehearse_endpoint.py --url https://your-host/forecast
 ```
 
 If that prints `3 of 3 shapes filed and validated`, the refresh will file

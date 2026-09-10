@@ -344,7 +344,7 @@ byId('api-test').addEventListener('click', async () => {
     if (error.name === 'AbortError') { last.detail = 'Request timed out after 60 seconds.'; }
     else if (error instanceof TypeError) {
       browserBlocked = true;
-      step('Blocked by the browser, not by us', 'Your endpoint did not answer this page\u2019s preflight, which is what a browser needs before it will send a cross-origin POST. The Arena\u2019s own calls are server-to-server and never preflight, so this says nothing about whether the endpoint works. Test it from a terminal instead: <code>python tools/probe_agent_api.py --url '+esc(urlInput.value)+'</code>. To make this page work too, answer OPTIONS with <code>Access-Control-Allow-Origin: *</code> (see examples/agent-api/server.py).', 'wait');
+      step('Blocked by the browser, not by us', 'Your endpoint did not answer this page\u2019s preflight, which is what a browser needs before it will send a cross-origin POST. The Arena\u2019s own calls are server-to-server and never preflight, so this says nothing about whether the endpoint works. Test it from a terminal instead: <code>python3 tools/probe_agent_api.py --url '+esc(urlInput.value)+'</code>. To make this page work too, answer OPTIONS with <code>Access-Control-Allow-Origin: *</code> (see examples/agent-api/server.py).', 'wait');
     }
     paintResults();
     if (browserBlocked) { status.className = 'status testing'; status.textContent = 'Not tested from this browser. Registration is open; verify with the CLI probe.'; }

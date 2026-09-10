@@ -147,7 +147,9 @@ def main(argv=None):
     body = (f"Received-At: {args.received}\n"
             f"Auto-merged after validation of {args.sha[:12]}"
             + (f" ({args.run_url})" if args.run_url else ""))
-    gh("pr", "merge", str(number), "--merge",
+    # --squash, not --merge: the ruleset on main requires a linear history, so a
+    # merge commit is refused. One commit per pull request, authored by its opener.
+    gh("pr", "merge", str(number), "--squash",
        "--subject", f"Merge #{number} from @{author}: {pr['title']}",
        "--body", body)
     print(f"merged #{number}")

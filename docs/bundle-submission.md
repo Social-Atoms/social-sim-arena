@@ -126,8 +126,8 @@ git clone https://github.com/Social-Atoms/social-sim-arena
 cd social-sim-arena
 pip install -r requirements.txt
 
-python tools/validate_bundle.py BUNDLE.json                  # the questions
-python tools/validate_bundle.py BUNDLE.json RESPONSE.json    # your answers
+python3 tools/validate_bundle.py BUNDLE.json                  # the questions
+python3 tools/validate_bundle.py BUNDLE.json RESPONSE.json    # your answers
 ```
 
 Nothing there touches the network. It runs the same code the arena runs, so the
@@ -202,15 +202,15 @@ the committed sandbox source artifact. Every write is temporary. See
 To inspect the participant-facing pieces individually:
 
 ```bash
-python examples/bundle/entrant.py \
+python3 examples/bundle/entrant.py \
     --bundle examples/bundle/sandbox-batch.json \
     --entrant demo_bundle_entrant \
     --anchor examples/bundle/sandbox-anchors.json \
     --out /tmp/response.json
 
-python tools/validate_bundle.py examples/bundle/sandbox-batch.json /tmp/response.json
+python3 tools/validate_bundle.py examples/bundle/sandbox-batch.json /tmp/response.json
 
-python tools/accept_bundle.py /tmp/response.json \
+python3 tools/accept_bundle.py /tmp/response.json \
     --bundle examples/bundle/sandbox-batch.json \
     --sandbox --write --out /tmp/sandbox-forecasts
 ```
@@ -225,8 +225,8 @@ rehearsal.
 To see a real week instead:
 
 ```bash
-python tools/make_bundle.py --list
-python tools/make_bundle.py --batch batch-2026-09-14 --out /tmp/real.json
+python3 tools/make_bundle.py --list
+python3 tools/make_bundle.py --batch batch-2026-09-14 --out /tmp/real.json
 ```
 
 `make_bundle.py` reads `questions/season0.json` and never writes it. It refuses
@@ -261,8 +261,8 @@ That step stays a pull request, which `tools/accept_bundle.py --write` produces
 for you:
 
 ```bash
-python tools/accept_bundle.py RESPONSE.json --bundle BUNDLE.json --write
-python tools/validate_submission.py forecasts/<round_id>/<entrant_id>.json
+python3 tools/accept_bundle.py RESPONSE.json --bundle BUNDLE.json --write
+python3 tools/validate_submission.py forecasts/<round_id>/<entrant_id>.json
 ```
 
 Nothing is written without `--write`; the common use of this command is asking

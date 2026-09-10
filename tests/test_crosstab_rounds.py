@@ -36,6 +36,13 @@ from ssa import batches, crosstab, harness, profile_round, refresh  # noqa: E402
 from ssa import series as series_registry  # noqa: E402
 from ssa.adapters import yougov_xtab  # noqa: E402
 
+# The fixture rounds carry the registered rounds' own ids, and the refresh
+# freezes a lock snapshot under that id the moment a window opens (the w39
+# snapshot landed on 2026-09-10 and handed this module sixty real points where
+# the fixture has thirty-seven). Every snapshot this module reads or writes
+# therefore lives in a scratch directory, never in the repository's locks/.
+refresh.LOCKS = tempfile.mkdtemp(prefix="ssa-crosstab-locks-")
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 CELLS = list(series_registry.YOUGOV_XTAB_CELLS)

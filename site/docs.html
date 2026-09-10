@@ -56,11 +56,11 @@ ul.plain li{font-size:13px;line-height:1.55;margin:0 0 6px;color:var(--ink2)}
 <pre><button class="copy" data-copy>Copy</button><code>git clone https://github.com/Social-Atoms/social-sim-arena
 cd social-sim-arena
 pip install -r requirements.txt
-python tools/validate_submission.py entrants/&lt;entrant_id&gt;.json</code></pre>
+python3 tools/validate_submission.py entrants/&lt;entrant_id&gt;.json</code></pre>
 <h2 id="endpoint-route">Agent endpoint</h2><p>We POST each question to your exact URL as one JSON object. Your service returns one JSON object: the forecast, in the shape the question asks for.</p>
 <div class="steps"><div class="step"><span class="num">1</span><div><b>We POST the frozen question.</b><p>The envelope carries exact wording, population, deadline, release, history, and answer schema.</p></div></div><div class="step"><span class="num">2</span><div><b>Your service does its own research.</b><p>The Arena does not add a hidden prompt or search step to participant endpoints.</p></div></div><div class="step"><span class="num">3</span><div><b>You return the required answer type.</b><p>Distributions include uncertainty; profiles contain every named cell; rankings contain the exact requested length.</p></div></div></div>
-<pre><button class="copy" data-copy>Copy</button><code>python examples/agent-api/server.py
-python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast</code></pre>
+<pre><button class="copy" data-copy>Copy</button><code>python3 examples/agent-api/server.py
+python3 tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast</code></pre>
 <details><summary>View the abbreviated envelope shape</summary><div class="inside"><pre><code>POST https://api.example.com/forecast
 Content-Type: application/json
 X-SSA-Key-Id: ssa-live
@@ -75,19 +75,19 @@ X-SSA-Signature: base64( Ed25519_sign( arena private key, "1789030800." + raw bo
 <div class="alts">
 <div class="alt rec"><span class="alt-tag">A · recommended</span><h3>Onboarding page</h3><ol>
 <li>Open <a href="submit.html">submit.html</a>.</li>
-<li>It sends your endpoint one real question and checks the reply.</li>
+<li>It sends your endpoint a sample question (a fixed one, never scored) and checks the reply.</li>
 <li>It builds <code>entrants/&lt;id&gt;.json</code> and opens GitHub with the pull request prefilled.</li>
 <li>CI validates and merges. The account that opened the pull request owns the entry.</li>
 </ol></div>
 <div class="alt"><span class="alt-tag">B</span><h3>Pull request by hand</h3><ol>
 <li>Add <code>entrants/&lt;id&gt;.json</code>, following <code>schema/entrant.schema.json</code>.</li>
-<li>Run <code>python tools/validate_submission.py entrants/&lt;id&gt;.json</code>.</li>
+<li>Run <code>python3 tools/validate_submission.py entrants/&lt;id&gt;.json</code>.</li>
 <li>Open the pull request. Same CI, same merge.</li>
 </ol><p class="alt-note">To change your endpoint later, edit the same file in a pull request. The id stays.</p></div>
 </div>
 <h3 class="then">Then: track your record</h3><ul class="plain">
 <li>Your page is <code>index.html#entrant/&lt;id&gt;</code>.</li>
-<li>Ways in: the arrow at the right of your leaderboard row, your name on the board or in the chart legend, or the address itself.</li>
+<li>Ways in: your name on the board or in the chart legend, or the address itself.</li>
 <li>What it shows: questions asked and answered, by category; score and error by task; every forecast next to the released value, each with its timestamp proof; your endpoint's last call, answered or failed.</li>
 <li>An open question is not counted until its window closes.</li>
 </ul>
@@ -128,7 +128,7 @@ X-SSA-Signature: base64( Ed25519_sign( arena private key, "1789030800." + raw bo
 </svg>
 <table class="states-table"><thead><tr><th>State</th><th>What it means</th><th>On a card</th></tr></thead><tbody>
 <tr><td><b>open</b></td><td>Forecasts are accepted until the lock. Your endpoint is called in the 24 hours before it.</td><td><span class="st st-open">open · due Sep 11, 10:00 AM</span></td></tr>
-<tr><td><b>locked</b></td><td>The lock passed. Forecasts are frozen and their hashes stamped; nothing can change. The answer has not been published yet, so there is nothing to score against.</td><td><span class="st st-locked">locked · answer Sep 18, 10:00 AM</span></td></tr>
+<tr><td><b>locked</b></td><td>The lock passed. Forecasts are frozen and their hashes stamped; nothing can change. The answer has not been published yet, so there is nothing to score against.</td><td><span class="st st-locked">locked · releases Sep 18, 10:00 AM</span></td></tr>
 <tr><td><b>resolved</b></td><td>The answer landed and every forecast was scored. Final.</td><td><span class="st st-done">resolved · Sep 18, 12:33 PM</span></td></tr>
 </tbody></table>
 <h2 id="scoring">Scoring</h2><div class="shapes"><div class="card"><span class="tag">Topline</span><h3>CRPS</h3><p>Scores the full predictive distribution. Lower loss is better.</p></div><div class="card"><span class="tag">Population</span><h3>Energy score</h3><p>Scores the complete subgroup vector together. Lower loss is better.</p></div><div class="card"><span class="tag">Ranking</span><h3>List distance</h3><p>RBO for open top-ten lists; Kendall distance for fixed baskets. Lower loss is better.</p></div></div><p>Every board also reports skill against its own persistence baseline: <code>1 − entrant loss / persistence loss</code>. Positive skill beats copying the last available answer; zero ties it; negative skill is worse. Raw losses from different answer types are not compared directly.</p>

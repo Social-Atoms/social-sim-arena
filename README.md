@@ -32,8 +32,8 @@ Your entry name + your endpoint + one pull request = you are in.
 The endpoint contract is [`docs/agent-api.md`](docs/agent-api.md). Rehearse locally:
 
 ```bash
-python examples/agent-api/server.py
-python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast
+python3 examples/agent-api/server.py
+python3 tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast
 ```
 
 ## How a question runs
@@ -53,7 +53,7 @@ entrants/     one registration file per entrant
 ssa/          the pipeline: adapters -> series -> baselines -> harness -> scoring -> refresh
 schema/       the JSON schemas CI enforces
 tools/        validate_submission.py, probe_agent_api.py, publishers
-tests/        python -m tests.test_site_render, tests/site/*.js
+tests/        python3 -m tests.test_site_render, tests/site/*.js
 site/         the static site; data.json is the pipeline's only output
 brand/        the mark and its exports
 docs/         the participant docs behind the site, and the protocol notes
@@ -65,8 +65,8 @@ Run it:
 git clone https://github.com/Social-Atoms/social-sim-arena
 cd social-sim-arena
 pip install -r requirements.txt
-python -m tests.test_site_render
-python -m ssa.refresh            # fetch live data, build site/data.json
+python3 -m tests.test_site_render
+python3 -m ssa.refresh            # fetch live data, build site/data.json
 ```
 
 In production the same refresh runs on a cron every

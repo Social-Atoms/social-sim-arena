@@ -826,6 +826,9 @@ const fmtCountdown = ms => {
 const fmtLocal = iso => new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 // The same, naming the zone: every time on the site is the reader's local time, and this says which.
 const fmtLocalZ = iso => new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
+// A closed question either waits for its release date or, once that date has passed, for the answer itself.
+const fmtDay = iso => new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+const closedWhen = r => (r.status==='awaiting_resolution' || Date.parse(r.release_at) < Date.now()) ? 'locked · answer expected '+fmtDay(r.release_at) : 'locked · releases '+fmtLocal(r.release_at);
 const fmtDate = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(y, m-1, d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'}); };
 const dnum = iso => { const [y,m,d] = iso.slice(0,10).split('-').map(Number); return new Date(y, m-1, d).getTime(); };
 // A round closes at its own lock. `deadline` is published for every round, so
@@ -1051,7 +1054,7 @@ function subsList(host, rows, id){
   const hay=x=>(x.t.label+' '+questionText(x.r)+' '+x.r.round_id).toLowerCase();
   const item=x=>{ const r=x.r, u=(x.t.unit||'').trim()==='%'?'%':'', active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
     // The question's state in the site's words (open, locked, resolved); an open one here is answered by definition.
-    const cls=active?'live':r.status==='resolved'?'done':'closed', when=active?'answered · due '+fmtLocal(deadlineOf(r)):r.status==='resolved'?'resolved · '+fmtLocal((r.resolution||{}).resolved_at||r.release_at):'locked · releases '+fmtLocal(r.release_at);
+    const cls=active?'live':r.status==='resolved'?'done':'closed', when=active?'answered · due '+fmtLocal(deadlineOf(r)):r.status==='resolved'?'resolved · '+fmtLocal((r.resolution||{}).resolved_at||r.release_at):closedWhen(r);
     const out=typeof x.rel==='number'?' &rarr; <b>'+fmtNum(x.rel,u)+'</b>'+(x.err!==null?' <span class="dim">off by '+fmtNum(x.err,u)+'</span>':''):'';
     return '<li><a href="#forecast/'+esc(r.round_id)+'/'+esc(id)+'"><span class="top"><b>'+esc(x.t.label)+'</b><span class="when '+cls+'">'+esc(when)+'</span></span><span class="q">'+esc(questionText(r))+'</span><span class="vals">'+forecastSummary(x.f,u,active)+out+'</span></a></li>'; };
   const draw=()=>{
@@ -1088,7 +1091,7 @@ function renderQuestion(roundId){
   window.__questionName=t.label+(o?' · round '+o.n:'');
   const rel=(r.resolution||{}).value, active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
   const listed=isListed(r);
-  const state=!listed?'<span class="qdue closed">scheduled · listed '+esc(fmtLocal(r.published_at))+'</span>':active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">locked · releases '+esc(fmtLocal(r.release_at))+'</span>';
+  const state=!listed?'<span class="qdue closed">scheduled · listed '+esc(fmtLocal(r.published_at))+'</span>':active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
   const f=r.forecasts||{}, ids=Object.keys(f), models=ids.filter(k=>!isBaseline(k));
   const nameOf=k=>forecasterName(k,data);
   const rows=ids.map(k=>{ const x=f[k]; const err=(typeof rel==='number'&&typeof x.mean==='number')?Math.abs(x.mean-rel):null; const crps=(err!==null&&typeof x.sd==='number')?crpsNormal(x.mean,x.sd,rel):null; return {k,x,err,crps,base:isBaseline(k)}; });
@@ -1129,7 +1132,7 @@ function renderForecast(roundId, entrantId){
   const name=forecasterName(entrantId,data).split(' (')[0], t=taskForRound(r), f=(r.forecasts||{})[entrantId]||null, u=(t.unit||'').trim()==='%'?'%':'';
   window.__forecastName=name+' on '+t.label;
   const rel=(r.resolution||{}).value, active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
-  const state=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">locked · releases '+esc(fmtLocal(r.release_at))+'</span>';
+  const state=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
   const tile=(k,v,sub)=>'<div class="tile"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="s">'+sub+'</div></div>';
   let h='<div class="eyebrow page-eyebrow">Forecast</div><h2 class="page-title"><a href="#entrant/'+esc(entrantId)+'">'+esc(name)+'</a> on <a href="#leaderboard/'+esc(taskKeyForRound(r))+'/all">'+esc(t.label)+'</a></h2>'
     +'<p class="lede page-description">'+esc(r.question)+'</p><p class="ent-meta">'+state+'<span>question <b>'+esc(r.round_id)+'</b></span><span>entrant <b>'+esc(entrantId)+'</b></span></p>';
@@ -1662,7 +1665,7 @@ function seriesChart(key, data){
      + `<path d="${smoothPath(pts)}" fill="none" stroke="#111110" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g>`;
   const lx = X(xs[xs.length-1]), lyv = Y(ys[ys.length-1]);
   g += `<circle cx="${lx}" cy="${lyv}" r="3.4" fill="#111110" stroke="#fff" stroke-width="1.6"/>`;
-  g += `<text x="${lx-8}" y="${lyv-9}" font-size="12.5" font-weight="800" fill="#111110" text-anchor="end">${ys[ys.length-1]}${d.unit==='%'?'%':''}</text>`;
+  g += `<text x="${lx-8}" y="${lyv-9}" font-size="12.5" font-weight="800" fill="#111110" text-anchor="end">${fmtVal(ys[ys.length-1], d.unit==='%'?'%':'')}</text>`;
   // forecast overlays, one column per published round; a date label only where it has room
   let lastLabelX = -1e9;
   upcoming.forEach(r => {
@@ -1744,8 +1747,15 @@ function renderTaskHeader(data,key){
   card.style.display='';
   const r = active[0] || rs.slice(-1)[0];
   if(!r){
-    document.getElementById('task-question-summary').textContent='No scheduled question yet';
-    document.getElementById('task-question-body').innerHTML='<p>This registered task has historical data but no reviewed Season 0 round.</p>';
+    // Nothing listed yet, but a question may already be scheduled: say when it lists.
+    const sched=(key==='agg'?(data.rounds||[]):taskRounds(d,data)).filter(x=>!isListed(x)).sort((a,b)=>String(a.published_at).localeCompare(String(b.published_at)))[0];
+    if(sched){
+      document.getElementById('task-question-summary').innerHTML='<span class="replay-tag">SCHEDULED</span><span class="qtext" title="'+esc(sched.round_id)+'">'+esc(questionText(sched))+'</span><time datetime="'+esc(sched.published_at)+'">lists '+esc(fmtLocal(sched.published_at))+'</time>';
+      document.getElementById('task-question-body').innerHTML='<p>'+esc(sched.question)+'</p><div class="qfoot"><span>lists '+esc(fmtLocal(sched.published_at))+'</span><span>locks '+esc(fmtLocal(sched.lock_at))+'</span><span>releases '+esc(fmtLocal(sched.release_at))+'</span></div>';
+    } else {
+      document.getElementById('task-question-summary').textContent='No scheduled question yet';
+      document.getElementById('task-question-body').innerHTML='<p>This registered task has historical data but no Season 0 question scheduled.</p>';
+    }
     return;
   }
   const due=deadlineOf(r), state=active.includes(r)?(key==='agg'?'NEXT TO CLOSE':'OPEN'):'LATEST';
@@ -1866,11 +1876,11 @@ function profileChart(d,data){
   if(slots.length){ let shift=target.reduce((a,t,i)=>a+(t-slots[i]),0)/slots.length; shift=Math.max(yTop-slots[0],Math.min(yBot-slots[slots.length-1],shift)); for(let i=0;i<slots.length;i++) slots[i]+=shift; }
   const maxCh=Math.max(6,Math.floor((P.r-14)/(many?5.2:6.1))-1);
   order.forEach((o,k)=>{
-    const ly=slots[k], lx=W-P.r, val=o.c.pts[o.c.pts.length-1].value, tail=' '+val+unit;
+    const ly=slots[k], lx=W-P.r, val=o.c.pts[o.c.pts.length-1].value, tail=' '+fmtVal(val,unit);
     let nm=o.c.label; if((nm+tail).length>maxCh) nm=nm.slice(0,Math.max(3,maxCh-tail.length-1))+'…';
     g+='<line x1="'+o.x+'" x2="'+(lx+6)+'" y1="'+o.y+'" y2="'+ly+'" stroke="'+colorAt(o.i)+'" stroke-width="1" opacity=".5"/>';
     g+='<circle cx="'+o.x+'" cy="'+o.y+'" r="2.8" fill="'+colorAt(o.i)+'" stroke="#fff" stroke-width="1.4"/>';
-    g+='<text x="'+(lx+9)+'" y="'+(ly+3.5)+'" font-size="'+(many?10:11)+'" fill="#111110"><title>'+esc(o.c.label)+tail+'</title>'+esc(nm)+' <tspan font-weight="700">'+val+unit+'</tspan></text>';
+    g+='<text x="'+(lx+9)+'" y="'+(ly+3.5)+'" font-size="'+(many?10:11)+'" fill="#111110"><title>'+esc(o.c.label)+tail+'</title>'+esc(nm)+' <tspan font-weight="700">'+fmtVal(val,unit)+'</tspan></text>';
   });
   svg.innerHTML=g;
   const lines=()=>svg.querySelectorAll('path[data-cell]');
@@ -1889,14 +1899,17 @@ function profileChart(d,data){
   renderLegend(ids,nameOf);
 }
 function rankingChart(d,data){
-  const svg=clearChart(); renderLegend([],{}); const r=taskRounds(d,data).slice(-1)[0];
+  const svg=clearChart(); renderLegend([],{});
+  const rs=taskRounds(d,data).filter(isListed).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
+  const open=rs.filter(x=>x.status==='open'&&Date.parse(deadlineOf(x))>Date.now()), waiting=rs.filter(x=>x.status!=='open'&&x.status!=='resolved');
+  const r=open[0]||rs.slice(-1)[0];
   const W=svg.clientWidth,H=svg.clientHeight;
   svg.setAttribute('viewBox','0 0 '+W+' '+H);
   svg.innerHTML='<foreignObject x="0" y="0" width="'+W+'" height="'+H+'"><div xmlns="http://www.w3.org/1999/xhtml" class="chart-message">'
     +'<h3>The list is the forecast</h3>'
     +'<p>Predict ten article titles in order. Rank-biased overlap scores the whole list.</p>'
-    +'<p class="muted">No historical Wikipedia list archive is published in data.json yet.</p>'
-    +'<p class="round">'+esc(r?'First live round: '+questionText(r):'No scheduled round')+'</p></div></foreignObject>';
+    +'<p class="muted">A ranked list has no line to draw; the record is the questions themselves'+(waiting.length?', '+waiting.length+' locked and awaiting '+(waiting.length===1?'its list':'their lists'):'')+'.</p>'
+    +'<p class="round">'+esc(r?(open[0]?'Next question: ':'Latest question: ')+questionText(r)+' · '+(open[0]?'due '+fmtLocal(deadlineOf(r)):closedWhen(r)):'No scheduled question')+'</p></div></foreignObject>';
 }
 
 function setTab(key){
@@ -1940,7 +1953,7 @@ function renderTaskChart(key){
     aggChart(psTraj,nameOf,unit);renderLegend(legendFor(psTraj),nameOf);return;
   }
   const pts=pointsFor(data,d.chart),last=pts.slice(-1)[0];
-  window.__caption='<span class="replay-tag">OBSERVED HISTORY</span> · '+esc(d.label)+(last?' · latest '+last.value+esc(d.unit||'')+' on '+fmtDate(last.date):'')+' · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
+  window.__caption='<span class="replay-tag">OBSERVED HISTORY</span> · '+esc(d.label)+(last?' · latest '+esc(fmtVal(last.value,d.unit||''))+' on '+fmtDate(last.date):'')+' · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
   seriesChart(key,data);
 }
 
@@ -2098,6 +2111,8 @@ function nextOpenOnly(rounds){
   const open=rounds.filter(r=>r.status==='open').sort((a,b)=>String(a.release_at).localeCompare(String(b.release_at)));
   return rounds.filter(r=>r.status!=='open'||r===open[0]);
 }
+// A released value as the source prints it: at most two decimals, no trailing zeros.
+function fmtVal(v, unit){ return (typeof v==='number' ? String(Math.round(v*100)/100) : '·') + (unit||''); }
 function fmtNum(v, unit){
   const a = Math.abs(v), d = a>=100?0:a>=10?1:2;
   return (typeof v==='number' ? v.toFixed(d) : '·') + (unit||'');
@@ -2244,7 +2259,7 @@ function roundsList(data){
     const t=taskForRound(r),g=TASK_GROUPS.find(x=>x.id===t.group),active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
     const kind=r.target_type||((r.cells&&r.cells.length)?'profile_energy':'continuous_normal');
     const shape=kind==='profile_energy'?'profile · '+(r.cells||[]).length+' cells':kind==='ranking_list'?'ranking':'number';
-    const when=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">locked · releases '+esc(fmtLocal(r.release_at))+'</span>';
+    const when=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
     const strip=forecastStrip(r,t,data)||'<div class="qempty">'+(r.n_forecasts?esc(r.n_forecasts)+' forecast'+(r.n_forecasts===1?'':'s')+' filed · '+esc(shape):'No forecasts filed yet · '+esc(shape))+'</div>';
     return '<div class="qcard'+(active?' live':'')+'"><div class="qhead"><span>'+esc(g?g.label:'Task')+'</span><span class="qshape'+(kind!=='continuous_normal'?' special':'')+'">'+esc(shape)+'</span>'+when+'</div>'
       +'<h3><a class="qlink" href="#question/'+esc(r.round_id)+'">'+esc(t.label)+'</a>'+(()=>{const o=roundOrdinal(r,data); return o?' <span class="ord">round '+o.n+' of '+o.of+'</span>':'';})()+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
