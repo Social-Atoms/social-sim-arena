@@ -67,7 +67,7 @@ console.log(`data updated    : ${els['data-updated'].textContent}`);
   const to = from + 21 * 86400000;
   const inGrid = iso => { const t = Date.parse(iso); return t >= from && t < to; };
   const landing = data.rounds.filter(r => r.release_at && inGrid(r.release_at));
-  const tagged = [...weekly.matchAll(/<div class="wc-tag res"><b>(\d+)<\/b>/g)]
+  const tagged = [...weekly.matchAll(/<div class="wc-tag res(?: past)?"><b>(\d+)<\/b>/g)]
     .reduce((n, m) => n + Number(m[1]), 0);
   if (landing.length && tagged !== landing.length) {
     problems.push(`the calendar counts ${tagged} answers landing in the three `

@@ -1,0 +1,15 @@
+{
+  "entrant": "gemini-pro-web-superfc",
+  "input_hash": "aef46fc280ff",
+  "logged_at": "2026-09-10T16:25:08Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt_sha256": "6dc5e3d06a6f25f72ea1edd5e6d8840ea7e651f74ec55d6b0bd53aea728dc3aa",
+  "reply": "1. Outside view. Historically, this generic ballot tracker hovered between D+3 and D+7 for most of the summer, moving 0 to 2 points per week. A naive extrapolation based strictly on the summer months would predict a value around D+6 or D+7. However, the most recent release showed a massive jump to D+11.0, suggesting a fundamental shift rather than typical statistical noise. \n\n2. Inside view. The jump to 11.0 corresponds exactly to a recent methodology change by YouGov for their post-Labor Day polling. According to search results, YouGov transitioned from asking a standard, abstract generic ballot (\"Democrat or Republican for Congress?\") to a named-candidate format for likely voters (\"NAMES OF THE ACTUAL CANDIDATES RUNNING IN THEIR DISTRICT\"). This format asks respondents to choose between the actual candidates on their upcoming local ballot. The result was 49% Democratic to 38% Republican (D+11). Because polling firms typically stick with their likely-voter/named-candidate screens through the rest of the cycle once initiated around Labor Day, we should expect the next poll to use this same methodology. Therefore, the baseline for our prediction should shift to ~11.0, though we should account for regression to the mean and standard polling variance (an expected polling standard error is roughly 2.5 to 3 points on a spread with a ~1,200 likely voter sample). \n\n3. Pre-mortem. If this forecast is badly wrong, it is likely because either a) the D+11 reading was a major outlier for the new methodology and the true named-ballot lead is closer to D+7, or b) YouGov's tracker author reverts to logging the traditional \"generic\" registered voter question (which was running at D+6) instead of the named-candidate metric. To correct for this, I will pull the expected mean down slightly from 11 to 9.5 and expand the standard deviation to cover the D+6 to D+8 range comfortably.\n\n4. Calibrate. With a mean of 9.5 and an SD of 2.3, the 1-SD interval is roughly [7.2, 11.8]. This comfortably covers the possibility of a normal polling fluctuation around the new likely voter baseline, while capturing a moderate regression toward the summer's registered voter baseline.\n\n{\"mean\": 9.5, \"sd\": 2.3}",
+  "round_id": "yougov-2026-w38-generic",
+  "usage": {
+    "input_tokens": 2565,
+    "output_tokens": 520,
+    "thinking_tokens": 3456
+  },
+  "via": "direct"
+}
