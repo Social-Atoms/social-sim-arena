@@ -2699,8 +2699,11 @@ Promise.allSettled([
 });
 </script>
 <script>
+// The easter egg speaks in a browser's console only; the render tests run this script under a stub whose agent says so.
+if(!/ssa-render-check/.test((typeof navigator!=='undefined'&&navigator.userAgent)||'')){
 console.log("%c\n              \u25cf\n       /\\    /     Social Simulation Arena\n      /  \\  /      Can a simulator predict a public before it moves?\n     /    \\/\n    /\n","color:#15803d;font-family:monospace;font-size:12px");
 console.log("%cYou looked behind the board. Join us: cli@mit.edu \u00b7 github.com/Social-Atoms/social-sim-arena","color:#4f4e49;font-family:monospace");
+}
 </script>
 </body>
 </html>
