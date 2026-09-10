@@ -267,7 +267,10 @@ table.lb .skill.pos{color:var(--accent-ink);}
 /* question browser and weekly set */
 .widecol{max-width:1120px!important;}
 .task-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0 12px;}
-.task-search{flex:1 1 280px;border:1px solid var(--line);border-radius:5px;padding:8px 10px;font:13px var(--sans);color:var(--ink);background:#fff;}
+#round-status-seg{margin-left:auto;}
+.qcounts{font-weight:400;font-size:13px;color:var(--mut);margin-left:10px;letter-spacing:0;}
+.qcounts b{color:var(--ink2);font-weight:700;}
+.task-search{flex:0 1 260px;min-width:160px;border:1px solid var(--line);border-radius:5px;padding:8px 10px;font:13px var(--sans);color:var(--ink);background:#fff;}
 /* question cards: the question first, then every answer on one scale */
 .qgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
 .qcard{border:1px solid var(--line);border-radius:5px;background:#fff;padding:14px 16px 12px;display:flex;flex-direction:column;min-width:0;}
@@ -712,7 +715,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 
   <div class="page" id="page-questions">
     <div class="inner"><div class="col widecol">
-      <h2 class="page-title">Questions</h2>
+      <h2 class="page-title">Questions <span class="qcounts" id="q-counts"></span></h2>
       <div class="task-toolbar">
         <input class="task-search" id="task-search" type="search" placeholder="Search questions…" aria-label="Search tasks">
         <div class="qf-picker" id="qf-picker">
@@ -722,7 +725,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
             <div class="model-pop-foot"><span class="model-count" id="qf-count"></span><button type="button" class="model-action" id="qf-clear">Clear</button><button type="button" class="model-action" id="qf-done">Done</button></div>
           </section>
         </div>
-        <div class="seg mini" id="round-status-seg" role="group" aria-label="Question status"><button data-status="all" class="on">All</button><button data-status="active">Open</button><button data-status="resolved">Resolved</button></div>
+        <div class="seg mini" id="round-status-seg" role="group" aria-label="Question status"><button data-status="all" class="on">All</button><button data-status="active">Open</button><button data-status="locked">Locked</button><button data-status="resolved">Resolved</button></div>
       </div>
       <div id="rounds-list"></div>
     </div></div>
@@ -2227,10 +2230,15 @@ function roundsList(data){
   const status=window.__roundStatus||'all',query=(window.__roundQuery||'').toLowerCase(), picked=qf.sel;
   qfLabel();
   document.querySelectorAll('#round-status-seg button').forEach(b=>b.classList.toggle('on',b.dataset.status===status));
+  const listed=(data.rounds||[]).filter(isListed), now=Date.now();
+  const nOpen=listed.filter(r=>r.status==='open'&&Date.parse(deadlineOf(r))>now).length, nRes=listed.filter(r=>r.status==='resolved').length, nLock=listed.length-nOpen-nRes;
+  const qc=document.getElementById('q-counts'); if(qc) qc.innerHTML='<b>'+nOpen+'</b> open · <b>'+nLock+'</b> locked · <b>'+nRes+'</b> resolved';
   const rows=(data.rounds||[]).filter(r=>{
     if(!isListed(r)) return false;
     const t=taskForRound(r),active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
+    const locked=r.status==='locked'||r.status==='awaiting_resolution'||(r.status==='open'&&!active);
     if(status==='active'&&!active)return false;
+    if(status==='locked'&&!locked)return false;
     if(status==='resolved'&&r.status!=='resolved')return false;
     if(picked.size && !picked.has(taskKeyForRound(r))) return false;
     const hay=(r.round_id+' '+r.question+' '+t.label+' '+t.population+' '+(r.batch_id||'')).toLowerCase();
@@ -2378,6 +2386,7 @@ function renderWeekly(data){
       +'<span>'+open.reduce((n,r)=>n+(r.n_forecasts||0),0)+' forecasts filed so far</span></div></section>'
     +'<aside class="week-card week-side" aria-labelledby="week-summary-title">'
       +'<h3 id="week-summary-title">This week</h3><dl>'
+      +'<div class="week-date"><dt>Season</dt><dd>'+esc(String(data.season ?? 0))+' <span class="dim">· live</span></dd></div>'
       +'<div class="week-date"><dt>Next close</dt><dd>'+when(soonest)+'</dd></div>'
       +'<div class="week-date"><dt>Last close in view</dt><dd>'+when(lastClose)+'</dd></div>'
       +'<div class="week-date"><dt>Answers begin</dt><dd>'+when(firstLanding)+'</dd></div>'
@@ -2476,10 +2485,7 @@ function render(data){
   function meta(){
     const openNow = data.rounds.filter(r=>isListed(r)&&r.status==='open'&&Date.parse(deadlineOf(r))>Date.now()).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
     const nx = openNow[0];
-    const parts = ['Season <b>0</b>'];
-    if(nx) parts.push('Next deadline <b>'+fmtCountdown(new Date(deadlineOf(nx))-Date.now())+'</b>');
-    parts.push('<b>'+openNow.length+'</b> open');
-    parts.push('<b>'+(lb.resolved_rounds||0)+'</b> resolved');
+    const parts = [];
     document.getElementById('meta-line').innerHTML = '<span class="live"><span class="livedot" aria-hidden="true"></span>Live</span>'+parts.map(p=>'<span>'+p+'</span>').join('');
   }
   meta();
@@ -2524,7 +2530,7 @@ const PAGE_TITLES={leaderboard:'Leaderboard',questions:'Questions',calendar:'Cal
 // Pre-release names. Kept so a link written before the rename still lands.
 const HASH_ALIASES={live:'leaderboard',rounds:'questions',weekly:'calendar'};
 function showPage(k){
-  document.documentElement.dataset.page=k;   // the status line's season and counts show on the leaderboard only
+  document.documentElement.dataset.page=k;
   PAGES.forEach(pg=>{
     document.getElementById('page-'+pg).classList.toggle('on', pg===k);
     const b=document.querySelector('.ptab[data-page="'+pg+'"]'); if(b) b.classList.toggle('on', pg===k);
