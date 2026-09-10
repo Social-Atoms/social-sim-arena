@@ -440,7 +440,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 </style>
 <script defer src="panels.js"></script>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="stylesheet" href="typography.css?v=5c8c77231e">
+<link rel="stylesheet" href="typography.css?v=776d3377fa">
 </head>
 <body class="site-home">
 
@@ -473,7 +473,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
   <div class="page on" id="page-live">
     <div class="chartcol">
       <div class="task-shell">
-        <aside class="tasknav" id="task-panel" aria-label="Task families">
+        <aside class="tasknav" id="task-panel" aria-label="Tasks">
           <div class="tasknav-head">
             <span class="tasknav-label">Tasks</span>
             <div class="tasknav-actions">
@@ -490,11 +490,11 @@ table.lb .skill.pos{color:var(--accent-ink);}
             <div id="task-families"></div>
           </div>
         </aside>
-        <div class="panel-resizer" data-panel-resizer="tasks" role="separator" tabindex="0" aria-label="Resize task families" aria-orientation="vertical" aria-controls="task-panel" title="Drag to resize · double-click to reset"></div>
+        <div class="panel-resizer" data-panel-resizer="tasks" role="separator" tabindex="0" aria-label="Resize tasks" aria-orientation="vertical" aria-controls="task-panel" title="Drag to resize · double-click to reset"></div>
         <section class="taskview" id="benchmark-panel">
           <div class="taskhead">
             <div class="eyebrow page-eyebrow" id="task-eyebrow">BENCHMARK OVERVIEW</div>
-            <h2 class="page-title" id="task-title">All task families</h2>
+            <h2 class="page-title" id="task-title">Overall</h2>
             <div class="taskmeta page-description" id="task-meta"><span>Loading task map…</span></div>
           </div>
           <details class="question-card" id="task-question-card" open>
@@ -679,7 +679,7 @@ const YOUGOV_PROFILE_CELLS = [
 ];
 const TREND_CELLS = ['trends_share_tesla','trends_share_iphone','trends_share_samsung','trends_share_netflix','trends_share_disney'];
 const TASKS = {
-  agg:{label:'All task families', group:null, population:'All measured populations', cadence:'weekly + release calendar', shape:'three task shapes'},
+  agg:{label:'Overall', group:null, population:'All measured populations', cadence:'weekly + release calendar', shape:'three task shapes'},
   yougov_approval:{label:'Economist / YouGov approval',group:'opinion',population:'US adult citizens',cadence:'weekly',shape:'topline distribution',chart:'yougov_approval',unit:'%',tracker:'yougov_approval',per:'yougov_approval',srcName:'YouGov',srcUrl:'https://yougov.com/en-us/topics/topic/The_Economist_YouGov_polls',match:r=>r.series==='yougov_approval'},
   mc_approval:{label:'Morning Consult approval',group:'opinion',population:'US registered voters',cadence:'weekly',shape:'topline distribution',chart:'mc_approval',unit:'%',tracker:'mc_approval',per:'mc_approval',srcName:'Morning Consult',srcUrl:'https://pro.morningconsult.com/trackers/donald-trump-congress-policy-republicans-polling',match:r=>r.series==='mc_approval'},
   civiqs_approval:{label:'Civiqs approval',group:'opinion',population:'US registered voters',cadence:'weekly snapshot',shape:'topline distribution',chart:'civiqs_net_approval',unit:' pts',zero:true,per:'civiqs_net_approval',srcName:'Civiqs',srcUrl:'https://civiqs.com/results/approve_president_trump_2025',match:r=>r.series==='civiqs_net_approval' && (r.target_type||'continuous_normal')==='continuous_normal'},
@@ -1363,7 +1363,7 @@ function renderBoard(mode){
   if(key==='agg'){
     const spans=(data.backtest&&data.backtest.spans)||{};
     entries=spans[mode]||(data.backtest&&data.backtest.overall)||[];appendPending=true;
-    title='ALL-TASK MODEL BACKTEST';
+    title='OVERALL \u00b7 MODEL BACKTEST';
     note='Walk-forward model replay on matched historical releases. Arena score 0 is persistence and 100 is a perfect oracle.';
   }else if(d.kind==='profile'){
     const live=((data.profile||{}).matched||[]).length?(data.profile||{}).matched:(data.profile||{}).board||[];
@@ -1543,7 +1543,7 @@ function roundsList(data){
       +'<h3>'+esc(t.label)+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
       +'<div class="qfoot"><span class="qid" title="'+esc(r.round_id)+'">Source '+(t.srcUrl?'<a class="src" href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span>'+esc(t.population)+'</span><a class="go" href="#live/'+taskKeyForRound(r)+'/all">open task →</a></div></div>';
   }).join('')+'</div>'||'';
-  if(!rows.length) el.innerHTML='<div class="week-card"><h3>No matching questions</h3><p>Try another task family, status, or search term.</p></div>';
+  if(!rows.length) el.innerHTML='<div class="week-card"><h3>No matching questions</h3><p>Try another category, status, or search term.</p></div>';
 }
 
 function renderWeekly(data){
@@ -1659,7 +1659,7 @@ function renderWeekly(data){
       +'<div class="wcal"><div class="wgrid wghead">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>'<div>'+d+'</div>').join('')+'</div>'
       +[0,1,2].map(w=>'<div class="wgrid">'+weekRow(w)+'</div>').join('')+'</div>'
       +'<p>Each one closes on its own clock, so the week is a calendar rather than a single deadline. A question whose release slips is held, never re-dated.</p>'
-      +'<div class="facets"><div class="facet"><h4>Task families</h4>'+bar(fam)+'</div>'
+      +'<div class="facets"><div class="facet"><h4>Categories</h4>'+bar(fam)+'</div>'
       +'<div class="facet"><h4>Answer shape</h4>'+bar(shape)+'</div>'
       +'<div class="facet"><h4>Horizon</h4>'+bar(horizon)+'</div></div>'
       +'<div class="week-browse"><a class="go" href="#rounds">Browse all '+open.length+' open questions →</a>'

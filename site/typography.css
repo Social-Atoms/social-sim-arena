@@ -15,6 +15,13 @@
   --accent-hover: #166534;
 }
 body { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+/* The browser's own stylesheet puts code in the system monospace, which is
+   wider and taller than Inconsolata at the same size. Claim it back, and let
+   inline code sit at the size of the text around it. */
+code, pre, kbd, samp, tt { font-family: var(--font-mono); }
+code, kbd, samp { font-size: .96em; }
+pre { font-size: 13px; line-height: 1.55; }
+pre code, pre kbd, pre samp { font: inherit; }
 td.num { text-align: right; white-space: nowrap; }
 .header-status .meta b, .site-home .qcard .qstats b { font-weight: 700; }
 .header-status .updated b { font-weight: 400; }
@@ -191,8 +198,8 @@ td.num { text-align: right; white-space: nowrap; }
 .site-submit .privacy { font-size: 12px; font-weight: 500; line-height: 16px; }
 .site-submit .storage-note p, .site-submit .status, .site-submit .empty { font-size: 13.5px; line-height: 1.5; }
 .site-submit .shape span { font-size: 12px; line-height: 1.5; }
-.site-submit .shape code { font-size: 12px; line-height: 1.6; }
-.site-submit pre.code { font-size: 13px; line-height: 1.55; }
+.site-submit .shape code { line-height: 1.6; }
+.site-submit pre.code, .site-submit pre.code code { font-size: 13px; line-height: 1.55; }
 .site-submit .codelabel, .site-submit .eyebrow { letter-spacing: .09em; }
 .site-submit .railbox dl { font-size: 12.5px; line-height: 1.5; }
 .site-submit .railbox dt { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
