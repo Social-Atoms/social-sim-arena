@@ -28,8 +28,8 @@ a{color:inherit;}
 .header-status{display:flex;align-items:center;gap:6px 18px;padding:0 16px 8px;flex-wrap:wrap;}
 /* The live light sits at the head of the status line: the arena is running, and this is when. */
 .header-status .meta .live{display:inline-flex;align-items:center;gap:6px;color:var(--accent-ink);font-weight:700;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;}
-.livedot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:0 0 auto;animation:breathe 2.6s ease-out infinite;}
-@keyframes breathe{0%{box-shadow:0 0 0 0 rgba(21,128,61,.45);}70%{box-shadow:0 0 0 7px rgba(21,128,61,0);}100%{box-shadow:0 0 0 0 rgba(21,128,61,0);}}
+.livedot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:0 0 auto;animation:breathe 3.6s ease-in-out infinite;}
+@keyframes breathe{0%{box-shadow:0 0 0 0 rgba(21,128,61,.22);opacity:1;}50%{opacity:.75;}70%{box-shadow:0 0 0 4px rgba(21,128,61,0);}100%{box-shadow:0 0 0 0 rgba(21,128,61,0);opacity:1;}}
 @media(prefers-reduced-motion:reduce){.livedot{animation:none;}}
 .exam{display:inline-flex;gap:5px;align-items:baseline;border:1px solid #cce4d3;background:#f5faf6;color:var(--accent-ink);border-radius:4px;padding:3px 9px;font:700 12.5px/1.4 var(--sans);cursor:pointer;flex-wrap:wrap;text-align:left;}
 .exam:hover{border-color:var(--accent);}
@@ -111,7 +111,7 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .task-link.on{background:#f0f2f0;color:var(--ink);font-weight:600;}
 .task-all:focus-visible,.task-link:focus-visible,.task-group summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
 .taskview{min-width:0;display:flex;flex-direction:column;overflow-y:auto;overflow-wrap:anywhere;}
-.taskhead{padding:var(--panel-head-top) 16px 10px;border-bottom:1px solid #efefec;flex:0 0 auto;}
+.taskhead{padding:var(--panel-head-top) 16px 8px;border-bottom:1px solid #efefec;flex:0 0 auto;}
 .taskhead .eyebrow{font-size:var(--panel-title-size);line-height:var(--panel-title-line);letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:800;}
 .taskhead h2{margin:2px 0 3px;color:var(--ink);font-size:19px;line-height:1.25;}
 .taskmeta{display:flex;flex-wrap:wrap;gap:5px 12px;color:var(--mut);font-size:12.5px;}
@@ -138,7 +138,7 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .seg-choice{position:relative;display:flex;flex:1;min-width:0;}
 .seg-choice input{position:absolute;width:1px;height:1px;margin:0;opacity:0;}
 .seg-choice span{width:100%;text-align:center;}
-.chart-filters{padding:10px 16px 8px;flex:0 0 auto;min-width:0;}
+.chart-filters{padding:8px 16px 4px;flex:0 0 auto;min-width:0;}
 .legend-strip{min-width:0;}
 .model-toolbar{display:flex;align-items:center;gap:12px;min-height:0;margin-right:auto;}
 .model-trigger{display:inline-flex;align-items:center;gap:8px;min-height:25px;padding:0 9px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink2);font:500 12.5px/1.3 var(--sans);cursor:pointer;}
@@ -225,7 +225,7 @@ table.lb thead th.has-help{cursor:help;}
 .seg button{position:relative;}
 th.has-help .th-label{text-decoration:underline dotted #d0cec7;text-underline-offset:3px;}
 /* the hover box: white, one thin dark border, a soft shadow, the page's own face */
-th .th-help,.seg button .th-help,.taskmeta b .th-help,.lb-how .th-help{visibility:hidden;opacity:0;position:absolute;z-index:40;top:calc(100% + 6px);right:6px;width:min(280px,60vw);padding:7px 10px;background:#fff;color:var(--ink2);border:1px solid #333;box-shadow:0 2px 8px rgba(0,0,0,.08);font:400 12.5px/1.45 var(--sans);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;z-index:6;pointer-events:none;transition:opacity .2s,visibility .2s;}
+th .th-help,.seg button .th-help,.taskmeta b .th-help,.lbhead h2 .th-help{visibility:hidden;opacity:0;position:absolute;z-index:40;top:calc(100% + 6px);right:6px;width:min(280px,60vw);padding:7px 10px;background:#fff;color:var(--ink2);border:1px solid #333;box-shadow:0 2px 8px rgba(0,0,0,.08);font:400 12.5px/1.45 var(--sans);text-transform:none;letter-spacing:0;text-align:left;white-space:normal;z-index:6;pointer-events:none;transition:opacity .2s,visibility .2s;}
 th .th-help{width:min(280px,calc(var(--board-width,320px) - 110px));}
 th:hover .th-help,th:focus-within .th-help,th:focus .th-help{visibility:visible;opacity:1;}
 .seg button .th-help{left:auto;right:0;top:calc(100% + 8px);width:min(300px,60vw);font-weight:400;text-align:left;text-transform:none;}
@@ -243,10 +243,12 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .av .lg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:4px;background:inherit;}
 .lchip .av,.model-option .av{width:18px;height:18px;border-radius:3px;font-size:8px;}
 .lchip .av .lg,.model-option .av .lg{padding:2px;}
-.lb-how{position:relative;margin-left:auto;align-self:center;border:0;background:none;padding:0;font:600 12px/1.4 var(--sans);color:var(--mut);cursor:help;text-decoration:underline dotted #d0cec7;text-underline-offset:3px;white-space:nowrap;}
-.lb-how:hover,.lb-how:focus{color:var(--ink);outline:none;}
-.lb-how .th-help{font-weight:400;text-align:left;text-transform:none;letter-spacing:0;line-height:1.55;}
-.lb-how:hover .th-help,.lb-how:focus .th-help{visibility:visible;opacity:1;}
+/* The board's title carries the scoring note: hover or focus it. The scope word wears the same dotted line as the column heads. */
+.lbcol .lbhead h2.has-help{position:relative;cursor:help;outline:none;}
+.lbcol .lbhead h2.has-help span#lb-title{text-decoration:underline dotted #d0cec7;text-underline-offset:3px;}
+.lbcol .lbhead h2.has-help:hover span#lb-title{color:var(--ink);}
+.lbcol .lbhead h2 .th-help{font-weight:400;font-size:12px;text-align:left;text-transform:none;letter-spacing:0;line-height:1.55;}
+.lbcol .lbhead h2:hover .th-help,.lbcol .lbhead h2:focus .th-help{visibility:visible;opacity:1;}
 @container leaderboard (max-width:420px){
   .lbhead h2{flex-basis:100%;}
   .lbhead .seg{width:100%;}
@@ -696,8 +698,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
     <div class="panel-resizer" data-panel-resizer="board" role="separator" tabindex="0" aria-label="Resize leaderboard" aria-orientation="vertical" aria-controls="leaderboard-panel" title="Drag to resize · double-click to reset"></div>
     <aside class="lbcol" id="leaderboard-panel" aria-label="Leaderboard">
       <div class="lbhead">
-        <h2><b>Leaderboard</b> <span id="lb-title">Overall</span></h2>
-        <button type="button" class="lb-how has-help" id="lb-how">how it's scored<span class="th-help" id="lb-note" role="tooltip"></span></button>
+        <h2 class="has-help" id="lb-how" tabindex="0" title=""><b>Leaderboard</b> <span id="lb-title">Overall</span><span class="th-help" id="lb-note" role="tooltip"></span></h2>
       </div>
       <div class="scroll">
         <table class="lb">
@@ -1991,12 +1992,12 @@ function renderBoard(mode){
   // the board's left edge.
   if(!window.__helpPlaced){
     window.__helpPlaced = true;
-    const show = ev => { const th = ev.target.closest && ev.target.closest('th.has-help, .lb-how'); if(!th) return; const box = th.querySelector('.th-help'); if(!box) return;
+    const show = ev => { const th = ev.target.closest && ev.target.closest('th.has-help, #lb-how'); if(!th) return; const box = th.querySelector('.th-help'); if(!box) return;
       const t = th.getBoundingClientRect(), panel = th.closest('.lbcol') || th.closest('table'), pr = panel.getBoundingClientRect();
-      const w = Math.min(th.matches('.lb-how') ? 340 : 280, pr.width - 24); box.style.width = w + 'px';
+      const w = Math.min(th.id==='lb-how' ? 340 : 280, pr.width - 24); box.style.width = w + 'px';
       box.style.position = 'fixed'; box.style.top = (t.bottom + 6) + 'px'; box.style.right = 'auto';
       box.style.left = Math.max(pr.left + 12, Math.min(t.right - w, pr.right - 12 - w)) + 'px'; };
-    const hide = ev => { const th = ev.target.closest && ev.target.closest('th.has-help, .lb-how'); if(!th) return; const box = th.querySelector('.th-help'); if(box) box.removeAttribute('style'); };
+    const hide = ev => { const th = ev.target.closest && ev.target.closest('th.has-help, #lb-how'); if(!th) return; const box = th.querySelector('.th-help'); if(box) box.removeAttribute('style'); };
     document.addEventListener('mouseover', show); document.addEventListener('focusin', show);
     document.addEventListener('mouseout', hide); document.addEventListener('focusout', hide);
   }
@@ -2196,12 +2197,12 @@ function stripSvg(r, t, data, W){
   });
   bases.forEach(k=>{ g += '<circle cx="'+x(f[k].mean).toFixed(1)+'" cy="'+y0+'" r="3.6" fill="#fff" stroke="#96948d" stroke-width="1.4"><title>'+esc(forecasterName(k,data))+' (reference): '+fmtNum(f[k].mean,unit)+'</title></circle>'; });
   const mm = models.map(k=>f[k].mean).sort((a,b)=>a-b), cons = mm.length ? mm[Math.floor(mm.length/2)] : null;
+  // A label near either edge anchors inward so it stays inside the strip (a card on a phone is narrow).
+  const edge = (anc, tx) => tx < 48 ? ['start', Math.max(tx, 1)] : tx > W-48 ? ['end', Math.min(tx, W-1)] : [anc, tx];
   if(typeof per==='number'){ g += '<line x1="'+x(per).toFixed(1)+'" y1="'+(y0-14)+'" x2="'+x(per).toFixed(1)+'" y2="'+(y0+14)+'" stroke="#96948d" stroke-width="1" stroke-dasharray="2 2"/><text x="'+edge('middle', x(per))[1].toFixed(1)+'" y="'+(y0+27)+'" font-size="9.5" fill="#96948d" text-anchor="'+edge('middle', x(per))[0]+'"'+mono+'>last release '+fmtNum(per,unit)+'</text>'; }
   // When the answer landed near the models' median the two labels split left and right of
   // their lines instead of piling up; otherwise each is centred on its own line.
   const near = cons!==null && typeof rel==='number' && Math.abs(x(rel)-x(cons)) < 110;
-  // A label near either edge anchors inward so it stays inside the strip (a card on a phone is narrow).
-  const edge = (anc, tx) => tx < 48 ? ['start', Math.max(tx, 1)] : tx > W-48 ? ['end', Math.min(tx, W-1)] : [anc, tx];
   const side = (px, leftward) => edge(...(near ? (leftward ? ['end', px-5] : ['start', px+5]) : ['middle', px]));
   if(cons!==null){
     const [anc, tx] = side(x(cons), typeof rel==='number' && cons < rel);
