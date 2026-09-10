@@ -157,6 +157,12 @@ jobs:
       # fails, but the forecasts that did succeed are already written and the
       # participant deadline is hard. Commit what landed, and let the job
       # still report failure so the cause gets fixed.
+      # The README's contributors wall follows the GitHub roster; a new avatar lands with the next data commit.
+      - name: redraw the contributors wall
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -m tools.contributors_wall || echo "contributors wall skipped"
       - name: commit if changed
         if: always()
         run: |
@@ -185,12 +191,12 @@ jobs:
           #            back. Unlike news, this corpus did not exist until a
           #            model asked for it, and the index will not return the
           #            same thing tomorrow.
-          git add -A forecasts site resolutions locks civiqs trends wikitop news stamps sources search replies
+          git add -A forecasts site resolutions locks civiqs trends wikitop news stamps sources search replies README.md brand/contributors
           # ignore the generated_at stamp so no-op runs do not commit
           if git diff --cached --quiet -I '"generated_at"'; then
             echo "no substantive change"
             git reset --quiet
-            git checkout -- site forecasts resolutions locks civiqs trends wikitop news stamps sources search replies
+            git checkout -- site forecasts resolutions locks civiqs trends wikitop news stamps sources search replies README.md brand/contributors
           else
             git commit -m "data refresh $(date -u +%Y-%m-%dT%H:%MZ)"
             # The branch this run is on, never a hard-coded main: a manual run
