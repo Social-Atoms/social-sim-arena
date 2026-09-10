@@ -267,7 +267,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .qcard .qstats{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;font-size:12px;color:var(--mut);margin-top:6px;}
 .qcard .qstats b{font-size:19px;color:var(--ink);font-weight:700;}
 .qcard .qstats .hit{color:var(--accent-ink);font-weight:700;}
-.qcard .qempty{font-size:12.5px;color:var(--mut);padding:10px 0 6px;border-top:1px dashed var(--line);margin-top:auto;}
+.qcard .qempty{flex:1 1 auto;min-height:108px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12.5px;color:var(--mut);padding:10px 0 6px;border-top:1px dashed var(--line);margin-top:auto;}
 .qcard .qfoot{display:flex;align-items:center;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid #eeede9;font-size:11.5px;color:var(--mut);}
 .qcard .qfoot .qid{font-size:10.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .qcard .qfoot a.src{color:var(--ink2);text-decoration:underline;text-underline-offset:2px;}
@@ -466,7 +466,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 </style>
 <script defer src="panels.js?v=91f5d3557c"></script>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=09be152762">
+<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=6015085340">
 </head>
 <body class="site-home">
 
@@ -569,7 +569,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
       <h2 class="page-title">Questions</h2>
       <div class="task-toolbar">
         <input class="task-search" id="task-search" type="search" placeholder="Search questions…" aria-label="Search tasks">
-        <div class="fchips" id="round-category-chips" style="margin:0;"></div>
+        <select id="round-category" class="round-select" aria-label="Category"></select>
         <div class="seg mini" id="round-status-seg" role="group" aria-label="Question status"><button data-status="all" class="on">All</button><button data-status="active">Open</button><button data-status="resolved">Resolved</button></div>
       </div>
       <div id="rounds-list"></div>
@@ -706,7 +706,7 @@ const YOUGOV_PROFILE_CELLS = [
 ];
 const TREND_CELLS = ['trends_share_tesla','trends_share_iphone','trends_share_samsung','trends_share_netflix','trends_share_disney'];
 const TASKS = {
-  agg:{label:'Overall', group:null, population:'All measured populations', cadence:'weekly + release calendar', shape:'three answer types'},
+  agg:{label:'Overall standings', group:null, population:'All measured populations', cadence:'weekly + release calendar', shape:'three answer types'},
   yougov_approval:{label:'Economist / YouGov approval',group:'opinion',population:'US adult citizens',cadence:'weekly',shape:'topline distribution',chart:'yougov_approval',unit:'%',tracker:'yougov_approval',per:'yougov_approval',srcName:'YouGov',srcUrl:'https://yougov.com/en-us/topics/topic/The_Economist_YouGov_polls',match:r=>r.series==='yougov_approval'},
   mc_approval:{label:'Morning Consult approval',group:'opinion',population:'US registered voters',cadence:'weekly',shape:'topline distribution',chart:'mc_approval',unit:'%',tracker:'mc_approval',per:'mc_approval',srcName:'Morning Consult',srcUrl:'https://pro.morningconsult.com/trackers/donald-trump-congress-policy-republicans-polling',match:r=>r.series==='mc_approval'},
   civiqs_approval:{label:'Civiqs approval',group:'opinion',population:'US registered voters',cadence:'weekly snapshot',shape:'topline distribution',chart:'civiqs_net_approval',unit:' pts',zero:true,per:'civiqs_net_approval',srcName:'Civiqs',srcUrl:'https://civiqs.com/results/approve_president_trump_2025',match:r=>r.series==='civiqs_net_approval' && (r.target_type||'continuous_normal')==='continuous_normal'},
@@ -895,7 +895,7 @@ function renderTaskOptions(){
   const hit=(...parts)=>{ const hay=parts.join(' ').toLowerCase(); return words.every(w=>hay.includes(w)); };
   const option=(k,label,meta,count)=>'<button type="button" class="model-option task-option'+(k===key?' on':'')+'" data-task="'+k+'" role="option" aria-selected="'+(k===key)+'"><span class="model-option-name">'+esc(label)+(count!=null?'<span class="task-pop-count">'+count+'</span>':'')+'</span>'+(meta?'<span class="task-pop-meta">'+esc(meta)+'</span>':'')+'</button>';
   const groups=[];
-  if(hit('overall all tasks')) groups.push('<fieldset class="model-group"><legend>Everything</legend>'+option('agg','Overall','all tasks',(data.rounds||[]).length)+'</fieldset>');
+  if(hit('overall all tasks')) groups.push('<fieldset class="model-group"><legend>Everything</legend>'+option('agg','Overall standings','all tasks',(data.rounds||[]).length)+'</fieldset>');
   TASK_GROUPS.forEach(g=>{
     const keys=Object.keys(TASKS).filter(k=>TASKS[k].group===g.id && !TASKS[k].retired && hit(TASKS[k].label,TASKS[k].population||'',g.label));
     if(!keys.length) return;
@@ -1446,7 +1446,7 @@ function renderBoard(mode){
   if(key==='agg'){
     const spans=(data.backtest&&data.backtest.spans)||{};
     entries=spans[mode]||(data.backtest&&data.backtest.overall)||[];appendPending=true;
-    title='Overall'; tag='backtest';
+    title='Overall standings'; tag='backtest';
     note=(window.__matched?'Scored over '+window.__matched+'. ':'')+'Walk-forward model replay: every forecast was made from data available before its release. Arena score 0 is persistence and 100 is a perfect oracle.';
     const same=JSON.stringify(entries)===JSON.stringify((data.backtest&&data.backtest.overall)||[]);
     if(mode!=='all' && same) note+=' The backtest window is four weeks, so every range shows the same rounds until the season adds more.';
@@ -1618,12 +1618,24 @@ function stripSvg(r, t, data, W){
   g += '<text x="'+L+'" y="'+(H-3)+'" font-size="9.5" fill="#b8b6ae"'+mono+'>'+fmtNum(lo+pad,unit)+'</text>';
   g += '<text x="'+(W-R)+'" y="'+(H-3)+'" font-size="9.5" fill="#b8b6ae" text-anchor="end"'+mono+'>'+fmtNum(hi-pad,unit)+'</text>';
   const strays = {below:[], above:[]};
-  models.slice().sort((a,b)=>f[a].mean-f[b].mean).forEach(k=>{
-    const v = f[k].mean;
-    if(off(v)){ strays[v<lo?'below':'above'].push(forecasterName(k,data)+' '+fmtNum(v,unit)); return; }
-    const px = x(v), cy = y0 + rowFor(px)*ROW;
-    g += '<circle cx="'+px.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+RAD+'" fill="#111110" fill-opacity=".72"><title>'+esc(forecasterName(k,data))+': '+fmtNum(v,unit)+' ± '+fmtNum(f[k].sd,'')+'</title></circle>';
-  });
+  const sortedModels = models.slice().sort((a,b)=>f[a].mean-f[b].mean);
+  if(models.length > 40){
+    // Past forty answers a swarm is taller than the strip; a histogram says the same thing.
+    const BINS = 32, counts = new Array(BINS).fill(0), names = Array.from({length:BINS}, ()=>[]);
+    sortedModels.forEach(k=>{ const v=f[k].mean; if(off(v)){ strays[v<lo?'below':'above'].push(forecasterName(k,data)+' '+fmtNum(v,unit)); return; }
+      const b = Math.min(BINS-1, Math.floor((v-lo)/(hi-lo)*BINS)); counts[b]++; names[b].push(forecasterName(k,data)); });
+    const peak = Math.max(1, ...counts), bw = (W-L-R)/BINS;
+    // Bars are mirrored on the axis so their tops stay clear of the labels above it.
+    counts.forEach((c,b)=>{ if(!c) return; const h = 4 + 26*c/peak;
+      g += '<rect x="'+(L+b*bw+0.5).toFixed(1)+'" y="'+(y0-h/2).toFixed(1)+'" width="'+(bw-1).toFixed(1)+'" height="'+h.toFixed(1)+'" rx="1" fill="#111110" fill-opacity=".55"><title>'+c+' answer'+(c>1?'s':'')+' near '+fmtNum(lo+(b+0.5)*(hi-lo)/BINS,unit)+': '+esc(names[b].slice(0,6).join(', '))+(names[b].length>6?' …':'')+'</title></rect>'; });
+  } else {
+    sortedModels.forEach(k=>{
+      const v = f[k].mean;
+      if(off(v)){ strays[v<lo?'below':'above'].push(forecasterName(k,data)+' '+fmtNum(v,unit)); return; }
+      const px = x(v), cy = y0 + rowFor(px)*ROW;
+      g += '<circle cx="'+px.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+RAD+'" fill="#111110" fill-opacity=".72"><title>'+esc(forecasterName(k,data))+': '+fmtNum(v,unit)+' ± '+fmtNum(f[k].sd,'')+'</title></circle>';
+    });
+  }
   // Strays are one hollow mark at the edge with a count; their values are in the tooltip.
   [['below', L, 'start'], ['above', W-R, 'end']].forEach(([side, px, anchor])=>{
     const n = strays[side].length; if(!n) return;
@@ -1633,12 +1645,17 @@ function stripSvg(r, t, data, W){
   bases.forEach(k=>{ g += '<circle cx="'+x(f[k].mean).toFixed(1)+'" cy="'+y0+'" r="3.6" fill="#fff" stroke="#96948d" stroke-width="1.4"><title>'+esc(forecasterName(k,data))+' (reference): '+fmtNum(f[k].mean,unit)+'</title></circle>'; });
   const mm = models.map(k=>f[k].mean).sort((a,b)=>a-b), cons = mm.length ? mm[Math.floor(mm.length/2)] : null;
   if(typeof per==='number'){ g += '<line x1="'+x(per).toFixed(1)+'" y1="'+(y0-14)+'" x2="'+x(per).toFixed(1)+'" y2="'+(y0+14)+'" stroke="#96948d" stroke-width="1" stroke-dasharray="2 2"/><text x="'+x(per).toFixed(1)+'" y="'+(y0+27)+'" font-size="9.5" fill="#96948d" text-anchor="middle"'+mono+'>last release '+fmtNum(per,unit)+'</text>'; }
-  if(cons!==null){ g += '<line x1="'+x(cons).toFixed(1)+'" y1="'+(y0-17)+'" x2="'+x(cons).toFixed(1)+'" y2="'+(y0+17)+'" stroke="#111110" stroke-width="2"/><text x="'+x(cons).toFixed(1)+'" y="'+(y0-21)+'" font-size="10" font-weight="700" fill="#111110" text-anchor="middle"'+mono+'>models '+fmtNum(cons,unit)+'</text>'; }
+  // When the answer landed near the models' median the two labels split left and right of
+  // their lines instead of piling up; otherwise each is centred on its own line.
+  const near = cons!==null && typeof rel==='number' && Math.abs(x(rel)-x(cons)) < 110;
+  const side = (px, leftward) => near ? (leftward ? ['end', px-5] : ['start', px+5]) : ['middle', px];
+  if(cons!==null){
+    const [anc, tx] = side(x(cons), typeof rel==='number' && cons < rel);
+    g += '<line x1="'+x(cons).toFixed(1)+'" y1="'+(y0-17)+'" x2="'+x(cons).toFixed(1)+'" y2="'+(y0+17)+'" stroke="#111110" stroke-width="2"/><text x="'+tx.toFixed(1)+'" y="'+(y0-21)+'" font-size="10" font-weight="700" fill="#111110" text-anchor="'+anc+'"'+mono+'>models '+fmtNum(cons,unit)+'</text>';
+  }
   if(typeof rel==='number'){
-    // When the answer landed next to the models' median, the two top labels would sit on
-    // top of each other; the released label then takes the row above.
-    const near = cons!==null && Math.abs(x(rel)-x(cons)) < 96, ry = near ? y0-35 : y0-23;
-    g += '<line x1="'+x(rel).toFixed(1)+'" y1="'+(ry+4)+'" x2="'+x(rel).toFixed(1)+'" y2="'+(y0+19)+'" stroke="#15803d" stroke-width="2"/><text x="'+x(rel).toFixed(1)+'" y="'+ry+'" font-size="10" font-weight="700" fill="#0a6a30" text-anchor="middle"'+mono+'>released '+fmtNum(rel,unit)+'</text>';
+    const [anc, tx] = side(x(rel), cons===null || rel < cons);
+    g += '<line x1="'+x(rel).toFixed(1)+'" y1="'+(y0-19)+'" x2="'+x(rel).toFixed(1)+'" y2="'+(y0+19)+'" stroke="#15803d" stroke-width="2"/><text x="'+tx.toFixed(1)+'" y="'+(y0-23)+'" font-size="10" font-weight="700" fill="#0a6a30" text-anchor="'+anc+'"'+mono+'>released '+fmtNum(rel,unit)+'</text>';
   }
   return '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-hidden="true">'+g+'</svg>';
 }
@@ -1653,9 +1670,11 @@ function drawStrips(scope, data){
 function roundsList(data){
   const el = document.getElementById('rounds-list');
   const cat=window.__roundCategory||'all',status=window.__roundStatus||'all',query=(window.__roundQuery||'').toLowerCase();
-  const chips=document.getElementById('round-category-chips');
-  chips.innerHTML=[['all','All']].concat(TASK_GROUPS.map(g=>[g.id,g.label])).map(([k,n])=>'<button data-cat="'+k+'" class="'+(cat===k?'on':'')+'">'+esc(n)+'</button>').join('');
-  chips.querySelectorAll('button').forEach(b=>b.onclick=()=>{window.__roundCategory=b.dataset.cat;roundsList(data);});
+  const sel=document.getElementById('round-category');
+  if(sel){
+    sel.innerHTML=[['all','All categories']].concat(TASK_GROUPS.map(g=>[g.id,g.label])).map(([k,n])=>'<option value="'+k+'"'+(cat===k?' selected':'')+'>'+esc(n)+'</option>').join('');
+    sel.onchange=()=>{window.__roundCategory=sel.value;roundsList(data);};
+  }
   document.querySelectorAll('#round-status-seg button').forEach(b=>b.classList.toggle('on',b.dataset.status===status));
   const rows=(data.rounds||[]).filter(r=>{
     const t=taskForRound(r),active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
@@ -1673,7 +1692,7 @@ function roundsList(data){
     const t=taskForRound(r),g=TASK_GROUPS.find(x=>x.id===t.group),active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
     const kind=r.target_type||((r.cells&&r.cells.length)?'profile_energy':'continuous_normal');
     const shape=kind==='profile_energy'?'profile · '+(r.cells||[]).length+' cells':kind==='ranking_list'?'ranking':'number';
-    const when=active?'<span class="qdue live">due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">closed · answer '+esc(fmtLocal(r.release_at))+'</span>';
+    const when=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">locked · answer '+esc(fmtLocal(r.release_at))+'</span>';
     const strip=forecastStrip(r,t,data)||'<div class="qempty">'+(r.n_forecasts?esc(r.n_forecasts)+' forecasts filed · '+esc(shape):'No forecasts filed yet · '+esc(shape))+'</div>';
     return '<div class="qcard'+(active?' live':'')+'"><div class="qhead"><span>'+esc(g?g.label:'Task')+'</span><span class="qshape'+(kind!=='continuous_normal'?' special':'')+'">'+esc(shape)+'</span>'+when+'</div>'
       +'<h3>'+esc(t.label)+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
