@@ -881,7 +881,12 @@ function rankChart(traj, id){
 }
 function renderEntrant(id){
   const data=window.__data, host=document.getElementById('entrant-col'); if(!data||!host) return;
-  const e=(data.entrants||[]).find(x=>x.entrant_id===id);
+  // The board and the harness know entrants the registration folder does not: the arena's
+  // own runs and their variants. A page renders for any id something on the site knows.
+  const known = (data.entrants||[]).find(x=>x.entrant_id===id)
+    || (((data.leaderboard||{}).entries||[]).some(x=>x.entrant===id) || ((data.backtest||{}).overall||[]).some(x=>x.entrant===id) || (data.rounds||[]).some(r=>r.forecasts&&r.forecasts[id]) || (data.entrant_status||{})[id]
+        ? {entrant_id:id, name:forecasterName(id,data), type:isBaseline(id)?'baseline':'llm', unregistered:true} : null);
+  const e = known;
   if(!e){
     window.__entrantName='';
     host.innerHTML='<div class="eyebrow page-eyebrow">Entrant</div><h2 class="page-title">No entrant called '+esc(id||'(none)')+'</h2><p class="lede page-description">Pick one from the <a href="#leaderboard">leaderboard</a>; every row links here.</p>';
@@ -909,7 +914,7 @@ function renderEntrant(id){
     +'<div class="ent-meta"><span><b>'+esc(e.type==='llm'?'LLM':e.type==='baseline'?'Baseline':(e.type||'entrant'))+'</b></span>'
     +((e.arms||[]).length?'<span>setup '+esc((e.arms||[]).join(', '))+'</span>':'')
     +(e.homepage?'<span><a href="'+esc(e.homepage)+'" target="_blank" rel="noopener">homepage</a></span>':'')
-    +'<span><a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/entrants/'+esc(id)+'.json" target="_blank" rel="noopener">registration file</a></span>'
+    +(e.unregistered?'<span class="dim">run by the arena</span>':'<span><a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/entrants/'+esc(id)+'.json" target="_blank" rel="noopener">registration file</a></span>')
     +'<span class="dim">id '+esc(id)+'</span></div>'
     +(e.method?'<p class="ent-method">'+esc(e.method)+'</p>':'')+'</div></div>';
   // ---- left: how it performs ----

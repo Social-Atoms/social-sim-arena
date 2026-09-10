@@ -1,106 +1,87 @@
-# Social Simulation Arena
+<p align="center">
+  <img src="brand/png/ssa-mark-192.png" width="88" alt="">
+</p>
 
-![Simulated societies graded by the real future](assets/teaser.png)
+<h1 align="center">Social Simulation Arena</h1>
 
-A live benchmark for social simulation. Models forecast the next public-opinion
-release before it is published. Forecasts share a weekly participant deadline,
-are hashed, and are scored in public once the real number drops.
+<p align="center">Can a simulator predict a public before it speaks?</p>
 
-Site: https://social-simulation-arena.com · Docs: https://social-simulation-arena.com/docs.html
+<p align="center">
+  <a href="https://social-simulation-arena.com">Site</a> ·
+  <a href="https://social-simulation-arena.com/docs.html">Docs</a> ·
+  <a href="https://social-simulation-arena.com/background.html">Background</a> ·
+  <a href="https://social-simulation-arena.com/index.html#leaderboard">Leaderboard</a>
+</p>
 
-## Why
+A live benchmark for social simulation. Before each release, entrants forecast what a population will do: how it will answer a poll, what it will search for, what it will read. Forecasts lock before the answer exists, are hashed and timestamped, and are scored in public when the real number lands. No one sees the answer first, including us.
 
-Companies sell AI-simulated survey respondents; papers disagree about whether
-they work. Every existing evaluation replays old surveys, which sit inside
-training data, and vendors pick their own test sets. Live arenas fixed this in
-other domains (ForecastBench, TS-Arena, LLM-SoccerArena): lock the prediction
-before the answer exists, then nobody can cheat. Nobody runs one for public
-opinion. This is that arena.
+## Enter
 
-## Quickstart
+Your entry name + your endpoint + one pull request = you are in.
+
+1. Choose your entry name. Lower-case, permanent: it names your registration file, your row on the board and your page.
+2. Expose one HTTPS endpoint. We POST each question to it as a signed JSON object; you return the forecast in the type the question asks for (a number, a profile, or a ranking).
+3. Register on the [onboarding page](https://social-simulation-arena.com/submit.html), which tests your endpoint and opens the pull request for you, or add `entrants/<id>.json` by hand and open it yourself.
+
+The endpoint contract is [`docs/agent-api.md`](docs/agent-api.md). Rehearse locally:
+
+```bash
+python examples/agent-api/server.py
+python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast
+```
+
+## How a question runs
+
+A question is listed a week ahead, **open** until its lock (48 hours before the answer is published), **locked** while the source has not yet published, and **resolved** within 6 hours of the number landing. At the lock, every forecast's hash goes into a manifest that is submitted to [OpenTimestamps](https://opentimestamps.org); the proof lands in a Bitcoin block hours later ([how to verify one](docs/timestamps.md)). A number question is scored by CRPS, a profile by the energy score, a ranking by rank-biased overlap; the arena score puts persistence at 0 and a perfect oracle at 100.
+
+## In this repository
+
+```
+registry/     tasks.json, the one description of every task the site shows
+questions/    the season: every round, its lock and release time, frozen up front
+forecasts/    one file per entrant per round
+locks/        the input history each round froze when its call window opened
+stamps/       per-round hash manifests and their OpenTimestamps proofs
+resolutions/  the published numbers rounds resolved against, with sources
+entrants/     one registration file per entrant
+ssa/          the pipeline: adapters -> series -> baselines -> harness -> scoring -> refresh
+schema/       the JSON schemas CI enforces
+tools/        validate_submission.py, probe_agent_api.py, publishers
+tests/        python -m tests.test_site_render, tests/site/*.js
+site/         the static site; data.json is the pipeline's only output
+brand/        the mark and its exports
+docs/         the participant docs behind the site, and the protocol notes
+```
+
+Run it:
 
 ```bash
 git clone https://github.com/Social-Atoms/social-sim-arena
 cd social-sim-arena
 pip install -r requirements.txt
-python -m tests.test_scoring     # hand-checked scoring tests
+python -m tests.test_site_render
 python -m ssa.refresh            # fetch live data, build site/data.json
-open site/index.html
 ```
 
-Each refresh also writes `site/operator.json`: finite source and
-entrant-round states, evidence, retry/deadline information, spend, and the
-required operator action. See [`docs/operator-status.md`](docs/operator-status.md).
+In production the same refresh runs on a cron every
+six hours, resolves what has been published, stamps what has locked, and commits the result.
 
-`ssa.refresh` hits real, keyless endpoints, all same-day or first-party:
+## Organizer
 
-- Silver Bulletin poll CSVs (approval + generic ballot, updated same day)
-- YouGov tracker download (weekly Economist/YouGov waves, demographic breaks)
-- Michigan SCA official release + FRED CSV (consumer sentiment)
-- VoteHub polls API (backfill history)
+<a href="https://social-atoms.com"><img src="brand/png/ssa-mark-512-light.png" width="40" align="left" alt=""></a>
+Social Simulation Arena is a project of [Social Atoms](https://social-atoms.com) at MIT, with collaborators at Stanford, Carnegie Mellon, UC Berkeley, and beyond.
+<br clear="left">
 
-## Repo map
+## Contributors
 
-```
-questions/    the season: every round, its lock and release time, frozen up front
-              candidates/ proposals awaiting review; bundles/ the frozen weekly batch
-forecasts/    one file per entrant per round; the PR that adds it is the submission
-locks/        two input-history freezes per round: what entrants were handed
-              when the call window opened, and what existed at the close
-stamps/       forecast hash manifests and OpenTimestamps proofs at submission close
-resolutions/  the published numbers rounds resolved against, with sources
-entrants/     who is competing: one registration file per entrant
-ssa/          the pipeline: adapters -> series -> baselines -> harness -> scoring -> refresh
-schema/       JSON schemas the CI validator enforces
-tools/        validate_submission.py and operator tools
-tests/        hand-checked unit tests (python -m tests.test_scoring)
-site/         the static site; data.json is the pipeline's only output artifact
-backtest/     committed evidence of the model backtest (runs/*.jsonl)
-.github/      refresh cron + submission validation + lock audit
-```
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/jajamoa"><img src="https://github.com/jajamoa.png?size=96" width="72" alt=""><br><sub>jajamoa</sub></a></td>
+    <td align="center"><a href="https://github.com/assassin808"><img src="https://github.com/assassin808.png?size=96" width="72" alt=""><br><sub>assassin808</sub></a></td>
+    <td align="center"><a href="https://github.com/jayzou3773"><img src="https://github.com/jayzou3773.png?size=96" width="72" alt=""><br><sub>jayzou3773</sub></a></td>
+    <td align="center"><a href="https://github.com/ZhenzeMo"><img src="https://github.com/ZhenzeMo.png?size=96" width="72" alt=""><br><sub>ZhenzeMo</sub></a></td>
+    <td align="center"><a href="https://github.com/XuanL17"><img src="https://github.com/XuanL17.png?size=96" width="72" alt=""><br><sub>XuanL17</sub></a></td>
+  </tr>
+</table>
 
-## Submitting a forecast
-
-Start at [`site/submit.html`](site/submit.html) or [`docs/agent-api.md`](docs/agent-api.md).
-
-**Every question closes on its own clock**, at its `lock_at` — `release − 48h`
-for 94 of the 116 rounds, and deliberately earlier for the 22 that ask about a
-period rather than a moment. It is listed a week before it closes, and your
-endpoint is called in the 24 hours before that. See
-[`docs/submission-window.md`](docs/submission-window.md).
-
-One route: **we call you.** You register one HTTPS endpoint by pull request
-(`site/submit.html` builds the file after your endpoint passes the browser
-test); every week the arena POSTs each question to it as a signed JSON request
-and files the JSON forecast it returns. The contract is
-[`docs/agent-api.md`](docs/agent-api.md). Rehearse with
-`python examples/agent-api/server.py` and
-`python tools/probe_agent_api.py --url http://127.0.0.1:8787/forecast`.
-
-Every answer ends as one `forecasts/<round_id>/<entrant>.json` matching
-`schema/forecast.schema.json`, scored identically to the arena's own models.
-Distributions, not points: every target needs a mean and an sd, or ordered
-quantiles including `0.5`. CI prints the canonical sha256 your entry is cited by.
-
-The bundle format (`docs/bundle-submission.md`) and the earlier intake design
-(`docs/submission-design.md`) are kept for the record; neither is a way in this
-season.
-
-Baselines (persistence, trend, poll-average snapshot, human panel) run in
-every round. The headline metric is skill: `1 - CRPS(you) / CRPS(persistence)`.
-
-## How the pipeline fits together
-
-![Pipeline](assets/fig-pipeline.png)
-
-Full protocol figures and the teaser live in `assets/`.
-
-## Status
-
-Prototype, season 0. Live rounds start Aug 11, 2026. The data refresh runs every
-six hours via GitHub Actions; resolution and scoring run in that same workflow.
-Known gaps and open tasks are listed on the docs page.
-
-Maintainers: the offline candidate → human review → deterministic bundle →
-sandbox scoring procedure is documented in
-[`docs/weekly-pipeline.md`](docs/weekly-pipeline.md).
+The arena's own refreshes are committed by `actions-user` on the arena's behalf.
