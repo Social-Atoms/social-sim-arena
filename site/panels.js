@@ -9,7 +9,8 @@
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
   function defaults(width) {
-    return {tasks: clamp(width * .18, MIN.tasks, 252), board: clamp(width * .32, MIN.board, 520)};
+    // The chart is the page; the board gets a quarter of the width and never more than 400px.
+    return {tasks: clamp(width * .18, MIN.tasks, 252), board: clamp(width * .24, 300, 400)};
   }
 
   // Shrink both side panels proportionally only when the viewport needs it.

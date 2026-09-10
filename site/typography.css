@@ -41,7 +41,10 @@ td.num { text-align: right; white-space: nowrap; }
 .site-home .question-card .qfoot { font-size: 11px; line-height: 1.5; }
 .site-home .replay-tag { font-size: 10.5px; font-weight: 800; letter-spacing: .05em; }
 .site-home .model-toolbar { gap: 10px; }
-.site-home .model-chips { --chip-height: 26px; }
+/* The chip strip under the toolbar repeated what the chart's own legend
+   shows, in two more rows. The Models button carries the count, the
+   legend names the lines, the picker removes them. */
+.site-home .legend-strip, .site-home .model-chips { display: none; }
 .site-home .lchip { font-size: 12px; font-weight: 600; }
 .site-home .lchip .setup { font-size: 11px; }
 .site-home .model-option { font-size: 13.5px; line-height: 1.4; min-height: 34px; }

@@ -167,7 +167,7 @@ assert.equal(restored.sizes().tasks, 44, 'collapse state survives a reload');
 assert.ok(restored.filters.hidden);
 restored.toggle.emit('click');
 assert.equal(restored.sizes().tasks, expanded.tasks, 'resizing while collapsed preserves expanded width');
-assert.equal(restored.sizes().board, expanded.board + 40);
+assert.ok(Math.abs(restored.sizes().board - (expanded.board + 40)) < 1e-6, 'board width survives the save/restore round trip');
 restored.toggle.emit('click');
 restored.board.emit('keydown', {key: 'End'});
 assert.equal(1440 - 8 - 44 - restored.sizes().board, 320, 'collapsed layout uses the freed width');
