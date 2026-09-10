@@ -1609,10 +1609,12 @@ function stripSvg(r, t, data, W){
   const pad = Math.max((hi-lo)*0.12, 0.3); lo -= pad; hi += pad;
   const x = v => L + (Math.min(hi, Math.max(lo, v))-lo)/(hi-lo)*(W-L-R);
   const off = v => v<lo || v>hi;
-  // A beeswarm: sorted by value, each dot takes the first row, out from the axis, where it
-  // does not touch that row's last dot.
-  const lastAt = {};
-  const rowFor = px => { for(let k=0;k<12;k++){ const row = k===0 ? 0 : (k%2 ? Math.ceil(k/2) : -Math.ceil(k/2)); if(lastAt[row]==null || px-lastAt[row] >= 2*RAD+1.2){ lastAt[row]=px; return row; } } return 0; };
+  // A bounded swarm: two rows above and below the axis, and a dot that finds no room in its
+  // own column steps sideways, so thirty identical answers spread along the axis instead of
+  // climbing out of the strip.
+  const taken = new Set(), CELL = 2*RAD+1.2, ROWS = [0,1,-1,2,-2];
+  const place = px => { for(let step=0; step<40; step++){ const dx = (step%2 ? 1 : -1) * Math.ceil(step/2) * CELL; const col = Math.round((px+dx)/CELL);
+      for(const row of ROWS){ const key = col+':'+row; if(!taken.has(key)){ taken.add(key); return [col*CELL, row]; } } } return [px, 0]; };
   const mono = ' font-family="Inconsolata, ui-monospace, monospace"';
   let g = '<line x1="'+L+'" y1="'+y0+'" x2="'+(W-R)+'" y2="'+y0+'" stroke="#dcdbd6" stroke-width="1"/>';
   g += '<text x="'+L+'" y="'+(H-3)+'" font-size="9.5" fill="#b8b6ae"'+mono+'>'+fmtNum(lo+pad,unit)+'</text>';
@@ -1629,11 +1631,19 @@ function stripSvg(r, t, data, W){
     counts.forEach((c,b)=>{ if(!c) return; const h = 4 + 26*c/peak;
       g += '<rect x="'+(L+b*bw+0.5).toFixed(1)+'" y="'+(y0-h/2).toFixed(1)+'" width="'+(bw-1).toFixed(1)+'" height="'+h.toFixed(1)+'" rx="1" fill="#111110" fill-opacity=".55"><title>'+c+' answer'+(c>1?'s':'')+' near '+fmtNum(lo+(b+0.5)*(hi-lo)/BINS,unit)+': '+esc(names[b].slice(0,6).join(', '))+(names[b].length>6?' …':'')+'</title></rect>'; });
   } else {
+    // The shape of the answers first: a thin line from the lowest to the highest, a band over
+    // the middle half. Then the dots, small and faint, one per entrant with its name on hover.
+    const inside = sortedModels.map(k=>f[k].mean).filter(v=>!off(v));
+    if(inside.length >= 4){
+      const qq = p => inside[Math.min(inside.length-1, Math.max(0, Math.round(p*(inside.length-1))))];
+      g += '<line x1="'+x(inside[0]).toFixed(1)+'" x2="'+x(inside[inside.length-1]).toFixed(1)+'" y1="'+y0+'" y2="'+y0+'" stroke="#111110" stroke-opacity=".35" stroke-width="1.5"/>';
+      g += '<rect x="'+x(qq(.25)).toFixed(1)+'" y="'+(y0-5)+'" width="'+Math.max(2, x(qq(.75))-x(qq(.25))).toFixed(1)+'" height="10" rx="2" fill="#111110" fill-opacity=".14"><title>middle half of the answers: '+fmtNum(qq(.25),unit)+' to '+fmtNum(qq(.75),unit)+'</title></rect>';
+    }
     sortedModels.forEach(k=>{
       const v = f[k].mean;
       if(off(v)){ strays[v<lo?'below':'above'].push(forecasterName(k,data)+' '+fmtNum(v,unit)); return; }
-      const px = x(v), cy = y0 + rowFor(px)*ROW;
-      g += '<circle cx="'+px.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+RAD+'" fill="#111110" fill-opacity=".72"><title>'+esc(forecasterName(k,data))+': '+fmtNum(v,unit)+' ± '+fmtNum(f[k].sd,'')+'</title></circle>';
+      const [px, row] = place(x(v)), cy = y0 + row*ROW;
+      g += '<circle cx="'+px.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+(RAD-0.6)+'" fill="#111110" fill-opacity=".5"><title>'+esc(forecasterName(k,data))+': '+fmtNum(v,unit)+' ± '+fmtNum(f[k].sd,'')+'</title></circle>';
     });
   }
   // Strays are one hollow mark at the edge with a count; their values are in the tooltip.
@@ -1800,10 +1810,10 @@ function renderWeekly(data){
       // The four steps a newcomer needs and cannot get anywhere else on the
       // site. They lived in a card of their own on the old weekly screen and
       // were dropped when this one was rebuilt; the wording is that card's.
-      +'<dl class="lifecycle"><dt>Listed</dt><dd>a week before it closes</dd>'
+      +'<dl class="lifecycle"><dt>Listed</dt><dd>a week before it closes; the question is <b>open</b></dd>'
       +'<dt>We call you</dt><dd>in the 24 hours before the close</dd>'
-      +'<dt>Closes</dt><dd>48 hours before its answer, or before the week it measures</dd>'
-      +'<dt>Scored</dt><dd>within 6 hours of the answer landing</dd></dl>'
+      +'<dt>Closes</dt><dd>48 hours before its answer, or before the week it measures; forecasts are <b>locked</b></dd>'
+      +'<dt>Scored</dt><dd>within 6 hours of the answer landing; the question is <b>resolved</b></dd></dl>'
       +'<div class="week-actions"><a class="btn dark" href="submit.html">Test and register</a></div></section>'
     +'<section class="week-card week-overview" aria-labelledby="week-questions-title">'
       +'<div class="week-count"><h3 id="week-questions-title">Calendar</h3>'
