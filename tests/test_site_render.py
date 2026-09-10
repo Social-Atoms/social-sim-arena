@@ -290,7 +290,8 @@ def test_every_link_the_docs_send_a_participant_to_exists():
             continue
         with open(path) as fh:
             html = fh.read()
-        if f'id="{anchor}"' not in html:
+        # index.html routes by hash (#leaderboard, #questions, #calendar); the page element is id="page-<route>".
+        if f'id="{anchor}"' not in html and not (page == "index.html" and f'id="page-{anchor}"' in html):
             missing.append(f"{src} -> {page}#{anchor} (no such section)")
     assert not missing, "docs point at sections that do not exist:\n  " + \
         "\n  ".join(missing)

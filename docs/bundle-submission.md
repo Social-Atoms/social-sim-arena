@@ -277,7 +277,7 @@ still not be admitted.
 
 A round's outcome, the rule it resolved under, and every entrant's answer
 sorted by error are on the
-[rounds table](https://social-simulation-arena.com/leaderboard.html#rounds) as
+[rounds table](https://social-simulation-arena.com/index.html#questions) as
 soon as it resolves — no waiting for the end of the season, and no need to take
 a rank on trust. `docs/participant-quickstart.md` lists the four boards and
 what each one measures.

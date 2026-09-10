@@ -94,7 +94,7 @@
 
     function resize() {
       const total = width();
-      // A hidden Live tab reports zero; keep the user's last usable layout.
+      // A hidden Leaderboard tab reports zero; keep the user's last usable layout.
       if (!desktop.matches || !total) { finish(true); measuredWidth = 0; return; }
       if (total === measuredWidth && sizes) return;
       finish(true);
@@ -170,5 +170,5 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) module.exports = {fitWidths, mountPanels};
-  else mountPanels(document.getElementById('page-live'));
+  else mountPanels(document.getElementById('page-leaderboard'));
 })();

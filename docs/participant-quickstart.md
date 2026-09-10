@@ -212,7 +212,7 @@ Nothing here is a black box, and none of it waits for the season to end.
 - **[The weekly calendar](https://social-simulation-arena.com/leaderboard.html#batches)**
   — which batch is open, what is in it, and when the next one is handed over.
   A batch is published a week before its deadline.
-- **[The rounds table](https://social-simulation-arena.com/leaderboard.html#rounds)**
+- **[The rounds table](https://social-simulation-arena.com/index.html#questions)**
   — every round, and once one resolves it expands to the outcome, the exact
   rule it was resolved under, and **every entrant's forecast sorted by error**,
   yours among them. If a resolution was ever corrected, the correction and the

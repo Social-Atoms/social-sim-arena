@@ -90,7 +90,7 @@ td.num { text-align: right; white-space: nowrap; }
 .site-home .frow { font-size: 12px; line-height: 1.5; }
 .site-home .week-side dd { font-size: 12.5px; line-height: 1.5; }
 .site-home .fchips button { font: 600 11px var(--font-mono); letter-spacing: .02em; }
-.site-home #page-rounds .task-toolbar { --filter-height: 30px; align-items: center; }
+.site-home #page-questions .task-toolbar { --filter-height: 30px; align-items: center; }
 .site-home #task-search,
 .site-home #round-category-chips button,
 .site-home #round-status-seg button {
@@ -102,7 +102,7 @@ td.num { text-align: right; white-space: nowrap; }
   font-size: 12.5px;
   line-height: 1.4;
 }
-.site-home #page-rounds .task-search {
+.site-home #page-questions .task-search {
   appearance: none;
   -webkit-appearance: none;
   min-width: 0;
@@ -150,11 +150,11 @@ td.num { text-align: right; white-space: nowrap; }
 
 /* Weekly and its submission routes */
 .site-home #page-submit h2 { font-size: 19px; font-weight: 800; line-height: 1.25; margin-bottom: 6px; }
-.site-home #page-weekly .week-card h3 { font-size: 16px; font-weight: 700; line-height: 1.25; margin-bottom: 5px; }
-.site-home #page-weekly .week-count h3 { font-size: 17px; font-weight: 700; margin: 0; }
-.site-home #page-weekly .week-route h4, .site-home #page-submit .svrow .tx>b { font-size: 15px; font-weight: 800; line-height: 1.3; margin-bottom: 3px; }
+.site-home #page-calendar .week-card h3 { font-size: 16px; font-weight: 700; line-height: 1.25; margin-bottom: 5px; }
+.site-home #page-calendar .week-count h3 { font-size: 17px; font-weight: 700; margin: 0; }
+.site-home #page-calendar .week-route h4, .site-home #page-submit .svrow .tx>b { font-size: 15px; font-weight: 800; line-height: 1.3; margin-bottom: 3px; }
 .site-home #page-submit .lede { font-size: 13.5px; line-height: 1.5; }
-.site-home #page-weekly .facet h4 { font-size: 10.5px; }
+.site-home #page-calendar .facet h4 { font-size: 10.5px; }
 
 /* Live, Questions, and Weekly share one page heading scale: production's. */
 .site-home .page .page-title { font-size: 19px; font-weight: 700; line-height: 1.25; letter-spacing: 0; color: var(--ink); margin: 2px 0 3px; }
@@ -313,3 +313,9 @@ nav.site-nav :is(a, button):focus-visible { outline: 2px solid var(--ink2); outl
   nav.site-nav .right { order: 3; width: 100%; }
   nav.site-nav .right a.cta { margin-left: auto; }
 }
+
+/* Every expander on the site opens with + and closes with -, on every page: no disclosure triangle. */
+details > summary { list-style: none; cursor: pointer; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before { content: "+"; display: inline-block; width: 12px; color: var(--mut); }
+details[open] > summary::before { content: "\2212"; }

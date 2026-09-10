@@ -39,12 +39,12 @@ main{flex:1 1 auto;min-height:0;display:flex;width:100%;margin:0 auto;}
 .page.on{display:flex;}
 
 /* LIVE: task map left, evidence in the middle, leaderboard right */
-#page-live{--panel-head-top:14px;--panel-title-size:14px;--panel-title-line:28px;}
-#page-live.on{display:grid;grid-template-columns:var(--task-width,clamp(180px,18vw,252px)) 8px minmax(320px,1fr) 8px var(--board-width,clamp(300px,24vw,400px));grid-template-rows:minmax(0,1fr);}
-#page-live.tasks-collapsed{grid-template-columns:44px 0 minmax(320px,1fr) 8px var(--board-width,clamp(300px,24vw,400px));}
+#page-leaderboard{--panel-head-top:14px;--panel-title-size:14px;--panel-title-line:28px;}
+#page-leaderboard.on{display:grid;grid-template-columns:var(--task-width,clamp(180px,18vw,252px)) 8px minmax(320px,1fr) 8px var(--board-width,clamp(300px,24vw,400px));grid-template-rows:minmax(0,1fr);}
+#page-leaderboard.tasks-collapsed{grid-template-columns:44px 0 minmax(320px,1fr) 8px var(--board-width,clamp(300px,24vw,400px));}
 /* The task tree left the page: the title is a picker (search, categories, counts), and the chart takes the column. */
-#page-live.on,#page-live.tasks-collapsed{grid-template-columns:minmax(320px,1fr) 8px var(--board-width,clamp(300px,24vw,400px));}
-#page-live .tasknav,#page-live [data-panel-resizer="tasks"]{display:none;}
+#page-leaderboard.on,#page-leaderboard.tasks-collapsed{grid-template-columns:minmax(320px,1fr) 8px var(--board-width,clamp(300px,24vw,400px));}
+#page-leaderboard .tasknav,#page-leaderboard [data-panel-resizer="tasks"]{display:none;}
 .task-picker{position:relative;display:block;}
 .task-trigger{display:inline-flex;align-items:center;gap:6px;margin:0;padding:0 4px 0 0;border:0;border-radius:4px;background:none;color:inherit;font:inherit;cursor:pointer;}
 .task-trigger-count{color:var(--mut);font-size:12.5px;font-weight:400;margin-left:2px;}
@@ -104,11 +104,11 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .taskmeta{display:flex;flex-wrap:wrap;gap:5px 12px;color:var(--mut);font-size:12.5px;}
 .taskmeta b{color:var(--ink2);font-weight:700;}
 .question-card{margin:4px 16px 14px;border:1px solid var(--line);border-radius:5px;background:#fff;flex:0 0 auto;}
-.question-card summary{cursor:pointer;list-style:none;padding:9px 11px;font-size:13px;color:var(--ink);font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-.question-card summary::-webkit-details-marker{display:none;}
-.question-card summary:before{content:'\25b8';color:var(--mut);}
-.question-card[open] summary:before{content:'\25be';}
-.question-card .qbody{border-top:1px solid #eeede9;padding:10px 11px 11px;font-size:13.5px;color:var(--ink2);}
+.question-card summary{padding:9px 11px;font-size:13px;color:var(--ink);font-weight:700;display:flex;gap:8px;align-items:baseline;}
+.question-card summary .qtext{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.question-card[open] summary .qtext{white-space:normal;}
+.question-card summary time{margin-left:auto;white-space:nowrap;color:var(--mut);font-weight:500;}
+.question-card .qbody{border-top:1px solid #eeede9;padding:10px 11px 11px 31px;font-size:13.5px;color:var(--ink2);}
 .question-card .qbody p{margin:0 0 7px;}
 .question-card .qfoot{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;color:var(--mut);font-size:11px;}
 .question-card .qfoot .go{margin-left:auto;color:var(--link);font-weight:700;text-decoration:none;}
@@ -224,10 +224,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .lchip .av,.model-option .av{width:18px;height:18px;border-radius:3px;font-size:8px;}
 .lchip .av .lg,.model-option .av .lg{padding:2px;}
 .lb-note{font-size:12px;color:var(--mut);padding:6px 14px 8px;flex:0 0 auto;border-top:1px solid var(--line);}
-.lb-note summary{cursor:pointer;list-style:none;font-weight:700;color:var(--mut);}
-.lb-note summary::-webkit-details-marker{display:none;}
-.lb-note summary:before{content:"+";display:inline-block;width:12px;color:var(--mut);}
-.lb-note[open] summary:before{content:"\2212";}
+.lb-note summary{font-weight:700;color:var(--mut);}
 .lb-note p{margin:6px 0 0;line-height:1.55;}
 @container leaderboard (max-width:420px){
   .lbhead h2{flex-basis:100%;}
@@ -272,9 +269,9 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .qcard .qfoot .go:hover{text-decoration:underline;}
 @media(max-width:900px){.qgrid{grid-template-columns:1fr;}}
 .weekly-grid{display:grid;grid-template-columns:minmax(0,1fr) 270px;grid-template-areas:"entry join" "overview calendar";gap:16px;align-items:stretch;}
-#page-weekly .col{padding-top:24px;padding-bottom:32px;}
-#page-weekly .lede{max-width:100ch;}
-#page-weekly .week-card{min-width:0;margin:0;padding:20px;}
+#page-calendar .col{padding-top:24px;padding-bottom:32px;}
+#page-calendar .lede{max-width:100ch;}
+#page-calendar .week-card{min-width:0;margin:0;padding:20px;}
 .week-entry{grid-area:entry;display:flex;flex-direction:column;}
 .week-join{grid-area:join;display:flex;flex-direction:column;}
 .week-overview{grid-area:overview;display:flex;flex-direction:column;}
@@ -287,10 +284,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .week-stat b{display:block;color:var(--ink);font-size:17px;}
 .week-stat span{color:var(--mut);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;}
 .week-questions details{border-top:1px solid #eeede9;padding:8px 0;}
-.week-questions summary{cursor:pointer;color:var(--ink);font-size:12.5px;font-weight:700;list-style:none;}
-.week-questions summary::-webkit-details-marker{display:none;}
-.week-questions summary:before{content:'\25b8 ';color:var(--mut);}
-.week-questions details[open] summary:before{content:'\25be ';}
+.week-questions summary{color:var(--ink);font-size:12.5px;font-weight:700;}
 .week-questions p{font-size:12px;margin:6px 0;color:var(--ink2);}
 .week-side{grid-area:calendar;min-width:0;}
 .week-count{display:flex;align-items:center;gap:8px 12px;margin:0 0 8px;flex-wrap:wrap;}
@@ -351,9 +345,9 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .week-route p{font-size:12.5px;margin:0 0 8px;}
 .week-route code{font-size:12px;background:#f4f4f2;padding:1px 5px;border-radius:3px;overflow-wrap:anywhere;}
 .week-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:16px;}
-#page-weekly .btn{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:7px 12px;border:1px solid transparent;font-size:13px;line-height:20px;font-weight:600;}
-#page-weekly .btn.soft{border-color:var(--line);}
-#page-weekly .btn.soft:hover{border-color:var(--ink);}
+#page-calendar .btn{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:7px 12px;border:1px solid transparent;font-size:13px;line-height:20px;font-weight:600;}
+#page-calendar .btn.soft{border-color:var(--line);}
+#page-calendar .btn.soft:hover{border-color:var(--ink);}
 .week-browse{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;margin-top:auto;padding-top:16px;border-top:1px solid var(--line);}
 .week-browse .go{color:var(--link);font-size:14px;font-weight:600;text-decoration:none;}
 .week-browse .go:hover{text-decoration:underline;}
@@ -371,8 +365,8 @@ table.lb .skill.pos{color:var(--accent-ink);}
   .weekly-grid{grid-template-columns:minmax(0,1fr) 240px;}
 }
 @media(max-width:600px){
-  #page-weekly .col{padding:20px 16px 28px;}
-  #page-weekly .week-card{padding:16px;}
+  #page-calendar .col{padding:20px 16px 28px;}
+  #page-calendar .week-card{padding:16px;}
   .week-routes,.facets{grid-template-columns:1fr;}
   .week-route+.week-route{border-left:0;border-top:1px solid var(--line);padding:16px 0 0;}
   .facet+.facet{border-top:1px solid var(--line);padding-top:16px;}
@@ -422,7 +416,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
   body{overflow:auto;display:block;height:auto;}
   main{display:block;}
   .page.on{display:block;}
-  #page-live.on{display:block;}
+  #page-leaderboard.on{display:block;}
   .panel-resizer{display:none;}
 
   .header-status{padding:0 12px 10px;gap:8px 14px;}
@@ -462,20 +456,20 @@ table.lb .skill.pos{color:var(--accent-ink);}
 .pager button{border:1px solid var(--line);background:#fff;border-radius:4px;padding:3px 10px;cursor:pointer;}
 .pager button:disabled{opacity:.35;cursor:default;}
 </style>
-<script defer src="panels.js?v=0618292d06"></script>
+<script defer src="panels.js?v=a01d556f72"></script>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="stylesheet" href="typography.css?v=132a6a9e3f">
+<link rel="stylesheet" href="typography.css?v=13eabe3514">
 </head>
 <body class="site-home">
 
 <header class="site-header">
 <nav class="top site-nav" aria-label="Main navigation">
   <div class="in">
-    <a class="brand" href="#live"><img src="logo.svg" alt=""><span class="brand-name">Social Simulation Arena</span><span class="by">by MIT</span></a>
+    <a class="brand" href="#leaderboard"><img src="logo.svg" alt=""><span class="brand-name">Social Simulation Arena</span><span class="by">by MIT</span></a>
     <div class="page-tabs">
-      <button class="ptab on" data-page="live">Live</button>
-      <button class="ptab" data-page="rounds">Questions</button>
-      <button class="ptab" data-page="weekly">Weekly</button>
+      <a class="ptab on" href="#leaderboard" data-page="leaderboard">Leaderboard</a>
+      <a class="ptab" href="#questions" data-page="questions">Questions</a>
+      <a class="ptab" href="#calendar" data-page="calendar">Calendar</a>
     </div>
     <div class="right">
       <a class="item" href="background.html">Background</a>
@@ -494,7 +488,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
 
 <main>
 
-  <div class="page on" id="page-live">
+  <div class="page on" id="page-leaderboard">
     <div class="chartcol">
       <div class="task-shell">
         <aside class="tasknav" id="task-panel" aria-label="Tasks">
@@ -563,7 +557,7 @@ table.lb .skill.pos{color:var(--accent-ink);}
     </aside>
   </div>
 
-  <div class="page" id="page-rounds">
+  <div class="page" id="page-questions">
     <div class="inner"><div class="col widecol">
       <h2 class="page-title">Questions</h2>
       <div class="task-toolbar">
@@ -575,10 +569,9 @@ table.lb .skill.pos{color:var(--accent-ink);}
     </div></div>
   </div>
 
-  <div class="page" id="page-weekly">
+  <div class="page" id="page-calendar">
     <div class="inner"><div class="col widecol">
-        <div class="eyebrow page-eyebrow">The week</div>
-        <h2 class="page-title" id="weekly-title">The weekly set</h2>
+        <h2 class="page-title" id="weekly-title">Calendar</h2>
         <p class="lede page-description">Every question runs on its own clock: listed a week ahead, and answered in the 24 hours before it closes &#8212; the same window for every entrant. Most close 48 hours before their answer is published; the ones that ask about a whole week close before that week begins.</p>
       <div id="weekly-content" class="weekly-grid"></div>
     </div></div>
@@ -1281,11 +1274,11 @@ function renderTaskHeader(data,key){
     return;
   }
   const due=deadlineOf(r), state=active.includes(r)?(key==='agg'?'NEXT TO CLOSE':'OPEN'):'LATEST';
-  document.getElementById('task-question-summary').innerHTML='<span class="replay-tag">'+state+'</span><span title="'+esc(r.round_id)+'">'+esc(questionText(r))+'</span><time datetime="'+esc(due)+'" style="margin-left:auto;color:var(--mut);font-weight:500;">due '+esc(fmtLocal(due))+'</time>';
+  document.getElementById('task-question-summary').innerHTML='<span class="replay-tag">'+state+'</span><span class="qtext" title="'+esc(r.round_id)+'">'+esc(questionText(r))+'</span><time datetime="'+esc(due)+'">due '+esc(fmtLocal(due))+'</time>';
   document.getElementById('task-question-body').innerHTML='<p>'+esc(r.question)+'</p><div class="qfoot">'
     +'<span>'+shapeChip(r)+(r.target_type==='profile_energy'?(r.cells||[]).length+' cells':r.target_type==='ranking_list'?'ordered list':'predictive distribution')+'</span>'
     +'<span>releases '+esc(fmtLocal(r.release_at))+'</span><span>'+esc(r.n_forecasts||0)+' forecasts filed</span>'
-    +'<a class="go" href="#rounds">every question →</a><a class="go" href="#weekly" style="margin-left:14px;">weekly calendar →</a></div>';
+    +'<a class="go" href="#questions">every question →</a><a class="go" href="#calendar" style="margin-left:14px;">calendar →</a></div>';
 }
 
 function alignedVectors(data,cells){
@@ -1381,7 +1374,7 @@ function renderTaskChart(key){
     unitSeg.querySelector('[data-unit="level"]').style.display='none';unitSeg.querySelector('[data-unit="arena"]').style.display='';unitSeg.querySelector('[data-unit="crps"]').style.display='';
     const unit=window.__unitAgg||'arena';unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.unit===unit));
     const tj=bt.trajectory||[], span=tj.length?fmtDate(tj[0].date)+' to '+fmtDate(tj[tj.length-1].date):'';
-    document.getElementById('caption').textContent=(bt.n_rounds||tj.length)+' matched releases'+(span?', '+span:'')+(unit==='crps'?' · average CRPS, lower is better':'');
+    document.getElementById('caption').textContent=(bt.n_rounds||tj.length)+' matched releases'+(span?', '+span:'');
     aggChart(bt.trajectory,nameOf,unit);renderLegend(legendFor(bt.trajectory),nameOf);return;
   }
   if(d.kind==='profile'){
@@ -1665,7 +1658,7 @@ function renderWeekly(data){
         by.get(k).n++; });
       return [...by.values()].sort((a,b)=>b.n-a.n||a.label.localeCompare(b.label));
     };
-    const line=(g)=>'<li><a href="#live/'+g.key+'/all">'
+    const line=(g)=>'<li><a href="#leaderboard/'+g.key+'/all">'
       +'<span class="wp-q">'+esc(g.label)+(g.n>1?' <i>&times;'+g.n+'</i>':'')+'</span>'
       +'<span class="wp-t">'+esc(timeOf(g.when))+'</span></a></li>';
     const dateLabel=new Date(key+'T12:00:00Z').toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',timeZone:'UTC'});
@@ -1719,7 +1712,7 @@ function renderWeekly(data){
       +'<div class="facets"><div class="facet"><h4>Categories</h4>'+bar(fam)+'</div>'
       +'<div class="facet"><h4>Answer shape</h4>'+bar(shape)+'</div>'
       +'<div class="facet"><h4>Horizon</h4>'+bar(horizon)+'</div></div>'
-      +'<div class="week-browse"><a class="go" href="#rounds">Browse all '+open.length+' open questions →</a>'
+      +'<div class="week-browse"><a class="go" href="#questions">Browse all '+open.length+' open questions →</a>'
       +'<span>'+open.reduce((n,r)=>n+(r.n_forecasts||0),0)+' forecasts filed so far</span></div></section>'
     +'<aside class="week-card week-side" aria-labelledby="week-summary-title">'
       +'<h3 id="week-summary-title">This week</h3><dl>'
@@ -1863,50 +1856,53 @@ function examRounds(data){
   }
 }
 
-const PAGES=['live','rounds','weekly','submit','exam'];
+const PAGES=['leaderboard','questions','calendar','submit','exam'];
+const PAGE_TITLES={leaderboard:'Leaderboard',questions:'Questions',calendar:'Calendar',submit:'Submit your agent',exam:'The Midterm Exam'};
+// Pre-release names. Kept so a link written before the rename still lands.
+const HASH_ALIASES={live:'leaderboard',rounds:'questions',weekly:'calendar'};
 function showPage(k){
   PAGES.forEach(pg=>{
     document.getElementById('page-'+pg).classList.toggle('on', pg===k);
     const b=document.querySelector('.ptab[data-page="'+pg+'"]'); if(b) b.classList.toggle('on', pg===k);
   });
   window.__page = k;
-  if(k==='live' && window.__data) requestAnimationFrame(()=>setTab(window.__tab||'agg'));
-  if(k==='weekly' && window.__data) renderWeekly(window.__data);
+  if(k==='leaderboard' && window.__data) requestAnimationFrame(()=>setTab(window.__tab||'agg'));
+  if(k==='calendar' && window.__data) renderWeekly(window.__data);
   if(typeof syncHash==='function') syncHash();
 }
 
 const CHART_KEYS = Object.keys(TASKS);
 const SPAN_KEYS = ['all','m6','d30','last'];
 function syncHash(){
-  const pg = window.__page || 'live';
+  const pg = window.__page || 'leaderboard', tab = window.__tab || 'agg', span = window.__board || 'all';
   let h = pg;
-  if(pg === 'live'){
-    const tab = window.__tab || 'agg', span = window.__board || 'all';
-    if(tab !== 'agg' || span !== 'all') h = 'live/' + tab + '/' + span;
-  }
+  if(pg === 'leaderboard' && (tab !== 'agg' || span !== 'all')) h = 'leaderboard/' + tab + '/' + span;
   history.replaceState(null, '', '#' + h);
+  const scope = pg === 'leaderboard' && tab !== 'agg' && TASKS[tab] ? TASKS[tab].label + ' · ' : '';
+  document.title = scope + (PAGE_TITLES[pg] || PAGE_TITLES.leaderboard) + ' · Social Simulation Arena';
 }
 function applyHash(){
   const parts = (location.hash || '').slice(1).split('/');
+  parts[0] = HASH_ALIASES[parts[0]] || parts[0];
   const pg = PAGES.includes(parts[0]) ? parts[0] : null;
   if(!pg) return;
-  if(pg === 'live'){
-    if(CHART_KEYS.includes(parts[1])) window.__tab = parts[1];
-    if(SPAN_KEYS.includes(parts[2])){ window.__board = parts[2]; if(typeof setRange==='function') setRange(SPAN_TO_RANGE[parts[2]]||0); }
+  if(pg === 'leaderboard'){
+    // The URL is the whole state: a bare #leaderboard is Overall over all rounds, whatever was open before.
+    window.__tab = CHART_KEYS.includes(parts[1]) ? parts[1] : 'agg';
+    const span = SPAN_KEYS.includes(parts[2]) ? parts[2] : 'all';
+    window.__board = span; if(typeof setRange==='function') setRange(SPAN_TO_RANGE[span]||0);
   }
-  if(pg === 'rounds' && /^batch-\d{4}-\d{2}-\d{2}$/.test(parts[1]||'')){
-    // #rounds/batch-2026-09-14: the week's set, as a search a reader can clear
+  if(pg === 'questions' && /^batch-\d{4}-\d{2}-\d{2}$/.test(parts[1]||'')){
+    // #questions/batch-2026-09-14: the week's set, as a search a reader can clear
     window.__roundQuery = parts[1]; window.__roundStatus = 'all';
     const box = document.getElementById('task-search'); if(box) box.value = parts[1];
     if(window.__data) roundsList(window.__data);
   }
   showPage(pg);
-  if(pg === 'live' && window.__data){ setTab(window.__tab || 'agg'); renderBoard(window.__board || 'all'); }
+  if(pg === 'leaderboard' && window.__data){ setTab(window.__tab || 'agg'); renderBoard(window.__board || 'all'); }
 }
 window.addEventListener('hashchange', applyHash);
 
-document.querySelectorAll('.ptab').forEach(b=> b.onclick = ()=> showPage(b.dataset.page));
-document.getElementById('nav-submit').onclick = e=>{ e.preventDefault(); showPage('submit'); };
 document.querySelector('.task-all').onclick=()=>{setTab('agg');renderBoard(window.__board||'all');};
 (function(){
   const trigger=document.getElementById('task-trigger'), host=document.getElementById('task-picker');
@@ -1937,7 +1933,7 @@ document.querySelectorAll('#span-seg button').forEach(b=> b.onclick = ()=>{
   renderBoard(b.dataset.span);
 });
 let rsz;
-function redraw(){ if(window.__data && (window.__page||'live')==='live') renderTaskChart(window.__tab||'agg'); }
+function redraw(){ if(window.__data && (window.__page||'leaderboard')==='leaderboard') renderTaskChart(window.__tab||'agg'); }
 function scheduleRedraw(){
   if(rsz)return;
   rsz=requestAnimationFrame(()=>{rsz=0;redraw();});
