@@ -221,7 +221,7 @@ table.lb{width:100%;border-collapse:collapse;font-size:14.5px;table-layout:fixed
 table.lb col.rank-col{width:34px;}
 table.lb col.score-col{width:56px;}
 table.lb col.loss-col{width:58px;}
-table.lb col.rounds-col{width:56px;}
+table.lb col.rounds-col{width:74px;}
 table.lb th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);font-weight:700;text-align:left;padding:8px;border-bottom:none;box-shadow:0 1px 0 var(--line);position:sticky;top:0;background:#fff;z-index:2;}
 table.lb td{padding:10px 8px;border-bottom:1px solid #eeede9;vertical-align:middle;}
 table.lb tr:last-child td{border-bottom:none;}
@@ -1288,12 +1288,13 @@ function tipShow(tip, ev, html){
 const DEFAULT_VISIBLE_MODELS = 6;
 const MODEL_SELECTION_KEY = 'ssa.chart-models.v1';
 function defaultKeep(data){
-  // The default comparison: the top models on the overall backtest, persistence and EWMA. Pure.
-  const board = ((data||{}).backtest||{}).overall || [];
+  // The default comparison: the top models on the season's overall board once it has one (the backtest's until then), persistence and EWMA. Pure.
+  const live = (data && data.rounds) ? liveBoard(data,'agg','all') : [];
+  const board = live.length ? live : (((data||{}).backtest||{}).overall || []);
   const keep = new Set(['persistence','ewma']);
   let n = 0;
   for(const row of board){
-    if(row.baseline || keep.has(row.entrant)) continue;
+    if(row.baseline || isBaseline(row.entrant) || row.entrant==='crowd' || keep.has(row.entrant)) continue;
     keep.add(row.entrant);
     if(++n >= DEFAULT_VISIBLE_MODELS) break;
   }
@@ -1509,9 +1510,9 @@ function aggChart(traj, nameOf, unit){
   const bt0 = (window.__data && window.__data.backtest) || {};
   // model_entrants names the measured entrants; mock_models is the older key
   // the placeholder path used, kept as a fallback for archived data.json files.
-  const mocks = bt0.model_entrants || bt0.mock_models || [];
-  // Use the same selected entrants for backtests and tracker forecasts.
-  const universe = ['climatology','trend','ewma'].concat(mocks).concat(['crowd']);
+  // The entrants are whatever this trajectory scores (the season's or the backtest's), baselines first.
+  const universe = trajIds(traj);
+  const mocks = universe.filter(id=>!isBaseline(id)&&id!=='crowd');
   const hiddenA = coerceUnknown(universe);
   const arenaAt = (t,s) => (t.crps && t.crps[s]!=null && t.crps.persistence!=null)
       ? arenaOf(t.crps[s], t.crps.persistence) : null;
@@ -1545,8 +1546,10 @@ function aggChart(traj, nameOf, unit){
   traj.forEach(t => series.forEach(s => { const v=val(t,s); if(v!=null){ lo=Math.min(lo,v); hi=Math.max(hi,v);} }));
   // Fit the chosen models, including scores below the persistence baseline.
   // A fixed -30 floor clipped most of a weak model's curve when selected alone.
-  if(unit==='skill'){ lo=Math.min(lo,0); hi=Math.max(hi,0); }
-  if(unit==='arena'){ lo=Math.min(lo,0); hi=Math.max(hi,100); }
+  // The floor is one persistence-worth below zero: an entrant's first question can be far worse, and drawing it
+  // to scale would flatten every other line; below the floor a line runs along the edge.
+  if(unit==='skill'){ lo=Math.max(Math.min(lo,0),-1); hi=Math.max(hi,0); }
+  if(unit==='arena'){ lo=Math.max(Math.min(lo,0),-100); hi=Math.max(hi,100); }
   const pad=(hi-lo)*0.08||0.05; lo-=pad; hi+=pad;
   const X = i => P.l + i/(traj.length-1)*(W-P.l-P.r);
   const Y = v => P.t + (hi-v)/(hi-lo)*(H-P.t-P.b);
@@ -1996,6 +1999,98 @@ function rankingChart(d,data){
   svg.innerHTML=wrap(h);
 }
 
+// ---- the season, question by question ----
+// The ids a score trajectory carries: baselines first (never persistence, which is the zero line), then entrants, then the crowd.
+function trajIds(traj){
+  const ids=new Set(); (traj||[]).forEach(t=>{ Object.keys(t.skills||{}).forEach(id=>ids.add(id)); Object.keys(t.crps||{}).forEach(id=>ids.add(id)); });
+  ids.delete('persistence');
+  const base=['climatology','trend','ewma'].filter(id=>ids.has(id)), rest=[...ids].filter(id=>!isBaseline(id)&&id!=='crowd').sort();
+  return base.concat(rest).concat(ids.has('crowd')?['crowd']:[]);
+}
+function resolvedAt(r){ return String((r.resolution||{}).resolved_at||r.release_at||''); }
+// Resolved questions that carry per-entrant scores, oldest first; for Overall, every number question.
+function scoredRounds(data,key){
+  const all=key==='agg'?(data.rounds||[]).filter(r=>r.target_type!=='profile_energy'&&r.target_type!=='ranking_list'):taskRounds(TASKS[key],data);
+  return all.filter(r=>r.status==='resolved'&&r.scores&&Object.keys(r.scores).length).sort((a,b)=>resolvedAt(a).localeCompare(resolvedAt(b)));
+}
+// At each resolved question's date, every entrant's running mean skill (and CRPS where the question has one) over
+// the questions it has answered so far. Persistence's CRPS rides along so the arena scale can be drawn.
+function liveTrajectory(data,key){
+  const sum={},n={},csum={},cn={},out=[];
+  scoredRounds(data,key).forEach(r=>{
+    Object.entries(r.scores).forEach(([id,sc])=>{ if(typeof sc.skill!=='number') return; sum[id]=(sum[id]||0)+sc.skill; n[id]=(n[id]||0)+1; if(typeof sc.crps==='number'){ csum[id]=(csum[id]||0)+sc.crps; cn[id]=(cn[id]||0)+1; } });
+    if(typeof r.persistence_crps==='number'){ csum.persistence=(csum.persistence||0)+r.persistence_crps; cn.persistence=(cn.persistence||0)+1; }
+    const skills={},crps={};
+    Object.keys(sum).forEach(id=>{ skills[id]=sum[id]/n[id]; });
+    Object.keys(csum).forEach(id=>{ crps[id]=csum[id]/cn[id]; });
+    out.push({date:resolvedAt(r).slice(0,10), skills, crps:Object.keys(crps).length?crps:null, n:out.length+1});
+  });
+  return out;
+}
+// The season's board for one task, or for every number question: each entrant's mean over the resolved
+// questions it answered inside the window (all, m6, d30, last).
+function liveBoard(data,key,mode){
+  const now=Date.now(), cut=mode==='d30'?now-30*86400e3:mode==='m6'?now-182*86400e3:null;
+  let rs=scoredRounds(data,key);
+  if(mode==='last') rs=rs.slice(-1); else if(cut) rs=rs.filter(r=>Date.parse(resolvedAt(r))>=cut);
+  const acc={};
+  rs.forEach(r=>Object.entries(r.scores).forEach(([id,sc])=>{ if(typeof sc.skill!=='number') return; const a=acc[id]||(acc[id]={n:0,s:0,c:0,cn:0}); a.n++; a.s+=sc.skill; if(typeof sc.crps==='number'){ a.c+=sc.crps; a.cn++; } }));
+  return Object.entries(acc).map(([id,a])=>({entrant:id,rounds:a.n,mean_skill:a.s/a.n,mean_crps:a.cn?a.c/a.cn:null,baseline:isBaseline(id)})).sort((x,y)=>y.mean_skill-x.mean_skill);
+}
+// A trajectory none of whose entrants has ever been chosen gets a default: the top entrants by skill, plus EWMA and the crowd.
+function ensurePick(traj){
+  const ids=trajIds(traj); if(!ids.length) return;
+  coerceUnknown(ids);   // establishes the saved or default selection before it is inspected
+  const keep=window.__keep||new Set();
+  if(ids.some(id=>keep.has(id))) return;
+  const last=traj[traj.length-1];
+  const top=ids.filter(id=>!isBaseline(id)&&id!=='crowd').sort((a,b)=>((last.skills||{})[b]??-9)-((last.skills||{})[a]??-9)).slice(0,DEFAULT_VISIBLE_MODELS);
+  selectModels(top.concat(ids.filter(id=>id==='ewma'||id==='crowd')), true);
+}
+function chartMessage(title, body, muted){
+  const svg=clearChart(); renderLegend([],{}); const W=svg.clientWidth,H=svg.clientHeight; svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  svg.innerHTML='<foreignObject x="0" y="0" width="'+W+'" height="'+H+'"><div xmlns="http://www.w3.org/1999/xhtml" class="chart-message"><h3>'+esc(title)+'</h3><p>'+esc(body)+'</p>'+(muted?'<p class="muted">'+esc(muted)+'</p>':'')+'</div></foreignObject>';
+}
+// The ranking task's tracker: the released weekly lists as a bump chart, rank 1 at the top, one line per title,
+// and one more column for the next question, holding the consensus order of the lists filed so far.
+function rankingTracker(d,data){
+  const svg=clearChart(), tip=pane().querySelector('.tooltip'); renderLegend([],{});
+  const W=svg.clientWidth,H=svg.clientHeight; svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  const weeks=((data.lists||{})[d.chart||'wiki_top10_en']||[]).slice(-10);
+  if(!weeks.length){ chartMessage('No released lists yet','The weekly top ten appears here once the archive holds a full week.'); return; }
+  const rs=taskRounds(d,data).filter(isListed).filter(r=>r.status!=='resolved').sort((a,b)=>String(a.lock_at).localeCompare(String(b.lock_at)));
+  const hasLists=r=>Object.entries(r.forecasts||{}).some(([k,f])=>f&&Array.isArray(f.items)&&f.items.length&&!isBaseline(k));
+  const nxt=rs.find(hasLists); let cons=null;
+  if(nxt){
+    const lists=Object.entries(nxt.forecasts).filter(([k,f])=>f&&Array.isArray(f.items)&&f.items.length&&!isBaseline(k)), cnt={},pos={};
+    lists.forEach(([k,f])=>f.items.forEach((t,i)=>{ cnt[t]=(cnt[t]||0)+1; pos[t]=(pos[t]||0)+i+1; }));
+    const order=Object.keys(cnt).filter(t=>cnt[t]>=Math.max(2,lists.length*0.25)).sort((a,b)=>cnt[b]-cnt[a]||pos[a]/cnt[a]-pos[b]/cnt[b]).slice(0,10);
+    cons={round:nxt,n:lists.length,order};
+  }
+  const cols=weeks.map(w=>({label:fmtDate(w.week_end),items:w.items.slice(0,10),released:true}));
+  if(cons) cols.push({label:'next question',items:cons.order,released:false,n:cons.n});
+  const P={t:24,r:200,b:26,l:34}, X=i=>P.l+(cols.length===1?0:i/(cols.length-1)*(W-P.l-P.r)), Y=rank=>P.t+(rank-1)/9*(H-P.t-P.b);
+  const nice=t=>String(t).replace(/_/g,' ');
+  const latest=cols[cols.length-1].items, colorOfTitle={}; latest.forEach((t,i)=>colorOfTitle[t]=CELL_COLORS[i%CELL_COLORS.length]);
+  const titles=new Set(); cols.forEach(c=>c.items.forEach(t=>titles.add(t)));
+  let g='';
+  for(let r=1;r<=10;r++) g+='<line x1="'+P.l+'" x2="'+(W-P.r)+'" y1="'+Y(r).toFixed(1)+'" y2="'+Y(r).toFixed(1)+'" stroke="rgba(0,0,0,.05)"/><text x="'+(P.l-8)+'" y="'+(Y(r)+3.5).toFixed(1)+'" font-size="10.5" fill="#96948d" text-anchor="end">'+r+'</text>';
+  cols.forEach((c,i)=>{ g+='<text x="'+X(i).toFixed(1)+'" y="'+(H-8)+'" font-size="10.5" fill="'+(c.released?'#96948d':'#0a6a30')+'" font-weight="'+(c.released?'400':'700')+'" text-anchor="'+(i===0?'start':i===cols.length-1?'end':'middle')+'">'+esc(c.label)+'</text>'; if(!c.released) g+='<line x1="'+X(i).toFixed(1)+'" x2="'+X(i).toFixed(1)+'" y1="'+P.t+'" y2="'+(H-P.b)+'" stroke="#15803d" stroke-dasharray="3 4" stroke-opacity=".5"/>'; });
+  // Grey titles first so the coloured lines of the latest list sit on top.
+  [...titles].sort((a,b)=>(colorOfTitle[a]?1:0)-(colorOfTitle[b]?1:0)).forEach(t=>{
+    const col=colorOfTitle[t]||'#c9c7c0', inLatest=!!colorOfTitle[t];
+    const pts=cols.map((c,i)=>{ const k=c.items.indexOf(t); return k<0?null:{x:X(i),y:Y(k+1),c,rank:k+1}; });
+    let path='',prev=null;
+    pts.forEach(p=>{ if(!p){ prev=null; return; } path+=(prev?' L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1); prev=p; });
+    if(path) g+='<path d="'+path+'" fill="none" stroke="'+col+'" stroke-width="'+(inLatest?2:1.2)+'" stroke-opacity="'+(inLatest?'.9':'.55')+'" stroke-linejoin="round" stroke-linecap="round"/>';
+    pts.forEach(p=>{ if(!p) return; g+='<circle cx="'+p.x.toFixed(1)+'" cy="'+p.y.toFixed(1)+'" r="'+(p.c.released?3.2:3.8)+'" fill="'+(p.c.released?col:'#fff')+'" stroke="'+col+'" stroke-width="1.6" data-tip="'+attr(nice(t)+' · #'+p.rank+(p.c.released?' · week ending '+p.c.label:' · the consensus of '+p.c.n+' filed lists'))+'"/>'; });
+  });
+  latest.forEach((t,i)=>{ const nm=nice(t); g+='<text x="'+(W-P.r+12)+'" y="'+(Y(i+1)+3.5).toFixed(1)+'" font-size="11" fill="#111110"><tspan fill="'+(colorOfTitle[t]||'#111110')+'" font-weight="700">'+(i+1)+'</tspan> '+esc(nm.length>27?nm.slice(0,26)+'…':nm)+'</text>'; });
+  svg.innerHTML=g;
+  svg.onmousemove=ev=>{ const c=ev.target.closest&&ev.target.closest('circle[data-tip]'); if(c) tipShow(tip,ev,esc(c.dataset.tip)); else tip.style.display='none'; };
+  svg.onmouseleave=()=>{ tip.style.display='none'; };
+}
+
 function setTab(key){
   if(!TASKS[key])key='agg'; window.__tab=key; if(typeof syncHash==='function')syncHash();
   const data=window.__data;if(!data)return;
@@ -2004,40 +2099,47 @@ function setTab(key){
 }
 function renderTaskChart(key){
   const data=window.__data;if(!data)return; const d=TASKS[key],bt=data.backtest||{},nameOf={};
-  window.__matched='';  // set by the branches that score over matched releases; the board note reads it
-  document.getElementById('chart-filters').style.visibility=d.kind==='ranking'?'hidden':'';
+  window.__matched='';  // read by the board note
   (data.entrants||[]).forEach(e=>nameOf[e.entrant_id]=e.name);
   const unitSeg=document.getElementById('unit-seg'),rangeSeg=document.getElementById('range-seg');
-  const roster=['climatology','trend','ewma'].concat(bt.model_entrants||bt.mock_models||[]).concat(['crowd']);
-  const legendFor=traj=>!traj||!traj.length?[]:roster.filter(s=>traj.some(t=>(t.skills&&t.skills[s]!=null)||(t.crps&&t.crps[s]!=null)));
+  const showUnits=(level,arena,crps)=>{ unitSeg.style.display=''; unitSeg.querySelector('[data-unit="level"]').style.display=level?'':'none'; unitSeg.querySelector('[data-unit="arena"]').style.display=arena?'':'none'; unitSeg.querySelector('[data-unit="crps"]').style.display=crps?'':'none'; };
+  const mark=unit=>unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.unit===unit));
+  const src=d.srcUrl?' · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>':'';
+  const live=liveTrajectory(data,key), hasLive=live.length>=2;
+  // The season once it has two resolved questions; the walk-forward backtest until then.
+  const scoreView=(traj,fromLive,unit)=>{
+    if(fromLive){ ensurePick(traj); window.__matched=traj.length+' questions resolved'; window.__caption='<span class="replay-tag">SEASON 0</span> · '+(key==='agg'?'every number question':esc(d.label))+' · running mean over '+traj.length+' resolved questions'+src; }
+    else { const n=(traj[traj.length-1]||{}).n||traj.length; window.__matched=n+' releases at most'; window.__caption='<span class="replay-tag">BACKTEST</span> · '+(key==='agg'?'walk-forward replay before the season':esc(d.label)+' · walk-forward replay before the season')+src; }
+    // Arm ids (an entrant's web or sfc setup) have no registration of their own; name them the way the board does.
+    const names=Object.assign({},nameOf); trajIds(traj).forEach(id=>{ if(!names[id]) names[id]=forecasterName(id,data); });
+    aggChart(traj,names,unit); renderLegend(trajIds(traj),names);
+  };
+  document.getElementById('chart-filters').style.visibility='';
   if(key==='agg'){
-    unitSeg.style.display='';rangeSeg.style.display='';
-    // A topline task without model rounds hides Score and CRPS (line below); Overall always has them, so restore both here.
-    unitSeg.querySelector('[data-unit="level"]').style.display='none';unitSeg.querySelector('[data-unit="arena"]').style.display='';unitSeg.querySelector('[data-unit="crps"]').style.display='';
-    const unit=window.__unitAgg||'arena';unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.unit===unit));
-    const tj=bt.trajectory||[], span=tj.length?fmtDate(tj[0].date)+' to '+fmtDate(tj[tj.length-1].date):'';
-    window.__matched=(bt.n_rounds||tj.length)+' matched releases'+(span?', '+span:'');
-    aggChart(bt.trajectory,nameOf,unit);renderLegend(legendFor(bt.trajectory),nameOf);return;
+    showUnits(false,true,true); rangeSeg.style.display='';
+    const unit=window.__unitAgg||'arena'; mark(unit);
+    const traj=hasLive?live:(bt.trajectory||[]);
+    if(traj.length>=2) scoreView(traj,hasLive,unit); else chartMessage('No scored questions yet','The first questions of the season resolve within days of their release.');
+    return;
   }
-  if(d.kind==='profile'){
-    unitSeg.style.display='none';rangeSeg.style.display='';
-    window.__caption='<span class="replay-tag">MEASURED CELLS</span> · every line is a measured population cell, not a model estimate · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
-    profileChart(d,data);return;
+  if(d.kind==='profile'||d.kind==='ranking'){
+    showUnits(true,true,false); rangeSeg.style.display=d.kind==='ranking'?'none':'';
+    let unit=window.__unitSer||'level'; if(unit==='crps') unit='arena'; mark(unit);
+    if(unit==='arena'){
+      if(hasLive) scoreView(live,true,'arena');
+      else chartMessage('The score view needs two resolved questions', live.length?'One question on this task has resolved so far.':'No question on this task has resolved yet.', 'The tracker shows the series meanwhile.');
+      return;
+    }
+    if(d.kind==='profile'){ window.__caption='<span class="replay-tag">MEASURED CELLS</span> · every line is a measured population cell, not a model estimate'+src; profileChart(d,data); }
+    else { window.__caption='<span class="replay-tag">RELEASED LISTS</span> · the weekly top ten as published, and the next question\'s consensus'+src; rankingTracker(d,data); }
+    return;
   }
-  if(d.kind==='ranking'){
-    unitSeg.style.display='none';rangeSeg.style.display='none';
-    window.__caption='<span class="replay-tag">RANKING TASK</span> · the exact question and scoring object are shown before any leaderboard number';rankingChart(d,data);return;
-  }
-  const psTraj=(bt.per_series_trajectory||{})[d.per],hasModel=psTraj&&psTraj.length>1;
-  let unit=hasModel?(window.__unitSer||'arena'):'level'; unitSeg.style.display='';rangeSeg.style.display='';
-  unitSeg.querySelector('[data-unit="level"]').style.display='';unitSeg.querySelector('[data-unit="arena"]').style.display=hasModel?'':'none';unitSeg.querySelector('[data-unit="crps"]').style.display=hasModel?'':'none';
-  unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.unit===unit));
-  if(unit!=='level'&&hasModel){
-    window.__matched=psTraj[psTraj.length-1].n+' releases at most';window.__caption=esc(d.label)+' · '+psTraj[psTraj.length-1].n+' matched releases · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
-    aggChart(psTraj,nameOf,unit);renderLegend(legendFor(psTraj),nameOf);return;
-  }
+  const psTraj=(bt.per_series_trajectory||{})[d.per]||[],hasModel=psTraj.length>1,hasScore=hasLive||hasModel;
+  let unit=hasScore?(window.__unitSer||'arena'):'level';
+  showUnits(true,hasScore,hasScore); rangeSeg.style.display=''; mark(unit);
+  if(unit!=='level'&&hasScore){ scoreView(hasLive?live:psTraj,hasLive,unit); return; }
   const pts=pointsFor(data,d.chart),last=pts.slice(-1)[0];
-  window.__caption='<span class="replay-tag">OBSERVED HISTORY</span> · '+esc(d.label)+(last?' · latest '+esc(fmtVal(last.value,d.unit||''))+' on '+fmtDate(last.date):'')+' · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
+  window.__caption='<span class="replay-tag">OBSERVED HISTORY</span> · '+esc(d.label)+(last?' · latest '+esc(fmtVal(last.value,d.unit||''))+' on '+fmtDate(last.date):'')+src;
   seriesChart(key,data);
 }
 
@@ -2050,7 +2152,11 @@ function renderBoard(mode){
   (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; });
   const btMap = {}; ((data.backtest&&data.backtest.overall)||[]).forEach(e=>btMap[e.entrant]=e);
   let entries=[],metricKey='mean_crps',metricLabel='CRPS',title=d.label,tag='',note='',appendPending=false,replay=false;
-  if(key==='agg'){
+  const liveRows=liveBoard(data,key,mode);
+  if(key==='agg' && liveRows.length){
+    entries=liveRows; appendPending=true; title='Overall standings'; tag='live';
+    note='Season 0, every number question: each row is its mean over the resolved questions it answered in this window (the Questions column). Arena score 0 is persistence and 100 is a perfect oracle.';
+  }else if(key==='agg'){
     const spans=(data.backtest&&data.backtest.spans)||{};
     entries=spans[mode]||(data.backtest&&data.backtest.overall)||[];appendPending=true;
     title='Overall standings'; tag='backtest';
@@ -2065,6 +2171,9 @@ function renderBoard(mode){
     const live=((data.ranking||{}).matched||[]).length?(data.ranking||{}).matched:(data.ranking||{}).board||[];
     if(live.length){entries=live;metricKey='mean_loss';metricLabel='Loss';tag='live';note=(data.ranking||{}).note||'';}
     else{entries=rankingReplay(d,data);metricLabel='Rank loss';tag='baseline replay';replay=true;note='A ranking replay needs archived historical lists. The UI does not invent one when the published payload has none.';}
+  }else if(liveRows.length){
+    entries=liveRows; tag='live';
+    note='Season 0, this task: each row is its mean over the resolved questions it answered in this window (the Questions column).';
   }else{
     const model=(data.backtest&&data.backtest.per_series&&data.backtest.per_series[d.per])||[];
     const base=(data.backtest&&data.backtest.baseline_replay&&data.backtest.baseline_replay.per_series&&data.backtest.baseline_replay.per_series[d.per])||[];

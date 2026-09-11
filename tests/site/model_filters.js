@@ -8,8 +8,11 @@ const html = fs.readFileSync(path.join(root, 'site/index.html'), 'utf8');
 const script = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('\n');
 const data = JSON.parse(fs.readFileSync(path.join(root, 'site/data.json'), 'utf8'));
 const storageKey = 'ssa.chart-models.v1';
+// The picker's mechanics are checked against the backtest roster, which the site falls back to when no
+// question has resolved; the season's own default is checked at the end against the real payload.
+const backtestOnly = JSON.parse(JSON.stringify(data)); backtestOnly.rounds.forEach(r=>{ delete r.scores; });
 
-function fixture(storage = new Map()) {
+function fixture(storage = new Map(), payload = backtestOnly) {
   const {els, window: win, document: doc} = installGlobals();
   const svg = node('svg'), tip = node(), events = {}, stripEvents = {};
   svg.clientWidth = 600; svg.clientHeight = 360;
@@ -33,7 +36,7 @@ function fixture(storage = new Map()) {
     return inputs;
   };
   const api = new Function(script+'\nreturn {render, renderTaskChart, renderLegend, matchingModels, coerceUnknown, modelInfo, selectModels, resetModels, modelPicker, TASKS};')();
-  api.render(data);
+  api.render(payload);
   api.renderTaskChart('agg');
   return {api, els, win, doc, svg, events, stripEvents, storage, options};
 }
@@ -42,7 +45,7 @@ let f = fixture();
 const selected = f.api.modelPicker.ids.filter(id=>!f.win.__hidden.has(id));
 assert.equal(selected.length, 7, 'default comparison is six entrants and EWMA');
 assert.ok(selected.includes('ewma'));
-assert.equal(f.els['model-selected-count'].textContent, '7 of 29 entrants');
+assert.equal(f.els['model-selected-count'].textContent, '7 of '+f.api.modelPicker.ids.length+' entrants');
 const originalBoard = f.els['lb-body'].innerHTML;
 const originalSelection = [...f.win.__keep];
 f.els['model-trigger'].onclick();
@@ -126,17 +129,19 @@ f = fixture(saved);
 f.api.coerceUnknown(['future-entrant']);
 assert.ok(!f.win.__hidden.has('future-entrant'), 'explicit choices for new entrants persist');
 f.els['model-reset'].onclick();
-assert.equal(f.els['model-selected-count'].textContent, '7 of 29 entrants');
+assert.equal(f.els['model-selected-count'].textContent, '7 of '+f.api.modelPicker.ids.length+' entrants');
 assert.deepEqual(leaks(f.els), []);
 console.log('ok chart updates, empty state, task switching, reset, and selection persistence');
 
 for(const value of ['{broken', '{}', '[123]']) {
   f = fixture(new Map([[storageKey,value]]));
-  assert.equal(f.els['model-selected-count'].textContent, '7 of 29 entrants');
+  assert.equal(f.els['model-selected-count'].textContent, '7 of '+f.api.modelPicker.ids.length+' entrants');
 }
 f = fixture({get(){throw Error('denied');}, set(){throw Error('denied');}});
 f.api.selectModels(['ewma'],false);
 assert.ok(f.win.__hidden.has('ewma'));
 f.api.resetModels();
 assert.ok(!f.win.__hidden.has('ewma'));
+// With the season's scores present, the default comparison is the season's top six and EWMA, never the crowd.
+{ const live = fixture(new Map(), data); const sel = live.api.modelPicker.ids.filter(id=>!live.win.__hidden.has(id)); assert.equal(sel.length, 7, 'the season picks its own default'); assert.ok(sel.includes('ewma')); assert.ok(!sel.includes('crowd')); }
 console.log('ok malformed and unavailable storage');

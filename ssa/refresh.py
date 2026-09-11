@@ -1571,6 +1571,39 @@ def assert_site_contract(rounds):
             + ("\n  ..." if len(problems) > 12 else ""))
 
 
+def attach_round_scores(rounds, profile_board, ranking_board):
+    """Copy each scored profile and ranking round's per-entrant scores onto the
+    round itself, the way build_leaderboard leaves them on number rounds, so
+    every resolved round says how every entrant did on it."""
+    by_id = {r["round_id"]: r for r in rounds}
+    for block, keys in ((profile_board, ("energy", "skill")),
+                        (ranking_board, ("loss", "skill"))):
+        for pr in (block or {}).get("rounds", []):
+            r = by_id.get(pr["round_id"])
+            if r is None:
+                continue
+            r["scores"] = {e["entrant"]: {k: e[k] for k in keys if k in e}
+                           for e in pr.get("entries", [])}
+
+
+def published_lists(weeks=12):
+    """The released ranked lists a ranking task is scored against, oldest
+    first: the weekly Wikipedia top ten, summed from the archived daily lists.
+    The archive is optional to the rest of the payload, so a missing one is
+    reported, not raised."""
+    try:
+        from .adapters import wikipedia
+        ends = wikipedia.archived_weeks()[-weeks:]
+        out = []
+        for end in ends:
+            items, _ = wikipedia.weekly_top(end)
+            out.append({"week_end": end.isoformat(), "items": list(items)})
+        return {"wiki_top10_en": out}
+    except Exception as e:
+        print("lists skipped:", e)
+        return {}
+
+
 def build_leaderboard(rounds, resolved):
     """Real scores only. Empty until rounds resolve."""
     entries = {}
@@ -1585,6 +1618,9 @@ def build_leaderboard(rounds, resolved):
         if not os.path.isdir(rdir):
             continue
         round_fcs = []
+        # The round keeps every entrant's own score, so the site can draw the season
+        # question by question, not only the means the board averages.
+        scores = {}
         for fn in sorted(os.listdir(rdir)):
             if not fn.endswith(".json"):
                 continue
@@ -1597,6 +1633,8 @@ def build_leaderboard(rounds, resolved):
             e = entries.setdefault(fc["entrant"], {"crps": [], "skill": []})
             e["crps"].append(c)
             e["skill"].append(scoring.skill(c, per_crps))
+            scores[fc["entrant"]] = {"crps": round(c, 4),
+                                     "skill": round(scoring.skill(c, per_crps), 4)}
         # crowd: equal-weight mixture of every submission in the round
         if len(round_fcs) >= 2:
             xs = scoring.pool_samples(round_fcs)
@@ -1604,6 +1642,10 @@ def build_leaderboard(rounds, resolved):
             e = entries.setdefault("crowd", {"crps": [], "skill": []})
             e["crps"].append(c)
             e["skill"].append(scoring.skill(c, per_crps))
+            scores["crowd"] = {"crps": round(c, 4),
+                               "skill": round(scoring.skill(c, per_crps), 4)}
+        r["scores"] = scores
+        r["persistence_crps"] = round(per_crps, 4)
     board = []
     for name, e in entries.items():
         board.append({
@@ -2336,6 +2378,7 @@ def main():
     board = build_leaderboard(rounds, resolved)
     profile_board = build_profile_leaderboard(rounds, resolved, series)
     ranking_board = build_ranking_leaderboard(rounds, resolved, ranking_obs)
+    attach_round_scores(rounds, profile_board, ranking_board)
     replay_series = {
         name: series[name]
         for name in ("umich_sentiment", "yougov_approval", "mc_approval",
@@ -2451,6 +2494,8 @@ def main():
         "backtest": bt,
         "charts": charts,
         "series_tail": {k: v[-8:] for k, v in series.items()},
+        # The released ranked lists behind a ranking task, so its tracker has a past.
+        "lists": published_lists(),
         "tasks": task_rows,
         "entrant_status": entrant_status.build(rounds, load_entrants()),
         # Which URL, fetched when, and where the saved raw body is -- per
