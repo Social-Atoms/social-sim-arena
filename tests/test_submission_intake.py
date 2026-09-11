@@ -255,7 +255,7 @@ class SubmissionPrototype(unittest.TestCase):
         # Two panels, in Prophet Arena's order: test the API, then the model
         # information, and one submit button that opens the pull request.
         for marker in ('<h3>Test your API</h3>', 'id="api-test"', 'name="endpoint_url"',
-                       '>Forecast endpoint URL <', '>Model / team name <', 'id="entrant-id"',
+                       '>Forecast endpoint URL <', '>Entrant id <', 'id="entrant-id"',
                        '<h3>Your details</h3>', '>Display name <', '>Company / organization <',
                        'id="entrant-org"', 'id="entrant-github"', 'id="reg-json"',
                        '>Submit for review</a>', '<h3>Test results</h3>', '<h3>API response</h3>'):

@@ -29,7 +29,7 @@ is what turns a rehearsed endpoint into one the season calls:
 }
 ```
 
-`entrant_id` is the "Model / Team Name" on the form: lower-case, permanent,
+`entrant_id` is the "Entrant id" on the form: lower-case, permanent,
 the name of the file and of the row on the board. `contact` is optional and
 public; leave it out to be reached through the `github` account.
 

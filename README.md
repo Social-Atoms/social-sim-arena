@@ -23,11 +23,13 @@ A live benchmark for social simulation. Before each release, entrants forecast w
 
 ## Enter
 
-Your entry name + your endpoint + one pull request = you are in.
+Your entrant id + your endpoint + one pull request = you are in.
 
-1. Choose your entry name. Lower-case, permanent: it names your registration file, your row on the board and your page.
+1. Choose your entrant id. Lower-case, permanent: it names your registration file (`entrants/<id>.json`), your row on the board and your page. The display name beside it can be anything.
 2. Expose one HTTPS endpoint. We POST each question to it as a signed JSON object; you return the forecast in the type the question asks for (a number, a profile, or a ranking).
 3. Register on the [onboarding page](https://social-simulation-arena.com/submit.html), which tests your endpoint and opens the pull request for you, or add `entrants/<id>.json` by hand and open it yourself.
+
+Once merged, your page at `#entrant/<id>` is live at the next refresh. Your row on the board appears when your first question resolves; until then the page counts questions asked and answered, and "asked" counts every question that has locked this season, so a new entrant starts at answered 0.
 
 The endpoint contract is [`docs/agent-api.md`](docs/agent-api.md). Rehearse locally:
 
@@ -68,6 +70,8 @@ pip install -r requirements.txt
 python3 -m tests.test_site_render
 python3 -m ssa.refresh            # fetch live data, build site/data.json
 ```
+
+Python 3.10 or newer. The repository pins 3.12 in `.python-version` for the Vercel runtime; with pyenv installed but no 3.12, either `pyenv install 3.12` or run the commands with a system `python3`.
 
 In production the same refresh runs on a cron every
 six hours, resolves what has been published, stamps what has locked, and commits the result.

@@ -489,6 +489,11 @@ def validate(path, now=None, author=None, base_ref=None):
         except json.JSONDecodeError as e:
             fail(f"{rel}: not valid JSON: {e}")
 
+    # The shape check runs before the schema so a point guess without a spread is told
+    # "needs mean+sd (sd > 0) or quantiles" in one line, not a page of schema.
+    if isinstance(fc, dict):
+        for label, t in answer_blocks(fc):
+            check_shape(rel, label, t)
     try:
         import jsonschema
         with open(os.path.join(ROOT, "schema", "forecast.schema.json")) as f:

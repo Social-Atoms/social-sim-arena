@@ -198,9 +198,9 @@ Content-Type: application/json
           <input id="api-url" name="endpoint_url" type="url" pattern="https://.*" required placeholder="https://api.example.com/forecast" autocomplete="url">
         </div>
         <div class="field full">
-          <label for="entrant-id">Model / team name <span class="req">*</span></label>
+          <label for="entrant-id">Entrant id <span class="req">*</span></label>
           <input id="entrant-id" name="entrant_id" type="text" required pattern="[a-z0-9][a-z0-9_.-]{1,47}" placeholder="my-forecaster" autocomplete="off" spellcheck="false">
-          <small>Lower-case. This is your name on the board.</small>
+          <small>Lower-case, permanent: the file name, your row on the board and your page. The display name below can be anything.</small>
         </div>
       </div>
       <div class="actions">
@@ -370,7 +370,7 @@ function registration(){
 function syncRegistration(){
   const reg = registration();
   const json = JSON.stringify(reg, null, 2) + '\n';
-  byId('reg-filename').textContent = reg.entrant_id || '<model-or-team-name>';
+  byId('reg-filename').textContent = reg.entrant_id || '<entrant-id>';
   byId('reg-json').textContent = json;
   const idOk = /^[a-z0-9][a-z0-9_.-]{1,47}$/.test(reg.entrant_id);
   const ghOk = /^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$/.test(reg.github || '');
@@ -381,7 +381,7 @@ function syncRegistration(){
   open.href = ready ? REPO+'/new/main?filename='+encodeURIComponent('entrants/'+reg.entrant_id+'.json')+'&value='+encodeURIComponent(json) : '#';
   byId('reg-copy').disabled = !ready;
   byId('reg-status').textContent = !endpointOk ? 'Pass the test to unlock.'
-    : !idOk ? 'Model / team name: lower-case letters, digits, . _ -, 2 to 48 characters.'
+    : !idOk ? 'Entrant id: lower-case letters, digits, . _ -, 2 to 48 characters.'
     : !reg.name || !reg.organization ? 'Fill in the display name and organization.'
     : !ghOk ? 'Enter the GitHub login that will open the pull request.'
     : browserBlocked ? 'Run the CLI probe before you open the pull request \u2014 this browser could not reach your endpoint.'
