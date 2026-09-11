@@ -2267,9 +2267,9 @@ function stripMarkFor(scope, id){ const q=CSS.escape(id); return scope.querySele
 function stripRowsFor(mark){ const ids=mark.dataset.e?[mark.dataset.e]:String(mark.dataset.es||'').split(' ').filter(Boolean); return ids.map(id=>document.querySelector('#question-col tr.link[data-e="'+CSS.escape(id)+'"]')).filter(Boolean); }
 if(!window.__stripHover){
   window.__stripHover=true;
-  document.addEventListener('mouseover', ev=>{ const m=ev.target.closest&&ev.target.closest('.qstrip [data-tip]'); if(!m) return; showStripTip(esc(m.dataset.tip).replace(/\n/g,'<br>'), ev.clientX, ev.clientY); stripRowsFor(m).forEach(tr=>tr.classList.add('hl')); });
+  document.addEventListener('mouseover', ev=>{ const m=ev.target.closest&&ev.target.closest('.qstrip [data-tip]'); if(!m) return; m.classList.add('hl'); showStripTip(esc(m.dataset.tip).replace(/\n/g,'<br>'), ev.clientX, ev.clientY); stripRowsFor(m).forEach(tr=>tr.classList.add('hl')); });
   document.addEventListener('mousemove', ev=>{ const m=ev.target.closest&&ev.target.closest('.qstrip [data-tip]'); const t=document.getElementById('strip-tip'); if(!m||!t||t.style.display==='none') return; showStripTip(t.innerHTML, ev.clientX, ev.clientY); });
-  document.addEventListener('mouseout', ev=>{ const m=ev.target.closest&&ev.target.closest('.qstrip [data-tip]'); if(!m) return; hideStripTip(); stripRowsFor(m).forEach(tr=>tr.classList.remove('hl')); });
+  document.addEventListener('mouseout', ev=>{ const m=ev.target.closest&&ev.target.closest('.qstrip [data-tip]'); if(!m) return; m.classList.remove('hl'); hideStripTip(); stripRowsFor(m).forEach(tr=>tr.classList.remove('hl')); });
 }
 function drawStrips(scope, data){
   if(!scope || !scope.querySelectorAll || !data) return;
