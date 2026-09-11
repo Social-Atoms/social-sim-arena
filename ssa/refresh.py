@@ -1551,20 +1551,36 @@ def crowd_answer(r, members):
     return {"topline": _pooled_distribution(scoring.pool_samples(toplines))}, len(toplines)
 
 
-def file_crowd_forecasts(rounds):
-    """Write `forecasts/<round>/crowd.json` for every round whose filing has closed.
+def file_crowd_forecasts(rounds, now, backfill=False):
+    """Write `forecasts/<round>/crowd.json` while a round's filing window is open.
 
-    Filed once: a crowd already on disk is the crowd, whatever lands later. The
-    filing time is the deadline, because that is when the pool was fixed. Returns
-    the number of files written.
+    Rewritten by every refresh, like the baselines and for the same reason: the
+    pool has to hold whatever has been filed so far, and the last write before
+    the close is the one that counts.
+
+    Never written inside `LOCK_MARGIN_SECONDS` of the close. The crowd is our
+    artifact rather than an entrant's answer, but it still lands in `forecasts/`
+    as a commit, and a commit that lands after its round closed is exactly what
+    `tools/audit_landing.py` exists to reject. Filing early keeps the crowd
+    inside the same window every entrant answered in, so the audit needs no
+    exception for the ordinary path.
+
+    `backfill=True` ignores the window. It is for `tools/publish_scores.py`
+    rebuilding a crowd for rounds that closed before this code existed: those
+    files are derived from forecasts that were themselves audited, and they are
+    reproducible by rerunning this function.
     """
     written = 0
     for r in rounds:
-        if r.get("status") == "open":
-            continue
+        if not backfill:
+            if r.get("status") != "open":
+                continue
+            left = (batches.effective_deadline(r["lock_at"]) - now).total_seconds()
+            if left < LOCK_MARGIN_SECONDS:
+                continue
         rdir = os.path.join(FORECASTS, r["round_id"])
         path = os.path.join(rdir, CROWD_ID + ".json")
-        if not os.path.isdir(rdir) or os.path.exists(path):
+        if not os.path.isdir(rdir) or (backfill and os.path.exists(path)):
             continue
         members = []
         for fn in sorted(os.listdir(rdir)):
@@ -1583,15 +1599,19 @@ def file_crowd_forecasts(rounds):
         except (ValueError, KeyError, RuntimeError) as e:
             print(f"crowd not filed for {r['round_id']}: {e}")
             continue
-        deadline = batches.effective_deadline(r["lock_at"])
+        stamp = batches.effective_deadline(r["lock_at"]) if backfill else now
         body = {
             "round_id": r["round_id"],
             "entrant": CROWD_ID,
             **answer,
-            "notes": ("filed=" + deadline.strftime("%Y-%m-%dT%H:%MZ")
+            "notes": ("filed=" + stamp.strftime("%Y-%m-%dT%H:%MZ")
                       + f", crowd: equal-weight pool of the {pooled} forecasts "
-                      "filed by the deadline"),
+                      "filed by then"),
         }
+        previous = read_forecast(path)
+        if previous and {k: v for k, v in previous.items() if k != "notes"} == \
+                        {k: v for k, v in body.items() if k != "notes"}:
+            continue                      # same pool, same answer: leave the file alone
         with open(path, "w") as f:
             json.dump(body, f, indent=2)
             f.write("\n")
@@ -2528,7 +2548,7 @@ def main():
         filed, filing_failures = file_baseline_forecasts(
             rounds, hist_by_round, now, series, ranking_obs,
             run_status=run_status)
-    crowd_filed = file_crowd_forecasts(rounds)
+    crowd_filed = file_crowd_forecasts(rounds, now)
     if crowd_filed:
         print(f"crowd filed for {crowd_filed} round(s)")
     count_forecasts(rounds)

@@ -536,6 +536,16 @@ def validate(path, now=None, author=None, base_ref=None):
     check_answer_matches_round(rel, fc, rounds[fc["round_id"]])
     if not is_example:
         check_forecast_owner(rel, fc["entrant"], author, base_ref)
+        if fc["entrant"] == "crowd":
+            # The crowd is not an entrant with an answer of its own: it is the
+            # equal-weight pool of the forecasts already in the round, written by
+            # `refresh.file_crowd_forecasts` and reproducible by rerunning it. The
+            # deadline exists to stop an answer arriving after the outcome is
+            # visible, and a function of files that were themselves on time cannot
+            # do that. Every other check above still applies to it.
+            ok(rel, "crowd: derived from this round's filed forecasts")
+            print(f"    sha256: {canonical_sha256(fc)}")
+            return
         lock_at = datetime.strptime(rounds[fc["round_id"]]["lock_at"],
                                     "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
         # The deadline is the batch's, not the round's own lock. Season 0's

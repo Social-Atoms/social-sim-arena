@@ -8,8 +8,10 @@ from datetime import datetime, timezone
 
 from ssa import refresh
 
-ROUND = {"round_id": "t-num-1", "lock_at": "2026-09-01T12:00:00Z", "status": "locked",
+ROUND = {"round_id": "t-num-1", "lock_at": "2026-09-01T12:00:00Z", "status": "open",
          "release_at": "2026-09-08T12:00:00Z", "target_type": "scalar"}
+# Inside the filing window: six hours before the close, well clear of LOCK_MARGIN_SECONDS.
+NOW = datetime(2026, 9, 1, 6, 0, tzinfo=timezone.utc)
 
 
 def _file(root, rid, entrant, body):
@@ -28,13 +30,13 @@ def _with_tree(fn):
             refresh.FORECASTS = keep
 
 
-def test_the_crowd_files_the_pool_of_the_entrants_once_filing_has_closed():
+def test_the_crowd_pools_the_entrants_while_the_window_is_open():
     def run(tmp):
         _file(tmp, "t-num-1", "a", {"topline": {"mean": 10.0, "sd": 1.0}})
         _file(tmp, "t-num-1", "b", {"topline": {"mean": 14.0, "sd": 1.0}})
         _file(tmp, "t-num-1", "persistence", {"topline": {"mean": 30.0, "sd": 1.5}})
         _file(tmp, "t-num-1", "mocky", {"topline": {"mean": 99.0, "sd": 1.0}, "notes": "MOCK placeholder"})
-        assert refresh.file_crowd_forecasts([dict(ROUND)]) == 1
+        assert refresh.file_crowd_forecasts([dict(ROUND)], NOW) == 1
         fc = refresh.read_forecast(os.path.join(tmp, "t-num-1", "crowd.json"))
         assert fc["entrant"] == "crowd"
         t = fc["topline"]
@@ -42,22 +44,38 @@ def test_the_crowd_files_the_pool_of_the_entrants_once_filing_has_closed():
         assert abs(t["mean"] - 12.0) < 0.05, t
         assert "0.5" in t["quantiles"] and len(t["quantiles"]) == 39
         assert t["quantiles"]["0.025"] < 10.0 < t["quantiles"]["0.5"] < 14.0 < t["quantiles"]["0.975"]
-        assert fc["notes"].startswith("filed=2026-0") and "pool of the 2 forecasts" in fc["notes"]
-        # filed once: a second pass with a new member does not move the crowd
+        assert fc["notes"].startswith("filed=2026-09-01T06:00Z") and "pool of the 2 forecasts" in fc["notes"]
+        # rewritten while the window is open: a new member moves the crowd
+        assert refresh.file_crowd_forecasts([dict(ROUND)], NOW) == 0, "same pool, no rewrite"
         _file(tmp, "t-num-1", "c", {"topline": {"mean": 50.0, "sd": 1.0}})
-        assert refresh.file_crowd_forecasts([dict(ROUND)]) == 0
-        assert refresh.read_forecast(os.path.join(tmp, "t-num-1", "crowd.json")) == fc
+        assert refresh.file_crowd_forecasts([dict(ROUND)], NOW) == 1
+        moved = refresh.read_forecast(os.path.join(tmp, "t-num-1", "crowd.json"))
+        assert moved["topline"]["mean"] > fc["topline"]["mean"], moved
+        assert "pool of the 3 forecasts" in moved["notes"]
     _with_tree(run)
 
 
-def test_no_crowd_while_a_round_is_open_or_for_a_pool_of_one():
+def test_never_written_once_the_close_is_near_or_past():
+    """The file lands in `forecasts/` as a commit, so it must not appear after the
+    round it belongs to closed: tools/audit_landing.py would reject it as late."""
     def run(tmp):
         _file(tmp, "t-num-1", "a", {"topline": {"mean": 10.0, "sd": 1.0}})
         _file(tmp, "t-num-1", "b", {"topline": {"mean": 14.0, "sd": 1.0}})
-        assert refresh.file_crowd_forecasts([dict(ROUND, status="open")]) == 0
+        late = datetime(2026, 9, 1, 11, 45, tzinfo=timezone.utc)     # 15 min before the close
+        assert refresh.file_crowd_forecasts([dict(ROUND)], late) == 0
+        after = datetime(2026, 9, 1, 13, 0, tzinfo=timezone.utc)     # an hour after it
+        assert refresh.file_crowd_forecasts([dict(ROUND, status="locked")], after) == 0
+        assert not os.path.exists(os.path.join(tmp, "t-num-1", "crowd.json"))
+        # the backfill path is for rounds that closed before the crowd existed
+        assert refresh.file_crowd_forecasts([dict(ROUND, status="locked")], after, backfill=True) == 1
+    _with_tree(run)
+
+
+def test_no_crowd_for_a_pool_of_one():
+    def run(tmp):
         _file(tmp, "t-num-2", "a", {"topline": {"mean": 10.0, "sd": 1.0}})
         _file(tmp, "t-num-2", "persistence", {"topline": {"mean": 30.0, "sd": 1.5}})
-        assert refresh.file_crowd_forecasts([dict(ROUND, round_id="t-num-2")]) == 0
+        assert refresh.file_crowd_forecasts([dict(ROUND, round_id="t-num-2")], NOW) == 0
         assert not os.path.exists(os.path.join(tmp, "t-num-2", "crowd.json"))
     _with_tree(run)
 
@@ -68,7 +86,7 @@ def test_the_crowd_is_scored_like_any_file():
         _file(tmp, "t-num-1", "b", {"topline": {"mean": 14.0, "sd": 1.0}})
         _file(tmp, "t-num-1", "persistence", {"topline": {"mean": 30.0, "sd": 1.5}})
         r = dict(ROUND, baselines={"persistence": {"mean": 30.0, "sd": 1.5}})
-        refresh.file_crowd_forecasts([r])
+        refresh.file_crowd_forecasts([r], NOW)
         board = refresh.build_leaderboard([r], {"t-num-1": {"value": 12.0}})
         rows = {e["entrant"]: e for e in board}
         assert set(rows) == {"a", "b", "persistence", "crowd"}

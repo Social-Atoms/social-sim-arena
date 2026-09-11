@@ -22,7 +22,7 @@ def main(path=os.path.join(ROOT, "site", "data.json")):
     resolved = {r["round_id"]: r["resolution"] for r in rounds
                 if r.get("status") == "resolved" and isinstance(r.get("resolution"), dict)
                 and "value" in r["resolution"]}
-    filed = refresh.file_crowd_forecasts(rounds)
+    filed = refresh.file_crowd_forecasts(rounds, refresh.now_utc(), backfill=True)
     refresh.count_forecasts(rounds)
     board = refresh.build_leaderboard(rounds, resolved)
     data["leaderboard"] = {"resolved_rounds": sum(1 for r in rounds if r.get("status") == "resolved"),
