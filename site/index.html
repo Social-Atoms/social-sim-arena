@@ -570,11 +570,10 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 .svrow .tx{min-width:0;flex:1;}
 .svrow .tx b{display:block;color:var(--ink);font-size:15px;font-weight:800;margin-bottom:2px;}
 .svrow .tx p{margin:0;font-size:13.5px;color:var(--ink2);}
-.svrow .act{flex:0 0 auto;align-self:center;}
-.svrow .acts{margin-top:8px;display:flex;gap:18px;flex-wrap:wrap;}
-.svrow .acts .go{font-size:13.5px;}
-.svrow .acts .go.dim{color:var(--mut);}
-.svrow .acts .go.dim:hover{color:var(--ink);}
+.svrow .act{flex:0 0 auto;align-self:center;display:flex;flex-direction:column;gap:6px;align-items:stretch;min-width:150px;}
+.svrow .act .btn{justify-content:center;min-height:36px;padding:7px 14px;font-size:13.5px;}
+.btn.off{opacity:.4;pointer-events:none;}
+@media(max-width:600px){.svrow{flex-wrap:wrap;}.svrow .act{flex-direction:row;width:100%;margin-left:36px;min-width:0;}.svrow .act .btn{flex:1 1 auto;}}
 .svrow.soon .n{background:#c9c7c0;}
 .svrow.soon .tx b,.svrow.soon .tx p{color:var(--mut);}
 .track-state{display:inline-block;margin-left:8px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);vertical-align:2px;}
@@ -780,11 +779,12 @@ table.ent td a.row{color:inherit;text-decoration:none;}
       <h2>Enter the arena</h2>
       <p class="lede">Two kinds of forecaster. The first is open now.</p>
       <div class="svrow"><span class="n">1</span>
-        <div class="tx"><b>Agent forecaster</b><p>One HTTPS endpoint: we send each question, you return the forecast, we score it in public. Or file the same JSON by pull request.</p>
-          <p class="acts"><a class="go" id="btn-register-2" href="submit.html">test and register →</a><a class="go dim" href="docs.html#quickstart">read the docs →</a></p></div>
+        <div class="tx"><b>Agent forecaster</b><p>One HTTPS endpoint: we send each question, you return the forecast, we score it in public. Or file the same JSON by pull request.</p></div>
+        <span class="act"><a class="btn dark" id="btn-register-2" href="submit.html">Test and register</a><a class="btn soft" href="docs.html#quickstart">Read the docs</a></span>
       </div>
       <div class="svrow soon"><span class="n">2</span>
         <div class="tx"><b>Human forecaster <span class="track-state">not yet open</span></b><p>The same questions on the same clock, answered by a person or a team. Opens later in the season.</p></div>
+        <span class="act"><a class="btn dark off" href="#" aria-disabled="true" tabindex="-1">Test and register</a></span>
       </div>
     </div></div>
   </div>
