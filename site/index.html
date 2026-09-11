@@ -40,10 +40,10 @@ main{flex:1 1 auto;min-height:0;display:flex;width:100%;margin:0 auto;}
 
 /* LIVE: task map left, evidence in the middle, leaderboard right */
 #page-leaderboard{--panel-head-top:10px;--panel-title-size:14px;--panel-title-line:28px;}
-#page-leaderboard.on{display:grid;grid-template-columns:var(--task-width,clamp(180px,18vw,252px)) 8px minmax(320px,1fr) 8px var(--board-width,clamp(320px,25vw,440px));grid-template-rows:minmax(0,1fr);}
-#page-leaderboard.tasks-collapsed{grid-template-columns:44px 0 minmax(320px,1fr) 8px var(--board-width,clamp(320px,25vw,440px));}
+#page-leaderboard.on{display:grid;grid-template-columns:var(--task-width,clamp(180px,18vw,252px)) 8px minmax(320px,1fr) 8px var(--board-width,clamp(360px,25vw,440px));grid-template-rows:minmax(0,1fr);}
+#page-leaderboard.tasks-collapsed{grid-template-columns:44px 0 minmax(320px,1fr) 8px var(--board-width,clamp(360px,25vw,440px));}
 /* The task tree left the page: the title is a picker (search, categories, counts), and the chart takes the column. */
-#page-leaderboard.on,#page-leaderboard.tasks-collapsed{grid-template-columns:minmax(320px,1fr) 8px var(--board-width,clamp(320px,25vw,440px));}
+#page-leaderboard.on,#page-leaderboard.tasks-collapsed{grid-template-columns:minmax(320px,1fr) 8px var(--board-width,clamp(360px,25vw,440px));}
 #page-leaderboard .tasknav,#page-leaderboard [data-panel-resizer="tasks"]{display:none;}
 .task-picker{position:relative;display:block;}
 .task-trigger{display:inline-flex;align-items:center;gap:6px;margin:0;padding:0 4px 0 0;border:0;border-radius:3px;background:none;color:inherit;font:inherit;cursor:pointer;}
@@ -240,18 +240,20 @@ table.lb col.score-col{width:56px;}
 table.lb col.loss-col{width:58px;}
 table.lb col.rounds-col{width:78px;}
 table.lb th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);font-weight:700;text-align:left;padding:8px;border-bottom:none;box-shadow:0 1px 0 var(--line);position:sticky;top:0;background:#fff;z-index:2;}
-table.lb td{padding:10px 8px;border-bottom:1px solid #eeede9;vertical-align:middle;}
+table.lb td{padding:9px 8px;border-bottom:1px solid #eeede9;vertical-align:middle;}
 table.lb tr:last-child td{border-bottom:none;}
 table.lb td.num,table.lb th.num{text-align:right;font-variant-numeric:tabular-nums;}
 table.lb th.num{font-size:10.5px;letter-spacing:.04em;}
 /* Questions: a two-digit count under a nine-letter head sits centred, where a right edge would leave it adrift. */
 table.lb th:last-child,table.lb td:last-child{text-align:center;padding-left:4px;padding-right:6px;}
-table.lb .rank{color:var(--mut);width:30px;padding-right:6px;font-variant-numeric:tabular-nums;}
-table.lb .who{display:flex;align-items:center;gap:9px;}
+table.lb .rank{color:var(--mut);width:30px;padding-right:6px;font-variant-numeric:tabular-nums;text-align:right;}
+table.lb .who{display:flex;align-items:center;gap:10px;}
+table.lb .who .av{width:30px;height:30px;border-radius:6px;font-size:11px;}
+table.lb .who .av .lg{padding:5px;}
 table.lb .who>span:last-child{min-width:0;}
 /* A narrow board shortens a name with an ellipsis; it never breaks a name or its small print onto a second line. */
 table.lb .who .model-name,table.lb .who .model-meta{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-table.lb .who b{color:var(--ink);font-weight:700;font-size:15px;}
+table.lb .who b{color:var(--ink);font-weight:700;font-size:14.5px;line-height:17px;}
 table.lb .who .type{font-size:11px;color:var(--mut);}
 /* A heading with a title= explanation says so, rather than hiding it. */
 table.lb thead th.has-help{cursor:help;}
@@ -668,7 +670,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 </style>
 <script defer src="panels.js?v=91f5d3557c"></script>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=2">
+<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=3">
 </head>
 <body class="site-home">
 

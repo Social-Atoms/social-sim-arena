@@ -1,7 +1,8 @@
 /* Two separators share the space around a flexible benchmark panel. */
 (function () {
   'use strict';
-  const MIN = {tasks: 180, center: 320, board: 280};
+  // The board stops at 360: below that a name would have to shrink or be cut, and the user set that as the line.
+  const MIN = {tasks: 180, center: 320, board: 360};
   const GUTTERS = 16;
   const COLLAPSED_WIDTH = 44;
   const STORAGE_KEY = 'ssa.panel-widths.v1';
@@ -10,7 +11,7 @@
 
   function defaults(width) {
     // The chart is the page; the board gets a quarter of the width and never more than 400px.
-    return {tasks: clamp(width * .18, MIN.tasks, 252), board: clamp(width * .25, 320, 440)};
+    return {tasks: clamp(width * .18, MIN.tasks, 252), board: clamp(width * .25, MIN.board, 440)};
   }
 
   // Shrink both side panels proportionally only when the viewport needs it.
