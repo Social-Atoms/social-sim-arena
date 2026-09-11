@@ -192,6 +192,16 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .chart-message h3{margin:0 0 8px;color:var(--ink);font-size:18px;}
 .chart-message p{margin:4px 0;}
 .chart-message .muted{color:var(--mut);}
+.rank-host{height:100%;overflow:auto;padding:14px 18px;font:12.5px/1.5 var(--sans);}
+.rank-view h3{margin:0 0 2px;font-size:13.5px;color:var(--ink);}
+.rank-view .sub{margin:0 0 10px;color:var(--mut);font-size:12px;}
+.rank-view .row{display:grid;grid-template-columns:minmax(140px,1.2fr) 3fr 170px 90px;gap:10px;align-items:center;padding:3px 0;}
+.rank-view .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink);}
+.rank-view .bar{height:9px;background:#f1f1ee;border-radius:2px;overflow:hidden;}
+.rank-view .bar i{display:block;height:100%;background:#111110;opacity:.55;}
+.rank-view .row.hit .bar i{background:var(--accent);opacity:1;}
+.rank-view .n{color:var(--mut);font-size:11.5px;white-space:nowrap;}
+.rank-view .mark{color:var(--accent-ink);font-size:11.5px;font-weight:700;}
 .chart-message .round{color:var(--accent-ink);font-weight:700;}
 .tooltip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:4px;padding:6px 11px;font-size:12px;color:var(--ink);box-shadow:0 2px 10px rgba(0,0,0,.08);display:none;max-width:calc(100% - 12px);overflow-wrap:anywhere;z-index:5;line-height:1.45;}
 
@@ -561,6 +571,17 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 .svrow .tx b{display:block;color:var(--ink);font-size:15px;font-weight:800;margin-bottom:2px;}
 .svrow .tx p{margin:0;font-size:13.5px;color:var(--ink2);}
 .svrow .act{flex:0 0 auto;align-self:center;}
+.svrow .acts{margin-top:8px;display:flex;gap:18px;flex-wrap:wrap;}
+.svrow .acts .go{font-size:13.5px;}
+.svrow .acts .go.dim{color:var(--mut);}
+.svrow .acts .go.dim:hover{color:var(--ink);}
+.svrow.soon .n{background:#c9c7c0;}
+.svrow.soon .tx b,.svrow.soon .tx p{color:var(--mut);}
+.track-state{display:inline-block;margin-left:8px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);vertical-align:2px;}
+.track-state.open{color:var(--accent-ink);}
+.btn.green{background:var(--accent);color:#fff;border:1px solid var(--accent);}
+.btn.green:hover{opacity:.85;}
+.svrow .tx code{font-size:12.5px;background:#f5f5f2;border:1px solid var(--line);border-radius:3px;padding:0 4px;color:var(--ink);}
 .btn{display:inline-block;text-decoration:none;font-size:13.5px;font-weight:700;border-radius:4px;padding:8px 17px;}
 .demo{margin-top:20px;border:1px dashed var(--line);border-radius:4px;padding:13px 15px;}
 .demo .dhead{font-size:11px;font-weight:800;letter-spacing:.09em;color:var(--mut);}
@@ -756,15 +777,14 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 
   <div class="page" id="page-submit">
     <div class="inner"><div class="col">
-      <h2>Submit your predictive agent</h2>
-      <p class="lede">One HTTPS endpoint. We call it every week with a signed request; you return the forecast.</p>
+      <h2>Enter the arena</h2>
+      <p class="lede">Two kinds of forecaster. The first is open now.</p>
       <div class="svrow"><span class="n">1</span>
-        <div class="tx"><b>Test your API</b><p>One HTTPS URL. We POST each question as one JSON object, signed with our published key; you return the forecast in the shape the question asks for.</p></div>
-        <span class="act"><a class="btn dark" id="btn-register-2" href="submit.html">Add your agent</a></span>
+        <div class="tx"><b>Agent forecaster</b><p>One HTTPS endpoint: we send each question, you return the forecast, we score it in public. Or file the same JSON by pull request.</p>
+          <p class="acts"><a class="go" id="btn-register-2" href="submit.html">test and register →</a><a class="go dim" href="docs.html#quickstart">read the docs →</a></p></div>
       </div>
-      <div class="svrow"><span class="n">2</span>
-        <div class="tx"><b>Submit for review</b><p>The onboarding page builds your registration file and opens it as a pull request. CI validates and merges it; we call your endpoint from the next batch.</p></div>
-        <span class="act"><a class="btn soft" href="docs.html#quickstart">Read the docs</a></span>
+      <div class="svrow soon"><span class="n">2</span>
+        <div class="tx"><b>Human forecaster <span class="track-state">not yet open</span></b><p>The same questions on the same clock, answered by a person or a team. Opens later in the season.</p></div>
       </div>
     </div></div>
   </div>
@@ -1389,7 +1409,7 @@ function ensureModelPicker(){
   const strip = document.getElementById('legend-strip');
   const toolbar = document.getElementById('model-toolbar'), controls = document.getElementById('chart-filters');
   strip.innerHTML = '<div class="model-chips" id="model-chips" role="group" aria-label="Selected chart entrants"></div>';
-  toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop" title="Which entrants the chart draws; the board beside it always lists everyone">Chart: <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
+  toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop" title="Which entrants the chart draws: every entrant and setup that filed on this task, one line each. The board beside it always lists everyone.">Chart: <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
     + '<button type="button" class="model-action" id="model-reset" title="Show the top 6 entrants and EWMA">Reset</button>'
     + '<section class="model-pop" id="model-pop" aria-label="Choose chart entrants" hidden>'
     + '<div class="model-search-row"><input type="search" id="model-search" placeholder="Search entrants or labs" aria-label="Search entrants or labs" autocomplete="off">'
@@ -1758,6 +1778,11 @@ function renderTaskNav(data,key){
   host.querySelectorAll('[data-task]').forEach(b=>b.onclick=()=>{ setTab(b.dataset.task); renderBoard(window.__board||'all'); });
 }
 
+// The file in the repository that reads a task's source: the exact field, its dates, the archive and the checks.
+const SOURCE_READER={civiqs_approval:'ssa/adapters/civiqs.py',civiqs_angry:'ssa/adapters/civiqs.py',civiqs_econ_direction:'ssa/adapters/civiqs.py',civiqs_econ_now:'ssa/adapters/civiqs.py',civiqs_family_finances:'ssa/adapters/civiqs.py',civiqs_inflation_concern:'ssa/adapters/civiqs.py',civiqs_profile:'ssa/adapters/civiqs.py',civiqs_subgroups:'ssa/adapters/civiqs.py',
+  hh_approval:'ssa/adapters/hhpoll.py',sce_inflation:'ssa/adapters/sce.py',aaii_sentiment:'ssa/adapters/aaii.py',umich_sentiment:'ssa/adapters/umich.py',umich_party:'ssa/adapters/umichparty.py',
+  trends_basket:'ssa/adapters/trends.py',search_interest:'ssa/adapters/trends.py',wiki_top10:'ssa/adapters/wikipedia.py',wiki_views:'ssa/adapters/wikipedia.py',yougov_profile:'ssa/adapters/yougov_xtab.py',
+  yougov_approval:'ssa/series.py',mc_approval:'ssa/series.py',generic_margin:'ssa/series.py'};
 function renderTaskHeader(data,key){
   const d = TASKS[key]||TASKS.agg;
   const group = TASK_GROUPS.find(g=>g.id===d.group);
@@ -1770,6 +1795,7 @@ function renderTaskHeader(data,key){
   const helpOf={population:'The people the released number describes. Every question on this task is about them.',
     answer:'What a question on this task asks for: a number with an uncertainty range, a profile (one number per cell), or a ranked list.',
     cadence:'How often the source publishes, so how often a question on this task closes.',
+    source:'Who publishes the released number, as they define it (a net figure is approve minus disapprove, so it can be negative). The link on the right is the arena\'s own reader for this source in the repository: the exact field, its dates, the archive and the checks.',
     questions:rs.length+' asked this season, '+active.length+' open now.'};
   const lab=(k,text)=>'<b class="has-help" tabindex="0">'+text+'<span class="th-help" role="tooltip">'+esc(helpOf[k])+'</span></b>';
   const chip=t=>'<span class="shape">'+esc(t)+'</span>';
@@ -1777,6 +1803,7 @@ function renderTaskHeader(data,key){
   document.getElementById('task-meta').innerHTML = '<span>'+lab('population','Population')+' '+esc(d.population)+'</span>'
     +'<span>'+lab('answer','Question type')+' '+answers.map(chip).join('')+'</span>'
     +(key==='agg' ? '' : '<span>'+lab('cadence','Cadence')+' '+esc(cadence)+'</span>')
+    +(key==='agg' || !d.srcName ? '' : '<span>'+lab('source','Source')+' '+(d.srcUrl?'<a href="'+esc(d.srcUrl)+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>':esc(d.srcName))+(SOURCE_READER[key]?'<a class="go" href="https://github.com/Social-Atoms/social-sim-arena/blob/main/'+SOURCE_READER[key]+'" target="_blank" rel="noopener">how it is read →</a>':'')+'</span>')
     +'<span>'+lab('questions','Questions')+' <span class="numeric">'+rs.length+'</span><a class="go" href="'+(key==='agg'?'#questions':'#questions/task/'+esc(key))+'">'+(key==='agg'?'see all questions':'see all rounds')+' →</a></span>';
   const card = document.getElementById('task-question-card');
   card.style.display='';
@@ -1934,17 +1961,31 @@ function profileChart(d,data){
   renderLegend(ids,nameOf);
 }
 function rankingChart(d,data){
+  // No line to draw for a ranked list. Instead: the titles the filed lists name most, the share of lists
+  // naming each, and, once the week's list is out, which of them made it and which released titles nobody had.
   const svg=clearChart(); renderLegend([],{});
-  const rs=taskRounds(d,data).filter(isListed).sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
-  const open=rs.filter(x=>x.status==='open'&&Date.parse(deadlineOf(x))>Date.now()), waiting=rs.filter(x=>x.status!=='open'&&x.status!=='resolved');
-  const r=open[0]||rs.slice(-1)[0];
-  const W=svg.clientWidth,H=svg.clientHeight;
-  svg.setAttribute('viewBox','0 0 '+W+' '+H);
-  svg.innerHTML='<foreignObject x="0" y="0" width="'+W+'" height="'+H+'"><div xmlns="http://www.w3.org/1999/xhtml" class="chart-message">'
-    +'<h3>The list is the forecast</h3>'
-    +'<p>Predict ten article titles in order. Rank-biased overlap scores the whole list.</p>'
-    +'<p class="muted">A ranked list has no line to draw; the record is the questions themselves'+(waiting.length?', '+waiting.length+' locked and awaiting '+(waiting.length===1?'its list':'their lists'):'')+'.</p>'
-    +'<p class="round">'+esc(r?(open[0]?'Next question: ':'Latest question: ')+questionText(r)+' · '+(open[0]?'due '+fmtLocal(deadlineOf(r)):closedWhen(r)):'No scheduled question')+'</p></div></foreignObject>';
+  const W=svg.clientWidth,H=svg.clientHeight; svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  const wrap=inner=>'<foreignObject x="0" y="0" width="'+W+'" height="'+H+'"><div xmlns="http://www.w3.org/1999/xhtml" class="rank-host">'+inner+'</div></foreignObject>';
+  const rs=taskRounds(d,data).filter(isListed).sort((a,b)=>String(a.lock_at).localeCompare(String(b.lock_at)));
+  const hasLists=r=>Object.entries(r.forecasts||{}).some(([k,f])=>f&&Array.isArray(f.items)&&f.items.length&&!isBaseline(k));
+  const filed=rs.filter(hasLists), closed=filed.filter(r=>!(r.status==='open'&&Date.parse(deadlineOf(r))>Date.now()));
+  const r=closed.length?closed[closed.length-1]:filed[filed.length-1];
+  if(!r){ svg.innerHTML=wrap('<div class="chart-message"><h3>The list is the forecast</h3><p>Predict ten article titles in order. Rank-biased overlap scores the whole list.</p><p class="muted">No lists filed yet.</p></div>'); return; }
+  const lists=Object.entries(r.forecasts||{}).filter(([k,f])=>f&&Array.isArray(f.items)&&f.items.length&&!isBaseline(k)), n=lists.length;
+  const tally={}, pos={};
+  lists.forEach(([k,f])=>f.items.forEach((t,i)=>{ tally[t]=(tally[t]||0)+1; pos[t]=(pos[t]||0)+i+1; }));
+  const scored=((data.ranking||{}).rounds||[]).find(x=>x.round_id===r.round_id);
+  const outcome=(scored&&Array.isArray(scored.outcome)&&scored.outcome.length)?scored.outcome:(Array.isArray((r.resolution||{}).items)?r.resolution.items:null);
+  const hit=new Set(outcome||[]), title=t=>String(t).replace(/_/g,' ');
+  const rows=Object.keys(tally).sort((a,b)=>tally[b]-tally[a]||pos[a]/tally[a]-pos[b]/tally[b]).slice(0,12);
+  const active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
+  const state=active?'open · due '+fmtLocal(deadlineOf(r)):outcome?'released '+fmtLocal((r.resolution||{}).resolved_at||r.release_at):closedWhen(r);
+  let h='<div class="rank-view"><h3>'+esc(questionText(r))+'</h3><p class="sub">'+n+' list'+(n===1?'':'s')+' filed · '+esc(state)+(outcome?' · '+outcome.filter(t=>tally[t]).length+' of '+outcome.length+' released titles were on at least one list':'')+'</p>';
+  h+=rows.map(t=>'<div class="row'+(hit.has(t)?' hit':'')+'"><span class="t" title="'+attr(title(t))+'">'+esc(title(t))+'</span><span class="bar"><i style="width:'+Math.round(100*tally[t]/n)+'%"></i></span><span class="n">'+tally[t]+' of '+n+' · mean rank '+(pos[t]/tally[t]).toFixed(1)+'</span><span class="mark">'+(outcome&&hit.has(t)?'in the top 10':'')+'</span></div>').join('');
+  const missed=outcome?outcome.filter(t=>!tally[t]):[];
+  if(missed.length) h+='<p class="sub">Released and on no list: '+esc(missed.map(title).join(', '))+'.</p>';
+  h+='<p class="sub">Titles ordered by how many lists name them; the bar is that share. Every list is in the table on the question page.</p></div>';
+  svg.innerHTML=wrap(h);
 }
 
 function setTab(key){
@@ -1984,7 +2025,7 @@ function renderTaskChart(key){
   unitSeg.querySelector('[data-unit="level"]').style.display='';unitSeg.querySelector('[data-unit="arena"]').style.display=hasModel?'':'none';unitSeg.querySelector('[data-unit="crps"]').style.display=hasModel?'':'none';
   unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.unit===unit));
   if(unit!=='level'&&hasModel){
-    window.__matched=psTraj[psTraj.length-1].n+' matched releases';window.__caption=esc(d.label)+' · '+psTraj[psTraj.length-1].n+' matched releases · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
+    window.__matched=psTraj[psTraj.length-1].n+' releases at most';window.__caption=esc(d.label)+' · '+psTraj[psTraj.length-1].n+' matched releases · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>';
     aggChart(psTraj,nameOf,unit);renderLegend(legendFor(psTraj),nameOf);return;
   }
   const pts=pointsFor(data,d.chart),last=pts.slice(-1)[0];
@@ -2021,7 +2062,7 @@ function renderBoard(mode){
     const base=(data.backtest&&data.backtest.baseline_replay&&data.backtest.baseline_replay.per_series&&data.backtest.baseline_replay.per_series[d.per])||[];
     entries=model.length?model:(base.length?base:scalarReplay(d,data));
     tag=model.length?'backtest':'baseline replay'; replay=!model.length;
-    note=model.length?(window.__matched?'Scored over '+window.__matched+'. ':'')+'Model walk-forward replay for this task only; every forecast is after its own training cutoff.':'A small walk-forward baseline replay from the task history currently published to the site. It is not a Season 0 model result.';
+    note=model.length?(window.__matched?'Scored over '+window.__matched+'; each row counts only the releases after its own training cutoff, so Rounds differs by row. ':'')+'Model walk-forward replay for this task only.':'A small walk-forward baseline replay from the task history currently published to the site. It is not a Season 0 model result.';
   }
   document.getElementById('lb-title').textContent=title;
   // A heading with help renders its label plus a hover box; the browser's
@@ -2597,7 +2638,7 @@ function examRounds(data){
 }
 
 const PAGES=['leaderboard','questions','calendar','entrant','question','forecast','submit','exam'];
-const PAGE_TITLES={leaderboard:'Leaderboard',questions:'Questions',calendar:'Calendar',entrant:'Entrant',question:'Question',forecast:'Forecast',submit:'Submit your agent',exam:'The Midterm Exam'};
+const PAGE_TITLES={leaderboard:'Leaderboard',questions:'Questions',calendar:'Calendar',entrant:'Entrant',question:'Question',forecast:'Forecast',submit:'Enter the arena',exam:'The Midterm Exam'};
 // Pre-release names. Kept so a link written before the rename still lands.
 const HASH_ALIASES={live:'leaderboard',rounds:'questions',weekly:'calendar'};
 function showPage(k){
@@ -2688,6 +2729,11 @@ function applyHash(){
   }
 }
 window.addEventListener('hashchange', applyHash);
+// Route before the data arrives, so a refresh shows the right page and not the board first. Only the
+// page switch: the full router runs again once the data is in.
+(function(){ try{ const raw=(location.hash||'').slice(1), p=raw.split('?')[0].split('/')[0], pg=HASH_ALIASES[p]||p; if(!PAGES.includes(pg)) return;
+  // Visibility only, not showPage: that would sync the hash from a state that is still empty and drop the task from the URL.
+  document.documentElement.dataset.page=pg; PAGES.forEach(x=>{ document.getElementById('page-'+x).classList.toggle('on', x===pg); const b=document.querySelector('.ptab[data-page="'+x+'"]'); if(b) b.classList.toggle('on', x===pg); }); }catch(e){} })();
 
 document.querySelector('.task-all').onclick=()=>{setTab('agg');renderBoard(window.__board||'all');};
 (function(){
