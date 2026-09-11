@@ -1,7 +1,7 @@
 /* Two separators share the space around a flexible benchmark panel. */
 (function () {
   'use strict';
-  // The board stops at 360: below that a name would have to shrink or be cut, and the user set that as the line.
+  // The board stops at 360: below that the longest active name would be cut, and the user set that as the line.
   const MIN = {tasks: 180, center: 320, board: 360};
   const GUTTERS = 16;
   const COLLAPSED_WIDTH = 44;
