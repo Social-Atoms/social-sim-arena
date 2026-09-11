@@ -78,11 +78,11 @@ six hours, resolves what has been published, stamps what has locked, and commits
 
 ## Organizer
 
-<a href="https://github.com/Social-Atoms"><picture>
+<p><a href="https://github.com/Social-Atoms"><picture>
   <source media="(prefers-color-scheme: dark)" srcset="brand/readme/social-atoms-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="brand/readme/social-atoms-light.svg">
   <img src="brand/readme/social-atoms-light.svg" width="72" align="left" alt="Social Atoms">
-</picture></a>
+</picture></a></p>
 
 Social Simulation Arena is a project initiated by [Social Atoms](https://github.com/Social-Atoms) at MIT, with collaborators from Stanford, Carnegie Mellon, UC Berkeley, UCSD, Harvard, UBC, Northeastern, and beyond.
 
