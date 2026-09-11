@@ -2011,7 +2011,9 @@ function resolvedAt(r){ return String((r.resolution||{}).resolved_at||r.release_
 // Resolved questions that carry per-entrant scores, oldest first; for Overall, every number question.
 function scoredRounds(data,key){
   const all=key==='agg'?(data.rounds||[]).filter(r=>r.target_type!=='profile_energy'&&r.target_type!=='ranking_list'):taskRounds(TASKS[key],data);
-  return all.filter(r=>r.status==='resolved'&&r.scores&&Object.keys(r.scores).length).sort((a,b)=>resolvedAt(a).localeCompare(resolvedAt(b)));
+  // A round carries scores only once it has been scored, so the scores are the test; a profile or ranking
+  // round can be scored while its status still says awaiting_resolution.
+  return all.filter(r=>r.scores&&Object.keys(r.scores).length).sort((a,b)=>resolvedAt(a).localeCompare(resolvedAt(b)));
 }
 // At each resolved question's date, every entrant's running mean skill (and CRPS where the question has one) over
 // the questions it has answered so far. Persistence's CRPS rides along so the arena scale can be drawn.
