@@ -391,7 +391,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 .qstrip rect.hl{fill-opacity:1;}
 #question-col table.ent tr.link.hl td{background:#f4faf6;}
 #question-col table.ent tr.link .row:hover .q{text-decoration:underline;text-underline-offset:2px;}
-#strip-tip{position:fixed;}
+#strip-tip{position:fixed;max-width:340px;white-space:normal;}
 .qcard .qref{margin-top:6px;font-size:10.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .qcard .qref a{color:var(--mut);text-decoration:underline;text-underline-offset:2px;}
 .qcard .qref a:hover{color:var(--accent-ink);}
@@ -2196,7 +2196,7 @@ function stripSvg(r, t, data, W){
     const peak = Math.max(1, ...counts), bw = (W-L-R)/BINS;
     // Bars are mirrored on the axis so their tops stay clear of the labels above it.
     counts.forEach((c,b)=>{ if(!c) return; const h = 4 + 26*c/peak;
-      g += '<rect x="'+(L+b*bw+0.5).toFixed(1)+'" y="'+(y0-h/2).toFixed(1)+'" width="'+(bw-1).toFixed(1)+'" height="'+h.toFixed(1)+'" rx="1" fill="#111110" fill-opacity=".55" data-es="'+attr(binIds[b].join(' '))+'" data-tip="'+attr(c+' answer'+(c>1?'s':'')+' near '+fmtNum(lo+(b+0.5)*(hi-lo)/BINS,unit)+': '+names[b].slice(0,6).join(', ')+(names[b].length>6?' …':''))+'"/>'; });
+      g += '<rect x="'+(L+b*bw+0.5).toFixed(1)+'" y="'+(y0-h/2).toFixed(1)+'" width="'+(bw-1).toFixed(1)+'" height="'+h.toFixed(1)+'" rx="1" fill="#111110" fill-opacity=".55" data-es="'+attr(binIds[b].join(' '))+'" data-tip="'+attr(c+' answer'+(c>1?'s':'')+' near '+fmtNum(lo+(b+0.5)*(hi-lo)/BINS,unit)+'\n'+names[b].slice(0,6).join(', ')+(names[b].length>6?' …':''))+'"/>'; });
   } else {
     // The shape of the answers first: a thin line from the lowest to the highest, a band over
     // the middle half. Then the dots, small and faint, one per entrant with its name on hover.
