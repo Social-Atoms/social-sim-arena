@@ -69,7 +69,7 @@ def registration(entrant, entrants_dir=None):
 
 def revoked(entrant, entrants_dir=None):
     reg = registration(entrant, entrants_dir) or {}
-    return reg.get("status") == "revoked"
+    return reg.get("status") in ("revoked", "retired")
 
 
 def route(entrant, entrants_dir=None):
@@ -89,7 +89,7 @@ def route(entrant, entrants_dir=None):
     spec = reg.get("route")
     if not spec:
         return None
-    if reg.get("status") == "revoked":
+    if reg.get("status") in ("revoked", "retired"):
         return None
 
     kind = spec.get("kind")
@@ -135,7 +135,7 @@ def callable_now(entrant, entrants_dir=None):
     reg = registration(entrant, entrants_dir)
     if not reg or not reg.get("route"):
         return False, "not a registered Route A participant"
-    if reg.get("status") == "revoked":
+    if reg.get("status") in ("revoked", "retired"):
         return False, "registration is revoked"
     try:
         route(entrant, entrants_dir)

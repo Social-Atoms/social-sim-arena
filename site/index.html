@@ -216,7 +216,13 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .lbcol .lbhead h2{margin:0;font-size:18px;line-height:26px;font-weight:800;color:var(--ink);letter-spacing:.03em;flex:1 1 200px;overflow-wrap:anywhere;}
 .lbcol .lbhead h2 span#lb-title{display:none;}   /* the task is named at the left already; the word alone heads the board */
 .lbhead .seg{flex-wrap:wrap;}
-.lbcol .scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding:0 6px;}
+.lbcol .lbview{flex:0 0 auto;padding:0 16px 8px;}
+.lbcol .lbheadrow{flex:0 0 auto;padding:0 6px;overflow-y:auto;scrollbar-gutter:stable;}
+.lbcol .scroll{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-gutter:stable;padding:0 6px;}
+table.lb tr.zero td{border-top:1px dashed #96948d;border-bottom:0;padding:5px 8px 9px;color:var(--mut);font-size:12px;}
+table.lb tr.zero td b{color:var(--ink2);font-weight:700;}
+table.lb tr.off td{color:var(--mut);}
+table.lb tr.off .model-name a{color:var(--mut);}
 table.lb{width:100%;border-collapse:collapse;font-size:14.5px;table-layout:fixed;}
 table.lb col.rank-col{width:34px;}
 table.lb col.score-col{width:56px;}
@@ -732,10 +738,16 @@ table.ent td a.row{color:inherit;text-decoration:none;}
         <h2 class="has-help" id="lb-how"><b>Leaderboard</b> <span id="lb-title">Overall</span><span class="th-help" id="lb-note" role="tooltip"></span></h2>
         <div class="task-live"><time id="data-updated" title="Data refreshed every 6 hours"></time></div>
       </div>
+      <div class="lbview"><div class="seg mini" id="view-seg" role="group" aria-label="Which rows the board lists"><button data-view="standard" class="on">Standard<span class="th-help" role="tooltip">One row per model, in its standard setup (web+sfc where it exists), for entrants that filed in the last two weeks. Persistence is the zero line.</span></button><button data-view="all">Everyone<span class="th-help" role="tooltip">Every setup, every baseline, and the entrants that have retired or stopped filing.</span></button></div></div>
+      <div class="lbheadrow">
+        <table class="lb lb-head">
+          <colgroup><col class="rank-col"><col><col class="score-col"><col class="loss-col"><col class="rounds-col"></colgroup>
+          <thead><tr><th></th><th>Entrant</th><th class="num" id="lb-score-head">Score</th><th class="num" id="lb-loss-head">CRPS</th><th class="num" id="lb-rounds-head">Questions</th></tr></thead>
+        </table>
+      </div>
       <div class="scroll">
         <table class="lb">
           <colgroup><col class="rank-col"><col><col class="score-col"><col class="loss-col"><col class="rounds-col"></colgroup>
-          <thead><tr><th></th><th>Entrant</th><th class="num" id="lb-score-head">Score</th><th class="num" id="lb-loss-head">CRPS</th><th class="num" id="lb-rounds-head">Questions</th></tr></thead>
           <tbody id="lb-body"><tr><td colspan="5" style="color:var(--mut);">loading…</td></tr></tbody>
         </table>
       </div>
@@ -1295,9 +1307,9 @@ function defaultKeep(data){
   // resolved questions as the most-answered entrant), so the opening chart is the established field, not a
   // lucky first week.
   const live = (data && data.rounds) ? liveBoard(data,'agg','all') : [];
-  const models = live.filter(r=>!isBaseline(r.entrant) && r.entrant!=='crowd');
+  const models = live.length ? standardRows(live,data) : [];
   const floor = models.length ? Math.ceil(Math.max(...models.map(r=>r.rounds))/2) : 0;
-  const board = live.length ? live.filter(r=>r.rounds>=floor) : (((data||{}).backtest||{}).overall || []);
+  const board = live.length ? models.filter(r=>r.rounds>=floor).concat(live.filter(r=>isBaseline(r.entrant))) : (((data||{}).backtest||{}).overall || []);
   const keep = new Set(['persistence','ewma']);
   let n = 0;
   for(const row of board){
@@ -2047,6 +2059,29 @@ function liveBoard(data,key,mode){
   rs.forEach(r=>Object.entries(r.scores).forEach(([id,sc])=>{ if(typeof sc.skill!=='number') return; const a=acc[id]||(acc[id]={n:0,s:0,c:0,cn:0}); a.n++; a.s+=sc.skill; if(typeof sc.crps==='number'){ a.c+=sc.crps; a.cn++; } }));
   return Object.entries(acc).map(([id,a])=>({entrant:id,rounds:a.n,mean_skill:a.s/a.n,mean_crps:a.cn?a.c/a.cn:null,baseline:isBaseline(id)})).sort((x,y)=>y.mean_skill-x.mean_skill);
 }
+// ---- who is still in the arena ----
+const DORMANT_DAYS=14;
+function lastFiledMap(data){ if(data.__lastFiled) return data.__lastFiled; const m={}; (data.rounds||[]).forEach(r=>Object.entries(r.forecasts||{}).forEach(([id,f])=>{ if(f&&f.filed&&(!m[id]||f.filed>m[id])) m[id]=f.filed; })); return data.__lastFiled=m; }
+// 'retired' when the registration says so, 'dormant' when nothing has been filed for two weeks, '' when active.
+function entrantState(id,data){
+  if(isBaseline(id)||id==='crowd') return '';
+  const e=(data.entrants||[]).find(x=>x.entrant_id===id); if(e&&e.status==='retired') return 'retired';
+  const last=lastFiledMap(data)[id]; if(!last) return '';
+  return (Date.parse(data.generated_at||Date.now())-Date.parse(last))/86400e3>DORMANT_DAYS?'dormant':'';
+}
+function familyOf(id){ return id.replace(/-(web|superfc|zeroshot|news|persona|closed)/g,''); }
+// The setup a model stands on the standard board with: web+sfc where it exists, then web, then the plain id.
+function setupRank(id){ const w=/-web/.test(id), sf=/-superfc/.test(id), z=/-zeroshot|-news|-persona/.test(id); return w&&sf?0:w?1:(!sf&&!z)?2:sf?3:4; }
+function standardRows(rows,data){
+  const fam={};
+  rows.forEach(r=>{ if(isBaseline(r.entrant)||r.entrant==='crowd'||entrantState(r.entrant,data)) return; const f=familyOf(r.entrant); if(!fam[f]||setupRank(r.entrant)<setupRank(fam[f].entrant)) fam[f]=r; });
+  return Object.values(fam).sort((a,b)=>b.mean_skill-a.mean_skill);
+}
+function scoredInWindow(data,key,mode){
+  const now=Date.now(), cut=mode==='d30'?now-30*86400e3:mode==='m6'?now-182*86400e3:null;
+  let rs=scoredRounds(data,key); if(mode==='last') rs=rs.slice(-1); else if(cut) rs=rs.filter(r=>Date.parse(resolvedAt(r))>=cut);
+  return rs.length;
+}
 // A trajectory none of whose entrants has ever been chosen gets a default: the top entrants by skill, plus EWMA and the crowd.
 function ensurePick(traj){
   const ids=trajIds(traj); if(!ids.length) return;
@@ -2162,10 +2197,13 @@ function renderBoard(mode){
   (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; });
   const btMap = {}; ((data.backtest&&data.backtest.overall)||[]).forEach(e=>btMap[e.entrant]=e);
   let entries=[],metricKey='mean_crps',metricLabel='CRPS',title=d.label,tag='',note='',appendPending=false,replay=false;
-  const liveRows=liveBoard(data,key,mode);
+  const view=window.__boardView||'standard', standard=view==='standard';
+  document.querySelectorAll('#view-seg button').forEach(b=>b.classList.toggle('on',b.dataset.view===view));
+  const liveRows=liveBoard(data,key,mode); window.__scoredN=liveRows.length?scoredInWindow(data,key,mode):0;
   if(key==='agg' && liveRows.length){
-    entries=liveRows; appendPending=true; title='Overall standings'; tag='live';
-    note='Season 0, every number question: each row is its mean over the resolved questions it answered in this window (the Questions column). Arena score 0 is persistence and 100 is a perfect oracle.';
+    entries=standard?standardRows(liveRows,data):liveRows; appendPending=!standard; title='Overall standings'; tag='live';
+    note=standard?'Season 0, every number question. One row per model in its standard setup, for entrants that filed in the last two weeks; the score is the mean over the resolved questions it answered in this window, and the Questions column says how many of them. Persistence is the zero line. Everyone lists every setup, the baselines and the retired.'
+      :'Season 0, every number question, everyone: every setup, every baseline, and the entrants that have retired or stopped filing. Each row is its mean over the resolved questions it answered in this window.';
   }else if(key==='agg'){
     const spans=(data.backtest&&data.backtest.spans)||{};
     entries=spans[mode]||(data.backtest&&data.backtest.overall)||[];appendPending=true;
@@ -2182,8 +2220,8 @@ function renderBoard(mode){
     if(live.length){entries=live;metricKey='mean_loss';metricLabel='Loss';tag='live';note=(data.ranking||{}).note||'';}
     else{entries=rankingReplay(d,data);metricLabel='Rank loss';tag='baseline replay';replay=true;note='A ranking replay needs archived historical lists. The UI does not invent one when the published payload has none.';}
   }else if(liveRows.length){
-    entries=liveRows; tag='live';
-    note='Season 0, this task: each row is its mean over the resolved questions it answered in this window (the Questions column).';
+    entries=standard?standardRows(liveRows,data):liveRows; tag='live';
+    note=standard?'Season 0, this task. One row per model in its standard setup, entrants that filed in the last two weeks; the mean over the resolved questions it answered in this window. Persistence is the zero line.':'Season 0, this task, everyone: every setup, every baseline, and the retired.';
   }else{
     const model=(data.backtest&&data.backtest.per_series&&data.backtest.per_series[d.per])||[];
     const base=(data.backtest&&data.backtest.baseline_replay&&data.backtest.baseline_replay.per_series&&data.backtest.baseline_replay.per_series[d.per])||[];
@@ -2232,20 +2270,22 @@ function renderBoard(mode){
     const pos = arena!=null && arena>0;
     const setup = condTag(nameOf[id]), variant = variantOf(id);
     const entryType = typeOf[id] || (isBaseline(id) ? 'baseline' : 'llm');
+    const state=entrantState(id,data), last=lastFiledMap(data)[id];
     const details = [
       setup==='zs' ? 'Zero-shot' : setup==='r10' ? 'Recent-10' : variant,   // the registered name's setup, else the id's
       entryType==='llm' ? 'LLM' : entryType.charAt(0).toUpperCase()+entryType.slice(1),
       id==='persistence' ? 'Reference' : '',
+      state ? 'Retired'+(last?' · last filed '+fmtDate(last):'') : '',
       s && s.mock ? 'Placeholder' : ''
     ].filter(Boolean);
     const refLine = ref && btMap[id] ? '<br><span class="type">last season '+((btMap[id].mean_skill>0?'+':'')+(btMap[id].mean_skill*100).toFixed(1))+'%</span>' : '';
-    return '<tr><td class="rank">'+(rank||'·')+'</td>'
+    return '<tr'+(state?' class="off"':'')+'><td class="rank">'+(rank||'·')+'</td>'
       + '<td><span class="who">'+avatar(id)
       + '<span class="who-text"><b class="model-name"><a href="#entrant/'+esc(id)+'">'+esc((nameOf[id]||forecasterName(id,data)).split(' (')[0].split(' · ')[0])+'</a></b>'
       + '<span class="model-meta">'+details.map(detail=>'<span>'+esc(detail)+'</span>').join(' <span aria-hidden="true">·</span> ')+'</span></span></span></td>'
       + '<td class="num skill'+(pos?' pos':'')+'">'+skillTxt+subSkill+refLine+'</td>'
       + '<td class="num">'+(s && typeof s[metricKey]==='number' ? s[metricKey].toFixed(metricLabel==='Loss'||metricLabel==='Rank loss'?3:2) : '·')+'</td>'
-      + '<td class="num">'+(s ? s.rounds : 0)+'</td>'
+      + '<td class="num">'+(s ? s.rounds+(window.__scoredN&&tag==='live'?'<span class="dim"> / '+window.__scoredN+'</span>':'') : 0)+'</td>'
       + '</tr>';
   }
   const body = document.getElementById('lb-body');
@@ -2254,7 +2294,10 @@ function renderBoard(mode){
   const orderT = {llm:0, baseline:1};
   // An entrant with nothing scored yet has no row: the board ranks results, the Questions page lists who is in.
   entries = entries.filter(e=>(e.rounds||0)>0);
-  body.innerHTML = entries.map((e,i)=>row(e.entrant,e,i+1)).join('');
+  // On the standard board persistence is not a row but the zero line: models above it beat the last release.
+  const zeroRow='<tr class="zero"><td></td><td colspan="4"><b>persistence · 0</b> &nbsp;copying the last release, the zero of the scale</td></tr>';
+  if(tag==='live' && standard){ let html='', drawn=false; entries.forEach((e,i)=>{ if(!drawn && e.mean_skill<0){ html+=zeroRow; drawn=true; } html+=row(e.entrant,e,i+1); }); if(!drawn) html+=zeroRow; body.innerHTML=html; }
+  else body.innerHTML = entries.map((e,i)=>row(e.entrant,e,i+1)).join('');
   if(!body.innerHTML){
     const nx=taskRounds(d,data).filter(r=>r.status!=='resolved').sort((a,b)=>a.release_at.localeCompare(b.release_at))[0];
     body.innerHTML='<tr><td colspan="6" style="padding:18px;color:var(--mut);">No defensible historical replay is available for this task.'+(nx?' The first live result is '+esc(nx.round_id)+' on '+esc(fmtDate(nx.release_at))+'.':'')+'</td></tr>';
@@ -2792,6 +2835,7 @@ function chartUrlState(){
   const tab = window.__tab || 'agg', p = new URLSearchParams();
   const unit = tab === 'agg' ? (window.__unitAgg || 'arena') : (window.__unitSer || 'arena');
   if(unit !== 'arena') p.set('unit', unit);
+  if((window.__boardView||'standard') !== 'standard') p.set('view', window.__boardView);
   if(window.__data && modelPicker.ids && modelPicker.ids.length){
     const hidden = window.__hidden || new Set(), keep = defaultKeep(window.__data);
     const now = modelPicker.ids.filter(id => !hidden.has(id)), dflt = modelPicker.ids.filter(id => keep.has(id));
@@ -2829,6 +2873,7 @@ function applyHash(){
     const span = SPAN_KEYS.includes(parts[2]) ? parts[2] : 'all';
     window.__board = span; if(typeof setRange==='function') setRange(SPAN_TO_RANGE[span]||0);
     const unit = q.get('unit');
+    window.__boardView = q.get('view')==='all' ? 'all' : 'standard';
     if(['arena','crps','level'].includes(unit)){ window.__unitAgg = unit === 'level' ? 'arena' : unit; window.__unitSer = unit; }
     window.__urlEntrants = q.get('entrants') ? q.get('entrants').split(',').filter(Boolean) : null;
   }
@@ -2925,6 +2970,9 @@ function setRange(months){
 document.querySelectorAll('#range-seg button').forEach(b=> b.onclick = ()=>{
   setRange(Number(b.dataset.range));
   if(window.__data){ setTab(window.__tab||'agg'); renderBoard(RANGE_TO_SPAN[window.__range]||'all'); }
+});
+document.querySelectorAll('#view-seg button').forEach(b=> b.onclick = ()=>{
+  window.__boardView = b.dataset.view; renderBoard(window.__board || 'all'); if(typeof syncHash==='function') syncHash();
 });
 document.querySelectorAll('#unit-seg button').forEach(b=> b.onclick = ()=>{
   const tab = window.__tab || 'agg';

@@ -1571,6 +1571,9 @@ def assert_site_contract(rounds):
             + ("\n  ..." if len(problems) > 12 else ""))
 
 
+BASELINE_IDS = {"persistence", "trend", "ewma", "climatology"}
+
+
 def attach_round_scores(rounds, profile_board, ranking_board):
     """Copy each scored profile and ranking round's per-entrant scores onto the
     round itself, the way build_leaderboard leaves them on number rounds, so
@@ -1628,7 +1631,8 @@ def build_leaderboard(rounds, resolved):
                 fc = json.load(f)
             if not scoreable_forecast(fc):
                 continue
-            round_fcs.append(fc)
+            if fc["entrant"] not in BASELINE_IDS:   # the crowd is the entrants' answers, not the references
+                round_fcs.append(fc)
             c = scoring.crps_forecast(fc["topline"], outcome)
             e = entries.setdefault(fc["entrant"], {"crps": [], "skill": []})
             e["crps"].append(c)

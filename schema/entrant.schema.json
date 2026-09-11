@@ -56,9 +56,10 @@
       "type": "string",
       "enum": [
         "active",
-        "revoked"
+        "revoked",
+        "retired"
       ],
-      "description": "Absent means active, so no existing registration changes meaning. 'revoked' is the off switch for both routes at once: the bundle intake refuses an upload before issuing a receipt, and tools/probe_agent_api.py refuses to call the endpoint. It is recorded here rather than only in a private console because a participant has to be able to see, from the public record, that the arena has stopped reaching them -- a revocation nobody can observe is indistinguishable from an outage."
+      "description": "Absent means active, so no existing registration changes meaning. 'revoked' is the off switch for both routes at once: the bundle intake refuses an upload before issuing a receipt, and tools/probe_agent_api.py refuses to call the endpoint. It is recorded here rather than only in a private console because a participant has to be able to see, from the public record, that the arena has stopped reaching them -- a revocation nobody can observe is indistinguishable from an outage. 'retired' means the entrant has left the arena or stopped filing: it keeps its record, stays out of the standard board, and is listed with the retired entrants; the arena stops calling its endpoint."
     },
     "homepage": {
       "type": "string",
@@ -94,6 +95,11 @@
           "description": "The exact HTTPS URL the arena POSTs each question to, as one JSON object; the reply body is the forecast, one JSON object. Plain http is refused here and again in code: the signature says who sent the request, https is what keeps a third party from reading the question or rewriting the reply in transit. No query string or fragment, so a URL cannot smuggle a credential."
         }
       }
+    },
+    "retired_at": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "The day the entrant was retired (UTC date). Only meaningful with status 'retired'."
     }
   }
 }

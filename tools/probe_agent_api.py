@@ -336,7 +336,7 @@ def main(argv=None):
             print(f"FAIL: no entrants/{args.entrant}.json in this checkout",
                   file=sys.stderr)
             return 1
-        if entrant.get("status") == "revoked":
+        if entrant.get("status") in ("revoked", "retired"):
             print(f"FAIL: entrant '{args.entrant}' is revoked. A revoked "
                   "registration is not probed and not called: the point of "
                   "revocation is that the arena stops reaching the endpoint.",

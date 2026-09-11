@@ -452,7 +452,7 @@ def entrant_is_revoked(entrant):
     upload from a revoked entrant would already have a receipt, and a receipt
     the arena intends to ignore is worse than a refusal.
     """
-    return bool(entrant) and entrant.get("status") == "revoked"
+    return bool(entrant) and entrant.get("status") in ("revoked", "retired")
 
 
 def normalise(response, bundle, now=None, entrant=None):
