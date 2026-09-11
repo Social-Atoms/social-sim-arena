@@ -1468,6 +1468,183 @@ def first_commit_times(root):
     return times
 
 
+# --- the crowd, and who has left --------------------------------------------
+#
+# The crowd is an entrant with a different way of answering. At a round's
+# deadline its answer is the equal-weight pool of every forecast filed by then
+# (the references excluded), written in the submission format so it is scored,
+# counted and shown by exactly the code an entrant's file goes through. Before
+# this, three leaderboard builders each pooled on the fly and the crowd had no
+# file, no coverage and no submissions page.
+CROWD_ID = "crowd"
+CROWD_MIN = 2            # a pool of one is that one entrant, not a crowd
+RETIRE_AFTER_DAYS = 14   # nothing filed for this long: retired, until it files again
+
+
+def _pooled_distribution(xs):
+    """A pooled sample set -> one `distribution` in the submission format.
+
+    The quantiles are the pool's own (the mixture, not a normal fitted to it),
+    so `scoring.crps_forecast` scores the mixture; the mean and sd ride beside
+    them for readers and the round chart, which draw a number as mean +- sd.
+    """
+    xs = sorted(float(x) for x in xs)
+    n = len(xs)
+    if n < 2:
+        raise ValueError("a pool needs at least two values")
+    quantiles = {}
+    for lv in scoring.QUANT_LEVELS:
+        pos = lv * (n - 1)
+        lo = int(pos)
+        hi = min(lo + 1, n - 1)
+        key = ("%.3f" % lv).rstrip("0")
+        quantiles[key] = round(xs[lo] + (pos - lo) * (xs[hi] - xs[lo]), 4)
+    mean = sum(xs) / n
+    sd = (sum((x - mean) ** 2 for x in xs) / n) ** 0.5
+    return {"mean": round(mean, 4), "sd": round(max(sd, 1e-6), 4), "quantiles": quantiles}
+
+
+def crowd_answer(r, members):
+    """The crowd's submission for one round, in the round's own format.
+
+    A number pools the members' quantiles (`scoring.pool_samples`, the same
+    fixed levels for everyone, so each member weighs the same); a profile does
+    that cell by cell; a ranking orders titles by how many lists name them,
+    ties broken by mean position, cut to the round's length. A member whose
+    file does not parse as an answer to this round is left out, not repaired.
+    """
+    if profile_round.is_profile(r):
+        cells = profile_round.cells_for(r)
+        cols = []
+        for fc in members:
+            try:
+                cols.append(profile_round.submission_cells(fc, cells))
+            except (ValueError, KeyError):
+                continue
+        if len(cols) < CROWD_MIN:
+            raise ValueError(f"only {len(cols)} complete profiles to pool")
+        profile = {}
+        for i, cell in enumerate(cells):
+            profile[cell] = _pooled_distribution(
+                scoring.pool_samples([{"topline": col[i]} for col in cols]))
+        return {"profile": profile}, len(cols)
+    if ranking_round.is_ranking(r):
+        spec = ranking_round.spec_for(r)
+        lists = []
+        for fc in members:
+            try:
+                lists.append(ranking_round.submission_list(fc, spec))
+            except (ValueError, KeyError, RuntimeError):
+                continue
+        if len(lists) < CROWD_MIN:
+            raise ValueError(f"only {len(lists)} rankings to pool")
+        cnt, pos = {}, {}
+        for items in lists:
+            for i, t in enumerate(items):
+                cnt[t] = cnt.get(t, 0) + 1
+                pos[t] = pos.get(t, 0) + i + 1
+        consensus = sorted(cnt, key=lambda t: (-cnt[t], pos[t] / cnt[t], t))[:spec["length"]]
+        return {"ranking": consensus}, len(lists)
+    toplines = [fc for fc in members if isinstance(fc.get("topline"), dict)]
+    if len(toplines) < CROWD_MIN:
+        raise ValueError(f"only {len(toplines)} toplines to pool")
+    return {"topline": _pooled_distribution(scoring.pool_samples(toplines))}, len(toplines)
+
+
+def file_crowd_forecasts(rounds):
+    """Write `forecasts/<round>/crowd.json` for every round whose filing has closed.
+
+    Filed once: a crowd already on disk is the crowd, whatever lands later. The
+    filing time is the deadline, because that is when the pool was fixed. Returns
+    the number of files written.
+    """
+    written = 0
+    for r in rounds:
+        if r.get("status") == "open":
+            continue
+        rdir = os.path.join(FORECASTS, r["round_id"])
+        path = os.path.join(rdir, CROWD_ID + ".json")
+        if not os.path.isdir(rdir) or os.path.exists(path):
+            continue
+        members = []
+        for fn in sorted(os.listdir(rdir)):
+            if not fn.endswith(".json"):
+                continue
+            fc = read_forecast(os.path.join(rdir, fn))
+            if not fc or not scoreable_forecast(fc):
+                continue
+            if fc.get("entrant") in BASELINE_IDS or fc.get("entrant") == CROWD_ID:
+                continue
+            members.append(fc)
+        if len(members) < CROWD_MIN:
+            continue
+        try:
+            answer, pooled = crowd_answer(r, members)
+        except (ValueError, KeyError, RuntimeError) as e:
+            print(f"crowd not filed for {r['round_id']}: {e}")
+            continue
+        deadline = batches.effective_deadline(r["lock_at"])
+        body = {
+            "round_id": r["round_id"],
+            "entrant": CROWD_ID,
+            **answer,
+            "notes": ("filed=" + deadline.strftime("%Y-%m-%dT%H:%MZ")
+                      + f", crowd: equal-weight pool of the {pooled} forecasts "
+                      "filed by the deadline"),
+        }
+        with open(path, "w") as f:
+            json.dump(body, f, indent=2)
+            f.write("\n")
+        written += 1
+    return written
+
+
+def _filed_at(stamp):
+    """A `filed` stamp (notes form, or a git commit time) -> aware datetime, or None."""
+    for fmt in ("%Y-%m-%dT%H:%MZ", "%Y-%m-%dT%H:%M:%SZ"):
+        try:
+            return datetime.strptime(stamp, fmt).replace(tzinfo=timezone.utc)
+        except (TypeError, ValueError):
+            pass
+    try:
+        t = datetime.fromisoformat(str(stamp).replace("Z", "+00:00"))
+        return t if t.tzinfo else t.replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError):
+        return None
+
+
+def retirement(rounds, entrants, now):
+    """Who has left the arena, and since when: {id: {retired_at, last_filed, by}}.
+
+    Two ways out. A registration that says `status: retired` (with its own
+    `retired_at`), and the rule: an entrant that has filed nothing for
+    RETIRE_AFTER_DAYS is retired as of the day that window closed, and is back
+    the day it files again. The references and the crowd are never retired.
+    Read after `count_forecasts`, which puts every filing time on the rounds.
+    """
+    last = {}
+    for r in rounds:
+        for ent, fc in (r.get("forecasts") or {}).items():
+            stamp = (fc or {}).get("filed")
+            if stamp and stamp > last.get(ent, ""):
+                last[ent] = stamp
+    out = {}
+    for e in entrants:
+        if e.get("status") == "retired" and e.get("entrant_id"):
+            out[e["entrant_id"]] = {"retired_at": e.get("retired_at"),
+                                    "last_filed": last.get(e["entrant_id"]),
+                                    "by": "registration"}
+    for ent, stamp in sorted(last.items()):
+        if ent in BASELINE_IDS or ent == CROWD_ID or ent in out:
+            continue
+        t = _filed_at(stamp)
+        if t is None or (now - t) <= timedelta(days=RETIRE_AFTER_DAYS):
+            continue
+        out[ent] = {"retired_at": (t + timedelta(days=RETIRE_AFTER_DAYS)).strftime("%Y-%m-%d"),
+                    "last_filed": stamp, "by": "rule"}
+    return out
+
+
 def count_forecasts(rounds):
     added = first_commit_times(FORECASTS)
     """Attach filed forecasts to each round: count + per-entrant toplines
@@ -1620,7 +1797,6 @@ def build_leaderboard(rounds, resolved):
         rdir = os.path.join(FORECASTS, r["round_id"])
         if not os.path.isdir(rdir):
             continue
-        round_fcs = []
         # The round keeps every entrant's own score, so the site can draw the season
         # question by question, not only the means the board averages.
         scores = {}
@@ -1631,23 +1807,12 @@ def build_leaderboard(rounds, resolved):
                 fc = json.load(f)
             if not scoreable_forecast(fc):
                 continue
-            if fc["entrant"] not in BASELINE_IDS:   # the crowd is the entrants' answers, not the references
-                round_fcs.append(fc)
             c = scoring.crps_forecast(fc["topline"], outcome)
             e = entries.setdefault(fc["entrant"], {"crps": [], "skill": []})
             e["crps"].append(c)
             e["skill"].append(scoring.skill(c, per_crps))
             scores[fc["entrant"]] = {"crps": round(c, 4),
                                      "skill": round(scoring.skill(c, per_crps), 4)}
-        # crowd: equal-weight mixture of every submission in the round
-        if len(round_fcs) >= 2:
-            xs = scoring.pool_samples(round_fcs)
-            c = scoring.crps_samples(xs, outcome)
-            e = entries.setdefault("crowd", {"crps": [], "skill": []})
-            e["crps"].append(c)
-            e["skill"].append(scoring.skill(c, per_crps))
-            scores["crowd"] = {"crps": round(c, 4),
-                               "skill": round(scoring.skill(c, per_crps), 4)}
         r["scores"] = scores
         r["persistence_crps"] = round(per_crps, 4)
     board = []
@@ -2363,6 +2528,9 @@ def main():
         filed, filing_failures = file_baseline_forecasts(
             rounds, hist_by_round, now, series, ranking_obs,
             run_status=run_status)
+    crowd_filed = file_crowd_forecasts(rounds)
+    if crowd_filed:
+        print(f"crowd filed for {crowd_filed} round(s)")
     count_forecasts(rounds)
     stamped = stamp_locked_rounds(rounds)
 
@@ -2482,6 +2650,8 @@ def main():
         "trackers": trackers,
         "rounds": rounds,
         "entrants": load_entrants(),
+        # Who has left the arena and since when; the board's Standard view keeps to the rest.
+        "retired": retirement(rounds, load_entrants(), now),
         "leaderboard": {
             "resolved_rounds": sum(1 for r in rounds if r["status"] == "resolved"),
             "entries": board,

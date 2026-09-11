@@ -166,9 +166,23 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .model-search-row input[type="search"]{min-width:0;min-height:30px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink2);font:400 13px/1.4 var(--sans);padding:6px 9px;flex:1 1 160px;width:100%;appearance:none;}
 .model-search-row input[type="search"]::placeholder{color:var(--mut);}
 .model-search-row input[type="search"]:focus-visible{border-color:#969b94;outline:0;box-shadow:0 0 0 2px #f0f2ef;}
-.model-setup-filter{flex:1 0 auto;max-width:100%;}
-.model-setup-filter .seg-choice span{padding:4px 8px;font-size:12px;}
-.model-setup-filter input:focus-visible{outline:0;}
+.msel-row{display:flex;gap:6px;flex-wrap:wrap;}
+.msel{position:relative;}
+.msel-btn{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:0 9px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink2);font:500 12px/1.3 var(--sans);cursor:pointer;white-space:nowrap;}
+.msel-btn:hover,.msel-btn[aria-expanded="true"]{border-color:#c3c6c2;background:#f5f6f5;color:var(--ink);}
+.msel-k{color:var(--mut);font-weight:400;}
+.msel-btn .model-icon{width:13px;height:13px;transform:rotate(90deg);}
+.msel-btn[aria-expanded="true"] .model-icon{transform:rotate(-90deg);}
+.msel-pop{position:absolute;top:calc(100% + 4px);left:0;min-width:190px;z-index:31;background:#fff;border:1px solid var(--line);border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.06);padding:4px;}
+.msel-pop[hidden]{display:none;}
+.msel-pop button{display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;border-radius:3px;padding:6px 8px;color:var(--ink2);font:500 12.5px/1.3 var(--sans);cursor:pointer;text-align:left;white-space:nowrap;}
+.msel-pop button:hover{background:#f0f2ef;color:var(--ink);}
+.msel-pop button.on{color:var(--ink);}
+.msel-pop button .model-icon{width:13px;height:13px;visibility:hidden;}
+.msel-pop button.on .model-icon{visibility:visible;}
+.msel-n{margin-left:auto;padding-left:14px;color:var(--mut);font-weight:400;font-variant-numeric:tabular-nums;}
+.model-retired{color:var(--mut);font-size:10.5px;line-height:1.4;white-space:nowrap;flex-shrink:0;border:1px solid var(--line);border-radius:2px;padding:0 4px;}
+.model-option.off .model-option-name{color:var(--mut);}
 .model-bulk{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;padding:0 12px 8px;border-bottom:1px solid #eeede9;flex:0 0 auto;}
 .model-bulk .model-count{margin-right:auto;}
 .model-options{overflow-y:auto;overscroll-behavior:contain;padding:4px 6px;min-height:0;}
@@ -217,10 +231,10 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .lbcol .lbhead h2 span#lb-title{display:none;}   /* the task is named at the left already; the word alone heads the board */
 .lbhead .seg{flex-wrap:wrap;}
 .lbcol .lbview{flex:0 0 auto;padding:0 16px 8px;}
-.lbcol .lbheadrow{flex:0 0 auto;padding:0 6px;overflow-y:auto;scrollbar-gutter:stable;}
-.lbcol .scroll{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-gutter:stable;padding:0 6px;}
-table.lb tr.zero td{border-top:1px dashed #96948d;border-bottom:0;padding:5px 8px 9px;color:var(--mut);font-size:12px;}
-table.lb tr.zero td b{color:var(--ink2);font-weight:700;}
+.lbcol .scroll{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-gutter:stable;padding:0 2px 0 6px;}
+.lbcol .scroll::-webkit-scrollbar{width:8px;}
+.lbcol .scroll::-webkit-scrollbar-thumb{background:#c9c7c0;border-radius:4px;}
+.lbcol .scroll::-webkit-scrollbar-track{background:transparent;margin-top:34px;}
 table.lb tr.off td{color:var(--mut);}
 table.lb tr.off .model-name a{color:var(--mut);}
 table.lb{width:100%;border-collapse:collapse;font-size:14.5px;table-layout:fixed;}
@@ -279,7 +293,8 @@ table.lb .skill.pos{color:var(--accent-ink);}
   table.lb col.rank-col{width:22px;}
   table.lb col.score-col{width:40px;}
   table.lb col.loss-col{width:44px;}
-  table.lb col.rounds-col{width:40px;}
+  table.lb col.rounds-col{width:50px;}
+  table.lb th.num{font-size:10px;letter-spacing:0;}
 }
 
 /* question browser and weekly set */
@@ -738,16 +753,11 @@ table.ent td a.row{color:inherit;text-decoration:none;}
         <h2 class="has-help" id="lb-how"><b>Leaderboard</b> <span id="lb-title">Overall</span><span class="th-help" id="lb-note" role="tooltip"></span></h2>
         <div class="task-live"><time id="data-updated" title="Data refreshed every 6 hours"></time></div>
       </div>
-      <div class="lbview"><div class="seg mini" id="view-seg" role="group" aria-label="Which rows the board lists"><button data-view="standard" class="on">Standard<span class="th-help" role="tooltip">One row per model, in its standard setup (web+sfc where it exists), for entrants that filed in the last two weeks. Persistence is the zero line.</span></button><button data-view="all">Everyone<span class="th-help" role="tooltip">Every setup, every baseline, and the entrants that have retired or stopped filing.</span></button></div></div>
-      <div class="lbheadrow">
-        <table class="lb lb-head">
-          <colgroup><col class="rank-col"><col><col class="score-col"><col class="loss-col"><col class="rounds-col"></colgroup>
-          <thead><tr><th></th><th>Entrant</th><th class="num" id="lb-score-head">Score</th><th class="num" id="lb-loss-head">CRPS</th><th class="num" id="lb-rounds-head">Questions</th></tr></thead>
-        </table>
-      </div>
+      <div class="lbview"><div class="seg mini" id="view-seg" role="group" aria-label="Which rows the board lists"><button data-view="standard" class="on">Standard<span class="th-help" role="tooltip">One row per model, in its standard setup (web+sfc where it exists), for entrants that filed in the last two weeks, and persistence as the reference.</span></button><button data-view="all">Everyone<span class="th-help" role="tooltip">Every setup, every baseline, and the entrants that have retired or stopped filing.</span></button></div></div>
       <div class="scroll">
         <table class="lb">
           <colgroup><col class="rank-col"><col><col class="score-col"><col class="loss-col"><col class="rounds-col"></colgroup>
+          <thead><tr><th></th><th>Entrant</th><th class="num" id="lb-score-head">Score</th><th class="num" id="lb-loss-head">CRPS</th><th class="num" id="lb-rounds-head">Questions</th></tr></thead>
           <tbody id="lb-body"><tr><td colspan="5" style="color:var(--mut);">loading…</td></tr></tbody>
         </table>
       </div>
@@ -1373,27 +1383,62 @@ function condTag(nm){
   return '';
 }
 function condSuffix(nm, pre){ const c = condTag(nm); return c ? (pre||' ')+c : ''; }
-const modelPicker = {ids:[], nameOf:{}, query:'', setup:'all', open:false, ready:false, listKey:null, chipKey:null};
+const modelPicker = {ids:[], nameOf:{}, query:'', setup:'all', status:'active', open:false, ready:false, listKey:null, chipKey:null, filterKey:null};
 const modelAttr = s => esc(s).replace(/"/g, '&quot;');
 const modelChevron = '<svg class="model-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6l-6 6"/></svg>';
 const modelRemove = '<svg class="model-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>';
 const modelCheck = '<svg class="model-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5l10 -10"/></svg>';
+// The setups an id can stand in, read off its suffixes the way the harness writes them: the context
+// it saw (recent-10, web, zero-shot, news) and how it was asked (sfc, persona). References sit apart.
+const SETUPS=[['web+sfc','web + sfc'],['web','web'],['r10+sfc','recent-10 + sfc'],['r10','recent-10'],['zs+sfc','zero-shot + sfc'],['zs','zero-shot'],['news+sfc','news + sfc'],['news','news'],['persona','persona'],['ref','reference']];
+const SETUP_LABEL=Object.fromEntries(SETUPS);
+function setupOf(id){
+  if(isBaseline(id)||id==='crowd') return 'ref';
+  if(/-persona/.test(id)) return 'persona';
+  const ctx=/-web/.test(id)?'web':/-news/.test(id)?'news':/-zeroshot/.test(id)?'zs':'r10';
+  return ctx+(/-superfc/.test(id)?'+sfc':'');
+}
 function modelInfo(id, nameOf){
   const data = window.__data || {}, name = nameOf[id] || id;
   const baseline = ['persistence','ewma','trend','climatology'].includes(id)
     || (data.entrants||[]).some(e=>e.entrant_id===id && e.type==='baseline')
     || ((data.backtest||{}).overall||[]).some(r=>r.entrant===id && r.baseline);
-  const vendor = vendorOf(id), setup = condTag(name);
-  return {id, name, label:name.split(' (')[0], setup,
+  const vendor = vendorOf(id), setup = condTag(name), setupKey = setupOf(id);
+  return {id, name, label:name.split(' (')[0], setup, setupKey,
     group:baseline?'Baselines':vendor?vendorName(vendor):'Other entrants',
-    setupLabel:setup==='r10'?'Recent-10':setup==='zs'?'Zero-shot':''};
+    setupLabel:setupKey==='ref'?'':SETUP_LABEL[setupKey], retired:!!entrantState(id,data)};
 }
-function matchingModels(ids, nameOf, query, setup){
+function matchingModels(ids, nameOf, query, setup, status){
   const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  status = status || 'all';
   return ids.map(id=>modelInfo(id,nameOf)).filter(m=>
-    (setup==='all' || m.setup===setup)
+    (setup==='all' || m.setupKey===setup)
+    && (status==='all' || (status==='retired')===m.retired)
     && words.every(word=>(m.name+' '+m.id+' '+m.group).toLowerCase().includes(word)));
 }
+// A dropdown of our own: a button that names the choice, the options beneath it, a count beside each.
+function menuSelectHtml(kind, label, options, value){
+  const cur = options.find(o=>o.value===value) || options[0];
+  return '<div class="msel" data-kind="'+kind+'"><button type="button" class="msel-btn" aria-haspopup="listbox" aria-expanded="false"><span class="msel-k">'+label+'</span><span class="msel-v">'+esc(cur.label)+'</span>'+modelChevron+'</button>'
+    + '<div class="msel-pop" role="listbox" aria-label="'+label+'" hidden>'+options.map(o=>'<button type="button" role="option" data-value="'+modelAttr(o.value)+'" aria-selected="'+(o.value===cur.value)+'"'+(o.value===cur.value?' class="on"':'')+'>'+modelCheck+'<span>'+esc(o.label)+'</span>'+(o.count!=null?'<span class="msel-n">'+o.count+'</span>':'')+'</button>').join('')+'</div></div>';
+}
+function pickerFilterOptions(){
+  const infos = modelPicker.ids.map(id=>modelInfo(id,modelPicker.nameOf));
+  const bySetup = {}; infos.forEach(m=>{ bySetup[m.setupKey]=(bySetup[m.setupKey]||0)+1; });
+  const retired = infos.filter(m=>m.retired).length;
+  return {
+    setup: [{value:'all',label:'All setups',count:infos.length}].concat(SETUPS.filter(([k])=>bySetup[k]).map(([k,l])=>({value:k,label:l,count:bySetup[k]}))),
+    status: [{value:'active',label:'Active',count:infos.length-retired},{value:'retired',label:'Retired',count:retired},{value:'all',label:'Everyone',count:infos.length}]
+  };
+}
+function renderPickerFilters(){
+  const host = document.getElementById('model-filters'); if(!host) return;
+  const opts = pickerFilterOptions(), key = JSON.stringify([opts, modelPicker.setup, modelPicker.status]);
+  if(key===modelPicker.filterKey) return;
+  modelPicker.filterKey = key;
+  host.innerHTML = menuSelectHtml('setup','Setup',opts.setup,modelPicker.setup) + menuSelectHtml('status','Status',opts.status,modelPicker.status);
+}
+function setPickerFilter(kind, value){ modelPicker[kind]=value; renderModelOptions(); }
 function openModelPicker(open, restoreFocus=false){
   modelPicker.open = open;
   const trigger = document.getElementById('model-trigger');
@@ -1437,8 +1482,7 @@ function ensureModelPicker(){
     + '<button type="button" class="model-action" id="model-reset" title="Show the top 6 entrants and EWMA">Reset</button>'
     + '<section class="model-pop" id="model-pop" aria-label="Choose chart entrants" hidden>'
     + '<div class="model-search-row"><input type="search" id="model-search" placeholder="Search entrants or labs" aria-label="Search entrants or labs" autocomplete="off">'
-    + '<div class="seg model-setup-filter" id="model-setup" role="radiogroup" aria-label="Information setup">'
-    + [['all','All setups'],['r10','Recent-10'],['zs','Zero-shot']].map(([value,label])=>'<label class="seg-choice"><input type="radio" name="model-setup" value="'+value+'"'+(value==='all'?' checked':'')+'><span>'+label+'</span></label>').join('')+'</div></div>'
+    + '<div class="msel-row" id="model-filters"></div></div>'
     + '<div class="model-bulk"><span class="model-count" id="model-result-count" role="status"></span><button type="button" class="model-action" id="model-select-results">Select results</button><button type="button" class="model-action" id="model-clear-results">Clear results</button></div>'
     + '<div class="model-options" id="model-options"></div>'
     + '<div class="model-pop-foot"><span class="model-count" id="model-menu-count" role="status"></span><span class="model-scope">· Chart only</span><button type="button" class="model-action" id="model-done">Done</button></div></section>';
@@ -1446,8 +1490,14 @@ function ensureModelPicker(){
   document.getElementById('model-done').onclick = ()=>openModelPicker(false,true);
   document.getElementById('model-reset').onclick = resetModels;
   document.getElementById('model-search').oninput = ev=>{ modelPicker.query=ev.target.value; renderModelOptions(); };
-  document.getElementById('model-setup').onchange = ev=>{ modelPicker.setup=ev.target.value; renderModelOptions(); };
-  const results = ()=>matchingModels(modelPicker.ids,modelPicker.nameOf,modelPicker.query,modelPicker.setup).map(m=>m.id);
+  // The two dropdowns: a button opens its list (and closes the other), an option sets the filter, any other click closes both.
+  const pop = document.getElementById('model-pop');
+  pop.onclick = ev=>{
+    const t = ev.target, opt = t.closest ? t.closest('.msel-pop [data-value]') : null, btn = t.closest ? t.closest('.msel-btn') : null;
+    if(opt){ setPickerFilter(opt.closest('.msel').dataset.kind, opt.dataset.value); return; }
+    pop.querySelectorAll('.msel').forEach(m=>{ const list=m.querySelector('.msel-pop'), open=!!btn && m.contains(btn) && list.hidden; list.hidden=!open; m.querySelector('.msel-btn').setAttribute('aria-expanded',String(open)); });
+  };
+  const results = ()=>matchingModels(modelPicker.ids,modelPicker.nameOf,modelPicker.query,modelPicker.setup,modelPicker.status).map(m=>m.id);
   document.getElementById('model-select-results').onclick = ()=>selectModels(results(),true);
   document.getElementById('model-clear-results').onclick = ()=>selectModels(results(),false);
   document.getElementById('model-options').onchange = ev=>{
@@ -1474,8 +1524,9 @@ function ensureModelPicker(){
   });
 }
 function renderModelOptions(){
-  const {ids,nameOf,query,setup} = modelPicker;
-  const hidden = coerceUnknown(ids), matches = matchingModels(ids,nameOf,query,setup);
+  const {ids,nameOf,query,setup,status} = modelPicker;
+  renderPickerFilters();
+  const hidden = coerceUnknown(ids), matches = matchingModels(ids,nameOf,query,setup,status);
   const list = document.getElementById('model-options');
   const key = JSON.stringify(matches);
   // Leave search, scroll and focused checkboxes intact when a chart redraws.
@@ -1486,10 +1537,11 @@ function renderModelOptions(){
     list.innerHTML = [...groups].sort(([a],[b])=>a==='Baselines'?1:b==='Baselines'?-1:a.localeCompare(b)).map(([group,models])=>
       '<fieldset class="model-group"><legend>'+esc(group)+'<span>'+models.length+'</span></legend>'
       + models.sort((a,b)=>a.label.localeCompare(b.label)||a.setup.localeCompare(b.setup)).map(m=>
-        '<label class="model-option"><span class="model-check"><input type="checkbox" data-model="'+modelAttr(m.id)+'"'+(!hidden.has(m.id)?' checked':'')+'>'+modelCheck+'</span>'
+        '<label class="model-option'+(m.retired?' off':'')+'"><span class="model-check"><input type="checkbox" data-model="'+modelAttr(m.id)+'"'+(!hidden.has(m.id)?' checked':'')+'>'+modelCheck+'</span>'
         + avatar(m.id,colorOf(m.id))+'<span class="model-option-name">'+esc(m.label)+'</span>'
+        + (m.retired?'<span class="model-retired">retired</span>':'')
         + (m.setupLabel?'<span class="model-setup">'+m.setupLabel+'</span>':'')+'</label>').join('')+'</fieldset>').join('')
-      || '<p class="model-empty">'+(ids.length?'No entrants match. Try another name or setup.':'No published forecasts on this task yet.')+'</p>';
+      || '<p class="model-empty">'+(ids.length?'No entrants match. Try another name, setup or status.':'No published forecasts on this task yet.')+'</p>';
     list.scrollTop = 0;
   }
   list.querySelectorAll('input[data-model]').forEach(input=>{input.checked=!hidden.has(input.dataset.model);});
@@ -1515,7 +1567,7 @@ function renderLegend(ids, nameOf){
       const m=modelInfo(id,nameOf);
       return '<button type="button" class="lchip" data-model="'+modelAttr(id)+'" aria-label="'+modelAttr('Remove '+m.name)+'" title="'+modelAttr(m.name)+'">'
         + avatar(id,colorOf(id))+'<span class="model-chip-name">'+esc(m.label)+'</span>'
-        + (m.setup?'<span class="setup">'+m.setup+'</span>':'')+modelRemove+'</button>';
+        + (m.setup?'<span class="setup">'+m.setup+'</span>':'')+(m.retired?'<span class="setup">retired</span>':'')+modelRemove+'</button>';
     }).join('') || '<p class="model-empty">'+(modelPicker.ids.length?'Choose entrants to start comparing.':'No published forecasts to draw on this task yet.')+'</p>';
     chips.scrollTop = scroll;
   }
@@ -1599,19 +1651,10 @@ function aggChart(traj, nameOf, unit){
     g += `<line x1="${X(i)}" x2="${X(i)}" y1="${H-P.b}" y2="${H-P.b+4}" stroke="#c9c7c0"/>`;
     g += `<text x="${X(i)}" y="${H-8}" font-size="11" fill="#96948d" text-anchor="${anchor}">${fmtDate(traj[i].date)}</text>`;
   }
-  // The shaded lead is the crowd's, so it is drawn only where a crowd exists.
-  if(unit!=='crps' && series.indexOf('crowd') >= 0){
-    const pts = traj.map((tt,i)=>[X(i), val(tt,'crowd')]).filter(p=>p[1]!=null)
-                    .map(p=>[p[0], Y(p[1])]);
-    if(pts.length > 1){
-      g += `<g clip-path="url(#clip-agg)"><path d="${smoothPath(pts)} L ${pts[pts.length-1][0].toFixed(1)} ${(H-P.b).toFixed(1)} L ${pts[0][0].toFixed(1)} ${(H-P.b).toFixed(1)} Z" fill="url(#lead)" stroke="none"/></g>`;
-    }
-  }
   const lastCk = traj[traj.length-1];
   const yTop = P.t+9, yBot = H-P.b-9;
   g += '<g clip-path="url(#clip-agg)">';
   for(const s of series){
-    const heavy = s==='crowd';
     const isModel = mocks.indexOf(s) >= 0;
     // A line starts where its entrant starts being scored, not at the left
     // edge: on a per-tracker curve most models only become eligible partway
@@ -1619,7 +1662,7 @@ function aggChart(traj, nameOf, unit){
     const pts = traj.map((tt,i)=>[X(i), val(tt,s)]).filter(p=>p[1]!=null)
                     .map(p=>[p[0], Y(p[1])]);
     if(pts.length < 2) continue;
-    g += `<path d="${smoothPath(pts)}" fill="none" stroke="${colorOf(s)}" stroke-width="${heavy?2.8:(isModel?1.6:1.9)}" ${isModel?'opacity=".9"':''} stroke-linecap="round" stroke-linejoin="round"><title>${esc(nameOf[s]||s)}</title></path>`;
+    g += `<path d="${smoothPath(pts)}" fill="none" stroke="${colorOf(s)}" stroke-width="${isModel?1.6:1.9}" ${isModel?'opacity=".9"':''} stroke-linecap="round" stroke-linejoin="round"><title>${esc(nameOf[s]||s)}</title></path>`;
   }
   g += '</g>';
   const avail = P.r - 33, maxCh = Math.max(4, Math.floor(avail/5.7) - 5);  // 11px Inconsolata is ~5.5px a character; 5 covers the gap and the value
@@ -1650,7 +1693,6 @@ function aggChart(traj, nameOf, unit){
     }
     let nm = (nameOf[s]||s).split(' (')[0] + condSuffix(nameOf[s]);
     if(nm.length > maxCh) nm = nm.slice(0, maxCh-1)+'…';
-    const heavy = s==='crowd';
     g += `<line x1="${X(traj.length-1)}" x2="${X(traj.length-1)+8}" y1="${Y(last)}" y2="${ly}" stroke="${colorOf(s)}" stroke-width="1" opacity=".5"/>`;
     g += `<circle cx="${X(traj.length-1)}" cy="${Y(last)}" r="3" fill="${colorOf(s)}" stroke="#fff" stroke-width="1.5"/>`;
     g += `<rect x="${X(traj.length-1)+8}" y="${ly-8.5}" width="19" height="17" rx="3" fill="${colorOf(s)}"/>`;
@@ -1660,7 +1702,7 @@ function aggChart(traj, nameOf, unit){
     } else {
       g += `<text x="${X(traj.length-1)+17.5}" y="${ly+3.5}" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">${initOf(s)}</text>`;
     }
-    g += `<a href="#entrant/${esc(s)}"><text x="${X(traj.length-1)+31}" y="${ly+4}" font-size="12.5" font-weight="${heavy?800:600}" fill="${heavy?'#0a6a30':'#4f4e49'}">${esc(nm)} ${fmtV(last)}</text></a>`;
+    g += `<a href="#entrant/${esc(s)}"><text x="${X(traj.length-1)+31}" y="${ly+4}" font-size="12.5" font-weight="600" fill="#4f4e49">${esc(nm)} ${fmtV(last)}</text></a>`;
   });
   g += `<line class="xh" x1="0" x2="0" y1="${P.t}" y2="${H-P.b}" stroke="#96948d" stroke-dasharray="3 3" style="display:none"/>`;
   svg.innerHTML = g;
@@ -2062,12 +2104,21 @@ function liveBoard(data,key,mode){
 // ---- who is still in the arena ----
 const DORMANT_DAYS=14;
 function lastFiledMap(data){ if(data.__lastFiled) return data.__lastFiled; const m={}; (data.rounds||[]).forEach(r=>Object.entries(r.forecasts||{}).forEach(([id,f])=>{ if(f&&f.filed&&(!m[id]||f.filed>m[id])) m[id]=f.filed; })); return data.__lastFiled=m; }
-// 'retired' when the registration says so, 'dormant' when nothing has been filed for two weeks, '' when active.
+// 'retired' when the payload's retired map or the registration says so, or (older payloads) when nothing
+// has been filed for two weeks; '' when active. The references and the crowd never retire.
 function entrantState(id,data){
   if(isBaseline(id)||id==='crowd') return '';
+  if((data.retired||{})[id]) return 'retired';
   const e=(data.entrants||[]).find(x=>x.entrant_id===id); if(e&&e.status==='retired') return 'retired';
+  if(data.retired) return '';
   const last=lastFiledMap(data)[id]; if(!last) return '';
-  return (Date.parse(data.generated_at||Date.now())-Date.parse(last))/86400e3>DORMANT_DAYS?'dormant':'';
+  return (Date.parse(data.generated_at||Date.now())-Date.parse(last))/86400e3>DORMANT_DAYS?'retired':'';
+}
+// 'Retired Sep 1 · last filed Aug 18', for a row's small print.
+function retiredWords(id,data){
+  if(!entrantState(id,data)) return '';
+  const ret=(data.retired||{})[id]||{}, last=ret.last_filed||lastFiledMap(data)[id];
+  return 'Retired'+(ret.retired_at?' '+fmtDate(ret.retired_at):'')+(last?' · last filed '+fmtDate(last):'');
 }
 function familyOf(id){ return id.replace(/-(web|superfc|zeroshot|news|persona|closed)/g,''); }
 // The setup a model stands on the standard board with: web+sfc where it exists, then web, then the plain id.
@@ -2075,22 +2126,26 @@ function setupRank(id){ const w=/-web/.test(id), sf=/-superfc/.test(id), z=/-zer
 function standardRows(rows,data){
   const fam={};
   rows.forEach(r=>{ if(isBaseline(r.entrant)||r.entrant==='crowd'||entrantState(r.entrant,data)) return; const f=familyOf(r.entrant); if(!fam[f]||setupRank(r.entrant)<setupRank(fam[f].entrant)) fam[f]=r; });
-  return Object.values(fam).sort((a,b)=>b.mean_skill-a.mean_skill);
+  // Persistence stays on the board as an entrant: the reference everyone is measured against, in its own place.
+  const per=rows.find(r=>r.entrant==='persistence');
+  return Object.values(fam).concat(per?[per]:[]).sort((a,b)=>b.mean_skill-a.mean_skill);
 }
 function scoredInWindow(data,key,mode){
   const now=Date.now(), cut=mode==='d30'?now-30*86400e3:mode==='m6'?now-182*86400e3:null;
   let rs=scoredRounds(data,key); if(mode==='last') rs=rs.slice(-1); else if(cut) rs=rs.filter(r=>Date.parse(resolvedAt(r))>=cut);
   return rs.length;
 }
-// A trajectory none of whose entrants has ever been chosen gets a default: the top entrants by skill, plus EWMA and the crowd.
+// A trajectory none of whose entrants has ever been chosen gets a default: the top active entrants by skill, plus EWMA.
+// The crowd and the retired are a pick away in the chart menu, not on the chart by default.
 function ensurePick(traj){
   const ids=trajIds(traj); if(!ids.length) return;
   coerceUnknown(ids);   // establishes the saved or default selection before it is inspected
   const keep=window.__keep||new Set();
   if(ids.some(id=>keep.has(id))) return;
-  const last=traj[traj.length-1];
-  const top=ids.filter(id=>!isBaseline(id)&&id!=='crowd').sort((a,b)=>((last.skills||{})[b]??-9)-((last.skills||{})[a]??-9)).slice(0,DEFAULT_VISIBLE_MODELS);
-  selectModels(top.concat(ids.filter(id=>id==='ewma'||id==='crowd')), true);
+  const last=traj[traj.length-1], data=window.__data||{}, rank=id=>((last.skills||{})[id]??-9);
+  const models=ids.filter(id=>!isBaseline(id)&&id!=='crowd'), active=models.filter(id=>!entrantState(id,data));
+  const top=(active.length?active:models).sort((a,b)=>rank(b)-rank(a)).slice(0,DEFAULT_VISIBLE_MODELS);
+  selectModels(top.concat(ids.filter(id=>id==='ewma')), true);
 }
 function chartMessage(title, body, muted){
   const svg=clearChart(); renderLegend([],{}); const W=svg.clientWidth,H=svg.clientHeight; svg.setAttribute('viewBox','0 0 '+W+' '+H);
@@ -2202,7 +2257,7 @@ function renderBoard(mode){
   const liveRows=liveBoard(data,key,mode); window.__scoredN=liveRows.length?scoredInWindow(data,key,mode):0;
   if(key==='agg' && liveRows.length){
     entries=standard?standardRows(liveRows,data):liveRows; appendPending=!standard; title='Overall standings'; tag='live';
-    note=standard?'Season 0, every number question. One row per model in its standard setup, for entrants that filed in the last two weeks; the score is the mean over the resolved questions it answered in this window, and the Questions column says how many of them. Persistence is the zero line. Everyone lists every setup, the baselines and the retired.'
+    note=standard?'Season 0, every number question. One row per model in its standard setup, for entrants that filed in the last two weeks, and persistence as the reference; the score is the mean over the resolved questions it answered in this window, and the Questions column says how many of them. Everyone lists every setup, the other baselines, the crowd and the retired.'
       :'Season 0, every number question, everyone: every setup, every baseline, and the entrants that have retired or stopped filing. Each row is its mean over the resolved questions it answered in this window.';
   }else if(key==='agg'){
     const spans=(data.backtest&&data.backtest.spans)||{};
@@ -2221,7 +2276,7 @@ function renderBoard(mode){
     else{entries=rankingReplay(d,data);metricLabel='Rank loss';tag='baseline replay';replay=true;note='A ranking replay needs archived historical lists. The UI does not invent one when the published payload has none.';}
   }else if(liveRows.length){
     entries=standard?standardRows(liveRows,data):liveRows; tag='live';
-    note=standard?'Season 0, this task. One row per model in its standard setup, entrants that filed in the last two weeks; the mean over the resolved questions it answered in this window. Persistence is the zero line.':'Season 0, this task, everyone: every setup, every baseline, and the retired.';
+    note=standard?'Season 0, this task. One row per model in its standard setup, entrants that filed in the last two weeks, and persistence as the reference; the mean over the resolved questions it answered in this window.':'Season 0, this task, everyone: every setup, every baseline, the crowd, and the retired.';
   }else{
     const model=(data.backtest&&data.backtest.per_series&&data.backtest.per_series[d.per])||[];
     const base=(data.backtest&&data.backtest.baseline_replay&&data.backtest.baseline_replay.per_series&&data.backtest.baseline_replay.per_series[d.per])||[];
@@ -2270,12 +2325,12 @@ function renderBoard(mode){
     const pos = arena!=null && arena>0;
     const setup = condTag(nameOf[id]), variant = variantOf(id);
     const entryType = typeOf[id] || (isBaseline(id) ? 'baseline' : 'llm');
-    const state=entrantState(id,data), last=lastFiledMap(data)[id];
+    const state=entrantState(id,data);
     const details = [
       setup==='zs' ? 'Zero-shot' : setup==='r10' ? 'Recent-10' : variant,   // the registered name's setup, else the id's
       entryType==='llm' ? 'LLM' : entryType.charAt(0).toUpperCase()+entryType.slice(1),
       id==='persistence' ? 'Reference' : '',
-      state ? 'Retired'+(last?' · last filed '+fmtDate(last):'') : '',
+      retiredWords(id,data),
       s && s.mock ? 'Placeholder' : ''
     ].filter(Boolean);
     const refLine = ref && btMap[id] ? '<br><span class="type">last season '+((btMap[id].mean_skill>0?'+':'')+(btMap[id].mean_skill*100).toFixed(1))+'%</span>' : '';
@@ -2294,10 +2349,7 @@ function renderBoard(mode){
   const orderT = {llm:0, baseline:1};
   // An entrant with nothing scored yet has no row: the board ranks results, the Questions page lists who is in.
   entries = entries.filter(e=>(e.rounds||0)>0);
-  // On the standard board persistence is not a row but the zero line: models above it beat the last release.
-  const zeroRow='<tr class="zero"><td></td><td colspan="4"><b>persistence · 0</b> &nbsp;copying the last release, the zero of the scale</td></tr>';
-  if(tag==='live' && standard){ let html='', drawn=false; entries.forEach((e,i)=>{ if(!drawn && e.mean_skill<0){ html+=zeroRow; drawn=true; } html+=row(e.entrant,e,i+1); }); if(!drawn) html+=zeroRow; body.innerHTML=html; }
-  else body.innerHTML = entries.map((e,i)=>row(e.entrant,e,i+1)).join('');
+  body.innerHTML = entries.map((e,i)=>row(e.entrant,e,i+1)).join('');
   if(!body.innerHTML){
     const nx=taskRounds(d,data).filter(r=>r.status!=='resolved').sort((a,b)=>a.release_at.localeCompare(b.release_at))[0];
     body.innerHTML='<tr><td colspan="6" style="padding:18px;color:var(--mut);">No defensible historical replay is available for this task.'+(nx?' The first live result is '+esc(nx.round_id)+' on '+esc(fmtDate(nx.release_at))+'.':'')+'</td></tr>';

@@ -35,7 +35,7 @@ function fixture(storage = new Map(), payload = backtestOnly) {
     }
     return inputs;
   };
-  const api = new Function(script+'\nreturn {render, renderTaskChart, renderLegend, matchingModels, coerceUnknown, modelInfo, selectModels, resetModels, modelPicker, TASKS};')();
+  const api = new Function(script+'\nreturn {render, renderTaskChart, renderLegend, matchingModels, coerceUnknown, modelInfo, selectModels, resetModels, setPickerFilter, modelPicker, TASKS};')();
   api.render(payload);
   api.renderTaskChart('agg');
   return {api, els, win, doc, svg, events, stripEvents, storage, options};
@@ -52,12 +52,16 @@ f.els['model-trigger'].onclick();
 assert.equal(f.els['model-pop'].hidden, false);
 assert.equal(f.doc.activeElement, f.els['model-search']);
 assert.match(f.options.innerHTML, /<legend>Baselines/);
-assert.match(f.options.innerHTML, /Recent-10/);
-assert.match(f.options.innerHTML, /Zero-shot/);
+// The backtest roster is entirely retired by now; the status dropdown opens the whole list.
+f.api.setPickerFilter('status','all');
+assert.match(f.els['model-filters'].innerHTML, /Everyone/);
+assert.match(f.options.innerHTML, /recent-10/);
+assert.match(f.options.innerHTML, /zero-shot/);
+assert.match(f.options.innerHTML, /model-retired/);
 
 f.els['model-search'].oninput({target:{value:'  OPENAI  '}});
 assert.equal(f.els['model-result-count'].textContent, '6 results');
-f.els['model-setup'].onchange({target:{value:'zs'}});
+f.api.setPickerFilter('setup','zs');
 assert.equal(f.els['model-result-count'].textContent, '3 results');
 assert.deepEqual([...f.win.__keep], originalSelection, 'searching does not alter selection');
 const matching = f.options.querySelectorAll();

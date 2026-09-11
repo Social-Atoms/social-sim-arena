@@ -22,17 +22,22 @@ def main(path=os.path.join(ROOT, "site", "data.json")):
     resolved = {r["round_id"]: r["resolution"] for r in rounds
                 if r.get("status") == "resolved" and isinstance(r.get("resolution"), dict)
                 and "value" in r["resolution"]}
+    filed = refresh.file_crowd_forecasts(rounds)
+    refresh.count_forecasts(rounds)
     board = refresh.build_leaderboard(rounds, resolved)
     data["leaderboard"] = {"resolved_rounds": sum(1 for r in rounds if r.get("status") == "resolved"),
                            "entries": board}
     refresh.attach_round_scores(rounds, data.get("profile"), data.get("ranking"))
     data["lists"] = refresh.published_lists()
+    data["retired"] = refresh.retirement(rounds, refresh.load_entrants(), refresh.now_utc())
+    data["entrant_status"] = refresh.entrant_status.build(rounds, refresh.load_entrants())
     with open(path, "w") as fh:
         json.dump(data, fh, separators=(",", ":"), ensure_ascii=False)
         fh.write("\n")
     scored = sum(1 for r in rounds if r.get("scores"))
     weeks = len((data["lists"] or {}).get("wiki_top10_en", []))
-    print(f"{path}: {scored} rounds carry scores, {len(board)} board rows, {weeks} weekly lists")
+    print(f"{path}: {scored} rounds carry scores, {len(board)} board rows, {weeks} weekly lists, "
+          f"{filed} crowd forecasts filed, {len(data['retired'])} entrants retired")
 
 
 if __name__ == "__main__":
