@@ -146,6 +146,6 @@ f.api.selectModels(['ewma'],false);
 assert.ok(f.win.__hidden.has('ewma'));
 f.api.resetModels();
 assert.ok(!f.win.__hidden.has('ewma'));
-// With the season's scores present, the default comparison is the season's top six and EWMA, never the crowd.
-{ const live = fixture(new Map(), data); const sel = live.api.modelPicker.ids.filter(id=>!live.win.__hidden.has(id)); assert.equal(sel.length, 7, 'the season picks its own default'); assert.ok(sel.includes('ewma')); assert.ok(!sel.includes('crowd')); }
+// With the season's scores present, the default comparison is the season's top six active entrants, EWMA and the crowd.
+{ const live = fixture(new Map(), data); const sel = live.api.modelPicker.ids.filter(id=>!live.win.__hidden.has(id)); assert.equal(sel.length, 8, 'the season picks its own default'); assert.ok(sel.includes('ewma')); assert.ok(sel.includes('crowd')); assert.ok(sel.every(id=>!live.win.__data.retired[id])); }
 console.log('ok malformed and unavailable storage');

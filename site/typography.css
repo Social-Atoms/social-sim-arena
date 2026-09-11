@@ -333,7 +333,9 @@ details[open] > summary::before { content: "\2212"; }
    viewport does not push the chart beside it. Chrome and Safari take the -webkit- rules; Firefox
    (no ::-webkit-scrollbar) takes the standard properties, which Chrome would otherwise let override
    the custom ones. */
-html, .inner, .taskview, .lbcol .scroll, .tasknav, .model-options { scrollbar-gutter: stable; }
+/* Not on html: the app shell never scrolls the document, and a reserved gutter there held every
+   column ten pixels short of the viewport's edge, the board's own scrollbar included. */
+.inner, .taskview, .lbcol .scroll, .tasknav, .model-options { scrollbar-gutter: stable; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #cfcec8; border: 3px solid transparent; border-radius: 10px; background-clip: padding-box; }
