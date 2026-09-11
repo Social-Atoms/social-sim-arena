@@ -392,6 +392,13 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 #question-col table.ent tr.link.hl td{background:#f4faf6;}
 #question-col table.ent tr.link .row:hover .q{text-decoration:underline;text-underline-offset:2px;}
 #strip-tip{position:fixed;max-width:340px;white-space:normal;}
+/* On a screen with a pointer the strip stays under the nav while the list scrolls, so a hovered
+   row far down the list still shows its mark. Phones have no hover and keep their space. */
+@media (hover:hover) and (min-width:701px){
+  #question-col .strip-sec{position:sticky;top:0;z-index:3;background:#fff;margin-left:-8px;margin-right:-8px;padding:8px 8px 8px;}
+  #question-col .strip-sec.stuck{box-shadow:0 1px 0 var(--line);}
+}
+.strip-sentinel{height:1px;margin-bottom:-1px;}
 .qcard .qref{margin-top:6px;font-size:10.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .qcard .qref a{color:var(--mut);text-decoration:underline;text-underline-offset:2px;}
 .qcard .qref a:hover{color:var(--accent-ink);}
@@ -1119,7 +1126,7 @@ function renderQuestion(roundId){
     +tile('Forecasts', String(ids.length), models.length+' entrant'+(models.length===1?'':'s')+' · '+(ids.length-models.length)+' baseline'+(ids.length-models.length===1?'':'s'))
     +tile('Timestamp', !st||!st.manifest?'not yet':(st.bitcoin_attested?'on-chain':'stamped'), !st||!st.manifest?(active?'every forecast is hashed and stamped at the lock':'no manifest on record'):(st.bitcoin_attested?'the manifest of forecast hashes is attested in a Bitcoin block':'the forecast hashes are in an OpenTimestamps receipt from the lock; the Bitcoin block that seals them follows within hours, then this reads on-chain'))
     +'</div>';
-  if(mm.length) h+='<div class="ent-sec"><h3>Where the answers sit</h3><div class="qstrip" data-strip="'+esc(r.round_id)+'"></div>'+stripLegend(models.length>40)+'</div>';
+  if(mm.length) h+='<div class="ent-sec strip-sec"><h3>Where the answers sit</h3><div class="qstrip" data-strip="'+esc(r.round_id)+'"></div>'+stripLegend(models.length>40)+'</div>';
   h+='<div class="ent-sec"><h3>Every forecast</h3><p class="sub">'+(resolved?'Closest first, by CRPS where the forecast carried an uncertainty, else by error.':'In the order they were filed; scored once the answer lands.')+' Open a row for the forecast and its timestamp proof.</p>'
     +'<table class="ent"><thead><tr><th class="num">#</th><th>Entrant</th><th class="col-filed">Filed</th><th class="num">Forecast</th><th class="num">Error</th><th class="num">CRPS</th></tr></thead><tbody>'
     +rows.map((row,i)=>{ const x=row.x; const href='#forecast/'+esc(r.round_id)+'/'+esc(row.k);
@@ -1136,6 +1143,18 @@ function renderQuestion(roundId){
     tr.addEventListener('mouseleave', ()=>{ const m=stripMarkFor(host, tr.dataset.e); if(m) m.classList.remove('hl'); hideStripTip(); });
   });
   requestAnimationFrame(()=>drawStrips(host, data));
+  // The strip sticks under the nav on pointer screens; a one-pixel sentinel above it says when it is stuck.
+  const sec=host.querySelector('.strip-sec');
+  if(sec && window.matchMedia('(hover:hover) and (min-width:701px)').matches && 'IntersectionObserver' in window){
+    // The page scrolls inside a column (div.inner), not the window: the offset is measured from
+    // that column's top edge, and the column is the observer's root. If the window scrolls, the nav's height is the offset.
+    let scroller=sec.parentElement; while(scroller && scroller!==document.body && !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY)) scroller=scroller.parentElement;
+    const inColumn=scroller && scroller!==document.body, nav=document.querySelector('nav.site-nav');
+    const navBottom=nav?nav.getBoundingClientRect().bottom:0, off=inColumn?Math.max(0, Math.round(navBottom-scroller.getBoundingClientRect().top)):Math.round(navBottom);
+    sec.style.top=off+'px';
+    const sentinel=document.createElement('div'); sentinel.className='strip-sentinel'; sec.parentNode.insertBefore(sentinel, sec);
+    new IntersectionObserver(es=>sec.classList.toggle('stuck', !es[0].isIntersecting), {root:inColumn?scroller:null, rootMargin:'-'+(off+1)+'px 0px 0px 0px', threshold:0}).observe(sentinel);
+  }
   if(typeof syncHash==='function') syncHash();
 }
 // ---- one forecast: what was filed, when, against what, and the proof that it existed before the answer ----
