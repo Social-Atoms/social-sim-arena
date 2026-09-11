@@ -662,7 +662,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 </style>
 <script defer src="panels.js?v=91f5d3557c"></script>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=7">
+<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=9">
 </head>
 <body class="site-home">
 
@@ -1310,7 +1310,7 @@ function defaultKeep(data){
   // resolved questions as the most-answered entrant), so the opening chart is the established field, not a
   // lucky first week.
   const live = (data && data.rounds) ? liveBoard(data,'agg','all') : [];
-  const models = live.length ? standardRows(live,data) : [];
+  const models = live.length ? activeRows(live,data) : [];
   const floor = models.length ? Math.ceil(Math.max(...models.map(r=>r.rounds))/2) : 0;
   const board = live.length ? models.filter(r=>r.rounds>=floor).concat(live.filter(r=>isBaseline(r.entrant))) : (((data||{}).backtest||{}).overall || []);
   const keep = new Set(['persistence','ewma','crowd']);
@@ -1471,7 +1471,7 @@ function ensureModelPicker(){
   const strip = document.getElementById('legend-strip');
   const toolbar = document.getElementById('model-toolbar'), controls = document.getElementById('chart-filters');
   strip.innerHTML = '<div class="model-chips" id="model-chips" role="group" aria-label="Selected chart entrants"></div>';
-  toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop" title="Which entrants the chart draws, one line each; the count is out of the active entrants unless the status filter says otherwise. The board beside it lists the active entrants in their standard setup.">Chart: <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
+  toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop" title="Which entrants the chart draws, one line each; the count is out of the active entrants unless the status filter says otherwise. The board beside it lists the same active entrants, one row each.">Chart: <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
     + '<button type="button" class="model-action" id="model-reset" title="Show the top 5 entrants, EWMA and the crowd">Reset</button>'
     + '<section class="model-pop" id="model-pop" aria-label="Choose chart entrants" hidden>'
     + '<div class="model-search-row"><input type="search" id="model-search" placeholder="Search entrants or labs" aria-label="Search entrants or labs" autocomplete="off">'
@@ -2118,16 +2118,10 @@ function retiredWords(id,data){
   const ret=(data.retired||{})[id]||{}, last=ret.last_filed||lastFiledMap(data)[id];
   return 'Retired'+(ret.retired_at?' '+fmtDate(ret.retired_at):'')+(last?' · last filed '+fmtDate(last):'');
 }
-function familyOf(id){ return id.replace(/-(web|superfc|zeroshot|news|persona|closed)/g,''); }
-// The setup a model stands on the standard board with: web+sfc where it exists, then web, then the plain id.
-function setupRank(id){ const w=/-web/.test(id), sf=/-superfc/.test(id), z=/-zeroshot|-news|-persona/.test(id); return w&&sf?0:w?1:(!sf&&!z)?2:sf?3:4; }
-function standardRows(rows,data){
-  const fam={};
-  rows.forEach(r=>{ if(isBaseline(r.entrant)||r.entrant==='crowd'||entrantState(r.entrant,data)) return; const f=familyOf(r.entrant); if(!fam[f]||setupRank(r.entrant)<setupRank(fam[f].entrant)) fam[f]=r; });
-  // Persistence and the crowd stay on the board as entrants, each in its own ranked place: the reference
-  // everyone is measured against, and the pool of everyone's answers.
-  const refs=rows.filter(r=>r.entrant==='persistence'||r.entrant==='crowd');
-  return Object.values(fam).concat(refs).sort((a,b)=>b.mean_skill-a.mean_skill);
+// The board's rows are the chart menu's Active pool, one row per entrant: every setup still filing, the
+// references and the crowd, ranked together. A row for every id the menu offers, and nothing the menu hides.
+function activeRows(rows,data){
+  return rows.filter(r=>!entrantState(r.entrant,data)).sort((a,b)=>b.mean_skill-a.mean_skill);
 }
 // A trajectory none of whose entrants has ever been chosen gets a default: the top active entrants by skill, EWMA and the crowd.
 // The retired are a pick away in the chart menu, not on the chart by default.
@@ -2248,8 +2242,8 @@ function renderBoard(mode){
   let entries=[],metricKey='mean_crps',metricLabel='CRPS',title=d.label,tag='',note='',appendPending=false,replay=false;
   const liveRows=liveBoard(data,key,mode);
   if(key==='agg' && liveRows.length){
-    entries=standardRows(liveRows,data); title='Overall standings'; tag='live';
-    note='Season 0, every number question. One row per model in its standard setup, for entrants that filed in the last two weeks, with persistence as the reference and the crowd as the pool of all answers; the score is the mean over the resolved questions it answered in this window, and the Questions column says how many of them.';
+    entries=activeRows(liveRows,data); title='Overall standings'; tag='live';
+    note='Season 0, every number question. One row per active entrant (every setup still filing), with persistence as the reference and the crowd as the pool of all answers; the score is the mean over the resolved questions it answered in this window, and the Questions column says how many of them.';
   }else if(key==='agg'){
     const spans=(data.backtest&&data.backtest.spans)||{};
     entries=spans[mode]||(data.backtest&&data.backtest.overall)||[];appendPending=true;
@@ -2266,8 +2260,8 @@ function renderBoard(mode){
     if(live.length){entries=live;metricKey='mean_loss';metricLabel='Loss';tag='live';note=(data.ranking||{}).note||'';}
     else{entries=rankingReplay(d,data);metricLabel='Rank loss';tag='baseline replay';replay=true;note='A ranking replay needs archived historical lists. The UI does not invent one when the published payload has none.';}
   }else if(liveRows.length){
-    entries=standardRows(liveRows,data); tag='live';
-    note='Season 0, this task. One row per model in its standard setup, entrants that filed in the last two weeks, with persistence as the reference and the crowd as the pool of all answers; the mean over the resolved questions it answered in this window.';
+    entries=activeRows(liveRows,data); tag='live';
+    note='Season 0, this task. One row per active entrant (every setup still filing), with persistence as the reference and the crowd as the pool of all answers; the mean over the resolved questions it answered in this window.';
   }else{
     const model=(data.backtest&&data.backtest.per_series&&data.backtest.per_series[d.per])||[];
     const base=(data.backtest&&data.backtest.baseline_replay&&data.backtest.baseline_replay.per_series&&data.backtest.baseline_replay.per_series[d.per])||[];
