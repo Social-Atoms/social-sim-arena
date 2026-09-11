@@ -13,7 +13,7 @@ A single tapered line with one fold, thin where it starts and heavy where it end
 | `ssa-mark-32-dark.svg`, `ssa-mark-16-dark.svg` | heavier cuts for favicon sizes (the line thickens as the tile shrinks) |
 | `png/ssa-mark-{1024,512,192,32}.png` | raster exports of the dark master (GitHub avatar, app icons, favicon fallback) |
 | `png/ssa-mark-512-light.png` | raster export of the light master |
-| `readme/{ssa,social-atoms}-{dark,light}.svg` | the two marks for the README's `<picture>`: the dark tile under a dark scheme, the paper tile under a light one; corners rounded (112/512) because GitHub does not round them |
+| `readme/{ssa,social-atoms}-dark.svg` | the two marks as the README shows them: the ink tile in every colour scheme, like the org avatar, corners rounded (112/512) because GitHub does not round them |
 
 ## Rules
 
