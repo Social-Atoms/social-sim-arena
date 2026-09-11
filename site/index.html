@@ -335,8 +335,7 @@ table.lb .model-name a:hover{text-decoration:underline;text-underline-offset:2px
 .chartpane svg a:hover text{text-decoration:underline;}
 @media (max-width:880px){ .tiles,.ent-cov{grid-template-columns:repeat(2,minmax(0,1fr));} }
 .qmore{display:flex;justify-content:center;margin:16px 0 8px;}
-.qmore .btn{font:700 12.5px/1.4 var(--sans);padding:7px 16px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink);cursor:pointer;}
-.qmore .btn:hover{border-color:var(--ink);}
+.qmore .btn{font-family:var(--sans);}
 .qmore .dim{color:var(--mut);font-weight:500;}
 .ranked{margin:0;padding-left:22px;font-size:13px;color:var(--ink2);columns:2;column-gap:32px;}
 .ranked li{margin:0 0 5px;break-inside:avoid;}
@@ -500,9 +499,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 .week-route p{font-size:12.5px;margin:0 0 8px;}
 .week-route code{font-size:12px;background:#f4f4f2;padding:1px 5px;border-radius:3px;overflow-wrap:anywhere;}
 .week-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:16px;}
-#page-calendar .btn{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:7px 12px;border:1px solid transparent;font-size:13px;line-height:20px;font-weight:600;}
-#page-calendar .btn.soft{border-color:var(--line);}
-#page-calendar .btn.soft:hover{border-color:var(--ink);}
+#page-calendar .btn{padding:7px 12px;}
 .week-browse{display:flex;align-items:center;flex-wrap:wrap;gap:8px 16px;margin-top:auto;padding-top:16px;border-top:1px solid var(--line);}
 .week-browse .go{color:var(--link);font-size:14px;font-weight:600;text-decoration:none;}
 .week-browse .go:hover{text-decoration:underline;}
@@ -570,34 +567,31 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 .vrow .go:hover{text-decoration:underline;}
 .vrow .when{color:var(--mut);font-size:11.5px;white-space:nowrap;}
 .shape{display:inline-block;text-transform:uppercase;border:1px solid var(--line);border-radius:3px;padding:0 6px;margin-right:4px;background:#fff;font-size:10.5px;line-height:1.6;font-weight:700;letter-spacing:.04em;color:var(--mut);vertical-align:1px;white-space:nowrap;}
-.svrow{display:flex;gap:14px;padding:12px 2px;border-bottom:1px solid #eeede9;align-items:flex-start;}
+.svrow{display:flex;gap:16px;padding:24px 2px 26px;border-bottom:1px solid #eeede9;align-items:flex-start;}
 .svrow:last-child{border-bottom:none;}
 .svrow .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:3px;background:var(--ink);color:#fff;font-size:11px;font-weight:700;flex:0 0 auto;margin-top:1px;}
 .svrow .tx{min-width:0;flex:1;}
-.svrow .tx b{display:block;color:var(--ink);font-size:15px;font-weight:800;margin-bottom:2px;}
-.svrow .tx p{margin:0;font-size:13.5px;color:var(--ink2);}
-.svrow .acts{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 2px;}
-.btn.flat{border-radius:2px;min-height:32px;padding:6px 18px;font-size:13px;font-weight:700;min-width:150px;justify-content:center;border:1px solid #c9c7c0;background:#fff;color:var(--ink);}
-.btn.flat.dark{background:var(--ink);border-color:var(--ink);color:#fff;}
-.btn.flat:hover{border-color:var(--ink);}
+.svrow .tx b{display:block;color:var(--ink);font-size:15.5px;font-weight:800;margin-bottom:6px;}
+.svrow .tx p{margin:0;font-size:13.5px;line-height:1.6;color:var(--ink2);max-width:760px;}
+.svrow .acts{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0 0;}
+.svrow .acts .btn{min-width:160px;}
 .btn.off{opacity:.35;pointer-events:none;}
 .svrow.soon .n{background:#c9c7c0;}
 .svrow.soon .tx b,.svrow.soon .tx p{color:var(--mut);}
 .track-state{display:inline-block;margin-left:8px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);vertical-align:2px;}
 .track-state::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:5px;vertical-align:1px;}
 .track-state.open{color:var(--accent-ink);}
-.btn.green{background:var(--accent);color:#fff;border:1px solid var(--accent);}
-.btn.green:hover{opacity:.85;}
 .svrow .tx code{font-size:12.5px;background:#f5f5f2;border:1px solid var(--line);border-radius:3px;padding:0 4px;color:var(--ink);}
-.btn{display:inline-block;text-decoration:none;font-size:13.5px;font-weight:700;border-radius:4px;padding:8px 17px;}
+/* One button for the site: 34px tall, 3px corners, ink for the primary action, a hairline box for the rest. */
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:7px 16px;text-decoration:none;font-size:13px;line-height:20px;font-weight:700;border-radius:3px;border:1px solid #c9c7c0;background:#fff;color:var(--ink);cursor:pointer;}
+.btn:hover{border-color:var(--ink);}
 .demo{margin-top:20px;border:1px dashed var(--line);border-radius:4px;padding:13px 15px;}
 .demo .dhead{font-size:11px;font-weight:800;letter-spacing:.09em;color:var(--mut);}
 .demo .dsub{font-size:13px;color:var(--ink2);margin:3px 0 8px;}
 .demo svg{display:block;width:100%;}
-.btn.dark{background:var(--ink);color:#fff;}
-.btn.dark:hover{opacity:.85;}
-.btn.soft{background:#fff;color:var(--ink);border:1px solid var(--line);}
-.btn.soft:hover{border-color:var(--ink);}
+.btn.dark{background:var(--ink);border-color:var(--ink);color:#fff;}
+.btn.dark:hover{opacity:.85;border-color:var(--ink);}
+.btn.soft{background:#fff;color:var(--ink);}
 .erow{display:flex;gap:11px;padding:9px 2px;border-bottom:1px solid #eeede9;align-items:flex-start;}
 .erow:last-child{border-bottom:none;}
 .erow .tx{min-width:0;}
@@ -714,7 +708,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
           <div class="chart-filters" id="chart-filters">
             <div class="chartctl" role="group" aria-label="Chart filters">
               <div class="model-toolbar" id="model-toolbar" style="display:none;"></div>
-              <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker<span class="th-help" role="tooltip">The published series itself, with each round's forecasts drawn on it.</span></button><button data-unit="arena" class="on">Score<span class="th-help" role="tooltip">Arena score: 0 is persistence (copying the last release), 100 is a perfect oracle. Averaged over every matched release in the window. Higher is better.</span></button><button data-unit="crps">CRPS<span class="th-help" role="tooltip">CRPS, the error in the question's own unit: how far the whole forecast distribution sat from the published number. Lower is better.</span></button></div>
+              <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker<span class="th-help" role="tooltip">The published series itself, with each question's forecasts drawn on it.</span></button><button data-unit="arena" class="on">Score<span class="th-help" role="tooltip">Arena score: 0 is persistence (copying the last release), 100 is a perfect oracle. Averaged over every matched release in the window. Higher is better.</span></button><button data-unit="crps">CRPS<span class="th-help" role="tooltip">CRPS, the error in the question's own unit: how far the whole forecast distribution sat from the published number. Lower is better.</span></button></div>
               <div class="seg mini" id="range-seg" role="group" aria-label="Time window for the chart and the board"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0" class="on">All</button></div>
             </div>
             <div class="legend-strip" id="legend-strip" style="display:none;"></div>
@@ -739,7 +733,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
       <div class="scroll">
         <table class="lb">
           <colgroup><col class="rank-col"><col><col class="score-col"><col class="loss-col"><col class="rounds-col"></colgroup>
-          <thead><tr><th></th><th>Entrant</th><th class="num" id="lb-score-head">Score</th><th class="num" id="lb-loss-head">CRPS</th><th class="num" id="lb-rounds-head">Rounds</th></tr></thead>
+          <thead><tr><th></th><th>Entrant</th><th class="num" id="lb-score-head">Score</th><th class="num" id="lb-loss-head">CRPS</th><th class="num" id="lb-rounds-head">Questions</th></tr></thead>
           <tbody id="lb-body"><tr><td colspan="5" style="color:var(--mut);">loading…</td></tr></tbody>
         </table>
       </div>
@@ -785,16 +779,16 @@ table.ent td a.row{color:inherit;text-decoration:none;}
   <div class="page" id="page-submit">
     <div class="inner"><div class="col">
       <h2>Join the arena</h2>
-      <p class="lede">Two kinds of forecaster.</p>
+      <p class="lede" style="margin-bottom:10px">Two kinds of forecaster.</p>
       <div class="svrow"><span class="n">1</span>
         <div class="tx"><b>Agent forecaster <span class="track-state open">Open now</span></b>
           <p>Connect an HTTPS endpoint, or submit the same JSON through a pull request. We send each question, your agent returns a forecast, and every result is scored publicly.</p>
-          <p class="acts"><a class="btn dark flat" id="btn-register-2" href="submit.html">Register an agent</a><a class="btn flat" href="docs.html#quickstart">Read the docs →</a></p></div>
+          <p class="acts"><a class="btn dark" id="btn-register-2" href="submit.html">Register an agent</a><a class="btn" href="docs.html#quickstart">Read the docs →</a></p></div>
       </div>
       <div class="svrow soon"><span class="n">2</span>
         <div class="tx"><b>Human forecaster <span class="track-state">Coming soon</span></b>
           <p>Answer the same questions on the same schedule, on your own or with a team. Human forecasting opens later this season.</p>
-          <p class="acts"><a class="btn dark flat off" href="#" aria-disabled="true" tabindex="-1">Register as a human</a></p></div>
+          <p class="acts"><a class="btn dark off" href="#" aria-disabled="true" tabindex="-1">Register as a human</a></p></div>
       </div>
     </div></div>
   </div>
@@ -1135,7 +1129,7 @@ function renderQuestion(roundId){
   window.__questionName='';
   if(!r){ host.innerHTML='<div class="eyebrow page-eyebrow">Question</div><h2 class="page-title">No question called '+esc(roundId||'(none)')+'</h2><p class="lede page-description">Start from <a href="#questions">every question</a>.</p>'; if(typeof syncHash==='function') syncHash(); return; }
   const t=taskForRound(r), key=taskKeyForRound(r), u=(t.unit||'').trim()==='%'?'%':'', o=roundOrdinal(r,data);
-  window.__questionName=t.label+(o?' · round '+o.n:'');
+  window.__questionName=t.label+(o?' · question '+o.n:'');
   const rel=(r.resolution||{}).value, active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
   const listed=isListed(r);
   const state=!listed?'<span class="qdue closed">scheduled · listed '+esc(fmtLocal(r.published_at))+'</span>':active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
@@ -1147,9 +1141,9 @@ function renderQuestion(roundId){
   const mm=models.map(k=>f[k].mean).filter(v=>typeof v==='number').sort((a,b)=>a-b), cons=mm.length?mm[Math.floor(mm.length/2)]:null;
   const tile=(k,v,sub)=>'<div class="tile"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="s">'+sub+'</div></div>';
   const st=(data.stamps||{})[r.round_id];
-  let h='<div class="eyebrow page-eyebrow">Question'+(o?' · round '+o.n+' of '+o.of:'')+'</div><h2 class="page-title"><a href="#leaderboard/'+esc(key)+'/all">'+esc(t.label)+'</a></h2>'
+  let h='<div class="eyebrow page-eyebrow">Question'+(o?' '+o.n+' of '+o.of+' on this task':'')+'</div><h2 class="page-title"><a href="#leaderboard/'+esc(key)+'/all">'+esc(t.label)+'</a></h2>'
     +'<p class="lede page-description">'+esc(r.question)+'</p>'
-    +'<p class="ent-meta">'+state+(key!=='agg'?'<span><a href="#questions/task/'+esc(key)+'">every round of this task</a></span>':'')+(r.batch_id?'<span><a href="#questions/'+esc(r.batch_id)+'">week of '+esc(fmtDate(r.batch_id.replace('batch-','')))+'</a></span>':'')+'<span>source '+(t.srcUrl?'<a href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span class="dim">'+esc(r.round_id)+'</span></p>';
+    +'<p class="ent-meta">'+state+(key!=='agg'?'<span><a href="#questions/task/'+esc(key)+'">all questions on this task</a></span>':'')+(r.batch_id?'<span><a href="#questions/'+esc(r.batch_id)+'">week of '+esc(fmtDate(r.batch_id.replace('batch-','')))+'</a></span>':'')+'<span>source '+(t.srcUrl?'<a href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span class="dim">'+esc(r.round_id)+'</span></p>';
   h+='<div class="tiles">'
     +tile('Released', resolved?fmtNum(rel,u):'·', resolved?esc(fmtLocal((r.resolution||{}).resolved_at||r.release_at)):(active?'after the lock at '+esc(fmtLocal(deadlineOf(r))):'expected '+esc(fmtLocal(r.release_at))))
     +tile('What the models say', cons!==null?fmtNum(cons,u):'·', cons!==null?'median of '+mm.length+' number forecast'+(mm.length===1?'':'s'):'no number forecasts')
@@ -1247,7 +1241,7 @@ function renderForecast(roundId, entrantId){
 // a week before it locks. Before that it exists on the calendar as a scheduled close and nothing more.
 function isListed(r){ return !r.published_at || Date.parse(r.published_at) <= Date.now(); }
 function roundOrdinal(r, data){
-  // "round 3 of 7": this question's place among its task's listed questions, by deadline.
+  // "question 3 of 7": this question's place among its task's listed questions, by deadline.
   const t=taskForRound(r); if(!t||!t.match) return null;
   const sib=taskRounds(t,data).filter(isListed).slice().sort((a,b)=>deadlineOf(a).localeCompare(deadlineOf(b)));
   const i=sib.findIndex(x=>x.round_id===r.round_id); return i<0?null:{n:i+1,of:sib.length};
@@ -1662,7 +1656,7 @@ function aggChart(traj, nameOf, unit){
       const va = val(ck,a), vb = val(ck,b);
       return unit==='crps' ? va-vb : vb-va;
     });
-    tipShow(tip, ev, '<b>'+fmtDate(ck.date)+'</b> · '+ck.n+' rounds<br>'
+    tipShow(tip, ev, '<b>'+fmtDate(ck.date)+'</b> · '+ck.n+' questions<br>'
       + lineup.map((s,i)=>(i+1)+'. '+(nameOf[s]||s).split(' (')[0]+condSuffix(nameOf[s])+' '+fmtV(val(ck,s))).join('<br>'));
   };
   svg.onmouseleave = ()=>{ xh.style.display='none'; tip.style.display='none'; };
@@ -1816,7 +1810,7 @@ function renderTaskHeader(data,key){
     +'<span class="mi">'+lab('answer','Question type')+'<span class="val">'+answers.map(chip).join('')+'</span></span>'
     +(key==='agg' ? '' : '<span class="mi">'+lab('cadence','Cadence')+val(cadence,'w-cad')+'</span>')
     +(key==='agg' || !d.srcName ? '' : '<span class="mi">'+lab('source','Source')+'<span class="val w-src" title="'+attr(d.srcName)+'">'+(d.srcUrl?'<a href="'+esc(d.srcUrl)+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>':esc(d.srcName))+'</span>'+(SOURCE_READER[key]?'<a class="go" href="https://github.com/Social-Atoms/social-sim-arena/blob/main/'+SOURCE_READER[key]+'" target="_blank" rel="noopener">code →</a>':'')+'</span>')
-    +'<span class="mi mq">'+lab('questions','Questions')+'<span class="numeric">'+rs.length+'</span><a class="go" href="'+(key==='agg'?'#questions':'#questions/task/'+esc(key))+'">'+(key==='agg'?'see all questions':'see all rounds')+' →</a></span>';
+    +'<span class="mi mq">'+lab('questions','Questions')+'<span class="numeric">'+rs.length+'</span><a class="go" href="'+(key==='agg'?'#questions':'#questions/task/'+esc(key))+'">all questions →</a></span>';
   const card = document.getElementById('task-question-card');
   card.style.display='';
   const r = active[0] || rs.slice(-1)[0];
@@ -1837,7 +1831,7 @@ function renderTaskHeader(data,key){
   document.getElementById('task-question-body').innerHTML='<p>'+esc(r.question)+'</p><div class="qfoot">'
     +'<span>'+shapeChip(r)+(r.target_type==='profile_energy'?(r.cells||[]).length+' cells':r.target_type==='ranking_list'?'ordered list':'predictive distribution')+'</span>'
     +'<span>releases '+esc(fmtLocal(r.release_at))+'</span><span>'+esc(r.n_forecasts||0)+' forecasts filed</span>'
-    +'<a class="go" href="'+(key==='agg'?'#questions':'#questions/task/'+esc(key))+'">'+(key==='agg'?'every question':'every round of this task')+' →</a></div>';
+    +'<a class="go" href="'+(key==='agg'?'#questions':'#questions/task/'+esc(key))+'">'+(key==='agg'?'every question':'all questions on this task')+' →</a></div>';
 }
 
 function alignedVectors(data,cells){
@@ -2060,11 +2054,11 @@ function renderBoard(mode){
     title='Overall standings'; tag='backtest';
     note=(window.__matched?'Scored over '+window.__matched+'. ':'')+'Walk-forward model replay: every forecast was made from data available before its release. Arena score 0 is persistence and 100 is a perfect oracle.';
     const same=JSON.stringify(entries)===JSON.stringify((data.backtest&&data.backtest.overall)||[]);
-    if(mode!=='all' && same) note+=' The backtest window is four weeks, so every range shows the same rounds until the season adds more.';
+    if(mode!=='all' && same) note+=' The backtest window is four weeks, so every range shows the same questions until the season adds more.';
   }else if(d.kind==='profile'){
     const live=((data.profile||{}).matched||[]).length?(data.profile||{}).matched:(data.profile||{}).board||[];
     if(live.length){entries=live;metricKey='mean_energy';metricLabel='Energy';tag='live';note=(data.profile||{}).note||'';}
-    else{entries=profileReplay(d,data);metricLabel='Profile RMSE';tag='baseline replay';replay=true;note='Historical walk-forward replay over aligned population snapshots. Baselines only; this is context while Season 0 profile rounds await resolution, not a live model rank.';}
+    else{entries=profileReplay(d,data);metricLabel='Profile RMSE';tag='baseline replay';replay=true;note='Historical walk-forward replay over aligned population snapshots. Baselines only; this is context while Season 0 profile questions await resolution, not a live model rank.';}
   }else if(d.kind==='ranking'){
     const live=((data.ranking||{}).matched||[]).length?(data.ranking||{}).matched:(data.ranking||{}).board||[];
     if(live.length){entries=live;metricKey='mean_loss';metricLabel='Loss';tag='live';note=(data.ranking||{}).note||'';}
@@ -2109,7 +2103,7 @@ function renderBoard(mode){
     ? 'Skill: how much of persistence\u2019s error this forecaster removed. 0 is persistence, above 0 beats it.'
     : 'Arena score: 0 is persistence (copying the last release), 100 is a perfect oracle. Higher is better.');
   const roundsHead=document.getElementById('lb-rounds-head');
-  headWithHelp(roundsHead, 'Rounds', 'How many resolved rounds this row is averaged over. Fewer rounds, noisier score.');
+  headWithHelp(roundsHead, 'Questions', 'How many resolved questions this row is averaged over. Fewer questions, noisier score.');
   function row(id, s, rank, ref){
     const arena = s ? 100*s.mean_skill : null;
     const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0)) : '<span class="pend">···</span>';
@@ -2383,7 +2377,7 @@ function roundsList(data){
     const when=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
     const strip=forecastStrip(r,t,data)||'<div class="qempty">'+(r.n_forecasts?esc(r.n_forecasts)+' forecast'+(r.n_forecasts===1?'':'s')+' filed · '+esc(shape):'No forecasts filed yet · '+esc(shape))+'</div>';
     return '<div class="qcard'+(active?' live':'')+'"><div class="qhead"><span>'+esc(g?g.label:'Task')+'</span><span class="qshape'+(kind!=='continuous_normal'?' special':'')+'">'+esc(shape)+'</span>'+when+'</div>'
-      +'<h3><a class="qlink" href="#question/'+esc(r.round_id)+'">'+esc(t.label)+'</a>'+(()=>{const o=roundOrdinal(r,data); return o?' <span class="ord">round '+o.n+' of '+o.of+'</span>':'';})()+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
+      +'<h3><a class="qlink" href="#question/'+esc(r.round_id)+'">'+esc(t.label)+'</a>'+(()=>{const o=roundOrdinal(r,data); return o?' <span class="ord">question '+o.n+' of '+o.of+'</span>':'';})()+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
       +'<div class="qfoot"><span class="qid">Source '+(t.srcUrl?'<a class="src" href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span>'+esc(t.population)+'</span><a class="go" href="#question/'+esc(r.round_id)+'">open question →</a><a class="go" href="#leaderboard/'+taskKeyForRound(r)+'/all">open task →</a></div>'
       // Where this question sits in the season: its week, as a link to that week's set, and its id, which the search box also matches.
       +(r.batch_id?'<div class="qref"><a href="#questions/'+esc(r.batch_id)+'" title="Every question in this week\'s set">week of '+esc(fmtDate(r.batch_id.replace('batch-','')))+'</a></div>':'')+'</div>';

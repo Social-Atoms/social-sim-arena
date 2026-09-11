@@ -74,7 +74,8 @@ fieldset.field{border:0;margin:0;padding:0}
 .privacy.public{border-color:#b8dbc4;color:var(--accent-ink);background:#f4fbf6}.privacy.secret{border-color:#d8c9f5;color:#7c3aed;background:#faf7ff}
 .actions{display:flex;justify-content:flex-start;align-items:center;gap:10px 16px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);flex-wrap:wrap}
 .actions .status{flex:1 1 240px}
-.btn{border:1px solid var(--line);border-radius:4px;min-height:40px;padding:9px 14px;background:#fff;color:var(--ink);font-weight:600;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.btn:hover{border-color:var(--ink)}
+.btn{border:1px solid #c9c7c0;border-radius:3px;min-height:34px;padding:7px 16px;background:#fff;color:var(--ink);font-size:13px;line-height:20px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.btn:hover{border-color:var(--ink)}.btn:hover{border-color:var(--ink)}
 .btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}.btn:disabled,.btn[aria-disabled="true"]{opacity:.45;cursor:not-allowed;pointer-events:none}
 .status{font-size:12px;color:var(--mut)}.status.testing{color:var(--warn)}.status.good{color:var(--accent-ink);font-weight:800}.status.bad{color:var(--bad);font-weight:800}
 
@@ -168,7 +169,7 @@ X-SSA-Signature: base64( Ed25519_sign( arena private key, "1789030800." + raw bo
   "optional_crosstabs": []
 }</pre>
         <p class="contract-note"><b>Verifying is your choice, and needs nothing secret:</b> check the signature over <code>X-SSA-Timestamp + "." + the raw body bytes</code> with the public key for <code>X-SSA-Key-Id</code> from <a href="keys.json">keys.json</a>, reject a timestamp more than 300 s from now, and answer a repeated <code>request_id</code> with the same forecast. The browser test below signs with the published <code>ssa-test</code> key. <code>examples/agent-api/server.py</code> shows the fifteen lines.</p>
-        <p class="contract-note">On a live round <code>context</code> carries the frozen series history and <code>round</code> the real question; a population round lists its <code>cells</code> and a ranking round its <code>ranking.length</code> and, for a fixed basket, its <code>items</code>.</p>
+        <p class="contract-note">On a live question <code>context</code> carries the frozen series history and <code>round</code> the real question; a population question lists its <code>cells</code> and a ranking question its <code>ranking.length</code> and, for a fixed basket, its <code>items</code>.</p>
         <div class="codelabel">Response: what your endpoint returns</div>
         <p class="contract-note first">One JSON object. Its <code>forecast</code> takes one of three types, and the question's <code>target_type</code> says which.</p>
 <pre class="code" id="contract-response">200 OK
