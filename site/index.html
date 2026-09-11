@@ -221,11 +221,13 @@ table.lb{width:100%;border-collapse:collapse;font-size:14.5px;table-layout:fixed
 table.lb col.rank-col{width:34px;}
 table.lb col.score-col{width:56px;}
 table.lb col.loss-col{width:58px;}
-table.lb col.rounds-col{width:74px;}
+table.lb col.rounds-col{width:78px;}
 table.lb th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);font-weight:700;text-align:left;padding:8px;border-bottom:none;box-shadow:0 1px 0 var(--line);position:sticky;top:0;background:#fff;z-index:2;}
 table.lb td{padding:10px 8px;border-bottom:1px solid #eeede9;vertical-align:middle;}
 table.lb tr:last-child td{border-bottom:none;}
 table.lb td.num,table.lb th.num{text-align:right;font-variant-numeric:tabular-nums;}
+table.lb th.num{font-size:10.5px;letter-spacing:.04em;}
+table.lb th:last-child,table.lb td:last-child{padding-right:14px;}
 table.lb .rank{color:var(--mut);width:30px;padding-right:6px;font-variant-numeric:tabular-nums;}
 table.lb .who{display:flex;align-items:center;gap:9px;}
 table.lb .who>span:last-child{min-width:0;overflow-wrap:anywhere;}
@@ -1553,10 +1555,8 @@ function aggChart(traj, nameOf, unit){
   traj.forEach(t => series.forEach(s => { const v=val(t,s); if(v!=null){ lo=Math.min(lo,v); hi=Math.max(hi,v);} }));
   // Fit the chosen models, including scores below the persistence baseline.
   // A fixed -30 floor clipped most of a weak model's curve when selected alone.
-  // The floor is one persistence-worth below zero: an entrant's first question can be far worse, and drawing it
-  // to scale would flatten every other line; below the floor a line runs along the edge.
-  if(unit==='skill'){ lo=Math.max(Math.min(lo,0),-1); hi=Math.max(hi,0); }
-  if(unit==='arena'){ lo=Math.max(Math.min(lo,0),-100); hi=Math.max(hi,100); }
+  if(unit==='skill'){ lo=Math.min(lo,0); hi=Math.max(hi,0); }
+  if(unit==='arena'){ lo=Math.min(lo,0); hi=Math.max(hi,100); }
   const pad=(hi-lo)*0.08||0.05; lo-=pad; hi+=pad;
   const X = i => P.l + i/(traj.length-1)*(W-P.l-P.r);
   const Y = v => P.t + (hi-v)/(hi-lo)*(H-P.t-P.b);
@@ -2029,9 +2029,10 @@ function liveTrajectory(data,key){
   scoredRounds(data,key).forEach(r=>{
     Object.entries(r.scores).forEach(([id,sc])=>{ if(typeof sc.skill!=='number') return; sum[id]=(sum[id]||0)+sc.skill; n[id]=(n[id]||0)+1; if(typeof sc.crps==='number'){ csum[id]=(csum[id]||0)+sc.crps; cn[id]=(cn[id]||0)+1; } });
     if(typeof r.persistence_crps==='number'){ csum.persistence=(csum.persistence||0)+r.persistence_crps; cn.persistence=(cn.persistence||0)+1; }
+    // A line starts at an entrant's second scored question: a running mean of one question is that question's luck.
     const skills={},crps={};
-    Object.keys(sum).forEach(id=>{ skills[id]=sum[id]/n[id]; });
-    Object.keys(csum).forEach(id=>{ crps[id]=csum[id]/cn[id]; });
+    Object.keys(sum).forEach(id=>{ if(n[id]>=2) skills[id]=sum[id]/n[id]; });
+    Object.keys(csum).forEach(id=>{ if(id==='persistence'||cn[id]>=2) crps[id]=csum[id]/cn[id]; });
     out.push({date:resolvedAt(r).slice(0,10), skills, crps:Object.keys(crps).length?crps:null, n:out.length+1, live:true});
   });
   return out;
