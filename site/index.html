@@ -664,7 +664,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 </style>
 <script defer src="panels.js?v=91f5d3557c"></script>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=18">
+<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=20">
 </head>
 <body class="site-home">
 
@@ -686,7 +686,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
     </div>
   </div>
 </nav>
-<script>/* On a phone the six tabs scroll sideways; the current one is brought into view. */document.querySelectorAll(".page-tabs a.on").forEach(a=>a.scrollIntoView({inline:"center",block:"nearest"}));</script>
+<script>/* On a phone the six tabs scroll sideways: the current one is brought into view, and the row fades on whichever side has more. */(function(){const row=document.querySelector(".page-tabs");if(!row)return;document.querySelectorAll(".page-tabs a.on").forEach(a=>a.scrollIntoView({inline:"center",block:"nearest"}));const edges=()=>{row.classList.toggle("at-start",row.scrollLeft<=1);row.classList.toggle("at-end",row.scrollLeft+row.clientWidth>=row.scrollWidth-1);};row.addEventListener("scroll",edges,{passive:true});window.addEventListener("resize",edges);edges();})();</script>
 
 </header>
 

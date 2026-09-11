@@ -253,7 +253,8 @@ nav.site-nav .brand .by { color: var(--mut); font-size: 11.5px; font-weight: 400
 nav.site-nav .page-tabs { display: flex; align-items: center; gap: 2px; flex: 1 1 auto; min-width: 0; }
 nav.site-nav .page-tabs .item { display: inline-flex; align-items: center; color: var(--ink2); font: 400 13.5px/1.4 var(--font-mono); text-decoration: none; white-space: nowrap; }
 nav.site-nav .page-tabs .ptab + .nav-live { margin-left: auto; }
-nav.site-nav .page-tabs .nav-live + .item, nav.site-nav .page-tabs .item + .item { margin-left: 16px; }
+/* The right-hand group at one rhythm: 18px between Live, the three links and the call to action (the .in gap). */
+nav.site-nav .page-tabs .nav-live + .item, nav.site-nav .page-tabs .item + .item { margin-left: 18px; }
 nav.site-nav .page-tabs .item:hover { color: var(--accent-ink); }
 nav.site-nav .page-tabs .item.on { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
 nav.site-nav .ptab {
@@ -274,7 +275,7 @@ nav.site-nav .ptab {
 nav.site-nav .ptab:hover { background: #f5f6f5; color: var(--ink); }
 nav.site-nav .ptab.on { background: var(--ink); color: #fff; }
 /* The live light: the arena is running. It sits with the secondary links, ahead of Background. */
-nav.site-nav .nav-live, nav.site-nav .page-tabs a.nav-live { text-decoration: none; display: inline-flex; align-items: center; gap: 6px; color: var(--accent-ink); font-weight: 800; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; margin-right: 2px; }
+nav.site-nav .nav-live, nav.site-nav .page-tabs a.nav-live { text-decoration: none; display: inline-flex; align-items: center; gap: 6px; color: var(--accent-ink); font-weight: 800; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
 .livedot { width:7px;height:7px;border-radius:50%;background:var(--accent);flex:0 0 auto;animation:breathe 3.6s ease-in-out infinite; }
 @keyframes breathe{0%{box-shadow:0 0 0 0 rgba(21,128,61,.22);opacity:1; }50%{opacity:.75; }70%{box-shadow:0 0 0 4px rgba(21,128,61,0); }100%{box-shadow:0 0 0 0 rgba(21,128,61,0);opacity:1; }}
 @media(prefers-reduced-motion:reduce){.livedot { animation:none; }}
@@ -323,10 +324,13 @@ nav.site-nav :is(a, button):focus-visible { outline: 2px solid var(--ink2); outl
   nav.site-nav .by, nav.site-nav .page-tabs a.nav-live { display: none; }
   nav.site-nav .right { display: contents; }
   nav.site-nav .right a.cta { order: 2; margin-left: auto; padding: 10px 0 10px 10px; font-size: 13px; }
-  nav.site-nav .page-tabs { display: flex; order: 3; flex: 0 0 100%; width: 100%; gap: 6px; margin: 4px -12px 0; padding: 0 12px 8px; box-sizing: content-box; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-padding: 12px; }
+  nav.site-nav .page-tabs { display: flex; order: 3; flex: 0 0 100%; width: 100%; gap: 8px; margin: 4px -12px 0; padding: 0 12px 8px; box-sizing: content-box; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-padding: 12px; }
   nav.site-nav .page-tabs::-webkit-scrollbar { display: none; }
-  nav.site-nav .page-tabs { mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
-  nav.site-nav .page-tabs a { flex: 0 0 auto; margin: 0; min-height: 36px; padding: 0 14px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink2); font: 600 13.5px/1.2 var(--font-mono); text-decoration: none; display: inline-flex; align-items: center; }
+  /* The row fades on the side that has more to show: both when in the middle, one at either end, none when it all fits. */
+  nav.site-nav .page-tabs { --fade-l: 28px; --fade-r: 28px; mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent); -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent); }
+  nav.site-nav .page-tabs.at-start { --fade-l: 0px; }
+  nav.site-nav .page-tabs.at-end { --fade-r: 0px; }
+  nav.site-nav .page-tabs a { flex: 0 0 auto; margin: 0; min-height: 36px; padding: 0 14px; scroll-margin: 12px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink2); font: 600 13.5px/1.2 var(--font-mono); text-decoration: none; display: inline-flex; align-items: center; }
   nav.site-nav .page-tabs .ptab.on, nav.site-nav .page-tabs .item.on { background: var(--ink); border-color: var(--ink); color: #fff; text-decoration: none; }
 }
 }
