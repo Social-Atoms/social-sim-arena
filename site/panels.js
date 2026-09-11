@@ -11,7 +11,7 @@
 
   function defaults(width) {
     // The chart is the page; the board gets a quarter of the width and never more than 400px.
-    return {tasks: clamp(width * .18, MIN.tasks, 252), board: clamp(width * .25, MIN.board, 440)};
+    return {tasks: clamp(width * .18, MIN.tasks, 252), board: clamp(width * .28, MIN.board, 470)};
   }
 
   // Shrink both side panels proportionally only when the viewport needs it.

@@ -40,10 +40,10 @@ main{flex:1 1 auto;min-height:0;display:flex;width:100%;margin:0 auto;}
 
 /* LIVE: task map left, evidence in the middle, leaderboard right */
 #page-leaderboard{--panel-head-top:10px;--panel-title-size:14px;--panel-title-line:28px;}
-#page-leaderboard.on{display:grid;grid-template-columns:var(--task-width,clamp(180px,18vw,252px)) 8px minmax(320px,1fr) 8px var(--board-width,clamp(360px,26vw,440px));grid-template-rows:minmax(0,1fr);}
-#page-leaderboard.tasks-collapsed{grid-template-columns:44px 0 minmax(320px,1fr) 8px var(--board-width,clamp(360px,26vw,440px));}
+#page-leaderboard.on{display:grid;grid-template-columns:var(--task-width,clamp(180px,18vw,252px)) 8px minmax(320px,1fr) 8px var(--board-width,clamp(360px,28vw,470px));grid-template-rows:minmax(0,1fr);}
+#page-leaderboard.tasks-collapsed{grid-template-columns:44px 0 minmax(320px,1fr) 8px var(--board-width,clamp(360px,28vw,470px));}
 /* The task tree left the page: the title is a picker (search, categories, counts), and the chart takes the column. */
-#page-leaderboard.on,#page-leaderboard.tasks-collapsed{grid-template-columns:minmax(320px,1fr) 8px var(--board-width,clamp(360px,26vw,440px));}
+#page-leaderboard.on,#page-leaderboard.tasks-collapsed{grid-template-columns:minmax(320px,1fr) 8px var(--board-width,clamp(360px,28vw,470px));}
 #page-leaderboard .tasknav,#page-leaderboard [data-panel-resizer="tasks"]{display:none;}
 .task-picker{position:relative;display:block;}
 .task-trigger{display:inline-flex;align-items:center;gap:6px;margin:0;padding:0 4px 0 0;border:0;border-radius:3px;background:none;color:inherit;font:inherit;cursor:pointer;}
@@ -240,7 +240,7 @@ table.lb col.score-col{width:40px;}
 table.lb col.loss-col{width:44px;}
 table.lb col.rounds-col{width:50px;}
 table.lb th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);font-weight:700;text-align:left;padding:8px;border-bottom:none;box-shadow:0 1px 0 var(--line);position:sticky;top:0;background:#fff;z-index:2;}
-table.lb td{padding:7px 4px;border-bottom:1px solid #eeede9;vertical-align:middle;}
+table.lb td{padding:9px 4px;border-bottom:1px solid #eeede9;vertical-align:middle;}
 table.lb tr:last-child td{border-bottom:none;}
 table.lb td.num,table.lb th.num{text-align:right;font-variant-numeric:tabular-nums;}
 table.lb th.num{font-size:10px;letter-spacing:0;}
@@ -662,7 +662,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 </style>
 <script defer src="panels.js?v=91f5d3557c"></script>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=9">
+<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=10">
 </head>
 <body class="site-home">
 
