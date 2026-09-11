@@ -230,7 +230,6 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .lbcol .lbhead h2{margin:0;font-size:18px;line-height:26px;font-weight:800;color:var(--ink);letter-spacing:.03em;flex:1 1 200px;overflow-wrap:anywhere;}
 .lbcol .lbhead h2 span#lb-title{display:none;}   /* the task is named at the left already; the word alone heads the board */
 .lbhead .seg{flex-wrap:wrap;}
-.lbcol .lbview{flex:0 0 auto;padding:0 16px 8px;}
 .lbcol .scroll{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-gutter:stable;padding:0 2px 0 6px;}
 .lbcol .scroll::-webkit-scrollbar{width:8px;}
 .lbcol .scroll::-webkit-scrollbar-thumb{background:#c9c7c0;border-radius:4px;}
@@ -753,7 +752,6 @@ table.ent td a.row{color:inherit;text-decoration:none;}
         <h2 class="has-help" id="lb-how"><b>Leaderboard</b> <span id="lb-title">Overall</span><span class="th-help" id="lb-note" role="tooltip"></span></h2>
         <div class="task-live"><time id="data-updated" title="Data refreshed every 6 hours"></time></div>
       </div>
-      <div class="lbview"><div class="seg mini" id="view-seg" role="group" aria-label="Which rows the board lists"><button data-view="standard" class="on">Standard<span class="th-help" role="tooltip">One row per model, in its standard setup (web+sfc where it exists), for entrants that filed in the last two weeks, and persistence as the reference.</span></button><button data-view="all">Everyone<span class="th-help" role="tooltip">Every setup, every baseline, and the entrants that have retired or stopped filing.</span></button></div></div>
       <div class="scroll">
         <table class="lb">
           <colgroup><col class="rank-col"><col><col class="score-col"><col class="loss-col"><col class="rounds-col"></colgroup>
@@ -1428,7 +1426,7 @@ function pickerFilterOptions(){
   const retired = infos.filter(m=>m.retired).length;
   return {
     setup: [{value:'all',label:'All setups',count:infos.length}].concat(SETUPS.filter(([k])=>bySetup[k]).map(([k,l])=>({value:k,label:l,count:bySetup[k]}))),
-    status: [{value:'active',label:'Active',count:infos.length-retired},{value:'retired',label:'Retired',count:retired},{value:'all',label:'Everyone',count:infos.length}]
+    status: [{value:'active',label:'Active',count:infos.length-retired},{value:'retired',label:'Retired',count:retired},{value:'all',label:'All',count:infos.length}]
   };
 }
 function renderPickerFilters(){
@@ -1478,7 +1476,7 @@ function ensureModelPicker(){
   const strip = document.getElementById('legend-strip');
   const toolbar = document.getElementById('model-toolbar'), controls = document.getElementById('chart-filters');
   strip.innerHTML = '<div class="model-chips" id="model-chips" role="group" aria-label="Selected chart entrants"></div>';
-  toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop" title="Which entrants the chart draws: every entrant and setup that filed on this task, one line each. The board beside it always lists everyone.">Chart: <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
+  toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop" title="Which entrants the chart draws, one line each; the count is out of the active entrants unless the status filter says otherwise. The board beside it lists the active entrants in their standard setup.">Chart: <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
     + '<button type="button" class="model-action" id="model-reset" title="Show the top 6 entrants and EWMA">Reset</button>'
     + '<section class="model-pop" id="model-pop" aria-label="Choose chart entrants" hidden>'
     + '<div class="model-search-row"><input type="search" id="model-search" placeholder="Search entrants or labs" aria-label="Search entrants or labs" autocomplete="off">'
@@ -1557,8 +1555,13 @@ function renderLegend(ids, nameOf){
   modelPicker.ids = [...new Set(ids||[])]; modelPicker.nameOf = nameOf||{};
   const hidden = coerceUnknown(modelPicker.ids), selected = modelPicker.ids.filter(id=>!hidden.has(id));
   strip.style.display=''; toolbar.style.display='';
-  // The count says what the picker governs: the lines on the chart, never the board's rows.
-  document.getElementById('model-selected-count').textContent = modelPicker.ids.length ? selected.length+' of '+modelPicker.ids.length+' entrants' : 'no entrants';
+  // The count says what the picker governs: the lines on the chart, out of the entrants under the
+  // status filter (the active ones by default; every id when no model is active, as in a pure backtest).
+  const data=window.__data||{}, st=modelPicker.status||'all';
+  let pool = st==='all' ? modelPicker.ids : modelPicker.ids.filter(id=>(st==='retired')===!!entrantState(id,data));
+  if(!pool.some(id=>!isBaseline(id)&&id!=='crowd')) pool = modelPicker.ids;
+  const drawn = selected.filter(id=>pool.includes(id)).length;
+  document.getElementById('model-selected-count').textContent = modelPicker.ids.length ? drawn+' of '+pool.length+' entrants' : 'no entrants';
   const chips = document.getElementById('model-chips'), key=JSON.stringify([modelPicker.ids.length, selected.map(id=>[id,modelPicker.nameOf[id]])]);
   if(key!==modelPicker.chipKey){
     modelPicker.chipKey = key;
@@ -2252,13 +2255,10 @@ function renderBoard(mode){
   (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; });
   const btMap = {}; ((data.backtest&&data.backtest.overall)||[]).forEach(e=>btMap[e.entrant]=e);
   let entries=[],metricKey='mean_crps',metricLabel='CRPS',title=d.label,tag='',note='',appendPending=false,replay=false;
-  const view=window.__boardView||'standard', standard=view==='standard';
-  document.querySelectorAll('#view-seg button').forEach(b=>b.classList.toggle('on',b.dataset.view===view));
   const liveRows=liveBoard(data,key,mode); window.__scoredN=liveRows.length?scoredInWindow(data,key,mode):0;
   if(key==='agg' && liveRows.length){
-    entries=standard?standardRows(liveRows,data):liveRows; appendPending=!standard; title='Overall standings'; tag='live';
-    note=standard?'Season 0, every number question. One row per model in its standard setup, for entrants that filed in the last two weeks, and persistence as the reference; the score is the mean over the resolved questions it answered in this window, and the Questions column says how many of them. Everyone lists every setup, the other baselines, the crowd and the retired.'
-      :'Season 0, every number question, everyone: every setup, every baseline, and the entrants that have retired or stopped filing. Each row is its mean over the resolved questions it answered in this window.';
+    entries=standardRows(liveRows,data); title='Overall standings'; tag='live';
+    note='Season 0, every number question. One row per model in its standard setup, for entrants that filed in the last two weeks, and persistence as the reference; the score is the mean over the resolved questions it answered in this window, and the Questions column says how many of them.';
   }else if(key==='agg'){
     const spans=(data.backtest&&data.backtest.spans)||{};
     entries=spans[mode]||(data.backtest&&data.backtest.overall)||[];appendPending=true;
@@ -2275,8 +2275,8 @@ function renderBoard(mode){
     if(live.length){entries=live;metricKey='mean_loss';metricLabel='Loss';tag='live';note=(data.ranking||{}).note||'';}
     else{entries=rankingReplay(d,data);metricLabel='Rank loss';tag='baseline replay';replay=true;note='A ranking replay needs archived historical lists. The UI does not invent one when the published payload has none.';}
   }else if(liveRows.length){
-    entries=standard?standardRows(liveRows,data):liveRows; tag='live';
-    note=standard?'Season 0, this task. One row per model in its standard setup, entrants that filed in the last two weeks, and persistence as the reference; the mean over the resolved questions it answered in this window.':'Season 0, this task, everyone: every setup, every baseline, the crowd, and the retired.';
+    entries=standardRows(liveRows,data); tag='live';
+    note='Season 0, this task. One row per model in its standard setup, entrants that filed in the last two weeks, and persistence as the reference; the mean over the resolved questions it answered in this window.';
   }else{
     const model=(data.backtest&&data.backtest.per_series&&data.backtest.per_series[d.per])||[];
     const base=(data.backtest&&data.backtest.baseline_replay&&data.backtest.baseline_replay.per_series&&data.backtest.baseline_replay.per_series[d.per])||[];
@@ -2887,7 +2887,6 @@ function chartUrlState(){
   const tab = window.__tab || 'agg', p = new URLSearchParams();
   const unit = tab === 'agg' ? (window.__unitAgg || 'arena') : (window.__unitSer || 'arena');
   if(unit !== 'arena') p.set('unit', unit);
-  if((window.__boardView||'standard') !== 'standard') p.set('view', window.__boardView);
   if(window.__data && modelPicker.ids && modelPicker.ids.length){
     const hidden = window.__hidden || new Set(), keep = defaultKeep(window.__data);
     const now = modelPicker.ids.filter(id => !hidden.has(id)), dflt = modelPicker.ids.filter(id => keep.has(id));
@@ -2925,7 +2924,6 @@ function applyHash(){
     const span = SPAN_KEYS.includes(parts[2]) ? parts[2] : 'all';
     window.__board = span; if(typeof setRange==='function') setRange(SPAN_TO_RANGE[span]||0);
     const unit = q.get('unit');
-    window.__boardView = q.get('view')==='all' ? 'all' : 'standard';
     if(['arena','crps','level'].includes(unit)){ window.__unitAgg = unit === 'level' ? 'arena' : unit; window.__unitSer = unit; }
     window.__urlEntrants = q.get('entrants') ? q.get('entrants').split(',').filter(Boolean) : null;
   }
@@ -3022,9 +3020,6 @@ function setRange(months){
 document.querySelectorAll('#range-seg button').forEach(b=> b.onclick = ()=>{
   setRange(Number(b.dataset.range));
   if(window.__data){ setTab(window.__tab||'agg'); renderBoard(RANGE_TO_SPAN[window.__range]||'all'); }
-});
-document.querySelectorAll('#view-seg button').forEach(b=> b.onclick = ()=>{
-  window.__boardView = b.dataset.view; renderBoard(window.__board || 'all'); if(typeof syncHash==='function') syncHash();
 });
 document.querySelectorAll('#unit-seg button').forEach(b=> b.onclick = ()=>{
   const tab = window.__tab || 'agg';

@@ -54,7 +54,7 @@ assert.equal(f.doc.activeElement, f.els['model-search']);
 assert.match(f.options.innerHTML, /<legend>Baselines/);
 // The backtest roster is entirely retired by now; the status dropdown opens the whole list.
 f.api.setPickerFilter('status','all');
-assert.match(f.els['model-filters'].innerHTML, /Everyone/);
+assert.match(f.els['model-filters'].innerHTML, /All/);
 assert.match(f.options.innerHTML, /recent-10/);
 assert.match(f.options.innerHTML, /zero-shot/);
 assert.match(f.options.innerHTML, /model-retired/);
