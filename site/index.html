@@ -109,7 +109,13 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .taskhead{padding:var(--panel-head-top) 16px 8px;border-bottom:1px solid #efefec;flex:0 0 auto;}
 .taskhead .eyebrow{font-size:var(--panel-title-size);line-height:var(--panel-title-line);letter-spacing:.1em;text-transform:uppercase;color:var(--mut);font-weight:800;}
 .taskhead h2,.site-home .page .taskhead h2.page-title{margin:2px 0 4px;color:var(--ink);font-size:21.5px;line-height:1.25;}   /* the page's one title: a step above the rest, not a headline; outranks the page-title scale */
-.taskmeta{display:flex;flex-wrap:wrap;gap:5px 12px;color:var(--mut);font-size:12.5px;}
+.taskmeta{display:flex;flex-wrap:nowrap;gap:5px 12px;color:var(--mut);font-size:12.5px;}
+.taskmeta .mi{display:flex;align-items:baseline;gap:5px;min-width:0;flex:0 1 auto;white-space:nowrap;}
+.taskmeta .mi>b,.taskmeta .mi .numeric,.taskmeta .mi a.go{flex:none;}
+.taskmeta .mi.mq{flex:none;}
+.taskmeta .val{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.taskmeta .val.w-pop{max-width:220px;}.taskmeta .val.w-cad{max-width:280px;}.taskmeta .val.w-src{max-width:150px;}
+@media(max-width:600px){.taskmeta{flex-wrap:wrap;}}
 .taskmeta b{color:var(--ink2);font-weight:700;}
 .taskmeta a.go{color:var(--link);font-weight:700;text-decoration:none;margin-left:14px;}
 .taskmeta a.go:hover{text-decoration:underline;text-underline-offset:2px;}
@@ -1797,16 +1803,18 @@ function renderTaskHeader(data,key){
   const helpOf={population:'The people the released number describes. Every question on this task is about them.',
     answer:'What a question on this task asks for: a number with an uncertainty range, a profile (one number per cell), or a ranked list.',
     cadence:'How often the source publishes, so how often a question on this task closes.',
-    source:'Who publishes the released number, as they define it (a net figure is approve minus disapprove, so it can be negative). The link on the right is the arena\'s own reader for this source in the repository: the exact field, its dates, the archive and the checks.',
+    source:'Who publishes the number, as they define it: a net figure is approve minus disapprove and can be negative. "code" is the arena\'s reader for this source in the repository: the field, its dates, the archive, the checks.',
     questions:rs.length+' asked this season, '+active.length+' open now.'};
   const lab=(k,text)=>'<b class="has-help" tabindex="0">'+text+'<span class="th-help" role="tooltip">'+esc(helpOf[k])+'</span></b>';
   const chip=t=>'<span class="shape">'+esc(t)+'</span>';
   const answers = key==='agg' ? ['number','profile','ranking'] : [d.kind==='ranking' ? 'ranking' : d.kind==='profile' ? 'profile'+(d.cells ? ' · '+d.cells.length+' cells' : '') : 'number'];
-  document.getElementById('task-meta').innerHTML = '<span>'+lab('population','Population')+' '+esc(d.population)+'</span>'
-    +'<span>'+lab('answer','Question type')+' '+answers.map(chip).join('')+'</span>'
-    +(key==='agg' ? '' : '<span>'+lab('cadence','Cadence')+' '+esc(cadence)+'</span>')
-    +(key==='agg' || !d.srcName ? '' : '<span>'+lab('source','Source')+' '+(d.srcUrl?'<a href="'+esc(d.srcUrl)+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>':esc(d.srcName))+(SOURCE_READER[key]?'<a class="go" href="https://github.com/Social-Atoms/social-sim-arena/blob/main/'+SOURCE_READER[key]+'" target="_blank" rel="noopener">how it is read →</a>':'')+'</span>')
-    +'<span>'+lab('questions','Questions')+' <span class="numeric">'+rs.length+'</span><a class="go" href="'+(key==='agg'?'#questions':'#questions/task/'+esc(key))+'">'+(key==='agg'?'see all questions':'see all rounds')+' →</a></span>';
+  // One line: every value can shrink to an ellipsis (the full text is in its title), the labels and the link never do.
+  const val=(t,cap)=>'<span class="val '+cap+'" title="'+attr(t)+'">'+esc(t)+'</span>';
+  document.getElementById('task-meta').innerHTML = '<span class="mi">'+lab('population','Population')+val(d.population,'w-pop')+'</span>'
+    +'<span class="mi">'+lab('answer','Question type')+'<span class="val">'+answers.map(chip).join('')+'</span></span>'
+    +(key==='agg' ? '' : '<span class="mi">'+lab('cadence','Cadence')+val(cadence,'w-cad')+'</span>')
+    +(key==='agg' || !d.srcName ? '' : '<span class="mi">'+lab('source','Source')+'<span class="val w-src" title="'+attr(d.srcName)+'">'+(d.srcUrl?'<a href="'+esc(d.srcUrl)+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>':esc(d.srcName))+'</span>'+(SOURCE_READER[key]?'<a class="go" href="https://github.com/Social-Atoms/social-sim-arena/blob/main/'+SOURCE_READER[key]+'" target="_blank" rel="noopener">code →</a>':'')+'</span>')
+    +'<span class="mi mq">'+lab('questions','Questions')+'<span class="numeric">'+rs.length+'</span><a class="go" href="'+(key==='agg'?'#questions':'#questions/task/'+esc(key))+'">'+(key==='agg'?'see all questions':'see all rounds')+' →</a></span>';
   const card = document.getElementById('task-question-card');
   card.style.display='';
   const r = active[0] || rs.slice(-1)[0];
