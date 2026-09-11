@@ -665,7 +665,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 </style>
 <script defer src="panels.js?v=91f5d3557c"></script>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=80fdc2dcf0">
+<link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=2">
 </head>
 <body class="site-home">
 
@@ -844,11 +844,11 @@ const VENDORS = [
   [/^kimi/, 'kimi', 'Moonshot']
 ];
 const vendorOf = id => { for(const [re,key] of VENDORS) if(re.test(id)) return key; return null; };
-const LOGO_VENDORS = new Set(['claude','openai','gemini','grok','deepseek','qwen','zhipu','kimi']);
+const LOGO_VENDORS = new Set(['claude','openai','gemini','grok','deepseek','qwen','zhipu','kimi','crowd']);   // the crowd wears its own mark, in the site's green
 const vendorName = key => { for(const [,k,n] of VENDORS) if(k===key) return n; return key; };
-const VCOLOR = {claude:'#C87B60', openai:'#3F9581', gemini:'#6B92D4', grok:'#111110', deepseek:'#7783D8', qwen:'#907FD2', zhipu:'#588FBE', kimi:'#4C8A99'};
-const avColor = id => { const v = vendorOf(id); return v ? VCOLOR[v] : '#a8a69e'; };
-const avatar = (id, tone) => { const v = vendorOf(id);
+const VCOLOR = {claude:'#C87B60', openai:'#3F9581', gemini:'#6B92D4', grok:'#111110', deepseek:'#7783D8', qwen:'#907FD2', zhipu:'#588FBE', kimi:'#4C8A99', crowd:'#15803d'};
+const avColor = id => { const v = id==='crowd' ? 'crowd' : vendorOf(id); return v ? VCOLOR[v] : '#a8a69e'; };
+const avatar = (id, tone) => { const v = id==='crowd' ? 'crowd' : vendorOf(id);
   return '<span class="av" style="background:'+(tone||avColor(id))+'" aria-hidden="true">'+(LOGO_VENDORS.has(v)?'<img class="lg" src="logos/'+v+'.svg?r2" onerror="this.remove()" alt="">':'')+esc(initOf(id))+'</span>'; };
 // Every model wears its vendor's hue; siblings inside a family split on
 // lightness, so a vendor reads as one color at a glance and as distinct
@@ -1305,7 +1305,7 @@ function tipShow(tip, ev, html){
 }
 
 // Start with a small comparison, chosen from the published standings.
-const DEFAULT_VISIBLE_MODELS = 6;
+const DEFAULT_VISIBLE_MODELS = 5;   // five models, EWMA and the crowd: seven lines
 const MODEL_SELECTION_KEY = 'ssa.chart-models.v1';
 function defaultKeep(data){
   // The default comparison: the top models on the season's overall board once it has one (the backtest's until then), persistence, EWMA and the crowd. Pure.
@@ -1475,7 +1475,7 @@ function ensureModelPicker(){
   const toolbar = document.getElementById('model-toolbar'), controls = document.getElementById('chart-filters');
   strip.innerHTML = '<div class="model-chips" id="model-chips" role="group" aria-label="Selected chart entrants"></div>';
   toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop" title="Which entrants the chart draws, one line each; the count is out of the active entrants unless the status filter says otherwise. The board beside it lists the active entrants in their standard setup.">Chart: <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
-    + '<button type="button" class="model-action" id="model-reset" title="Show the top 6 entrants, EWMA and the crowd">Reset</button>'
+    + '<button type="button" class="model-action" id="model-reset" title="Show the top 5 entrants, EWMA and the crowd">Reset</button>'
     + '<section class="model-pop" id="model-pop" aria-label="Choose chart entrants" hidden>'
     + '<div class="model-search-row"><input type="search" id="model-search" placeholder="Search entrants or labs" aria-label="Search entrants or labs" autocomplete="off">'
     + '<div class="msel-row" id="model-filters"></div></div>'
@@ -1697,7 +1697,7 @@ function aggChart(traj, nameOf, unit){
     g += `<line x1="${X(traj.length-1)}" x2="${X(traj.length-1)+8}" y1="${Y(last)}" y2="${ly}" stroke="${colorOf(s)}" stroke-width="1" opacity=".5"/>`;
     g += `<circle cx="${X(traj.length-1)}" cy="${Y(last)}" r="3" fill="${colorOf(s)}" stroke="#fff" stroke-width="1.5"/>`;
     g += `<rect x="${X(traj.length-1)+8}" y="${ly-8.5}" width="19" height="17" rx="3" fill="${colorOf(s)}"/>`;
-    const lv = vendorOf(s);
+    const lv = s==='crowd' ? 'crowd' : vendorOf(s);
     if(lv && LOGO_VENDORS.has(lv)){
       g += `<image href="logos/${lv}.svg?r2" x="${X(traj.length-1)+10.5}" y="${ly-6}" width="14" height="12"/>`;
     } else {

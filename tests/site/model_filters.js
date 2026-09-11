@@ -43,9 +43,9 @@ function fixture(storage = new Map(), payload = backtestOnly) {
 
 let f = fixture();
 const selected = f.api.modelPicker.ids.filter(id=>!f.win.__hidden.has(id));
-assert.equal(selected.length, 7, 'default comparison is six entrants and EWMA');
+assert.equal(selected.length, 6, 'default comparison is five entrants and EWMA');
 assert.ok(selected.includes('ewma'));
-assert.equal(f.els['model-selected-count'].textContent, '7 of '+f.api.modelPicker.ids.length+' entrants');
+assert.equal(f.els['model-selected-count'].textContent, '6 of '+f.api.modelPicker.ids.length+' entrants');
 const originalBoard = f.els['lb-body'].innerHTML;
 const originalSelection = [...f.win.__keep];
 f.els['model-trigger'].onclick();
@@ -133,19 +133,19 @@ f = fixture(saved);
 f.api.coerceUnknown(['future-entrant']);
 assert.ok(!f.win.__hidden.has('future-entrant'), 'explicit choices for new entrants persist');
 f.els['model-reset'].onclick();
-assert.equal(f.els['model-selected-count'].textContent, '7 of '+f.api.modelPicker.ids.length+' entrants');
+assert.equal(f.els['model-selected-count'].textContent, '6 of '+f.api.modelPicker.ids.length+' entrants');
 assert.deepEqual(leaks(f.els), []);
 console.log('ok chart updates, empty state, task switching, reset, and selection persistence');
 
 for(const value of ['{broken', '{}', '[123]']) {
   f = fixture(new Map([[storageKey,value]]));
-  assert.equal(f.els['model-selected-count'].textContent, '7 of '+f.api.modelPicker.ids.length+' entrants');
+  assert.equal(f.els['model-selected-count'].textContent, '6 of '+f.api.modelPicker.ids.length+' entrants');
 }
 f = fixture({get(){throw Error('denied');}, set(){throw Error('denied');}});
 f.api.selectModels(['ewma'],false);
 assert.ok(f.win.__hidden.has('ewma'));
 f.api.resetModels();
 assert.ok(!f.win.__hidden.has('ewma'));
-// With the season's scores present, the default comparison is the season's top six active entrants, EWMA and the crowd.
-{ const live = fixture(new Map(), data); const sel = live.api.modelPicker.ids.filter(id=>!live.win.__hidden.has(id)); assert.equal(sel.length, 8, 'the season picks its own default'); assert.ok(sel.includes('ewma')); assert.ok(sel.includes('crowd')); assert.ok(sel.every(id=>!live.win.__data.retired[id])); }
+// With the season's scores present, the default comparison is the season's top five active entrants, EWMA and the crowd.
+{ const live = fixture(new Map(), data); const sel = live.api.modelPicker.ids.filter(id=>!live.win.__hidden.has(id)); assert.equal(sel.length, 7, 'the season picks its own default'); assert.ok(sel.includes('ewma')); assert.ok(sel.includes('crowd')); assert.ok(sel.every(id=>!live.win.__data.retired[id])); }
 console.log('ok malformed and unavailable storage');
