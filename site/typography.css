@@ -248,7 +248,16 @@ nav.site-nav .brand {
 nav.site-nav .brand img { width: 22px; height: 22px; flex: 0 0 22px; }
 nav.site-nav .brand-name { font-size: 16.5px; font-weight: 700; line-height: 1.25; }
 nav.site-nav .brand .by { color: var(--mut); font-size: 11.5px; font-weight: 400; }
-nav.site-nav .page-tabs { display: flex; gap: 2px; }
+/* One container holds all six links. On a desktop it dissolves (display: contents) so the three page tabs
+   sit by the brand and Background / Docs / GitHub sit right, ahead of Live; on a phone it is one swipeable row. */
+nav.site-nav .page-tabs { display: contents; }
+nav.site-nav .ptab + .ptab { margin-left: 2px; }
+nav.site-nav .page-tabs .item { margin-left: 16px; }
+nav.site-nav .page-tabs .ptab + .item { margin-left: auto; }
+nav.site-nav .page-tabs .item { display: inline-flex; align-items: center; color: var(--ink2); font: 400 13.5px/1.4 var(--font-mono); text-decoration: none; white-space: nowrap; }
+nav.site-nav .page-tabs .item:hover { color: var(--accent-ink); }
+nav.site-nav .page-tabs .item.on { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; }
+nav.site-nav .right { margin-left: 16px; }
 nav.site-nav .ptab {
   display: inline-flex;
   align-items: center;
@@ -305,13 +314,10 @@ nav.site-nav :is(a, button):focus-visible { outline: 2px solid var(--ink2); outl
 @media (max-width: 880px) {
   nav.site-nav .in { padding: 8px 12px 6px; gap: 8px 16px; }
   nav.site-nav .brand { flex: 1 1 auto; }
-  nav.site-nav .page-tabs { order: 3; width: 100%; }
-  nav.site-nav .ptab { flex: 1; padding: 6px 12px; font-size: 13px; }
   nav.site-nav .right { gap: 12px; }
 }
-/* A phone: the brand and the one call to action on the first row, the three tabs as equal
-   cells on the second, Background / Docs / GitHub as equal cells on the third. Every target is
-   at least 40px tall. The .right wrapper dissolves so its links can take their own rows. */
+/* A phone: the brand and the one call to action on the first row. Beneath them the six links are peers,
+   one row of equal pills that scrolls sideways (no wrapping into tiers), the current page filled in. */
 @media (max-width: 600px) {
   nav.site-nav .in { padding: 4px 12px 0; gap: 2px 0; }
   nav.site-nav .brand { width: auto; flex: 1 1 auto; min-height: 40px; order: 1; }
@@ -319,10 +325,11 @@ nav.site-nav :is(a, button):focus-visible { outline: 2px solid var(--ink2); outl
   nav.site-nav .by, nav.site-nav .right a.nav-live { display: none; }
   nav.site-nav .right { display: contents; }
   nav.site-nav .right a.cta { order: 2; margin-left: auto; padding: 10px 0 10px 10px; font-size: 13px; }
-  nav.site-nav .page-tabs { order: 3; flex: 0 0 100%; width: 100%; margin: 2px 0 0; }   /* no shrinking, so nothing shares its row */
-  nav.site-nav .ptab { flex: 1 1 0; text-align: center; padding: 10px 4px; font-size: 13px; }
-  nav.site-nav .right a.item { order: 4; flex: 1 1 33.333%; min-width: 0; text-align: center; padding: 10px 0 11px; font-size: 13px; border-top: 1px solid var(--line); margin: 4px 0 0; }   /* a third each: a zero basis would let one squeeze onto the tab row */
-  nav.site-nav .right a.item + a.item { border-left: 1px solid var(--line); }
+  nav.site-nav .page-tabs { display: flex; order: 3; flex: 0 0 100%; width: 100%; gap: 6px; margin: 4px -12px 0; padding: 0 12px 8px; box-sizing: content-box; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-padding: 12px; }
+  nav.site-nav .page-tabs::-webkit-scrollbar { display: none; }
+  nav.site-nav .page-tabs a { flex: 0 0 auto; margin: 0; min-height: 36px; padding: 0 14px; border: 1px solid var(--line); border-radius: 4px; background: #fff; color: var(--ink2); font: 600 13.5px/1.2 var(--font-mono); text-decoration: none; display: inline-flex; align-items: center; }
+  nav.site-nav .page-tabs a.on { background: var(--ink); border-color: var(--ink); color: #fff; text-decoration: none; }
+}
 }
 
 /* Every expander on the site opens with + and closes with -, on every page: no disclosure triangle. */
