@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="brand/readme/ssa-dark.svg" width="120" alt="">
+  <img src="brand/ssa-mark-512-dark.svg" width="120" alt="">
 </p>
 
 <h1 align="center">Social Simulation Arena</h1>
@@ -74,7 +74,7 @@ six hours, resolves what has been published, stamps what has locked, and commits
 
 ## Organizer
 
-<a href="https://github.com/Social-Atoms"><img src="brand/readme/social-atoms-dark.svg" width="72" align="left" alt="Social Atoms"></a>
+<a href="https://github.com/Social-Atoms"><img src="brand/social-atoms/social-atoms-atoms-dark.svg" width="72" align="left" alt="Social Atoms"></a>
 
 Social Simulation Arena is a project initiated by [Social Atoms](https://github.com/Social-Atoms) at MIT, with collaborators from Stanford, Carnegie Mellon, UC Berkeley, UCSD, Harvard, UBC, Northeastern, and beyond.
 

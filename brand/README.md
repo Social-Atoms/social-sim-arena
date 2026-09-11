@@ -13,11 +13,10 @@ A single tapered line with one fold, thin where it starts and heavy where it end
 | `ssa-mark-32-dark.svg`, `ssa-mark-16-dark.svg` | heavier cuts for favicon sizes (the line thickens as the tile shrinks) |
 | `png/ssa-mark-{1024,512,192,32}.png` | raster exports of the dark master (GitHub avatar, app icons, favicon fallback) |
 | `png/ssa-mark-512-light.png` | raster export of the light master |
-| `readme/{ssa,social-atoms}-dark.svg` | the two marks as the README shows them: the ink tile in every colour scheme, like the org avatar, corners rounded (112/512) because GitHub does not round them |
 
 ## Rules
 
-Square tile in the masters; platforms round the corners. The 64 cut carries a 14-unit radius because the site header does not round it. Paper `#efece4`, ink `#141416`, green `#22c55e` on ink and `#15803d` on paper. Nothing else: no gradients, no text inside the mark, no second accent. Each size is its own cut (512, 64, 32, 16): the line gets thicker and the point larger as the tile shrinks, so the mark stays readable as a favicon. Do not redraw the geometry by hand; the drafts and the generator live in the Social Atoms brand folder (`ssa/drafts/r9`, family `q-deep`).
+Square tile in the masters; platforms round the corners. The README shows the square masters as they are (the ink tile in every colour scheme, like the org avatar). Only icon-sized uses carry their own radius: the 64 cut has a 14-unit one because the site header does not round it. Paper `#efece4`, ink `#141416`, green `#22c55e` on ink and `#15803d` on paper. Nothing else: no gradients, no text inside the mark, no second accent. Each size is its own cut (512, 64, 32, 16): the line gets thicker and the point larger as the tile shrinks, so the mark stays readable as a favicon. Do not redraw the geometry by hand; the drafts and the generator live in the Social Atoms brand folder (`ssa/drafts/r9`, family `q-deep`).
 
 Rasters were exported with macOS QuickLook (`qlmanage -t -s <size>`); re-export after any change to the masters.
 
