@@ -13,6 +13,7 @@ A single tapered line with one fold, thin where it starts and heavy where it end
 | `ssa-mark-32-dark.svg`, `ssa-mark-16-dark.svg` | heavier cuts for favicon sizes (the line thickens as the tile shrinks) |
 | `png/ssa-mark-{1024,512,192,32}.png` | raster exports of the dark master (GitHub avatar, app icons, favicon fallback) |
 | `png/ssa-mark-512-light.png` | raster export of the light master |
+| `readme/{ssa,social-atoms}-{dark,light}.svg` | the two marks for the README's `<picture>`: the dark tile under a dark scheme, the paper tile under a light one; corners rounded (112/512) because GitHub does not round them |
 
 ## Rules
 
@@ -24,5 +25,5 @@ Rasters were exported with macOS QuickLook (`qlmanage -t -s <size>`); re-export 
 
 | Folder | What | Source |
 | --- | --- | --- |
-| `social-atoms/` | the Social Atoms atoms mark (three discs on ink), the organizer's mark in the README | a copy of the master in the Social Atoms brand folder; do not edit here |
+| `social-atoms/` | the Social Atoms atoms mark (three discs on ink, and its paper twin), the organizer's mark in the README | copies of the masters in the Social Atoms brand folder; do not edit here |
 | `contributors/` | one round avatar per contributor (`<login>.svg`), the wall in the README, each linked to its profile | drawn by `python -m tools.contributors_wall` from the GitHub roster, avatars embedded, bots left out; the tool also rewrites the README block |
