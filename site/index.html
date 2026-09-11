@@ -1289,8 +1289,13 @@ const DEFAULT_VISIBLE_MODELS = 6;
 const MODEL_SELECTION_KEY = 'ssa.chart-models.v1';
 function defaultKeep(data){
   // The default comparison: the top models on the season's overall board once it has one (the backtest's until then), persistence and EWMA. Pure.
+  // In the season, only entrants with a real record qualify for the default (at least half as many
+  // resolved questions as the most-answered entrant), so the opening chart is the established field, not a
+  // lucky first week.
   const live = (data && data.rounds) ? liveBoard(data,'agg','all') : [];
-  const board = live.length ? live : (((data||{}).backtest||{}).overall || []);
+  const models = live.filter(r=>!isBaseline(r.entrant) && r.entrant!=='crowd');
+  const floor = models.length ? Math.ceil(Math.max(...models.map(r=>r.rounds))/2) : 0;
+  const board = live.length ? live.filter(r=>r.rounds>=floor) : (((data||{}).backtest||{}).overall || []);
   const keep = new Set(['persistence','ewma']);
   let n = 0;
   for(const row of board){
@@ -1514,8 +1519,10 @@ function aggChart(traj, nameOf, unit){
   const universe = trajIds(traj);
   const mocks = universe.filter(id=>!isBaseline(id)&&id!=='crowd');
   const hiddenA = coerceUnknown(universe);
-  const arenaAt = (t,s) => (t.crps && t.crps[s]!=null && t.crps.persistence!=null)
-      ? arenaOf(t.crps[s], t.crps.persistence) : null;
+  // On the season's trajectory the arena value is the board's own number, a hundred times the entrant's mean
+  // per-question skill; a ratio of pooled CRPS would compare an entrant's questions with persistence's over every question.
+  const arenaAt = (t,s) => t.live ? (t.skills && t.skills[s]!=null ? 100*t.skills[s] : null)
+      : (t.crps && t.crps[s]!=null && t.crps.persistence!=null) ? arenaOf(t.crps[s], t.crps.persistence) : null;
   const val0 = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null)
       : unit==='arena' ? arenaAt(t,s) : t.skills[s];
   // Only entrants the data actually scores. Falling back to 0 for a missing
@@ -2025,7 +2032,7 @@ function liveTrajectory(data,key){
     const skills={},crps={};
     Object.keys(sum).forEach(id=>{ skills[id]=sum[id]/n[id]; });
     Object.keys(csum).forEach(id=>{ crps[id]=csum[id]/cn[id]; });
-    out.push({date:resolvedAt(r).slice(0,10), skills, crps:Object.keys(crps).length?crps:null, n:out.length+1});
+    out.push({date:resolvedAt(r).slice(0,10), skills, crps:Object.keys(crps).length?crps:null, n:out.length+1, live:true});
   });
   return out;
 }
