@@ -383,6 +383,15 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 .qcard h3 a.qlink:hover{text-decoration:underline;text-underline-offset:3px;}
 #question-col .qstrip{min-height:82px;margin:0;}
 #question-col .qstrip svg{display:block;width:100%;height:82px;overflow:visible;}
+.strip-legend{display:flex;flex-wrap:wrap;gap:3px 14px;margin-top:4px;font-size:11px;color:var(--mut);}
+.strip-legend span{display:inline-flex;align-items:center;gap:5px;}
+.strip-legend svg{width:14px;height:12px;overflow:visible;flex:none;}
+.qstrip [data-tip]{cursor:default;}
+.qstrip circle.hl{fill-opacity:1;stroke:#15803d;stroke-width:1.8;}
+.qstrip rect.hl{fill-opacity:1;}
+#question-col table.ent tr.link.hl td{background:#f4faf6;}
+#question-col table.ent tr.link .row:hover .q{text-decoration:underline;text-underline-offset:2px;}
+#strip-tip{position:fixed;}
 .qcard .qref{margin-top:6px;font-size:10.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .qcard .qref a{color:var(--mut);text-decoration:underline;text-underline-offset:2px;}
 .qcard .qref a:hover{color:var(--accent-ink);}
@@ -818,6 +827,7 @@ const INITIALS = { crowd:'CR', ewma:'EW', trend:'TR', climatology:'CL', persiste
 const initOf = id => INITIALS[id] || String(id).slice(0,2).toUpperCase();
 
 const esc = s => { const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; };
+const attr = s => esc(s).replace(/"/g,'&quot;');   // for attribute values
 const fmtCountdown = ms => {
   if(ms<=0) return 'locked';
   const d=Math.floor(ms/86400000), h=Math.floor(ms%86400000/3600000), m=Math.floor(ms%3600000/60000);
@@ -1109,16 +1119,22 @@ function renderQuestion(roundId){
     +tile('Forecasts', String(ids.length), models.length+' entrant'+(models.length===1?'':'s')+' · '+(ids.length-models.length)+' baseline'+(ids.length-models.length===1?'':'s'))
     +tile('Timestamp', !st||!st.manifest?'not yet':(st.bitcoin_attested?'on-chain':'stamped'), !st||!st.manifest?(active?'every forecast is hashed and stamped at the lock':'no manifest on record'):(st.bitcoin_attested?'the manifest of forecast hashes is attested in a Bitcoin block':'the forecast hashes are in an OpenTimestamps receipt from the lock; the Bitcoin block that seals them follows within hours, then this reads on-chain'))
     +'</div>';
-  if(mm.length) h+='<div class="ent-sec"><h3>Where the answers sit</h3><div class="qstrip" data-strip="'+esc(r.round_id)+'"></div></div>';
+  if(mm.length) h+='<div class="ent-sec"><h3>Where the answers sit</h3><div class="qstrip" data-strip="'+esc(r.round_id)+'"></div>'+stripLegend(models.length>40)+'</div>';
   h+='<div class="ent-sec"><h3>Every forecast</h3><p class="sub">'+(resolved?'Closest first, by CRPS where the forecast carried an uncertainty, else by error.':'In the order they were filed; scored once the answer lands.')+' Open a row for the forecast and its timestamp proof.</p>'
     +'<table class="ent"><thead><tr><th class="num">#</th><th>Entrant</th><th class="col-filed">Filed</th><th class="num">Forecast</th><th class="num">Error</th><th class="num">CRPS</th></tr></thead><tbody>'
     +rows.map((row,i)=>{ const x=row.x; const href='#forecast/'+esc(r.round_id)+'/'+esc(row.k);
       const what=forecastSummary(x,u,active);
-      return '<tr class="link" data-href="'+href+'"><td class="num dim">'+(resolved&&(row.err!==null)?i+1:'·')+'</td><td><a class="row" href="#entrant/'+esc(row.k)+'"><span class="q">'+esc(nameOf(row.k))+'</span></a>'+(row.base?' <span class="dim">baseline</span>':'')+'</td><td class="dim col-filed">'+(x.filed?esc(fmtLocal(x.filed)):'·')+'</td><td class="num">'+what+'</td><td class="num">'+(row.err!==null?fmtNum(row.err,u):'·')+'</td><td class="num">'+(row.crps!==null?row.crps.toFixed(2):'·')+'</td></tr>'; }).join('')
+      const lbl=nameOf(row.k)+(typeof x.mean==='number'?': '+fmtNum(x.mean,u)+(typeof x.sd==='number'?' ± '+fmtNum(x.sd,''):''):'');
+      return '<tr class="link" data-href="'+href+'" data-e="'+esc(row.k)+'" data-lbl="'+esc(lbl)+'"><td class="num dim">'+(resolved&&(row.err!==null)?i+1:'·')+'</td><td><a class="row" href="#entrant/'+esc(row.k)+'"><span class="q">'+esc(nameOf(row.k))+'</span></a>'+(row.base?' <span class="dim">baseline</span>':'')+'</td><td class="dim col-filed">'+(x.filed?esc(fmtLocal(x.filed)):'·')+'</td><td class="num">'+what+'</td><td class="num">'+(row.err!==null?fmtNum(row.err,u):'·')+'</td><td class="num">'+(row.crps!==null?row.crps.toFixed(2):'·')+'</td></tr>'; }).join('')
     +'</tbody></table></div>';
   if(!ids.length) h+='<div class="ent-sec"><p class="sub">No forecasts filed yet.</p></div>';
   host.innerHTML=h;
   host.querySelectorAll('tr.link').forEach(tr=>{ tr.onclick=ev=>{ if(ev.target.closest('a')) return; location.hash=tr.dataset.href; }; });
+  // A row and its mark on the strip light up together: the mark gets a ring and its label, the row a tint.
+  host.querySelectorAll('tr.link[data-e]').forEach(tr=>{
+    tr.addEventListener('mouseenter', ()=>{ const m=stripMarkFor(host, tr.dataset.e); if(!m) return; m.classList.add('hl'); const b=m.getBoundingClientRect(); showStripTip(esc(tr.dataset.lbl||''), b.left+b.width/2, b.top-6, 'above'); });
+    tr.addEventListener('mouseleave', ()=>{ const m=stripMarkFor(host, tr.dataset.e); if(m) m.classList.remove('hl'); hideStripTip(); });
+  });
   requestAnimationFrame(()=>drawStrips(host, data));
   if(typeof syncHash==='function') syncHash();
 }
@@ -2174,13 +2190,13 @@ function stripSvg(r, t, data, W){
   const sortedModels = models.slice().sort((a,b)=>f[a].mean-f[b].mean);
   if(models.length > 40){
     // Past forty answers a swarm is taller than the strip; a histogram says the same thing.
-    const BINS = 32, counts = new Array(BINS).fill(0), names = Array.from({length:BINS}, ()=>[]);
+    const BINS = 32, counts = new Array(BINS).fill(0), names = Array.from({length:BINS}, ()=>[]), binIds = Array.from({length:BINS}, ()=>[]);
     sortedModels.forEach(k=>{ const v=f[k].mean; if(off(v)){ strays[v<lo?'below':'above'].push(forecasterName(k,data)+' '+fmtNum(v,unit)); return; }
-      const b = Math.min(BINS-1, Math.floor((v-lo)/(hi-lo)*BINS)); counts[b]++; names[b].push(forecasterName(k,data)); });
+      const b = Math.min(BINS-1, Math.floor((v-lo)/(hi-lo)*BINS)); counts[b]++; names[b].push(forecasterName(k,data)); binIds[b].push(k); });
     const peak = Math.max(1, ...counts), bw = (W-L-R)/BINS;
     // Bars are mirrored on the axis so their tops stay clear of the labels above it.
     counts.forEach((c,b)=>{ if(!c) return; const h = 4 + 26*c/peak;
-      g += '<rect x="'+(L+b*bw+0.5).toFixed(1)+'" y="'+(y0-h/2).toFixed(1)+'" width="'+(bw-1).toFixed(1)+'" height="'+h.toFixed(1)+'" rx="1" fill="#111110" fill-opacity=".55"><title>'+c+' answer'+(c>1?'s':'')+' near '+fmtNum(lo+(b+0.5)*(hi-lo)/BINS,unit)+': '+esc(names[b].slice(0,6).join(', '))+(names[b].length>6?' …':'')+'</title></rect>'; });
+      g += '<rect x="'+(L+b*bw+0.5).toFixed(1)+'" y="'+(y0-h/2).toFixed(1)+'" width="'+(bw-1).toFixed(1)+'" height="'+h.toFixed(1)+'" rx="1" fill="#111110" fill-opacity=".55" data-es="'+attr(binIds[b].join(' '))+'" data-tip="'+attr(c+' answer'+(c>1?'s':'')+' near '+fmtNum(lo+(b+0.5)*(hi-lo)/BINS,unit)+': '+names[b].slice(0,6).join(', ')+(names[b].length>6?' …':''))+'"/>'; });
   } else {
     // The shape of the answers first: a thin line from the lowest to the highest, a band over
     // the middle half. Then the dots, small and faint, one per entrant with its name on hover.
@@ -2188,22 +2204,22 @@ function stripSvg(r, t, data, W){
     if(inside.length >= 4){
       const qq = p => inside[Math.min(inside.length-1, Math.max(0, Math.round(p*(inside.length-1))))];
       g += '<line x1="'+x(inside[0]).toFixed(1)+'" x2="'+x(inside[inside.length-1]).toFixed(1)+'" y1="'+y0+'" y2="'+y0+'" stroke="#111110" stroke-opacity=".35" stroke-width="1.5"/>';
-      g += '<rect x="'+x(qq(.25)).toFixed(1)+'" y="'+(y0-5)+'" width="'+Math.max(2, x(qq(.75))-x(qq(.25))).toFixed(1)+'" height="10" rx="2" fill="#111110" fill-opacity=".14"><title>middle half of the answers: '+fmtNum(qq(.25),unit)+' to '+fmtNum(qq(.75),unit)+'</title></rect>';
+      g += '<rect x="'+x(qq(.25)).toFixed(1)+'" y="'+(y0-5)+'" width="'+Math.max(2, x(qq(.75))-x(qq(.25))).toFixed(1)+'" height="10" rx="2" fill="#111110" fill-opacity=".14" data-tip="'+attr('middle half of the answers: '+fmtNum(qq(.25),unit)+' to '+fmtNum(qq(.75),unit))+'"/>';
     }
     sortedModels.forEach(k=>{
       const v = f[k].mean;
       if(off(v)){ strays[v<lo?'below':'above'].push(forecasterName(k,data)+' '+fmtNum(v,unit)); return; }
       const [px, row] = place(x(v)), cy = y0 + row*ROW;
-      g += '<circle cx="'+px.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+(RAD-0.6)+'" fill="#111110" fill-opacity=".5"><title>'+esc(forecasterName(k,data))+': '+fmtNum(v,unit)+' ± '+fmtNum(f[k].sd,'')+'</title></circle>';
+      g += '<circle cx="'+px.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="'+(RAD-0.6)+'" fill="#111110" fill-opacity=".5" data-e="'+attr(k)+'" data-tip="'+attr(forecasterName(k,data)+': '+fmtNum(v,unit)+' ± '+fmtNum(f[k].sd,''))+'"/>';
     });
   }
   // Strays are one hollow mark at the edge with a count; their values are in the tooltip.
   [['below', L, 'start'], ['above', W-R, 'end']].forEach(([side, px, anchor])=>{
     const n = strays[side].length; if(!n) return;
-    g += '<circle cx="'+px+'" cy="'+y0+'" r="'+RAD+'" fill="#fff" stroke="#111110" stroke-width="1.2" stroke-dasharray="2 1.5"><title>'+esc(strays[side].join(', '))+'</title></circle>';
+    g += '<circle cx="'+px+'" cy="'+y0+'" r="'+RAD+'" fill="#fff" stroke="#111110" stroke-width="1.2" stroke-dasharray="2 1.5" data-tip="'+attr(strays[side].join(', '))+'"/>';
     g += '<text x="'+px+'" y="'+(y0-8)+'" font-size="9.5" fill="#96948d" text-anchor="'+anchor+'"'+mono+'>'+n+' '+side+'</text>';
   });
-  bases.forEach(k=>{ g += '<circle cx="'+x(f[k].mean).toFixed(1)+'" cy="'+y0+'" r="3.6" fill="#fff" stroke="#96948d" stroke-width="1.4"><title>'+esc(forecasterName(k,data))+' (reference): '+fmtNum(f[k].mean,unit)+'</title></circle>'; });
+  bases.forEach(k=>{ g += '<circle cx="'+x(f[k].mean).toFixed(1)+'" cy="'+y0+'" r="3.6" fill="#fff" stroke="#96948d" stroke-width="1.4" data-e="'+attr(k)+'" data-tip="'+attr(forecasterName(k,data)+' (reference): '+fmtNum(f[k].mean,unit))+'"/>'; });
   const mm = models.map(k=>f[k].mean).sort((a,b)=>a-b), cons = mm.length ? mm[Math.floor(mm.length/2)] : null;
   // A label near either edge anchors inward so it stays inside the strip (a card on a phone is narrow).
   const edge = (anc, tx) => tx < 48 ? ['start', Math.max(tx, 1)] : tx > W-48 ? ['end', Math.min(tx, W-1)] : [anc, tx];
@@ -2221,6 +2237,39 @@ function stripSvg(r, t, data, W){
     g += '<line x1="'+x(rel).toFixed(1)+'" y1="'+(y0-19)+'" x2="'+x(rel).toFixed(1)+'" y2="'+(y0+19)+'" stroke="#15803d" stroke-width="2"/><text x="'+tx.toFixed(1)+'" y="'+(y0-23)+'" font-size="10" font-weight="700" fill="#0a6a30" text-anchor="'+anc+'"'+mono+'>released '+fmtNum(rel,unit)+'</text>';
   }
   return '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" aria-hidden="true">'+g+'</svg>';
+}
+// One line under the strip on a question page saying what the marks are. The strip has two
+// drawings (a swarm up to forty answers, a histogram past that), so it has two legends.
+function stripLegend(hist){
+  const g=(body,label)=>'<span><svg viewBox="0 0 14 12" aria-hidden="true">'+body+'</svg>'+label+'</span>';
+  const line=(color,dash)=>'<line x1="7" y1="0" x2="7" y2="12" stroke="'+color+'" stroke-width="2"'+(dash?' stroke-dasharray="2 2" stroke-width="1"':'')+'/>';
+  const items=hist
+    ? [g('<rect x="2" y="1" width="4" height="10" rx="1" fill="#111110" fill-opacity=".55"/><rect x="8" y="4" width="4" height="4" rx="1" fill="#111110" fill-opacity=".55"/>','answers per bin, taller is more'),
+       g('<circle cx="7" cy="6" r="3.4" fill="#fff" stroke="#111110" stroke-width="1.2" stroke-dasharray="2 1.5"/>','answers beyond the scale')]
+    : [g('<circle cx="7" cy="6" r="2.8" fill="#111110" fill-opacity=".5"/>','one entrant\'s answer'),
+       g('<line x1="0" y1="6" x2="14" y2="6" stroke="#111110" stroke-opacity=".35" stroke-width="1.5"/><rect x="3" y="1.5" width="8" height="9" rx="1.5" fill="#111110" fill-opacity=".14"/>','the middle half of the answers')];
+  items.push(g('<circle cx="7" cy="6" r="3.6" fill="#fff" stroke="#96948d" stroke-width="1.4"/>','a baseline'));
+  items.push(g(line('#96948d',true),'last release'), g(line('#111110'),'the models\' median'), g(line('#15803d'),'released'));
+  return '<div class="strip-legend">'+items.join('')+'</div>';
+}
+// The strip's own tooltip: one element for the page, placed by the pointer or over a mark.
+function stripTip(){ let t=document.getElementById('strip-tip'); if(!t){ t=document.createElement('div'); t.id='strip-tip'; t.className='tooltip'; document.body.appendChild(t); } return t; }
+function showStripTip(html, x, y, anchor){
+  const t=stripTip(); t.innerHTML=html; t.style.display='block';
+  const w=t.offsetWidth, h=t.offsetHeight; let lx, ly;
+  if(anchor==='above'){ lx=x-w/2; ly=y-h; } else { lx=x+14; ly=y-h-10; if(lx+w>innerWidth-8) lx=x-w-14; }
+  lx=Math.max(8, Math.min(innerWidth-w-8, lx)); if(ly<8) ly=y+18;
+  t.style.left=lx+'px'; t.style.top=ly+'px';
+}
+function hideStripTip(){ const t=document.getElementById('strip-tip'); if(t) t.style.display='none'; }
+// The mark that stands for an entrant: its own dot, or the histogram bin that holds it.
+function stripMarkFor(scope, id){ const q=CSS.escape(id); return scope.querySelector('.qstrip [data-e="'+q+'"]')||scope.querySelector('.qstrip [data-es~="'+q+'"]'); }
+function stripRowsFor(mark){ const ids=mark.dataset.e?[mark.dataset.e]:String(mark.dataset.es||'').split(' ').filter(Boolean); return ids.map(id=>document.querySelector('#question-col tr.link[data-e="'+CSS.escape(id)+'"]')).filter(Boolean); }
+if(!window.__stripHover){
+  window.__stripHover=true;
+  document.addEventListener('mouseover', ev=>{ const m=ev.target.closest&&ev.target.closest('.qstrip [data-tip]'); if(!m) return; showStripTip(esc(m.dataset.tip).replace(/\n/g,'<br>'), ev.clientX, ev.clientY); stripRowsFor(m).forEach(tr=>tr.classList.add('hl')); });
+  document.addEventListener('mousemove', ev=>{ const m=ev.target.closest&&ev.target.closest('.qstrip [data-tip]'); const t=document.getElementById('strip-tip'); if(!m||!t||t.style.display==='none') return; showStripTip(t.innerHTML, ev.clientX, ev.clientY); });
+  document.addEventListener('mouseout', ev=>{ const m=ev.target.closest&&ev.target.closest('.qstrip [data-tip]'); if(!m) return; hideStripTip(); stripRowsFor(m).forEach(tr=>tr.classList.remove('hl')); });
 }
 function drawStrips(scope, data){
   if(!scope || !scope.querySelectorAll || !data) return;
