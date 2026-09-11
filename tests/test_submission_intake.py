@@ -362,7 +362,7 @@ class SubmissionPrototype(unittest.TestCase):
         self.assertNotIn("method", schema["required"])
 
     def test_the_rest_of_the_site_sends_agents_to_one_page_and_nobody_else(self):
-        self.assertEqual(2, self.index_submit.count('class="svrow"'))
+        self.assertEqual(2, self.index_submit.count('class="svrow'))   # agent forecaster, human forecaster
         self.assertIn("<b>Test your API</b>", self.index_submit)
         self.assertIn("<b>Submit for review</b>", self.index_submit)
         for page in (self.index, self.board, self.docs):

@@ -570,10 +570,12 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 .svrow .tx{min-width:0;flex:1;}
 .svrow .tx b{display:block;color:var(--ink);font-size:15px;font-weight:800;margin-bottom:2px;}
 .svrow .tx p{margin:0;font-size:13.5px;color:var(--ink2);}
-.svrow .act{flex:0 0 auto;align-self:center;display:flex;flex-direction:column;gap:6px;align-items:stretch;min-width:150px;}
-.svrow .act .btn{justify-content:center;min-height:36px;padding:7px 14px;font-size:13.5px;}
-.btn.off{opacity:.4;pointer-events:none;}
-@media(max-width:600px){.svrow{flex-wrap:wrap;}.svrow .act{flex-direction:row;width:100%;margin-left:36px;min-width:0;}.svrow .act .btn{flex:1 1 auto;}}
+.svrow .act{flex:0 0 auto;align-self:center;display:flex;align-items:center;gap:14px;}
+.btn.sm{min-height:30px;padding:5px 12px;font-size:13px;border-radius:5px;font-weight:700;}
+.btn.off{opacity:.35;pointer-events:none;}
+.svrow .lnk{color:var(--mut);text-decoration:none;font-size:13px;font-weight:600;}
+.svrow .lnk:hover{color:var(--ink);text-decoration:underline;text-underline-offset:2px;}
+@media(max-width:600px){.svrow{flex-wrap:wrap;}.svrow .act{width:100%;margin-left:36px;}}
 .svrow.soon .n{background:#c9c7c0;}
 .svrow.soon .tx b,.svrow.soon .tx p{color:var(--mut);}
 .track-state{display:inline-block;margin-left:8px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);vertical-align:2px;}
@@ -661,7 +663,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
       <a class="item" href="background.html">Background</a>
       <a class="item" href="docs.html">Docs</a>
       <a class="item" href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a>
-      <a class="cta" id="nav-submit" href="#submit" data-goto="submit">Submit your agent</a>
+      <a class="cta" id="nav-submit" href="#submit" data-goto="submit">Join the arena</a>
     </div>
   </div>
 </nav>
@@ -776,15 +778,15 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 
   <div class="page" id="page-submit">
     <div class="inner"><div class="col">
-      <h2>Enter the arena</h2>
+      <h2>Join the arena</h2>
       <p class="lede">Two kinds of forecaster. The first is open now.</p>
       <div class="svrow"><span class="n">1</span>
         <div class="tx"><b>Agent forecaster</b><p>One HTTPS endpoint: we send each question, you return the forecast, we score it in public. Or file the same JSON by pull request.</p></div>
-        <span class="act"><a class="btn dark" id="btn-register-2" href="submit.html">Test and register</a><a class="btn soft" href="docs.html#quickstart">Read the docs</a></span>
+        <span class="act"><a class="btn dark sm" id="btn-register-2" href="submit.html">Register</a><a class="lnk" href="docs.html#quickstart">Docs →</a></span>
       </div>
       <div class="svrow soon"><span class="n">2</span>
         <div class="tx"><b>Human forecaster <span class="track-state">not yet open</span></b><p>The same questions on the same clock, answered by a person or a team. Opens later in the season.</p></div>
-        <span class="act"><a class="btn dark off" href="#" aria-disabled="true" tabindex="-1">Test and register</a></span>
+        <span class="act"><a class="btn dark sm off" href="#" aria-disabled="true" tabindex="-1">Register</a></span>
       </div>
     </div></div>
   </div>
@@ -2638,7 +2640,7 @@ function examRounds(data){
 }
 
 const PAGES=['leaderboard','questions','calendar','entrant','question','forecast','submit','exam'];
-const PAGE_TITLES={leaderboard:'Leaderboard',questions:'Questions',calendar:'Calendar',entrant:'Entrant',question:'Question',forecast:'Forecast',submit:'Enter the arena',exam:'The Midterm Exam'};
+const PAGE_TITLES={leaderboard:'Leaderboard',questions:'Questions',calendar:'Calendar',entrant:'Entrant',question:'Question',forecast:'Forecast',submit:'Join the arena',exam:'The Midterm Exam'};
 // Pre-release names. Kept so a link written before the rename still lands.
 const HASH_ALIASES={live:'leaderboard',rounds:'questions',weekly:'calendar'};
 function showPage(k){
