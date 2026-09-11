@@ -662,7 +662,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
       <span class="nav-live" title="The arena is running: questions are being called, locked and scored"><span class="livedot" aria-hidden="true"></span>Live</span>
       <a class="item" href="background.html">Background</a>
       <a class="item" href="docs.html">Docs</a>
-      <a class="item" href="https://github.com/Social-Atoms/social-sim-arena">GitHub</a>
+      <a class="item" href="https://github.com/Social-Atoms/social-sim-arena" target="_blank" rel="noopener">GitHub</a>
       <a class="cta" id="nav-submit" href="#submit" data-goto="submit">Join the arena</a>
     </div>
   </div>
@@ -2737,6 +2737,8 @@ function applyHash(){
   }
 }
 window.addEventListener('hashchange', applyHash);
+// Every link to GitHub, static or rendered, opens in a new tab; the site stays where the reader was.
+document.addEventListener('click', ev=>{ const a=ev.target.closest&&ev.target.closest('a[href^="https://github.com/"]'); if(a && !a.target){ a.target='_blank'; a.rel='noopener'; } }, true);
 // Route before the data arrives, so a refresh shows the right page and not the board first. Only the
 // page switch: the full router runs again once the data is in.
 (function(){ try{ const raw=(location.hash||'').slice(1), p=raw.split('?')[0].split('/')[0], pg=HASH_ALIASES[p]||p; if(!PAGES.includes(pg)) return;
