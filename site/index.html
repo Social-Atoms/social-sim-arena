@@ -1782,11 +1782,13 @@ function renderTaskNav(data,key){
   host.querySelectorAll('[data-task]').forEach(b=>b.onclick=()=>{ setTab(b.dataset.task); renderBoard(window.__board||'all'); });
 }
 
-// The file in the repository that reads a task's source: the exact field, its dates, the archive and the checks.
-const SOURCE_READER={civiqs_approval:'ssa/adapters/civiqs.py',civiqs_angry:'ssa/adapters/civiqs.py',civiqs_econ_direction:'ssa/adapters/civiqs.py',civiqs_econ_now:'ssa/adapters/civiqs.py',civiqs_family_finances:'ssa/adapters/civiqs.py',civiqs_inflation_concern:'ssa/adapters/civiqs.py',civiqs_profile:'ssa/adapters/civiqs.py',civiqs_subgroups:'ssa/adapters/civiqs.py',
-  hh_approval:'ssa/adapters/hhpoll.py',sce_inflation:'ssa/adapters/sce.py',aaii_sentiment:'ssa/adapters/aaii.py',umich_sentiment:'ssa/adapters/umich.py',umich_party:'ssa/adapters/umichparty.py',
-  trends_basket:'ssa/adapters/trends.py',search_interest:'ssa/adapters/trends.py',wiki_top10:'ssa/adapters/wikipedia.py',wiki_views:'ssa/adapters/wikipedia.py',yougov_profile:'ssa/adapters/yougov_xtab.py',
-  yougov_approval:'ssa/series.py',mc_approval:'ssa/series.py',generic_margin:'ssa/series.py'};
+// Each source has a page in the repository (docs/sources/): what the number is, where it is published,
+// how the arena reads it and how a question on it resolves. The Source name in the task header opens it.
+const SOURCE_DOC={yougov_approval:'yougov',yougov_profile:'yougov',mc_approval:'morning-consult',generic_margin:'silver-bulletin',
+  civiqs_approval:'civiqs',civiqs_angry:'civiqs',civiqs_econ_direction:'civiqs',civiqs_econ_now:'civiqs',civiqs_family_finances:'civiqs',civiqs_inflation_concern:'civiqs',civiqs_profile:'civiqs',civiqs_subgroups:'civiqs',
+  hh_approval:'harvard-harris',umich_sentiment:'michigan',umich_party:'michigan',sce_inflation:'ny-fed-sce',aaii_sentiment:'aaii',
+  trends_basket:'google-trends',search_interest:'google-trends',wiki_top10:'wikimedia',wiki_views:'wikimedia'};
+const sourceDocUrl=key=>SOURCE_DOC[key]?'https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/sources/'+SOURCE_DOC[key]+'.md':null;
 function renderTaskHeader(data,key){
   const d = TASKS[key]||TASKS.agg;
   const group = TASK_GROUPS.find(g=>g.id===d.group);
@@ -1799,7 +1801,7 @@ function renderTaskHeader(data,key){
   const helpOf={population:'The people the released number describes. Every question on this task is about them.',
     answer:'What a question on this task asks for: a number with an uncertainty range, a profile (one number per cell), or a ranked list.',
     cadence:'How often the source publishes, so how often a question on this task closes.',
-    source:'Who publishes the number, as they define it: a net figure is approve minus disapprove and can be negative. "code" is the arena\'s reader for this source in the repository: the field, its dates, the archive, the checks.',
+    source:'Who publishes the number. The name opens the arena\'s page on this source: what the number is (a net figure is approve minus disapprove, so it can be negative), where it is published, how it is read, and how a question on it resolves.',
     questions:rs.length+' asked this season, '+active.length+' open now.'};
   const lab=(k,text)=>'<b class="has-help" tabindex="0">'+text+'<span class="th-help" role="tooltip">'+esc(helpOf[k])+'</span></b>';
   const chip=t=>'<span class="shape">'+esc(t)+'</span>';
@@ -1809,7 +1811,7 @@ function renderTaskHeader(data,key){
   document.getElementById('task-meta').innerHTML = '<span class="mi">'+lab('population','Population')+val(d.population,'w-pop')+'</span>'
     +'<span class="mi">'+lab('answer','Question type')+'<span class="val">'+answers.map(chip).join('')+'</span></span>'
     +(key==='agg' ? '' : '<span class="mi">'+lab('cadence','Cadence')+val(cadence,'w-cad')+'</span>')
-    +(key==='agg' || !d.srcName ? '' : '<span class="mi">'+lab('source','Source')+'<span class="val w-src" title="'+attr(d.srcName)+'">'+(d.srcUrl?'<a href="'+esc(d.srcUrl)+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>':esc(d.srcName))+'</span>'+(SOURCE_READER[key]?'<a class="go" href="https://github.com/Social-Atoms/social-sim-arena/blob/main/'+SOURCE_READER[key]+'" target="_blank" rel="noopener">code →</a>':'')+'</span>')
+    +(key==='agg' || !d.srcName ? '' : '<span class="mi">'+lab('source','Source')+'<span class="val w-src" title="'+attr(d.srcName)+'">'+(sourceDocUrl(key)?'<a href="'+sourceDocUrl(key)+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>':(d.srcUrl?'<a href="'+esc(d.srcUrl)+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>':esc(d.srcName)))+'</span></span>')
     +'<span class="mi mq">'+lab('questions','Questions')+'<span class="numeric">'+rs.length+'</span><a class="go" href="'+(key==='agg'?'#questions':'#questions/task/'+esc(key))+'">all questions →</a></span>';
   const card = document.getElementById('task-question-card');
   card.style.display='';

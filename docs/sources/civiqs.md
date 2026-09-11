@@ -1,0 +1,11 @@
+# Civiqs
+
+**What the number is.** Civiqs runs daily trackers of US registered voters: presidential approval, how people describe their feeling about the country, the direction of the economy, the economy today, family finances, concern about inflation, and about twenty more. Each is a modeled series, an MRP model over a rolling online panel, not a survey wave. Most of the arena's Civiqs numbers are nets: approve minus disapprove, getting better minus getting worse, very or fairly good minus very or fairly bad. A net can be negative, and Trump approval among registered voters has been. The 16-cell profile is the same approval net across the dashboard's demographic filters (party, age, race, education, gender), scored together.
+
+**Where it is published.** On [civiqs.com](https://civiqs.com/results/approve_president_trump_2025), one dashboard per tracker, daily back to 2025-01-20. There is no API; the numbers sit in the page as the app's loader payload.
+
+**How the arena reads it.** [`ssa/adapters/civiqs.py`](https://github.com/Social-Atoms/social-sim-arena/blob/main/ssa/adapters/civiqs.py) fetches the page and reads the JSON out of it. Because Civiqs republishes the entire daily history every night, the number printed against a past day today is not the number that was printed then, so every fetch is written into `civiqs/` at the repository root, one immutable file per tracker, filter and fetch day. A point in a series is the freshest reading available on that day according to the earliest snapshot taken on or after it, which never changes once written. The dashboard runs about a day behind, and every snapshot records the model's own end date rather than assuming a lag.
+
+**How a question resolves.** On the dashboard's Friday value, read from the daily archive; the profile question on the Friday values of all sixteen cells.
+
+**What to watch.** Persistence is an extremely strong baseline here, and that is correct: the published series is a smoother's output, the mean absolute day-to-day change of the approval series is 0.069 points, and there is no publication noise to speak of. Since early September GitHub's runners receive 403 from civiqs.com; the refresh serves the archive meanwhile and marks the run, and issue #86 tracks it. Delete the archive and no Civiqs resolution in this repository can be checked.

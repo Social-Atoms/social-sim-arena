@@ -1,5 +1,7 @@
 # Adding a data source
 
+> What each source *is*, how it is read and how a question on it resolves: one page per source in [`docs/sources/`](sources/README.md). This page is the process for adding one.
+
 Every published number must answer three questions: **which URL was it fetched
 from, when, and where is the saved raw response.** This file is the checklist a
 new source has to pass, and the rules are not style preferences — each one is

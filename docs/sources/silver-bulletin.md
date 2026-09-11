@@ -1,0 +1,11 @@
+# Silver Bulletin poll database
+
+**What it is.** Two published-to-web Google Sheets linked from the free part of natesilver.net: every Trump approval poll (about 5,900 rows, including issue subgroups) and every 2026 generic congressional ballot poll (about 540 rows). Per poll they carry the pollster, sponsor, field dates, sample size, population, the raw marginals, and Silver Bulletin's own house-effect-adjusted marginals. Refreshed daily.
+
+**Where it is published.** [natesilver.net](https://www.natesilver.net/p/generic-ballot-average-2026-nate-silver-bulletin-congress-polls), free and keyless.
+
+**How the arena reads it.** [`ssa/adapters/silverbulletin.py`](https://github.com/Social-Atoms/social-sim-arena/blob/main/ssa/adapters/silverbulletin.py) fetches both sheets and archives each pull as a dated CSV under `sources/sb_approval/` and `sources/sb_generic/`. It reads the raw columns only. Adjustment is the arena's own step, [`ssa/average.py`](https://github.com/Social-Atoms/social-sim-arena/blob/main/ssa/average.py): a rolling average of the polls whose field midpoint falls in the trailing window, weighted by recency and the square root of the sample size; a house effect per pollster, its mean gap to that average over the trailing 180 days, shrunk toward zero for pollsters with few polls; then the average again with each poll shifted by minus its pollster's house effect. Taking the publisher's adjusted figure instead would move the arena's numbers whenever they retuned their model. Two fields are part of every definition and nothing defaults them: `subgroup` (overall approval versus issue approval) and `population` (adults, registered voters, likely voters).
+
+**How a question resolves.** A single-pollster question (the two approval tasks) resolves on that pollster's first wave to enter the archived sheet after the lock. The generic-ballot average resolves on the arena's adjusted average computed from the archived sheet. The midterm questions on the same task resolve on certified results.
+
+**What to watch.** The archive is the record; the live sheets are only ever a source for the next archived vintage. A row is not "the" reading until its subgroup and population are named.
