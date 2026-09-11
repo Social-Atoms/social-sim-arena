@@ -244,10 +244,13 @@ table.lb td{padding:10px 8px;border-bottom:1px solid #eeede9;vertical-align:midd
 table.lb tr:last-child td{border-bottom:none;}
 table.lb td.num,table.lb th.num{text-align:right;font-variant-numeric:tabular-nums;}
 table.lb th.num{font-size:10.5px;letter-spacing:.04em;}
-table.lb th:last-child,table.lb td:last-child{padding-right:14px;}
+/* Questions: a two-digit count under a nine-letter head sits centred, where a right edge would leave it adrift. */
+table.lb th:last-child,table.lb td:last-child{text-align:center;padding-left:4px;padding-right:6px;}
 table.lb .rank{color:var(--mut);width:30px;padding-right:6px;font-variant-numeric:tabular-nums;}
 table.lb .who{display:flex;align-items:center;gap:9px;}
-table.lb .who>span:last-child{min-width:0;overflow-wrap:anywhere;}
+table.lb .who>span:last-child{min-width:0;}
+/* A narrow board shortens a name with an ellipsis; it never breaks a name or its small print onto a second line. */
+table.lb .who .model-name,table.lb .who .model-meta{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 table.lb .who b{color:var(--ink);font-weight:700;font-size:15px;}
 table.lb .who .type{font-size:11px;color:var(--mut);}
 /* A heading with a title= explanation says so, rather than hiding it. */
