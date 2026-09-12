@@ -1,0 +1,15 @@
+{
+  "entrant": "gemini-pro-web-superfc",
+  "input_hash": "1cd858976595",
+  "logged_at": "2026-09-12T15:32:04Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt_sha256": "9e303e0773fb6abb5ce7ea53f788d5594a8f5e48b4b92bea07d68f1d14d9ec27",
+  "reply": "1. Outside view. The base rate for this series over the last ten releases is an average of 35.6%. Week-to-week changes average about 1.6 points in absolute terms, entirely consistent with the expected sampling error of a poll with ~1,500 respondents (margin of error around 2.5%, implying a standard error of ~1.2%). A naive extrapolation of the series, which has recently bounced between 33% and 38%, would predict a number around 35.5%. \n\n2. Inside view. We are forecasting the poll fielding September 12-14, scheduled for release on September 15. Although the most recent published value in the prompt for late August is 36.0%, articles point to a subsequent early September poll (released around Sept 9) showing Trump's net approval \"remains in the dumps at -26\". Given the typical 'not sure' response rate and previous identical net-approval margins in this tracker (e.g., the mid-August poll), a net of -26 strongly implies an approval rating of 35%. There are no major external shocks in the provided text beyond typical campaign events (e.g., a rally in Dallas), which shouldn't move the top-line number significantly outside the margin of error. \n\n3. Pre-mortem. The most likely reason the forecast fails is that I'm over-indexing on the quoted \"-26 net approval\" meaning exactly 35% approve. If disapproval shifted disproportionately, or if the author was casually citing a lagging metric, the true underlying approval could be 34% or 36%. Furthermore, natural sampling variance could easily push the number to 34.0 or 37.0 purely by chance. To correct for this, my standard deviation needs to comfortably bracket 34% to 37%.\n\n4. Calibrate. Setting a mean of 35.5% with an SD of 1.4 gives a 68% confidence interval of [34.1, 36.9], which covers the most probable outcomes (34, 35, 36, 37) effectively while accommodating the observed historical volatility.\n\n```json\n{\"mean\": 35.5, \"sd\": 1.4}\n```",
+  "round_id": "yougov-2026-w38-approval",
+  "usage": {
+    "input_tokens": 2682,
+    "output_tokens": 498,
+    "thinking_tokens": 4651
+  },
+  "via": "direct"
+}
