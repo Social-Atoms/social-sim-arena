@@ -198,9 +198,9 @@ INVENTORY = {
             "hand-written basket rounds ran live in `questions/season0.json`. "
             "That mismatch is the reason this file exists."),
     },
-    "hhpoll": {
+    "harvard-harris": {
         "publisher": "Harvard-Harris Poll",
-        "adapter": "ssa/adapters/hhpoll.py",
+        "adapter": "ssa/adapters/harvard_harris.py",
         "role": TARGET,
         "state": INTEGRATED,
         "rights": APPROVED,
@@ -209,7 +209,7 @@ INVENTORY = {
             "The adapter watches the publisher's all-polls index on every "
             "refresh because neither release dates nor document URLs are "
             "predictable. Novel toplines are parsed and count/base validated "
-            "before their write-once PDFs enter sources/hhpoll; watcher "
+            "before their write-once PDFs enter sources/harvard-harris; watcher "
             "failure is reported while the validated archive remains usable. "
             "The archive includes the separately verified M3 first-term "
             "contract and the current M3ALT contract."),

@@ -710,7 +710,7 @@ def test_sce_names_the_first_month_the_calendar_does_not_cover():
     for line in printed.splitlines():
         if "unsupported_family" not in line:
             continue
-        for source in ("sce", "hhpoll", "trends", "trends_basket"):
+        for source in ("sce", "harvard-harris", "trends", "trends_basket"):
             assert f'"source": "{source}"' not in line, line
     print("ok test_sce_names_the_first_month_the_calendar_does_not_cover")
 
@@ -740,7 +740,7 @@ def test_declined_families_carry_their_decision():
     `unsupported_family` sends the next reader off to write the template; for
     these four that work was done and decided against.
     """
-    ok, why = gen.gate("hh_trump_approval", {"source": "hhpoll"}, [])
+    ok, why = gen.gate("hh_trump_approval", {"source": "harvard-harris"}, [])
     assert not ok and why["gate"] == "declined_family", why
     assert "calendar" in why["detail"], why
     ok, why = gen.gate("trends_share_tesla", {"source": "trends_basket"}, [])

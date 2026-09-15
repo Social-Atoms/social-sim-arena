@@ -71,7 +71,7 @@ from urllib.parse import urljoin
 import requests
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-ARCHIVE = os.path.join(ROOT, "sources", "hhpoll")
+ARCHIVE = os.path.join(ROOT, "sources", "harvard-harris")
 CATALOG = os.path.join(ARCHIVE, "catalog.json")
 
 PAGE_URL = "https://harvardharrispoll.com/all-polls/"
@@ -423,7 +423,7 @@ def parse_any(text):
 
 # --- the archive -------------------------------------------------------------
 #
-# `sources/hhpoll/<production stamp>.pdf`, committed, named by the date the
+# `sources/harvard-harris/<production stamp>.pdf`, committed, named by the date the
 # document prints on itself rather than the day it was downloaded.
 
 
@@ -473,7 +473,7 @@ def load():
             "no Harvard-Harris topline has been archived under "
             f"{os.path.relpath(ARCHIVE, ROOT)}; the parser reads the archive "
             "and never the network, so a vintage has to be fetched and "
-            "committed first (hhpoll.fetch, URL in hand)")
+            "committed first (harvard_harris.fetch, URL in hand)")
     records = []
     for day in days:
         with open(archive_path(day), "rb") as f:
@@ -511,7 +511,8 @@ def _catalog():
     with open(CATALOG) as handle:
         rows = json.load(handle)
     if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
-        raise RuntimeError("sources/hhpoll/catalog.json is not a list of records")
+        raise RuntimeError(
+            "sources/harvard-harris/catalog.json is not a list of records")
     return rows
 
 
@@ -642,6 +643,6 @@ def fetch(url, timeout=TIMEOUT):
             "200, so this is a dead or moved link, not a poll")
     rec = parse_any(to_text(body))
     path = archive(body, rec["stamp"])
-    print(f"  hhpoll  {len(body):>9,}B  stamped {rec['stamp']}  fielded "
+    print(f"  harvard-harris  {len(body):>9,}B  stamped {rec['stamp']}  fielded "
           f"through {rec['date']}  approve {rec['approve']:.0f}%")
     return path

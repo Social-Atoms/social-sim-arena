@@ -21,7 +21,7 @@ Adding a tracker means adding a row here, and nothing else.
 from . import crosstab
 from .adapters import aaii as aaii_adapter
 from .adapters import civiqs as civiqs_adapter
-from .adapters import hhpoll as hhpoll_adapter
+from .adapters import harvard_harris as harvard_harris_adapter
 from .adapters import sce as sce_adapter
 from .adapters import silverbulletin as sb
 from .adapters import trends as trends_adapter
@@ -1149,7 +1149,7 @@ SERIES["hh_trump_approval"] = {
                   "monthly online survey of US registered voters, published "
                   "as PDF toplines with no preannounced calendar; some "
                   "months are skipped."),
-    "source": "hhpoll",
+    "source": "harvard-harris",
     "unit": "% approve",
     "cadence": ("roughly monthly, no preannounced schedule; rows dated by "
                 "the day the topline was published, never the fielding day"),
@@ -1165,7 +1165,7 @@ SERIES["hh_trump_approval"] = {
         "production stamp -- the day the number became public -- so a "
         "late-published wave can never slide into history a forecaster "
         "already locked against. The series reads only the committed "
-        "vintages under sources/hhpoll/. The six-hour source watcher reads "
+        "vintages under sources/harvard-harris/. The six-hour source watcher reads "
         "the publisher's all-polls index and archives a novel topline only "
         "after the same strict parser and count/base checks accept it."),
 }
@@ -1688,7 +1688,7 @@ def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
     # The refresh injects the result of the all-polls watcher.  Other callers
     # (candidate generation, tests and audits) stay offline and read the exact
     # same committed write-once archive.
-    load("hhpoll", hhpoll_adapter.load)
+    load("harvard-harris", harvard_harris_adapter.load)
     # One workbook download carries every wave of every subgroup, so all
     # sixteen crosstab cells share a single request the way the five basket
     # series share one Trends comparison. `src["yougov_xtab"]` holds *parsed*
@@ -1753,8 +1753,9 @@ def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
             elif source == "sce":
                 out[sid] = sce_adapter.to_series(src["sce"],
                                                  spec["sce"]["horizon"])
-            elif source == "hhpoll":
-                out[sid] = hhpoll_adapter.to_series(src["hhpoll"])
+            elif source == "harvard-harris":
+                out[sid] = harvard_harris_adapter.to_series(
+                    src["harvard-harris"])
             elif source == "yougov_xtab":
                 # Derived once for the whole roster, not once per cell. Sixteen
                 # independent reads of one payload would be sixteen chances for

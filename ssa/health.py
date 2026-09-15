@@ -56,7 +56,7 @@ BUDGETS = {
     # No announced calendar and occasional skipped months. The fetch clock
     # catches a broken watcher quickly; the broad change clock catches a dead
     # archive index without treating a skipped monthly wave as an outage.
-    "hhpoll": (3, 75),
+    "harvard-harris": (3, 75),
 }
 DEFAULT_BUDGET = (3, 30)
 CIVIQS_WEEKLY_CHANGE_BUDGET_DAYS = 10

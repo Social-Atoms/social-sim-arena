@@ -222,7 +222,7 @@ PARKED_CADENCE = {
 # `unsupported_family` would send the next reader off to write a template that
 # was considered and declined.
 DECLINED_FAMILIES = {
-    "hhpoll":
+    "harvard-harris":
         "Harvard-Harris announces no release calendar and has no derivable "
         "URL; a wave enters the archive when a maintainer fetches its PDF, so "
         "no forward release can be scheduled. The hand-written rounds resolve "

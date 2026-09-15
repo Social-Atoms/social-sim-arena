@@ -1,7 +1,7 @@
 """The Harvard-Harris topline, from converted PDF text. No network, no poppler.
 
 The fixture is carved verbatim out of the real `pdftotext -layout` output for
-`sources/hhpoll/2026-07-16.pdf` (the July 2026 topline): the personal-finances
+`sources/harvard-harris/2026-07-16.pdf` (the July 2026 topline): the personal-finances
 table before the anchor, the complete M3ALT approval table, and the head of
 the `M3A_ISS ... Summary Of Strongly/Somewhat Approve` table after it --
 fifteen issue-approval percentages in the identical two-line shape, which is
@@ -9,7 +9,7 @@ exactly what a parser anchored on anything looser than the question code
 would read instead. Column spacing is copied exactly; the form feed before
 one page header is the character the umichparty probe once lost three rows to.
 
-Run: PYTHONPATH=. python tests/test_hhpoll.py
+Run: PYTHONPATH=. python tests/test_harvard_harris.py
 """
 import os
 import shutil
@@ -18,7 +18,7 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ssa.adapters import hhpoll
+from ssa.adapters import harvard_harris
 
 PAGE_HEAD = (
     "Fielding Period: July 10 - 12, 2026\n"
@@ -164,19 +164,19 @@ LEGACY = (
 
 
 def test_the_approval_record_comes_out_of_the_real_layout():
-    got = hhpoll.parse(TOPLINE)
+    got = harvard_harris.parse(TOPLINE)
     assert got == EXPECTED, got
 
 
 def test_the_first_term_contract_is_a_separate_strict_parser():
-    got = hhpoll.parse_any(LEGACY)
+    got = harvard_harris.parse_any(LEGACY)
     assert got == {
         "date": "2017-02-13", "approve": 48.0, "disapprove": 52.0,
         "dk": 0.0, "unweighted_n": 2000, "stamp": "2017-02-16",
-        "question": hhpoll.LEGACY_QUESTION,
+        "question": harvard_harris.LEGACY_QUESTION,
     }, got
     try:
-        hhpoll.parse_legacy(LEGACY.replace("Donald Trump", "President Trump"))
+        harvard_harris.parse_legacy(LEGACY.replace("Donald Trump", "President Trump"))
         assert False, "a changed first-term instrument parsed"
     except RuntimeError as e:
         assert "expected 1" in str(e), e
@@ -190,28 +190,28 @@ def test_the_archive_index_is_the_discovery_surface():
         'Topline</span></a>'
         '<a class="row" href="/topline-july/"><span class="rl">'
         'Topline</span></a>')
-    assert hhpoll.archive_pages(index) == [
+    assert harvard_harris.archive_pages(index) == [
         "https://harvardharrispoll.com/topline-august/",
         "https://harvardharrispoll.com/topline-july/",
     ]
     page = '<button data-pdf="/assets/uploads/2026/08/topline.pdf">Read</button>'
-    assert hhpoll.document_url(page, hhpoll.PAGE_URL) == \
+    assert harvard_harris.document_url(page, harvard_harris.PAGE_URL) == \
         "https://harvardharrispoll.com/assets/uploads/2026/08/topline.pdf"
 
 
 def test_the_watcher_uses_the_catalog_as_a_cursor():
     d = tempfile.mkdtemp(prefix="ssa-hh-watch-")
-    saved = (hhpoll.ARCHIVE, hhpoll.CATALOG, hhpoll._get, hhpoll.to_text)
-    hhpoll.ARCHIVE = d
-    hhpoll.CATALOG = os.path.join(d, "catalog.json")
+    saved = (harvard_harris.ARCHIVE, harvard_harris.CATALOG, harvard_harris._get, harvard_harris.to_text)
+    harvard_harris.ARCHIVE = d
+    harvard_harris.CATALOG = os.path.join(d, "catalog.json")
     known = "https://harvardharrispoll.com/topline-july/"
     new = "https://harvardharrispoll.com/topline-august/"
     pdf = "https://harvardharrispoll.com/assets/topline-august.pdf"
-    with open(hhpoll.CATALOG, "w") as handle:
+    with open(harvard_harris.CATALOG, "w") as handle:
         import json
         json.dump([{"page_url": known}], handle)
     bodies = {
-        hhpoll.PAGE_URL: (
+        harvard_harris.PAGE_URL: (
             '<a class="row" href="/topline-august/"><span class="rl">'
             'Topline</span></a><a class="row" href="/topline-july/">'
             '<span class="rl">Topline</span></a>').encode(),
@@ -220,20 +220,20 @@ def test_the_watcher_uses_the_catalog_as_a_cursor():
     }
     calls = []
     try:
-        hhpoll._get = lambda url, timeout=hhpoll.TIMEOUT: \
+        harvard_harris._get = lambda url, timeout=harvard_harris.TIMEOUT: \
             (calls.append(url) or bodies[url])
-        hhpoll.to_text = lambda _body: TOPLINE.replace(
+        harvard_harris.to_text = lambda _body: TOPLINE.replace(
             "16 Jul 2026", "16 Aug 2026").replace(
             "July 10 - 12, 2026", "August 10 - 12, 2026")
-        added = hhpoll.update()
+        added = harvard_harris.update()
         assert [row["stamp"] for row in added] == ["2026-08-16"], added
-        assert calls == [hhpoll.PAGE_URL, new, pdf], calls
+        assert calls == [harvard_harris.PAGE_URL, new, pdf], calls
         assert os.path.exists(os.path.join(d, "2026-08-16.pdf"))
         calls[:] = []
-        assert hhpoll.update() == []
-        assert calls == [hhpoll.PAGE_URL], calls
+        assert harvard_harris.update() == []
+        assert calls == [harvard_harris.PAGE_URL], calls
     finally:
-        hhpoll.ARCHIVE, hhpoll.CATALOG, hhpoll._get, hhpoll.to_text = saved
+        harvard_harris.ARCHIVE, harvard_harris.CATALOG, harvard_harris._get, harvard_harris.to_text = saved
         shutil.rmtree(d, ignore_errors=True)
 
 
@@ -242,7 +242,7 @@ def test_the_anchor_is_the_question_code_not_the_word_approve():
     Approve' and a page of percents in the identical two-line shape. That must
     read as 'the poll dropped the question', never as 49% approval."""
     try:
-        hhpoll.parse(FINANCES + ISSUES)
+        harvard_harris.parse(FINANCES + ISSUES)
         assert False, "an issue-approval percent passed for the topline"
     except RuntimeError as e:
         assert "no M3ALT table" in str(e), e
@@ -254,7 +254,7 @@ def test_a_changed_question_wording_is_loud():
     reworded = TOPLINE.replace("the job Donald J. Trump is doing as President",
                                "the job President Trump is doing as President")
     try:
-        hhpoll.parse(reworded)
+        harvard_harris.parse(reworded)
         assert False, "a reworded question parsed as the registered one"
     except RuntimeError as e:
         assert "wording changed" in str(e), e
@@ -262,7 +262,7 @@ def test_a_changed_question_wording_is_loud():
 
 def test_two_anchor_tables_are_loud():
     try:
-        hhpoll.parse(TOPLINE + APPROVAL)
+        harvard_harris.parse(TOPLINE + APPROVAL)
         assert False, "two M3ALT tables parsed as one poll"
     except RuntimeError as e:
         assert "2 M3ALT tables" in str(e), e
@@ -272,7 +272,7 @@ def test_nets_that_do_not_sum_to_a_hundred_are_loud():
     doctored = TOPLINE.replace("(Net)                                     42%",
                                "(Net)                                     22%")
     try:
-        hhpoll.parse(doctored)
+        harvard_harris.parse(doctored)
         assert False, "approve+disapprove+dk of 80 went unremarked"
     except RuntimeError as e:
         assert "not ~100" in str(e), e
@@ -285,7 +285,7 @@ def test_a_net_that_disagrees_with_its_own_count_is_loud():
     doctored = TOPLINE.replace("Strongly/Somewhat Approve                747",
                                "Strongly/Somewhat Approve                947")
     try:
-        hhpoll.parse(doctored)
+        harvard_harris.parse(doctored)
         assert False, "a count from the wrong table went unremarked"
     except RuntimeError as e:
         assert "wrong table" in str(e), e
@@ -295,99 +295,99 @@ def test_a_subgroup_base_cannot_pass_for_the_topline():
     doctored = TOPLINE.replace("Unweighted Base                         1776",
                                "Unweighted Base                          176")
     try:
-        hhpoll.parse(doctored)
+        harvard_harris.parse(doctored)
         assert False, "a 176-person base passed for a national wave"
     except RuntimeError as e:
         assert "subgroup" in str(e), e
 
 
 def test_the_fielding_period_dates_the_row_by_its_end_day():
-    assert hhpoll.fielding_end(TOPLINE) == "2026-07-12"
+    assert harvard_harris.fielding_end(TOPLINE) == "2026-07-12"
     # The April and May shapes, and a span that crosses a month boundary.
-    assert hhpoll.fielding_end(
+    assert harvard_harris.fielding_end(
         "Fielding Period: April 23 - 26, 2026\n") == "2026-04-26"
-    assert hhpoll.fielding_end(
+    assert harvard_harris.fielding_end(
         "Fielding Period: June 28 - July 1, 2026\n") == "2026-07-01"
     try:
-        hhpoll.fielding_end("Fielding Period: July 10 - 12, 2026\n"
+        harvard_harris.fielding_end("Fielding Period: July 10 - 12, 2026\n"
                             "Fielding Period: July 11 - 13, 2026\n")
         assert False, "two fielding periods in one document went unremarked"
     except RuntimeError as e:
         assert "different" in str(e), e
     try:
-        hhpoll.fielding_end("Fielding Period: Summer 2026\n")
+        harvard_harris.fielding_end("Fielding Period: Summer 2026\n")
         assert False, "an unreadable fielding period parsed"
     except RuntimeError as e:
         assert "unreadable fielding period" in str(e), e
 
 
 def test_the_stamp_names_the_vintage_never_the_download_day():
-    assert hhpoll.stamp_date(TOPLINE) == "2026-07-16"
+    assert harvard_harris.stamp_date(TOPLINE) == "2026-07-16"
     try:
-        hhpoll.stamp_date("no dates here\n")
+        harvard_harris.stamp_date("no dates here\n")
         assert False, "a document with no stamp was dated anyway"
     except RuntimeError as e:
         assert "guesswork" in str(e), e
     try:
-        hhpoll.stamp_date("   16 Jul 2026\n   2 Jun 2026\n")
+        harvard_harris.stamp_date("   16 Jul 2026\n   2 Jun 2026\n")
         assert False, "two production stamps went unremarked"
     except RuntimeError as e:
         assert "different" in str(e), e
 
 
 def test_a_missing_converter_names_the_package_rather_than_skipping():
-    saved = hhpoll.BINARY
-    hhpoll.BINARY = "pdftotext-that-does-not-exist"
+    saved = harvard_harris.BINARY
+    harvard_harris.BINARY = "pdftotext-that-does-not-exist"
     try:
-        hhpoll.to_text(b"%PDF-1.7 ...")
+        harvard_harris.to_text(b"%PDF-1.7 ...")
         assert False, "a missing converter went unnoticed"
     except RuntimeError as e:
         assert "poppler" in str(e), e
     finally:
-        hhpoll.BINARY = saved
+        harvard_harris.BINARY = saved
 
 
 def test_the_archive_is_write_once_and_never_overwrites():
     d = tempfile.mkdtemp(prefix="ssa-hh-")
-    saved = hhpoll.ARCHIVE
-    hhpoll.ARCHIVE = d
+    saved = harvard_harris.ARCHIVE
+    harvard_harris.ARCHIVE = d
     try:
-        p = hhpoll.archive(b"%PDF-1.7 the poll", "2026-07-16")
-        assert hhpoll.archive(b"%PDF-1.7 the poll", "2026-07-16") == p
+        p = harvard_harris.archive(b"%PDF-1.7 the poll", "2026-07-16")
+        assert harvard_harris.archive(b"%PDF-1.7 the poll", "2026-07-16") == p
         try:
-            hhpoll.archive(b"%PDF-1.7 a different poll", "2026-07-16")
+            harvard_harris.archive(b"%PDF-1.7 a different poll", "2026-07-16")
             assert False, "an archived vintage was overwritten"
         except RuntimeError as e:
             assert "different document" in str(e), e
         with open(p, "rb") as f:
             assert f.read() == b"%PDF-1.7 the poll"
-        assert hhpoll.archived_days() == ["2026-07-16"]
+        assert harvard_harris.archived_days() == ["2026-07-16"]
     finally:
-        hhpoll.ARCHIVE = saved
+        harvard_harris.ARCHIVE = saved
         shutil.rmtree(d, ignore_errors=True)
 
 
 def test_an_empty_archive_refuses_to_invent_a_series():
     d = tempfile.mkdtemp(prefix="ssa-hh-")
-    saved = hhpoll.ARCHIVE
-    hhpoll.ARCHIVE = d
+    saved = harvard_harris.ARCHIVE
+    harvard_harris.ARCHIVE = d
     try:
-        hhpoll.load()
+        harvard_harris.load()
         assert False, "an empty archive produced a series"
     except RuntimeError as e:
         assert "no Harvard-Harris topline" in str(e), e
     finally:
-        hhpoll.ARCHIVE = saved
+        harvard_harris.ARCHIVE = saved
         shutil.rmtree(d, ignore_errors=True)
 
 
 def test_records_sort_by_fielding_date_and_refuse_duplicates():
     a = dict(EXPECTED)
     b = dict(EXPECTED, date="2026-05-31", approve=43.0, stamp="2026-06-02")
-    assert [r["date"] for r in hhpoll.to_records([a, b])] == \
+    assert [r["date"] for r in harvard_harris.to_records([a, b])] == \
         ["2026-05-31", "2026-07-12"]
     try:
-        hhpoll.to_records([a, dict(a, stamp="2026-07-17")])
+        harvard_harris.to_records([a, dict(a, stamp="2026-07-17")])
         assert False, "one poll filed under two stamps went unremarked"
     except RuntimeError as e:
         assert "two archived toplines" in str(e), e
@@ -398,7 +398,7 @@ def test_to_series_dates_by_stamp_and_keeps_skipped_months_absent():
     became public -- never the fielding day the record keeps. Fielding-dated
     rows would let a late-published wave slide into pre-lock history after
     the lock froze it (see the to_series docstring)."""
-    rows = hhpoll.to_series([
+    rows = harvard_harris.to_series([
         dict(EXPECTED, date="2026-04-26", approve=42.0, stamp="2026-04-28"),
         dict(EXPECTED, date="2026-05-31", approve=43.0, stamp="2026-06-02"),
         # no June poll exists, and no June row is invented
@@ -412,11 +412,11 @@ def test_fetching_the_next_poll_requires_a_maintainer_and_a_url():
     """No calendar, no derivable slug, no default URL: `fetch()` without one
     is a programming error, not a request."""
     try:
-        hhpoll.fetch()
+        harvard_harris.fetch()
         assert False, "fetch invented a URL"
     except TypeError:
         pass
-    assert callable(hhpoll.parse) and callable(hhpoll.to_text)
+    assert callable(harvard_harris.parse) and callable(harvard_harris.to_text)
 
 
 if __name__ == "__main__":

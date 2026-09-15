@@ -8,7 +8,7 @@ One page per source the arena scores against. Each says the same five things, in
 | Morning Consult | [morning-consult.md](morning-consult.md) | Morning Consult approval | `ssa/adapters/silverbulletin.py` |
 | Silver Bulletin poll database | [silver-bulletin.md](silver-bulletin.md) | Generic ballot & midterm; the poll-level records behind the two approval tasks above | `ssa/adapters/silverbulletin.py`, `ssa/average.py` |
 | Civiqs | [civiqs.md](civiqs.md) | Civiqs approval, the five Civiqs sentiment trackers, Civiqs 16-cell profile | `ssa/adapters/civiqs.py` |
-| Harvard CAPS / Harris | [harvard-harris.md](harvard-harris.md) | Harvard / Harris approval | `ssa/adapters/hhpoll.py` |
+| Harvard CAPS / Harris | [harvard-harris.md](harvard-harris.md) | Harvard / Harris approval | `ssa/adapters/harvard_harris.py` |
 | University of Michigan | [michigan.md](michigan.md) | Michigan consumer sentiment, Sentiment by party | `ssa/adapters/umich.py`, `ssa/adapters/umichparty.py` |
 | New York Fed SCE | [ny-fed-sce.md](ny-fed-sce.md) | Household inflation expectations | `ssa/adapters/sce.py` |
 | AAII | [aaii.md](aaii.md) | Investor sentiment | `ssa/adapters/aaii.py` |
