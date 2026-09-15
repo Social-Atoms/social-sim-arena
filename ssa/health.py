@@ -53,6 +53,10 @@ BUDGETS = {
     # skip; the adapter itself refuses a page whose newest row is over 21
     # days old, so `stale` here fires before the fetch starts failing loudly.
     "aaii": (3, 12),
+    # No announced calendar and occasional skipped months. The fetch clock
+    # catches a broken watcher quickly; the broad change clock catches a dead
+    # archive index without treating a skipped monthly wave as an outage.
+    "hhpoll": (3, 75),
 }
 DEFAULT_BUDGET = (3, 30)
 CIVIQS_WEEKLY_CHANGE_BUDGET_DAYS = 10

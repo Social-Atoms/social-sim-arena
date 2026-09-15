@@ -206,11 +206,13 @@ INVENTORY = {
         "rights": APPROVED,
         "evidence": (
             "No terms of use are published on harvardharrispoll.com. "
-            "Retrieval is manual by design: the adapter reads topline PDFs a "
-            "maintainer placed in the archive and nothing in the refresh "
-            "fetches it unasked. Only three monthly observations exist so "
-            "far, so the history gate refuses it and will keep refusing it "
-            "until the series is twelve months long."),
+            "The adapter watches the publisher's all-polls index on every "
+            "refresh because neither release dates nor document URLs are "
+            "predictable. Novel toplines are parsed and count/base validated "
+            "before their write-once PDFs enter sources/hhpoll; watcher "
+            "failure is reported while the validated archive remains usable. "
+            "The archive includes the separately verified M3 first-term "
+            "contract and the current M3ALT contract."),
     },
 
     # --- integrated inputs, never targets -----------------------------------

@@ -1160,12 +1160,14 @@ SERIES["hh_trump_approval"] = {
         "Harvard CAPS/Harris Poll online survey, roughly 1,700-2,750 US "
         "registered voters per wave, weighted to the US general adult "
         "population; approve is the published strongly/somewhat net from "
-        "the topline PDF (question code M3ALT). Rows are dated by the "
+        "the topline PDF (question code M3 in 2017-2020 and M3ALT in the "
+        "current term). Rows are dated by the "
         "production stamp -- the day the number became public -- so a "
         "late-published wave can never slide into history a forecaster "
         "already locked against. The series reads only the committed "
-        "vintages under sources/hhpoll/; a new wave enters when a "
-        "maintainer fetches its PDF."),
+        "vintages under sources/hhpoll/. The six-hour source watcher reads "
+        "the publisher's all-polls index and archives a novel topline only "
+        "after the same strict parser and count/base checks accept it."),
 }
 
 # --- Google Trends: the market-research track -------------------------------
@@ -1683,9 +1685,9 @@ def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
     # capture on success, newest archived vintage (with a loud warning) on
     # fetch failure: fetch what is there, never go dark when it is not.
     load("sce", lambda: sce_adapter.history(diagnostics=diagnostic_rows))
-    # Harvard-Harris publishes no calendar and no derivable URL, so the
-    # archive is the source of truth and nothing here fetches on its own; a
-    # new wave is a maintainer passing hhpoll.fetch a URL.
+    # The refresh injects the result of the all-polls watcher.  Other callers
+    # (candidate generation, tests and audits) stay offline and read the exact
+    # same committed write-once archive.
     load("hhpoll", hhpoll_adapter.load)
     # One workbook download carries every wave of every subgroup, so all
     # sixteen crosstab cells share a single request the way the five basket

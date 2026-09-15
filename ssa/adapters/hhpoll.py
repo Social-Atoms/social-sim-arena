@@ -3,9 +3,13 @@
   https://harvardharrispoll.com/all-polls/  ->  one page per poll  ->
       /assets/uploads/<yyyy>/<mm>/<name>.pdf   (Topline / KeyResults / Crosstabs)
 
-**What was verified before this adapter existed.** The three most recent
-toplines (April, May and July 2026 -- June was skipped) were downloaded and
-converted with `pdftotext -layout`. All three carry the identical structure:
+**Two table contracts were verified.** The 2017-2020 first-term archive uses
+question code ``M3`` and the exact wording "Do you approve or disapprove of
+the job Donald Trump is doing as President of the United States?".  Those
+tables publish approve and disapprove nets.  The 2025-present archive uses
+``M3ALT`` and the reversed wording below; those tables also publish a separate
+don't-know net.  All accepted PDFs are converted with ``pdftotext -layout``.
+The current contract is:
 
 - exactly one table whose title line is the question code **`M3ALT`** followed
   by the exact wording "Do you disapprove or approve of the job Donald J.
@@ -21,19 +25,22 @@ converted with `pdftotext -layout`. All three carry the identical structure:
 The anchor is the question *code*, not the word "Approve": one table later the
 same file prints `M3A_ISS ... Summary Of Strongly/Somewhat Approve` -- fifteen
 issue-approval percentages in the identical two-line shape -- and any looser
-anchor would read one of those and call it the topline. Only 2026 vintages
-were verified; a backfill into 2017-2025 needs its own verification pass
-before any of those PDFs are trusted.
+anchor would read one of those and call it the topline.  The historical
+backfill applies the same exact wording, national-base, net-sum and
+count-over-weighted-base checks to every first-term document rather than
+loosening the current parser until old files happen to fit.
 
 **What no code can know: when the next poll comes.** Harvard-Harris announces
 no release calendar, skips months without notice (no June 2026 poll exists),
 and neither the poll page slug (`/crosstabs-july-2026/`, `/crosstabs-may-2/`)
 nor the PDF name (`July2026_HHP_TOPLINE.pdf`, `HHP_May2026_Topline.pdf`,
 `HHP_Apr2026_Crosstabs.pdf`) nor even the upload directory month follows a
-derivable pattern. So this is the umichparty contract: **the archive is the
-source of truth, nothing here fetches on its own, and pointing `fetch` at a
-new month is a maintainer passing the URL.** A round on this series must set
-`release_estimated: true` and resolve on the next published wave.
+derivable pattern.  The all-polls index *is* enumerable, however, so it is the
+watcher's cursor: every refresh follows Topline pages above the newest catalog
+entry, validates the linked PDF, and files it write-once.  A changed table or
+broken index degrades visibly and serves the last validated archive.  A round
+on this series must still set `release_estimated: true` and resolve on the next
+published wave because discovery does not create a release calendar.
 
 **Who was asked.** Every page says both halves: "HCAPS (Filtered on Registered
 Voters) / Weighted To The U.S. General Adult Population". The scored number is
@@ -41,11 +48,11 @@ the approve net among those respondents as published; the registration filter
 and the adult-population weighting are the pollster's design, stated here so
 the prompt can state it too.
 
-**Rows are dated by the fielding end date**, the day the last interview was
-taken ("2026-07-12" for July 10-12) -- the convention poll averages already
-use -- and the archive vintage is named by the document's own production
-stamp, never the download day (the umich lesson: a PDF re-downloaded months
-later is still the old vintage).
+Each parsed record retains the **fielding end date**, the day the last
+interview was taken ("2026-07-12" for July 10-12).  The scored series is dated
+by the document's own production stamp -- when the number became knowable --
+and the archive vintage uses that same stamp, never the download day (the
+umich lesson: a PDF re-downloaded months later is still the old vintage).
 
 **Every number is cross-checked before it leaves.** The three percentage nets
 must sum to ~100 (Sigma is printed as 100%), and each net must agree with its
@@ -53,15 +60,19 @@ own count over the weighted base to within a rounding point. A percent read
 out of the wrong line fails one of the two; a table restructured out from
 under the parser fails both, loudly.
 """
+import hashlib
+import json
 import os
 import re
 import shutil
 import subprocess
+from urllib.parse import urljoin
 
 import requests
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ARCHIVE = os.path.join(ROOT, "sources", "hhpoll")
+CATALOG = os.path.join(ARCHIVE, "catalog.json")
 
 PAGE_URL = "https://harvardharrispoll.com/all-polls/"
 BINARY = "pdftotext"
@@ -75,6 +86,9 @@ UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
 CODE = "M3ALT"
 QUESTION = ("Do you disapprove or approve of the job Donald J. Trump is "
             "doing as President of the United States?")
+LEGACY_CODE = "M3"
+LEGACY_QUESTION = ("Do you approve or disapprove of the job Donald Trump is "
+                   "doing as President of the United States?")
 
 MONTHS = {m: i for i, m in enumerate(
     ["January", "February", "March", "April", "May", "June", "July",
@@ -83,12 +97,22 @@ MON3 = {m[:3]: i for m, i in MONTHS.items()}
 
 # The question-code line: `M3ALT <wording>`, heavily indented by -layout.
 ANCHOR = re.compile(rf"^[ \t\f]*{CODE}\b[ \t]*(.*\S)[ \t]*$")
+LEGACY_ANCHOR = re.compile(
+    rf"^[ \t\f]*{LEGACY_CODE}\b[ \t]*(.*\S)[ \t]*$")
 # A `<label>  <count>` line and the `(Net)/bare <pp>%` line that follows it.
 APPROVE = re.compile(r"^[ \t\f]*Strongly/Somewhat Approve[ \t]+([\d,]+)[ \t]*$")
 DISAPPROVE = re.compile(
     r"^[ \t\f]*Strongly/Somewhat Disapprove[ \t]+([\d,]+)[ \t]*$")
 DK = re.compile(r"^[ \t\f]*Don'?t Know/Not Sure[ \t]+([\d,]+)[ \t]*$")
 NET = re.compile(r"^[ \t\f]*(?:\(Net\))?[ \t]*(\d{1,2})%[ \t]*$")
+LEGACY_APPROVE = re.compile(
+    r"^[ \t\f]*(?:Strongly/Somewhat Approve|Approve \(Net\))"
+    r"[ \t]+([\d,]+)[ \t]*$")
+LEGACY_DISAPPROVE = re.compile(
+    r"^[ \t\f]*(?:Strongly/Somewhat Disapprove|Disapprove \(Net\))"
+    r"[ \t]+([\d,]+)[ \t]*$")
+LEGACY_NET = re.compile(
+    r"^[ \t\f]*(?:\(Net\))?[ \t]*(\d{1,3})%[ \t]*$")
 UNWEIGHTED = re.compile(r"^[ \t\f]*Unweighted Base[ \t]+([\d,]+)[ \t]*$")
 WEIGHTED = re.compile(r"^[ \t\f]*Weighted Base[ \t]+([\d,]+)[ \t]*$")
 # `Fielding Period: July 10 - 12, 2026` / `... June 28 - July 1, 2026`.
@@ -98,6 +122,17 @@ FIELDING_SPAN = re.compile(
     r"(\d{1,2}),[ \t]*(\d{4})$")
 # The production stamp, a bare `16 Jul 2026` right-aligned on every page.
 STAMP = re.compile(r"^[ \t\f]*(\d{1,2})[ \t]+([A-Z][a-z]{2})[ \t]+(\d{4})[ \t]*$")
+
+# The archive index is the stable discovery surface. It links to a document
+# page; that page in turn carries the actual PDF URL in `data-pdf`.  Neither
+# slug nor PDF filename is predictable, which is why watching the index is the
+# only safe automatic route.
+ROW_LINK = re.compile(
+    r'<a\s+class="row"\s+href="([^"]+)"[^>]*>(.*?)</a>', re.I | re.S)
+TOPLINE_LABEL = re.compile(
+    r'<span\s+class="rl">\s*Topline\s*</span>', re.I)
+PDF_LINK = re.compile(r'data-pdf="([^"]+\.pdf)"', re.I)
+WATCH_PAGE_LIMIT = 12
 
 # How many lines below the anchor the whole table must sit. The real table
 # spans ~38 lines; a table that wandered past this is a layout change.
@@ -287,6 +322,105 @@ def parse(text):
             "question": re.sub(r"\s+", " ", wording)}
 
 
+def parse_legacy(text):
+    """Parse the separately verified 2017-2020 M3 approval table.
+
+    First-term releases predate ``M3ALT`` and omit a separate don't-know row.
+    They use either ``Strongly/Somewhat Approve`` or ``Approve (Net)`` for the
+    two net rows.  The same count/base and 100-percent checks as the current
+    parser keep this a strict source adapter rather than a PDF heuristic.
+    """
+    lines = text.splitlines()
+    anchors = []
+    for i, line in enumerate(lines):
+        match = LEGACY_ANCHOR.match(line)
+        if match and re.sub(r"\s+", " ", match.group(1)).strip() == LEGACY_QUESTION:
+            anchors.append((i, LEGACY_QUESTION))
+    if len(anchors) != 1:
+        raise RuntimeError(
+            f"found {len(anchors)} exact legacy {LEGACY_CODE} presidential-"
+            "approval tables; expected 1")
+
+    start, wording = anchors[0]
+    end = min(start + WINDOW, len(lines))
+    next_question = re.compile(r"^[ \t\f]*M\d+[A-Z_]*\b")
+    for i in range(start + 1, end):
+        if next_question.match(lines[i]):
+            end = i
+            break
+    window = lines[start:end]
+    found = {}
+    for key, pattern in (("approve", LEGACY_APPROVE),
+                         ("disapprove", LEGACY_DISAPPROVE)):
+        hits = [(i, _int(match.group(1)))
+                for i, line in enumerate(window)
+                if (match := pattern.match(line))]
+        if len(hits) != 1:
+            raise RuntimeError(
+                f"found {len(hits)} legacy {key} rows; expected 1")
+        i, count = hits[0]
+        found[key] = (count, _net_after_pattern(
+            window, i, key, LEGACY_NET))
+
+    bases = {}
+    for key, pattern in (("unweighted", UNWEIGHTED),
+                         ("weighted", WEIGHTED)):
+        hits = [_int(match.group(1)) for line in window
+                if (match := pattern.match(line))]
+        if len(hits) != 1:
+            raise RuntimeError(
+                f"found {len(hits)} legacy {key} base rows; expected 1")
+        bases[key] = hits[0]
+    if min(bases.values()) < MIN_BASE:
+        raise RuntimeError("legacy table base is below 500; likely a subgroup")
+
+    total = sum(net for _count, net in found.values())
+    if abs(total - 100.0) > SUM_TOLERANCE:
+        raise RuntimeError(
+            f"legacy approve and disapprove sum to {total}, not approximately 100")
+    for key, (count, net) in found.items():
+        implied = 100.0 * count / bases["weighted"]
+        if abs(implied - net) > NET_TOLERANCE:
+            raise RuntimeError(
+                f"legacy {key} is {net}% but {count}/{bases['weighted']} "
+                f"implies {implied:.1f}%")
+
+    return {"date": fielding_end(text),
+            "approve": found["approve"][1],
+            "disapprove": found["disapprove"][1],
+            "dk": 0.0,
+            "unweighted_n": bases["unweighted"],
+            "stamp": stamp_date(text),
+            "question": wording}
+
+
+def _net_after_pattern(lines, i, what, pattern):
+    for line in lines[i + 1:i + 3]:
+        if not line.strip():
+            continue
+        match = pattern.match(line)
+        if match:
+            return float(match.group(1))
+        break
+    raise RuntimeError(
+        f"the {what} count on line {i + 1} is not followed by its percent; "
+        "the table layout has changed")
+
+
+def parse_any(text):
+    """Parse either verified presidential-term table contract."""
+    try:
+        return parse(text)
+    except RuntimeError as current_error:
+        try:
+            return parse_legacy(text)
+        except RuntimeError as legacy_error:
+            raise RuntimeError(
+                "no supported Harvard-Harris presidential-approval table; "
+                f"current parser: {current_error}; legacy parser: "
+                f"{legacy_error}") from legacy_error
+
+
 # --- the archive -------------------------------------------------------------
 #
 # `sources/hhpoll/<production stamp>.pdf`, committed, named by the date the
@@ -343,8 +477,111 @@ def load():
     records = []
     for day in days:
         with open(archive_path(day), "rb") as f:
-            records.append(parse(to_text(f.read())))
+            records.append(parse_any(to_text(f.read())))
     return to_records(records)
+
+
+def archive_pages(index_html):
+    """Topline document pages from the all-polls index, newest first."""
+    pages = []
+    for match in ROW_LINK.finditer(index_html):
+        if not TOPLINE_LABEL.search(match.group(2)):
+            continue
+        url = urljoin(PAGE_URL, match.group(1))
+        if url not in pages:
+            pages.append(url)
+    if not pages:
+        raise RuntimeError("the Harvard-Harris archive index contains no Topline links")
+    return pages
+
+
+def document_url(page_html, page_url):
+    """The one PDF linked by a Topline document page."""
+    links = list(dict.fromkeys(
+        urljoin(page_url, match.group(1)) for match in PDF_LINK.finditer(page_html)))
+    if len(links) != 1:
+        raise RuntimeError(
+            f"{page_url} carries {len(links)} data-pdf links; expected exactly 1")
+    return links[0]
+
+
+def _catalog():
+    if not os.path.exists(CATALOG):
+        return []
+    with open(CATALOG) as handle:
+        rows = json.load(handle)
+    if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+        raise RuntimeError("sources/hhpoll/catalog.json is not a list of records")
+    return rows
+
+
+def _write_catalog(rows):
+    os.makedirs(ARCHIVE, exist_ok=True)
+    tmp = CATALOG + ".tmp"
+    with open(tmp, "w") as handle:
+        json.dump(rows, handle, indent=2, sort_keys=True)
+        handle.write("\n")
+    os.replace(tmp, CATALOG)
+
+
+def _get(url, timeout=TIMEOUT):
+    response = requests.get(url, headers={"User-Agent": UA}, timeout=timeout)
+    response.raise_for_status()
+    return response.content
+
+
+def fetch_index(timeout=TIMEOUT):
+    """Fetch and minimally validate the publisher's discovery page."""
+    body = _get(PAGE_URL, timeout)
+    archive_pages(body.decode("utf-8", "replace"))
+    return body
+
+
+def update(timeout=TIMEOUT, page_limit=WATCH_PAGE_LIMIT, index_html=None):
+    """Discover and archive new toplines; return newly filed records.
+
+    The committed catalog is the cursor.  The all-polls page is newest-first,
+    so a normal run follows only pages above the first already-known page.  A
+    missing or changed approval table is an error: the watcher never labels a
+    novel release irrelevant on its own.
+    """
+    rows = _catalog()
+    known = {row.get("page_url") for row in rows}
+    index = (fetch_index(timeout).decode("utf-8", "replace")
+             if index_html is None else index_html)
+    unseen = []
+    for page_url in archive_pages(index):
+        if page_url in known:
+            break
+        unseen.append(page_url)
+        if len(unseen) > page_limit:
+            raise RuntimeError(
+                f"more than {page_limit} unseen topline pages precede the "
+                "catalog cursor; run the explicit backfill before the watcher")
+
+    added = []
+    for page_url in reversed(unseen):
+        page = _get(page_url, timeout).decode("utf-8", "replace")
+        pdf_url = document_url(page, page_url)
+        body = _get(pdf_url, timeout)
+        if body[:4] != b"%PDF":
+            raise RuntimeError(
+                f"{pdf_url} answered {len(body)} bytes that are not a PDF")
+        record = parse_any(to_text(body))
+        path = archive(body, record["stamp"])
+        rows.append({
+            "approve": record["approve"],
+            "bytes": len(body),
+            "fielding_end": record["date"],
+            "file": os.path.basename(path),
+            "page_url": page_url,
+            "pdf_url": pdf_url,
+            "sha256": hashlib.sha256(body).hexdigest(),
+            "stamp": record["stamp"],
+        })
+        _write_catalog(rows)
+        added.append(record)
+    return added
 
 
 def to_records(records):
@@ -397,15 +634,13 @@ def fetch(url, timeout=TIMEOUT):
     an archive is only worth committing if it holds the table this module
     can still read.
     """
-    r = requests.get(url, headers={"User-Agent": UA}, timeout=timeout)
-    r.raise_for_status()
-    body = r.content
+    body = _get(url, timeout)
     if body[:4] != b"%PDF":
         raise RuntimeError(
             f"{url} answered {len(body)} bytes that are not a PDF (starts "
             f"{body[:16]!r}); WordPress serves an HTML error page with a "
             "200, so this is a dead or moved link, not a poll")
-    rec = parse(to_text(body))
+    rec = parse_any(to_text(body))
     path = archive(body, rec["stamp"])
     print(f"  hhpoll  {len(body):>9,}B  stamped {rec['stamp']}  fielded "
           f"through {rec['date']}  approve {rec['approve']:.0f}%")

@@ -148,10 +148,93 @@ EXPECTED = {"date": "2026-07-12", "approve": 42.0, "disapprove": 54.0,
             "question": ("Do you disapprove or approve of the job Donald J. "
                          "Trump is doing as President of the United States?")}
 
+LEGACY = (
+    "Fielding Period: February 11 - 13, 2017\n"
+    "                                                                   16 Feb 2017\n"
+    "M3 Do you approve or disapprove of the job Donald Trump is doing as President of the United States?\n"
+    "\n"
+    "Unweighted Base                         2000\n"
+    "Weighted Base                           2000\n"
+    "Approve (Net)                             960\n"
+    "                                           48%\n"
+    "Disapprove (Net)                         1040\n"
+    "                                           52%\n"
+    "M4 Do you approve or disapprove of something else?\n"
+)
+
 
 def test_the_approval_record_comes_out_of_the_real_layout():
     got = hhpoll.parse(TOPLINE)
     assert got == EXPECTED, got
+
+
+def test_the_first_term_contract_is_a_separate_strict_parser():
+    got = hhpoll.parse_any(LEGACY)
+    assert got == {
+        "date": "2017-02-13", "approve": 48.0, "disapprove": 52.0,
+        "dk": 0.0, "unweighted_n": 2000, "stamp": "2017-02-16",
+        "question": hhpoll.LEGACY_QUESTION,
+    }, got
+    try:
+        hhpoll.parse_legacy(LEGACY.replace("Donald Trump", "President Trump"))
+        assert False, "a changed first-term instrument parsed"
+    except RuntimeError as e:
+        assert "expected 1" in str(e), e
+
+
+def test_the_archive_index_is_the_discovery_surface():
+    index = (
+        '<a class="row" href="/key-results-august/"><span class="rl">'
+        'Key Results</span></a>'
+        '<a class="row" href="/topline-august/"><span class="rl">'
+        'Topline</span></a>'
+        '<a class="row" href="/topline-july/"><span class="rl">'
+        'Topline</span></a>')
+    assert hhpoll.archive_pages(index) == [
+        "https://harvardharrispoll.com/topline-august/",
+        "https://harvardharrispoll.com/topline-july/",
+    ]
+    page = '<button data-pdf="/assets/uploads/2026/08/topline.pdf">Read</button>'
+    assert hhpoll.document_url(page, hhpoll.PAGE_URL) == \
+        "https://harvardharrispoll.com/assets/uploads/2026/08/topline.pdf"
+
+
+def test_the_watcher_uses_the_catalog_as_a_cursor():
+    d = tempfile.mkdtemp(prefix="ssa-hh-watch-")
+    saved = (hhpoll.ARCHIVE, hhpoll.CATALOG, hhpoll._get, hhpoll.to_text)
+    hhpoll.ARCHIVE = d
+    hhpoll.CATALOG = os.path.join(d, "catalog.json")
+    known = "https://harvardharrispoll.com/topline-july/"
+    new = "https://harvardharrispoll.com/topline-august/"
+    pdf = "https://harvardharrispoll.com/assets/topline-august.pdf"
+    with open(hhpoll.CATALOG, "w") as handle:
+        import json
+        json.dump([{"page_url": known}], handle)
+    bodies = {
+        hhpoll.PAGE_URL: (
+            '<a class="row" href="/topline-august/"><span class="rl">'
+            'Topline</span></a><a class="row" href="/topline-july/">'
+            '<span class="rl">Topline</span></a>').encode(),
+        new: f'<button data-pdf="{pdf}"></button>'.encode(),
+        pdf: b"%PDF watched topline",
+    }
+    calls = []
+    try:
+        hhpoll._get = lambda url, timeout=hhpoll.TIMEOUT: \
+            (calls.append(url) or bodies[url])
+        hhpoll.to_text = lambda _body: TOPLINE.replace(
+            "16 Jul 2026", "16 Aug 2026").replace(
+            "July 10 - 12, 2026", "August 10 - 12, 2026")
+        added = hhpoll.update()
+        assert [row["stamp"] for row in added] == ["2026-08-16"], added
+        assert calls == [hhpoll.PAGE_URL, new, pdf], calls
+        assert os.path.exists(os.path.join(d, "2026-08-16.pdf"))
+        calls[:] = []
+        assert hhpoll.update() == []
+        assert calls == [hhpoll.PAGE_URL], calls
+    finally:
+        hhpoll.ARCHIVE, hhpoll.CATALOG, hhpoll._get, hhpoll.to_text = saved
+        shutil.rmtree(d, ignore_errors=True)
 
 
 def test_the_anchor_is_the_question_code_not_the_word_approve():

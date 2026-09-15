@@ -17,7 +17,7 @@ import os
 import re
 from datetime import date, datetime, timedelta, timezone
 
-from .adapters import aaii, silverbulletin, umich
+from .adapters import aaii, hhpoll, silverbulletin, umich
 from . import health
 from . import provenance
 from . import reliability
@@ -2269,7 +2269,7 @@ def build_and_account_registry_sources(
     """
     registry_sources = sorted(
         {spec["source"] for spec in series_registry.SERIES.values()}
-        - {"sb_approval", "sb_generic", "umich", "aaii"})
+        - {"sb_approval", "sb_generic", "umich", "aaii", "hhpoll"})
     for name in registry_sources:
         run_status.source_started(
             name, route=f"ssa.series:{name}",
@@ -2449,6 +2449,32 @@ def main():
             (f"same-source {block['file']} sha256={block['sha256']} "
              f"parsed_asof={asof}")
 
+    # Harvard-Harris has no calendar and no predictable release URL.  The
+    # source's own all-polls index is its discovery feed.  Its raw HTML goes
+    # through the common manifest so transport freshness is observable; the
+    # linked PDFs remain their own write-once, production-stamped archive.
+    def load_hhpoll():
+        raw = hhpoll.fetch_index()
+        added = hhpoll.update(index_html=raw.decode("utf-8", "replace"))
+        rows = hhpoll.load()
+        block = provenance.record(
+            "hhpoll", hhpoll.PAGE_URL, raw, ext="html",
+            note=("Harvard-Harris all-polls discovery index; linked Topline "
+                  "PDFs are validated and stored write-once under "
+                  "sources/hhpoll"))
+        return {"rows": rows, "provenance": block}, \
+            (f"{block['file']} sha256={block['sha256']}; "
+             f"{len(rows)} validated waves, {len(added)} newly archived")
+
+    def archive_hhpoll():
+        raw, block = provenance.current(
+            "hhpoll", expected_url=hhpoll.PAGE_URL)
+        hhpoll.archive_pages(raw.decode("utf-8", "replace"))
+        rows = hhpoll.load()
+        return {"rows": rows, "provenance": block}, \
+            (f"same-source {block['file']} sha256={block['sha256']}; "
+             f"{len(rows)} validated write-once toplines")
+
     loaded, source_failures = run_source_tasks([
         ("sb_approval", silverbulletin.APPROVAL_URL,
          load_sb("sb_approval", silverbulletin.APPROVAL_URL,
@@ -2460,6 +2486,7 @@ def main():
          archive_sb("sb_generic", silverbulletin.GENERIC_URL)),
         ("umich", series_registry.MICHIGAN_URL, load_umich, archive_umich),
         ("aaii", aaii.URL, load_aaii, archive_aaii),
+        ("hhpoll", hhpoll.PAGE_URL, load_hhpoll, archive_hhpoll),
     ], run_status, next_deadline=next_deadline, next_lock=next_lock)
 
     # Every independent loader above has already run and every success is on
