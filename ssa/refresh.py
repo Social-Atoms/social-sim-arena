@@ -21,6 +21,7 @@ from .adapters import aaii, silverbulletin, umich
 from . import health
 from . import provenance
 from . import reliability
+from . import seal
 from . import stamps
 from . import average, backtest, baselines, batches, domains, envfile, harness, scoring, sharecard
 from . import participants
@@ -830,7 +831,7 @@ def job_still_due(r, path, now):
     draft, replaced only while the window proper is open -- once the buy-by
     boundary passes, the draft is the insurance and it stands.
     """
-    prev = read_forecast(path)
+    prev = read_available_forecast(path)
     if prev is None:
         return True
     if harness.filed_in_window(prev.get("notes"), r["lock_at"]):
@@ -901,7 +902,7 @@ def price_jobs(jobs, hist_by_round, read_forecast, news_for, prof_hist=None,
             model, ctx, eli = harness.resolve(entrant)
         except KeyError:
             continue
-        previous = read_forecast(path)
+        previous = read_available_forecast(path)
         notes = (previous or {}).get("notes") or ""
         try:
             if eli == "persona":
@@ -1118,6 +1119,98 @@ def read_forecast(path):
         return None
 
 
+def read_available_forecast(path):
+    """Plaintext forecast, or an arena-sealed one while the key is present."""
+    got = read_forecast(path)
+    if got is not None or not seal.enabled():
+        return got
+    rel = os.path.relpath(path, FORECASTS)
+    round_id, filename = rel.split(os.sep, 1)
+    entrant = filename[:-5] if filename.endswith(".json") else ""
+    receipt_path = seal.path(round_id, entrant)
+    if not os.path.exists(receipt_path):
+        return None
+    receipt = seal.read(receipt_path)
+    return seal.open_receipt(receipt, signing_keys())[0]
+
+
+def signing_keys():
+    """Published keys, with the configured live key available immediately."""
+    from . import signing
+    keys = signing.published_keys()
+    live = signing.live_signer()
+    if live is not None:
+        keys[live[1]] = signing.public_key_of(live[0])
+    return keys
+
+
+def validate_arena_forecast(round_def, body):
+    """Apply the committed schema and the round's semantic answer contract."""
+    import jsonschema
+    with open(os.path.join(ROOT, "schema", "forecast.schema.json")) as fh:
+        jsonschema.validate(body, json.load(fh))
+    if body.get("round_id") != round_def.get("round_id"):
+        raise ValueError("forecast round_id does not match the round")
+    if profile_round.is_profile(round_def):
+        profile_round.submission_cells(body, profile_round.cells_for(round_def))
+    elif ranking_round.is_ranking(round_def):
+        ranking_round.submission_list(body, ranking_round.spec_for(round_def))
+    elif not isinstance(body.get("topline"), dict):
+        raise ValueError("scalar round requires a topline distribution")
+
+
+def file_arena_forecast(round_def, body, received_at, *, deadline, replace=False):
+    """File an arena-collected answer without exposing it before the close."""
+    path = os.path.join(FORECASTS, body["round_id"], body["entrant"] + ".json")
+    validate_arena_forecast(round_def, body)
+    if seal.eligible(deadline):
+        if received_at >= deadline:
+            raise seal.SealError("refusing to seal a forecast received after its deadline")
+        return seal.seal_to_file(body, received_at=received_at, replace=replace)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        json.dump(body, f, indent=2)
+        f.write("\n")
+    return path
+
+
+def reveal_locked_forecasts(rounds, now):
+    """Open receipts from an earlier commit after their real deadline."""
+    if not seal.enabled():
+        return 0
+    revealed = 0
+    keys = signing_keys()
+    for r in rounds:
+        deadline = batches.effective_deadline(r["lock_at"])
+        if now < deadline:
+            continue
+        rdir = os.path.join(seal.SEALED, r["round_id"])
+        for filename in sorted(os.listdir(rdir)) if os.path.isdir(rdir) else []:
+            if not filename.endswith(".json"):
+                continue
+            receipt_path = os.path.join(rdir, filename)
+            receipt = seal.read(receipt_path)
+            try:
+                received = datetime.fromisoformat(
+                    receipt["received_at"].replace("Z", "+00:00"))
+            except (KeyError, TypeError, ValueError) as err:
+                raise seal.SealError(f"invalid receipt time in {receipt_path}") from err
+            if received >= deadline:
+                raise seal.SealError(f"late sealed forecast: {receipt_path}")
+            target = os.path.join(FORECASTS, r["round_id"],
+                                  receipt["entrant"] + ".json")
+            existed = os.path.exists(target)
+            seal.reveal_to_files(receipt_path, target, public_keys=keys)
+            revealed += 0 if existed else 1
+        # Raw replies, failures and model-selected search queries are equally
+        # capable of exposing an answer. They become public only with it.
+        from . import replies
+        from .adapters import search as search_adapter
+        replies.reveal_round(r["round_id"])
+        search_adapter.reveal_round(r["round_id"])
+    return revealed
+
+
 def scoreable_forecast(forecast):
     """False for a labelled local placeholder, whatever its valid shape.
 
@@ -1190,7 +1283,7 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
             rdir = os.path.join(FORECASTS, r["round_id"])
             for entrant, _model, _ctx, _eli in roster():
                 path = os.path.join(rdir, entrant + ".json")
-                previous = read_forecast(path)
+                previous = read_available_forecast(path)
                 if previous is None or not scoreable_forecast(previous):
                     run_status.entrant_missed(
                         r["round_id"], entrant, lock_at=r["lock_at"],
@@ -1208,7 +1301,7 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
             if run_status is not None and model_jobs_due(r, now):
                 for entrant, _model, _ctx, _eli in roster():
                     path = os.path.join(rdir, entrant + ".json")
-                    previous = read_forecast(path)
+                    previous = read_available_forecast(path)
                     if scoreable_forecast(previous):
                         record_existing(r, entrant, path, previous)
                     else:
@@ -1266,7 +1359,7 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
         for entrant, _model, _ctx, _eli in roster():
             path = os.path.join(rdir, entrant + ".json")
             if not job_still_due(r, path, now):
-                record_existing(r, entrant, path, read_forecast(path))
+                record_existing(r, entrant, path, read_available_forecast(path))
                 continue
             jobs.append((r, entrant, path))
 
@@ -1334,7 +1427,7 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
             body = harness.forecast(
                 entrant, r,
                 history=hist_by_round.get(r["round_id"]),
-                previous=read_forecast(path),
+                previous=read_available_forecast(path),
                 news=news,
                 profile_history=prof_hist.get(r["round_id"]),
                 ranking_history=rank_hist.get(r["round_id"]))
@@ -1344,13 +1437,24 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
             # participant deadline is hard. The successes land; main() reports
             # every failure and exits non-zero, so a run is loudly broken
             # without being silently incomplete.
-            failures.append(f"{r['round_id']}/{entrant}: {e}")
+            detail = ("sealed forecast attempt failed; inspect encrypted failure evidence"
+                      if seal.enabled() else str(e))
+            failures.append(f"{r['round_id']}/{entrant}: {detail}")
             if run_status is not None:
-                run_status.entrant_failed(r["round_id"], entrant, e)
+                run_status.entrant_failed(r["round_id"], entrant, detail)
             return 0
-        with open(path, "w") as f:
-            json.dump(body, f, indent=2)
-            f.write("\n")
+        try:
+            received_at = datetime.now(timezone.utc)
+            artifact = file_arena_forecast(
+                r, body, received_at,
+                deadline=batches.effective_deadline(r["lock_at"]))
+        except Exception as e:                     # fail one entrant, not the run
+            detail = ("sealed forecast validation or storage failed"
+                      if seal.enabled() else str(e))
+            failures.append(f"{r['round_id']}/{entrant}: {detail}")
+            if run_status is not None:
+                run_status.entrant_failed(r["round_id"], entrant, detail)
+            return 0
         if run_status is not None:
             if not scoreable_forecast(body):
                 run_status.entrant_failed(
@@ -1368,12 +1472,12 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
                         "configured direct route failed terminally; standby used")
                 run_status.entrant_succeeded(
                     r["round_id"], entrant, route=route,
-                    artifact=os.path.relpath(path, ROOT),
+                    artifact=os.path.relpath(artifact, ROOT),
                     fallback_error=fallback_error)
         return 1
 
     if jobs:
-        billable, usd = price_jobs(jobs, hist_by_round, read_forecast,
+        billable, usd = price_jobs(jobs, hist_by_round, read_available_forecast,
                                    news_for, prof_hist, rank_hist)
         costs = {(r["round_id"], entrant): cost
                  for r, entrant, _path, cost in billable}
@@ -1583,10 +1687,14 @@ def file_crowd_forecasts(rounds, now, backfill=False):
         if not os.path.isdir(rdir) or (backfill and os.path.exists(path)):
             continue
         members = []
-        for fn in sorted(os.listdir(rdir)):
+        names = set(os.listdir(rdir))
+        sealed_dir = os.path.join(seal.SEALED, r["round_id"])
+        if seal.enabled() and os.path.isdir(sealed_dir):
+            names.update(os.listdir(sealed_dir))
+        for fn in sorted(names):
             if not fn.endswith(".json"):
                 continue
-            fc = read_forecast(os.path.join(rdir, fn))
+            fc = read_available_forecast(os.path.join(rdir, fn))
             if not fc or not scoreable_forecast(fc):
                 continue
             if fc.get("entrant") in BASELINE_IDS or fc.get("entrant") == CROWD_ID:
@@ -1608,13 +1716,13 @@ def file_crowd_forecasts(rounds, now, backfill=False):
                       + f", crowd: equal-weight pool of the {pooled} forecasts "
                       "filed by then"),
         }
-        previous = read_forecast(path)
+        previous = read_available_forecast(path)
         if previous and {k: v for k, v in previous.items() if k != "notes"} == \
                         {k: v for k, v in body.items() if k != "notes"}:
             continue                      # same pool, same answer: leave the file alone
-        with open(path, "w") as f:
-            json.dump(body, f, indent=2)
-            f.write("\n")
+        file_arena_forecast(
+            r, body, datetime.now(timezone.utc),
+            deadline=batches.effective_deadline(r["lock_at"]), replace=True)
         written += 1
     return written
 
@@ -1701,6 +1809,21 @@ def count_forecasts(rounds):
                         fcs[fc["entrant"]] = entry
                     except (ValueError, KeyError):
                         continue
+        # Before the deadline, publish only that an arena-collected answer was
+        # received.  The signed receipt carries no answer or unsalted digest.
+        sdir = os.path.join(seal.SEALED, r["round_id"])
+        if seal.enabled() and os.path.isdir(sdir):
+            keys = signing_keys()
+            for fn in sorted(os.listdir(sdir)):
+                if not fn.endswith(".json"):
+                    continue
+                try:
+                    receipt = seal.read(os.path.join(sdir, fn))
+                    seal.verify_receipt(receipt, keys)
+                    fcs.setdefault(receipt["entrant"], {
+                        "filed": receipt["received_at"], "sealed": True})
+                except (OSError, KeyError, ValueError, seal.SealError):
+                    continue
         r["n_forecasts"] = len(fcs)
         r["forecasts"] = fcs
 
@@ -2358,6 +2481,10 @@ def main():
     next_deadline, next_lock = next_operational_times(season, now)
     run_status = reliability.RunStatus(now)
     skip_filing = os.environ.get("SSA_SKIP_FILING") == "1"
+    # A configured rollout without both secrets must stop before any model is
+    # called.  Otherwise the paid answer could exist only in an ephemeral log.
+    seal.require_rollout_consistent()
+    seal.require_ready()
     if skip_filing:
         run_status.carry_entrant_states(_load_previous_operator())
 
@@ -2548,6 +2675,9 @@ def main():
         filed, filing_failures = file_baseline_forecasts(
             rounds, hist_by_round, now, series, ranking_obs,
             run_status=run_status)
+    revealed = reveal_locked_forecasts(rounds, now)
+    if revealed:
+        print(f"revealed {revealed} sealed forecast(s)")
     crowd_filed = file_crowd_forecasts(rounds, now)
     if crowd_filed:
         print(f"crowd filed for {crowd_filed} round(s)")

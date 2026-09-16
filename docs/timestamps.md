@@ -77,6 +77,42 @@ submission, and the same one the leaderboard and the paper cite. **It is fixed**
 would prove the forecasts existed but not what they were forecasting *from*, and
 "the baselines were computed from strictly pre-lock data" is a claim too.
 
+## Arena-collected forecasts stay sealed until the deadline
+
+For rounds after the configured rollout boundary, the arena no longer commits
+its model and Route A answers as plaintext during the filing window. It writes
+an authenticated ciphertext to `sealed/<round>/<entrant>.json`. The receipt
+binds the round, entrant, exact platform receipt time, ciphertext and a salted
+commitment, and is signed by the live Ed25519 key already published in
+`site/keys.json`. The random salt is inside the ciphertext, so a small numeric
+answer cannot be guessed by enumerating hashes.
+
+After the participant deadline, refresh decrypts the receipt and writes the
+unchanged forecast to its existing `forecasts/<round>/<entrant>.json` path. It
+also publishes the salt under `reveal-receipts/`, so the landing audit can
+recompute the commitment without possessing the encryption key. The audit only
+accepts this as an on-time reveal when the signed receipt was already present
+in the parent commit, names the same round and entrant, predates the deadline,
+and the revealed bytes match. It does not use a commit-message trailer as a
+blanket deadline bypass.
+
+Raw provider replies, failure excerpts, and model-selected search queries can
+also disclose an answer. They are encrypted during the same window and opened
+after the deadline. Baselines remain plaintext because they are deterministic
+functions of public history.
+
+This receipt time trusts the arena as the receiver. OpenTimestamps remains the
+independent post-close proof over the completed plaintext manifest; it is not
+claimed as a per-receipt pre-close timestamp.
+
+Rollout is explicit: `SSA_SEAL_FORECASTS=1` and an ISO `SSA_SEAL_AFTER` select
+future deadlines only. Enabling without the Fernet `SSA_SEAL_KEY` or the
+published live signing key fails before provider calls. `SSA_SEAL_KEY` must not
+be rotated while any receipt remains unopened; losing it makes those forecasts
+unrecoverable. The feature flag must likewise remain enabled until every
+pending receipt has been revealed; disabling it would make refresh ignore the
+sealed queue.
+
 ## The two phases, and why the second one is not optional
 
 `ots stamp` returns in about a second with a calendar's receipt. The Bitcoin

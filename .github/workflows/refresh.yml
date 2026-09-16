@@ -33,6 +33,11 @@ jobs:
       # Unset, no participant is called -- never an unsigned request.
       SSA_SIGNING_KEY: ${{ secrets.SSA_SIGNING_KEY }}
       SSA_SIGNING_KEY_ID: ${{ vars.SSA_SIGNING_KEY_ID || 'ssa-live' }}
+      # Opt-in rollout. The symmetric seal key must not be rotated while an
+      # unrevealed receipt exists; the Ed25519 key signs its public receipt.
+      SSA_SEAL_FORECASTS: ${{ vars.SSA_SEAL_FORECASTS }}
+      SSA_SEAL_AFTER: ${{ vars.SSA_SEAL_AFTER }}
+      SSA_SEAL_KEY: ${{ secrets.SSA_SEAL_KEY }}
       # Model entrants run only for providers whose key is set. Missing keys or
       # failed calls are reported and file nothing: automation never enables
       # the scalar-only mock escape hatch used for local development.
@@ -192,6 +197,9 @@ jobs:
           #            model asked for it, and the index will not return the
           #            same thing tomorrow.
           git add -A forecasts site resolutions locks civiqs trends wikitop news stamps sources search replies README.md brand/contributors
+          for path in sealed reveal-receipts; do
+            [ ! -e "$path" ] || git add -A "$path"
+          done
           # ignore the generated_at stamp so no-op runs do not commit
           if git diff --cached --quiet -I '"generated_at"'; then
             echo "no substantive change"
