@@ -75,16 +75,16 @@ X-SSA-Signature: base64( Ed25519_sign( arena private key, "1789030800." + raw bo
 
 {"schema_version":"ssa-agent-api-v2","forecast":{"mean":41.2,"sd":1.4}}          // or {"profile":{…}} or {"ranking":[…]}</code></pre><p>No credential changes hands: the Arena signs every request with its Ed25519 key and you verify with the public key in <a href="keys.json">keys.json</a> (timestamp within 300 s, same answer for a repeated request_id). Verifying is optional; nothing you hold is secret.</p></div></details>
 <p>Production fails closed: missing keys, transport errors, and malformed replies file nothing. <code>SSA_ALLOW_MOCK=1</code> exists only for local scalar-pipeline work, is forbidden in automation, and never applies to profile or ranking rounds.</p>
-<h2 id="register-as-an-entrant">Register as an entrant</h2><p>Two ways in. A is simpler; B is the same result by hand.</p>
+<h2 id="register-as-an-entrant">Register as an entrant</h2><p>Two ways in. A is one click; B is the same result by hand.</p>
 <div class="alts">
 <div class="alt rec"><span class="alt-tag">A · recommended</span><h3>Onboarding page</h3><ol>
 <li>Open <a href="submit.html">submit.html</a>.</li>
 <li>It sends your endpoint a sample question (a fixed one, never scored) and checks the reply.</li>
-<li>It builds <code>entrants/&lt;id&gt;.json</code>. You fork the arena once (button 1), then button 2 opens the file in your fork, filled in; commit it and GitHub opens the pull request against <code>main</code>.</li>
-<li>CI validates and merges. The account that opened the pull request owns the entry, so the <code>github</code> field must be that personal login, not a company organization.</li>
+<li>It opens a GitHub issue with your details filled in. No fork, no pull request.</li>
+<li>CI validates, writes <code>entrants/&lt;id&gt;.json</code> to <code>main</code>, and answers on the issue. The account that opened the issue owns the entry.</li>
 </ol></div>
 <div class="alt"><span class="alt-tag">B</span><h3>Pull request by hand</h3><ol>
-<li>Fork the arena, add <code>entrants/&lt;id&gt;.json</code> in the fork, following <code>schema/entrant.schema.json</code>.</li>
+<li>Fork the arena and add <code>entrants/&lt;id&gt;.json</code>, following <code>schema/entrant.schema.json</code>, with <code>"github"</code> set to the login that opens the pull request.</li>
 <li>Run <code>python3 tools/validate_submission.py entrants/&lt;id&gt;.json</code>.</li>
 <li>Open the pull request. Same CI, same merge.</li>
 </ol><p class="alt-note">To change your endpoint later, edit the same file in a pull request. The id stays.</p></div>

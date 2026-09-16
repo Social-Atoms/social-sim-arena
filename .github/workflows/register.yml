@@ -1,0 +1,91 @@
+name: register
+
+# A "Register an entrant" issue becomes entrants/<id>.json on main, with no
+# fork and no pull request. tools/register_from_issue.py reads the form and
+# sets `github` to the issue's author; tools/validate_submission.py judges the
+# file exactly as it judges a pull request (--author is the issue author, so a
+# second registration under someone else's id is refused); the commit lands
+# on main as github-actions[bot], which main-guard.yml allows, and the issue
+# is answered and closed. A failure is quoted back on the issue and the issue
+# stays open: edit it and the workflow runs again.
+#
+# The issue body is data, never code: nothing here checks out or executes
+# anything from it, and the JSON it becomes is the only thing written.
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: main-writers
+  cancel-in-progress: false
+
+jobs:
+  register:
+    if: contains(github.event.issue.labels.*.name, 'registration')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: write and validate the registration
+        id: reg
+        env:
+          ISSUE_JSON: ${{ toJSON(github.event.issue) }}
+          RECEIVED: ${{ github.event.issue.created_at }}
+          AUTHOR: ${{ github.event.issue.user.login }}
+        run: |
+          printf '%s' "$ISSUE_JSON" > /tmp/issue.json
+          set +e
+          rel=$(python tools/register_from_issue.py /tmp/issue.json 2>&1 | tee /tmp/reg.log | tail -1)
+          rc=${PIPESTATUS[0]}
+          if [ "$rc" != "0" ]; then echo "ok=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          python tools/validate_submission.py --now "$RECEIVED" --author "$AUTHOR" --base origin/main "$rel" > /tmp/val.log 2>&1
+          rc=$?
+          cat /tmp/val.log
+          echo "rel=$rel" >> "$GITHUB_OUTPUT"
+          if [ "$rc" = "0" ]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
+      - name: commit to main
+        if: steps.reg.outputs.ok == 'true'
+        env:
+          REL: ${{ steps.reg.outputs.rel }}
+          AUTHOR: ${{ github.event.issue.user.login }}
+          RECEIVED: ${{ github.event.issue.created_at }}
+          NUMBER: ${{ github.event.issue.number }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$REL"
+          if git diff --cached --quiet; then echo "already on main"; exit 0; fi
+          git commit -m "Register ${REL#entrants/} from #${NUMBER} by @${AUTHOR}" -m "Received-At: ${RECEIVED}"
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((i * 10))
+          done
+          exit 1
+      - name: answer the issue
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          OK: ${{ steps.reg.outputs.ok }}
+          REL: ${{ steps.reg.outputs.rel }}
+        with:
+          script: |
+            const fs = require('fs');
+            const read = p => { try { return fs.readFileSync(p, 'utf8').trim(); } catch (e) { return ''; } };
+            const ok = process.env.OK === 'true' && '${{ job.status }}' === 'success';
+            const log = [read('/tmp/reg.log'), read('/tmp/val.log')].filter(Boolean).join('\n').replace(/::error::/g, '');
+            const body = ok
+              ? `Registered. \`${process.env.REL}\` is on \`main\` with \`"github": "${context.payload.issue.user.login}"\`; the arena calls your endpoint from the next batch. To change the endpoint later, open a pull request editing the same file from that account.\n\n<details><summary>validation</summary>\n\n\`\`\`\n${log}\n\`\`\`\n</details>`
+              : `Not registered yet. Edit this issue to fix what is quoted below and it runs again.\n\n\`\`\`\n${log || 'the workflow failed before validation; a maintainer will look'}\n\`\`\``;
+            await github.rest.issues.createComment({...context.repo, issue_number: context.issue.number, body});
+            if (ok) await github.rest.issues.update({...context.repo, issue_number: context.issue.number, state: 'closed', state_reason: 'completed'});
