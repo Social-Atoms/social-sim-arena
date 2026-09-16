@@ -9,8 +9,16 @@ name: register
 # is answered and closed. A failure is quoted back on the issue and the issue
 # stays open: edit it and the workflow runs again.
 #
-# The issue body is data, never code: nothing here checks out or executes
-# anything from it, and the JSON it becomes is the only thing written.
+# Threat model, in short. The issue body is data, never code: it reaches the
+# job only through an environment variable (never through a ${{ }} expression
+# inside a shell line), nothing here checks out or executes anything from it,
+# and the JSON it becomes is the only thing written. Identity is the issue's
+# author from the event payload, which the participant cannot set. The token
+# is the job's own GITHUB_TOKEN, scoped to contents and issues; there are no
+# secrets. The seat costs something (a weekly call), so the endpoint has to
+# pass the arena's probe before the file is written, and one login may hold
+# three seats (validate_submission.MAX_ROUTES_PER_LOGIN). A closed issue that
+# is edited does nothing; an id that already exists is refused by the API.
 
 on:
   issues:
@@ -26,7 +34,7 @@ concurrency:
 
 jobs:
   register:
-    if: contains(github.event.issue.labels.*.name, 'registration')
+    if: github.event.issue.state == 'open' && contains(github.event.issue.labels.*.name, 'registration')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,6 +57,14 @@ jobs:
           rel=$(python tools/register_from_issue.py /tmp/issue.json 2>&1 | tee /tmp/reg.log | tail -1)
           rc=${PIPESTATUS[0]}
           if [ "$rc" != "0" ]; then echo "ok=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          url=$(python -c "import json,sys; print(json.load(open(sys.argv[1]))['route']['url'])" "$rel")
+          # The endpoint must answer the arena's fixtures before it gets a seat:
+          # a registration is a call the cron pays for every week, and a form
+          # anyone can fill must not be able to buy that for a dead URL.
+          python tools/probe_agent_api.py --url "$url" --timeout 30 --retries 1 > /tmp/probe.log 2>&1
+          rc=$?
+          cat /tmp/probe.log
+          if [ "$rc" != "0" ]; then echo "ok=false" >> "$GITHUB_OUTPUT"; exit 0; fi
           python tools/validate_submission.py --now "$RECEIVED" --author "$AUTHOR" --base origin/main "$rel" > /tmp/val.log 2>&1
           rc=$?
           cat /tmp/val.log
@@ -56,36 +72,42 @@ jobs:
           if [ "$rc" = "0" ]; then echo "ok=true" >> "$GITHUB_OUTPUT"; else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
       - name: commit to main
         if: steps.reg.outputs.ok == 'true'
+        id: commit
+        uses: actions/github-script@v7
         env:
           REL: ${{ steps.reg.outputs.rel }}
           AUTHOR: ${{ github.event.issue.user.login }}
           RECEIVED: ${{ github.event.issue.created_at }}
           NUMBER: ${{ github.event.issue.number }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "$REL"
-          if git diff --cached --quiet; then echo "already on main"; exit 0; fi
-          git commit -m "Register ${REL#entrants/} from #${NUMBER} by @${AUTHOR}" -m "Received-At: ${RECEIVED}"
-          for i in 1 2 3 4 5; do
-            git pull --rebase origin main && git push origin HEAD:main && exit 0
-            sleep $((i * 10))
-          done
-          exit 1
+        with:
+          # One call to the Contents API: the commit is made and signed by
+          # GitHub itself (a verified commit by github-actions[bot]), lands on
+          # the current tip of main, and needs no local git, no rebase, no
+          # retry. A registration is always a new file, so no sha is passed;
+          # if the id already exists the API refuses and the issue says so.
+          script: |
+            const fs = require('fs');
+            const rel = process.env.REL;
+            const content = fs.readFileSync(rel).toString('base64');
+            const message = `Register ${rel.replace('entrants/', '')} from #${process.env.NUMBER} by @${process.env.AUTHOR}\n\nReceived-At: ${process.env.RECEIVED}`;
+            const res = await github.rest.repos.createOrUpdateFileContents({...context.repo, path: rel, branch: 'main', message, content});
+            core.setOutput('sha', res.data.commit.sha);
+            core.setOutput('url', res.data.commit.html_url);
       - name: answer the issue
         if: always()
         uses: actions/github-script@v7
         env:
           OK: ${{ steps.reg.outputs.ok }}
           REL: ${{ steps.reg.outputs.rel }}
+          COMMIT: ${{ steps.commit.outputs.url }}
         with:
           script: |
             const fs = require('fs');
             const read = p => { try { return fs.readFileSync(p, 'utf8').trim(); } catch (e) { return ''; } };
-            const ok = process.env.OK === 'true' && '${{ job.status }}' === 'success';
-            const log = [read('/tmp/reg.log'), read('/tmp/val.log')].filter(Boolean).join('\n').replace(/::error::/g, '');
+            const ok = process.env.OK === 'true' && !!process.env.COMMIT;
+            const log = [read('/tmp/reg.log'), read('/tmp/probe.log'), read('/tmp/val.log')].filter(Boolean).join('\n').replace(/::error::/g, '').replace(/`/g, "'").slice(0, 6000);
             const body = ok
-              ? `Registered. \`${process.env.REL}\` is on \`main\` with \`"github": "${context.payload.issue.user.login}"\`; the arena calls your endpoint from the next batch. To change the endpoint later, open a pull request editing the same file from that account.\n\n<details><summary>validation</summary>\n\n\`\`\`\n${log}\n\`\`\`\n</details>`
+              ? `Registered: ${process.env.COMMIT}\n\n\`${process.env.REL}\` is on \`main\` with \`"github": "${context.payload.issue.user.login}"\`; the arena calls your endpoint from the next batch. To change the endpoint later, open a pull request editing the same file from that account.\n\n<details><summary>validation</summary>\n\n\`\`\`\n${log}\n\`\`\`\n</details>`
               : `Not registered yet. Edit this issue to fix what is quoted below and it runs again.\n\n\`\`\`\n${log || 'the workflow failed before validation; a maintainer will look'}\n\`\`\``;
             await github.rest.issues.createComment({...context.repo, issue_number: context.issue.number, body});
             if (ok) await github.rest.issues.update({...context.repo, issue_number: context.issue.number, state: 'closed', state_reason: 'completed'});
