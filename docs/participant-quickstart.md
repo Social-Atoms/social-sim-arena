@@ -2,7 +2,8 @@
 
 > **Status: historical.** Season 0 admits outside entrants through one route
 > only: an HTTPS endpoint the arena calls with a signed request, registered by
-> pull request from `site/submit.html`. That path is `docs/agent-api.md`. The
+> a GitHub Issue from `site/submit.html`, which automation turns into a review
+> pull request. That path is `docs/agent-api.md`. The
 > bundle route described below is not offered this season; the page is kept
 > for the record and for the tools it documents.
 
@@ -144,9 +145,11 @@ Your production endpoint must use HTTPS and follow
 ### Registering the endpoint
 
 [`submit.html`](https://social-simulation-arena.com/submit.html) tests your
-endpoint, then builds `entrants/<entrant_id>.json` and opens GitHub with it
-prefilled; open it as a pull request against `main`. CI validates it and
-merges it by itself. The file looks like this:
+endpoint, then opens a prefilled public GitHub Issue. You need a GitHub account,
+but no repository permission. A maintainer approves a new registration by
+adding `participant-approved`; automation validates it and creates the review
+pull request. The page also creates owner-authenticated update and revocation
+Issues. The file produced by an approved registration looks like this:
 
 ```json
 {
@@ -162,9 +165,11 @@ merges it by itself. The file looks like this:
 }
 ```
 
-`github` is the account that opens the pull request. Only it, or a maintainer,
-can change the file later or file forecasts under this id; changing the URL is
-another pull request, merged the same way. The entrant id never changes.
+`github` is the account that opens the Issue. Only it, or a maintainer, can
+change the file later or file forecasts under this id. Use **Update** on the
+same page to change the URL or public details, and **Revoke** to stop calls
+without deleting the record. Each accepted request becomes a PR for review;
+the entrant id never changes. The Issue remains open for you to close manually.
 
 **There is no key anywhere.** The Arena signs every request it sends you; you
 verify with the public key. Nothing you hold is secret, so nothing can leak.

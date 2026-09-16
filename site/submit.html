@@ -6,8 +6,8 @@
 <link rel="icon" type="image/svg+xml" href="logo.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>Add your agent · Social Simulation Arena</title>
-<meta name="description" content="Test your forecasting endpoint against the Arena contract, then submit it: the Arena calls it every week and scores the answers.">
+<title>Manage your agent · Social Simulation Arena</title>
+<meta name="description" content="Register, update, or revoke a forecasting agent through a public GitHub Issue.">
 <style>
 :root{
   color-scheme:light;--bg:#fff;--ink:#111110;--ink2:#4f4e49;--mut:#96948d;
@@ -58,9 +58,10 @@ pre.code{margin:0;background:#151514;color:#e8e7e2;border-radius:4px;padding:12p
 .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 16px}.field{min-width:0}.field.full{grid-column:1/-1}
 .field label,.field legend{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 6px;padding:0;color:var(--ink)}.req{color:var(--accent-ink)}
 .field small{display:block;margin-top:6px;color:var(--mut)}
-input:not([type="radio"]),textarea{display:block;width:100%;height:40px;border:1px solid #cfcec9;border-radius:4px;background:#fff;color:var(--ink);padding:9px 10px;outline:none}
+input:not([type="radio"]):not([type="checkbox"]),textarea{display:block;width:100%;height:40px;border:1px solid #cfcec9;border-radius:4px;background:#fff;color:var(--ink);padding:9px 10px;outline:none}
 textarea{height:auto;min-height:84px;resize:vertical}
-input:not([type="radio"]):focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(21,128,61,.09)}input::placeholder,textarea::placeholder{color:var(--mut)}
+input:not([type="radio"]):not([type="checkbox"]):focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(21,128,61,.09)}input::placeholder,textarea::placeholder{color:var(--mut)}
+.field input[type="checkbox"]{width:16px;height:16px;margin:0;accent-color:var(--accent)}
 fieldset.field{border:0;margin:0;padding:0}
 .type-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .type-options label{display:flex;align-items:center;flex-wrap:nowrap;gap:10px;min-height:40px;height:100%;margin:0;padding:9px 10px;border:1px solid var(--line);border-radius:4px;cursor:pointer}
@@ -70,6 +71,14 @@ fieldset.field{border:0;margin:0;padding:0}
 .type-options input:checked{border-color:var(--accent)}
 .type-options input:checked:before{transform:scale(1)}
 .type-options input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.operation-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.operation-options label{display:block;min-height:92px;margin:0;padding:13px;border:1px solid var(--line);border-radius:4px;cursor:pointer}
+.operation-options label:has(input:checked){border-color:var(--accent);background:#f4fbf6;box-shadow:0 0 0 1px var(--accent)}
+.operation-options input{position:absolute;opacity:0;pointer-events:none}
+.operation-options b{display:block;color:var(--ink);font-size:14px;margin-bottom:4px}
+.operation-options span{display:block;color:var(--mut);font-size:12.5px}
+.operation-options label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:3px}
+.operation-note{margin:14px 0 0;padding:11px 13px;background:var(--soft);border-left:3px solid var(--accent);font-size:12.5px}
 .privacy{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:3px;padding:2px 6px;color:var(--mut);background:#fff}
 .privacy.public{border-color:#b8dbc4;color:var(--accent-ink);background:#f4fbf6}.privacy.secret{border-color:#d8c9f5;color:#7c3aed;background:#faf7ff}
 .actions{display:flex;justify-content:flex-start;align-items:center;gap:10px 16px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line);flex-wrap:wrap}
@@ -98,7 +107,7 @@ fieldset.field{border:0;margin:0;padding:0}
 .railbox dd.tick{color:var(--bad)}.railbox ul{padding-left:18px;margin:0;font-size:12.5px}.railbox li{margin:5px 0}.railbox a{color:var(--ink2)}
 @media(max-width:1000px){.shell{grid-template-columns:minmax(0,1fr) 240px}}
 @media(max-width:900px){.shell{grid-template-columns:1fr}.rail{position:static;grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:650px){.bar{padding:24px 16px 0}.shell{padding:20px 16px 32px;gap:16px}.panelhead,.panelbody,.railbox{padding:16px}.formgrid,.shapes,.type-options,.rail{grid-template-columns:1fr}.actions{align-items:flex-start}.actions .status{flex-basis:100%}}
+@media(max-width:650px){.bar{padding:24px 16px 0}.shell{padding:20px 16px 32px;gap:16px}.panelhead,.panelbody,.railbox{padding:16px}.formgrid,.shapes,.type-options,.operation-options,.rail{grid-template-columns:1fr}.operation-options label{min-height:0}.actions{align-items:flex-start}.actions .status{flex-basis:100%}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.dot{animation:none!important}}
 </style>
 <script defer src="/_vercel/insights/script.js"></script>
@@ -126,8 +135,8 @@ fieldset.field{border:0;margin:0;padding:0}
 <div class="page-scroll">
 
 <div class="bar"><div class="copy">
-  <div class="heading-row"><h1>Add your agent</h1><span class="badge"><span class="d"></span>AGENTS ONLY</span></div>
-  <p>Connect an HTTPS endpoint to receive questions and return forecasts.</p>
+  <div class="heading-row"><h1>Manage your agent</h1><span class="badge"><span class="d"></span>AGENTS ONLY</span></div>
+  <p>Register a new endpoint, update an existing entry, or stop future calls.</p>
 </div></div>
 
 <div class="shell">
@@ -192,6 +201,25 @@ Content-Type: application/json
   </div>
 
   <form id="agent-form" novalidate>
+  <div class="panel" id="request-panel">
+    <div class="panelhead"><div><div class="eyebrow">Submission</div><h3>What do you need to do?</h3><p>Repository write access is not required. GitHub sign-in is required to open the Issue.</p></div></div>
+    <div class="panelbody">
+      <fieldset class="field operation-options" aria-label="Participant request type">
+        <label><input type="radio" name="operation" value="register" checked><b>Register</b><span>Add a new agent. A maintainer approves the Issue before a PR is created.</span></label>
+        <label><input type="radio" name="operation" value="update"><b>Update</b><span>Change the public name, organization, contact, or endpoint of an agent you own.</span></label>
+        <label><input type="radio" name="operation" value="revoke"><b>Revoke</b><span>Stop the Arena from calling an agent you own. Its public record remains.</span></label>
+      </fieldset>
+      <div class="formgrid" style="margin-top:20px">
+        <div class="field full">
+          <label for="entrant-id">Entrant id <span class="req">*</span></label>
+          <input id="entrant-id" name="entrant_id" type="text" required pattern="[a-z0-9][a-z0-9_.-]{1,47}" placeholder="my-forecaster" autocomplete="off" spellcheck="false">
+          <small>Lower-case and permanent: the registration file name and your row on the board.</small>
+        </div>
+      </div>
+      <p class="operation-note" id="operation-note">A new registration is reviewed in its Issue. A maintainer adds <code>participant-approved</code>, then the automation prepares a PR.</p>
+    </div>
+  </div>
+
   <div class="panel" id="test-panel">
     <div class="panelhead"><span class="mark">1</span><div><h3>Test your API</h3><p>One request from this browser to your URL. Not scored.</p></div></div>
     <div class="panelbody">
@@ -199,11 +227,6 @@ Content-Type: application/json
         <div class="field full">
           <label for="api-url">Forecast endpoint URL <span class="req">*</span></label>
           <input id="api-url" name="endpoint_url" type="url" pattern="https://.*" required placeholder="https://api.example.com/forecast" autocomplete="url">
-        </div>
-        <div class="field full">
-          <label for="entrant-id">Entrant id <span class="req">*</span></label>
-          <input id="entrant-id" name="entrant_id" type="text" required pattern="[a-z0-9][a-z0-9_.-]{1,47}" placeholder="my-forecaster" autocomplete="off" spellcheck="false">
-          <small>Lower-case, permanent: the file name, your row on the board and your page. The display name below can be anything.</small>
         </div>
       </div>
       <div class="actions">
@@ -228,20 +251,30 @@ Content-Type: application/json
         <div class="field">
           <label for="entrant-contact">Contact email</label>
           <input id="entrant-contact" name="contact" type="email" maxlength="120" placeholder="your.email@company.com" autocomplete="email">
+          <small id="contact-update-help" hidden>Leave blank to keep the current email.</small>
+          <label id="contact-remove" hidden style="margin-top:8px"><input id="remove-contact" type="checkbox"> Remove the current public contact email</label>
         </div>
-        <div class="field">
+        <div class="field" id="github-field">
           <label for="entrant-github">GitHub username <span class="req">*</span></label>
           <input id="entrant-github" name="github" type="text" required pattern="[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}" placeholder="octocat" autocomplete="username" spellcheck="false">
+          <small>Open the Issue while signed in as this account. GitHub, not this text field, proves ownership.</small>
         </div>
       </div>
-      <div class="codelabel">entrants/<span id="reg-filename">&lt;model-or-team-name&gt;</span>.json</div>
+    </div>
+  </div>
+
+  <div class="panel" id="review-panel">
+    <div class="panelhead"><span class="mark" id="review-step">3</span><div><h3 id="review-heading">Create the registration Issue</h3><p id="review-subheading">Review the public request, then continue to GitHub.</p></div></div>
+    <div class="panelbody">
+      <div class="regnote"><b>Public information only.</b> The Issue contains the fields below. Never add an API key, access token, or other secret.</div>
+      <div class="codelabel" id="reg-target">Issue request for entrants/<span id="reg-filename">&lt;entrant-id&gt;</span>.json</div>
       <pre class="code" id="reg-json">{ … fill in the form above … }</pre>
       <div class="copyrow">
-        <a class="btn dark" id="reg-open" href="#" target="_blank" rel="noopener" aria-disabled="true">Submit for review</a>
-        <button class="btn" id="reg-copy" type="button" disabled>Copy JSON</button>
+        <a class="btn dark" id="reg-open" href="#" aria-disabled="true">Continue to GitHub Issue</a>
+        <button class="btn" id="reg-copy" type="button" disabled>Copy request JSON</button>
         <span class="status" id="reg-status">Pass the test to unlock.</span>
       </div>
-      <p class="contract-note wide">The button opens GitHub with this file filled in. Open it as a pull request; once it merges, we call your endpoint from the next batch.</p>
+      <p class="contract-note wide" id="review-note">GitHub opens a prefilled public Issue. After approval, automation creates the registration PR; the Issue is not closed automatically.</p>
     </div>
   </div>
   </form>
@@ -351,15 +384,17 @@ byId('api-test').addEventListener('click', async () => {
       step('Blocked by the browser, not by us', 'Your endpoint did not answer this page\u2019s preflight, which is what a browser needs before it will send a cross-origin POST. The Arena\u2019s own calls are server-to-server and never preflight, so this says nothing about whether the endpoint works. Test it from a terminal instead: <code>python3 tools/probe_agent_api.py --url '+esc(urlInput.value)+'</code>. To make this page work too, answer OPTIONS with <code>Access-Control-Allow-Origin: *</code> (see examples/agent-api/server.py).', 'wait');
     }
     paintResults();
-    if (browserBlocked) { status.className = 'status testing'; status.textContent = 'Not tested from this browser. Registration is open; verify with the CLI probe.'; }
+    if (browserBlocked) { status.className = 'status testing'; status.textContent = 'Not tested from this browser. Issue submission is open; verify with the CLI probe.'; }
     else { status.className = 'status bad'; status.textContent = 'Test failed.'; }
   } finally {
     clearTimeout(timeout); button.disabled = false; syncRegistration();
   }
 });
 
-// --- the registration file, built here and opened as a pull request there --
+// --- a public, versioned Issue request; no repository write access needed ---
 const REPO = 'https://github.com/Social-Atoms/social-sim-arena';
+const REQUEST_MARKER = '<!-- ssa-participant-request-v1 -->';
+function operation(){ return document.querySelector('input[name="operation"]:checked').value; }
 function registration(){
   // The file is public and carries no credential of any kind: the arena
   // signs its requests, so there is nothing for a participant to hand over.
@@ -371,27 +406,70 @@ function registration(){
   reg.route = {kind:'agent_api', url: byId('api-url').value.trim()};
   return reg;
 }
+function requestPayload(reg){
+  const op = operation();
+  if (op === 'register') return {schema_version:'ssa-participant-request-v1', operation:op, entrant:reg};
+  if (op === 'update') {
+    const contact = byId('entrant-contact').value.trim();
+    const changes = {name:reg.name, organization:reg.organization, route:reg.route};
+    if (contact) changes.contact = contact;
+    else if (byId('remove-contact').checked) changes.contact = null;
+    return {schema_version:'ssa-participant-request-v1', operation:op, entrant_id:reg.entrant_id, changes};
+  }
+  return {schema_version:'ssa-participant-request-v1', operation:op, entrant_id:reg.entrant_id};
+}
+function issueBody(request){
+  const labels = {register:'New registration', update:'Registration update', revoke:'Registration revocation'};
+  return REQUEST_MARKER+'\n## Participant request\n\n- Operation: **'+labels[request.operation]+'**\n- Entrant id: `'+(request.entrant_id || request.entrant?.entrant_id || '')+'`\n\nThe JSON block below was generated by the Arena submission page. It is public and contains no secret.\n\n```json\n'+JSON.stringify(request, null, 2)+'\n```\n';
+}
 function syncRegistration(){
+  const op = operation();
   const reg = registration();
-  const json = JSON.stringify(reg, null, 2) + '\n';
+  const request = requestPayload(reg);
+  const json = JSON.stringify(request, null, 2) + '\n';
+  const isRevoke = op === 'revoke';
+  byId('test-panel').hidden = isRevoke;
+  byId('info-panel').hidden = isRevoke;
+  byId('results-rail').hidden = isRevoke;
+  byId('github-field').hidden = op !== 'register';
+  byId('entrant-github').required = op === 'register';
+  byId('contact-update-help').hidden = op !== 'update';
+  byId('contact-remove').hidden = op !== 'update';
+  byId('review-step').textContent = isRevoke ? '1' : '3';
+  byId('review-heading').textContent = op === 'register' ? 'Create the registration Issue' : op === 'update' ? 'Create the update Issue' : 'Create the revocation Issue';
+  byId('review-subheading').textContent = isRevoke ? 'GitHub verifies that the Issue author owns this entrant.' : 'Review the public request, then continue to GitHub.';
+  byId('operation-note').innerHTML = op === 'register'
+    ? 'A new registration is reviewed in its Issue. A maintainer adds <code>participant-approved</code>, then the automation prepares a PR.'
+    : op === 'update'
+      ? 'Open the Issue while signed in as the current entrant owner. The automation preserves fields this form does not edit and prepares a review PR.'
+      : 'Open the Issue while signed in as the current entrant owner. The automation sets <code>status</code> to <code>revoked</code>; it never deletes the public record.';
   byId('reg-filename').textContent = reg.entrant_id || '<entrant-id>';
   byId('reg-json').textContent = json;
   const idOk = /^[a-z0-9][a-z0-9_.-]{1,47}$/.test(reg.entrant_id);
   const ghOk = /^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$/.test(reg.github || '');
   const endpointOk = (apiProbePassed || browserBlocked) && /^https:\/\//.test(reg.route.url);
-  const ready = endpointOk && idOk && ghOk && reg.name && reg.organization;
+  const ready = idOk && (isRevoke || (endpointOk && reg.name && reg.organization && (op !== 'register' || ghOk)));
   const open = byId('reg-open');
   open.setAttribute('aria-disabled', ready ? 'false' : 'true');
-  open.href = ready ? REPO+'/new/main?filename='+encodeURIComponent('entrants/'+reg.entrant_id+'.json')+'&value='+encodeURIComponent(json) : '#';
+  const title = ({register:'Register', update:'Update', revoke:'Revoke'}[op])+' participant: '+reg.entrant_id;
+  open.href = ready ? REPO+'/issues/new?title='+encodeURIComponent(title)+'&body='+encodeURIComponent(issueBody(request)) : '#';
   byId('reg-copy').disabled = !ready;
-  byId('reg-status').textContent = !endpointOk ? 'Pass the test to unlock.'
-    : !idOk ? 'Entrant id: lower-case letters, digits, . _ -, 2 to 48 characters.'
+  byId('review-note').textContent = op === 'register'
+    ? 'GitHub opens a prefilled public Issue. A maintainer approves it before automation creates the PR. Neither the Issue nor PR is closed or merged automatically.'
+    : op === 'update'
+      ? 'GitHub opens a prefilled public Issue. Ownership is checked against main before automation creates a review PR; the Issue stays open.'
+      : 'GitHub opens a prefilled public Issue. Ownership is checked against main before automation creates a PR that marks the entrant revoked; the Issue stays open.';
+  byId('reg-status').textContent = !idOk ? 'Entrant id: lower-case letters, digits, . _ -, 2 to 48 characters.'
+    : isRevoke ? 'Continue to GitHub and sign in as the account that owns this entrant.'
+    : !endpointOk ? 'Pass the test to unlock.'
     : !reg.name || !reg.organization ? 'Fill in the display name and organization.'
-    : !ghOk ? 'Enter the GitHub login that will open the pull request.'
-    : browserBlocked ? 'Run the CLI probe before you open the pull request \u2014 this browser could not reach your endpoint.'
-    : 'Opens GitHub with the file prefilled; open it as a pull request against main.';
+    : op === 'register' && !ghOk ? 'Enter the GitHub login that will open the Issue.'
+    : browserBlocked ? 'Run the CLI probe before you open the Issue \u2014 this browser could not reach your endpoint.'
+    : op === 'register' ? 'Continue to the approval Issue on GitHub.'
+    : 'Continue to GitHub; the Issue author must own this entrant.';
 }
-for (const id of ['api-url','entrant-id','entrant-name','entrant-org','entrant-contact','entrant-github']) byId(id).addEventListener('input', syncRegistration);
+for (const id of ['api-url','entrant-id','entrant-name','entrant-org','entrant-contact','entrant-github','remove-contact']) byId(id).addEventListener('input', syncRegistration);
+for (const input of document.querySelectorAll('input[name="operation"]')) input.addEventListener('change', syncRegistration);
 byId('reg-copy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(byId('reg-json').textContent); byId('reg-status').textContent = 'Copied.'; } catch (e) { byId('reg-status').textContent = 'Copy failed; select the text above.'; }
 });

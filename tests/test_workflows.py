@@ -22,6 +22,8 @@ def test_questions_workflow_triggers_on_its_own_contract_changes():
     # the workflow can silently skip the very check being repaired.
     assert body.count('- ".github/workflows/questions.yml"') == 2
     assert body.count('- ".github/workflows/refresh.yml"') == 2
+    assert body.count('- ".github/workflows/participant-intake.yml"') == 2
+    assert body.count('- "site/submit.html"') == 2
     # Discovery, not a hand-written list. The list this replaced named 14 of
     # 51 suites and skipped `test_scoring.py`; two skipped suites sat red on
     # dev while this workflow reported success. Asserting the loop rather than
@@ -208,6 +210,20 @@ def test_the_candidate_job_never_promotes_anything():
     for bad in ("API_KEY", "secrets.", "OPENAI", "ANTHROPIC"):
         assert bad not in body, f"the candidate job references {bad}"
     print("ok test_the_candidate_job_never_promotes_anything")
+
+
+def test_participant_issues_require_admission_approval_and_never_auto_close():
+    body = text(".github/workflows/participant-intake.yml")
+    assert "types: [opened, edited, reopened, labeled]" in body
+    assert "participant-approved" in body
+    assert "steps.request.outputs.ready == 'true'" in body
+    assert "tools/participant_issue.py" in body
+    assert "tools/validate_submission.py" in body
+    assert "gh pr create --base main" in body
+    for forbidden in ("gh issue close", "issues.update({", "gh pr merge"):
+        assert forbidden not in body, f"intake must leave review to maintainers: {forbidden}"
+    assert "The Issue remains open" in body
+    print("ok test_participant_issues_require_admission_approval_and_never_auto_close")
 
 
 if __name__ == "__main__":

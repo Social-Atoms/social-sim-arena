@@ -252,13 +252,16 @@ class SubmissionPrototype(unittest.TestCase):
                 '<div class="page" id="page-exam">', 1)[0]
 
     def test_page_is_agents_only_and_has_no_form_to_fill_in(self):
-        # Two panels, in Prophet Arena's order: test the API, then the model
-        # information, and one submit button that opens the pull request.
+        # One page handles all three lifecycle requests. Register and update
+        # still test the API; revoke skips straight to an owner-authenticated
+        # Issue instead of asking for endpoint fields it will not use.
         for marker in ('<h3>Test your API</h3>', 'id="api-test"', 'name="endpoint_url"',
                        '>Forecast endpoint URL <', '>Entrant id <', 'id="entrant-id"',
                        '<h3>Your details</h3>', '>Display name <', '>Company / organization <',
                        'id="entrant-org"', 'id="entrant-github"', 'id="reg-json"',
-                       '>Submit for review</a>', '<h3>Test results</h3>', '<h3>API response</h3>'):
+                       'value="register"', 'value="update"', 'value="revoke"',
+                       '>Continue to GitHub Issue</a>', '<h3>Test results</h3>',
+                       '<h3>API response</h3>'):
             self.assertIn(marker, self.page)
         # Gone: the second route, the type radio, the method line, the
         # calendar, and everything from the questionnaire era.
@@ -313,16 +316,21 @@ class SubmissionPrototype(unittest.TestCase):
         self.assertEqual(signing.TEST_PUBLIC_KEY, test["public_key"])
         self.assertEqual(signing.TEST_PRIVATE_KEY, test["private_key"])
 
-    def test_registration_is_a_pull_request_by_its_owner_with_no_secret_in_it(self):
+    def test_registration_redirects_to_an_owner_authenticated_issue_with_no_secret(self):
         builder = self.page.split("function registration(){", 1)[1].split(
             "function syncRegistration(){", 1)[0]
         self.assertNotIn("api-key", builder)
         self.assertNotIn("key", builder.lower().replace("kind", ""))
         self.assertIn("kind:'agent_api'", builder)
         self.assertIn("if (github) reg.github = github;", builder)
-        self.assertIn("'/new/main?filename='", self.page)
-        self.assertIn("encodeURIComponent('entrants/'+reg.entrant_id+'.json')", self.page)
-        self.assertIn("const ready = endpointOk && idOk && ghOk", self.page)
+        self.assertIn("REPO+'/issues/new?title='", self.page)
+        self.assertIn("<!-- ssa-participant-request-v1 -->", self.page)
+        self.assertIn("operation:op, entrant:reg", self.page)
+        self.assertIn("operation:op, entrant_id:reg.entrant_id, changes}", self.page)
+        self.assertIn("else if (byId('remove-contact').checked) changes.contact = null;", self.page)
+        self.assertIn("return {schema_version:'ssa-participant-request-v1', operation:op, entrant_id:reg.entrant_id}", self.page)
+        self.assertIn("const ready = idOk && (isRevoke ||", self.page)
+        self.assertNotIn("'/new/main?filename='", self.page)
         self.assertNotIn("/api/v1/registrations", self.page)
         self.assertIn('pattern="[a-z0-9][a-z0-9_.-]{1,47}"', self.page)
         with open(os.path.join(ROOT, "schema", "entrant.schema.json")) as f:

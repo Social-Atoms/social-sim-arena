@@ -1,0 +1,246 @@
+name: participant-issue-intake
+
+# The public submission page creates an Issue instead of asking an outsider to
+# write to this repository.  A new registration waits for a maintainer's
+# `participant-approved` label.  An update or revocation is accepted only from
+# the GitHub owner already recorded on main.  Every accepted request becomes a
+# reviewable PR; this workflow never merges it and never closes the Issue.
+on:
+  issues:
+    types: [opened, edited, reopened, labeled]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: participant-intake-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  intake:
+    if: contains(github.event.issue.body, '<!-- ssa-participant-request-v1 -->')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install jsonschema
+
+      - name: ensure the request and approval labels exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          gh label create participant-request --color 1D76DB --description "Participant registration, update, or revocation" --force
+          gh label create participant-approved --color 0E8A16 --description "Maintainer approved a new participant registration" --force
+          gh issue edit "$ISSUE" --add-label participant-request
+
+      - name: validate the Issue request
+        id: request
+        continue-on-error: true
+        env:
+          STATUS_FILE: ${{ runner.temp }}/participant-intake-status.md
+        run: |
+          python tools/participant_issue.py \
+            --event "$GITHUB_EVENT_PATH" \
+            --base origin/main \
+            --github-output "$GITHUB_OUTPUT" \
+            --status-file "$STATUS_FILE"
+
+      - name: report an invalid request
+        if: steps.request.outcome == 'failure'
+        uses: actions/github-script@v7
+        env:
+          STATUS_FILE: ${{ runner.temp }}/participant-intake-status.md
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- participant-intake-status -->';
+            const body = fs.readFileSync(process.env.STATUS_FILE, 'utf8');
+            const {data: comments} = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number, per_page: 100
+            });
+            const old = comments.find(c => c.body?.includes(marker) && c.user?.type === 'Bot');
+            if (old) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: old.id, body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body
+              });
+            }
+
+      - name: stop after an invalid request
+        if: steps.request.outcome == 'failure'
+        run: exit 1
+
+      - name: report that a registration is waiting for approval
+        if: steps.request.outputs.ready != 'true'
+        uses: actions/github-script@v7
+        env:
+          STATUS_FILE: ${{ runner.temp }}/participant-intake-status.md
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- participant-intake-status -->';
+            const body = fs.readFileSync(process.env.STATUS_FILE, 'utf8');
+            const {data: comments} = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number, per_page: 100
+            });
+            const old = comments.find(c => c.body?.includes(marker) && c.user?.type === 'Bot');
+            if (old) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: old.id, body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body
+              });
+            }
+
+      - name: write and validate the entrant change
+        id: prepare
+        if: steps.request.outputs.ready == 'true'
+        env:
+          BRANCH: participant-intake/issue-${{ github.event.issue.number }}
+          ISSUE_AUTHOR: ${{ steps.request.outputs.author }}
+          TARGET: ${{ steps.request.outputs.target }}
+        run: |
+          git fetch origin main
+          if git ls-remote --exit-code --heads origin "$BRANCH"; then
+            git fetch origin "$BRANCH:refs/remotes/origin/$BRANCH"
+          fi
+          git switch -C "$BRANCH" origin/main
+          python tools/participant_issue.py \
+            --event "$GITHUB_EVENT_PATH" \
+            --base origin/main \
+            --write
+          python tools/validate_submission.py \
+            --author "$ISSUE_AUTHOR" \
+            --base origin/main \
+            "$TARGET"
+          git add "$TARGET"
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "${{ steps.request.outputs.title }} (issue #${{ github.event.issue.number }})"
+          git push --force-with-lease origin "HEAD:refs/heads/$BRANCH"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: create or update the review pull request
+        id: pull
+        if: steps.request.outputs.ready == 'true' && steps.prepare.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: participant-intake/issue-${{ github.event.issue.number }}
+          ISSUE: ${{ github.event.issue.number }}
+          ISSUE_AUTHOR: ${{ steps.request.outputs.author }}
+          OPERATION: ${{ steps.request.outputs.operation }}
+          PR_TITLE: ${{ steps.request.outputs.title }}
+        run: |
+          printf -v BODY '%s\n\n%s\n%s\n\n%s\n\n%s\n\n%s' \
+            "Generated from participant request #$ISSUE." \
+            "Requested by: @$ISSUE_AUTHOR" \
+            "Operation: \`$OPERATION\`" \
+            "The Issue intake validated the request against \`origin/main\` and the entrant schema. Please review and merge this PR manually." \
+            "Refs #$ISSUE" \
+            "<!-- participant-intake-issue: $ISSUE -->"
+          PR_URL=$(gh pr list --base main --head "$BRANCH" --state open --json url --jq '.[0].url // empty')
+          if [ -n "$PR_URL" ]; then
+            gh pr edit "$PR_URL" --title "$PR_TITLE" --body "$BODY"
+          else
+            PR_URL=$(gh pr create --base main --head "$BRANCH" --title "$PR_TITLE" --body "$BODY")
+          fi
+          echo "url=$PR_URL" >> "$GITHUB_OUTPUT"
+
+      - name: report the pull request
+        if: steps.request.outputs.ready == 'true' && steps.prepare.outputs.changed == 'true'
+        uses: actions/github-script@v7
+        env:
+          PR_URL: ${{ steps.pull.outputs.url }}
+          OPERATION: ${{ steps.request.outputs.operation }}
+        with:
+          script: |
+            const marker = '<!-- participant-intake-status -->';
+            const body = `${marker}\n✅ The \`${process.env.OPERATION}\` request passed ownership and schema checks. Review PR ${process.env.PR_URL}.\n\nThe Issue remains open; merging the PR does not close it.`;
+            const {data: comments} = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number, per_page: 100
+            });
+            const old = comments.find(c => c.body?.includes(marker) && c.user?.type === 'Bot');
+            if (old) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: old.id, body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body
+              });
+            }
+
+      - name: report an already-applied request
+        if: steps.request.outputs.ready == 'true' && steps.prepare.outputs.changed == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- participant-intake-status -->';
+            const body = `${marker}\n✅ The requested entrant file already matches \`main\`; no pull request is needed.\n\nThe Issue remains open.`;
+            const {data: comments} = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number, per_page: 100
+            });
+            const old = comments.find(c => c.body?.includes(marker) && c.user?.type === 'Bot');
+            if (old) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: old.id, body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body
+              });
+            }
+
+      - name: report an intake infrastructure failure
+        if: failure() && steps.request.outcome != 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- participant-intake-status -->';
+            const run = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = `${marker}\n❌ The request was valid, but the intake automation failed while preparing its pull request. A maintainer should inspect [this run](${run}).\n\nThe Issue remains open and can be retried.`;
+            const {data: comments} = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number, per_page: 100
+            });
+            const old = comments.find(c => c.body?.includes(marker) && c.user?.type === 'Bot');
+            if (old) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: old.id, body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body
+              });
+            }

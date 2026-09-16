@@ -56,7 +56,17 @@ The arena holds no key of yours, so there is nothing of yours for it to leak.
   round. The arena never invents an answer under someone else's id and never
   forwards their question to a vendor on our account (`ssa/agent_api.py`).
 
-## What a pull request can and cannot do
+## What a participant Issue and pull request can and cannot do
+
+- The public page redirects registration, update, and revocation requests to a
+  GitHub Issue. GitHub sign-in is required; repository permission is not.
+- A new registration produces no pull request until a maintainer adds the
+  `participant-approved` label. Update and revoke requests must be opened by
+  the GitHub owner recorded on `main` (or a maintainer). Issue text is parsed
+  only as one versioned JSON block; it is never executed, and the workflow
+  never calls the submitted endpoint.
+- An accepted request creates a review PR and an Issue status comment. The
+  intake workflow never merges the PR or closes the Issue.
 
 - The bot merges a pull request by itself only when every changed file is a
   registration under the author's own GitHub login, none removed or renamed,

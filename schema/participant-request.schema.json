@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Social Sim Arena participant request",
+  "description": "The machine-readable block embedded in a participant registration, update, or revocation issue.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "operation"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "ssa-participant-request-v1"
+    },
+    "operation": {
+      "enum": [
+        "register",
+        "update",
+        "revoke"
+      ]
+    },
+    "entrant_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_.-]{1,47}$"
+    },
+    "entrant": {
+      "type": "object"
+    },
+    "changes": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "organization": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "contact": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 120
+        },
+        "route": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "url"
+          ],
+          "properties": {
+            "kind": {
+              "const": "agent_api"
+            },
+            "url": {
+              "type": "string",
+              "pattern": "^https://[^\\s?#]+$",
+              "maxLength": 300
+            }
+          }
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "operation": {
+          "const": "register"
+        }
+      },
+      "required": [
+        "entrant"
+      ],
+      "not": {
+        "anyOf": [
+          {"required": ["entrant_id"]},
+          {"required": ["changes"]}
+        ]
+      }
+    },
+    {
+      "properties": {
+        "operation": {
+          "const": "update"
+        }
+      },
+      "required": [
+        "entrant_id",
+        "changes"
+      ],
+      "not": {"required": ["entrant"]}
+    },
+    {
+      "properties": {
+        "operation": {
+          "const": "revoke"
+        }
+      },
+      "required": [
+        "entrant_id"
+      ],
+      "not": {
+        "anyOf": [
+          {"required": ["entrant"]},
+          {"required": ["changes"]}
+        ]
+      }
+    }
+  ]
+}

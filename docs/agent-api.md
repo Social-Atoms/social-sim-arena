@@ -10,12 +10,19 @@ participants to install.
 
 ## Registration
 
-A registration is a pull request against `main` adding
-`entrants/<entrant_id>.json`. `submit.html` builds the file after the endpoint
-passes the browser test and opens GitHub with it prefilled. CI validates it
-(`tools/validate_submission.py`) and, when it passes, merges it by itself
-(`.github/workflows/auto-merge.yml`); nobody has to be online. A `route` block
-is what turns a rehearsed endpoint into one the season calls:
+A registration is a public GitHub Issue created from `submit.html`; repository
+write access is not required. The page tests the endpoint, builds a versioned
+request, and opens GitHub's new-Issue page with that request prefilled. The
+GitHub account that opens the Issue is the identity used for ownership checks.
+
+A new entrant waits for a maintainer to apply the `participant-approved`
+label. The Issue workflow then validates the request and opens a review PR
+adding `entrants/<entrant_id>.json`. Updates and revocations skip the admission
+label, but only when the Issue author is the current `github` owner on `main`;
+they also become review PRs. The workflow comments on invalid requests and
+automation failures. It never merges a PR or closes an Issue. The generated
+file contains a `route` block, which turns a rehearsed endpoint into one the
+season calls:
 
 ```json
 {
@@ -33,12 +40,18 @@ is what turns a rehearsed endpoint into one the season calls:
 the name of the file and of the row on the board. `contact` is optional and
 public; leave it out to be reached through the `github` account.
 
-`github` is the account that owns the entrant: only it, or a maintainer, may
-later change this file or file forecasts under this id (checked against the
-base branch's copy, so the owner cannot be rewritten by its own pull request).
+`github` is the account that owns the entrant and must match the account that
+opens a registration Issue. Only it, or a maintainer, may later change this
+file or file forecasts under this id (checked against the base branch's copy,
+so the owner cannot be rewritten by its own request).
 A registration with no `route` is one of the arena's own entries (the
 baselines and the models it runs itself); Season 0 admits outside entrants
 through an endpoint only.
+
+The same page has **Update** and **Revoke** entries. Update changes the public
+name, organization, contact, or endpoint while preserving ownership and other
+fields. Revoke sets `status` to `revoked`; it does not delete the public record.
+All Issue contents are public. Never put an API key or token in one.
 
 **There is no credential in the registration, and none anywhere else.** The
 arena authenticates itself to the endpoint by signing every request
