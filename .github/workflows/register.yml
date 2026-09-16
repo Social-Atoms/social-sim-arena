@@ -122,7 +122,7 @@ jobs:
             const ok = process.env.OK === 'true' && !!process.env.COMMIT;
             const log = [read('/tmp/reg.log'), read('/tmp/probe.log'), read('/tmp/val.log')].filter(Boolean).join('\n').replace(/::error::/g, '').replace(/`/g, "'").slice(0, 6000);
             const body = ok
-              ? `Done: ${process.env.COMMIT}\n\n\`${process.env.REL}\` is on \`main\`, owned by \`"github": "${context.payload.issue.user.login}"\`. It takes effect from the next batch. To change it later, open this form again from the same account with the full new values, or a pull request editing the file.\n\n<details><summary>validation</summary>\n\n\`\`\`\n${log}\n\`\`\`\n</details>`
+              ? `Done: ${process.env.COMMIT}\n\n\`${process.env.REL}\` is on \`main\`, owned by \`"github": "${context.payload.issue.user.login}"\`. It takes effect from the next batch. To change it later, open this form again from the same account with the full new values (the Retire box leaves).\n\n<details><summary>validation</summary>\n\n\`\`\`\n${log}\n\`\`\`\n</details>`
               : `Not registered yet. Edit this issue to fix what is quoted below and it runs again.\n\n\`\`\`\n${log || 'the workflow failed before validation; a maintainer will look'}\n\`\`\``;
             await github.rest.issues.createComment({...context.repo, issue_number: context.issue.number, body});
             if (ok) await github.rest.issues.update({...context.repo, issue_number: context.issue.number, state: 'closed', state_reason: 'completed'});
