@@ -1940,7 +1940,19 @@ BASELINE_IDS = {"persistence", "trend", "ewma", "climatology"}
 def attach_round_scores(rounds, profile_board, ranking_board):
     """Copy each scored profile and ranking round's per-entrant scores onto the
     round itself, the way build_leaderboard leaves them on number rounds, so
-    every resolved round says how every entrant did on it."""
+    every resolved round says how every entrant did on it.
+
+    This is also where a profile or ranking round becomes `resolved`. A number
+    round resolves through `resolutions/resolved.json`, which `round_status`
+    reads; a profile or ranking round resolves from its own archived series
+    inside `build_profile_leaderboard` / `build_ranking_leaderboard` and writes
+    nothing to that file. Left alone, such a round carried scores in
+    `data.profile` / `data.ranking` while its own row still said
+    `awaiting_resolution`, and the site showed a scored question as waiting.
+    The round's `resolution` gets the outcome the board scored against, under
+    `outcome` (a cell vector or an ordered list; `items` too for a ranking, the
+    key the ranking chart already reads), so the question page can show it.
+    """
     by_id = {r["round_id"]: r for r in rounds}
     for block, keys in ((profile_board, ("energy", "skill")),
                         (ranking_board, ("loss", "skill"))):
@@ -1950,6 +1962,15 @@ def attach_round_scores(rounds, profile_board, ranking_board):
                 continue
             r["scores"] = {e["entrant"]: {k: e[k] for k in keys if k in e}
                            for e in pr.get("entries", [])}
+            r["status"] = "resolved"
+            resolution = dict(r.get("resolution") or {})
+            resolution.update(pr.get("resolution") or {})
+            outcome = pr.get("outcome")
+            if outcome is not None:
+                resolution["outcome"] = outcome
+                if isinstance(outcome, list):
+                    resolution["items"] = list(outcome)
+            r["resolution"] = resolution
 
 
 def published_lists(weeks=12):
