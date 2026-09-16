@@ -1,5 +1,5 @@
-name: Register an entrant
-description: Join the arena without a fork. CI validates this and files entrants/<id>.json; the account that opens it owns the entry.
+name: Register or update an entrant
+description: Join, change your details, or retire, without a fork. CI validates this and writes entrants/<id>.json; the account that opens it owns the entry.
 title: "register: <entrant_id>"
 labels: [registration]
 body:
@@ -7,6 +7,8 @@ body:
     attributes:
       value: |
         Fill this in (the onboarding page at social-simulation-arena.com/submit.html prefills it after testing your endpoint). CI writes `entrants/<entrant_id>.json` with `"github"` set to **your** login, validates it, and commits it to `main` by itself. The file is public and carries no secret.
+
+        The same form updates an entry you own: give the id and the full new values (what you leave empty is removed), and the file is rewritten. Changes take effect from the next batch.
   - type: input
     id: entrant_id
     attributes:
@@ -39,3 +41,9 @@ body:
     attributes:
       label: Contact email (optional)
       description: Goes into the public file; leave empty to keep it off
+  - type: checkboxes
+    id: retire
+    attributes:
+      label: Retire
+      options:
+        - label: Retire this entrant. The file stays, marked retired with today's date; the arena stops calling the endpoint and the board keeps the history.
