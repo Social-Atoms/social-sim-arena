@@ -56,7 +56,7 @@ details.contract summary{cursor:pointer;color:var(--accent-ink);font-weight:700;
 pre.code{margin:0;background:#151514;color:#e8e7e2;border-radius:4px;padding:12px 13px;font:11.5px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto;max-height:340px}
 
 .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 16px}.field{min-width:0}.field.full{grid-column:1/-1}
-.field label,.field legend{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 6px;padding:0;color:var(--ink)}.req{color:var(--accent-ink)}
+.field label,.field legend{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 6px;padding:0;color:var(--ink)}.req{color:var(--accent-ink)}.field .hint{margin:6px 0 0;font-size:12.5px;line-height:1.45;color:var(--mut)}
 .field small{display:block;margin-top:6px;color:var(--mut)}
 input:not([type="radio"]),textarea{display:block;width:100%;height:40px;border:1px solid #cfcec9;border-radius:4px;background:#fff;color:var(--ink);padding:9px 10px;outline:none}
 textarea{height:auto;min-height:84px;resize:vertical}
@@ -232,16 +232,18 @@ Content-Type: application/json
         <div class="field">
           <label for="entrant-github">GitHub username <span class="req">*</span></label>
           <input id="entrant-github" name="github" type="text" required pattern="[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}" placeholder="octocat" autocomplete="username" spellcheck="false">
+          <p class="hint">Your personal login, the account that will fork and open the pull request. Not your company's organization: CI merges only when the file's owner and the pull request's author are the same account.</p>
         </div>
       </div>
       <div class="codelabel">entrants/<span id="reg-filename">&lt;model-or-team-name&gt;</span>.json</div>
       <pre class="code" id="reg-json">{ … fill in the form above … }</pre>
       <div class="copyrow">
-        <a class="btn dark" id="reg-open" href="#" target="_blank" rel="noopener" aria-disabled="true">Submit for review</a>
+        <a class="btn" id="reg-fork" href="#" target="_blank" rel="noopener" aria-disabled="true">1 · Fork the arena</a>
+        <a class="btn dark" id="reg-open" href="#" target="_blank" rel="noopener" aria-disabled="true">2 · Submit for review</a>
         <button class="btn" id="reg-copy" type="button" disabled>Copy JSON</button>
         <span class="status" id="reg-status">Pass the test to unlock.</span>
       </div>
-      <p class="contract-note wide">The button opens GitHub with this file filled in. Open it as a pull request; once it merges, we call your endpoint from the next batch.</p>
+      <p class="contract-note wide">Outside contributors cannot write to the arena directly, so the file goes in through your fork: step 1 forks the repository under your GitHub login (once), step 2 opens the file in that fork, filled in. Commit it there and GitHub offers the pull request against the arena; once it merges, we call your endpoint from the next batch.</p>
     </div>
   </div>
   </form>
@@ -380,16 +382,21 @@ function syncRegistration(){
   const ghOk = /^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$/.test(reg.github || '');
   const endpointOk = (apiProbePassed || browserBlocked) && /^https:\/\//.test(reg.route.url);
   const ready = endpointOk && idOk && ghOk && reg.name && reg.organization;
-  const open = byId('reg-open');
+  // The file is written into the participant's own fork: GitHub refuses a
+  // direct edit from anyone without write access to the arena, and the fork's
+  // editor turns the commit into a pull request against main by itself.
+  const fork = byId('reg-fork'), open = byId('reg-open');
+  fork.setAttribute('aria-disabled', ready ? 'false' : 'true');
   open.setAttribute('aria-disabled', ready ? 'false' : 'true');
-  open.href = ready ? REPO+'/new/main?filename='+encodeURIComponent('entrants/'+reg.entrant_id+'.json')+'&value='+encodeURIComponent(json) : '#';
+  fork.href = ready ? REPO+'/fork' : '#';
+  open.href = ready ? 'https://github.com/'+encodeURIComponent(reg.github)+'/social-sim-arena/new/main?filename='+encodeURIComponent('entrants/'+reg.entrant_id+'.json')+'&value='+encodeURIComponent(json) : '#';
   byId('reg-copy').disabled = !ready;
   byId('reg-status').textContent = !endpointOk ? 'Pass the test to unlock.'
     : !idOk ? 'Entrant id: lower-case letters, digits, . _ -, 2 to 48 characters.'
     : !reg.name || !reg.organization ? 'Fill in the display name and organization.'
     : !ghOk ? 'Enter the GitHub login that will open the pull request.'
     : browserBlocked ? 'Run the CLI probe before you open the pull request \u2014 this browser could not reach your endpoint.'
-    : 'Opens GitHub with the file prefilled; open it as a pull request against main.';
+    : 'Fork once, then step 2 opens the file in your fork; commit it and open the pull request against main.';
 }
 for (const id of ['api-url','entrant-id','entrant-name','entrant-org','entrant-contact','entrant-github']) byId(id).addEventListener('input', syncRegistration);
 byId('reg-copy').addEventListener('click', async () => {
