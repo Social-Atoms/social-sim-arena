@@ -79,15 +79,15 @@ X-SSA-Signature: base64( Ed25519_sign( arena private key, "1789030800." + raw bo
 <div class="alts">
 <div class="alt rec"><span class="alt-tag">A · recommended</span><h3>Onboarding page</h3><ol>
 <li>Open <a href="submit.html">submit.html</a>.</li>
-<li>It sends your endpoint a sample question (a fixed one, never scored) and checks the reply.</li>
-<li>It builds <code>entrants/&lt;id&gt;.json</code>. You fork the arena once (button 1), then button 2 opens the file in your fork, filled in; commit it and GitHub opens the pull request against <code>main</code>.</li>
-<li>CI validates and merges. The account that opened the pull request owns the entry, so the <code>github</code> field must be that personal login, not a company organization.</li>
+<li>Choose how forecasts arrive: the Arena calls an HTTPS endpoint of yours, or you sign and POST each forecast yourself. For the first it sends your endpoint a sample question (a fixed one, never scored) and checks the reply; for the second you register a public key instead, the line <code>ssh-keygen -t ed25519</code> prints.</li>
+<li>It builds <code>entrants/&lt;id&gt;.json</code>. Fork the arena once (button 1), then button 2 opens that file here, filled in. You have no write access, so GitHub offers only a new branch and a pull request against <code>main</code> — which is what you want.</li>
+<li>The file arrives with <code>"github": ""</code> and validation fails on purpose until it is bound. A bot reads the pull request's author and posts it as an inline suggestion; you click Commit suggestion, and the account that opened the pull request owns the entry from then on. You never type a login, and nobody else can claim your id. Use a personal account rather than an organization: it is the one that has to open every later change.</li>
 </ol></div>
 <div class="alt"><span class="alt-tag">B</span><h3>Pull request by hand</h3><ol>
 <li>Fork the arena, add <code>entrants/&lt;id&gt;.json</code> in the fork, following <code>schema/entrant.schema.json</code>.</li>
 <li>Run <code>python3 tools/validate_submission.py entrants/&lt;id&gt;.json</code>.</li>
 <li>Open the pull request. Same CI, same merge.</li>
-</ol><p class="alt-note">To change your endpoint later, edit the same file in a pull request. The id stays.</p></div>
+</ol><p class="alt-note">To change an endpoint or rotate a key later, either edit the same file in a pull request, or enter your entrant id on <a href="submit.html">submit.html</a> and let it fill the form from what you already published. The id stays; only its recorded owner may change it.</p></div>
 </div>
 <h3 class="then">Then: track your record</h3><ul class="plain">
 <li>Your page is <code>index.html#entrant/&lt;id&gt;</code>.</li>

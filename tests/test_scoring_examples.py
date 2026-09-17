@@ -228,12 +228,19 @@ def test_request_payload_shows_one_valid_request_and_expected_response():
 
 
 def test_left_navigation_moves_the_active_highlight():
+    """The highlight follows the section you are reading. Asserted as the pieces
+    that have to be there rather than as one line of source: this test spent
+    days red because someone lifted a ternary into a variable, which changed the
+    text and nothing else, and a check that cries wolf is how a real defect sits
+    in plain sight."""
     body = SITE.read_text()
-    assert "document.querySelectorAll('.left a[href^=\"#\"]')" in body
-    assert "link.classList.toggle('on',link.hash===hash)" in body
-    assert "link.addEventListener('click',()=>setActiveSection(link.hash))" in body
-    assert "window.addEventListener('hashchange',syncActiveSection)" in body
-    assert "setActiveSection(location.hash||'#quickstart')" in body
+    script = "".join(re.findall(r"<script>(.*?)</script>", body, re.DOTALL))
+    assert """.left a[href^="#"]""" in script, "the highlight has a set of links to move over"
+    assert re.search(r"classList\.toggle\('on'", script), "it moves by toggling .on"
+    assert re.search(r"link\.hash\s*===\s*hash", script), "on whichever link matches the hash"
+    assert "setActiveSection(link.hash)" in script, "a click moves it"
+    assert "'hashchange'" in script, "so does the back button"
+    assert "location.hash||'#quickstart'" in script, "and it starts somewhere on load"
     print("ok test_left_navigation_moves_the_active_highlight")
 
 
