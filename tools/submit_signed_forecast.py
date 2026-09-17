@@ -15,7 +15,7 @@ import requests
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives import serialization
 from cryptography.exceptions import UnsupportedAlgorithm
-from ssa.signed_forecasts import PATH, signing_bytes, stamp
+from ssa.signed_forecasts import AUDIENCE, ORIGIN, PATH, signing_bytes, stamp
 
 
 def load_private_key(path):
@@ -52,8 +52,9 @@ def main():
     p.add_argument('--key')
     p.add_argument('--key-id', default='k1')
     p.add_argument('--entrant')
-    p.add_argument('--audience')
-    p.add_argument('--url')
+    p.add_argument('--audience', default=AUDIENCE,
+                   help='Only the isolated rehearsal fork needs to override this')
+    p.add_argument('--url', default=ORIGIN)
     p.add_argument('--answer')
     p.add_argument('--request-file', help='Saved signed request for safe retries; contains plaintext, keep private')
     args = p.parse_args()
@@ -74,8 +75,8 @@ def main():
         if record['url'] != args.url:
             p.error('saved request belongs to a different URL')
     else:
-        if not all((args.key, args.entrant, args.audience, args.answer)):
-            p.error('new requests need --key --entrant --audience --answer')
+        if not all((args.key, args.entrant, args.answer)):
+            p.error('new requests need --key --entrant --answer')
         raw = Path(args.answer).read_bytes()
         meta = {'entrant': args.entrant, 'key-id': args.key_id, 'request-id': str(uuid.uuid4()),
                 'timestamp': stamp(datetime.now(timezone.utc))}
