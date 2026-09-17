@@ -56,7 +56,7 @@ details.contract summary{cursor:pointer;color:var(--accent-ink);font-weight:700;
 pre.code{margin:0;background:#151514;color:#e8e7e2;border-radius:4px;padding:12px 13px;font:11.5px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto;max-height:340px}
 
 .formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 16px}.field{min-width:0}.field.full{grid-column:1/-1}
-.field label,.field legend{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 6px;padding:0;color:var(--ink)}.req{color:var(--accent-ink)}
+.field label,.field legend{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 6px;padding:0;color:var(--ink)}.req{color:var(--accent-ink)}.field .hint{margin:6px 0 0;font-size:12.5px;line-height:1.45;color:var(--mut)}
 .field small{display:block;margin-top:6px;color:var(--mut)}
 input:not([type="radio"]),textarea{display:block;width:100%;height:40px;border:1px solid #cfcec9;border-radius:4px;background:#fff;color:var(--ink);padding:9px 10px;outline:none}
 textarea{height:auto;min-height:84px;resize:vertical}
@@ -229,15 +229,21 @@ Content-Type: application/json
           <label for="entrant-contact">Contact email</label>
           <input id="entrant-contact" name="contact" type="email" maxlength="120" placeholder="your.email@company.com" autocomplete="email">
         </div>
+        <div class="field">
+          <label for="entrant-github">GitHub username <span class="req">*</span></label>
+          <input id="entrant-github" name="github" type="text" required pattern="[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}" placeholder="octocat" autocomplete="username" spellcheck="false">
+          <p class="hint">Your personal login, the account that will fork and open the pull request. Not your company's organization: CI merges only when the file's owner and the pull request's author are the same account.</p>
+        </div>
       </div>
       <div class="codelabel">entrants/<span id="reg-filename">&lt;model-or-team-name&gt;</span>.json</div>
       <pre class="code" id="reg-json">{ … fill in the form above … }</pre>
       <div class="copyrow">
-        <a class="btn dark" id="reg-open" href="#" target="_blank" rel="noopener" aria-disabled="true">Submit for review</a>
+        <a class="btn" id="reg-fork" href="#" target="_blank" rel="noopener" aria-disabled="true">1 · Fork the arena</a>
+        <a class="btn dark" id="reg-open" href="#" target="_blank" rel="noopener" aria-disabled="true">2 · Submit for review</a>
         <button class="btn" id="reg-copy" type="button" disabled>Copy JSON</button>
         <span class="status" id="reg-status">Pass the test to unlock.</span>
       </div>
-      <p class="contract-note wide">The button opens a GitHub issue with these details filled in. No fork, no pull request: CI validates it, writes this file to <code>main</code> with <code>"github"</code> set to the account that opened the issue, and answers on the issue. From the next batch we call your endpoint. To change the endpoint later, edit the same file in a pull request from that account.</p>
+      <p class="contract-note wide">Outside contributors cannot write to the arena directly, so the file goes in through your fork: step 1 forks the repository under your GitHub login (once), step 2 opens the file in that fork, filled in. Commit it there and GitHub offers the pull request against the arena; once it merges, we call your endpoint from the next batch.</p>
     </div>
   </div>
   </form>
@@ -362,32 +368,37 @@ function registration(){
   const reg = {entrant_id: byId('entrant-id').value.trim(), name: byId('entrant-name').value.trim(), organization: byId('entrant-org').value.trim(), type: 'participant'};
   const contact = byId('entrant-contact').value.trim();
   if (contact) reg.contact = contact;
+  const github = byId('entrant-github').value.trim();
+  if (github) reg.github = github;
   reg.route = {kind:'agent_api', url: byId('api-url').value.trim()};
   return reg;
 }
 function syncRegistration(){
   const reg = registration();
-  const json = JSON.stringify({...reg, github: '<the account that opens the issue>'}, null, 2) + '\n';
+  const json = JSON.stringify(reg, null, 2) + '\n';
   byId('reg-filename').textContent = reg.entrant_id || '<entrant-id>';
   byId('reg-json').textContent = json;
   const idOk = /^[a-z0-9][a-z0-9_.-]{1,47}$/.test(reg.entrant_id);
+  const ghOk = /^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$/.test(reg.github || '');
   const endpointOk = (apiProbePassed || browserBlocked) && /^https:\/\//.test(reg.route.url);
-  const ready = endpointOk && idOk && reg.name && reg.organization;
-  // The file is filed by CI from a GitHub issue form, prefilled here, and its
-  // `github` owner is the issue's author: nothing a participant can type.
-  const open = byId('reg-open');
+  const ready = endpointOk && idOk && ghOk && reg.name && reg.organization;
+  // The file is written into the participant's own fork: GitHub refuses a
+  // direct edit from anyone without write access to the arena, and the fork's
+  // editor turns the commit into a pull request against main by itself.
+  const fork = byId('reg-fork'), open = byId('reg-open');
+  fork.setAttribute('aria-disabled', ready ? 'false' : 'true');
   open.setAttribute('aria-disabled', ready ? 'false' : 'true');
-  const q = new URLSearchParams({template: 'register.yml', title: 'register: ' + reg.entrant_id, entrant_id: reg.entrant_id, name: reg.name, organization: reg.organization, url: reg.route.url});
-  if (reg.contact) q.set('contact', reg.contact);
-  open.href = ready ? REPO + '/issues/new?' + q.toString() : '#';
+  fork.href = ready ? REPO+'/fork' : '#';
+  open.href = ready ? 'https://github.com/'+encodeURIComponent(reg.github)+'/social-sim-arena/new/main?filename='+encodeURIComponent('entrants/'+reg.entrant_id+'.json')+'&value='+encodeURIComponent(json) : '#';
   byId('reg-copy').disabled = !ready;
   byId('reg-status').textContent = !endpointOk ? 'Pass the test to unlock.'
     : !idOk ? 'Entrant id: lower-case letters, digits, . _ -, 2 to 48 characters.'
     : !reg.name || !reg.organization ? 'Fill in the display name and organization.'
-    : browserBlocked ? 'Run the CLI probe before you submit \u2014 this browser could not reach your endpoint.'
-    : 'Opens a GitHub issue with these details; CI files the registration.';
+    : !ghOk ? 'Enter the GitHub login that will open the pull request.'
+    : browserBlocked ? 'Run the CLI probe before you open the pull request \u2014 this browser could not reach your endpoint.'
+    : 'Fork once, then step 2 opens the file in your fork; commit it and open the pull request against main.';
 }
-for (const id of ['api-url','entrant-id','entrant-name','entrant-org','entrant-contact']) byId(id).addEventListener('input', syncRegistration);
+for (const id of ['api-url','entrant-id','entrant-name','entrant-org','entrant-contact','entrant-github']) byId(id).addEventListener('input', syncRegistration);
 byId('reg-copy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(byId('reg-json').textContent); byId('reg-status').textContent = 'Copied.'; } catch (e) { byId('reg-status').textContent = 'Copy failed; select the text above.'; }
 });
