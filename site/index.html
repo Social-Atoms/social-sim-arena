@@ -2739,7 +2739,7 @@ function renderWeekly(data){
   const firstLanding=landing.map(r=>r.release_at).sort()[0];
   const when=iso=>iso?esc(fmtLocal(iso)):'—';
   host.innerHTML='<section class="week-card week-entry" aria-labelledby="week-entry-title">'
-      +'<h3 id="week-entry-title">How a question runs</h3><p>Register one HTTPS endpoint. Every question is sent to it, signed, in the 24 hours before that question closes; you return the forecast. Answer any subset; your latest answer per question counts, and one answer puts you on the board.</p>'
+      +'<h3 id="week-entry-title">How a question runs</h3><p>Register an HTTPS endpoint we call, or a public key you sign with. Endpoints are called in the 24 hours before a question closes; signed submissions arrive whenever you send them. Answer any subset; your latest answer per question counts, and one answer puts you on the board.</p>'
       // The four steps a newcomer needs and cannot get anywhere else on the
       // site. They lived in a card of their own on the old weekly screen and
       // were dropped when this one was rebuilt; the wording is that card's.
