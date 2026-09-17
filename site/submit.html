@@ -478,7 +478,8 @@ async function loadRegistration(){
   status.textContent = 'Loading\u2026';
   let doc;
   try {
-    const response = await fetch(RAW + encodeURIComponent(id) + '.json', {cache: 'no-store'});
+    const source = RAW + encodeURIComponent(id) + '.json';
+    const response = await fetch(source, {cache: 'no-store'});
     if (response.status === 404) { status.textContent = 'No registration under that id.'; return; }
     if (!response.ok) throw new Error(response.status);
     doc = await response.json();

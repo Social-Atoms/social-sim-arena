@@ -299,10 +299,15 @@ class SubmissionPrototype(unittest.TestCase):
         self.assertIn('type="url" pattern="https://.*" required', self.page)
         self.assertNotIn("<form action=", self.page)
         self.assertIn("const target = endpointUrl(urlInput.value);", self.page)
-        # Every other fetch on the page is the arena's own data, never a
-        # third party carrying what was typed.
+        # The page makes exactly two requests, both on an explicit click, and
+        # neither carries anything the participant typed anywhere it should not
+        # go: the probe goes to the endpoint they are testing, and the loader
+        # reads one of our own public registration files, addressed by entrant
+        # id alone. Any third fetch has to justify itself here.
         fetches = re.findall(r"fetch\(([^,)]+)", self.page)
-        self.assertEqual(fetches, ["target"])
+        self.assertEqual(fetches, ["target", "source"])
+        self.assertIn("const RAW = 'https://raw.githubusercontent.com/"
+                      "Social-Atoms/social-sim-arena/main/entrants/'", self.page)
         self.assertNotIn("localStorage", self.page)
 
     def test_the_browser_test_signs_with_the_published_test_key(self):
@@ -327,11 +332,17 @@ class SubmissionPrototype(unittest.TestCase):
         self.assertIn("kind:'agent_api'", builder)
         self.assertIn("alg: 'ed25519'", builder)
         self.assertIn("public: publicKeyRaw(byId('entrant-public-key').value)", builder)
-        self.assertIn("if (signed) reg.keys", builder)
-        self.assertIn("else reg.route", builder)
-        self.assertIn("reg.github = ''", builder)
+        self.assertIn("reg.keys = kept.concat", builder)
+        self.assertIn("reg.route = {kind:'agent_api'", builder)
+        # New registrations leave the owner for the bot to bind; an edit keeps
+        # the one already recorded.
+        self.assertIn("if (!loaded) reg.github = ''", builder)
         self.assertIn("'/new/'+REGISTRATION_BASE+'?filename='", self.page)
-        self.assertIn("encodeURIComponent('entrants/'+reg.entrant_id+'.json')", self.page)
+        self.assertIn("const path = 'entrants/'+reg.entrant_id+'.json'", self.page)
+        self.assertIn("encodeURIComponent(path)", self.page)
+        # A participant changing an existing entry edits that file rather than
+        # trying to create it a second time.
+        self.assertIn("REPO+'/edit/'+REGISTRATION_BASE+'/'+path", self.page)
         self.assertIn("const ready = routeOk && idOk && reg.name && reg.organization;", self.page)
         self.assertNotIn("/api/v1/registrations", self.page)
         self.assertNotIn('type="password"', self.page)
@@ -364,7 +375,8 @@ class SubmissionPrototype(unittest.TestCase):
     def test_the_registration_file_is_the_prophet_arena_shape_with_a_github_owner(self):
         builder = self.page.split("function registration(){", 1)[1].split(
             "function syncRegistration(){", 1)[0]
-        for field in ("entrant_id:", "name:", "organization:", "type: 'participant'",
+        for field in ("reg.entrant_id =", "reg.name =", "reg.organization =",
+                      "reg.type = reg.type || 'participant'",
                       "reg.contact = contact", "reg.github = ''", "kind:'agent_api'"):
             self.assertIn(field, builder)
         self.assertNotIn("method", builder)
