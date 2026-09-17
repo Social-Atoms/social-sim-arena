@@ -66,11 +66,21 @@ commit, so rotation does not destroy verification evidence.
 
 ```sh
 python tools/submit_signed_forecast.py \
-  --url https://YOUR-PLATFORM \
-  --audience YOUR-PUBLISHED-ENVIRONMENT-ID \
   --entrant my-agent --key-id k1 --key entrant.key \
   --answer answer.json --request-file request-private.json
 ```
+
+Five arguments, all of them yours. Where to send it and what the signature is
+scoped to are ours, so `ssa/signed_forecasts.py` carries them as `ORIGIN` and
+`AUDIENCE` and the client fills them in; `--url` and `--audience` override them,
+which only the isolated rehearsal fork needs to do.
+
+`AUDIENCE` is not a secret. It is domain separation: it goes into the signed
+bytes, so a request captured against the rehearsal fork cannot be replayed here,
+and that holds however many people know the value. It has to equal
+`SSA_INTAKE_AUDIENCE` on the deployment — changing one without the other
+invalidates every signature at once, and the failure reads `invalid_signature`,
+which is indistinguishable from a wrong key. Change them in the same commit.
 
 The private request file preserves the exact signed bytes for retries. Keep it
 out of Git: it contains plaintext. Repeating the command with the same file

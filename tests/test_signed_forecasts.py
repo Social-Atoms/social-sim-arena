@@ -13,6 +13,11 @@ from cryptography.hazmat.primitives import serialization
 from ssa import signed_forecasts as wire
 from ssa.forecast_api import accept
 
+import ast
+import pathlib
+ROOT_TOOL = pathlib.Path(__file__).resolve().parents[1] / 'tools/submit_signed_forecast.py'
+DOC = pathlib.Path(__file__).resolve().parents[1] / 'docs/signed-submissions.md'
+
 
 class Store:
     repo = 'test/fork'
@@ -171,3 +176,46 @@ class SignedTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ClientDefaults(unittest.TestCase):
+    """Where to send a forecast and what its signature is scoped to are the
+    arena's, not the participant's, and every participant was being told both by
+    hand. They are constants now and the client fills them in."""
+
+    def parser_defaults(self):
+        import ast
+        source = ROOT_TOOL.read_text()
+        found = {}
+        for node in ast.walk(ast.parse(source)):
+            if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+                    and node.func.attr == 'add_argument' and node.args
+                    and isinstance(node.args[0], ast.Constant)):
+                default = next((k.value for k in node.keywords if k.arg == 'default'), None)
+                found[node.args[0].value] = default
+        return found
+
+    def test_the_client_asks_only_for_what_the_participant_owns(self):
+        defaults = self.parser_defaults()
+        for flag, constant in (('--url', 'ORIGIN'), ('--audience', 'AUDIENCE')):
+            node = defaults.get(flag)
+            self.assertIsInstance(node, ast.Name, f'{flag} has no default')
+            self.assertEqual(node.id, constant,
+                             f'{flag} must default to the constant, not a literal')
+
+    def test_the_constants_are_usable_and_the_audience_is_not_a_secret(self):
+        self.assertTrue(wire.ORIGIN.startswith('https://'))
+        self.assertTrue(wire.AUDIENCE)
+        self.assertNotIn(' ', wire.AUDIENCE)
+        # It goes into the signed bytes, which is why it separates environments
+        # and why publishing it costs nothing.
+        signed = wire.signing_bytes({'entrant': 'e', 'key-id': 'k', 'request-id': 'r',
+                                     'timestamp': wire.stamp(datetime(2030, 1, 1, tzinfo=timezone.utc))},
+                                    b'{}', wire.AUDIENCE)
+        self.assertIn(wire.AUDIENCE.encode(), signed)
+
+    def test_the_documented_command_is_the_one_that_works(self):
+        doc = DOC.read_text()
+        self.assertNotIn('YOUR-PLATFORM', doc)
+        self.assertNotIn('YOUR-PUBLISHED-ENVIRONMENT-ID', doc)
+        self.assertIn(wire.AUDIENCE, doc)

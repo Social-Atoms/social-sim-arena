@@ -261,6 +261,76 @@ process.stdout.write(JSON.stringify({record: registration(),
     assert seen["record"]["github"] == "", "the bot binds the owner, the form never claims one"
 
 
+def edited_record(published, values):
+    """Run the page's own script with a registration already loaded."""
+    with open(SUBMIT_PATH) as f:
+        html = f.read()
+    script = next(s for s in re.findall(r"<script>(.*?)</script>", html, re.DOTALL)
+                  if "function registration()" in s)
+    harness = r"""
+const values = JSON.parse(process.argv[1]), published = JSON.parse(process.argv[2]);
+const elements = {};
+function element(id){ if(!elements[id]) elements[id] = {id, value: values[id]||'', checked:false,
+  hidden:false, disabled:false, required:false, textContent:'', className:'', innerHTML:'', href:'',
+  addEventListener(){}, setAttribute(n,v){this[n]=v;}, checkValidity(){return true;}, reportValidity(){}};
+  return elements[id]; }
+const apiRadio={value:'agent_api',checked:false,addEventListener(){}};
+const signedRadio={value:'signed_post',checked:true,addEventListener(){}};
+global.document={getElementById:element, querySelector(){return signedRadio.checked?signedRadio:apiRadio;},
+  querySelectorAll(){return [apiRadio,signedRadio];}};
+global.navigator={clipboard:{writeText(){}}};
+global.fetch=async()=>({ok:true,status:200,json:async()=>published});
+""" + script + r"""
+loaded = published;
+syncRegistration();
+process.stdout.write(JSON.stringify({record: registration(), openUrl: element('reg-open').href}));
+"""
+    return json.loads(subprocess.run(["node", "-e", harness, json.dumps(values), json.dumps(published)],
+                                     check=True, capture_output=True, text=True).stdout)
+
+
+def test_editing_keeps_what_the_form_never_shows():
+    """A participant changing an endpoint must not lose the fields this form has
+    no input for, and must not have their owner cleared and rebound."""
+    published = {"entrant_id": "already-here", "name": "Already Here",
+                 "organization": "Lab", "type": "participant", "github": "someone",
+                 "method": "a note this form never shows", "homepage": "https://example.test",
+                 "keys": [{"id": "k1", "alg": "ed25519",
+                           "public": base64.b64encode(bytes(range(32))).decode("ascii"),
+                           "revoked": False}]}
+    seen = edited_record(published, {
+        "entrant-id": "already-here", "entrant-name": "Already Here", "entrant-org": "Lab",
+        "entrant-contact": "", "entrant-key-id": "k2",
+        "entrant-public-key": ssh_public_line(bytes(range(1, 33))),
+    })
+    record = seen["record"]
+
+    assert record["github"] == "someone", "an existing owner is not cleared for rebinding"
+    assert record["method"] == published["method"]
+    assert record["homepage"] == published["homepage"]
+
+    # The old key stays, revoked: a revealed answer is checked against the key id
+    # it was signed with, so a rotation must not strand it.
+    assert [(k["id"], k.get("revoked")) for k in record["keys"]] == [("k1", True), ("k2", False)]
+    assert record["keys"][-1]["public"] == base64.b64encode(bytes(range(1, 33))).decode("ascii")
+    assert "@" not in json.dumps(record), "the ssh comment does not follow the key in"
+
+    assert "/edit/main/entrants/already-here.json?" in seen["openUrl"], \
+        "editing opens the existing file, not a new one"
+
+
+def test_editing_does_not_quietly_bring_a_retired_entrant_back():
+    published = {"entrant_id": "gone", "name": "Gone", "organization": "Lab",
+                 "type": "participant", "github": "someone", "status": "retired",
+                 "retired_at": "2026-09-11",
+                 "route": {"kind": "agent_api", "url": "https://old.example/forecast"}}
+    record = edited_record(published, {
+        "entrant-id": "gone", "entrant-name": "Gone", "entrant-org": "Lab",
+        "entrant-contact": "", "api-url": "https://new.example/forecast",
+    })["record"]
+    assert record["status"] == "retired" and record["retired_at"] == "2026-09-11"
+
+
 if __name__ == "__main__":
     test_existing_keyless_registrations_remain_valid()
     test_ed25519_public_keys_are_bounded_and_closed()
@@ -270,4 +340,6 @@ if __name__ == "__main__":
     test_the_form_refuses_what_is_not_an_ed25519_public_key()
     test_the_client_reads_every_key_file_a_participant_might_have()
     test_the_file_opens_against_this_repository_so_a_pull_request_is_the_only_way()
+    test_editing_keeps_what_the_form_never_shows()
+    test_editing_does_not_quietly_bring_a_retired_entrant_back()
     print("all signed registration tests passed")
