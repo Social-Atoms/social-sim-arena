@@ -258,6 +258,8 @@ def test_the_highlight_follows_the_scroll_and_listens_where_the_page_scrolls():
     assert re.search(r"setActiveSection\('#'\+current\.id,\s*false\)", script), (
         "scrolling moves the highlight but does not rename the tab")
     assert "scroller.scrollHeight" in script, "the last short section still activates at the end"
+    assert "const arrive=()=>{ if(!location.hash) return; settleUntil=Date.now()+700;" in script, (
+        "arriving at an anchor must keep that section highlighted while the browser scrolls")
     print("ok test_the_highlight_follows_the_scroll_and_listens_where_the_page_scrolls")
 
 
