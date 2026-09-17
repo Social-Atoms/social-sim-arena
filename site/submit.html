@@ -63,8 +63,10 @@ textarea{height:auto;min-height:84px;resize:vertical}
 input:not([type="radio"]):focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(21,128,61,.09)}input::placeholder,textarea::placeholder{color:var(--mut)}
 fieldset.field{border:0;margin:0;padding:0}
 .type-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.type-options label{display:flex;align-items:center;flex-wrap:nowrap;gap:10px;min-height:40px;height:100%;margin:0;padding:9px 10px;border:1px solid var(--line);border-radius:4px;cursor:pointer}
-.type-options label:has(input:checked){border-color:var(--accent);background:#f4fbf6}
+.route-option{border:1px solid var(--line);border-radius:4px;padding:9px 10px}
+.route-option:has(input:checked){border-color:var(--accent);background:#f4fbf6}
+.type-options label{display:flex;align-items:center;flex-wrap:nowrap;gap:10px;min-height:22px;height:auto;margin:0;padding:0;cursor:pointer}
+.route-doc{display:inline-block;margin:5px 0 0 26px;color:var(--accent-ink);font-size:12.5px;font-weight:700;text-underline-offset:2px}
 .type-options input{appearance:none;-webkit-appearance:none;display:grid;place-items:center;width:16px;height:16px;flex:0 0 16px;margin:0;padding:0;border:1px solid #92998f;border-radius:50%;background:#fff}
 .type-options input:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);transform:scale(0)}
 .type-options input:checked{border-color:var(--accent)}
@@ -207,13 +209,19 @@ Content-Type: application/json
             <button class="btn" id="load-go" type="button">Load</button>
             <span class="status" id="load-status"></span>
           </div>
-          <p class="hint">Fills the form from your published <code>entrants/&lt;id&gt;.json</code>, so you can change an endpoint or rotate a key without retyping the rest. Whether the change is allowed is decided when the pull request opens: only the account the file records may make it.</p>
+          <p class="hint">Fills the form from your published <code>entrants/&lt;id&gt;.json</code>, so you can change an endpoint or rotate a key without retyping the rest. Whether the change is allowed is decided when the pull request opens: only the account the file records may make it. <a href="docs.html#update-entrant-information">Read the update instructions →</a></p>
         </div>
         <fieldset class="field full">
           <legend>Submission route <span class="req">*</span></legend>
           <div class="type-options">
-            <label><input type="radio" name="submission-route" value="agent_api" checked> Arena calls my API</label>
-            <label><input type="radio" name="submission-route" value="signed_post"> I send signed forecasts</label>
+            <div class="route-option">
+              <label><input type="radio" name="submission-route" value="agent_api" checked> Arena calls my API</label>
+              <a class="route-doc" href="docs.html#agent-endpoint">Read the Agent endpoint docs →</a>
+            </div>
+            <div class="route-option">
+              <label><input type="radio" name="submission-route" value="signed_post"> I send signed forecasts</label>
+              <a class="route-doc" href="docs.html#signed-forecast-submission">Read the Manual signed submission docs →</a>
+            </div>
           </div>
         </fieldset>
         <div class="field full" id="endpoint-field">
