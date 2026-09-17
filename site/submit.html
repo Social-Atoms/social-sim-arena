@@ -91,6 +91,7 @@ fieldset.field{border:0;margin:0;padding:0}
 .storage-note h4{margin:0 0 6px;color:var(--ink)}
 .storage-note p{margin:0;overflow-wrap:anywhere}
 #reg-done{margin-top:20px;padding-top:20px;border-top:1px solid var(--line)}
+#fork-first{margin:14px 0 2px}
 .copyrow{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
 
 .railbox{border:1px solid var(--line);border-radius:5px;padding:20px;background:#fff}.railbox h3{margin:0 0 16px;color:var(--ink)}.railbox p{margin:0 0 8px;color:var(--mut)}
@@ -213,8 +214,8 @@ Content-Type: application/json
         </div>
         <div class="field" id="public-key-field" hidden>
           <label for="entrant-public-key">Ed25519 public key <span class="req">*</span></label>
-          <input id="entrant-public-key" name="public_key" type="text" placeholder="base64-encoded 32-byte public key" autocomplete="off" spellcheck="false">
-          <p class="hint">Publish the public key only. Keep the private key in your submission client; never paste or upload it here.</p>
+          <input id="entrant-public-key" name="public_key" type="text" placeholder="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA…" autocomplete="off" spellcheck="false">
+          <p class="hint">Paste the line from <code>arena-key.pub</code>; never paste the private key here. <a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/generating-a-key.md" target="_blank" rel="noopener">How to make this key</a></p>
         </div>
         <div class="field full">
           <label for="entrant-id">Entrant id <span class="req">*</span></label>
@@ -247,20 +248,20 @@ Content-Type: application/json
           <input id="entrant-contact" name="contact" type="email" maxlength="120" placeholder="your.email@company.com" autocomplete="email">
         </div>
         <div class="field">
-          <label for="entrant-github">GitHub username <span class="req">*</span></label>
-          <input id="entrant-github" name="github" type="text" required pattern="[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}" placeholder="octocat" autocomplete="username" spellcheck="false">
-          <p class="hint">Your personal login, the account that will fork and open the pull request. Not your company's organization: CI merges only when the file's owner and the pull request's author are the same account.</p>
+          <label>GitHub account</label>
+          <p class="hint">Whoever opens the pull request becomes the owner. The bot suggests it there; you confirm with one click.</p>
         </div>
       </div>
       <div class="codelabel">entrants/<span id="reg-filename">&lt;model-or-team-name&gt;</span>.json</div>
       <pre class="code" id="reg-json">{ … fill in the form above … }</pre>
       <div class="copyrow">
-        <a class="btn" id="reg-fork" href="#" target="_blank" rel="noopener" aria-disabled="true">1 · Fork the arena</a>
-        <a class="btn dark" id="reg-open" href="#" target="_blank" rel="noopener" aria-disabled="true">2 · Submit for review</a>
+        <a class="btn" id="reg-fork" href="#" target="_blank" rel="noopener">1 &middot; Fork this repository</a>
+        <a class="btn dark" id="reg-open" href="#" target="_blank" rel="noopener" aria-disabled="true">2 &middot; Open the prefilled file</a>
         <button class="btn" id="reg-copy" type="button" disabled>Copy JSON</button>
         <span class="status" id="reg-status">Pass the test to unlock.</span>
       </div>
-      <p class="contract-note wide">Outside contributors cannot write to the arena directly, so the file goes in through your fork: step 1 forks the repository under your GitHub login (once), step 2 opens the file in that fork, filled in. Commit it there and GitHub offers the pull request against the arena; once it merges, the registered route is active.</p>
+      <p class="hint" id="fork-first">Step 1 is once per account &mdash; skip it if you already have a fork. Do not skip it otherwise: without a fork, step 2 opens a page that cannot create one for you.</p>
+      <p class="contract-note wide">GitHub saves the file on a new branch in your fork and opens the pull request. The bot then posts an account-binding suggestion on it; apply that to confirm your GitHub identity, and a maintainer reviews. Your private signing key stays on your computer.</p>
     </div>
   </div>
   </form>
@@ -359,7 +360,7 @@ byId('api-test').addEventListener('click', async () => {
     const body = parseAgentReply(data);
     s3.state = 'good'; s3.detail = 'forecast mean '+body.forecast.mean+', sd '+body.forecast.sd+(body.reasoning_trace?' · reasoning_trace present':''); paintResults();
     apiProbePassed = true;
-    status.className = 'status good'; status.textContent = 'Test passed! Your API is compatible with the Arena. Fill in the model information below, then submit.';
+    status.className = 'status good'; status.textContent = 'Scalar test passed. Profile and ranking compatibility still require separate tests. Fill in the model information below, then submit.';
   } catch (error) {
     const last = results[results.length-1];
     if (last && last.state === 'wait') { last.state = 'bad'; last.detail = esc(error.message); }
@@ -379,16 +380,28 @@ byId('api-test').addEventListener('click', async () => {
 
 // --- the registration file, built here and opened as a pull request there --
 const REPO = 'https://github.com/Social-Atoms/social-sim-arena';
+const REGISTRATION_BASE = 'main';
+// Accept either the line ssh-keygen prints or the raw 32 bytes in base64. The
+// file always stores the raw form, so the repository keeps one spelling of a
+// key and the ssh comment -- a user name and a host name -- never reaches it.
+const SSH_ED25519_HEAD = '\x00\x00\x00\x0bssh-ed25519\x00\x00\x00\x20';
+function publicKeyRaw(text){
+  const value = (text || '').trim(), parts = value.split(/\s+/);
+  if (parts[0] !== 'ssh-ed25519') return value;
+  try {
+    const blob = atob(parts[1] || '');
+    return blob.length === 51 && blob.slice(0, 19) === SSH_ED25519_HEAD ? btoa(blob.slice(-32)) : '';
+  } catch (error) { return ''; }
+}
 function registration(){
   // The file is public. A signed-push entrant publishes only its public key;
   // the private key stays in the participant's submission client.
   const reg = {entrant_id: byId('entrant-id').value.trim(), name: byId('entrant-name').value.trim(), organization: byId('entrant-org').value.trim(), type: 'participant'};
   const contact = byId('entrant-contact').value.trim();
   if (contact) reg.contact = contact;
-  const github = byId('entrant-github').value.trim();
-  if (github) reg.github = github;
+  reg.github = ''; // Filled by the PR author's account-binding suggestion.
   const signed = document.querySelector('input[name="submission-route"]:checked').value === 'signed_post';
-  if (signed) reg.keys = [{id: byId('entrant-key-id').value.trim(), alg: 'ed25519', public: byId('entrant-public-key').value.trim(), revoked: false}];
+  if (signed) reg.keys = [{id: byId('entrant-key-id').value.trim(), alg: 'ed25519', public: publicKeyRaw(byId('entrant-public-key').value), revoked: false}];
   else reg.route = {kind:'agent_api', url: byId('api-url').value.trim()};
   return reg;
 }
@@ -399,26 +412,25 @@ function syncRegistration(){
   byId('reg-filename').textContent = reg.entrant_id || '<entrant-id>';
   byId('reg-json').textContent = json;
   const idOk = /^[a-z0-9][a-z0-9_.-]{1,47}$/.test(reg.entrant_id);
-  const ghOk = /^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$/.test(reg.github || '');
   const endpointOk = !signed && (apiProbePassed || browserBlocked) && /^https:\/\//.test(reg.route.url);
   const keyOk = signed && /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(reg.keys[0].id) && /^[A-Za-z0-9+/]{43}=$/.test(reg.keys[0].public);
   const routeOk = endpointOk || keyOk;
-  const ready = routeOk && idOk && ghOk && reg.name && reg.organization;
-  // The file is written into the participant's own fork: GitHub refuses a
-  // direct edit from anyone without write access to the arena, and the fork's
-  // editor turns the commit into a pull request against main by itself.
-  const fork = byId('reg-fork'), open = byId('reg-open');
-  fork.setAttribute('aria-disabled', ready ? 'false' : 'true');
+  const ready = routeOk && idOk && reg.name && reg.organization;
+  // Aimed at this repository, not at the participant's fork. Without write
+  // access GitHub offers only "create a new branch and start a pull request" --
+  // in their own fork it preselects a direct commit, which opens nothing and
+  // reports nothing. Verified on an account that already had a fork: no fork
+  // wall, and no direct-commit option.
+  byId('reg-fork').href = REPO + '/fork';
+  const open = byId('reg-open');
   open.setAttribute('aria-disabled', ready ? 'false' : 'true');
-  fork.href = ready ? REPO+'/fork' : '#';
-  open.href = ready ? 'https://github.com/'+encodeURIComponent(reg.github)+'/social-sim-arena/new/main?filename='+encodeURIComponent('entrants/'+reg.entrant_id+'.json')+'&value='+encodeURIComponent(json) : '#';
+  open.href = ready ? REPO+'/new/'+REGISTRATION_BASE+'?filename='+encodeURIComponent('entrants/'+reg.entrant_id+'.json')+'&value='+encodeURIComponent(json) : '#';
   byId('reg-copy').disabled = !ready;
-  byId('reg-status').textContent = !routeOk ? (signed ? 'Enter a key id and a base64-encoded 32-byte Ed25519 public key.' : 'Pass the test to unlock.')
+  byId('reg-status').textContent = !routeOk ? (signed ? 'Enter a key id and an Ed25519 public key: the ssh-ed25519 line from ssh-keygen, or the raw 32 bytes in base64.' : 'Pass the test to unlock.')
     : !idOk ? 'Entrant id: lower-case letters, digits, . _ -, 2 to 48 characters.'
     : !reg.name || !reg.organization ? 'Fill in the display name and organization.'
-    : !ghOk ? 'Enter the GitHub login that will open the pull request.'
     : !signed && browserBlocked ? 'Run the CLI probe before you open the pull request \u2014 this browser could not reach your endpoint.'
-    : 'Fork once, then step 2 opens the file in your fork; commit it and open the pull request against main.';
+    : 'Save on a new branch, open a PR, and confirm the account-binding suggestion. Base: '+REGISTRATION_BASE+'.';
 }
 function syncRoute(){
   const signed = document.querySelector('input[name="submission-route"]:checked').value === 'signed_post';
@@ -433,7 +445,7 @@ function syncRoute(){
   byId('entrant-public-key').required = signed;
   syncRegistration();
 }
-for (const id of ['api-url','entrant-id','entrant-name','entrant-org','entrant-contact','entrant-github','entrant-key-id','entrant-public-key']) byId(id).addEventListener('input', syncRegistration);
+for (const id of ['api-url','entrant-id','entrant-name','entrant-org','entrant-contact','entrant-key-id','entrant-public-key']) byId(id).addEventListener('input', syncRegistration);
 document.querySelectorAll('input[name="submission-route"]').forEach(input => input.addEventListener('change', syncRoute));
 byId('reg-copy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(byId('reg-json').textContent); byId('reg-status').textContent = 'Copied.'; } catch (e) { byId('reg-status').textContent = 'Copy failed; select the text above.'; }

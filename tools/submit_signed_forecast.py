@@ -3,6 +3,7 @@ Generate a raw Ed25519 private key with --generate-key. The output file is 0600.
 """
 import argparse
 import base64
+import getpass
 import json
 import os
 from pathlib import Path
@@ -13,7 +14,36 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import requests
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives import serialization
+from cryptography.exceptions import UnsupportedAlgorithm
 from ssa.signed_forecasts import PATH, signing_bytes, stamp
+
+
+def load_private_key(path):
+    """Whatever the participant already has: the raw 32 bytes this tool writes,
+    the OpenSSH key ssh-keygen writes, or PEM. A passphrase comes from
+    SSA_KEY_PASSPHRASE, or is asked for once when the key turns out to need one
+    (so an unattended run fails loudly instead of hanging on a prompt)."""
+    data = Path(path).read_bytes()
+    if len(data) == 32:
+        return Ed25519PrivateKey.from_private_bytes(data)
+    load = (serialization.load_ssh_private_key
+            if b'OPENSSH PRIVATE KEY' in data[:80] else serialization.load_pem_private_key)
+    secret = os.environ.get('SSA_KEY_PASSPHRASE')
+    try:
+        return unlock(load, data, secret.encode() if secret else None)
+    except TypeError:
+        if not sys.stdin.isatty():
+            raise SystemExit(f'{path} is passphrase-protected; set SSA_KEY_PASSPHRASE')
+        return unlock(load, data, getpass.getpass(f'Passphrase for {path}: ').encode())
+
+
+def unlock(load, data, secret):
+    try:
+        return load(data, secret)
+    except UnsupportedAlgorithm:
+        # cryptography hands OpenSSH's bcrypt KDF to a module it does not require.
+        raise SystemExit('a passphrase-protected OpenSSH key needs bcrypt: '
+                         'pip install bcrypt, or generate the key with -N ""') from None
 
 
 def main():
@@ -49,7 +79,7 @@ def main():
         raw = Path(args.answer).read_bytes()
         meta = {'entrant': args.entrant, 'key-id': args.key_id, 'request-id': str(uuid.uuid4()),
                 'timestamp': stamp(datetime.now(timezone.utc))}
-        key = Ed25519PrivateKey.from_private_bytes(Path(args.key).read_bytes())
+        key = load_private_key(args.key)
         meta['signature'] = base64.b64encode(key.sign(signing_bytes(meta, raw, args.audience))).decode()
         record = {'url': args.url, 'meta': meta, 'body': base64.b64encode(raw).decode()}
         fd = os.open(saved, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)

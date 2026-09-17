@@ -37,18 +37,26 @@ operator from reading the incoming plaintext or using its own identity early.
 
 ## Register once
 
-1. Generate an Ed25519 key locally:
-   `python tools/submit_signed_forecast.py --generate-key entrant.key`
-2. Keep `entrant.key` private (the tool creates it with mode 0600).
-3. Use the onboarding page's **Signed POST** mode, or add `keys` to your existing
-   entrant file in a fork and open a PR. Never upload the private key.
+1. Generate a key for the arena: `ssh-keygen -t ed25519 -C '' -f arena-key`.
+   `-C ''` matters: the default comment is your user name and host name, and a
+   registration is a public file. See [generating-a-key.md](generating-a-key.md).
+2. Keep `arena-key` private. Only `arena-key.pub` is ever published.
+3. Use the onboarding page's **Signed POST** mode and paste the whole
+   `ssh-ed25519 AAAA...` line, or add `keys` to your entrant file in a fork and
+   open a PR. Never upload the private key.
 4. A maintainer approves and merges the registration. Existing ownership checks
    apply to new keys and revocations. A keyless historical entrant stays valid,
    but cannot use signed POST until a key is approved.
 
+The file stores the 32 bytes inside that line, so the repository keeps one
+spelling of a key and no comment follows it in:
+
 ```json
 "keys": [{"id":"k1", "alg":"ed25519", "public":"BASE64_32_BYTE_PUBLIC_KEY", "revoked":false}]
 ```
+
+The raw base64 form is still accepted everywhere it was before, and the client
+reads OpenSSH, PEM or raw private keys, so a key registered earlier is unaffected.
 
 Key IDs are unique within an entrant. Revoke by setting `revoked:true`; add a
 new ID for a new key. Historical submissions refer to their approved registry

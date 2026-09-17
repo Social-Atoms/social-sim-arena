@@ -260,8 +260,9 @@ class SubmissionPrototype(unittest.TestCase):
                        '>Forecast endpoint URL <', '>Entrant id <', 'id="entrant-id"',
                        'id="entrant-key-id"', 'id="entrant-public-key"',
                        '<h3>Your details</h3>', '>Display name <', '>Company / organization <',
-                       'id="entrant-org"', 'id="entrant-github"', 'id="reg-json"',
-                       '>2 · Submit for review</a>', '<h3>Test results</h3>', '<h3>API response</h3>'):
+                       'id="entrant-org"', 'id="reg-json"',
+                       '>1 &middot; Fork this repository</a>', '>2 &middot; Open the prefilled file</a>',
+                       'id="fork-first"', '<h3>Test results</h3>', '<h3>API response</h3>'):
             self.assertIn(marker, self.page)
         # Gone: the old bundle/questionnaire route, the method line, the
         # calendar, and everything from the questionnaire era.
@@ -325,16 +326,16 @@ class SubmissionPrototype(unittest.TestCase):
         self.assertNotIn("secret", builder.lower())
         self.assertIn("kind:'agent_api'", builder)
         self.assertIn("alg: 'ed25519'", builder)
-        self.assertIn("public: byId('entrant-public-key').value.trim()", builder)
+        self.assertIn("public: publicKeyRaw(byId('entrant-public-key').value)", builder)
         self.assertIn("if (signed) reg.keys", builder)
         self.assertIn("else reg.route", builder)
-        self.assertIn("if (github) reg.github = github;", builder)
-        self.assertIn("'/social-sim-arena/new/main?filename='", self.page)
+        self.assertIn("reg.github = ''", builder)
+        self.assertIn("'/new/'+REGISTRATION_BASE+'?filename='", self.page)
         self.assertIn("encodeURIComponent('entrants/'+reg.entrant_id+'.json')", self.page)
-        self.assertIn("const ready = routeOk && idOk && ghOk", self.page)
+        self.assertIn("const ready = routeOk && idOk && reg.name && reg.organization;", self.page)
         self.assertNotIn("/api/v1/registrations", self.page)
         self.assertNotIn('type="password"', self.page)
-        self.assertIn("Keep the private key in your submission client", self.page)
+        self.assertIn("never paste the private key here", self.page)
         self.assertIn('pattern="[a-z0-9][a-z0-9_.-]{1,47}"', self.page)
         with open(os.path.join(ROOT, "schema", "entrant.schema.json")) as f:
             schema = json.load(f)
@@ -364,7 +365,7 @@ class SubmissionPrototype(unittest.TestCase):
         builder = self.page.split("function registration(){", 1)[1].split(
             "function syncRegistration(){", 1)[0]
         for field in ("entrant_id:", "name:", "organization:", "type: 'participant'",
-                      "reg.contact = contact", "reg.github = github", "kind:'agent_api'"):
+                      "reg.contact = contact", "reg.github = ''", "kind:'agent_api'"):
             self.assertIn(field, builder)
         self.assertNotIn("method", builder)
         schema = load_json("schema/entrant.schema.json")
