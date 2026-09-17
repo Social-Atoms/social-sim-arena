@@ -283,7 +283,7 @@ class SubmissionPrototype(unittest.TestCase):
             '<h2 id="register-as-an-entrant">Register as an entrant</h2>',
             '<h2 id="update-entrant-information">Update entrant information</h2>',
             '<h2 id="agent-endpoint">Agent endpoint</h2>',
-            '<h2 id="signed-forecast-submission">Signed forecast submission</h2>',
+            '<h2 id="signed-forecast-submission">Manual signed submission</h2>',
             '<h2 id="task-map">Task map</h2>',
         ]
         positions = [self.docs.index(section) for section in sections]
