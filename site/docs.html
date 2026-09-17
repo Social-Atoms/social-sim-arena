@@ -454,7 +454,7 @@ if(window.matchMedia&&matchMedia('(max-width:720px)').matches){var dn=document.q
 document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{const t=b.parentElement.querySelector('code').textContent;try{await navigator.clipboard.writeText(t);b.textContent='Copied';setTimeout(()=>b.textContent='Copy',1200)}catch(_){b.textContent='Select text'}});
 const sectionLinks=document.querySelectorAll('.left a[href^="#"]');
 // The tab's title follows the section, so a link to #scoring reads Scoring, not Quickstart.
-const setActiveSection=hash=>sectionLinks.forEach(link=>{ const on=link.hash===hash; link.classList.toggle('on',on); if(on) document.title=link.textContent.trim()+' · Docs · Social Simulation Arena'; });
+const setActiveSection=(hash,renameTab=true)=>sectionLinks.forEach(link=>{ const on=link.hash===hash; link.classList.toggle('on',on); if(on&&renameTab) document.title=link.textContent.trim()+' · Docs · Social Simulation Arena'; });
 sectionLinks.forEach(link=>link.addEventListener('click',()=>setActiveSection(link.hash)));
 // Anchors are the section names. Links written before the rename still land.
 const RENAMED={'#endpoint-route':'#agent-endpoint','#register':'#register-as-an-entrant','#states':'#question-states','#entrant-states':'#retirement','#reference':'#full-contracts'};
@@ -462,6 +462,20 @@ const syncActiveSection=()=>{ const to=RENAMED[location.hash]; if(to){ location.
 // The page scrolls in its own box under the header; a hash in the address is brought into view on arrival.
 const arrive=()=>{ if(!location.hash) return; const el=document.getElementById(location.hash.slice(1)); if(el) el.scrollIntoView({behavior:'instant'}); };
 arrive(); window.addEventListener('load', ()=>requestAnimationFrame(arrive));
+// Reading moves the highlight as well as clicking: the current section is the last heading to have
+// passed under the header. The tab keeps the name you navigated to -- scrolling is not a destination.
+const sections=[...sectionLinks].map(link=>document.getElementById(link.hash.slice(1))).filter(Boolean);
+// The article scrolls inside .page-scroll, not the window, so that is where the scroll event is.
+const scroller=document.querySelector('.page-scroll')||document.scrollingElement;
+let settleUntil=0; sectionLinks.forEach(link=>link.addEventListener('click',()=>{settleUntil=Date.now()+700;}));
+const followScroll=()=>{ if(Date.now()<settleUntil||!sections.length) return;
+  let current=sections[0]; for(const el of sections) if(el.getBoundingClientRect().top<=90) current=el;
+  // The last section is usually too short to reach the header; at the end it is the one being read.
+  if(scroller.scrollTop+scroller.clientHeight>=scroller.scrollHeight-2) current=sections[sections.length-1];
+  setActiveSection('#'+current.id,false); };
+let queued=false; const onScroll=()=>{ if(queued) return; queued=true;
+  requestAnimationFrame(()=>{queued=false;followScroll();}); };
+scroller.addEventListener('scroll',onScroll,{passive:true}); window.addEventListener('scroll',onScroll,{passive:true});
 window.addEventListener('hashchange',syncActiveSection);
 syncActiveSection();
 </script>
