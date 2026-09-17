@@ -273,6 +273,30 @@ class SubmissionPrototype(unittest.TestCase):
                      "questionnaire_commitment", "<textarea", "<select"):
             self.assertNotIn(gone, self.page)
 
+    def test_docs_follow_the_registration_update_and_delivery_order(self):
+        """The short docs follow the participant's journey: enter first,
+        maintain that registration second, then read either delivery contract.
+        The update instructions name the controls and ownership rule the live
+        form actually enforces."""
+        sections = [
+            '<h1 id="quickstart">Quickstart</h1>',
+            '<h2 id="register-as-an-entrant">Register as an entrant</h2>',
+            '<h2 id="update-entrant-information">Update entrant information</h2>',
+            '<h2 id="agent-endpoint">Agent endpoint</h2>',
+            '<h2 id="signed-forecast-submission">Signed forecast submission</h2>',
+            '<h2 id="task-map">Task map</h2>',
+        ]
+        positions = [self.docs.index(section) for section in sections]
+        self.assertEqual(positions, sorted(positions))
+        for marker in (
+                'Already registered?', '<code>Load</code>', 'Open your file to edit',
+                'Leave the entrant id unchanged',
+                'pull request author must match the GitHub owner',
+                'old key stays in the record marked revoked'):
+            self.assertIn(marker, self.docs)
+        self.assertIn("'#signed-submission':'#signed-forecast-submission'",
+                      self.docs)
+
     def test_how_it_works_shows_the_starter_fixture_verbatim(self):
         with open(os.path.join(ROOT, "examples", "agent-api", "request.json")) as f:
             request = json.load(f)
