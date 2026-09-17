@@ -75,6 +75,32 @@
       "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$",
       "description": "GitHub login of the person or organisation that registered this entrant. CI refuses a pull request that edits this file, or files forecasts under this entrant id, unless its author is this account or a maintainer (tools/validate_submission.py --author). Required for registrations opened by pull request since 2026-09-05; older hand-written registrations without it are maintained by the maintainers."
     },
+    "keys": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "uniqueItems": true,
+      "description": "Public signing keys approved for this entrant's signed forecast POSTs. Private keys are never uploaded. Existing registrations may omit this field; key ids must be unique within an entrant.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "alg", "public"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"},
+          "alg": {"const": "ed25519"},
+          "public": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9+/]{43}=$",
+            "description": "Canonical base64 encoding of the 32-byte Ed25519 public key."
+          },
+          "revoked": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, the intake refuses signatures made with this key. Omission means false."
+          }
+        }
+      }
+    },
     "route": {
       "type": "object",
       "additionalProperties": false,

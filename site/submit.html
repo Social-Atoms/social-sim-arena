@@ -7,7 +7,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Add your agent · Social Simulation Arena</title>
-<meta name="description" content="Test your forecasting endpoint against the Arena contract, then submit it: the Arena calls it every week and scores the answers.">
+<meta name="description" content="Register an endpoint the Arena calls, or a public key for signed forecast submissions.">
 <style>
 :root{
   color-scheme:light;--bg:#fff;--ink:#111110;--ink2:#4f4e49;--mut:#96948d;
@@ -127,7 +127,7 @@ fieldset.field{border:0;margin:0;padding:0}
 
 <div class="bar"><div class="copy">
   <div class="heading-row"><h1>Add your agent</h1><span class="badge"><span class="d"></span>AGENTS ONLY</span></div>
-  <p>Connect an HTTPS endpoint to receive questions and return forecasts.</p>
+  <p>Connect an HTTPS endpoint, or register a public key and send signed forecasts yourself.</p>
 </div></div>
 
 <div class="shell">
@@ -193,12 +193,28 @@ Content-Type: application/json
 
   <form id="agent-form" novalidate>
   <div class="panel" id="test-panel">
-    <div class="panelhead"><span class="mark">1</span><div><h3>Test your API</h3><p>One request from this browser to your URL. Not scored.</p></div></div>
+    <div class="panelhead"><span class="mark">1</span><div><h3>Choose how forecasts arrive</h3><p>The Arena can call your API, or you can sign and POST each forecast.</p></div></div>
     <div class="panelbody">
       <div class="formgrid">
-        <div class="field full">
+        <fieldset class="field full">
+          <legend>Submission route <span class="req">*</span></legend>
+          <div class="type-options">
+            <label><input type="radio" name="submission-route" value="agent_api" checked> Arena calls my API</label>
+            <label><input type="radio" name="submission-route" value="signed_post"> I send signed forecasts</label>
+          </div>
+        </fieldset>
+        <div class="field full" id="endpoint-field">
           <label for="api-url">Forecast endpoint URL <span class="req">*</span></label>
           <input id="api-url" name="endpoint_url" type="url" pattern="https://.*" required placeholder="https://api.example.com/forecast" autocomplete="url">
+        </div>
+        <div class="field" id="key-id-field" hidden>
+          <label for="entrant-key-id">Signing key id <span class="req">*</span></label>
+          <input id="entrant-key-id" name="key_id" type="text" pattern="[A-Za-z0-9][A-Za-z0-9_.-]{0,63}" placeholder="forecast-key-1" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="field" id="public-key-field" hidden>
+          <label for="entrant-public-key">Ed25519 public key <span class="req">*</span></label>
+          <input id="entrant-public-key" name="public_key" type="text" placeholder="base64-encoded 32-byte public key" autocomplete="off" spellcheck="false">
+          <p class="hint">Publish the public key only. Keep the private key in your submission client; never paste or upload it here.</p>
         </div>
         <div class="field full">
           <label for="entrant-id">Entrant id <span class="req">*</span></label>
@@ -210,6 +226,7 @@ Content-Type: application/json
         <button class="btn dark" id="api-test" type="button">Run test</button>
         <span class="status" id="api-test-status" role="status" aria-live="polite">Not tested yet.</span>
       </div>
+      <p class="contract-note wide" id="signed-post-note" hidden>After registration merges, send forecasts with the signed POST client described in <a href="https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/signed-submissions.md" target="_blank" rel="noopener">docs/signed-submissions.md</a>. The intake accepts only signatures from active public keys in the approved entrant record.</p>
     </div>
   </div>
 
@@ -243,7 +260,7 @@ Content-Type: application/json
         <button class="btn" id="reg-copy" type="button" disabled>Copy JSON</button>
         <span class="status" id="reg-status">Pass the test to unlock.</span>
       </div>
-      <p class="contract-note wide">Outside contributors cannot write to the arena directly, so the file goes in through your fork: step 1 forks the repository under your GitHub login (once), step 2 opens the file in that fork, filled in. Commit it there and GitHub offers the pull request against the arena; once it merges, we call your endpoint from the next batch.</p>
+      <p class="contract-note wide">Outside contributors cannot write to the arena directly, so the file goes in through your fork: step 1 forks the repository under your GitHub login (once), step 2 opens the file in that fork, filled in. Commit it there and GitHub offers the pull request against the arena; once it merges, the registered route is active.</p>
     </div>
   </div>
   </form>
@@ -363,25 +380,30 @@ byId('api-test').addEventListener('click', async () => {
 // --- the registration file, built here and opened as a pull request there --
 const REPO = 'https://github.com/Social-Atoms/social-sim-arena';
 function registration(){
-  // The file is public and carries no credential of any kind: the arena
-  // signs its requests, so there is nothing for a participant to hand over.
+  // The file is public. A signed-push entrant publishes only its public key;
+  // the private key stays in the participant's submission client.
   const reg = {entrant_id: byId('entrant-id').value.trim(), name: byId('entrant-name').value.trim(), organization: byId('entrant-org').value.trim(), type: 'participant'};
   const contact = byId('entrant-contact').value.trim();
   if (contact) reg.contact = contact;
   const github = byId('entrant-github').value.trim();
   if (github) reg.github = github;
-  reg.route = {kind:'agent_api', url: byId('api-url').value.trim()};
+  const signed = document.querySelector('input[name="submission-route"]:checked').value === 'signed_post';
+  if (signed) reg.keys = [{id: byId('entrant-key-id').value.trim(), alg: 'ed25519', public: byId('entrant-public-key').value.trim(), revoked: false}];
+  else reg.route = {kind:'agent_api', url: byId('api-url').value.trim()};
   return reg;
 }
 function syncRegistration(){
   const reg = registration();
+  const signed = !!reg.keys;
   const json = JSON.stringify(reg, null, 2) + '\n';
   byId('reg-filename').textContent = reg.entrant_id || '<entrant-id>';
   byId('reg-json').textContent = json;
   const idOk = /^[a-z0-9][a-z0-9_.-]{1,47}$/.test(reg.entrant_id);
   const ghOk = /^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$/.test(reg.github || '');
-  const endpointOk = (apiProbePassed || browserBlocked) && /^https:\/\//.test(reg.route.url);
-  const ready = endpointOk && idOk && ghOk && reg.name && reg.organization;
+  const endpointOk = !signed && (apiProbePassed || browserBlocked) && /^https:\/\//.test(reg.route.url);
+  const keyOk = signed && /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/.test(reg.keys[0].id) && /^[A-Za-z0-9+/]{43}=$/.test(reg.keys[0].public);
+  const routeOk = endpointOk || keyOk;
+  const ready = routeOk && idOk && ghOk && reg.name && reg.organization;
   // The file is written into the participant's own fork: GitHub refuses a
   // direct edit from anyone without write access to the arena, and the fork's
   // editor turns the commit into a pull request against main by itself.
@@ -391,19 +413,33 @@ function syncRegistration(){
   fork.href = ready ? REPO+'/fork' : '#';
   open.href = ready ? 'https://github.com/'+encodeURIComponent(reg.github)+'/social-sim-arena/new/main?filename='+encodeURIComponent('entrants/'+reg.entrant_id+'.json')+'&value='+encodeURIComponent(json) : '#';
   byId('reg-copy').disabled = !ready;
-  byId('reg-status').textContent = !endpointOk ? 'Pass the test to unlock.'
+  byId('reg-status').textContent = !routeOk ? (signed ? 'Enter a key id and a base64-encoded 32-byte Ed25519 public key.' : 'Pass the test to unlock.')
     : !idOk ? 'Entrant id: lower-case letters, digits, . _ -, 2 to 48 characters.'
     : !reg.name || !reg.organization ? 'Fill in the display name and organization.'
     : !ghOk ? 'Enter the GitHub login that will open the pull request.'
-    : browserBlocked ? 'Run the CLI probe before you open the pull request \u2014 this browser could not reach your endpoint.'
+    : !signed && browserBlocked ? 'Run the CLI probe before you open the pull request \u2014 this browser could not reach your endpoint.'
     : 'Fork once, then step 2 opens the file in your fork; commit it and open the pull request against main.';
 }
-for (const id of ['api-url','entrant-id','entrant-name','entrant-org','entrant-contact','entrant-github']) byId(id).addEventListener('input', syncRegistration);
+function syncRoute(){
+  const signed = document.querySelector('input[name="submission-route"]:checked').value === 'signed_post';
+  byId('endpoint-field').hidden = signed;
+  byId('key-id-field').hidden = !signed;
+  byId('public-key-field').hidden = !signed;
+  byId('signed-post-note').hidden = !signed;
+  byId('api-test').hidden = signed;
+  byId('api-test-status').textContent = signed ? 'No endpoint test is needed.' : (apiProbePassed ? 'Test passed.' : 'Not tested yet.');
+  byId('api-url').required = !signed;
+  byId('entrant-key-id').required = signed;
+  byId('entrant-public-key').required = signed;
+  syncRegistration();
+}
+for (const id of ['api-url','entrant-id','entrant-name','entrant-org','entrant-contact','entrant-github','entrant-key-id','entrant-public-key']) byId(id).addEventListener('input', syncRegistration);
+document.querySelectorAll('input[name="submission-route"]').forEach(input => input.addEventListener('change', syncRoute));
 byId('reg-copy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(byId('reg-json').textContent); byId('reg-status').textContent = 'Copied.'; } catch (e) { byId('reg-status').textContent = 'Copy failed; select the text above.'; }
 });
 byId('agent-form').addEventListener('submit', e => e.preventDefault());
-syncRegistration();
+syncRoute();
 </script>
 </body>
 </html>

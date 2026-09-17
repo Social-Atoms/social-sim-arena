@@ -1140,6 +1140,7 @@ function subsList(host, rows, id){
 // What a published forecast says, in a few words.
 function forecastSummary(f, u, active){
   if(!f) return '·';
+  if(f.sealed) return '<b>sealed</b> <span class="dim">opens after the deadline</span>';
   if(typeof f.mean==='number') return '<b>'+fmtNum(f.mean,u)+'</b>'+(typeof f.sd==='number'?' <span class="dim">± '+fmtNum(f.sd,'')+'</span>':'');
   if(f.shape==='profile') return '<b>profile</b> <span class="dim">'+(f.cells_n||Object.keys(f.cells||{}).length)+' cells</span>';
   if(f.shape==='ranking') return '<b>ranking</b> <span class="dim">'+(f.items?f.items.slice(0,3).map(x=>String(x).replace(/_/g,' ')).join(', ')+(f.items.length>3?' …':''):(f.items_n||0)+' items')+'</span>';
@@ -1221,8 +1222,8 @@ function renderForecast(roundId, entrantId){
   if(!f){
     h+='<div class="ent-sec"><p class="sub">No forecast from this entrant on this question.</p></div>';
   } else {
-    const what = typeof f.mean==='number' ? fmtNum(f.mean,u)+(typeof f.sd==='number'?' <span class="s" style="font-size:14px;color:var(--mut)">± '+fmtNum(f.sd,'')+'</span>':'') : esc(f.shape||'filed');
-    const whatSub = typeof f.mean==='number' ? 'mean and standard deviation' : (f.shape==='profile'?(f.cells_n||Object.keys(f.cells||{}).length)+' cells, one number each':f.shape==='ranking'?'an ordered list of '+(f.items_n||(f.items||[]).length):'');
+    const what = f.sealed?'sealed':typeof f.mean==='number' ? fmtNum(f.mean,u)+(typeof f.sd==='number'?' <span class="s" style="font-size:14px;color:var(--mut)">± '+fmtNum(f.sd,'')+'</span>':'') : esc(f.shape||'filed');
+    const whatSub = f.sealed?'encrypted until the participant deadline':typeof f.mean==='number' ? 'mean and standard deviation' : (f.shape==='profile'?(f.cells_n||Object.keys(f.cells||{}).length)+' cells, one number each':f.shape==='ranking'?'an ordered list of '+(f.items_n||(f.items||[]).length):'');
     const err=(typeof rel==='number'&&typeof f.mean==='number')?Math.abs(f.mean-rel):null, crps=(err!==null&&typeof f.sd==='number')?crpsNormal(f.mean,f.sd,rel):null;
     h+='<div class="tiles">'
       +tile('Forecast', what, whatSub)
@@ -1230,7 +1231,8 @@ function renderForecast(roundId, entrantId){
       +tile('Released', typeof rel==='number'?fmtNum(rel,u):'·', typeof rel==='number'?esc(fmtLocal((r.resolution||{}).resolved_at||r.release_at)):(active?'not yet':'expected '+esc(fmtLocal(r.release_at))))
       +tile('Error', err!==null?fmtNum(err,u):'·', crps!==null?'CRPS '+crps.toFixed(2):(err!==null?'absolute error':'scored once the answer lands'))
       +'</div>';
-    h+='<p class="ent-meta"><span><a href="#question/'+esc(r.round_id)+'">this question, every forecast</a></span><span><a href="'+REPO+'forecasts/'+esc(r.round_id)+'/'+esc(entrantId)+'.json" target="_blank" rel="noopener">the forecast file</a></span></p>';
+    const artifact=(f.sealed?'sealed/':'forecasts/')+esc(r.round_id)+'/'+esc(entrantId)+'.json';
+    h+='<p class="ent-meta"><span><a href="#question/'+esc(r.round_id)+'">this question, every forecast</a></span><span><a href="'+REPO+artifact+'" target="_blank" rel="noopener">'+(f.sealed?'the sealed receipt':'the forecast file')+'</a></span></p>';
     if(f.cells){
       const cells=Object.keys(f.cells);
       h+='<div class="ent-sec"><h3>The profile</h3><p class="sub">One number per cell, with its uncertainty.</p><table class="ent"><thead><tr><th>Cell</th><th class="num">Forecast</th><th class="num">± sd</th></tr></thead><tbody>'

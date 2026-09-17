@@ -47,6 +47,8 @@ import os
 import sys
 from datetime import datetime, timezone
 
+from . import seal
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -120,8 +122,9 @@ def log(round_id, entrant, ih, record):
     tmp = f"{dest}.{os.getpid()}.tmp"
     try:
         os.makedirs(os.path.dirname(dest), exist_ok=True)
+        stored = seal.encrypt_record(body, "provider-reply") if seal.enabled() else body
         with open(tmp, "w") as f:
-            json.dump(body, f, indent=2, sort_keys=True)
+            json.dump(stored, f, indent=2, sort_keys=True)
             f.write("\n")
         os.replace(tmp, dest)
     except OSError as e:
@@ -147,7 +150,9 @@ def lookup(round_id, entrant, ih, persona=None):
             got = json.load(f)
     except (OSError, ValueError):
         return None
-    return got if isinstance(got, dict) else None
+    if not isinstance(got, dict):
+        return None
+    return seal.decrypt_record(got, "provider-reply")
 
 
 # --- failures ---------------------------------------------------------------
@@ -205,6 +210,8 @@ def log_failure(round_id, entrant, ih, record):
     try:
         with open(dest) as f:
             got = json.load(f)
+        if isinstance(got, dict):
+            got = seal.decrypt_record(got, "provider-failure")
         if isinstance(got, dict) and isinstance(got.get("attempts"), list):
             body["attempts"] = got["attempts"]
             body["attempts_total"] = int(got.get("attempts_total") or
@@ -217,8 +224,9 @@ def log_failure(round_id, entrant, ih, record):
     tmp = f"{dest}.{os.getpid()}.tmp"
     try:
         os.makedirs(os.path.dirname(dest), exist_ok=True)
+        stored = seal.encrypt_record(body, "provider-failure") if seal.enabled() else body
         with open(tmp, "w") as f:
-            json.dump(body, f, indent=2, sort_keys=True)
+            json.dump(stored, f, indent=2, sort_keys=True)
             f.write("\n")
         os.replace(tmp, dest)
     except OSError as e:
@@ -239,4 +247,38 @@ def failures(round_id, entrant, ih, persona=None):
             got = json.load(f)
     except (OSError, ValueError):
         return []
-    return got.get("attempts") or [] if isinstance(got, dict) else []
+    if not isinstance(got, dict):
+        return []
+    try:
+        got = seal.decrypt_record(got, "provider-failure")
+    except seal.SealError:
+        return []
+    return got.get("attempts") or []
+
+
+def reveal_round(round_id):
+    """Decrypt this locked round's evidence in place; idempotent."""
+    directory = os.path.join(root(), _segment(round_id, "round_id"))
+    changed = 0
+    for base, _dirs, files in os.walk(directory) if os.path.isdir(directory) else []:
+        kind = "provider-failure" if os.path.basename(base) == "failures" \
+            else "provider-reply"
+        for name in files:
+            if not name.endswith(".json"):
+                continue
+            dest = os.path.join(base, name)
+            try:
+                with open(dest) as fh:
+                    stored = json.load(fh)
+                plain = seal.decrypt_record(stored, kind)
+            except (OSError, ValueError, seal.SealError):
+                continue
+            if plain is stored:
+                continue
+            tmp = f"{dest}.{os.getpid()}.tmp"
+            with open(tmp, "w") as fh:
+                json.dump(plain, fh, indent=2, sort_keys=True)
+                fh.write("\n")
+            os.replace(tmp, dest)
+            changed += 1
+    return changed

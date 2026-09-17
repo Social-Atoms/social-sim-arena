@@ -1,0 +1,39 @@
+name: signed-intake-tests
+on:
+  pull_request:
+    paths:
+      - 'ssa/**'
+      - 'api/**'
+      - 'tools/**'
+      - 'tests/**'
+      - 'schema/**'
+      - 'site/submit.html'
+      - 'requirements.txt'
+      - '.github/workflows/**'
+  push:
+    branches: [signed-sealed-intake]
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: pip install -r requirements.txt
+      - name: Offline contracts, HTTP transport and Git persistence
+        env:
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          for suite in signed_forecasts signed_http signed_registration signed_reveal signed_refresh platform_seal_sync seal replies search landing_audit submission_intake workflows; do
+            python "tests/test_${suite}.py"
+          done
