@@ -15,6 +15,14 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 VERSION = 'ssa-signed-forecast-v1'
 PATH = '/api/v1/forecasts'
+# Where a participant submits and what their signature is scoped to. Both are
+# ours, not theirs, so the client fills them in rather than asking. AUDIENCE is
+# not a secret -- it is domain separation, so a request captured against the
+# rehearsal fork cannot be replayed here, and that holds whoever knows it. It
+# must match SSA_INTAKE_AUDIENCE on the deployment, so changing one without the
+# other invalidates every signature at once; change them in the same commit.
+ORIGIN = 'https://social-simulation-arena.com'
+AUDIENCE = 'ssa-production-v1'
 MAX_BYTES = 65536
 SAFE = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,63}$')
 FIELDS = ('entrant', 'key-id', 'timestamp', 'request-id', 'signature')
