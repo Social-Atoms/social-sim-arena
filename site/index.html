@@ -1156,7 +1156,7 @@ function renderQuestion(roundId){
   window.__questionName=t.label+(o?' · question '+o.n:'');
   const rel=(r.resolution||{}).value, active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
   const listed=isListed(r);
-  const state=!listed?'<span class="qdue closed">scheduled · listed '+esc(fmtLocal(r.published_at))+'</span>':active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
+  const state=!listed?'<span class="qdue closed">scheduled · listed '+esc(fmtLocal(r.published_at))+'</span>':active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal((r.resolution||{}).resolved_at||r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
   const f=r.forecasts||{}, ids=Object.keys(f), models=ids.filter(k=>!isBaseline(k));
   const nameOf=k=>forecasterName(k,data);
   const rows=ids.map(k=>{ const x=f[k]; const err=(typeof rel==='number'&&typeof x.mean==='number')?Math.abs(x.mean-rel):null; const crps=(err!==null&&typeof x.sd==='number')?crpsNormal(x.mean,x.sd,rel):null; return {k,x,err,crps,base:isBaseline(k)}; });
@@ -1169,7 +1169,7 @@ function renderQuestion(roundId){
     +'<p class="lede page-description">'+esc(r.question)+'</p>'
     +'<p class="ent-meta">'+state+(key!=='agg'?'<span><a href="#questions/task/'+esc(key)+'">all questions on this task</a></span>':'')+(r.batch_id?'<span><a href="#questions/'+esc(r.batch_id)+'">week of '+esc(fmtDate(r.batch_id.replace('batch-','')))+'</a></span>':'')+'<span>source '+(t.srcUrl?'<a href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span class="dim">'+esc(r.round_id)+'</span></p>';
   h+='<div class="tiles">'
-    +tile('Released', resolved?fmtNum(rel,u):'·', resolved?esc(fmtLocal((r.resolution||{}).resolved_at||r.release_at)):(active?'after the lock at '+esc(fmtLocal(deadlineOf(r))):'expected '+esc(fmtLocal(r.release_at))))
+    +tile('Released', resolved?fmtNum(rel,u):'·', resolved?esc(fmtDay(r.release_at)):(active?'after the lock at '+esc(fmtLocal(deadlineOf(r))):'expected '+esc(fmtLocal(r.release_at))))
     +tile('What the models say', cons!==null?fmtNum(cons,u):'·', cons!==null?'median of '+mm.length+' number forecast'+(mm.length===1?'':'s'):'no number forecasts')
     +tile('Forecasts', String(ids.length), models.length+' entrant'+(models.length===1?'':'s')+' · '+(ids.length-models.length)+' baseline'+(ids.length-models.length===1?'':'s'))
     +tile('Timestamp', !st||!st.manifest?'not yet':(st.bitcoin_attested?'on-chain':'stamped'), !st||!st.manifest?(active?'every forecast is hashed and stamped at the lock':'no manifest on record'):(st.bitcoin_attested?'the manifest of forecast hashes is attested in a Bitcoin block':'the forecast hashes are in an OpenTimestamps receipt from the lock; the Bitcoin block that seals them follows within hours, then this reads on-chain'))
@@ -1215,7 +1215,7 @@ function renderForecast(roundId, entrantId){
   const name=forecasterName(entrantId,data).split(' (')[0], t=taskForRound(r), f=(r.forecasts||{})[entrantId]||null, u=(t.unit||'').trim()==='%'?'%':'';
   window.__forecastName=name+' on '+t.label;
   const rel=(r.resolution||{}).value, active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
-  const state=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
+  const state=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal((r.resolution||{}).resolved_at||r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
   const tile=(k,v,sub)=>'<div class="tile"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="s">'+sub+'</div></div>';
   let h='<div class="eyebrow page-eyebrow">Forecast</div><h2 class="page-title"><a href="#entrant/'+esc(entrantId)+'">'+esc(name)+'</a> on <a href="#leaderboard/'+esc(taskKeyForRound(r))+'/all">'+esc(t.label)+'</a></h2>'
     +'<p class="lede page-description">'+esc(r.question)+'</p><p class="ent-meta">'+state+'<span>question <b>'+esc(r.round_id)+'</b></span><span>entrant <b>'+esc(entrantId)+'</b></span></p>';
@@ -1228,7 +1228,7 @@ function renderForecast(roundId, entrantId){
     h+='<div class="tiles">'
       +tile('Forecast', what, whatSub)
       +tile('Filed', f.filed?esc(fmtLocalZ(f.filed)):'·', 'lock at '+esc(fmtLocal(r.lock_at||deadlineOf(r))))
-      +tile('Released', typeof rel==='number'?fmtNum(rel,u):'·', typeof rel==='number'?esc(fmtLocal((r.resolution||{}).resolved_at||r.release_at)):(active?'not yet':'expected '+esc(fmtLocal(r.release_at))))
+      +tile('Released', typeof rel==='number'?fmtNum(rel,u):'·', typeof rel==='number'?esc(fmtDay(r.release_at)):(active?'not yet':'expected '+esc(fmtLocal(r.release_at))))
       +tile('Error', err!==null?fmtNum(err,u):'·', crps!==null?'CRPS '+crps.toFixed(2):(err!==null?'absolute error':'scored once the answer lands'))
       +'</div>';
     const artifact=(f.sealed?'sealed/':'forecasts/')+esc(r.round_id)+'/'+esc(entrantId)+'.json';
@@ -2583,7 +2583,7 @@ function roundsList(data){
     const t=taskForRound(r),g=TASK_GROUPS.find(x=>x.id===t.group),active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
     const kind=r.target_type||((r.cells&&r.cells.length)?'profile_energy':'continuous_normal');
     const shape=kind==='profile_energy'?'profile · '+(r.cells||[]).length+' cells':kind==='ranking_list'?'ranking':'number';
-    const when=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
+    const when=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal((r.resolution||{}).resolved_at||r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
     const strip=forecastStrip(r,t,data)||'<div class="qempty">'+(r.n_forecasts?esc(r.n_forecasts)+' forecast'+(r.n_forecasts===1?'':'s')+' filed · '+esc(shape):'No forecasts filed yet · '+esc(shape))+'</div>';
     return '<div class="qcard'+(active?' live':'')+'"><div class="qhead"><span>'+esc(g?g.label:'Task')+'</span><span class="qshape'+(kind!=='continuous_normal'?' special':'')+'">'+esc(shape)+'</span>'+when+'</div>'
       +'<h3><a class="qlink" href="#question/'+esc(r.round_id)+'">'+esc(t.label)+'</a>'+(()=>{const o=roundOrdinal(r,data); return o?' <span class="ord">question '+o.n+' of '+o.of+'</span>':'';})()+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
