@@ -105,6 +105,21 @@ This receipt time trusts the arena as the receiver. OpenTimestamps remains the
 independent post-close proof over the completed plaintext manifest; it is not
 claimed as a per-receipt pre-close timestamp.
 
+### Security boundary for the first release
+
+The first release uses Fernet authenticated symmetric encryption and treats the
+platform as trusted. Its promise is that answers are not publicly disclosed
+before the deadline. The receiver handles plaintext and holds the decryption
+key, so this does not prevent platform operators or a compromised receiver
+from reading answers early. Signed receipts support integrity checks, but do
+not independently prove the platform's claimed receipt time or prevent a
+dishonest platform from omitting submissions.
+
+Replacing Fernet with X25519 alone would not remove that trust. Preventing the
+receiver from reading answers would require entrants to encrypt before sending,
+and an independently controlled reveal service to hold the private key. That
+stronger model is outside this release; the current rollout retains Fernet.
+
 Rollout is explicit: `SSA_SEAL_FORECASTS=1` and an ISO `SSA_SEAL_AFTER` select
 future deadlines only. Enabling without the Fernet `SSA_SEAL_KEY` or the
 published live signing key fails before provider calls. `SSA_SEAL_KEY` must not
