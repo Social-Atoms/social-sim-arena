@@ -1,0 +1,38 @@
+name: confirm-registration-account
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+    paths: ['entrants/*.json']
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  suggest-owner:
+    runs-on: ubuntu-latest
+    steps:
+      # No checkout or execution of contributor code. Read GitHub's PR metadata
+      # and added-file diff only; never grant this job contents:write.
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const login = pr.user.login;
+            if (pr.user.type !== 'User' || !/^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$/.test(login)) return;
+            const args = {...context.repo, pull_number: pr.number};
+            const files = await github.paginate(github.rest.pulls.listFiles, args);
+            const comments = await github.paginate(github.rest.pulls.listReviewComments, args);
+            for (const file of files) {
+              if (file.status !== 'added' || !/^entrants\/[a-z0-9][a-z0-9_.-]{1,47}\.json$/.test(file.filename) || !file.patch) continue;
+              const lines = file.patch.split('\n').filter(l => l.startsWith('+') && !l.startsWith('+++')).map(l => l.slice(1));
+              let doc;
+              try { doc = JSON.parse(lines.join('\n')); } catch { continue; }
+              if (doc.github !== '' || doc.entrant_id + '.json' !== file.filename.split('/')[1]) continue;
+              const index = lines.findIndex(l => /^\s*"github":\s*""\s*,?\s*$/.test(l));
+              if (index < 0) continue;
+              const marker = '<!-- ssa-account-binding-v1 -->';
+              if (comments.some(c => c.user.login === 'github-actions[bot]' && c.path === file.filename && c.commit_id === pr.head.sha && c.body.includes(marker))) continue;
+              const replacement = lines[index].replace('""', JSON.stringify(login));
+              await github.rest.pulls.createReviewComment({...args, commit_id:pr.head.sha,
+                path:file.filename, line:index+1, side:'RIGHT',
+                body:marker+'\nThis registration will be bound to **@'+login+'**, the author of this PR. Check the public key in the file, then click **Commit suggestion** to confirm. If this is the wrong account, close this PR and submit from the intended account. Maintainer review is still required.\n\n```suggestion\n'+replacement+'\n```'});
+            }

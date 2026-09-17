@@ -1021,9 +1021,9 @@ function renderEntrant(id){
   const score=live||bt, scoreSrc=live?'Season 0':(bt?'backtest':'');
   const rows=(data.rounds||[]).filter(r=>r.forecasts&&r.forecasts[id]).map(r=>{
     const f=r.forecasts[id], t=taskForRound(r), rel=(r.resolution||{}).value;
-    const err=(typeof rel==='number'&&typeof f.mean==='number')?Math.abs(f.mean-rel):null;
-    const crps=(err!==null&&typeof f.sd==='number')?crpsNormal(f.mean,f.sd,rel):null;
-    return {r,t,f,rel,err,crps};
+    // The published score, as on the question and forecast pages; the per-task means below sum it.
+    const s=forecastScore(r,id,f);
+    return {r,t,f,rel,err:s.err,crps:s.crps};
   }).sort((a,b)=>deadlineOf(b.r).localeCompare(deadlineOf(a.r)));
   const pct=(a,b)=>b?Math.round(100*a/b):0;
   // Coverage inside a window: the questions that closed in it, against the ones this entrant answered.
@@ -1140,10 +1140,29 @@ function subsList(host, rows, id){
 // What a published forecast says, in a few words.
 function forecastSummary(f, u, active){
   if(!f) return '·';
+  if(f.sealed) return '<b>sealed</b> <span class="dim">opens after the deadline</span>';
   if(typeof f.mean==='number') return '<b>'+fmtNum(f.mean,u)+'</b>'+(typeof f.sd==='number'?' <span class="dim">± '+fmtNum(f.sd,'')+'</span>':'');
   if(f.shape==='profile') return '<b>profile</b> <span class="dim">'+(f.cells_n||Object.keys(f.cells||{}).length)+' cells</span>';
   if(f.shape==='ranking') return '<b>ranking</b> <span class="dim">'+(f.items?f.items.slice(0,3).map(x=>String(x).replace(/_/g,' ')).join(', ')+(f.items.length>3?' …':''):(f.items_n||0)+' items')+'</span>';
   return '<b>filed</b>';
+}
+// The shape of a question's answer: a number, a joint profile of cells, or an ordered list. Older
+// definitions predate target_type and are numbers.
+function roundKind(r){ return r.target_type==='profile_energy'?'profile':r.target_type==='ranking_list'?'ranking':'number'; }
+// One forecast's score on one question, the same on every page that shows it. A number question is
+// scored by CRPS, a profile by the energy score, a ranking by its list loss; the pipeline publishes
+// them on the round (r.scores) and that is what is shown. Only a number forecast with no published
+// score falls back to the closed form, and never the crowd: its forecast is a quantile mixture, and
+// a normal refitted to its mean and sd is a different forecast with a different score (6.70 against
+// the published 5.52 on umich-2026-08-prelim, once shown on two pages of the same site).
+function forecastScore(r, entrantId, f){
+  const kind=roundKind(r), metric=kind==='profile'?'energy':kind==='ranking'?'loss':'crps';
+  const published=(r.scores||{})[entrantId]||null, rel=(r.resolution||{}).value;
+  const skill=published&&typeof published.skill==='number'?published.skill:null;
+  if(kind!=='number') return {kind, metric, err:null, crps:null, skill, score:published&&typeof published[metric]==='number'?published[metric]:null};
+  const err=(typeof rel==='number'&&f&&typeof f.mean==='number')?Math.abs(f.mean-rel):null;
+  const crps=published&&typeof published.crps==='number'?published.crps:(entrantId==='crowd'?null:(err!==null&&typeof f.sd==='number')?crpsNormal(f.mean,f.sd,rel):null);
+  return {kind, metric, err, crps, skill, score:null};
 }
 // ---- one question: what was asked, who answered when, what came out, who was closest ----
 function renderQuestion(roundId){
@@ -1155,12 +1174,18 @@ function renderQuestion(roundId){
   window.__questionName=t.label+(o?' · question '+o.n:'');
   const rel=(r.resolution||{}).value, active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
   const listed=isListed(r);
-  const state=!listed?'<span class="qdue closed">scheduled · listed '+esc(fmtLocal(r.published_at))+'</span>':active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
+  const state=!listed?'<span class="qdue closed">scheduled · listed '+esc(fmtLocal(r.published_at))+'</span>':active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal((r.resolution||{}).resolved_at||r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
   const f=r.forecasts||{}, ids=Object.keys(f), models=ids.filter(k=>!isBaseline(k));
   const nameOf=k=>forecasterName(k,data);
-  const rows=ids.map(k=>{ const x=f[k]; const err=(typeof rel==='number'&&typeof x.mean==='number')?Math.abs(x.mean-rel):null; const crps=(err!==null&&typeof x.sd==='number')?crpsNormal(x.mean,x.sd,rel):null; return {k,x,err,crps,base:isBaseline(k)}; });
-  const resolved=typeof rel==='number';
-  rows.sort((a,b)=> resolved ? ((a.crps??a.err??Infinity)-(b.crps??b.err??Infinity)) || String(a.x.filed||'').localeCompare(String(b.x.filed||'')) : String(a.x.filed||'zz').localeCompare(String(b.x.filed||'zz')));
+  // The released answer of a list question is a vector or an ordered list, kept in r.resolution.outcome.
+  const kind=roundKind(r);
+  const outcome=kind==='number'?null:((r.resolution||{}).outcome||null);
+  const rows=ids.map(k=>{ const x=f[k], s=forecastScore(r,k,x); return {k,x,err:s.err,crps:s.crps,score:s.score,skill:s.skill,base:isBaseline(k)}; });
+  const resolved=kind==='number'?typeof rel==='number':(r.status==='resolved'&&!!outcome);
+  const keyOf=row=>kind==='number'?(row.crps??row.err??Infinity):(row.score??Infinity);
+  rows.sort((a,b)=> resolved ? (keyOf(a)-keyOf(b)) || String(a.x.filed||'').localeCompare(String(b.x.filed||'')) : String(a.x.filed||'zz').localeCompare(String(b.x.filed||'zz')));
+  const firsts={}; if(kind==='ranking') models.forEach(k=>{ const it=(f[k]||{}).items; if(Array.isArray(it)&&it.length) firsts[it[0]]=(firsts[it[0]]||0)+1; });
+  const topFirst=Object.keys(firsts).sort((a,b)=>firsts[b]-firsts[a]||a.localeCompare(b))[0]||null;
   const mm=models.map(k=>f[k].mean).filter(v=>typeof v==='number').sort((a,b)=>a-b), cons=mm.length?mm[Math.floor(mm.length/2)]:null;
   const tile=(k,v,sub)=>'<div class="tile"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="s">'+sub+'</div></div>';
   const st=(data.stamps||{})[r.round_id];
@@ -1168,18 +1193,28 @@ function renderQuestion(roundId){
     +'<p class="lede page-description">'+esc(r.question)+'</p>'
     +'<p class="ent-meta">'+state+(key!=='agg'?'<span><a href="#questions/task/'+esc(key)+'">all questions on this task</a></span>':'')+(r.batch_id?'<span><a href="#questions/'+esc(r.batch_id)+'">week of '+esc(fmtDate(r.batch_id.replace('batch-','')))+'</a></span>':'')+'<span>source '+(t.srcUrl?'<a href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span class="dim">'+esc(r.round_id)+'</span></p>';
   h+='<div class="tiles">'
-    +tile('Released', resolved?fmtNum(rel,u):'·', resolved?esc(fmtLocal((r.resolution||{}).resolved_at||r.release_at)):(active?'after the lock at '+esc(fmtLocal(deadlineOf(r))):'expected '+esc(fmtLocal(r.release_at))))
-    +tile('What the models say', cons!==null?fmtNum(cons,u):'·', cons!==null?'median of '+mm.length+' number forecast'+(mm.length===1?'':'s'):'no number forecasts')
+    +tile('Released', resolved?(kind==='number'?fmtNum(rel,u):kind==='profile'?Object.keys(outcome).length+' cells':'top '+outcome.length):'·', resolved?esc(fmtDay(r.release_at))+(kind==='number'?'':' · the released '+(kind==='profile'?'profile':'list')+' is below'):(active?'after the lock at '+esc(fmtLocal(deadlineOf(r))):'expected '+esc(fmtLocal(r.release_at))))
+    +(kind==='number'?tile('What the models say', cons!==null?fmtNum(cons,u):'·', cons!==null?'median of '+mm.length+' number forecast'+(mm.length===1?'':'s'):'no number forecasts')
+      :kind==='ranking'?tile('What the models say', topFirst?esc(String(topFirst).replace(/_/g,' ')):'·', topFirst?'first on '+firsts[topFirst]+' of '+models.length+' list'+(models.length===1?'':'s'):'no lists filed')
+      :tile('What the models say', '·', models.length?models.length+' joint profile'+(models.length===1?'':'s')+', no single number':'no profiles filed'))
     +tile('Forecasts', String(ids.length), models.length+' entrant'+(models.length===1?'':'s')+' · '+(ids.length-models.length)+' baseline'+(ids.length-models.length===1?'':'s'))
     +tile('Timestamp', !st||!st.manifest?'not yet':(st.bitcoin_attested?'on-chain':'stamped'), !st||!st.manifest?(active?'every forecast is hashed and stamped at the lock':'no manifest on record'):(st.bitcoin_attested?'the manifest of forecast hashes is attested in a Bitcoin block':'the forecast hashes are in an OpenTimestamps receipt from the lock; the Bitcoin block that seals them follows within hours, then this reads on-chain'))
     +'</div>';
   if(mm.length) h+='<div class="ent-sec strip-sec"><h3>Where the answers sit</h3><div class="qstrip" data-strip="'+esc(r.round_id)+'"></div>'+stripLegend(models.length>40)+'</div>';
-  h+='<div class="ent-sec"><h3>Every forecast</h3><p class="sub">'+(resolved?'Closest first, by CRPS where the forecast carried an uncertainty, else by error.':'In the order they were filed; scored once the answer lands.')+' Open a row for the forecast and its timestamp proof.</p>'
-    +'<table class="ent"><thead><tr><th class="num">#</th><th>Entrant</th><th class="col-filed">Filed</th><th class="num">Forecast</th><th class="num">Error</th><th class="num">CRPS</th></tr></thead><tbody>'
+  if(resolved&&kind==='profile') h+='<div class="ent-sec"><h3>The released profile</h3><p class="sub">One number per cell, as the source published it. Every forecast is scored against this vector as a whole.</p><table class="ent"><thead><tr><th>Cell</th><th class="num">Released</th></tr></thead><tbody>'
+    +Object.keys(outcome).map(c=>'<tr><td class="q">'+esc(cellLabel(c))+'</td><td class="num"><b>'+(typeof outcome[c]==='number'?fmtNum(outcome[c],u):esc(String(outcome[c])))+'</b></td></tr>').join('')+'</tbody></table></div>';
+  if(resolved&&kind==='ranking') h+='<div class="ent-sec"><h3>The released list</h3><p class="sub">In the order the source published it, first to last.</p><ol class="ranked">'+outcome.map(x=>'<li>'+esc(String(x).replace(/_/g,' '))+'</li>').join('')+'</ol></div>';
+  const scoreHead=kind==='profile'?['Energy','Skill']:kind==='ranking'?['Loss','Skill']:['Error','CRPS'];
+  const sortNote=kind==='profile'?'Closest first, by energy score; lower is better.':kind==='ranking'?'Closest first, by ranking loss; lower is better.':'Closest first, by CRPS where the forecast carried an uncertainty, else by error.';
+  h+='<div class="ent-sec"><h3>Every forecast</h3><p class="sub">'+(resolved?sortNote:'In the order they were filed; scored once the answer lands.')+' Open a row for the forecast and its timestamp proof.</p>'
+    +'<table class="ent"><thead><tr><th class="num">#</th><th>Entrant</th><th class="col-filed">Filed</th><th class="num">Forecast</th><th class="num">'+scoreHead[0]+'</th><th class="num">'+scoreHead[1]+'</th></tr></thead><tbody>'
     +rows.map((row,i)=>{ const x=row.x; const href='#forecast/'+esc(r.round_id)+'/'+esc(row.k);
       const what=forecastSummary(x,u,active);
       const lbl=nameOf(row.k)+(typeof x.mean==='number'?': '+fmtNum(x.mean,u)+(typeof x.sd==='number'?' ± '+fmtNum(x.sd,''):''):'');
-      return '<tr class="link" data-href="'+href+'" data-e="'+esc(row.k)+'" data-lbl="'+esc(lbl)+'"><td class="num dim">'+(resolved&&(row.err!==null)?i+1:'·')+'</td><td><a class="row" href="#entrant/'+esc(row.k)+'"><span class="q">'+esc(nameOf(row.k))+'</span></a>'+(row.base?' <span class="dim">baseline</span>':'')+'</td><td class="dim col-filed">'+(x.filed?esc(fmtLocal(x.filed)):'·')+'</td><td class="num">'+what+'</td><td class="num">'+(row.err!==null?fmtNum(row.err,u):'·')+'</td><td class="num">'+(row.crps!==null?row.crps.toFixed(2):'·')+'</td></tr>'; }).join('')
+      const ranked=resolved&&(kind==='number'?row.err!==null:row.score!==null);
+      const c1=kind==='number'?(row.err!==null?fmtNum(row.err,u):'·'):(row.score!==null?row.score.toFixed(3):'·');
+      const c2=kind==='number'?(row.crps!==null?row.crps.toFixed(2):'·'):(row.skill!==null?row.skill.toFixed(2):'·');
+      return '<tr class="link" data-href="'+href+'" data-e="'+esc(row.k)+'" data-lbl="'+esc(lbl)+'"><td class="num dim">'+(ranked?i+1:'·')+'</td><td><a class="row" href="#entrant/'+esc(row.k)+'"><span class="q">'+esc(nameOf(row.k))+'</span></a>'+(row.base?' <span class="dim">baseline</span>':'')+'</td><td class="dim col-filed">'+(x.filed?esc(fmtLocal(x.filed)):'·')+'</td><td class="num">'+what+'</td><td class="num">'+c1+'</td><td class="num">'+c2+'</td></tr>'; }).join('')
     +'</tbody></table></div>';
   if(!ids.length) h+='<div class="ent-sec"><p class="sub">No forecasts filed yet.</p></div>';
   host.innerHTML=h;
@@ -1214,23 +1249,28 @@ function renderForecast(roundId, entrantId){
   const name=forecasterName(entrantId,data).split(' (')[0], t=taskForRound(r), f=(r.forecasts||{})[entrantId]||null, u=(t.unit||'').trim()==='%'?'%':'';
   window.__forecastName=name+' on '+t.label;
   const rel=(r.resolution||{}).value, active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
-  const state=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
+  const state=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal((r.resolution||{}).resolved_at||r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
   const tile=(k,v,sub)=>'<div class="tile"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="s">'+sub+'</div></div>';
   let h='<div class="eyebrow page-eyebrow">Forecast</div><h2 class="page-title"><a href="#entrant/'+esc(entrantId)+'">'+esc(name)+'</a> on <a href="#leaderboard/'+esc(taskKeyForRound(r))+'/all">'+esc(t.label)+'</a></h2>'
     +'<p class="lede page-description">'+esc(r.question)+'</p><p class="ent-meta">'+state+'<span>question <b>'+esc(r.round_id)+'</b></span><span>entrant <b>'+esc(entrantId)+'</b></span></p>';
   if(!f){
     h+='<div class="ent-sec"><p class="sub">No forecast from this entrant on this question.</p></div>';
   } else {
-    const what = typeof f.mean==='number' ? fmtNum(f.mean,u)+(typeof f.sd==='number'?' <span class="s" style="font-size:14px;color:var(--mut)">± '+fmtNum(f.sd,'')+'</span>':'') : esc(f.shape||'filed');
-    const whatSub = typeof f.mean==='number' ? 'mean and standard deviation' : (f.shape==='profile'?(f.cells_n||Object.keys(f.cells||{}).length)+' cells, one number each':f.shape==='ranking'?'an ordered list of '+(f.items_n||(f.items||[]).length):'');
-    const err=(typeof rel==='number'&&typeof f.mean==='number')?Math.abs(f.mean-rel):null, crps=(err!==null&&typeof f.sd==='number')?crpsNormal(f.mean,f.sd,rel):null;
+    const what = f.sealed?'sealed':typeof f.mean==='number' ? fmtNum(f.mean,u)+(typeof f.sd==='number'?' <span class="s" style="font-size:14px;color:var(--mut)">± '+fmtNum(f.sd,'')+'</span>':'') : esc(f.shape||'filed');
+    const whatSub = f.sealed?'encrypted until the participant deadline':typeof f.mean==='number' ? 'mean and standard deviation' : (f.shape==='profile'?(f.cells_n||Object.keys(f.cells||{}).length)+' cells, one number each':f.shape==='ranking'?'an ordered list of '+(f.items_n||(f.items||[]).length):'');
+    // The same score the question page shows, from the same function.
+    const {kind, err, crps, score, skill}=forecastScore(r, entrantId, f);
+    const outcome=kind==='number'?null:((r.resolution||{}).outcome||null), listDone=r.status==='resolved'&&!!outcome;
     h+='<div class="tiles">'
       +tile('Forecast', what, whatSub)
       +tile('Filed', f.filed?esc(fmtLocalZ(f.filed)):'·', 'lock at '+esc(fmtLocal(r.lock_at||deadlineOf(r))))
-      +tile('Released', typeof rel==='number'?fmtNum(rel,u):'·', typeof rel==='number'?esc(fmtLocal((r.resolution||{}).resolved_at||r.release_at)):(active?'not yet':'expected '+esc(fmtLocal(r.release_at))))
-      +tile('Error', err!==null?fmtNum(err,u):'·', crps!==null?'CRPS '+crps.toFixed(2):(err!==null?'absolute error':'scored once the answer lands'))
+      +(kind==='number'?tile('Released', typeof rel==='number'?fmtNum(rel,u):'·', typeof rel==='number'?esc(fmtDay(r.release_at)):(active?'not yet':'expected '+esc(fmtLocal(r.release_at))))
+        :tile('Released', listDone?(kind==='profile'?Object.keys(outcome).length+' cells':'top '+outcome.length):'·', listDone?esc(fmtDay(r.release_at)):(active?'not yet':'expected '+esc(fmtLocal(r.release_at)))))
+      +(kind==='number'?tile('Error', err!==null?fmtNum(err,u):'·', crps!==null?'CRPS '+crps.toFixed(2):(err!==null?'absolute error':'scored once the answer lands'))
+        :tile(kind==='profile'?'Energy':'Loss', score!==null?score.toFixed(3):'·', score!==null?(skill!==null?'skill '+skill.toFixed(2)+' against persistence':'lower is better'):'scored once the answer lands'))
       +'</div>';
-    h+='<p class="ent-meta"><span><a href="#question/'+esc(r.round_id)+'">this question, every forecast</a></span><span><a href="'+REPO+'forecasts/'+esc(r.round_id)+'/'+esc(entrantId)+'.json" target="_blank" rel="noopener">the forecast file</a></span></p>';
+    const artifact=(f.sealed?'sealed/':'forecasts/')+esc(r.round_id)+'/'+esc(entrantId)+'.json';
+    h+='<p class="ent-meta"><span><a href="#question/'+esc(r.round_id)+'">this question, every forecast</a></span><span><a href="'+REPO+artifact+'" target="_blank" rel="noopener">'+(f.sealed?'the sealed receipt':'the forecast file')+'</a></span></p>';
     if(f.cells){
       const cells=Object.keys(f.cells);
       h+='<div class="ent-sec"><h3>The profile</h3><p class="sub">One number per cell, with its uncertainty.</p><table class="ent"><thead><tr><th>Cell</th><th class="num">Forecast</th><th class="num">± sd</th></tr></thead><tbody>'
@@ -1238,6 +1278,11 @@ function renderForecast(roundId, entrantId){
     }
     if(f.items){
       h+='<div class="ent-sec"><h3>The ranking</h3><p class="sub">In the order forecast, first to last.</p><ol class="ranked">'+f.items.map(x=>'<li>'+esc(String(x).replace(/_/g,' '))+'</li>').join('')+'</ol></div>';
+      if(listDone) h+='<div class="ent-sec"><h3>The released list</h3><p class="sub">What the source published, first to last.</p><ol class="ranked">'+outcome.map(x=>'<li>'+esc(String(x).replace(/_/g,' '))+'</li>').join('')+'</ol></div>';
+    }
+    if(f.cells&&listDone){
+      h+='<div class="ent-sec"><h3>The released profile</h3><p class="sub">One number per cell, as the source published it.</p><table class="ent"><thead><tr><th>Cell</th><th class="num">Released</th><th class="num">Forecast</th></tr></thead><tbody>'
+        +Object.keys(outcome).map(c=>{const v=(f.cells||{})[c]||{}; return '<tr><td class="q">'+esc(cellLabel(c))+'</td><td class="num"><b>'+(typeof outcome[c]==='number'?fmtNum(outcome[c],u):esc(String(outcome[c])))+'</b></td><td class="num dim">'+(typeof v.mean==='number'?fmtNum(v.mean,u):'·')+'</td></tr>';}).join('')+'</tbody></table></div>';
     }
   }
   const st=(data.stamps||{})[r.round_id];
@@ -2581,7 +2626,7 @@ function roundsList(data){
     const t=taskForRound(r),g=TASK_GROUPS.find(x=>x.id===t.group),active=r.status==='open'&&Date.parse(deadlineOf(r))>Date.now();
     const kind=r.target_type||((r.cells&&r.cells.length)?'profile_energy':'continuous_normal');
     const shape=kind==='profile_energy'?'profile · '+(r.cells||[]).length+' cells':kind==='ranking_list'?'ranking':'number';
-    const when=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal(r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
+    const when=active?'<span class="qdue live">open · due '+esc(fmtLocal(deadlineOf(r)))+'</span>':r.status==='resolved'?'<span class="qdue done">resolved · '+esc(fmtLocal((r.resolution||{}).resolved_at||r.release_at))+'</span>':'<span class="qdue closed">'+esc(closedWhen(r))+'</span>';
     const strip=forecastStrip(r,t,data)||'<div class="qempty">'+(r.n_forecasts?esc(r.n_forecasts)+' forecast'+(r.n_forecasts===1?'':'s')+' filed · '+esc(shape):'No forecasts filed yet · '+esc(shape))+'</div>';
     return '<div class="qcard'+(active?' live':'')+'"><div class="qhead"><span>'+esc(g?g.label:'Task')+'</span><span class="qshape'+(kind!=='continuous_normal'?' special':'')+'">'+esc(shape)+'</span>'+when+'</div>'
       +'<h3><a class="qlink" href="#question/'+esc(r.round_id)+'">'+esc(t.label)+'</a>'+(()=>{const o=roundOrdinal(r,data); return o?' <span class="ord">question '+o.n+' of '+o.of+'</span>':'';})()+'</h3><p class="qtext">'+esc(questionText(r))+'</p>'+strip
