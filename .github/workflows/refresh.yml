@@ -28,6 +28,12 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     env:
+      SSA_SEAL_FORECASTS: ${{ vars.SSA_SEAL_FORECASTS }}
+      SSA_SEAL_AFTER: ${{ vars.SSA_SEAL_AFTER }}
+      SSA_SIGNED_REVEAL_ENABLED: ${{ vars.SSA_SIGNED_REVEAL_ENABLED }}
+      SSA_AGE_RECIPIENT: ${{ vars.SSA_AGE_RECIPIENT }}
+      SSA_AGE_KEY_ID: ${{ vars.SSA_AGE_KEY_ID }}
+      SSA_AGE_IDENTITIES: ${{ secrets.SSA_AGE_IDENTITIES }}
       # Route A: every request to a participant endpoint is signed with this
       # Ed25519 key (ssa/signing.py); the public half is site/keys.json.
       # Unset, no participant is called -- never an unsigned request.
@@ -122,6 +128,18 @@ jobs:
       - run: python tests/test_routes.py
         env:
           PYTHONPATH: .
+      # Both intake paths share the dedicated encrypted-data branch. Pull its
+      # platform receipts into the untracked local cache before refresh reads
+      # prior forecasts or reveals a locked round. The signed-forecast reveal
+      # path also needs the remote-tracking ref even when local model sealing
+      # is disabled.
+      - name: sync sealed branch before refresh
+        run: |
+          case "${SSA_SEAL_FORECASTS,,}:${SSA_SIGNED_REVEAL_ENABLED,,}" in
+            1:*|true:*|yes:*|on:*|*:1|*:true|*:yes|*:on)
+              python tools/sync_platform_seals.py pull
+              ;;
+          esac
       - run: python -m ssa.refresh
       # Resolution runs after the refresh so it scores against the series the
       # same run just fetched. It only ever adds, never overwrites, and
@@ -163,8 +181,20 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python -m tools.contributors_wall || echo "contributors wall skipped"
-      - name: commit if changed
+      # A provider failure does not erase answers that other entrants already
+      # produced. Persist their encrypted receipts before staging main. If this
+      # fails, the following always() commit step is explicitly gated off so
+      # main can never publish output whose private receipt was left on a
+      # disposable runner.
+      - name: sync platform receipts to sealed branch
+        id: platform_seal_push
         if: always()
+        run: |
+          case "${SSA_SEAL_FORECASTS,,}" in
+            1|true|yes|on) python tools/sync_platform_seals.py push ;;
+          esac
+      - name: commit if changed
+        if: always() && steps.platform_seal_push.outcome == 'success'
         run: |
           git config user.name "ssa-bot"
           git config user.email "actions@github.com"
@@ -192,6 +222,7 @@ jobs:
           #            model asked for it, and the index will not return the
           #            same thing tomorrow.
           git add -A forecasts site resolutions locks civiqs trends wikitop news stamps sources search replies README.md brand/contributors
+          if test -d reveal-receipts; then git add -A reveal-receipts; fi
           # ignore the generated_at stamp so no-op runs do not commit
           if git diff --cached --quiet -I '"generated_at"'; then
             echo "no substantive change"

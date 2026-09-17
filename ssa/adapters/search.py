@@ -57,7 +57,7 @@ from datetime import datetime, timezone
 
 import requests
 
-from .. import batches
+from .. import batches, seal
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 ARCHIVE = os.path.join(ROOT, "search")
@@ -159,7 +159,8 @@ def cached(query):
     try:
         with open(path) as f:
             rec = json.load(f)
-    except (OSError, json.JSONDecodeError):
+        rec = seal.decrypt_record(rec, "search-cache")
+    except (OSError, json.JSONDecodeError, seal.SealError):
         return None
     try:
         fetched = datetime.fromisoformat(
@@ -216,8 +217,9 @@ def search(query, now=None):
                     for x in (body.get("results") or [])],
     }
     os.makedirs(CACHE, exist_ok=True)
+    stored = seal.encrypt_record(record, "search-cache") if seal.enabled() else record
     with open(_cache_path(query), "w") as f:
-        json.dump(record, f, indent=1, sort_keys=True, ensure_ascii=False)
+        json.dump(stored, f, indent=1, sort_keys=True, ensure_ascii=False)
     return record
 
 
@@ -276,14 +278,16 @@ def record_round(round_id, entrant, queries, records, now=None):
     if os.path.exists(path):
         return path
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w") as f:
-        json.dump({
+    record = {
             "round_id": round_id, "entrant": entrant,
             "asked_at": now or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "params": params_signature(),
             "queries": queries,
             "results": records,
-        }, f, indent=1, sort_keys=True, ensure_ascii=False)
+        }
+    stored = seal.encrypt_record(record, "search-round") if seal.enabled() else record
+    with open(path, "w") as f:
+        json.dump(stored, f, indent=1, sort_keys=True, ensure_ascii=False)
     return path
 
 
@@ -294,6 +298,31 @@ def for_round(round_id, entrant):
         return None
     try:
         with open(path) as f:
-            return json.load(f)
-    except (OSError, json.JSONDecodeError):
+            got = json.load(f)
+        return seal.decrypt_record(got, "search-round")
+    except (OSError, json.JSONDecodeError, seal.SealError):
         return None
+
+
+def reveal_round(round_id):
+    """Publish frozen query/result evidence once the round has closed."""
+    directory = os.path.join(ROUNDS, round_id)
+    changed = 0
+    for name in sorted(os.listdir(directory)) if os.path.isdir(directory) else []:
+        if not name.endswith(".json"):
+            continue
+        dest = os.path.join(directory, name)
+        try:
+            with open(dest) as fh:
+                stored = json.load(fh)
+            plain = seal.decrypt_record(stored, "search-round")
+        except (OSError, json.JSONDecodeError, seal.SealError):
+            continue
+        if plain is stored:
+            continue
+        tmp = f"{dest}.{os.getpid()}.tmp"
+        with open(tmp, "w") as fh:
+            json.dump(plain, fh, indent=1, sort_keys=True, ensure_ascii=False)
+        os.replace(tmp, dest)
+        changed += 1
+    return changed

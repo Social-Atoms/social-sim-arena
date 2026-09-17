@@ -30,10 +30,10 @@ def entrant_row(doc, rid, entrant):
 
 def queue(status, entrant="claude-opus", spend=0.2):
     status.entrant_queued(
-        "r1", entrant, lock_at=LOCK, deadline=DEADLINE,
+        "round-1", entrant, lock_at=LOCK, deadline=DEADLINE,
         route={"via": "direct", "base": "https://provider.example/v1"},
         estimated_spend=spend)
-    status.entrant_started("r1", entrant)
+    status.entrant_started("round-1", entrant)
 
 
 def test_declared_state_vocabularies_are_closed():
@@ -520,17 +520,17 @@ def test_provider_429_and_timeout_are_retryable_but_401_is_terminal():
             ("grok", "Read timed out after 600 seconds")):
         status = reliability.RunStatus(NOW)
         queue(status, entrant)
-        status.entrant_failed("r1", entrant, error)
-        row = entrant_row(status.as_dict(), "r1", entrant)
+        status.entrant_failed("round-1", entrant, error)
+        row = entrant_row(status.as_dict(), "round-1", entrant)
         assert row["state"] == "retryable_failure", (entrant, row)
         assert row["next_retry"] == "2026-09-12T18:00:00Z"
         assert row["attempts"] == 1 and row["alert"]
 
     status = reliability.RunStatus(NOW)
     queue(status, "gpt-5.6-sol")
-    status.entrant_failed("r1", "gpt-5.6-sol",
+    status.entrant_failed("round-1", "gpt-5.6-sol",
                           "HTTP 401: invalid_api_key")
-    row = entrant_row(status.as_dict(), "r1", "gpt-5.6-sol")
+    row = entrant_row(status.as_dict(), "round-1", "gpt-5.6-sol")
     assert row["state"] == "terminal_failure"
     assert row["next_retry"] is None and "credentials" in row["required_action"]
 
@@ -539,10 +539,10 @@ def test_terminal_direct_failure_plus_standby_success_records_both_attempts():
     status = reliability.RunStatus(NOW)
     queue(status)
     status.entrant_succeeded(
-        "r1", "claude-opus", route="openrouter",
-        artifact="forecasts/r1/claude-opus.json",
+        "round-1", "claude-opus", route="openrouter",
+        artifact="forecasts/round-1/claude-opus.json",
         fallback_error="HTTP 401 on the configured direct route")
-    row = entrant_row(status.as_dict(), "r1", "claude-opus")
+    row = entrant_row(status.as_dict(), "round-1", "claude-opus")
     assert row["state"] == "succeeded" and row["attempts"] == 2
     assert row["route"] == "openrouter" and row["alert"]
     assert "standby route" in " ".join(row["evidence"])
@@ -582,7 +582,7 @@ class FilingPatch:
 
 def scalar_round():
     return {
-        "round_id": "r1", "series": "yougov_approval", "status": "open",
+        "round_id": "round-1", "series": "yougov_approval", "status": "open",
         "lock_at": LOCK, "release_at": "2026-09-15T00:00:00Z",
         "baselines": {"persistence": {"mean": 41.0, "sd": 1.5,
                                         "method": "last value"}},
@@ -602,14 +602,14 @@ def test_partial_model_success_lands_and_the_failed_model_creates_no_artifact():
     status = reliability.RunStatus(NOW)
     with FilingPatch(forecast, roster, {"claude-opus": 0.1, "grok": 0.1}) as root:
         written, failures = refresh.file_baseline_forecasts(
-            [scalar_round()], {"r1": []}, NOW, run_status=status)
-        assert os.path.exists(os.path.join(root, "r1", "claude-opus.json"))
-        assert not os.path.exists(os.path.join(root, "r1", "grok.json"))
+            [scalar_round()], {"round-1": []}, NOW, run_status=status)
+        assert os.path.exists(os.path.join(root, "round-1", "claude-opus.json"))
+        assert not os.path.exists(os.path.join(root, "round-1", "grok.json"))
     doc = status.as_dict()
     assert written == 2, "one baseline plus one successful entrant"
     assert len(failures) == 1 and "grok" in failures[0]
-    assert entrant_row(doc, "r1", "claude-opus")["state"] == "succeeded"
-    assert entrant_row(doc, "r1", "grok")["state"] == "retryable_failure"
+    assert entrant_row(doc, "round-1", "claude-opus")["state"] == "succeeded"
+    assert entrant_row(doc, "round-1", "grok")["state"] == "retryable_failure"
 
 
 def test_aaii_live_failure_with_valid_archive_does_not_block_unrelated_forecast():
@@ -636,13 +636,13 @@ def test_aaii_live_failure_with_valid_archive_does_not_block_unrelated_forecast(
     roster = [("claude-opus", "claude-opus", "recent10", "direct")]
     with FilingPatch(forecast, roster, {"claude-opus": 0.1}) as root:
         _written, entrant_failures = refresh.file_baseline_forecasts(
-            [scalar_round()], {"r1": []}, NOW, run_status=status)
-        assert os.path.exists(os.path.join(root, "r1", "claude-opus.json")), \
+            [scalar_round()], {"round-1": []}, NOW, run_status=status)
+        assert os.path.exists(os.path.join(root, "round-1", "claude-opus.json")), \
             "an AAII outage blocked an unrelated YouGov entrant-round"
     assert entrant_failures == []
     doc = status.as_dict()
     assert source_row(doc, "aaii")["state"] == "stale"
-    assert entrant_row(doc, "r1", "claude-opus")["state"] == "succeeded"
+    assert entrant_row(doc, "round-1", "claude-opus")["state"] == "succeeded"
 
 
 def test_aaii_without_archive_holds_only_aaii_and_files_yougov_end_to_end():
@@ -729,9 +729,9 @@ def test_budget_withholding_stays_queued_and_spends_nothing():
     status = reliability.RunStatus(NOW)
     with FilingPatch(forecast, roster, {"claude-opus": 4.0}, ceiling=0.0) as root:
         written, failures = refresh.file_baseline_forecasts(
-            [scalar_round()], {"r1": []}, NOW, run_status=status)
-        assert not os.path.exists(os.path.join(root, "r1", "claude-opus.json"))
-    row = entrant_row(status.as_dict(), "r1", "claude-opus")
+            [scalar_round()], {"round-1": []}, NOW, run_status=status)
+        assert not os.path.exists(os.path.join(root, "round-1", "claude-opus.json"))
+    row = entrant_row(status.as_dict(), "round-1", "claude-opus")
     assert written == 1, "only the free persistence baseline is written"
     assert failures and "spend ceiling" in " ".join(failures)
     assert row["state"] == "queued" and row["attempts"] == 0
@@ -746,29 +746,29 @@ def test_a_missing_answer_after_the_round_closed_is_missed_lock():
     status = reliability.RunStatus(after_deadline)
     with FilingPatch(lambda *_a, **_k: None, roster, {}) as root:
         refresh.file_baseline_forecasts(
-            [scalar_round()], {"r1": []}, after_deadline, run_status=status)
-        assert not os.path.exists(os.path.join(root, "r1", "claude-opus.json"))
-    row = entrant_row(status.as_dict(), "r1", "claude-opus")
+            [scalar_round()], {"round-1": []}, after_deadline, run_status=status)
+        assert not os.path.exists(os.path.join(root, "round-1", "claude-opus.json"))
+    row = entrant_row(status.as_dict(), "round-1", "claude-opus")
     assert row["state"] == "missed_lock" and row["attempts"] == 0
     assert row["next_deadline"] == LOCK and "do not file late" in row["required_action"]
 
 
 def test_a_labelled_mock_is_visible_locally_but_never_scored():
     round_ = dict(scalar_round(), status="resolved")
-    resolved = {"r1": {"value": 42.0}}
+    resolved = {"round-1": {"value": 42.0}}
     with tempfile.TemporaryDirectory(prefix="ssa-mock-score-") as root:
         saved = refresh.FORECASTS
         refresh.FORECASTS = root
         try:
-            os.makedirs(os.path.join(root, "r1"))
-            real = {"round_id": "r1", "entrant": "real",
+            os.makedirs(os.path.join(root, "round-1"))
+            real = {"round_id": "round-1", "entrant": "real",
                     "topline": {"mean": 41.0, "sd": 1.5},
                     "notes": "filed=2026-09-12T12:00Z, via=direct; in=abc"}
-            mock = {"round_id": "r1", "entrant": "mock",
+            mock = {"round_id": "round-1", "entrant": "mock",
                     "topline": {"mean": 42.0, "sd": 0.1},
                     "notes": "MOCK: provider failed; in=def"}
             for body in (real, mock):
-                with open(os.path.join(root, "r1", body["entrant"] + ".json"), "w") as f:
+                with open(os.path.join(root, "round-1", body["entrant"] + ".json"), "w") as f:
                     json.dump(body, f)
             board = refresh.build_leaderboard([round_], resolved)
             refresh.count_forecasts([round_])
@@ -811,7 +811,7 @@ def populate_in_order(order):
         status.source_succeeded(name, evidence=f"{name}.json")
     for entrant in order:
         status.entrant_queued(
-            "r1", entrant, lock_at=LOCK, deadline=DEADLINE,
+            "round-1", entrant, lock_at=LOCK, deadline=DEADLINE,
             route="direct", estimated_spend=0.1)
     return status
 
@@ -828,11 +828,11 @@ def test_operator_json_and_text_are_deterministic_under_concurrency_order():
 def test_second_refresh_pass_carries_first_pass_entrant_failure():
     first = reliability.RunStatus(NOW)
     queue(first, "grok")
-    first.entrant_failed("r1", "grok", "HTTP 429: rate limit")
+    first.entrant_failed("round-1", "grok", "HTTP 429: rate limit")
     second = reliability.RunStatus(NOW + timedelta(minutes=5))
     second.carry_entrant_states(first.as_dict())
     second.source_succeeded("aaii", evidence="fresh.html")
-    row = entrant_row(second.as_dict(), "r1", "grok")
+    row = entrant_row(second.as_dict(), "round-1", "grok")
     assert row["state"] == "retryable_failure" and row["attempts"] == 1
     assert row["last_error"] == "HTTP 429: rate limit"
 

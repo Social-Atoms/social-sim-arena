@@ -252,15 +252,19 @@ class SubmissionPrototype(unittest.TestCase):
                 '<div class="page" id="page-exam">', 1)[0]
 
     def test_page_is_agents_only_and_has_no_form_to_fill_in(self):
-        # Two panels, in Prophet Arena's order: test the API, then the model
-        # information, and one submit button that opens the pull request.
-        for marker in ('<h3>Test your API</h3>', 'id="api-test"', 'name="endpoint_url"',
+        # Two panels: choose and validate a machine route, then identify the
+        # entrant. Both routes produce one public registration pull request.
+        for marker in ('<h3>Choose how forecasts arrive</h3>', 'id="api-test"',
+                       'name="submission-route"', 'value="agent_api"',
+                       'value="signed_post"', 'name="endpoint_url"',
                        '>Forecast endpoint URL <', '>Entrant id <', 'id="entrant-id"',
+                       'id="entrant-key-id"', 'id="entrant-public-key"',
                        '<h3>Your details</h3>', '>Display name <', '>Company / organization <',
-                       'id="entrant-org"', 'id="entrant-github"', 'id="reg-json"',
-                       '>Submit for review</a>', '<h3>Test results</h3>', '<h3>API response</h3>'):
+                       'id="entrant-org"', 'id="reg-json"',
+                       '>1 &middot; Fork this repository</a>', '>2 &middot; Open the prefilled file</a>',
+                       'id="fork-first"', '<h3>Test results</h3>', '<h3>API response</h3>'):
             self.assertIn(marker, self.page)
-        # Gone: the second route, the type radio, the method line, the
+        # Gone: the old bundle/questionnaire route, the method line, the
         # calendar, and everything from the questionnaire era.
         for gone in ('id="route-b"', "Route B", "entrant_type", 'id="entrant-method"',
                      'id="calendar"', "loadCalendar", "bundle",
@@ -317,13 +321,21 @@ class SubmissionPrototype(unittest.TestCase):
         builder = self.page.split("function registration(){", 1)[1].split(
             "function syncRegistration(){", 1)[0]
         self.assertNotIn("api-key", builder)
-        self.assertNotIn("key", builder.lower().replace("kind", ""))
+        self.assertNotIn("private:", builder)
+        self.assertNotIn("private_key", builder)
+        self.assertNotIn("secret", builder.lower())
         self.assertIn("kind:'agent_api'", builder)
-        self.assertIn("if (github) reg.github = github;", builder)
-        self.assertIn("'/new/main?filename='", self.page)
+        self.assertIn("alg: 'ed25519'", builder)
+        self.assertIn("public: publicKeyRaw(byId('entrant-public-key').value)", builder)
+        self.assertIn("if (signed) reg.keys", builder)
+        self.assertIn("else reg.route", builder)
+        self.assertIn("reg.github = ''", builder)
+        self.assertIn("'/new/'+REGISTRATION_BASE+'?filename='", self.page)
         self.assertIn("encodeURIComponent('entrants/'+reg.entrant_id+'.json')", self.page)
-        self.assertIn("const ready = endpointOk && idOk && ghOk", self.page)
+        self.assertIn("const ready = routeOk && idOk && reg.name && reg.organization;", self.page)
         self.assertNotIn("/api/v1/registrations", self.page)
+        self.assertNotIn('type="password"', self.page)
+        self.assertIn("never paste the private key here", self.page)
         self.assertIn('pattern="[a-z0-9][a-z0-9_.-]{1,47}"', self.page)
         with open(os.path.join(ROOT, "schema", "entrant.schema.json")) as f:
             schema = json.load(f)
@@ -337,7 +349,7 @@ class SubmissionPrototype(unittest.TestCase):
         button, a working endpoint could not register from this page at all."""
         self.assertIn("let browserBlocked = false;", self.page)
         self.assertIn("browserBlocked = true;", self.page)
-        self.assertIn("const endpointOk = (apiProbePassed || browserBlocked)", self.page)
+        self.assertIn("const endpointOk = !signed && (apiProbePassed || browserBlocked)", self.page)
         self.assertIn("Blocked by the browser, not by us", self.page)
         self.assertIn("tools/probe_agent_api.py --url", self.page)
         # And the starter server everyone copies answers the preflight, so the
@@ -353,7 +365,7 @@ class SubmissionPrototype(unittest.TestCase):
         builder = self.page.split("function registration(){", 1)[1].split(
             "function syncRegistration(){", 1)[0]
         for field in ("entrant_id:", "name:", "organization:", "type: 'participant'",
-                      "reg.contact = contact", "reg.github = github", "kind:'agent_api'"):
+                      "reg.contact = contact", "reg.github = ''", "kind:'agent_api'"):
             self.assertIn(field, builder)
         self.assertNotIn("method", builder)
         schema = load_json("schema/entrant.schema.json")

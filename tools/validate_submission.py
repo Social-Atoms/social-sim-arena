@@ -91,7 +91,17 @@ def effective_deadline(lock_at):
     return lock_at
 
 
+class AnswerContractError(ValueError):
+    pass
+
+
+from contextvars import ContextVar
+_API_VALIDATION = ContextVar('api_validation', default=False)
+
+
 def fail(msg):
+    if _API_VALIDATION.get():
+        raise AnswerContractError('invalid forecast')
     print("FAIL:", msg)
     sys.exit(1)
 
@@ -154,6 +164,16 @@ def validate_entrant(path, author=None, base_ref=None):
         fail(f"{rel}: schema violation: {err}")
     if e["entrant_id"] + ".json" != os.path.basename(path):
         fail(f"{rel}: entrant_id '{e['entrant_id']}' does not match file name")
+    import base64
+    seen = set()
+    for key in e.get('keys', []):
+        try:
+            raw = base64.b64decode(key['public'], validate=True)
+            if len(raw) != 32 or key['id'] in seen:
+                raise ValueError()
+            seen.add(key['id'])
+        except Exception:
+            fail(f"{rel}: signing keys require unique IDs and base64 32-byte public keys")
     check_entrant_owner(rel, e, author, base_ref)
     ok(rel, f"owner @{e['github']}" if e.get("github") else "")
 
@@ -291,6 +311,8 @@ def check_forecast_owner(rel, entrant_id, author, base_ref):
     if not reg:
         fail(f"{rel}: no registration entrants/{entrant_id}.json; register "
              "first (same pull request is fine)")
+    if reg.get('keys'):
+        fail(f"{rel}: signed entrants submit through POST /api/v1/forecasts; plaintext PRs are not accepted")
     if not _same_login(reg.get("github"), author):
         fail(f"{rel}: forecasts for '{entrant_id}' may only be filed by "
              f"@{reg.get('github') or 'a maintainer'}; the pull request is by "
@@ -464,6 +486,18 @@ def check_answer_matches_round(rel, fc, rnd):
     if extra:
         fail(f"{rel}: profile has {len(extra)} cell(s) this round did not ask "
              f"for: {', '.join(extra[:5])}{' ...' if len(extra) > 5 else ''}")
+
+
+def validate_answer_contract(body, round_def):
+    """Shared semantic checks, with no plaintext diagnostics in API contexts."""
+    token = _API_VALIDATION.set(True)
+    try:
+        for label, block in answer_blocks(body):
+            check_shape('submission', label, block)
+            check_quantiles('submission', label, block)
+        check_answer_matches_round('submission', body, round_def)
+    finally:
+        _API_VALIDATION.reset(token)
 
 
 def validate(path, now=None, author=None, base_ref=None):
