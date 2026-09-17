@@ -92,6 +92,9 @@ fieldset.field{border:0;margin:0;padding:0}
 .storage-note p{margin:0;overflow-wrap:anywhere}
 #reg-done{margin-top:20px;padding-top:20px;border-top:1px solid var(--line)}
 #fork-first{margin:14px 0 2px}
+#load-field{border-bottom:1px solid var(--line);padding-bottom:16px}
+.loadrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.loadrow input{flex:0 1 260px}
 .copyrow{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
 
 .railbox{border:1px solid var(--line);border-radius:5px;padding:20px;background:#fff}.railbox h3{margin:0 0 16px;color:var(--ink)}.railbox p{margin:0 0 8px;color:var(--mut)}
@@ -197,6 +200,15 @@ Content-Type: application/json
     <div class="panelhead"><span class="mark">1</span><div><h3>Choose how forecasts arrive</h3><p>The Arena can call your API, or you can sign and POST each forecast.</p></div></div>
     <div class="panelbody">
       <div class="formgrid">
+        <div class="field full" id="load-field">
+          <label for="load-id">Already registered? Load your entry to change it</label>
+          <div class="loadrow">
+            <input id="load-id" type="text" pattern="[a-z0-9][a-z0-9_.-]{1,47}" placeholder="your entrant id" autocomplete="off" spellcheck="false">
+            <button class="btn" id="load-go" type="button">Load</button>
+            <span class="status" id="load-status"></span>
+          </div>
+          <p class="hint">Fills the form from your published <code>entrants/&lt;id&gt;.json</code>, so you can change an endpoint or rotate a key without retyping the rest. Whether the change is allowed is decided when the pull request opens: only the account the file records may make it.</p>
+        </div>
         <fieldset class="field full">
           <legend>Submission route <span class="req">*</span></legend>
           <div class="type-options">
@@ -393,16 +405,35 @@ function publicKeyRaw(text){
     return blob.length === 51 && blob.slice(0, 19) === SSH_ED25519_HEAD ? btoa(blob.slice(-32)) : '';
   } catch (error) { return ''; }
 }
+// The registration being edited, as published, or null when registering anew.
+// Editing starts from it so that fields this form never shows -- method, arms,
+// homepage, a second key -- survive a change of endpoint.
+let loaded = null;
 function registration(){
   // The file is public. A signed-push entrant publishes only its public key;
   // the private key stays in the participant's submission client.
-  const reg = {entrant_id: byId('entrant-id').value.trim(), name: byId('entrant-name').value.trim(), organization: byId('entrant-org').value.trim(), type: 'participant'};
+  const reg = loaded ? JSON.parse(JSON.stringify(loaded)) : {};
+  reg.entrant_id = byId('entrant-id').value.trim();
+  reg.name = byId('entrant-name').value.trim();
+  reg.organization = byId('entrant-org').value.trim();
+  reg.type = reg.type || 'participant';
   const contact = byId('entrant-contact').value.trim();
-  if (contact) reg.contact = contact;
-  reg.github = ''; // Filled by the PR author's account-binding suggestion.
+  if (contact) reg.contact = contact; else delete reg.contact;
+  // An existing file already records its owner; a new one is bound by the bot
+  // from whoever opens the pull request.
+  if (!loaded) reg.github = '';
   const signed = document.querySelector('input[name="submission-route"]:checked').value === 'signed_post';
-  if (signed) reg.keys = [{id: byId('entrant-key-id').value.trim(), alg: 'ed25519', public: publicKeyRaw(byId('entrant-public-key').value), revoked: false}];
-  else reg.route = {kind:'agent_api', url: byId('api-url').value.trim()};
+  const key = {id: byId('entrant-key-id').value.trim(), alg: 'ed25519', public: publicKeyRaw(byId('entrant-public-key').value), revoked: false};
+  if (signed) {
+    // Rotating: the old entry stays, marked revoked, because a revealed answer
+    // is verified against the key id it was signed with.
+    const kept = (reg.keys || []).filter(k => k.id !== key.id).map(k => ({...k, revoked: true}));
+    reg.keys = kept.concat([key]);
+    delete reg.route;
+  } else {
+    reg.route = {kind:'agent_api', url: byId('api-url').value.trim()};
+    if (!loaded) delete reg.keys;
+  }
   return reg;
 }
 function syncRegistration(){
@@ -424,7 +455,11 @@ function syncRegistration(){
   byId('reg-fork').href = REPO + '/fork';
   const open = byId('reg-open');
   open.setAttribute('aria-disabled', ready ? 'false' : 'true');
-  open.href = ready ? REPO+'/new/'+REGISTRATION_BASE+'?filename='+encodeURIComponent('entrants/'+reg.entrant_id+'.json')+'&value='+encodeURIComponent(json) : '#';
+  const path = 'entrants/'+reg.entrant_id+'.json';
+  open.href = ready ? (loaded
+    ? REPO+'/edit/'+REGISTRATION_BASE+'/'+path+'?value='+encodeURIComponent(json)
+    : REPO+'/new/'+REGISTRATION_BASE+'?filename='+encodeURIComponent(path)+'&value='+encodeURIComponent(json)) : '#';
+  open.textContent = loaded ? '2 \u00b7 Open your file to edit' : '2 \u00b7 Open the prefilled file';
   byId('reg-copy').disabled = !ready;
   byId('reg-status').textContent = !routeOk ? (signed ? 'Enter a key id and an Ed25519 public key: the ssh-ed25519 line from ssh-keygen, or the raw 32 bytes in base64.' : 'Pass the test to unlock.')
     : !idOk ? 'Entrant id: lower-case letters, digits, . _ -, 2 to 48 characters.'
@@ -432,6 +467,45 @@ function syncRegistration(){
     : !signed && browserBlocked ? 'Run the CLI probe before you open the pull request \u2014 this browser could not reach your endpoint.'
     : 'Save on a new branch, open a PR, and confirm the account-binding suggestion. Base: '+REGISTRATION_BASE+'.';
 }
+// Registrations are public files, so editing one needs nothing but a fetch.
+// Whether the edit is allowed is decided by check_entrant_owner when the pull
+// request opens; this only saves the participant from retyping what is already
+// published.
+const RAW = 'https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/entrants/';
+async function loadRegistration(){
+  const id = byId('load-id').value.trim(), status = byId('load-status');
+  if (!/^[a-z0-9][a-z0-9_.-]{1,47}$/.test(id)) { status.textContent = 'Enter your entrant id.'; return; }
+  status.textContent = 'Loading\u2026';
+  let doc;
+  try {
+    const response = await fetch(RAW + encodeURIComponent(id) + '.json', {cache: 'no-store'});
+    if (response.status === 404) { status.textContent = 'No registration under that id.'; return; }
+    if (!response.ok) throw new Error(response.status);
+    doc = await response.json();
+  } catch (error) { status.textContent = 'Could not read it just now. Try again.'; return; }
+  loaded = doc;
+  byId('entrant-id').value = doc.entrant_id || id;
+  byId('entrant-name').value = doc.name || '';
+  byId('entrant-org').value = doc.organization || '';
+  byId('entrant-contact').value = doc.contact || '';
+  const key = (doc.keys || []).filter(k => !k.revoked)[0];
+  const signed = !!key;
+  document.querySelectorAll('input[name="submission-route"]').forEach(input => { input.checked = input.value === (signed ? 'signed_post' : 'agent_api'); });
+  byId('api-url').value = (doc.route || {}).url || '';
+  byId('entrant-key-id').value = key ? key.id : '';
+  byId('entrant-public-key').value = '';
+  // A published key cannot be turned back into what was pasted, and reusing an
+  // id would strand the answers signed under it, so a rotation gets a new id
+  // and a new key rather than an edit of the old one.
+  apiProbePassed = !signed;
+  syncRoute();
+  status.textContent = signed
+    ? 'Loaded. To rotate, give a new key id and paste the new public key; the old one is kept and marked revoked.'
+    : 'Loaded. Change what you need, then open the file.';
+}
+byId('load-go').addEventListener('click', loadRegistration);
+byId('load-id').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); loadRegistration(); } });
+
 function syncRoute(){
   const signed = document.querySelector('input[name="submission-route"]:checked').value === 'signed_post';
   byId('endpoint-field').hidden = signed;
