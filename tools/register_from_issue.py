@@ -1,22 +1,12 @@
-"""Turn a "Register or update an entrant" issue into entrants/<id>.json.
+"""Turn a "Register an entrant" issue into entrants/<id>.json.
 
 Run by `.github/workflows/register.yml`. The issue is a GitHub issue form
 (`.github/ISSUE_TEMPLATE/register.yml`), so its body is a fixed sequence of
 `### <Label>` headings, each followed by the value typed into that field. This
-reads those values and writes the registration file for
+reads those values, sets `"github"` to the issue's author (the one thing a
+participant cannot type, because ownership is decided by who opened the
+issue, not by what it says), and writes the registration file for
 `tools/validate_submission.py` to judge.
-
-Three cases, decided by whether `entrants/<id>.json` already exists on main:
-
-  - absent: a new registration, `"github"` set to the issue's author (the one
-    thing a participant cannot type: ownership is decided by who opened the
-    issue, not by what it says);
-  - present: an update; the form's fields replace the file's (an empty
-    optional field removes it), everything else in the file (`github`,
-    `method`, `arms`, `homepage`, ...) is kept, and the validator refuses the
-    change unless the issue's author is the recorded owner;
-  - present and "Retire" ticked: `status` becomes `retired` with `retired_at`
-    set to the issue's time; the file stays so the board keeps its history.
 
     python tools/register_from_issue.py issue.json
 
@@ -40,7 +30,6 @@ FIELDS = {
     "Endpoint URL": "url",
     "Contact email (optional)": "contact",
 }
-RETIRE_LABEL = "Retire"
 EMPTY = {"", "_No response_"}
 ID_RE = re.compile(r"^[a-z0-9][a-z0-9_.-]{1,47}$")
 
@@ -55,9 +44,8 @@ def parse_form(body):
     return out
 
 
-def registration(issue, existing=None):
+def registration(issue):
     form = parse_form(issue.get("body"))
-    retire = "[x]" in form.get(RETIRE_LABEL, "").lower()
     login = (issue.get("user") or {}).get("login") or ""
     if not login:
         die("the issue has no author login")
@@ -73,23 +61,12 @@ def registration(issue, existing=None):
         die(f"entrant id {entrant_id!r}: lower-case letters, digits, . _ -, "
             "2 to 48 characters, starting with a letter or digit")
     url = reg.pop("url")
-    if existing:
-        doc = dict(existing)
-        doc.update(name=reg["name"], organization=reg["organization"])
-        doc.pop("contact", None)
-        doc["route"] = dict(existing.get("route") or {}, kind="agent_api", url=url)
-    else:
-        if retire:
-            die("nothing to retire: no registration under this id")
-        doc = {"entrant_id": entrant_id, "name": reg["name"],
-               "organization": reg["organization"], "type": "participant",
-               "github": login}
-        doc["route"] = {"kind": "agent_api", "url": url}
+    doc = {"entrant_id": entrant_id, "name": reg["name"],
+           "organization": reg["organization"], "type": "participant",
+           "github": login}
     if reg.get("contact"):
         doc["contact"] = reg["contact"]
-    if retire:
-        doc["status"] = "retired"
-        doc["retired_at"] = issue.get("created_at")
+    doc["route"] = {"kind": "agent_api", "url": url}
     return doc
 
 
@@ -103,14 +80,8 @@ if __name__ == "__main__":
         die("usage: python tools/register_from_issue.py issue.json")
     with open(sys.argv[1], encoding="utf-8") as f:
         issue = json.load(f)
-    form = parse_form(issue.get("body"))
-    entrant_id = form.get("Entrant id", "").strip()
-    rel = os.path.join("entrants", entrant_id + ".json")
-    existing = None
-    if ID_RE.match(entrant_id) and os.path.exists(os.path.join(ROOT, rel)):
-        with open(os.path.join(ROOT, rel), encoding="utf-8") as f:
-            existing = json.load(f)
-    doc = registration(issue, existing)
+    doc = registration(issue)
+    rel = os.path.join("entrants", doc["entrant_id"] + ".json")
     with open(os.path.join(ROOT, rel), "w", encoding="utf-8") as f:
         json.dump(doc, f, indent=2)
         f.write("\n")
