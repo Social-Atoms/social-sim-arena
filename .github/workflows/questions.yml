@@ -13,6 +13,11 @@ name: questions
 # Everything here is offline. No key, no provider, no upstream fetch: the
 # generator reads committed archives and the bundle reads the season file, so
 # a source being down cannot fail this job and this job cannot spend money.
+#
+# `site/**` is in the filter because nine suites read files under site/ --
+# test_site_render, test_contract_consistency and test_workflows open the
+# pages themselves. Without it a website-only change ran no test at all, which
+# is how a stale 404.html sat on main for six days.
 
 on:
   pull_request:
@@ -30,6 +35,7 @@ on:
       - "tools/**"
       - "tests/**"
       - "api/**"
+      - "site/**"
       - "vercel.json"
   push:
     branches: [dev]
@@ -46,6 +52,7 @@ on:
       - "tools/**"
       - "tests/**"
       - "api/**"
+      - "site/**"
       - "vercel.json"
 
 jobs:
