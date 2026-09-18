@@ -325,14 +325,22 @@ def probe(url, signer=None, timeout=30.0, retries=2, shapes=None):
                          "endpoint does not verify, so which key the arena "
                          "signs with does not matter to it"))
         except ProbeFailure as err:
-            unknown = "unknown key" in str(err).lower()
-            rows.append(("live key", not unknown,
-                         f"endpoint does not know {LIVE_KEY_ID!r}: the arena signs "
-                         f"live rounds with it, so every real call is refused. Load "
-                         f"the published list from {KEYS_URL}"
-                         if unknown else
-                         f"{LIVE_KEY_ID!r} was refused as a signature, not as an "
-                         "unknown key id"))
+            text = str(err)
+            # Only a refusal answers the question. A timeout or a closed port
+            # says nothing about the key list, and calling that a pass is how a
+            # dead endpoint would leave here with a clean row.
+            if not ("HTTP 401" in text or "HTTP 403" in text):
+                rows.append(("live key", False,
+                             f"not answered, so the key list is unknown: {text}"))
+            elif "unknown key" in text.lower():
+                rows.append(("live key", False,
+                             f"endpoint does not know {LIVE_KEY_ID!r}: the arena signs "
+                             f"live rounds with it, so every real call is refused. Load "
+                             f"the published list from {KEYS_URL}"))
+            else:
+                rows.append(("live key", True,
+                             f"{LIVE_KEY_ID!r} was refused as a signature, not as an "
+                             "unknown key id"))
     return rows
 
 
