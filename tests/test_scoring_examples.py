@@ -244,6 +244,25 @@ def test_left_navigation_moves_the_active_highlight():
     print("ok test_left_navigation_moves_the_active_highlight")
 
 
+def test_the_highlight_follows_the_scroll_and_listens_where_the_page_scrolls():
+    """Reading moves it, not only clicking. The listener has to be on
+    .page-scroll: the article scrolls inside that box and the body is
+    overflow:hidden, so a scroll handler on window never fires and the feature
+    silently does nothing."""
+    body = SITE.read_text()
+    script = "".join(re.findall(r"<script>(.*?)</script>", body, re.DOTALL))
+    assert "'.page-scroll'" in script, "the scroll container is where the page actually scrolls"
+    assert re.search(r"scroller\.addEventListener\('scroll'", script), "the handler is on it"
+    assert re.search(r"getBoundingClientRect\(\)\.top\s*<=", script), (
+        "the current section is the last heading to have passed under the header")
+    assert re.search(r"setActiveSection\('#'\+current\.id,\s*false\)", script), (
+        "scrolling moves the highlight but does not rename the tab")
+    assert "scroller.scrollHeight" in script, "the last short section still activates at the end"
+    assert "const arrive=()=>{ if(!location.hash) return; settleUntil=Date.now()+700;" in script, (
+        "arriving at an anchor must keep that section highlighted while the browser scrolls")
+    print("ok test_the_highlight_follows_the_scroll_and_listens_where_the_page_scrolls")
+
+
 def test_navigation_labels_match_their_section_titles():
     body = SITE.read_text()
     headings = {
@@ -278,5 +297,6 @@ if __name__ == "__main__":
     test_examples_separate_questions_from_the_http_payload()
     test_request_payload_shows_one_valid_request_and_expected_response()
     test_left_navigation_moves_the_active_highlight()
+    test_the_highlight_follows_the_scroll_and_listens_where_the_page_scrolls()
     test_navigation_labels_match_their_section_titles()
     print("all scoring example tests pass")
