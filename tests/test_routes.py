@@ -46,7 +46,8 @@ class Routed:
 class Keys:
     """Exactly the named keys present, everything else cleared."""
 
-    NAMES = ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER")
+    NAMES = ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER",
+             "SA_BASELINE_HS")
 
     def __init__(self, **present):
         self.present = present
@@ -446,6 +447,160 @@ def test_a_missing_vendor_key_goes_straight_to_the_standby():
             f = harness.forecast("claude-opus", ROUND, HIST)
         assert p.calls == ["openrouter"], p.calls
         assert "via=openrouter" in f["notes"]
+
+
+class Sponsored:
+    """The sponsor's gateway configured for the duration, restored after.
+
+    `table` patches `PPAPI_MODELS`, which ships empty on purpose: the ids have
+    to be read off the gateway's own catalogue before any of them is trusted,
+    so the tests supply their own rather than waiting for that.
+    """
+
+    VARS = ("SSA_PPAPI", "SSA_PPAPI_BASE", "SSA_PPAPI_BASE_GEMINI")
+
+    def __init__(self, value=None, base="https://gw.example/v1", table=None,
+                 gemini_base=None):
+        self.env = {}
+        if value is not None:
+            self.env["SSA_PPAPI"] = value
+        if base is not None:
+            self.env["SSA_PPAPI_BASE"] = base
+        if gemini_base is not None:
+            self.env["SSA_PPAPI_BASE_GEMINI"] = gemini_base
+        self.table = table
+
+    def __enter__(self):
+        self.saved = {k: os.environ.get(k) for k in self.VARS}
+        for k in self.VARS:
+            os.environ.pop(k, None)
+        os.environ.update(self.env)
+        self.saved_table = dict(harness.PPAPI_MODELS)
+        if self.table is not None:
+            harness.PPAPI_MODELS.clear()
+            harness.PPAPI_MODELS.update(self.table)
+        return self
+
+    def __exit__(self, *a):
+        for k, v in self.saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        harness.PPAPI_MODELS.clear()
+        harness.PPAPI_MODELS.update(self.saved_table)
+
+
+def test_the_sponsors_gateway_is_off_until_its_table_is_filled():
+    """`PPAPI_MODELS` is empty in the repository, so merging this routes
+    nothing. The table is filled from the gateway's own catalogue, because a
+    guessed id can name a different *version* of the same model -- which is a
+    different model on the same leaderboard row, not a routing change."""
+    assert harness.PPAPI_MODELS == {}, "a guessed catalogue was committed"
+    with Keys(SA_BASELINE_HS="pp-test"), Sponsored(None):
+        assert harness.ppapi_models() == frozenset(), "off unless set"
+    with Keys(SA_BASELINE_HS="pp-test"), Sponsored("1"):
+        assert harness.ppapi_models() == frozenset(), "empty table routes none"
+    with Keys(SA_BASELINE_HS="pp-test"), Sponsored("claude-opus"):
+        try:
+            harness.ppapi_models()
+        except ValueError as e:
+            assert "claude-opus" in str(e) and "catalogue" in str(e), e
+        else:
+            raise AssertionError("an unchecked id was routed")
+
+
+def test_the_sponsors_gateway_needs_both_a_key_and_a_host():
+    """Half a configuration would send the round to a host that is not there
+    and spend the fallback's money on a failed request first. It is also
+    indistinguishable, from the run log, from the outage it was set up to
+    avoid -- which is the same reason a typo raises."""
+    table = {"claude-opus": "claude-opus-4.8"}
+    with Keys(), Sponsored("claude-opus", table=table):
+        try:
+            harness.ppapi_models()
+        except ValueError as e:
+            assert "SA_BASELINE_HS" in str(e), e
+        else:
+            raise AssertionError("routed with no key")
+    with Keys(SA_BASELINE_HS="pp-test"), Sponsored("claude-opus", base=None,
+                                                   table=table):
+        try:
+            harness.ppapi_models()
+        except ValueError as e:
+            assert "SSA_PPAPI_BASE" in str(e), e
+        else:
+            raise AssertionError("routed with no host")
+
+
+def test_the_sponsor_is_primary_and_our_own_account_is_the_fallback():
+    """The inversion the sponsorship buys. OpenRouter is a standby behind our
+    own key; this gateway is in front of it, because those calls are not on the
+    maintainers' card. Our key is then what keeps a round from being lost when
+    the gateway is down -- so the fallback is `direct`, not OpenRouter."""
+    table = {"claude-opus": "claude-opus-4.8"}
+    with Keys(SA_BASELINE_HS="pp-test", ANTHROPIC_API_KEY="sk-ant",
+              OPEN_ROUTER="sk-or-test"):
+        with Sponsored("claude-opus", table=table), Routed("claude-opus"):
+            assert harness.route("claude-opus")["via"] == "ppapi"
+            # Named for OpenRouter too, and the sponsor still wins.
+            assert harness.standby_route("claude-opus")["via"] == "direct"
+    # No vendor key: the round is still worth trying, so OpenRouter is next.
+    with Keys(SA_BASELINE_HS="pp-test", OPEN_ROUTER="sk-or-test"):
+        with Sponsored("claude-opus", table=table), Routed(None):
+            assert harness.standby_route("claude-opus")["via"] == "openrouter"
+    # Nothing behind it at all is None, not a route that cannot be called.
+    with Keys(SA_BASELINE_HS="pp-test"):
+        with Sponsored("claude-opus", table=table), Routed(None):
+            assert harness.standby_route("claude-opus") is None
+    # An unsponsored entrant keeps the old arrangement exactly.
+    with Keys(ANTHROPIC_API_KEY="sk-ant", OPEN_ROUTER="sk-or-test"):
+        with Sponsored(None), Routed(None):
+            assert harness.route("claude-opus")["via"] == "direct"
+            assert harness.standby_route("claude-opus")["via"] == "openrouter"
+
+
+def test_the_sponsors_gateway_keeps_each_models_own_protocol():
+    """It forwards to the upstream that serves the model, so unlike OpenRouter
+    there is no depth substitution and no single protocol. Three prefixes on
+    one host: `/v1/chat/completions`, `/v1/messages`, and gemini's own
+    `/v1beta`, which our caller builds from a different base."""
+    table = {"claude-opus": "claude-opus-4.8", "gemini-pro": "gemini-3.1-pro",
+             "gpt-5.6-luna": "gpt-5.6-luna"}
+    with Keys(SA_BASELINE_HS="pp-test"), Sponsored("1", table=table):
+        anthropic = harness.route("claude-opus")
+        openai = harness.route("gpt-5.6-luna")
+        gemini = harness.route("gemini-pro")
+    assert anthropic["api"] == "anthropic", anthropic
+    assert anthropic["base"] == "https://gw.example/v1", anthropic
+    assert openai["base"] == "https://gw.example/v1", openai
+    assert gemini["api"] == "gemini", gemini
+    assert gemini["base"] == "https://gw.example/v1beta", gemini
+    # The derivation is a guess about one gateway's layout, so it is
+    # overridable without a patch.
+    with Keys(SA_BASELINE_HS="pp-test"):
+        with Sponsored("1", table=table,
+                       gemini_base="https://other.example/gemini"):
+            assert harness.route("gemini-pro")["base"] == \
+                "https://other.example/gemini"
+    # The vendor's own effort block survives, rather than being replaced.
+    assert anthropic["params"] == harness.MODELS["claude-opus"].get("params")
+
+
+def test_a_sponsored_forecast_says_whose_account_paid_for_it():
+    """`call_identity` carries the host, so switching to the sponsor re-runs
+    rather than reusing a reply the gateway never produced -- and the `via`
+    field is what makes a published score traceable to the account that bought
+    it, which a sponsor's involvement makes a disclosure and not a detail."""
+    table = {"claude-opus": "claude-opus-4.8"}
+    with Keys(SA_BASELINE_HS="pp-test", ANTHROPIC_API_KEY="sk-ant"):
+        with Sponsored(None), Routed(None):
+            direct = harness.call_identity("claude-opus")
+        with Sponsored("claude-opus", table=table), Routed(None):
+            sponsored = harness.call_identity("claude-opus")
+            assert harness.route("claude-opus")["via"] == "ppapi"
+    assert direct != sponsored, (direct, sponsored)
+    assert "gw.example" in sponsored, sponsored
 
 
 if __name__ == "__main__":

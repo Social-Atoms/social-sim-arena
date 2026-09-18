@@ -269,6 +269,123 @@ OPENROUTER_MODELS = {
 OPENROUTER_EFFORT = {"reasoning": {"effort": "high"}}
 
 
+# --- the sponsor's gateway -------------------------------------------------
+#
+# PP API is an aggregator like OpenRouter, with one difference that matters
+# here: it is paid for by a sponsor rather than out of the maintainers' pocket,
+# so it is the *primary* route for the models switched on for it and the
+# vendor's own account is the fallback. That inversion is the whole point --
+# `standby_route` below returns the direct route when this one is primary --
+# and it is why this block exists instead of repointing `OPENROUTER_BASE`.
+#
+# **Disclosure.** A sponsor paying for the inference that produces published
+# scores is a fact about the benchmark, not an implementation detail. Every
+# forecast bought here records `via=ppapi`, and the site and the paper have to
+# say so in words as well.
+#
+# The host is configuration, not code: the gateway is not a public service with
+# a stable documented address the way OpenRouter is, and hard-coding a host
+# nobody can verify from the repository is how `SSA_BASE_QWEN` was lost.
+PPAPI_BASE_ENV = "SSA_PPAPI_BASE"
+PPAPI_BASE_GEMINI_ENV = "SSA_PPAPI_BASE_GEMINI"
+# The name the secret was actually provisioned under. Renaming this lookup
+# without renaming the secret drops the route in silence.
+PPAPI_ENV = "SA_BASELINE_HS"
+
+# Unlike OpenRouter, which speaks one protocol, PP API serves all three on one
+# host under different prefixes: `/v1/chat/completions`, `/v1/messages` and
+# `/v1beta/models/{model}:generateContent`. Our callers build the first two
+# from a base ending at `/v1` and the third from a base ending at `/v1beta`,
+# so the gemini base is a separate value rather than the same one.
+PPAPI_GEMINI_SUFFIX = "/v1beta"
+
+# Model ids on the sponsor's gateway. **Deliberately empty.**
+#
+# `OPENROUTER_MODELS` above was filled by reading the provider's public
+# catalogue, entry by entry, and one model was left out because only a floating
+# alias existed for it. The same standard applies here and cannot be met yet:
+# the gateway publishes no catalogue this repository can reach, and the
+# introduction page states outright that it lists "only some of the models",
+# so absence from it proves nothing either way.
+#
+# Two entries are known to be wrong if guessed from that page, and they are the
+# reason this is empty rather than approximate:
+#
+#   grok           we score `grok-4.5`; the page advertises `grok-4.6`
+#   gemini-flash   we score `gemini-3.6-flash`; the page advertises 3.8
+#
+# A different version under the same entrant id is not a routing change, it is
+# a different model on the same leaderboard row. Four others (`claude-opus-5`,
+# `gemini-3.1-pro-preview`, `deepseek-v4-pro`, `glm-5.2`) appear to match
+# exactly and two more (`qwen3.8-max`, `kimi/kimi-k3`) differ only in spelling,
+# but "appear to" is not the standard the block above set.
+#
+# To fill this: GET the gateway's `/v1/models`, and add only entries whose id
+# names the same model *version* the direct route scores. `ppapi_models()`
+# raises on a name that is not here, so an empty table means `SSA_PPAPI` cannot
+# route anything -- merging this changes no entrant's endpoint.
+PPAPI_MODELS = {}
+
+# The gateway normalises nothing: each model keeps its own protocol and its own
+# vendor parameter block, because the request is forwarded to the upstream that
+# serves it. So unlike `OPENROUTER_EFFORT` there is no depth substitution here,
+# and a routed entrant is the same weights asked to think exactly as hard.
+
+
+def ppapi_base(api="openai"):
+    """The gateway's base for one protocol, or None when it is not configured.
+
+    The gemini base is read separately and falls back to swapping the `/v1`
+    tail for `/v1beta`, which is the shape the introduction documents. It is a
+    derivation, so it is overridable: a gateway that serves gemini somewhere
+    else needs a value, not a patch.
+    """
+    base = (os.environ.get(PPAPI_BASE_ENV) or "").strip().rstrip("/")
+    if not base:
+        return None
+    if api != "gemini":
+        return base
+    override = (os.environ.get(PPAPI_BASE_GEMINI_ENV) or "").strip().rstrip("/")
+    if override:
+        return override
+    trunk = base[: -len("/v1")] if base.endswith("/v1") else base
+    return trunk + PPAPI_GEMINI_SUFFIX
+
+
+def ppapi_models():
+    """Which models the sponsor's gateway is primary for.
+
+    `SSA_PPAPI` is a comma-separated list of model keys, or `1` for every model
+    in `PPAPI_MODELS`. Unset means none. An unknown name raises rather than
+    being skipped, for the reason `openrouter_models` gives: a typo that routes
+    nothing is indistinguishable from the outage it was set to work around.
+
+    The key and the base are both required. Naming a model here without them
+    would send the round to a host that is not there and spend the fallback's
+    money on a failed request first.
+    """
+    raw = (os.environ.get("SSA_PPAPI") or "").strip()
+    if not raw:
+        return frozenset()
+    if not os.environ.get(PPAPI_ENV) or not ppapi_base():
+        raise ValueError(
+            f"SSA_PPAPI is set but {PPAPI_ENV} or {PPAPI_BASE_ENV} is not; "
+            "the sponsor's gateway needs both a key and a host")
+    if raw == "1":
+        return frozenset(PPAPI_MODELS)
+    want = [m.strip() for m in raw.split(",") if m.strip()]
+    bad = [m for m in want if m not in PPAPI_MODELS]
+    if bad:
+        raise ValueError(
+            f"SSA_PPAPI names {bad}, which "
+            + ("is not routable there" if len(bad) == 1
+               else "are not routable there")
+            + f"; routable: {sorted(PPAPI_MODELS)}. An id is added to "
+            "PPAPI_MODELS only after its version is checked against the "
+            "gateway's own catalogue.")
+    return frozenset(want)
+
+
 def openrouter_models():
     """Which models the OpenRouter route is switched on for.
 
@@ -301,6 +418,16 @@ def _openrouter_route(model):
             "params": dict(OPENROUTER_EFFORT), "via": "openrouter"}
 
 
+def _ppapi_route(model):
+    cfg = MODELS[model]
+    # The model's own protocol and parameter block are kept: the gateway
+    # forwards to the upstream that serves it, so `reasoning_effort` means
+    # there what it means directly. Only the host, the key and the id change.
+    return {"env": PPAPI_ENV, "api": cfg["api"],
+            "base": ppapi_base(cfg["api"]), "model": PPAPI_MODELS[model],
+            "params": dict(cfg.get("params") or {}), "via": "ppapi"}
+
+
 def _direct_route(model):
     cfg = MODELS[model]
     shared = ((os.environ.get("SSA_BASE_GATEWAY")
@@ -314,9 +441,11 @@ def _direct_route(model):
 def route(entrant, via=None):
     """Where this entrant is reached: env, api, base, model, params, via.
 
-    `via` is `direct` or `openrouter` and is the one field that exists purely
-    to be written down -- into the forecast's notes, so a file says which
-    endpoint answered it, and into the entrant record on the site.
+    `via` is `direct`, `openrouter` or `ppapi`, and is the one field that
+    exists purely to be written down -- into the forecast's notes, so a file
+    says which endpoint answered it, and into the entrant record on the site.
+    That matters most for `ppapi`: a sponsor pays for those calls, and a
+    published score has to say on whose account it was produced.
 
     Passing `via` forces a route rather than asking which one is configured.
     That is how the standby is reached in `forecast`, and how a caller that
@@ -341,6 +470,10 @@ def route(entrant, via=None):
         raise ValueError(f"{entrant} is not a registered Route A participant")
 
     model = resolve(entrant)[0]
+    if via == "ppapi":
+        if model not in PPAPI_MODELS:
+            raise ValueError(f"{model} has no route on the sponsor's gateway")
+        return _ppapi_route(model)
     if via == "openrouter":
         if model not in OPENROUTER_MODELS:
             raise ValueError(f"{model} has no OpenRouter route")
@@ -348,7 +481,14 @@ def route(entrant, via=None):
     if via == "direct":
         return _direct_route(model)
     if via is not None:
-        raise ValueError(f"unknown route {via!r}; known: direct, openrouter")
+        raise ValueError(
+            f"unknown route {via!r}; known: direct, openrouter, ppapi")
+    # The sponsor's gateway is asked first, because it is the route that does
+    # not spend the maintainers' money. `standby_route` then makes the vendor's
+    # own account the fallback rather than OpenRouter, which is the inversion
+    # the sponsorship buys.
+    if model in ppapi_models():
+        return _ppapi_route(model)
     if model in openrouter_models():
         return _openrouter_route(model)
     return _direct_route(model)
@@ -357,9 +497,16 @@ def route(entrant, via=None):
 def standby_route(entrant):
     """The route to use when the configured one is terminally down, or None.
 
-    There is one only when the model is in the OpenRouter table, the key is
-    present, and the configured route is not already OpenRouter -- falling back
-    from a host to itself is not a fallback.
+    Falling back from a host to itself is not a fallback, so the configured
+    route is never its own standby, and a candidate without its key is not a
+    standby either -- naming it would spend a failed request to discover that.
+
+    **Which way round.** When the sponsor's gateway is primary the standby is
+    the vendor's own account: the sponsorship buys the ordinary case, and the
+    maintainers' key is what keeps a round from being lost when the gateway is
+    down. When the gateway is not primary the old arrangement stands, direct
+    first and OpenRouter behind it. Either way the forecast records which host
+    answered, so a fallback is visible rather than inferred from a gap.
 
     Never for a Route A participant. Their endpoint is the only place their
     forecast can come from; falling back would send their round to a vendor on
@@ -369,11 +516,19 @@ def standby_route(entrant):
     if participants.is_participant(entrant):
         return None
     model = resolve(entrant)[0]
+    via = route(entrant)["via"]
+    if via == "ppapi":
+        cfg = MODELS[model]
+        if os.environ.get(cfg["env"]):
+            return _direct_route(model)
+        if model in OPENROUTER_MODELS and os.environ.get(OPENROUTER_ENV):
+            return _openrouter_route(model)
+        return None
     if model not in OPENROUTER_MODELS:
         return None
     if not os.environ.get(OPENROUTER_ENV):
         return None
-    if route(entrant)["via"] == "openrouter":
+    if via == "openrouter":
         return None
     return _openrouter_route(model)
 
