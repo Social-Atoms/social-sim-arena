@@ -309,32 +309,50 @@ PPAPI_ENV = "SA_BASELINE_HS"
 # so the gemini base is a separate value rather than the same one.
 PPAPI_GEMINI_SUFFIX = "/v1beta"
 
-# Model ids on the sponsor's gateway. **Deliberately empty.**
+# Model ids on the sponsor's gateway, read off its own catalogue with
+# `tools/check_ppapi_catalogue.py` rather than copied from its brochure.
+# Checked 2026-09-18 against `https://app-us.ppapi.ai/v1/models`, 140 models.
 #
-# `OPENROUTER_MODELS` above was filled by reading the provider's public
-# catalogue, entry by entry, and one model was left out because only a floating
-# alias existed for it. The same standard applies here and cannot be met yet:
-# the gateway publishes no catalogue this repository can reach, and the
-# introduction page states outright that it lists "only some of the models",
-# so absence from it proves nothing either way.
+# The brochure was wrong in the direction that matters, which is why the tool
+# exists: it advertises `grok-4.6`, and the catalogue in fact carries the
+# `grok-4.5` this season scores. Guessing from the page would have kept a model
+# off the gateway for no reason; guessing the other way would have scored a
+# different model under an entrant's name.
 #
-# Two entries are known to be wrong if guessed from that page, and they are the
-# reason this is empty rather than approximate:
+# **Two are refused, and both refusals are the point.**
 #
-#   grok           we score `grok-4.5`; the page advertises `grok-4.6`
-#   gemini-flash   we score `gemini-3.6-flash`; the page advertises 3.8
+#   gemini-flash  we score `gemini-3.6-flash`. The gateway serves 2.5, 3.5,
+#                 3.7 and 3.8 -- every neighbour and not that one. Routing it
+#                 would change which model answers for an entrant whose
+#                 published scores already run on 3.6, and its history would
+#                 stop being comparable with itself.
+#   qwen-3.7      pinned to the dated snapshot `qwen3.7-max-2026-05-20`; the
+#                 gateway has only the floating `qwen3.7-max`, which rolls
+#                 forward mid-season. The same reason `OPENROUTER_MODELS`
+#                 leaves it out, and the pin is still worth more than the
+#                 redundancy.
 #
-# A different version under the same entrant id is not a routing change, it is
-# a different model on the same leaderboard row. Four others (`claude-opus-5`,
-# `gemini-3.1-pro-preview`, `deepseek-v4-pro`, `glm-5.2`) appear to match
-# exactly and two more (`qwen3.8-max`, `kimi/kimi-k3`) differ only in spelling,
-# but "appear to" is not the standard the block above set.
-#
-# To fill this: GET the gateway's `/v1/models`, and add only entries whose id
-# names the same model *version* the direct route scores. `ppapi_models()`
-# raises on a name that is not here, so an empty table means `SSA_PPAPI` cannot
-# route anything -- merging this changes no entrant's endpoint.
-PPAPI_MODELS = {}
+# `kimi` and `minimax` differ only in spelling -- the gateway drops the vendor
+# prefix the direct route carries -- and are the same weights under the same
+# version. Recorded here rather than left commented out, because "same model,
+# written differently" is a judgement someone made and should be able to find.
+PPAPI_MODELS = {
+    "claude-fable": "claude-fable-5",
+    "claude-opus": "claude-opus-4-8",
+    "claude-opus-5": "claude-opus-5",
+    "claude-sonnet": "claude-sonnet-5",
+    "deepseek-flash": "deepseek-v4-flash",
+    "deepseek-pro": "deepseek-v4-pro",
+    "gemini-pro": "gemini-3.1-pro-preview",
+    "glm": "glm-5.2",
+    "gpt-5.6-luna": "gpt-5.6-luna",
+    "gpt-5.6-sol": "gpt-5.6-sol",
+    "gpt-5.6-terra": "gpt-5.6-terra",
+    "grok": "grok-4.5",
+    "kimi": "kimi-k3",
+    "minimax": "MiniMax-M3",
+    "qwen-3.8": "qwen3.8-max",
+}
 
 # The gateway normalises nothing: each model keeps its own protocol and its own
 # vendor parameter block, because the request is forwarded to the upstream that

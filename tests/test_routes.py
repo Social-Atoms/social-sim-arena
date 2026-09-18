@@ -499,23 +499,47 @@ class Sponsored:
         harness.PPAPI_MODELS.update(self.saved_table)
 
 
-def test_the_sponsors_gateway_is_off_until_its_table_is_filled():
-    """`PPAPI_MODELS` is empty in the repository, so merging this routes
-    nothing. The table is filled from the gateway's own catalogue, because a
-    guessed id can name a different *version* of the same model -- which is a
-    different model on the same leaderboard row, not a routing change."""
-    assert harness.PPAPI_MODELS == {}, "a guessed catalogue was committed"
-    with Keys(SA_BASELINE_HS="pp-test"), Sponsored(None):
+def test_the_gateway_is_off_until_the_variable_names_a_model():
+    """The table says what *can* be routed; the variable says what *is*. So
+    merging a filled table moves nothing until somebody sets `SSA_PPAPI`."""
+    with Keys(SA_BASELINE_HS="pp-test"), Sponsored(None, table=None):
         assert harness.ppapi_models() == frozenset(), "off unless set"
-    with Keys(SA_BASELINE_HS="pp-test"), Sponsored("1"):
-        assert harness.ppapi_models() == frozenset(), "empty table routes none"
-    with Keys(SA_BASELINE_HS="pp-test"), Sponsored("claude-opus"):
+        assert harness.route("claude-opus-5")["via"] == "direct"
+
+
+def test_a_model_the_gateway_serves_at_another_version_cannot_be_named():
+    """`gemini-flash` is the live case. We score `gemini-3.6-flash`; the
+    catalogue carries 2.5, 3.5, 3.7 and 3.8 -- every neighbour and not that
+    one. It is absent from the table for that reason, and naming it has to
+    raise rather than fall through to the direct route: a silent skip looks
+    exactly like the gateway being off, which is what someone would set the
+    variable to find out."""
+    assert "gemini-flash" not in harness.PPAPI_MODELS
+    assert harness.MODELS["gemini-flash"]["model"] == "gemini-3.6-flash"
+    with Keys(SA_BASELINE_HS="pp-test"), Sponsored("gemini-flash", table=None):
         try:
             harness.ppapi_models()
         except ValueError as e:
-            assert "claude-opus" in str(e) and "catalogue" in str(e), e
+            assert "gemini-flash" in str(e) and "catalogue" in str(e), e
         else:
-            raise AssertionError("an unchecked id was routed")
+            raise AssertionError("a model the gateway serves at another "
+                                 "version was routed to it")
+    # `1` means every model in the table, and the table is the checked set --
+    # so the blanket switch cannot reach it either.
+    with Keys(SA_BASELINE_HS="pp-test"), Sponsored("1", table=None):
+        assert "gemini-flash" not in harness.ppapi_models()
+        assert harness.route("gemini-flash")["via"] == "direct"
+
+
+def test_the_committed_catalogue_names_models_we_actually_score():
+    """Every id in the table has to be a model key here, or the table is
+    describing a season that does not exist."""
+    for name, mid in harness.PPAPI_MODELS.items():
+        assert name in harness.MODELS, f"{name} is not a model here"
+        assert mid and isinstance(mid, str), (name, mid)
+    # The pinned Qwen snapshot stays out for the reason it stays out of
+    # OpenRouter: the gateway has only the alias that rolls forward.
+    assert "qwen-3.7" not in harness.PPAPI_MODELS
 
 
 def test_the_sponsors_gateway_needs_both_a_key_and_a_host():
