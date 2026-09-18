@@ -353,6 +353,20 @@ def ppapi_base(api="openai"):
     base = (os.environ.get(PPAPI_BASE_ENV) or "").strip().rstrip("/")
     if not base:
         return None
+    # The documented table lists the base as `https://app.ppapi.ai` for the
+    # Anthropic and Gemini rows and `https://app.ppapi.ai/v1` for the OpenAI
+    # ones, because it pairs each with a full endpoint path. Our call sites
+    # concatenate instead, so the value they need is the `/v1` form for both
+    # OpenAI and Anthropic. Copying the shorter one out of the docs -- the
+    # obvious mistake, and two of the three rows invite it -- would build
+    # `https://app.ppapi.ai/chat/completions`: a 404 on every call, from a
+    # setting that looks right next to the documentation it came from.
+    if not base.endswith("/v1"):
+        raise ValueError(
+            f"{PPAPI_BASE_ENV}={base!r} must end in '/v1': the callers append "
+            "'/chat/completions' and '/messages' to it. The documented value "
+            "is https://app.ppapi.ai/v1; gemini's '/v1beta' is derived from it "
+            f"and only {PPAPI_BASE_GEMINI_ENV} overrides that.")
     if api != "gemini":
         return base
     override = (os.environ.get(PPAPI_BASE_GEMINI_ENV) or "").strip().rstrip("/")
@@ -432,11 +446,22 @@ def _openrouter_route(model):
 
 def _ppapi_route(model):
     cfg = MODELS[model]
+    # `ppapi_models()` checks the key and the host, but `route(e, via="ppapi")`
+    # asks for this route by name and skips that check -- the backtest pins a
+    # route that way, and so does every caller that must not switch endpoints
+    # mid-run. Without this the route would carry `base: None`, which surfaces
+    # as a TypeError from string concatenation deep in the provider call, or an
+    # AttributeError from `route_is_down`. Neither names the missing variable.
+    base = ppapi_base(cfg["api"])
+    if not base:
+        raise ValueError(
+            f"{PPAPI_BASE_ENV} is not set, so there is no sponsor gateway to "
+            f"route {model} to; the documented value is https://app.ppapi.ai/v1")
     # The model's own protocol and parameter block are kept: the gateway
     # forwards to the upstream that serves it, so `reasoning_effort` means
     # there what it means directly. Only the host, the key and the id change.
     return {"env": PPAPI_ENV, "api": cfg["api"],
-            "base": ppapi_base(cfg["api"]), "model": PPAPI_MODELS[model],
+            "base": base, "model": PPAPI_MODELS[model],
             "params": dict(cfg.get("params") or {}), "via": "ppapi"}
 
 
@@ -2735,27 +2760,40 @@ def _ask(entrant, prompt, previous, round_id, parse=None):
             mark_route_down(primary, str(e))
             err = e
 
-    fb_hash = prompt_hash(entrant, prompt, via="openrouter")
+    # Whichever route `standby_route` actually chose -- not a hard-coded name.
+    # This block said "openrouter" in six places, which was true while the
+    # standby could only ever be OpenRouter. It stopped being true when the
+    # sponsor's gateway became a primary with `direct` behind it, and every one
+    # of the six was then a separate bug: the fallback's prompt hash would be
+    # computed for the wrong endpoint, so its own cache never matched and every
+    # six-hourly run re-bought an answer it already had; the forecast's notes
+    # would name an endpoint that did not answer it; and a model with no
+    # OpenRouter entry would raise "no OpenRouter route" from `prompt_hash`
+    # instead of falling back at all.
+    fb_via = standby["via"]
+    fb_hash = prompt_hash(entrant, prompt, via=fb_via)
     note = (previous or {}).get("notes") or ""
     if f"in={fb_hash}" in note and not note.startswith("MOCK"):
-        return None, "openrouter", fb_hash, False
+        return None, fb_via, fb_hash, False
     top = _replayed(round_id, entrant, fb_hash, parse)
     if top is not None:
-        return top, "openrouter", fb_hash, True
+        return top, fb_via, fb_hash, True
     try:
         text, usage = call_provider(entrant, prompt, with_usage=True,
-                                    via="openrouter")
+                                    via=fb_via)
         _log_reply(round_id, entrant, fb_hash, prompt, text, usage,
-                   via="openrouter")
-        return parse(text), "openrouter", fb_hash, False
+                   via=fb_via)
+        return parse(text), fb_via, fb_hash, False
     except Exception as e:
-        _log_failure(round_id, entrant, fb_hash, prompt, e, via="openrouter")
+        _log_failure(round_id, entrant, fb_hash, prompt, e, via=fb_via)
         # Both routes are gone. Report the *first* failure as the cause, since
         # that is the account that actually needs attention, and name the
-        # standby's failure too so nobody debugs a working gateway.
+        # standby's failure too so nobody debugs a working gateway. Both are
+        # named rather than described, because which account needs attention is
+        # the whole content of this message.
         raise RuntimeError(
-            f"direct route failed ({err}) and the OpenRouter standby also "
-            f"failed ({e})") from e
+            f"the {primary['via']} route failed ({err}) and the {fb_via} "
+            f"standby also failed ({e})") from e
 
 
 def _forecast_profile(entrant, r, history, profile_history, previous,

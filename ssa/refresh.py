@@ -1483,9 +1483,16 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
                 primary = configured_route(entrant)
                 primary_via = primary.get("via") if isinstance(primary, dict) else None
                 fallback_error = None
-                if via == "openrouter" and primary_via == "direct":
+                # Any route that is not the configured one means the primary
+                # failed terminally and the standby answered. This matched the
+                # one pair that existed while the standby could only be
+                # OpenRouter; with the sponsor's gateway primary and `direct`
+                # behind it, that pair is no longer the only fallback and a
+                # literal match would report the outage as an ordinary run.
+                if via and primary_via and via != primary_via:
                     fallback_error = (
-                        "configured direct route failed terminally; standby used")
+                        f"configured {primary_via} route failed terminally; "
+                        f"{via} standby used")
                 run_status.entrant_succeeded(
                     r["round_id"], entrant, route=route,
                     artifact=os.path.relpath(artifact, ROOT),

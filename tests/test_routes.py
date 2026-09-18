@@ -47,7 +47,7 @@ class Keys:
     """Exactly the named keys present, everything else cleared."""
 
     NAMES = ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER",
-             "SA_BASELINE_HS")
+             "SA_BASELINE_HS", "DASHSCOPE_API_KEY")
 
     def __init__(self, **present):
         self.present = present
@@ -78,13 +78,21 @@ DISABLED = ('claude-opus-4-8 @ https://api.anthropic.com/v1 HTTP 400: '
 class Provider:
     """Stands in for call_provider, recording which route each call took."""
 
-    def __init__(self, fail_direct=None, fail_standby=None):
+    def __init__(self, fail_direct=None, fail_standby=None, fail_by_via=None):
         self.fail_direct, self.fail_standby = fail_direct, fail_standby
+        # `fail_direct`/`fail_standby` read the standby as OpenRouter, which it
+        # was until a route could sit in front of `direct`. Naming the route
+        # outright covers the arrangements where `direct` *is* the standby.
+        self.fail_by_via = fail_by_via or {}
         self.calls = []
 
     def __call__(self, entrant, prompt, with_usage=False, context=None, via=None):
         self.calls.append(via or harness.route(entrant)["via"])
-        bad = self.fail_standby if self.calls[-1] == "openrouter" else self.fail_direct
+        if self.fail_by_via:
+            bad = self.fail_by_via.get(self.calls[-1])
+        else:
+            bad = (self.fail_standby if self.calls[-1] == "openrouter"
+                   else self.fail_direct)
         if bad:
             raise RuntimeError(bad)
         text = '{"mean": 41.0, "sd": 1.5}'
@@ -601,6 +609,79 @@ def test_a_sponsored_forecast_says_whose_account_paid_for_it():
             assert harness.route("claude-opus")["via"] == "ppapi"
     assert direct != sponsored, (direct, sponsored)
     assert "gw.example" in sponsored, sponsored
+
+
+def test_a_gateway_outage_falls_back_to_our_own_account_and_says_so():
+    """Regression. The fallback block named `openrouter` in six places, which
+    was true while the standby could only be OpenRouter. With the sponsor
+    primary the standby is `direct`, and each hard-coded name was then its own
+    bug: the fallback's prompt hash computed for an endpoint that did not
+    answer (so its cache never matches and every six-hourly run re-buys), and
+    a forecast whose notes name the wrong route -- which is the one thing the
+    `via` field exists to get right."""
+    table = {"claude-opus": "claude-opus-4-8"}
+    with Keys(SA_BASELINE_HS="pp-test", ANTHROPIC_API_KEY="k"):
+        with Sponsored("claude-opus", table=table), Routed(None):
+            assert harness.route("claude-opus")["via"] == "ppapi"
+            with Provider(fail_by_via={"ppapi": DISABLED}) as p:
+                f = harness.forecast("claude-opus", ROUND, HIST)
+            assert p.calls == ["ppapi", "direct"], p.calls
+            assert "via=direct" in f["notes"], f["notes"]
+            # The hash it keeps must be the one the route that answered would
+            # produce. `test_a_fallback_forecast_carries_the_standbys_hash...`
+            # owns that property; what matters here is that the route written
+            # down is the route that was called.
+            assert "via=openrouter" not in f["notes"], f["notes"]
+
+
+def test_a_model_the_gateway_serves_and_openrouter_does_not_can_fall_back():
+    """`qwen-3.7` is deliberately absent from the OpenRouter table -- only a
+    floating alias exists there. Computing the fallback hash as OpenRouter's
+    raised "no OpenRouter route" from inside the fallback, so the entrant could
+    not fall back at all: an outage on the gateway lost the round outright for
+    exactly the models the gateway was added to cover."""
+    assert "qwen-3.7" not in harness.OPENROUTER_MODELS
+    table = {"qwen-3.7": "qwen3.7-max"}
+    with Keys(SA_BASELINE_HS="pp-test", DASHSCOPE_API_KEY="k"):
+        with Sponsored("qwen-3.7", table=table), Routed(None):
+            assert harness.standby_route("qwen-3.7")["via"] == "direct"
+            with Provider(fail_by_via={"ppapi": DISABLED}) as p:
+                f = harness.forecast("qwen-3.7", ROUND, HIST)
+            assert p.calls == ["ppapi", "direct"], p.calls
+            assert "via=direct" in f["notes"], f["notes"]
+
+
+def test_the_gateway_base_must_end_in_v1_and_a_named_route_needs_one():
+    """Two settings that looked right and were not.
+
+    The published table pairs each protocol with a full path, so it lists the
+    base as `https://app.ppapi.ai` on two of its three rows. Our callers
+    concatenate, so copying the shorter form builds
+    `https://app.ppapi.ai/chat/completions` -- a 404 on every call, from a
+    value that matches the documentation it came from.
+
+    And `route(e, via="ppapi")` asks for the route by name, which skips the
+    key-and-host check in `ppapi_models()`. It used to hand back `base: None`,
+    surfacing as a TypeError from string concatenation inside the provider
+    call, naming neither the entrant nor the missing variable."""
+    table = {"claude-opus": "claude-opus-4-8"}
+    with Keys(SA_BASELINE_HS="pp-test"):
+        with Sponsored("1", base="https://app.ppapi.ai", table=table):
+            try:
+                harness.ppapi_base("openai")
+            except ValueError as e:
+                assert "must end in '/v1'" in str(e), e
+                assert "https://app.ppapi.ai/v1" in str(e), "no value to copy"
+            else:
+                raise AssertionError("a base with no /v1 was accepted")
+        # Named explicitly, with no host configured at all.
+        with Sponsored(None, base=None, table=table):
+            try:
+                harness.route("claude-opus", via="ppapi")
+            except ValueError as e:
+                assert harness.PPAPI_BASE_ENV in str(e), e
+            else:
+                raise AssertionError("routed to a host that is not set")
 
 
 if __name__ == "__main__":
