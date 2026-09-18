@@ -24,6 +24,12 @@ meets one -- which the arena records as a failed call, not as a forecast, and
 the participant discovers after the deadline. Each shape is a separate check
 with its own verdict.
 
+**Why there is a separate live-key check.** This probe signs with `ssa-test`,
+the arena signs with `ssa-live`. An endpoint that verifies signatures but
+carries only the published test key passes every other check here and then
+refuses every real call with `unknown key id 'ssa-live'` -- which the
+participant reads in the run log after the round has closed, if at all.
+
 **Why the signature check sends a bad signature.** Verifying is optional: an
 endpoint that answers an unsigned or badly signed request is not insecure for
 the arena (only the arena files forecasts), it is merely open to anyone who
@@ -54,6 +60,8 @@ SCHEMA_VERSION = "ssa-agent-api-v2"
 # Mirrors ssa/signing.py. This file imports nothing from ssa/ on purpose: a
 # participant runs it from a bare checkout.
 TEST_KEY_ID = "ssa-test"
+LIVE_KEY_ID = "ssa-live"
+KEYS_URL = "https://social-simulation-arena.com/keys.json"
 TEST_PRIVATE_KEY = "HLHPLfr2J+BaNVHYXBHNs5CJOSbmgouzCUp2cxcwdy4="
 HEADER_KEY_ID, HEADER_TIMESTAMP, HEADER_SIGNATURE = (
     "X-SSA-Key-Id", "X-SSA-Timestamp", "X-SSA-Signature")
@@ -301,6 +309,30 @@ def probe(url, signer=None, timeout=30.0, retries=2, shapes=None):
             rows.append(("signature", refused,
                          "bad signature refused; endpoint verifies" if refused
                          else f"bad signature was not refused with 401/403: {err}"))
+
+    if signer is not None:
+        # This probe signs with ssa-test; the arena signs with ssa-live. An
+        # endpoint carrying only the test key therefore passes every check
+        # above and refuses every real call, which is discovered in the run
+        # log after the round has closed. So ask about the live key directly.
+        # The signature is wrong either way -- what is read is which of the
+        # two refusals comes back, the key id or the signature.
+        live = make_signer(TEST_PRIVATE_KEY, LIVE_KEY_ID)
+        try:
+            call(url, envelope("scalar", "ssa-probe-livekey"), live, timeout,
+                 retries=0, corrupt=True)
+            rows.append(("live key", True,
+                         "endpoint does not verify, so which key the arena "
+                         "signs with does not matter to it"))
+        except ProbeFailure as err:
+            unknown = "unknown key" in str(err).lower()
+            rows.append(("live key", not unknown,
+                         f"endpoint does not know {LIVE_KEY_ID!r}: the arena signs "
+                         f"live rounds with it, so every real call is refused. Load "
+                         f"the published list from {KEYS_URL}"
+                         if unknown else
+                         f"{LIVE_KEY_ID!r} was refused as a signature, not as an "
+                         "unknown key id"))
     return rows
 
 
