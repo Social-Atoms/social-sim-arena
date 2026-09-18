@@ -341,6 +341,27 @@ def probe(url, signer=None, timeout=30.0, retries=2, shapes=None):
                 rows.append(("live key", True,
                              f"{LIVE_KEY_ID!r} was refused as a signature, not as an "
                              "unknown key id"))
+
+    # The mirror of the case above: an endpoint carrying only the live key is
+    # exactly right for live rounds and refuses this probe on every shape,
+    # because the probe signs with the test key. Three identical 401s read like
+    # a broken endpoint, so say once what actually happened.
+    shape_rows = [(i, row) for i, row in enumerate(rows) if row[0].startswith("round/")]
+    refused_test = shape_rows and all(
+        not ok and "unknown key" in detail.lower() and TEST_KEY_ID in detail
+        for _, (_, ok, detail) in shape_rows)
+    if refused_test and any(name == "live key" and ok for name, ok, _ in rows):
+        for i, (name, _, _) in shape_rows:
+            rows[i] = (name, False,
+                       f"not exercised: this probe signs with {TEST_KEY_ID!r}, which the "
+                       "endpoint does not accept")
+        rows.append(("test key", True,
+                     f"the endpoint knows {LIVE_KEY_ID!r} and not {TEST_KEY_ID!r}, which is "
+                     "correct for live rounds and is why the shapes above were not "
+                     f"exercised. To check them, accept {TEST_KEY_ID!r} while you test "
+                     f"(it is published at {KEYS_URL}, so anyone who finds your URL can "
+                     "also make you compute -- it is worth removing afterwards) or run "
+                     "your server with signature verification off."))
     return rows
 
 
