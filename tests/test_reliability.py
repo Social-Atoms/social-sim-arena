@@ -153,16 +153,22 @@ def test_silverbulletin_stale_200_is_rejected_before_archive_and_stays_red():
     raw, _block = provenance.current("sb_approval")
     rows = silverbulletin.parse(raw.decode("utf-8"))
     persisted = []
+    # The day the committed archive is one day past the freshness limit. Pinned
+    # to an absolute date this test rotted quietly: the refresh bot files a
+    # fresher archive every day, the gap to that date closed below the limit,
+    # and the case it exists to build stopped being buildable.
+    stale_day = max(record["end_date"] for record in silverbulletin.approval_polls(rows=rows)) \
+        + timedelta(days=refresh.SB_MAX_OBSERVATION_AGE_DAYS + 1)
 
     def live_loader():
         validated = refresh.validate_silverbulletin_rows(
-            "sb_approval", rows, today=datetime(2026, 10, 1).date())
+            "sb_approval", rows, today=stale_day)
         persisted.append("would-have-recorded")
         return validated, "new live vintage"
 
     def archive_loader():
         validated = refresh.validate_silverbulletin_rows(
-            "sb_approval", rows, today=datetime(2026, 10, 1).date())
+            "sb_approval", rows, today=stale_day)
         return validated, "same-source committed archive"
 
     status = reliability.RunStatus(NOW)
