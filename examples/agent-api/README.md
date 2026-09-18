@@ -30,10 +30,22 @@ The response should match the shape in `response.json`.
 ## Signatures
 
 The server verifies the arena's signature on every request (`verify_signature`
-in `server.py`, the fifteen lines a participant copies) against the public
-keys in `site/keys.json`; the probe signs with the published test key, so the
-two agree out of the box. `--no-verify` accepts unsigned requests, which is a
-participant's right and the probe reports as "does not verify".
+in `server.py`, the fifteen lines a participant copies). `--no-verify` accepts
+unsigned requests, which is a participant's right and the probe reports as
+"does not verify".
+
+**Two keys, and the difference matters once this leaves the repository.** The
+probe signs with `ssa-test`; the arena signs live rounds with `ssa-live`. Both
+are published at <https://social-simulation-arena.com/keys.json> and both are
+built into `PUBLIC_KEYS` in `server.py`, so a copied file verifies real traffic
+with no further setup. `load_public_keys()` then refreshes that pair — from
+`site/keys.json` inside a checkout, otherwise by fetching the published list at
+start-up, so a rotated key reaches your server on its next restart.
+
+Carry only the test key and the failure is silent in the worst way: the probe
+passes every check, and the arena is refused with `unknown key id 'ssa-live'`
+on the real round. The probe's `live key` check exists to catch that before
+the round rather than in the log afterwards.
 
 ```bash
 python examples/agent-api/server.py
