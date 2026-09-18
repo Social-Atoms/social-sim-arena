@@ -95,6 +95,7 @@ Social Simulation Arena is a project initiated by [Social Atoms](https://github.
 <a href="https://github.com/XuanL17" title="XuanL17"><img src="brand/contributors/XuanL17.svg" width="64" height="64" alt="XuanL17"></a>
 <a href="https://github.com/evie-mo" title="evie-mo"><img src="brand/contributors/evie-mo.svg" width="64" height="64" alt="evie-mo"></a>
 <a href="https://github.com/chenchenplus" title="chenchenplus"><img src="brand/contributors/chenchenplus.svg" width="64" height="64" alt="chenchenplus"></a>
+<a href="https://github.com/jayzou-test" title="jayzou-test"><img src="brand/contributors/jayzou-test.svg" width="64" height="64" alt="jayzou-test"></a>
 <a href="https://github.com/testing-shang" title="testing-shang"><img src="brand/contributors/testing-shang.svg" width="64" height="64" alt="testing-shang"></a>
 </p>
 <!-- contributors:end -->
