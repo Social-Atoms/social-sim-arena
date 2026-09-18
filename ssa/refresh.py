@@ -1718,7 +1718,7 @@ def file_crowd_forecasts(rounds, now, backfill=False):
             fc = read_available_forecast(os.path.join(rdir, fn))
             if not fc or not scoreable_forecast(fc):
                 continue
-            if fc.get("entrant") in BASELINE_IDS or fc.get("entrant") == CROWD_ID:
+            if fc.get("entrant") in NOT_A_COMPETITOR or fc.get("entrant") == CROWD_ID:
                 continue
             members.append(fc)
         if len(members) < CROWD_MIN:
@@ -1935,6 +1935,14 @@ def assert_site_contract(rounds):
 
 
 BASELINE_IDS = {"persistence", "trend", "ewma", "climatology"}
+# Entrants we run ourselves to prove the calling path still works. They are
+# registered and really answered, so the round archive shows the call happened
+# -- but they are not competitors and their answer is a fixture, so they must
+# stay out of the crowd mixture and off every board. Written as explicit ids
+# rather than a registration field on purpose: a flag anyone can set is a way
+# to be scored by nobody while sitting in the pool.
+HOUSE_TEST_IDS = {"test-jay", "just4test"}
+NOT_A_COMPETITOR = BASELINE_IDS | HOUSE_TEST_IDS
 
 
 def attach_round_scores(rounds, profile_board, ranking_board):
@@ -2008,6 +2016,8 @@ def build_leaderboard(rounds, resolved):
         # question by question, not only the means the board averages.
         scores = {}
         for fn in sorted(os.listdir(rdir)):
+            if fn[:-5] in HOUSE_TEST_IDS:
+                continue        # ours, answering a fixture: not a competitor
             if not fn.endswith(".json"):
                 continue
             with open(os.path.join(rdir, fn)) as f:
@@ -2095,6 +2105,8 @@ def build_profile_leaderboard(rounds, resolved, series):
             continue
         rows = []
         for fn in sorted(os.listdir(rdir)):
+            if fn[:-5] in HOUSE_TEST_IDS:
+                continue        # ours, answering a fixture: not a competitor
             if not fn.endswith(".json"):
                 continue
             with open(os.path.join(rdir, fn)) as f:
@@ -2244,6 +2256,8 @@ def build_ranking_leaderboard(rounds, resolved, ranking_obs=None):
             continue
         rows = []
         for fn in sorted(os.listdir(rdir)):
+            if fn[:-5] in HOUSE_TEST_IDS:
+                continue        # ours, answering a fixture: not a competitor
             if not fn.endswith(".json"):
                 continue
             with open(os.path.join(rdir, fn)) as f:
