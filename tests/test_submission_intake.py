@@ -326,13 +326,17 @@ class SubmissionPrototype(unittest.TestCase):
         self.assertIn('type="url" pattern="https://.*" required', self.page)
         self.assertNotIn("<form action=", self.page)
         self.assertIn("const target = endpointUrl(urlInput.value);", self.page)
-        # The page makes exactly two requests, both on an explicit click, and
-        # neither carries anything the participant typed anywhere it should not
-        # go: the probe goes to the endpoint they are testing, and the loader
-        # reads one of our own public registration files, addressed by entrant
-        # id alone. Any third fetch has to justify itself here.
+        # The page makes exactly three requests, all on an explicit click, and
+        # none carries anything the participant typed anywhere it should not
+        # go: two go to the endpoint they are testing -- the contract fixture,
+        # then the same body again under the live key id, to find out whether
+        # the arena's real calls would be refused -- and the loader reads one
+        # of our own public registration files, addressed by entrant id alone.
+        # Any further fetch has to justify itself here.
         fetches = re.findall(r"fetch\(([^,)]+)", self.page)
-        self.assertEqual(fetches, ["target", "source"])
+        self.assertEqual(fetches, ["target", "target", "source"])
+        self.assertIn("'X-SSA-Key-Id':'ssa-live'", self.page,
+                      "the second probe request is the live-key question")
         self.assertIn("const RAW = 'https://raw.githubusercontent.com/"
                       "Social-Atoms/social-sim-arena/main/entrants/'", self.page)
         self.assertNotIn("localStorage", self.page)
