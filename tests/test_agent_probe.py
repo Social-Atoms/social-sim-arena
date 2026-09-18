@@ -23,6 +23,7 @@ The four that matter:
 import importlib.util
 import json
 import os
+import shutil
 import socket
 import sys
 import tempfile
@@ -217,6 +218,53 @@ def test_a_revoked_entrant_is_not_probed():
         probe_tool.ROOT = saved
         import shutil
         shutil.rmtree(root)
+
+
+def test_a_copied_server_is_how_a_participant_runs_it_and_still_knows_both_keys():
+    """This file is meant to be copied out of the repository and run somewhere
+    else. That is where `ROOT/site/keys.json` stops existing -- and where the
+    live key used to stop arriving, so a copied server answered this probe and
+    refused the arena with "unknown key id 'ssa-live'", which the participant
+    read in a run log after the round had closed. Our own deployment never
+    showed it: it runs inside the checkout, on the side where the path exists.
+    So copy it the way a participant does, with nothing reachable around it."""
+    with tempfile.TemporaryDirectory() as away:
+        copied_path = os.path.join(away, "server.py")
+        shutil.copy(os.path.join(ROOT, "examples", "agent-api", "server.py"),
+                    copied_path)
+        spec = importlib.util.spec_from_file_location("_copied_agent_server",
+                                                      copied_path)
+        copied = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(copied)
+        assert not os.path.isfile(copied.KEYS_FILE), (
+            "the point of this test is a server that cannot see the "
+            f"repository's keys, but it found {copied.KEYS_FILE}")
+        # Unreachable on purpose: the built-in pair alone has to carry it, so a
+        # participant behind a firewall is not the one who finds out.
+        keys = copied.load_public_keys(url="http://127.0.0.1:1/keys.json",
+                                       timeout=0.2)
+        for key_id in (probe_tool.LIVE_KEY_ID, probe_tool.TEST_KEY_ID):
+            assert key_id in keys, (
+                f"a copied server does not know {key_id!r}; the arena signs "
+                "live rounds with it and every real call would be refused")
+
+        with socket.socket() as probe_socket:
+            probe_socket.bind(("127.0.0.1", 0))
+            port = probe_socket.getsockname()[1]
+        server = copied.serve("127.0.0.1", port, True, 0.0, keys)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            rows = verdicts(probe_tool.probe(
+                f"http://127.0.0.1:{port}/forecast", SIGNER, timeout=10,
+                retries=0))
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=5)
+        assert rows["live key"][0], rows["live key"][1]
+        for shape in ("scalar", "profile", "ranking"):
+            assert rows[f"round/{shape}"][0], rows[f"round/{shape}"][1]
 
 
 def test_the_registered_entrants_all_satisfy_the_schema_with_status_added():
