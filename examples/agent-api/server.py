@@ -27,23 +27,43 @@ import base64
 import json
 import os
 import time
+import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 KEYS_FILE = os.path.join(ROOT, "site", "keys.json")
+KEYS_URL = "https://social-simulation-arena.com/keys.json"
 MAX_SKEW_SECONDS = 300
-# The published test key, so this file works from a bare checkout too.
-PUBLIC_KEYS = {"ssa-test": "zt0rAf60fDi4fOj1qhhAqzx7GJz7XmBV1AWs+ln2xOY="}
+# Both published keys, because this file is meant to be copied out of the
+# repository and run somewhere else -- which is where KEYS_FILE stops existing.
+# Carrying only the test key made a copied server answer the probe and refuse
+# the arena with "unknown key id 'ssa-live'", after the round had closed.
+PUBLIC_KEYS = {
+    "ssa-test": "zt0rAf60fDi4fOj1qhhAqzx7GJz7XmBV1AWs+ln2xOY=",
+    "ssa-live": "NAUoC6NhjIAyDXQWLcR59Z1/X5yAFnFiNXdxgHEwKuE=",
+}
 
 
-def load_public_keys(path=KEYS_FILE):
-    """{key_id: base64 public key} from site/keys.json plus the test key."""
+def load_public_keys(path=KEYS_FILE, url=KEYS_URL, timeout=5):
+    """{key_id: base64 public key}: the built-in pair, then whatever the arena
+    publishes. The file is read when this runs inside a checkout; otherwise the
+    published list is fetched, so a rotated key reaches a copied server on its
+    next start instead of failing every call until someone redeploys. Both are
+    best-effort: the built-in pair alone is enough to answer the arena today."""
     keys = dict(PUBLIC_KEYS)
     if os.path.isfile(path):
         with open(path, encoding="utf-8") as fh:
             for row in json.load(fh).get("keys", []):
                 if row.get("key_id") and row.get("public_key"):
                     keys[row["key_id"]] = row["public_key"]
+        return keys
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as response:
+            for row in json.load(response).get("keys", []):
+                if row.get("key_id") and row.get("public_key"):
+                    keys[row["key_id"]] = row["public_key"]
+    except Exception:
+        pass        # offline, or the site is down: the built-in pair still verifies
     return keys
 
 
