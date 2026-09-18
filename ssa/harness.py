@@ -283,9 +283,19 @@ OPENROUTER_EFFORT = {"reasoning": {"effort": "high"}}
 # forecast bought here records `via=ppapi`, and the site and the paper have to
 # say so in words as well.
 #
-# The host is configuration, not code: the gateway is not a public service with
-# a stable documented address the way OpenRouter is, and hard-coding a host
-# nobody can verify from the repository is how `SSA_BASE_QWEN` was lost.
+# The published base is `https://app.ppapi.ai`, and the three protocols sit
+# under it exactly where our three call sites put them: the quick-start
+# documents `/v1/chat/completions`, `/v1/messages` and
+# `/v1beta/models/{model}:generateContent`, so `SSA_PPAPI_BASE` ending at `/v1`
+# serves the first two by concatenation and the gemini base is that with the
+# tail swapped. Checked 2026-09-18 against the vendor's own quick-start table.
+#
+# It stays a variable rather than a constant anyway. Not because the address is
+# unknown, but because an unset variable is what makes this route inert: a
+# constant here would route every named model the moment the key appeared in
+# the environment, and the key is a secret somebody adds for a different reason
+# first. The error below names the documented value, so setting it is one
+# copy-paste rather than a search.
 PPAPI_BASE_ENV = "SSA_PPAPI_BASE"
 PPAPI_BASE_GEMINI_ENV = "SSA_PPAPI_BASE_GEMINI"
 # The name the secret was actually provisioned under. Renaming this lookup
@@ -370,7 +380,9 @@ def ppapi_models():
     if not os.environ.get(PPAPI_ENV) or not ppapi_base():
         raise ValueError(
             f"SSA_PPAPI is set but {PPAPI_ENV} or {PPAPI_BASE_ENV} is not; "
-            "the sponsor's gateway needs both a key and a host")
+            "the sponsor's gateway needs both a key and a host. The published "
+            "base is https://app.ppapi.ai/v1 -- gemini is derived from it, so "
+            f"{PPAPI_BASE_GEMINI_ENV} is only for a gateway that moves it.")
     if raw == "1":
         return frozenset(PPAPI_MODELS)
     want = [m.strip() for m in raw.split(",") if m.strip()]
