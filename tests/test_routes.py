@@ -708,6 +708,61 @@ def test_the_gateway_base_must_end_in_v1_and_a_named_route_needs_one():
                 raise AssertionError("routed to a host that is not set")
 
 
+def test_reasoning_depth_is_part_of_the_condition_not_a_detail():
+    """Two entrants differing only in how hard they are asked to think are two
+    conditions, and until the parameter block reached `call_identity` they were
+    one cache key. Three consequences, all silent: changing a model's depth
+    re-bought nothing and so left the board averaging both depths under one
+    name; no filed forecast said which depth produced it; and a controlled
+    comparison was impossible, because the second variant reused the first's
+    reply."""
+    deep = dict(harness.MODELS["claude-sonnet"])
+    shallow = dict(deep, params={"output_config": {"effort": "low"}})
+    saved = harness.MODELS["claude-sonnet"]
+    try:
+        harness.MODELS["claude-sonnet"] = deep
+        a = harness.call_identity("claude-sonnet")
+        harness.MODELS["claude-sonnet"] = shallow
+        b = harness.call_identity("claude-sonnet")
+    finally:
+        harness.MODELS["claude-sonnet"] = saved
+    assert a != b, ("one identity for two depths: a low-effort variant would "
+                    "serve the max-effort reply out of cache")
+    assert harness.model_id("claude-sonnet") in a, a
+
+
+def test_a_model_that_asks_for_nothing_keeps_the_identity_it_had():
+    """The parameter tag is empty when the block is, so the nine entrants that
+    have never set a depth are not re-bought for a change that does not reach
+    them. Their committed forecasts keep matching."""
+    for name in ("gemini-pro", "deepseek-pro", "glm", "kimi"):
+        assert not (harness.MODELS[name].get("params") or {}), \
+            f"{name} grew a parameter block; this test no longer says anything"
+        plain = f"{harness.model_id(name)} @ {harness.base_url(name)}"
+        assert harness.call_identity(name) == plain, name
+
+
+def test_every_vendors_depth_is_read_and_absence_is_a_value():
+    """Each vendor nests the depth somewhere else, and `default` is a real
+    condition -- the vendor's own -- rather than a missing one, so it is
+    written down rather than left blank."""
+    assert harness.effort_label("claude-sonnet") == "max"        # Anthropic
+    assert harness.effort_label("gpt-5.6-luna") == "xhigh"       # OpenAI
+    assert harness.effort_label("grok") == "high"                # xAI
+    assert harness.effort_label("gemini-pro") == "default"       # none set
+    with Keys(OPEN_ROUTER="sk-or-test"), Routed("claude-opus"):
+        # OpenRouter substitutes its own unified scale, which the notes must
+        # report as what was actually asked for, not as the vendor's ceiling.
+        assert harness.effort_label("claude-opus") == "high"
+
+
+def test_the_filed_forecast_says_at_what_depth_it_was_produced():
+    with Keys(ANTHROPIC_API_KEY="k"), Routed(None):
+        with Provider():
+            f = harness.forecast("claude-opus", ROUND, HIST)
+    assert "effort=max" in f["notes"], f["notes"]
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:
