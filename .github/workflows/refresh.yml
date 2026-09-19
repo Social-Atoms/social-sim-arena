@@ -82,6 +82,19 @@ jobs:
       TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
       OPEN_ROUTER: ${{ secrets.OPEN_ROUTER }}
       SSA_OPENROUTER: ${{ vars.SSA_OPENROUTER }}
+      # The sponsor's gateway. Unlike OpenRouter this one is *primary* for the
+      # models it is switched on for, and the vendor's own account becomes the
+      # fallback -- the sponsorship pays for the ordinary case, our key keeps a
+      # round from being lost when the gateway is down.
+      #
+      # All three are required together: `harness.ppapi_models` raises when
+      # SSA_PPAPI names anything without a key and a host, so a half-finished
+      # configuration fails on the first run instead of quietly routing nothing
+      # and looking exactly like the outage it was set up to avoid.
+      SA_BASELINE_HS: ${{ secrets.SA_BASELINE_HS }}
+      SSA_PPAPI: ${{ vars.SSA_PPAPI }}
+      SSA_PPAPI_BASE: ${{ vars.SSA_PPAPI_BASE }}
+      SSA_PPAPI_BASE_GEMINI: ${{ vars.SSA_PPAPI_BASE_GEMINI }}
       # Which elicitation arms file forecasts, as a comma-separated list
       # (`news`, `superfc`, `persona`, or `1` for all). Unset means none, so
       # merging the code for an arm never starts paying for it -- switching one

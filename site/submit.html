@@ -338,6 +338,23 @@ async function signHeaders(bodyText){
     return {'X-SSA-Key-Id': TEST_KEY.id, 'X-SSA-Timestamp': ts, 'X-SSA-Signature': btoa(String.fromCharCode(...sig))};
   } catch (e) { return null; }
 }
+// Does the endpoint know the key the Arena actually signs with? Sent with a
+// signature that cannot verify, because no live private key exists outside the
+// Arena -- and none is needed. 'unknown key id' is the answer that matters.
+async function liveKeyVerdict(target, bodyText, signed, signal){
+  if (!signed) return {state:'wait', detail:'not checked: this browser cannot sign Ed25519.'};
+  try {
+    const response = await fetch(target, {method:'POST', signal,
+      headers: Object.assign({}, signed, {'Content-Type':'application/json', 'X-SSA-Key-Id':'ssa-live'}),
+      body: bodyText});
+    if (response.ok) return {state:'good', detail:'the endpoint does not verify signatures, so which key we sign with does not matter to it.'};
+    const text = (await response.text()).slice(0, 300);
+    if (/unknown\s+key/i.test(text)) return {state:'bad', detail:'the endpoint does not know <code>ssa-live</code>, which is the key the Arena signs live rounds with \u2014 every real call would be refused. Load both published keys from <a href="keys.json">keys.json</a>; <code>examples/agent-api/server.py</code> already carries them.'};
+    return {state:'good', detail:'<code>ssa-live</code> was refused as a signature, not as an unknown key id.'};
+  } catch (error) {
+    return {state:'wait', detail:'not checked: ' + esc(error.message)};
+  }
+}
 const FIXTURE = {schema_version:'ssa-agent-api-v2', request_id:'browser-contract-test', round:{round_id:'ssa-contract-test', board_id:'topline', target_type:'continuous_normal', question:'Non-scored contract test: return a normal forecast centered on 50.', unit:'points', lock_at:'2099-01-01T00:00:00Z', context:{persistence:50}}, optional_crosstabs:[]};
 
 const results = [];
@@ -379,6 +396,19 @@ byId('api-test').addEventListener('click', async () => {
     const s3 = step('Response format', 'the reply is one JSON object declaring ssa-agent-api-v2…', 'wait');
     const body = parseAgentReply(data);
     s3.state = 'good'; s3.detail = 'forecast mean '+body.forecast.mean+', sd '+body.forecast.sd+(body.reasoning_trace?' · reasoning_trace present':''); paintResults();
+    // This page signs with ssa-test; the Arena signs live rounds with ssa-live.
+    // An endpoint that verifies but holds only the test key passes everything
+    // above and refuses every real call, which is discovered from a run log
+    // after the round has closed. Ask about the live key before selling a seat:
+    // the signature below is deliberately wrong either way, so what is read is
+    // which refusal comes back, the key id or the signature.
+    const live = await liveKeyVerdict(target, bodyText, signed, controller.signal);
+    step('Live key', live.detail, live.state);
+    if (live.state === 'bad') {
+      status.className = 'status bad';
+      status.textContent = 'The endpoint does not know the key the Arena signs with. Fix that and test again.';
+      return;
+    }
     apiProbePassed = true;
     status.className = 'status good'; status.textContent = 'Scalar test passed. Profile and ranking compatibility still require separate tests. Fill in the model information below, then submit.';
   } catch (error) {
