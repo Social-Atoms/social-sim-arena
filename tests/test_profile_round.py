@@ -498,6 +498,52 @@ def test_a_cell_that_arrives_inside_the_call_window_is_in_no_null():
         refresh.LOCKS = real_locks
 
 
+def test_the_entrant_is_handed_the_history_its_own_null_was_built_from():
+    """The test above holds the *null* to the window snapshot. This holds the
+    prompt to the same snapshot, which it was not.
+
+    `profile_history_for` took no `now` and rebuilt from whatever the series
+    held at that moment. So once a round's window was open and the series
+    moved -- Civiqs republishes daily -- the entrant read one history and the
+    persistence it is scored against read another, and the comment above
+    `prof_hist` claimed they were the same object.
+
+    It was also paid for twice. A changed history is a changed prompt, so the
+    input hash moved and the next six-hourly refresh bought the round again:
+    measured on `trends-basket-2026-09-19` and `wiki-top10-2026-09-20`, two
+    calls per entrant where a scalar round of the same week took one.
+    """
+    import tempfile
+    season = {"season": 0, "rounds": [ROUND]}
+    before = series_fixture(last_day=10)
+    during = series_fixture(last_day=11)
+    inside = refresh.parse_iso("2026-08-12T02:00:00Z")
+    real_locks = refresh.LOCKS
+    refresh.LOCKS = tempfile.mkdtemp(prefix="ssa-locks-handed-")
+    try:
+        refresh.build_rounds(season, before, {},
+                             refresh.parse_iso("2026-08-11T02:00:00Z"))
+        rows, _ = refresh.build_rounds(season, during, {}, inside)
+
+        handed = refresh.profile_history_for(ROUND, during, inside)
+        for c in CELLS:
+            assert handed[c][-1]["date"] == "2026-08-10", (c, handed[c][-1])
+            assert len(handed[c]) == rows[0]["profile"]["history_points"][c], c
+
+        # Same call without `now` is the live filter -- which is what the
+        # entrant used to get, and why this round was bought twice.
+        live = refresh.profile_history_for(ROUND, during)
+        assert live[CELLS[0]][-1]["date"] == "2026-08-11"
+
+        # A round with no snapshot keeps the date filter, so nothing already
+        # scored moves.
+        os.remove(refresh.lock_snapshot_path(ROUND["round_id"]))
+        assert refresh.profile_history_for(
+            ROUND, during, inside)[CELLS[0]][-1]["date"] == "2026-08-11"
+    finally:
+        refresh.LOCKS = real_locks
+
+
 def test_the_baselines_are_frozen_at_lock_cell_by_cell():
     """The scalar rounds' invariant, applied sixteen times: once a release
     lands in a cell's series, an unfrozen persistence null would contain the

@@ -978,11 +978,58 @@ def nulls_for(r):
     return r.get("baselines") or {}
 
 
-def profile_history_for(r, series):
-    """{cell: history frozen at the effective deadline}, or None."""
+def _handed_history(r, now, field):
+    """What the entrants were actually handed for this round, or None.
+
+    Read-only: `attach_profile` and `attach_ranking` own the write, and this
+    runs in the same pass. Writing here too would be harmless -- the snapshot
+    merges -- but it would put two authors on one file for no reason.
+    """
+    if now is None or now < batches.window_opens_at(r["lock_at"]):
+        return None
+    return (read_lock_snapshot(r["round_id"]) or {}).get(field)
+
+
+def profile_history_for(r, series, now=None):
+    """{cell: history}, frozen to what the entrants were handed.
+
+    **The date filter is not the freeze.** `frozen_history` drops points dated
+    on or after the close, which is right, but it recomputes from whatever the
+    series holds *now*. Once a round's call window is open the series can still
+    move -- Civiqs republishes daily -- and then every six-hourly refresh built
+    a different prompt, so the input hash changed and the round was bought
+    again. Measured on `trends-basket-2026-09-19` and `wiki-top10-2026-09-20`:
+    two paid calls per entrant where a scalar round of the same week took one.
+
+    Cost was the smaller half. `attach_profile` computes the persistence null
+    from the window snapshot while this handed the entrant the live filter, so
+    from the moment the series moved the entrant and the null it is scored
+    against were reading different histories -- and the comment below this one
+    claimed the opposite.
+    """
     if not profile_round.is_profile(r):
         return None
-    return profile_round.frozen_history(r, series)
+    cells = profile_round.cells_for(r)
+    hist = profile_round.frozen_history(r, series, cells)
+    handed = _handed_history(r, now, "answer_history_by_cell")
+    # Every cell or none, for the reason `attach_profile` gives: a mixture of
+    # frozen and live cells is a profile no entrant was ever shown.
+    if handed and all(c in handed for c in cells):
+        return {c: handed[c] for c in cells}
+    return hist
+
+
+def ranking_history_for(r, obs, now=None):
+    """The observation weeks, frozen to what the entrants were handed.
+
+    The ranking twin of `profile_history_for`, and broken the same way for the
+    same reason: a Wikipedia week keeps accumulating inside the call window.
+    """
+    if not ranking_round.is_ranking(r):
+        return None
+    hist = ranking_round.frozen_history(r, obs)
+    handed = _handed_history(r, now, "answer_obs")
+    return handed if handed else hist
 
 
 def ranking_source_name(round_):
@@ -1394,13 +1441,17 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
     # read. Built once per round rather than per job: it is the same sixteen
     # slices for every entrant, and the pricing pass needs the identical object
     # to rebuild the identical prompt hash.
-    prof_hist = {r["round_id"]: profile_history_for(r, series or {})
+    prof_hist = {r["round_id"]: profile_history_for(r, series or {}, now)
                  for r in rounds if profile_round.is_profile(r)}
 
     # The same object for ranking rounds: weeks strictly before the effective
-    # deadline, so an entrant sees exactly the history persistence saw.
+    # deadline, so an entrant sees exactly the history persistence saw. That
+    # sentence was false until `now` was passed here -- the date filter alone
+    # recomputes from a series that keeps moving inside the call window, which
+    # both re-bought the round on every refresh and handed the entrant a
+    # history its own null was not built from.
     rank_hist = {r["round_id"]:
-                 ranking_round.frozen_history(r, (ranking_obs or {}).get(r["round_id"]))
+                 ranking_history_for(r, (ranking_obs or {}).get(r["round_id"]), now)
                  for r in rounds if ranking_round.is_ranking(r)}
 
     def news_for(r):
