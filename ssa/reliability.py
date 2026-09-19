@@ -118,6 +118,30 @@ def http_status(error):
     return int(match.group(1)) if match else None
 
 
+def public_entrant_error(error):
+    """An actionable failure class safe for a public pre-lock operator report.
+
+    Provider exception messages can contain response bodies, prompt fragments,
+    or credentials.  Inspect them here, but return only fixed labels.  The raw
+    evidence stays in the encrypted reply failure record when one was written.
+    """
+    status = http_status(error)
+    if status is not None:
+        return f"provider HTTP {status}"
+    lower = (error_text(error) or "").lower()
+    if re.search(r"\bno [a-z0-9_]+ in the environment\b", lower):
+        return "provider credential not configured"
+    if "timeout" in lower or "timed out" in lower:
+        return "provider timeout"
+    if "rate limit" in lower:
+        return "provider rate limit"
+    if "stream" in lower or "connection" in lower:
+        return "provider transport failure"
+    if "parse" in lower or "non-json" in lower or "no text" in lower:
+        return "provider response invalid"
+    return "provider call failed"
+
+
 def terminal_error(error, *, source=False):
     """Whether retrying the same operation later cannot repair this error.
 
