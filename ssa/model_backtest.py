@@ -115,8 +115,27 @@ def cache_path(entrant, prompt):
     return os.path.join(CACHE_DIR, entrant, cache_key(entrant, prompt) + ".json")
 
 
-def cache_read(entrant, prompt):
-    path = cache_path(entrant, prompt)
+def legacy_cache_key(entrant, prompt):
+    """The key these replies were bought under, before the request parameters
+    entered `harness.call_identity`.
+
+    5,042 of the 8,828 replies committed under `backtest/runs/` belong to the
+    entrants that send a reasoning depth, and their key moved when the depth
+    became part of the identity. The records cannot be re-keyed: a run record
+    carries `prompt_sha256` and a usage report, not the prompt, so the new key
+    is not derivable from the file. Recognising the old one is the only way to
+    keep them, and dropping them would re-buy roughly $39 of identical calls
+    the next time anyone runs `--execute`.
+
+    Everything bought from here on is written under the current key, so this
+    shrinks on its own rather than becoming a second scheme to maintain.
+    """
+    identity = f"{harness.model_id(entrant)} @ {harness.base_url(entrant)}"
+    return hashlib.sha256(
+        (identity + "\n" + prompt).encode("utf-8")).hexdigest()
+
+
+def _read_json(path):
     if not os.path.exists(path):
         return None
     try:
@@ -124,6 +143,19 @@ def cache_read(entrant, prompt):
             return json.load(f)
     except (OSError, json.JSONDecodeError):
         return None
+
+
+def cache_read(entrant, prompt):
+    hit = _read_json(cache_path(entrant, prompt))
+    if hit is not None:
+        return hit
+    # Only for entrants whose identity actually moved: for everyone else the
+    # legacy key is the current key, and looking twice would be a second stat
+    # of the same path.
+    legacy = legacy_cache_key(entrant, prompt)
+    if legacy == cache_key(entrant, prompt):
+        return None
+    return _read_json(os.path.join(CACHE_DIR, entrant, legacy + ".json"))
 
 
 def cache_write(entrant, prompt, record):

@@ -55,6 +55,26 @@ def test_the_crowd_pools_the_entrants_while_the_window_is_open():
     _with_tree(run)
 
 
+def test_a_house_test_entrant_is_not_pooled_into_the_crowd():
+    """`test-jay` and `just4test` are ours, registered so the arena really calls
+    an endpoint every round and we find out when that path breaks -- which is
+    how the first external entrant burned two rounds unnoticed. The endpoint
+    they point at answers a fixture, a constant. The crowd excluded only the
+    reference forecasters and itself, so that constant would have been pooled
+    into a scored, published baseline every round."""
+    def run(tmp):
+        _file(tmp, "t-num-1", "a", {"topline": {"mean": 10.0, "sd": 1.0}})
+        _file(tmp, "t-num-1", "b", {"topline": {"mean": 14.0, "sd": 1.0}})
+        _file(tmp, "t-num-1", "test-jay", {"topline": {"mean": 99.0, "sd": 1.0}})
+        _file(tmp, "t-num-1", "just4test", {"topline": {"mean": 99.0, "sd": 1.0}})
+        assert refresh.file_crowd_forecasts([dict(ROUND)], NOW) == 1
+        fc = refresh.read_forecast(os.path.join(tmp, "t-num-1", "crowd.json"))
+        assert abs(fc["topline"]["mean"] - 12.0) < 0.05, (
+            "a house test entrant reached the crowd: " + repr(fc["topline"]))
+        assert "pool of the 2 forecasts" in fc["notes"], fc["notes"]
+    _with_tree(run)
+
+
 def test_never_written_once_the_close_is_near_or_past():
     """The file lands in `forecasts/` as a commit, so it must not appear after the
     round it belongs to closed: tools/audit_landing.py would reject it as late."""
