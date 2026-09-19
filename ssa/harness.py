@@ -1687,8 +1687,68 @@ def call_identity(entrant, via=None):
     route will not match: when the account comes back, the next run misses,
     re-asks the vendor, and the entrant is upgraded without anyone noticing it
     had been demoted.
+
+    **The request parameters are part of it too.** The sentence above says two
+    hosts can serve different weights under one name; the same is true of one
+    host asked to think for a different length. `reasoning_effort: xhigh` and
+    `low` are not the same condition, and until this included them, changing
+    an entrant's depth was invisible: the cache still matched, so nothing was
+    re-bought, nothing said which depth a filed forecast had used, and a board
+    row silently averaged answers from both. It also made a controlled
+    comparison impossible -- two entrants differing only in depth collided on
+    one cache key and the second reused the first's reply.
+
+    An empty parameter block adds nothing to the string, so a model that has
+    never set one keeps the identity it has always had and its cache stays
+    valid. Only the entrants that actually ask for a depth are re-bought.
     """
-    return f"{model_id(entrant, via)} @ {base_url(entrant, via)}"
+    return (f"{model_id(entrant, via)} @ {base_url(entrant, via)}"
+            f"{_params_tag(route(entrant, via))}")
+
+
+def _params_tag(rt):
+    """` <8 hex>` for a route that sends parameters, empty for one that does not.
+
+    Hashed rather than spelled out because the block differs by vendor -- a
+    `reasoning_effort` string, Anthropic's `thinking`/`output_config` pair, an
+    OpenRouter `reasoning` object -- and the identity only has to distinguish
+    them, not describe them. `effort_label` is the readable half.
+    """
+    params = rt.get("params") or {}
+    if not params:
+        return ""
+    blob = json.dumps(params, sort_keys=True, separators=(",", ":"))
+    return " " + hashlib.sha256(blob.encode("utf-8")).hexdigest()[:8]
+
+
+# Where each vendor puts the depth, most specific first. Written out because
+# the shapes have nothing in common and a generic search would find the wrong
+# key in a block that happens to nest one.
+_EFFORT_PATHS = (
+    ("reasoning_effort",),                    # OpenAI, xAI, most OpenAI-compatible
+    ("output_config", "effort"),              # Anthropic
+    ("reasoning", "effort"),                  # OpenRouter's unified scale
+)
+
+
+def effort_label(entrant, via=None):
+    """The reasoning depth this route asks for, as one word for the notes.
+
+    `default` means the request carries no depth at all and the vendor's own
+    default applies -- which is a real condition and not a missing value, so
+    it is written down rather than left blank. Three of the season's models
+    run that way today.
+    """
+    params = route(entrant, via).get("params") or {}
+    for path in _EFFORT_PATHS:
+        cur = params
+        for key in path:
+            cur = cur.get(key) if isinstance(cur, dict) else None
+            if cur is None:
+                break
+        if isinstance(cur, str) and cur:
+            return cur
+    return "default"
 
 
 def prompt_hash(entrant, prompt, via=None):
@@ -2556,6 +2616,7 @@ def forecast_persona(entrant, r, history=None, previous=None):
     # and the note is where a reader finds that out.
     note = (f"filed={filed_stamp()}, "
             f"{model_id(entrant)}, harness v1, via={route(entrant)['via']}, "
+            f"effort={effort_label(entrant)}, "
             f"context={resolve(entrant)[1]} elicitation=persona, "
             f"{len(answers)}/{len(panel)} respondents, "
             + (f"{len(replayed)} replayed, " if replayed else "")
@@ -2870,6 +2931,7 @@ def _forecast_profile(entrant, r, history, profile_history, previous,
         return previous            # prompt; do not pay for it twice
     note = (f"filed={filed_stamp()}, "
             f"{model_id(entrant, via)}, harness v1, via={via}, "
+            f"effort={effort_label(entrant, via)}, "
             f"context={context} elicitation={elicitation}, "
             f"profile {len(cells)} cells, 1 sample"
             f"{', replayed from the reply log' if replayed else ''}"
@@ -2938,6 +3000,7 @@ def _forecast_ranking(entrant, r, ranking_history, previous, context,
         return previous            # prompt; do not pay for it twice
     note = (f"filed={filed_stamp()}, "
             f"{model_id(entrant, via)}, harness v1, via={via}, "
+            f"effort={effort_label(entrant, via)}, "
             f"context={context} elicitation={elicitation}, "
             f"ranking {spec['length']} items, 1 sample"
             f"{', replayed from the reply log' if replayed else ''}"
@@ -3030,6 +3093,7 @@ def forecast(entrant, r, history=None, previous=None, context=None,
             # after the hash it would otherwise be read as part of.
             note = (f"filed={filed_stamp()}, "
                     f"{model_id(entrant, via)}, harness v1, via={via}, "
+                    f"effort={effort_label(entrant, via)}, "
                     f"context={context} elicitation={elicitation}, "
                     f"1 sample"
                     f"{', replayed from the reply log' if replayed else ''}"
