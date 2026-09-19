@@ -1041,8 +1041,28 @@ def ranking_source_name(round_):
     }.get(kind, f"ranking_{kind}")
 
 
+def ranking_history_not_due(round_, now):
+    """A future Wiki round has no history until its first week can be final.
+
+    The requested history is the six weeks before the measured week.  A round
+    far enough ahead can have *all* seven requested weeks in the future.  That
+    is a scheduled wait, not a failed Wikimedia source attempt.
+    """
+    if (round_.get("ranking") or {}).get("kind") != "wiki_top10":
+        return False
+    try:
+        spec = ranking_round.spec_for(round_)
+        first_end = date.fromisoformat(spec["week_end"]) - timedelta(
+            weeks=ranking_round.HISTORY_WEEKS)
+    except (KeyError, TypeError, ValueError):
+        # Malformed definitions still take the existing named failure path.
+        return False
+    return now.date() < first_end + timedelta(
+        days=ranking_round.wikipedia_adapter.TOP_FINAL_LAG_DAYS)
+
+
 def ranking_observations(season, fetch=True, *, with_failures=False,
-                         with_degraded=False):
+                         with_degraded=False, now=None):
     """{round_id: the source's history of ordered lists} for every ranking round.
 
     The one place a ranking round touches its sources, and the only place that
@@ -1064,9 +1084,13 @@ def ranking_observations(season, fetch=True, *, with_failures=False,
     """
     if with_degraded and not with_failures:
         raise ValueError("with_degraded requires with_failures")
+    now = now or datetime.now(timezone.utc)
     out, failures, degraded = {}, [], []
     for r in (season or {}).get("rounds", []):
         if not ranking_round.is_ranking(r):
+            continue
+        if ranking_history_not_due(r, now):
+            out[r["round_id"]] = []
             continue
         source = ranking_source_name(r)
         diagnostics = []
@@ -1094,7 +1118,8 @@ def load_ranking_sources(season, run_status, *, fetch=True,
     """Load and account for ranking feeds without conflating their semantics."""
     groups = {}
     for definition in (season or {}).get("rounds", []):
-        if ranking_round.is_ranking(definition):
+        if ranking_round.is_ranking(definition) and not \
+                ranking_history_not_due(definition, run_status.now):
             groups.setdefault(
                 ranking_source_name(definition), []).append(
                     definition["round_id"])
@@ -1104,7 +1129,8 @@ def load_ranking_sources(season, run_status, *, fetch=True,
             next_lock=next_lock, next_deadline=next_deadline)
 
     observations, faults, degradations = ranking_observations(
-        season, fetch=fetch, with_failures=True, with_degraded=True)
+        season, fetch=fetch, with_failures=True, with_degraded=True,
+        now=run_status.now)
     faults_by_source = {}
     for name, round_id, error in faults:
         faults_by_source.setdefault(name, []).append((round_id, error))
@@ -1504,11 +1530,13 @@ def file_baseline_forecasts(rounds, hist_by_round, now, series=None,
             # participant deadline is hard. The successes land; main() reports
             # every failure and exits non-zero, so a run is loudly broken
             # without being silently incomplete.
-            detail = ("sealed forecast attempt failed; inspect encrypted failure evidence"
+            detail = (reliability.public_entrant_error(e)
                       if seal.enabled() else str(e))
             failures.append(f"{r['round_id']}/{entrant}: {detail}")
             if run_status is not None:
-                run_status.entrant_failed(r["round_id"], entrant, detail)
+                run_status.entrant_failed(
+                    r["round_id"], entrant, detail,
+                    terminal=reliability.terminal_error(e))
             return 0
         try:
             received_at = datetime.now(timezone.utc)

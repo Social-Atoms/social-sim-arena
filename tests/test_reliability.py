@@ -6,6 +6,7 @@ import json
 import os
 import tempfile
 from datetime import datetime, timedelta, timezone
+from unittest import mock
 
 from ssa import model_backtest, provenance, refresh, reliability
 from ssa import series as series_registry
@@ -472,6 +473,39 @@ def test_wikitop_live_403_with_six_archived_weeks_is_degraded_not_green():
     assert "same-source" in " ".join(row["evidence"])
 
 
+def test_future_wikitop_history_waits_until_a_complete_week_is_possible():
+    with open(refresh.QUESTIONS) as fh:
+        season = json.load(fh)
+    future = next(r for r in season["rounds"]
+                  if r["round_id"] == "wiki-top10-2026-11-01")
+    saved = refresh.ranking_round.observations
+    calls = []
+
+    def no_observations(round_, fetch=False, diagnostics=None):
+        calls.append(round_["round_id"])
+        return []
+
+    refresh.ranking_round.observations = no_observations
+    try:
+        # Its first requested history week ends September 20. Wikimedia's
+        # two-day finality lag makes September 22 the first possible fetch.
+        before = reliability.RunStatus(datetime(2026, 9, 21, tzinfo=timezone.utc))
+        observations, failures = refresh.load_ranking_sources(
+            {"rounds": [future]}, before, fetch=True)
+        assert observations[future["round_id"]] == [] and failures == []
+        assert calls == [] and before.as_dict()["source_states"] == []
+
+        due = reliability.RunStatus(datetime(2026, 9, 22, tzinfo=timezone.utc))
+        observations, failures = refresh.load_ranking_sources(
+            {"rounds": [future]}, due, fetch=True)
+        assert observations[future["round_id"]] == []
+        assert calls == [future["round_id"]]
+        assert len(failures) == 1 and failures[0][0] == "ranking_wikitop"
+        assert source_row(due.as_dict(), "ranking_wikitop")["alert"]
+    finally:
+        refresh.ranking_round.observations = saved
+
+
 def test_umich_composite_requires_hash_validated_finals_and_preliminary():
     finals = "Month,Year,Index\nJuly,2026,55.2\n"
     preliminary = "Month,Year,Index\nJuly,2026,55.2\nAugust (P),2026,51.0\n"
@@ -616,6 +650,36 @@ def test_partial_model_success_lands_and_the_failed_model_creates_no_artifact():
     assert len(failures) == 1 and "grok" in failures[0]
     assert entrant_row(doc, "round-1", "claude-opus")["state"] == "succeeded"
     assert entrant_row(doc, "round-1", "grok")["state"] == "retryable_failure"
+
+
+def test_sealed_provider_failure_reports_safe_cause_and_terminal_state():
+    def forecast(_entrant, _round, **_kwargs):
+        raise RuntimeError("provider HTTP 401: token=secret reply={mean:42}")
+
+    status = reliability.RunStatus(NOW)
+    roster = [("grok", "grok", "recent10", "direct")]
+    with FilingPatch(forecast, roster, {"grok": 0.1}), \
+            mock.patch.object(refresh.seal, "enabled", return_value=True):
+        _written, failures = refresh.file_baseline_forecasts(
+            [scalar_round()], {"round-1": []}, NOW, run_status=status)
+    row = entrant_row(status.as_dict(), "round-1", "grok")
+    assert row["state"] == "terminal_failure"
+    assert row["last_error"] == "provider HTTP 401"
+    assert len(failures) == 1 and "provider HTTP 401" in failures[0]
+    assert "secret" not in str(status.as_dict()) + str(failures)
+    assert "42" not in str(status.as_dict()) + str(failures)
+
+
+def test_public_provider_categories_never_echo_exception_bodies():
+    cases = [
+        (TimeoutError("timed out; secret=abc"), "provider timeout"),
+        (RuntimeError("no OPENAI_API_KEY in the environment; secret=abc"),
+         "provider credential not configured"),
+        (RuntimeError("malformed non-JSON: secret=abc"),
+         "provider response invalid"),
+    ]
+    for error, expected in cases:
+        assert reliability.public_entrant_error(error) == expected
 
 
 def test_aaii_live_failure_with_valid_archive_does_not_block_unrelated_forecast():
