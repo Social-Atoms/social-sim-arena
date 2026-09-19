@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import tempfile
 
-from ssa import model_backtest
+from ssa import harness, model_backtest
 
 
 SHA_A = "a" * 64
@@ -93,6 +93,47 @@ def test_invalid_digest_is_rejected_without_writing_cache():
         except ValueError as e:
             assert "invalid prompt_sha256" in str(e)
         assert not cache.exists()
+
+
+def test_replies_bought_before_depth_entered_the_identity_are_still_found():
+    """When the request parameters joined `harness.call_identity`, the cache
+    key of every entrant that sends a reasoning depth moved with it -- 5,042 of
+    the 8,828 replies committed under `backtest/runs/`.
+
+    They cannot be re-keyed. A run record carries `prompt_sha256` and a usage
+    report, not the prompt, so the new key is not derivable from the file.
+    Recognising the old key is the only way to keep them, and dropping them
+    would re-buy roughly $39 of identical calls on the next `--execute`.
+    """
+    entrant, prompt = "grok", "does approval move this week?"
+    assert harness.MODELS[harness.resolve(entrant)[0]].get("params"), \
+        "grok stopped sending a depth; this test no longer says anything"
+    current = model_backtest.cache_key(entrant, prompt)
+    legacy = model_backtest.legacy_cache_key(entrant, prompt)
+    assert current != legacy, "the identity did not move; nothing to fall back to"
+
+    with tempfile.TemporaryDirectory() as td:
+        cache = Path(td) / entrant
+        cache.mkdir(parents=True)
+        (cache / (legacy + ".json")).write_text(json.dumps(record()))
+        saved = model_backtest.CACHE_DIR
+        try:
+            model_backtest.CACHE_DIR = td
+            got = model_backtest.cache_read(entrant, prompt)
+        finally:
+            model_backtest.CACHE_DIR = saved
+    assert got is not None, "a committed reply was dropped and would be re-bought"
+    assert got["entrant"] == entrant
+
+
+def test_an_entrant_that_sends_no_depth_is_not_looked_up_twice():
+    """For the seven entrants with no parameter block the legacy key *is* the
+    current key, so the fallback must not turn one lookup into two stats of
+    the same path."""
+    entrant, prompt = "gemini-pro", "does approval move this week?"
+    assert not (harness.MODELS[harness.resolve(entrant)[0]].get("params") or {})
+    assert model_backtest.cache_key(entrant, prompt) == \
+        model_backtest.legacy_cache_key(entrant, prompt)
 
 
 if __name__ == "__main__":
