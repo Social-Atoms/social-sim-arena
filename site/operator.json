@@ -3,113 +3,92 @@
     {
       "id": "hh-2026-09-approval/claude-sonnet-web-superfc",
       "kind": "entrant_round",
-      "last_error": "provider timeout",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
-      "state": "retryable_failure"
-    },
-    {
-      "id": "yougov-2026-w39-approval/claude-sonnet-web",
-      "kind": "entrant_round",
-      "last_error": "provider transport failure",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "last_error": "provider HTTP 400",
+      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
       "state": "retryable_failure"
     },
     {
       "id": "yougov-2026-w39-approval/claude-sonnet-web-superfc",
       "kind": "entrant_round",
-      "last_error": "provider HTTP 400",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
-      "state": "retryable_failure"
-    },
-    {
-      "id": "yougov-2026-w39-generic/claude-sonnet-web",
-      "kind": "entrant_round",
       "last_error": "provider transport failure",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
       "state": "retryable_failure"
     },
     {
       "id": "yougov-2026-w39-rv-approval/claude-sonnet-web",
       "kind": "entrant_round",
-      "last_error": "provider transport failure",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "last_error": "provider timeout",
+      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
       "state": "retryable_failure"
     },
     {
       "id": "yougov-2026-w39-rv-approval/claude-sonnet-web-superfc",
       "kind": "entrant_round",
-      "last_error": "provider transport failure",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
-      "state": "retryable_failure"
-    },
-    {
-      "id": "yougov-2026-w39-rv-approval/glm-web",
-      "kind": "entrant_round",
       "last_error": "provider timeout",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
       "state": "retryable_failure"
     },
     {
       "id": "yougov-2026-w39-strong-approval/claude-sonnet-web-superfc",
       "kind": "entrant_round",
-      "last_error": "provider transport failure",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "last_error": "provider HTTP 400",
+      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
       "state": "retryable_failure"
     },
     {
       "id": "yougov-2026-w39-strong-approval/glm-web-superfc",
       "kind": "entrant_round",
-      "last_error": "provider timeout",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "last_error": "provider transport failure",
+      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
       "state": "retryable_failure"
     },
     {
       "id": "yougov-xtab-2026-w39/claude-sonnet-web",
       "kind": "entrant_round",
       "last_error": "provider transport failure",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
       "state": "retryable_failure"
     },
     {
       "id": "yougov-xtab-2026-w39/claude-sonnet-web-superfc",
       "kind": "entrant_round",
-      "last_error": "provider transport failure",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "last_error": "provider timeout",
+      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
       "state": "retryable_failure"
     },
     {
       "id": "civiqs",
       "kind": "source",
       "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/app",
-      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
-      "state": "stale"
+      "required_action": "restore live access now or hold affected rounds before the deadline; the same-source archive is not a new release",
+      "state": "deadline_risk"
     }
   ],
   "counts": {
     "entrant_rounds": {
       "missed_lock": 0,
       "queued": 0,
-      "retryable_failure": 11,
+      "retryable_failure": 8,
       "running": 0,
-      "succeeded": 73,
+      "succeeded": 76,
       "terminal_failure": 0
     },
     "sources": {
-      "deadline_risk": 0,
+      "deadline_risk": 1,
       "healthy": 12,
       "retryable_failure": 0,
-      "stale": 1,
+      "stale": 0,
       "unresolvable": 0
     }
   },
   "entrant_round_states": [
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/hh-2026-09-approval/claude-sonnet-web.json"
+        "forecast=forecasts/hh-2026-09-approval/claude-sonnet-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-20T14:00:00Z",
@@ -126,11 +105,11 @@
       "entrant": "claude-sonnet-web-superfc",
       "estimated_spend": 0.07065,
       "evidence": [],
-      "last_error": "provider timeout",
+      "last_error": "provider HTTP 400",
       "next_deadline": "2026-09-20T14:00:00Z",
       "next_lock": "2026-09-20T14:00:00Z",
-      "next_retry": "2026-09-20T10:51:11Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": "2026-09-20T17:19:29Z",
+      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
       "round_id": "hh-2026-09-approval",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "retryable_failure"
@@ -340,19 +319,21 @@
       "state": "succeeded"
     },
     {
-      "alert": true,
+      "alert": false,
       "attempts": 1,
       "entrant": "claude-sonnet-web",
       "estimated_spend": 0.07065,
-      "evidence": [],
-      "last_error": "provider transport failure",
+      "evidence": [
+        "forecast=sealed/yougov-2026-w39-approval/claude-sonnet-web.json"
+      ],
+      "last_error": null,
       "next_deadline": "2026-09-20T14:00:00Z",
       "next_lock": "2026-09-20T14:00:00Z",
-      "next_retry": "2026-09-20T10:51:11Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": null,
+      "required_action": "none",
       "round_id": "yougov-2026-w39-approval",
       "route": "ppapi:app-us.ppapi.ai",
-      "state": "retryable_failure"
+      "state": "succeeded"
     },
     {
       "alert": true,
@@ -360,11 +341,11 @@
       "entrant": "claude-sonnet-web-superfc",
       "estimated_spend": 0.07065,
       "evidence": [],
-      "last_error": "provider HTTP 400",
+      "last_error": "provider transport failure",
       "next_deadline": "2026-09-20T14:00:00Z",
       "next_lock": "2026-09-20T14:00:00Z",
-      "next_retry": "2026-09-20T10:51:11Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": "2026-09-20T17:19:29Z",
+      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
       "round_id": "yougov-2026-w39-approval",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "retryable_failure"
@@ -439,11 +420,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "glm-web",
-      "estimated_spend": 0.01041,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/yougov-2026-w39-approval/glm-web.json"
+        "forecast=forecasts/yougov-2026-w39-approval/glm-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-20T14:00:00Z",
@@ -456,11 +437,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "glm-web-superfc",
-      "estimated_spend": 0.01041,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/yougov-2026-w39-approval/glm-web-superfc.json"
+        "forecast=forecasts/yougov-2026-w39-approval/glm-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-20T14:00:00Z",
@@ -574,27 +555,29 @@
       "state": "succeeded"
     },
     {
-      "alert": true,
+      "alert": false,
       "attempts": 1,
       "entrant": "claude-sonnet-web",
       "estimated_spend": 0.07065,
-      "evidence": [],
-      "last_error": "provider transport failure",
+      "evidence": [
+        "forecast=sealed/yougov-2026-w39-generic/claude-sonnet-web.json"
+      ],
+      "last_error": null,
       "next_deadline": "2026-09-20T14:00:00Z",
       "next_lock": "2026-09-20T14:00:00Z",
-      "next_retry": "2026-09-20T10:51:11Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": null,
+      "required_action": "none",
       "round_id": "yougov-2026-w39-generic",
       "route": "ppapi:app-us.ppapi.ai",
-      "state": "retryable_failure"
+      "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/yougov-2026-w39-generic/claude-sonnet-web-superfc.json"
+        "forecast=forecasts/yougov-2026-w39-generic/claude-sonnet-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-20T14:00:00Z",
@@ -675,11 +658,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "glm-web",
-      "estimated_spend": 0.01041,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/yougov-2026-w39-generic/glm-web.json"
+        "forecast=forecasts/yougov-2026-w39-generic/glm-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-20T14:00:00Z",
@@ -692,11 +675,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "glm-web-superfc",
-      "estimated_spend": 0.01041,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/yougov-2026-w39-generic/glm-web-superfc.json"
+        "forecast=forecasts/yougov-2026-w39-generic/glm-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-20T14:00:00Z",
@@ -815,11 +798,11 @@
       "entrant": "claude-sonnet-web",
       "estimated_spend": 0.07065,
       "evidence": [],
-      "last_error": "provider transport failure",
+      "last_error": "provider timeout",
       "next_deadline": "2026-09-20T14:00:00Z",
       "next_lock": "2026-09-20T14:00:00Z",
-      "next_retry": "2026-09-20T10:51:11Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": "2026-09-20T17:19:29Z",
+      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
       "round_id": "yougov-2026-w39-rv-approval",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "retryable_failure"
@@ -830,11 +813,11 @@
       "entrant": "claude-sonnet-web-superfc",
       "estimated_spend": 0.07065,
       "evidence": [],
-      "last_error": "provider transport failure",
+      "last_error": "provider timeout",
       "next_deadline": "2026-09-20T14:00:00Z",
       "next_lock": "2026-09-20T14:00:00Z",
-      "next_retry": "2026-09-20T10:51:11Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": "2026-09-20T17:19:29Z",
+      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
       "round_id": "yougov-2026-w39-rv-approval",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "retryable_failure"
@@ -908,27 +891,29 @@
       "state": "succeeded"
     },
     {
-      "alert": true,
+      "alert": false,
       "attempts": 1,
       "entrant": "glm-web",
       "estimated_spend": 0.01041,
-      "evidence": [],
-      "last_error": "provider timeout",
+      "evidence": [
+        "forecast=sealed/yougov-2026-w39-rv-approval/glm-web.json"
+      ],
+      "last_error": null,
       "next_deadline": "2026-09-20T14:00:00Z",
       "next_lock": "2026-09-20T14:00:00Z",
-      "next_retry": "2026-09-20T10:51:11Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": null,
+      "required_action": "none",
       "round_id": "yougov-2026-w39-rv-approval",
       "route": "ppapi:app-us.ppapi.ai",
-      "state": "retryable_failure"
+      "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "glm-web-superfc",
-      "estimated_spend": 0.01041,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/yougov-2026-w39-rv-approval/glm-web-superfc.json"
+        "forecast=forecasts/yougov-2026-w39-rv-approval/glm-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-20T14:00:00Z",
@@ -1043,11 +1028,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/yougov-2026-w39-strong-approval/claude-sonnet-web.json"
+        "forecast=forecasts/yougov-2026-w39-strong-approval/claude-sonnet-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-20T14:00:00Z",
@@ -1064,11 +1049,11 @@
       "entrant": "claude-sonnet-web-superfc",
       "estimated_spend": 0.07065,
       "evidence": [],
-      "last_error": "provider transport failure",
+      "last_error": "provider HTTP 400",
       "next_deadline": "2026-09-20T14:00:00Z",
       "next_lock": "2026-09-20T14:00:00Z",
-      "next_retry": "2026-09-20T10:51:11Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": "2026-09-20T17:19:29Z",
+      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
       "round_id": "yougov-2026-w39-strong-approval",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "retryable_failure"
@@ -1143,11 +1128,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "glm-web",
-      "estimated_spend": 0.01041,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/yougov-2026-w39-strong-approval/glm-web.json"
+        "forecast=forecasts/yougov-2026-w39-strong-approval/glm-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-20T14:00:00Z",
@@ -1164,11 +1149,11 @@
       "entrant": "glm-web-superfc",
       "estimated_spend": 0.01041,
       "evidence": [],
-      "last_error": "provider timeout",
+      "last_error": "provider transport failure",
       "next_deadline": "2026-09-20T14:00:00Z",
       "next_lock": "2026-09-20T14:00:00Z",
-      "next_retry": "2026-09-20T10:51:11Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": "2026-09-20T17:19:29Z",
+      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
       "round_id": "yougov-2026-w39-strong-approval",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "retryable_failure"
@@ -1284,8 +1269,8 @@
       "last_error": "provider transport failure",
       "next_deadline": "2026-09-20T14:00:00Z",
       "next_lock": "2026-09-20T14:00:00Z",
-      "next_retry": "2026-09-20T10:51:11Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": "2026-09-20T17:19:29Z",
+      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
       "round_id": "yougov-xtab-2026-w39",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "retryable_failure"
@@ -1296,11 +1281,11 @@
       "entrant": "claude-sonnet-web-superfc",
       "estimated_spend": 0.07065,
       "evidence": [],
-      "last_error": "provider transport failure",
+      "last_error": "provider timeout",
       "next_deadline": "2026-09-20T14:00:00Z",
       "next_lock": "2026-09-20T14:00:00Z",
-      "next_retry": "2026-09-20T10:51:11Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": "2026-09-20T17:19:29Z",
+      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
       "round_id": "yougov-xtab-2026-w39",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "retryable_failure"
@@ -1510,7 +1495,7 @@
       "state": "succeeded"
     }
   ],
-  "generated_at": "2026-09-20T05:04:15Z",
+  "generated_at": "2026-09-20T11:31:17Z",
   "source_states": [
     {
       "alert": false,
@@ -1535,17 +1520,17 @@
       "estimated_spend": 0.0,
       "evidence": [
         "civiqs/approve_president_trump_2025 (29 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.age-18-34 (24 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.age-35-49 (25 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.age-50-64 (25 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.age-65_ (25 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.education-College_Graduate (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.education-Non-College_Graduate (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.education-Postgraduate (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.gender-Female (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.gender-Male (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.party-Democrat (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.party-Independent (25 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.party-Republican (29 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.race-Black_or_African-American (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.race-Hispanic_Latino (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.race-Other (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.race-White (24 snapshots; newest 2026-09-18); civiqs/describe_feeling_us (26 snapshots; newest 2026-09-18); civiqs/economy_family_retro (27 snapshots; newest 2026-09-18); civiqs/economy_us_direction (27 snapshots; newest 2026-09-18); civiqs/economy_us_now (27 snapshots; newest 2026-09-18); civiqs/inflation_impact (27 snapshots; newest 2026-09-18)",
-        "fetched_days=2.2; changed_days=9.2; fetch_budget=2; change_budget=4; stale_keys=economy_family_retro; failing_keys=approve_president_trump_2025,approve_president_trump_2025.age-18-34,approve_president_trump_2025.age-35-49,approve_president_trump_2025.age-50-64,approve_president_trump_2025.age-65_,approve_president_trump_2025.education-College_Graduate,approve_president_trump_2025.education-Non-College_Graduate,approve_president_trump_2025.education-Postgraduate,approve_president_trump_2025.gender-Female,approve_president_trump_2025.gender-Male,approve_president_trump_2025.party-Democrat,approve_president_trump_2025.party-Independent,approve_president_trump_2025.party-Republican,approve_president_trump_2025.race-Black_or_African-American,approve_president_trump_2025.race-Hispanic_Latino,approve_president_trump_2025.race-Other,approve_president_trump_2025.race-White,describe_feeling_us,economy_family_retro,economy_us_direction,economy_us_now,inflation_impact",
+        "fetched_days=2.5; changed_days=9.5; fetch_budget=2; change_budget=4; stale_keys=economy_family_retro; failing_keys=approve_president_trump_2025,approve_president_trump_2025.age-18-34,approve_president_trump_2025.age-35-49,approve_president_trump_2025.age-50-64,approve_president_trump_2025.age-65_,approve_president_trump_2025.education-College_Graduate,approve_president_trump_2025.education-Non-College_Graduate,approve_president_trump_2025.education-Postgraduate,approve_president_trump_2025.gender-Female,approve_president_trump_2025.gender-Male,approve_president_trump_2025.party-Democrat,approve_president_trump_2025.party-Independent,approve_president_trump_2025.party-Republican,approve_president_trump_2025.race-Black_or_African-American,approve_president_trump_2025.race-Hispanic_Latino,approve_president_trump_2025.race-Other,approve_president_trump_2025.race-White,describe_feeling_us,economy_family_retro,economy_us_direction,economy_us_now,inflation_impact",
         "live attempt failed; same-source archive used"
       ],
       "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/app",
       "next_deadline": "2026-09-20T14:00:00Z",
       "next_lock": "2026-09-20T14:00:00Z",
-      "next_retry": "2026-09-20T11:04:15Z",
-      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
+      "next_retry": "2026-09-20T17:31:17Z",
+      "required_action": "restore live access now or hold affected rounds before the deadline; the same-source archive is not a new release",
       "route": "ssa.series:civiqs",
       "source": "civiqs",
-      "state": "stale"
+      "state": "deadline_risk"
     },
     {
       "alert": false,
@@ -1584,8 +1569,8 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=0.1; fetch_budget=2; change_budget=7",
-        "sources/sb_approval/2026-09-20.csv sha256=1278af49466ffce6d5101abe0f41814e6d3de15fc09aefd1bae6794237d99d0e"
+        "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
+        "sources/sb_approval/2026-09-20.csv sha256=6451d7bcbb8e30a0a8aca98ca17e0c25460e1a6f24fb94481356a7049aef1c0b"
       ],
       "last_error": null,
       "next_deadline": "2026-09-20T14:00:00Z",
@@ -1601,8 +1586,8 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=0.1; fetch_budget=2; change_budget=10",
-        "sources/sb_generic/2026-09-20.csv sha256=9525da9d1fbd80e5cbc3d82170a6f2b2ecb7e08bf95e9aab2a9f09b1b3d2b8c2"
+        "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=10",
+        "sources/sb_generic/2026-09-20.csv sha256=22ec2714b30ae9b1d3be2660e3bbcef4b86f4a30017849a266a2662e0470076d"
       ],
       "last_error": null,
       "next_deadline": "2026-09-20T14:00:00Z",
@@ -1666,7 +1651,7 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=8.6; fetch_budget=3; change_budget=40",
+        "fetched_days=-0.0; changed_days=8.9; fetch_budget=3; change_budget=40",
         "sources/umich/2026-09-20.json sha256=512b0530509d9a05b7b938bf0b3920ecf0eaea70f59f1a648cd6d068d20bc0ad"
       ],
       "last_error": null,
