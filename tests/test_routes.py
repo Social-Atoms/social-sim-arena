@@ -21,6 +21,26 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ssa import harness
 
+# --- the job's own environment ---------------------------------------------
+#
+# `refresh.yml` runs this file inside the refresh job, which exports the live
+# routing variables. Every assertion below is about what the *code* does with
+# a routing table it was handed, so an inherited table makes them assert
+# something else: on 2026-09-19 `SSA_PPAPI` arrived set, entrants that should
+# have been `direct` came back `ppapi`, the step exited 1, and the filing pass
+# that runs after it never executed. Six rounds sat one lock away with nothing
+# bought.
+#
+# So the table is taken out of the environment here, once, and handed to the
+# tests explicitly by `Keys`, `Routed` and `Sponsored`. What the job exports is
+# kept in `LIVE_ROUTING` and checked by one test that is actually about the
+# deployment -- which is what running this file in the job was always for, and
+# what it was not in fact doing.
+LIVE_ROUTING = {k: os.environ.pop(k, None) for k in (
+    "SSA_MODELS", "SSA_OPENROUTER", "SSA_PPAPI",
+    "SSA_PPAPI_BASE", "SSA_PPAPI_BASE_GEMINI")}
+LIVE_GATEWAY_KEY = os.environ.get(harness.PPAPI_ENV)
+
 
 class Routed:
     """SSA_OPENROUTER set for the duration, restored after."""
@@ -44,10 +64,28 @@ class Routed:
 
 
 class Keys:
-    """Exactly the named keys present, everything else cleared."""
+    """Exactly the named keys present, everything else cleared.
+
+    `SSA_PPAPI` and its bases are cleared alongside the keys, not left to the
+    ambient environment. The gateway's roster and the gateway's key are one
+    setting in two halves, and `ppapi_models()` raises when it finds one half
+    without the other -- deliberately, because a half-configured gateway
+    silently reroutes a season.
+
+    Leaving the roster behind therefore turned every test that drops
+    `SA_BASELINE_HS` into that error, but only where the roster happened to be
+    set. It is not set on a pull request, so the suite passed review; it *is*
+    set in `refresh.yml`'s job environment, which runs this file in the step
+    immediately before `ssa.refresh`. On 2026-09-19, the first run after the
+    gateway reached `main` failed here, the filing pass never executed, and
+    the arena bought and filed nothing while six rounds counted down to their
+    lock. A test helper that controls which credentials exist has to control
+    the routing table that reads them.
+    """
 
     NAMES = ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "OPEN_ROUTER",
-             "SA_BASELINE_HS", "DASHSCOPE_API_KEY")
+             "SA_BASELINE_HS", "DASHSCOPE_API_KEY",
+             "SSA_PPAPI", "SSA_PPAPI_BASE", "SSA_PPAPI_BASE_GEMINI")
 
     def __init__(self, **present):
         self.present = present
@@ -235,6 +273,85 @@ def test_only_a_failure_that_survives_six_hours_moves_an_entrant():
         assert harness.terminal_failure(RuntimeError(t)) is True, t
     for t in transient:
         assert harness.terminal_failure(RuntimeError(t)) is False, t
+
+
+def test_the_jobs_own_routing_variables_name_only_models_that_exist():
+    """The deployment check, and the only test here that reads the job.
+
+    `refresh.yml` runs this file in the refresh job so a typo in a repository
+    variable cannot reach a season without failing something first -- a name
+    nobody serves silently drops an entrant, and a gateway roster without its
+    key silently reroutes one. Nothing was actually asserting that: the other
+    tests supply their own tables, and until 2026-09-19 the inherited one only
+    ever broke them.
+
+    Skips when nothing is exported, which is every pull request and every
+    local run.
+    """
+    if not any(LIVE_ROUTING.values()):
+        return
+    saved = {k: os.environ.get(k) for k in LIVE_ROUTING}
+    os.environ.update({k: v for k, v in LIVE_ROUTING.items() if v})
+    try:
+        if LIVE_ROUTING.get("SSA_PPAPI"):
+            assert LIVE_GATEWAY_KEY, (
+                "SSA_PPAPI names the models the sponsor's gateway serves, but "
+                f"{harness.PPAPI_ENV} is not set: every entrant on that list "
+                "would be routed to a host with no credential")
+            for m in harness.ppapi_models():
+                assert m in harness.MODELS, f"SSA_PPAPI names unknown {m!r}"
+        if LIVE_ROUTING.get("SSA_OPENROUTER"):
+            for m in harness.openrouter_models():
+                assert m in harness.MODELS, f"SSA_OPENROUTER names unknown {m!r}"
+        for m in (LIVE_ROUTING.get("SSA_MODELS") or "").split(","):
+            m = m.strip()
+            assert not m or m in harness.MODELS, \
+                f"SSA_MODELS names unknown model {m!r}"
+        # Every model the season will actually call has to resolve to a route
+        # whose key is present, or it files nothing for the whole season.
+        for m in (LIVE_ROUTING.get("SSA_MODELS") or "").split(","):
+            m = m.strip()
+            if m:
+                harness.route(m)
+    finally:
+        for k, v in saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+
+
+def test_clearing_keys_also_clears_the_gateway_roster_the_job_supplies():
+    """The regression that stopped the arena filing on 2026-09-19.
+
+    `refresh.yml` runs this file with the live `SSA_PPAPI` in the job
+    environment, on purpose -- the step guards that job's configuration. So
+    every test below that drops `SA_BASELINE_HS` inherits a roster naming
+    models whose key is now gone, which is exactly the half-configured
+    gateway `ppapi_models()` refuses. The step exited 1, the filing pass that
+    follows it never ran, and nothing was bought or filed.
+
+    Asserted here rather than left to the other tests because it only
+    reproduces when the roster is set, which a pull request never does.
+    """
+    saved = {k: os.environ.get(k)
+             for k in ("SSA_PPAPI", "SSA_PPAPI_BASE", "SA_BASELINE_HS")}
+    os.environ["SSA_PPAPI"] = "claude-opus"
+    os.environ["SSA_PPAPI_BASE"] = "https://gw.example/v1"
+    os.environ["SA_BASELINE_HS"] = "pp-live"
+    try:
+        with Keys(ANTHROPIC_API_KEY="sk-ant-test"):
+            assert "SSA_PPAPI" not in os.environ, \
+                "the roster survived Keys and will outlive the key it needs"
+            # The call that raised. It must route to the vendor now that the
+            # gateway is not configured at all, rather than refuse to answer.
+            assert harness.route("claude-opus")["via"] == "direct"
+    finally:
+        for k, v in saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
 
 
 def test_a_dead_route_is_remembered_for_the_run_and_not_written_down():
