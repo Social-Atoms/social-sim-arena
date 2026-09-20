@@ -1,27 +1,6 @@
 {
   "alerts": [
     {
-      "id": "mc-2026-w39-approval/claude-sonnet-web",
-      "kind": "entrant_round",
-      "last_error": "provider HTTP 400",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
-      "state": "retryable_failure"
-    },
-    {
-      "id": "mc-2026-w39-approval/claude-sonnet-web-superfc",
-      "kind": "entrant_round",
-      "last_error": "provider HTTP 400",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
-      "state": "retryable_failure"
-    },
-    {
-      "id": "mc-2026-w39-approval/glm-web",
-      "kind": "entrant_round",
-      "last_error": "provider transport failure",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
-      "state": "retryable_failure"
-    },
-    {
       "id": "civiqs",
       "kind": "source",
       "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/app",
@@ -33,9 +12,9 @@
     "entrant_rounds": {
       "missed_lock": 0,
       "queued": 0,
-      "retryable_failure": 3,
+      "retryable_failure": 0,
       "running": 0,
-      "succeeded": 11,
+      "succeeded": 14,
       "terminal_failure": 0
     },
     "sources": {
@@ -48,42 +27,46 @@
   },
   "entrant_round_states": [
     {
-      "alert": true,
+      "alert": false,
       "attempts": 1,
       "entrant": "claude-sonnet-web",
       "estimated_spend": 0.07065,
-      "evidence": [],
-      "last_error": "provider HTTP 400",
+      "evidence": [
+        "forecast=sealed/mc-2026-w39-approval/claude-sonnet-web.json"
+      ],
+      "last_error": null,
       "next_deadline": "2026-09-21T14:00:00Z",
       "next_lock": "2026-09-21T14:00:00Z",
-      "next_retry": "2026-09-20T22:03:18Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": null,
+      "required_action": "none",
       "round_id": "mc-2026-w39-approval",
       "route": "ppapi:app-us.ppapi.ai",
-      "state": "retryable_failure"
+      "state": "succeeded"
     },
     {
-      "alert": true,
+      "alert": false,
       "attempts": 1,
       "entrant": "claude-sonnet-web-superfc",
       "estimated_spend": 0.07065,
-      "evidence": [],
-      "last_error": "provider HTTP 400",
+      "evidence": [
+        "forecast=sealed/mc-2026-w39-approval/claude-sonnet-web-superfc.json"
+      ],
+      "last_error": null,
       "next_deadline": "2026-09-21T14:00:00Z",
       "next_lock": "2026-09-21T14:00:00Z",
-      "next_retry": "2026-09-20T22:03:18Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": null,
+      "required_action": "none",
       "round_id": "mc-2026-w39-approval",
       "route": "ppapi:app-us.ppapi.ai",
-      "state": "retryable_failure"
+      "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/mc-2026-w39-approval/deepseek-pro-web.json"
+        "forecast=forecasts/mc-2026-w39-approval/deepseek-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-21T14:00:00Z",
@@ -96,11 +79,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web-superfc",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/mc-2026-w39-approval/deepseek-pro-web-superfc.json"
+        "forecast=forecasts/mc-2026-w39-approval/deepseek-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-21T14:00:00Z",
@@ -113,11 +96,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/mc-2026-w39-approval/gemini-pro-web.json"
+        "forecast=forecasts/mc-2026-w39-approval/gemini-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-21T14:00:00Z",
@@ -130,11 +113,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/mc-2026-w39-approval/gemini-pro-web-superfc.json"
+        "forecast=forecasts/mc-2026-w39-approval/gemini-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-21T14:00:00Z",
@@ -146,27 +129,29 @@
       "state": "succeeded"
     },
     {
-      "alert": true,
+      "alert": false,
       "attempts": 1,
       "entrant": "glm-web",
       "estimated_spend": 0.01041,
-      "evidence": [],
-      "last_error": "provider transport failure",
+      "evidence": [
+        "forecast=sealed/mc-2026-w39-approval/glm-web.json"
+      ],
+      "last_error": null,
       "next_deadline": "2026-09-21T14:00:00Z",
       "next_lock": "2026-09-21T14:00:00Z",
-      "next_retry": "2026-09-20T22:03:18Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": null,
+      "required_action": "none",
       "round_id": "mc-2026-w39-approval",
       "route": "ppapi:app-us.ppapi.ai",
-      "state": "retryable_failure"
+      "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "glm-web-superfc",
-      "estimated_spend": 0.01041,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/mc-2026-w39-approval/glm-web-superfc.json"
+        "forecast=forecasts/mc-2026-w39-approval/glm-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-21T14:00:00Z",
@@ -179,11 +164,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/mc-2026-w39-approval/gpt-5.6-luna-web.json"
+        "forecast=forecasts/mc-2026-w39-approval/gpt-5.6-luna-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-21T14:00:00Z",
@@ -196,11 +181,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/mc-2026-w39-approval/gpt-5.6-luna-web-superfc.json"
+        "forecast=forecasts/mc-2026-w39-approval/gpt-5.6-luna-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-21T14:00:00Z",
@@ -213,11 +198,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/mc-2026-w39-approval/grok-web.json"
+        "forecast=forecasts/mc-2026-w39-approval/grok-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-21T14:00:00Z",
@@ -230,11 +215,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/mc-2026-w39-approval/grok-web-superfc.json"
+        "forecast=forecasts/mc-2026-w39-approval/grok-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-21T14:00:00Z",
@@ -247,11 +232,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "test-jay",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/mc-2026-w39-approval/test-jay.json"
+        "forecast=forecasts/mc-2026-w39-approval/test-jay.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-21T14:00:00Z",
@@ -264,11 +249,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "worldvac-base",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/mc-2026-w39-approval/worldvac-base.json"
+        "forecast=forecasts/mc-2026-w39-approval/worldvac-base.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-21T14:00:00Z",
@@ -280,7 +265,7 @@
       "state": "succeeded"
     }
   ],
-  "generated_at": "2026-09-20T16:13:08Z",
+  "generated_at": "2026-09-20T16:32:19Z",
   "source_states": [
     {
       "alert": false,
@@ -311,7 +296,7 @@
       "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/app",
       "next_deadline": "2026-09-21T14:00:00Z",
       "next_lock": "2026-09-21T14:00:00Z",
-      "next_retry": "2026-09-20T22:13:08Z",
+      "next_retry": "2026-09-20T22:32:19Z",
       "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
       "route": "ssa.series:civiqs",
       "source": "civiqs",
@@ -354,7 +339,7 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=-0.0; fetch_budget=2; change_budget=7",
+        "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
         "sources/sb_approval/2026-09-20.csv sha256=e42f4a8ee6e885c257929b09870dee1b0513d15546776568c4e8e2c41afdb99d"
       ],
       "last_error": null,
@@ -371,7 +356,7 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=-0.0; fetch_budget=2; change_budget=10",
+        "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=10",
         "sources/sb_generic/2026-09-20.csv sha256=e78aed7f4a925207dd798c7783c34d23581dd2ab061c14d12ba562dc02c62aaf"
       ],
       "last_error": null,
