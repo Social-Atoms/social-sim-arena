@@ -115,6 +115,22 @@ jobs:
       # nearest locks first and carries the tail to the next run, so raising
       # this only changes how fast a backlog drains, never whether it does.
       SSA_MAX_SPEND: ${{ vars.SSA_MAX_SPEND || '10' }}
+      # How hard one endpoint may be pushed, and how many calls run at once.
+      #
+      # These were tuned for a roster spread across five vendors, where the
+      # per-endpoint ceiling meant twelve requests each. The sponsor's gateway
+      # is now the only route, so `harness._provider_key` resolves every
+      # entrant to one budget and that ceiling is twelve simultaneous requests
+      # at one host.
+      #
+      # Measured against that host with a production-sized prompt, 4, 8 and 12
+      # concurrent calls all succeeded, so the defaults stand. They are passed
+      # from here anyway: the next endpoint may be less forgiving, and finding
+      # that out should cost a variable rather than a release.
+      # `|| ...` supplies the code default rather than the empty string an
+      # unset variable would otherwise deliver.
+      SSA_PROVIDER_LIMIT: ${{ vars.SSA_PROVIDER_LIMIT || '12' }}
+      SSA_FILING_WORKERS: ${{ vars.SSA_FILING_WORKERS || '20' }}
     steps:
       - uses: actions/checkout@v4
         with:
