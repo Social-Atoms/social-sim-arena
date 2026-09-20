@@ -876,6 +876,17 @@ MAX_SPEND = float(os.environ.get("SSA_MAX_SPEND") or "10")
 # 15k, qwen 8k, kimi 3.9k) tripled the fleet mean, so an "estimated $10"
 # ceiling was actually authorising ~$36. Until the estimator reads per-model
 # averages out of replies/, this stays pinned to the measured fleet mean.
+#
+# **Stale in the safe direction since 2026-09-20.** 4,650 is the fleet mean
+# from an era when the reasoning-heavy entrants sent a depth; none of them
+# does now, and one measured round came back with 21 output tokens where max
+# effort had spent 213. So the gate currently prices a call at roughly ten
+# times what it costs, which makes it refuse earlier than it needs to -- it
+# withholds the tail to the next run rather than overspending, so the error
+# costs patience and never money. Recalibrate from `replies/` once a few runs
+# of the new configuration have landed, and not by guessing before then: this
+# constant is the only thing standing between a loop and the sponsor's
+# balance.
 EST_IN_TOKENS, EST_OUT_TOKENS = 300, 4650
 
 
