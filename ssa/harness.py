@@ -69,10 +69,43 @@ from . import replies
 # "max" is rejected by the GPT-5.6 models with an explicit list of what they do
 # take: none/low/medium/high/xhigh. xhigh is their ceiling, so that is maximum
 # effort here despite the value differing from Anthropic's.
-OPENAI_MAX_EFFORT = {"reasoning_effort": "xhigh"}
-ANTHROPIC_MAX_EFFORT = {"thinking": {"type": "adaptive"},
-                        "output_config": {"effort": "max"}}
-XAI_MAX_EFFORT = {"reasoning_effort": "high"}
+# **Nothing is sent any more, from 2026-09-20.** What used to be here:
+#
+#     OPENAI_MAX_EFFORT    = {"reasoning_effort": "xhigh"}
+#     ANTHROPIC_MAX_EFFORT = {"thinking": {"type": "adaptive"},
+#                             "output_config": {"effort": "max"}}
+#     XAI_MAX_EFFORT       = {"reasoning_effort": "high"}
+#
+# Two findings retired them on the same day, and either alone would have been
+# enough.
+#
+# **It stopped working.** The sponsor's gateway serves `claude-sonnet-5` from
+# more than one upstream, and one of them is Bedrock, which answers
+# `output_config.effort` with `ValidationException: 'max' is not supported for
+# this model`. Which upstream a call lands on is not ours to choose, so the
+# entrant became a lottery: 24 of 24 succeeded in a standalone probe and 11 of
+# 12 failed in the run that mattered. An entrant that files by luck is not an
+# entrant.
+#
+# **It was never shown to be worth paying for.** Measured on one real round,
+# the same prompt at max, at low and with no block at all returned 35.5, 35.5
+# and 35.4 -- a tenth of a point apart -- while max spent 213 output tokens
+# against 21. Across the season the depth is where roughly four fifths of the
+# model bill goes, and the arena's own numbers have never shown it buying
+# accuracy: cost against skill is -0.03, and output length against skill is
+# *negative*.
+#
+# So every entrant now runs at its vendor's default depth. That is one
+# sentence to state in the paper instead of a per-entrant table, and
+# `effort_label` still writes the depth into every forecast's notes -- it now
+# reads `effort=default`, which is a claim, not an absence.
+#
+# This changes the condition, and `call_identity` carries the parameter block,
+# so forecasts bought before today are not comparable to forecasts bought
+# after it at the level of a single entrant's skill number. Rounds already
+# locked keep their scores untouched; `claude-sonnet-web` and
+# `claude-sonnet-web-superfc` carry 37 rounds each from the max era, and that
+# boundary is 2026-09-20.
 
 # Temperature is deliberately never set. Current frontier models on OpenAI and
 # Anthropic reject it outright, and elsewhere the provider default (~1.0) is
@@ -91,17 +124,14 @@ MODELS = {
     "gpt-5.6-luna": {
         "env": "OPENAI_API_KEY", "name": "GPT-5.6 Luna", "api": "openai",
         "base": "https://api.openai.com/v1", "model": "gpt-5.6-luna",
-        "params": OPENAI_MAX_EFFORT,
     },
     "gpt-5.6-sol": {
         "env": "OPENAI_API_KEY", "name": "GPT-5.6 Sol", "api": "openai",
         "base": "https://api.openai.com/v1", "model": "gpt-5.6-sol",
-        "params": OPENAI_MAX_EFFORT,
     },
     "gpt-5.6-terra": {
         "env": "OPENAI_API_KEY", "name": "GPT-5.6 Terra", "api": "openai",
         "base": "https://api.openai.com/v1", "model": "gpt-5.6-terra",
-        "params": OPENAI_MAX_EFFORT,
     },
     # --- Anthropic --------------------------------------------------------
     # Opus 4.8 rather than Opus 5: Opus 5's May 2026 cutoff sits so close to
@@ -111,7 +141,6 @@ MODELS = {
     "claude-opus": {
         "env": "ANTHROPIC_API_KEY", "name": "Claude Opus 4.8", "api": "anthropic",
         "base": "https://api.anthropic.com/v1", "model": "claude-opus-4-8",
-        "params": ANTHROPIC_MAX_EFFORT,
     },
     # Opus 5 runs alongside 4.8 rather than instead of it. Its May 2026 cutoff
     # leaves it a much shorter backtest window than the rest, which is a reason
@@ -119,17 +148,14 @@ MODELS = {
     "claude-opus-5": {
         "env": "ANTHROPIC_API_KEY", "name": "Claude Opus 5", "api": "anthropic",
         "base": "https://api.anthropic.com/v1", "model": "claude-opus-5",
-        "params": ANTHROPIC_MAX_EFFORT,
     },
     "claude-sonnet": {
         "env": "ANTHROPIC_API_KEY", "name": "Claude Sonnet 5", "api": "anthropic",
         "base": "https://api.anthropic.com/v1", "model": "claude-sonnet-5",
-        "params": ANTHROPIC_MAX_EFFORT,
     },
     "claude-fable": {
         "env": "ANTHROPIC_API_KEY", "name": "Claude Fable 5", "api": "anthropic",
         "base": "https://api.anthropic.com/v1", "model": "claude-fable-5",
-        "params": ANTHROPIC_MAX_EFFORT,
     },
     # --- Google -----------------------------------------------------------
     # Pinned, never the `-latest` aliases: an alias that rolls forward
@@ -150,7 +176,6 @@ MODELS = {
     "grok": {
         "env": "XAI_API_KEY", "name": "Grok 4.5", "api": "openai",
         "base": "https://api.x.ai/v1", "model": "grok-4.5",
-        "params": XAI_MAX_EFFORT,
     },
     # --- Gateway-hosted (one OpenAI-compatible endpoint, one key) ----------
     "qwen-3.7": {

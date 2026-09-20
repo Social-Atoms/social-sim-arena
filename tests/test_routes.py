@@ -732,8 +732,23 @@ def test_the_sponsors_gateway_keeps_each_models_own_protocol():
                        gemini_base="https://other.example/gemini"):
             assert harness.route("gemini-pro")["base"] == \
                 "https://other.example/gemini"
-    # The vendor's own effort block survives, rather than being replaced.
-    assert anthropic["params"] == harness.MODELS["claude-opus"].get("params")
+    # The vendor's own parameter block passes through rather than being
+    # replaced by the gateway's idea of one -- empty since 2026-09-20, and the
+    # assertion is written to keep holding if a depth is ever set again.
+    assert anthropic["params"] == (harness.MODELS["claude-opus"].get("params")
+                                   or {})
+    with Keys(SA_BASELINE_HS="pp-test"):
+        saved = harness.MODELS["claude-opus"].get("params")
+        harness.MODELS["claude-opus"]["params"] = {"thinking": {"type": "x"}}
+        try:
+            with Sponsored("1", table=table):
+                assert harness.route("claude-opus")["params"] == \
+                    {"thinking": {"type": "x"}}
+        finally:
+            if saved is None:
+                harness.MODELS["claude-opus"].pop("params", None)
+            else:
+                harness.MODELS["claude-opus"]["params"] = saved
 
 
 def test_a_sponsored_forecast_says_whose_account_paid_for_it():
@@ -862,11 +877,33 @@ def test_a_model_that_asks_for_nothing_keeps_the_identity_it_had():
 def test_every_vendors_depth_is_read_and_absence_is_a_value():
     """Each vendor nests the depth somewhere else, and `default` is a real
     condition -- the vendor's own -- rather than a missing one, so it is
-    written down rather than left blank."""
-    assert harness.effort_label("claude-sonnet") == "max"        # Anthropic
-    assert harness.effort_label("gpt-5.6-luna") == "xhigh"       # OpenAI
-    assert harness.effort_label("grok") == "high"                # xAI
-    assert harness.effort_label("gemini-pro") == "default"       # none set
+    written down rather than left blank.
+
+    The three nestings are supplied here instead of read off `MODELS`. Since
+    2026-09-20 no entrant sends a depth, so reading the live table would make
+    this assert `default` three times and stop covering the paths at all --
+    and they have to keep working, both to read the era before that date and
+    for the day a depth is set again.
+    """
+    shapes = {
+        "claude-sonnet": ({"output_config": {"effort": "max"}}, "max"),
+        "gpt-5.6-luna": ({"reasoning_effort": "xhigh"}, "xhigh"),
+        "grok": ({"reasoning_effort": "high"}, "high"),
+    }
+    for name, (params, want) in shapes.items():
+        model = harness.resolve(name)[0]
+        saved = harness.MODELS[model].get("params")
+        harness.MODELS[model]["params"] = params
+        try:
+            assert harness.effort_label(name) == want, name
+        finally:
+            if saved is None:
+                harness.MODELS[model].pop("params", None)
+            else:
+                harness.MODELS[model]["params"] = saved
+    # And with nothing set -- every entrant, as the season now runs.
+    for name in ("gemini-pro", "claude-sonnet", "grok"):
+        assert harness.effort_label(name) == "default", name
     with Keys(OPEN_ROUTER="sk-or-test"), Routed("claude-opus"):
         # OpenRouter substitutes its own unified scale, which the notes must
         # report as what was actually asked for, not as the vendor's ceiling.
@@ -874,10 +911,18 @@ def test_every_vendors_depth_is_read_and_absence_is_a_value():
 
 
 def test_the_filed_forecast_says_at_what_depth_it_was_produced():
+    """`default` is a claim about the condition, not a gap in the notes.
+
+    Every entrant dropped its reasoning-depth block on 2026-09-20, so the
+    label no longer varies -- which is exactly when it is easiest to stop
+    writing it, and exactly when a reader most needs it to distinguish a
+    forecast bought before that day from one bought after.
+    """
     with Keys(ANTHROPIC_API_KEY="k"), Routed(None):
         with Provider():
             f = harness.forecast("claude-opus", ROUND, HIST)
-    assert "effort=max" in f["notes"], f["notes"]
+    assert "effort=default" in f["notes"], f["notes"]
+    assert harness.effort_label("claude-opus") == "default"
 
 
 if __name__ == "__main__":
