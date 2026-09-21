@@ -386,10 +386,10 @@ def test_the_publish_gate_covers_every_field_a_page_reads_unguarded():
 
 
 def test_the_faq_is_on_every_nav_and_answers_the_two_comparisons():
-    """Background says why a live test exists. Docs say how to enter. Neither
-    says how this differs from a static survey bench or from ForecastBench,
-    which is the question people actually arrive with. A page that forgets
-    the FAQ is how that comparison never gets found.
+    """The FAQ is a general page. Related-work comparisons are one section
+    on it, so later questions can be added without inventing a new page.
+    A nav that forgets the FAQ, or a page that drops that section, is how
+    the comparison never gets found.
     """
     site = os.path.join(ROOT, "site")
     missing_nav = []
@@ -409,6 +409,8 @@ def test_the_faq_is_on_every_nav_and_answers_the_two_comparisons():
     with open(os.path.join(site, "faq.html"), encoding="utf-8") as fh:
         faq = fh.read()
     for needle in (
+        'id="comparison-with-related-work"',
+        "Comparison with related work",
         'id="static-benchmarks"',
         'id="forecast-arenas"',
         "contamination",

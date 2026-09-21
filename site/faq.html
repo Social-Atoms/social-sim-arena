@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" type="image/svg+xml" href="logo.svg">
-<title>FAQ · Social Simulation Arena</title><meta name="description" content="How Social Simulation Arena differs from a static benchmark and from a general forecast arena.">
+<title>FAQ · Social Simulation Arena</title><meta name="description" content="Questions about Social Simulation Arena, including how it differs from related work.">
 <style>
 :root{--bg:#fff;--ink:#111110;--ink2:#4f4e49;--mut:#96948d;--line:#e0e0e0;--soft:#f6f6f3;--accent:#15803d;--accent-ink:#0a6a30;--link:var(--accent);}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink2);font:15.5px/1.55 var(--sans);-webkit-font-smoothing:antialiased}a{color:var(--link)}
 .layout{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,760px) 190px;gap:38px;padding:34px 24px 70px;align-items:start}.left,.right{position:sticky;top:34px}.left .back{display:block;margin-bottom:20px;color:var(--ink2);text-decoration:none;font-size:12px}.navlabel{font-size:10.5px;letter-spacing:.12em;color:var(--mut);text-transform:uppercase;margin:18px 0 5px}.left a,.right a{display:block;color:var(--ink2);text-decoration:none;padding:5px 8px;border-radius:4px;font-size:12.5px}.left a.on{background:#f0f0ed;color:var(--ink);font-weight:800}.left a:hover,.right a:hover{color:var(--link)}
-article{min-width:0}.eyebrow{font-size:11.5px;letter-spacing:.12em;color:var(--mut);text-transform:uppercase}h1{font-size:30px;line-height:1.1;color:var(--ink);margin:4px 0 8px;scroll-margin-top:74px}h2{font-size:21px;line-height:1.25;color:var(--ink);margin:38px 0 8px;scroll-margin-top:74px}h3{font-size:16px;color:var(--ink);margin:20px 0 5px}p{margin:7px 0}.lede{font-size:17px;max-width:650px}.rule{border:0;border-top:1px solid var(--line);margin:20px 0}
+article{min-width:0}.eyebrow{font-size:11.5px;letter-spacing:.12em;color:var(--mut);text-transform:uppercase}h1{font-size:30px;line-height:1.1;color:var(--ink);margin:4px 0 8px;scroll-margin-top:74px}h2{font-size:21px;line-height:1.25;color:var(--ink);margin:38px 0 8px;scroll-margin-top:74px}h3{font-size:16px;color:var(--ink);margin:28px 0 8px;scroll-margin-top:74px}p{margin:7px 0}.lede{font-size:17px;max-width:650px}.rule{border:0;border-top:1px solid var(--line);margin:20px 0}
 .ask{margin:0 0 16px;font-size:15px;line-height:1.55;color:var(--ink)}
 .core u{text-decoration:underline;text-decoration-color:#b8b6ae;text-decoration-thickness:1.5px;text-underline-offset:4px}
 article a{color:var(--accent-ink);text-decoration:underline;text-underline-offset:2px}article a:hover{color:var(--accent)}
@@ -37,14 +37,20 @@ ul.plain{margin:12px 0 18px;padding-left:20px}ul.plain li{font-size:14.5px;line-
 </nav>
 <script>/* On a phone the tabs scroll sideways: the current one is brought into view, and the row fades on whichever side has more. */(function(){const row=document.querySelector(".page-tabs");if(!row)return;document.querySelectorAll(".page-tabs a.on").forEach(a=>a.scrollIntoView({inline:"center",block:"nearest"}));const edges=()=>{row.classList.toggle("at-start",row.scrollLeft<=1);row.classList.toggle("at-end",row.scrollLeft+row.clientWidth>=row.scrollWidth-1);};row.addEventListener("scroll",edges,{passive:true});window.addEventListener("resize",edges);edges();})();</script>
 <div class="page-scroll">
-<div class="layout"><aside class="left" aria-label="FAQ"><a class="back" href="index.html">← Back to arena</a><details class="docs-nav" open><summary>Sections</summary><div class="navlabel">Compare</div><a class="on" href="#static-benchmarks">Static benchmarks</a><a href="#forecast-arenas">Forecast arenas</a></details></aside>
+<div class="layout"><aside class="left" aria-label="FAQ"><a class="back" href="index.html">← Back to arena</a><details class="docs-nav" open><summary>Sections</summary>
+<div class="navlabel">Comparison with related work</div>
+<a class="on" href="#static-benchmarks">Static benchmarks</a>
+<a href="#forecast-arenas">Forecast arenas</a>
+</details></aside>
 <article>
 <div class="eyebrow">FAQ</div>
-<h1>How this differs from related work</h1>
-<p class="lede">The <a href="background.html">background</a> says why a live test exists. This page is for the next question people actually ask: how is that different from the benches they already know?</p>
+<h1>FAQ</h1>
+<p class="lede">Questions people ask about the arena. New here? <a href="background.html">Read the background story</a>. Entering a simulator? <a href="docs.html#quickstart">Read the docs</a>. To add a question, open a pull request against this page.</p>
 <hr class="rule">
 
-<h2 id="static-benchmarks">Static benchmarks</h2>
+<h2 id="comparison-with-related-work">Comparison with related work</h2>
+
+<h3 id="static-benchmarks">Static benchmarks</h3>
 <p class="ask"><b>Eval-via-forecasting seems like a solid reality check. Could it expose biases we miss in standard benchmarks?</b></p>
 <p>That is exactly where a live forecast adds something a static bench cannot.</p>
 <p>First, it is live. Forecasts lock before the real outcome exists, so a model cannot benefit from contamination or memorization. The questions and the scoring rules are pre-registered, and every forecast and every result is public.</p>
@@ -53,7 +59,7 @@ ul.plain{margin:12px 0 18px;padding-left:20px}ul.plain li{font-size:14.5px;line-
 <p class="core"><u>Does what we learn from standard benchmarks actually hold up in the real future?</u></p>
 <div class="callout">The lock, the shared cutoff, and the public timestamp are on the docs under <a href="docs.html#integrity">Integrity</a>. A longer account of fair evaluation, anti-cheating, and responsible use will live in the technical report.</div>
 
-<h2 id="forecast-arenas">Forecast arenas</h2>
+<h3 id="forecast-arenas">Forecast arenas</h3>
 <p class="ask"><b>Where is the difference from a forecast arena in the general sense?</b></p>
 <p>The object of the benchmark is different.</p>
 <p>Forecasting benches such as ForecastBench, FutureX, and Prophet Arena mainly test whether a system has general future-prediction ability, so many of their tasks are scattered, one-off events.</p>
@@ -68,9 +74,14 @@ ul.plain{margin:12px 0 18px;padding-left:20px}ul.plain li{font-size:14.5px;line-
 <p>These tasks test heterogeneity inside the population, and consistency across questions, times, and subgroups.</p>
 <p>If the only goal is generic future prediction, the thing you train may be a very strong forecaster, or even a very strong researcher. That is a different object from a simulator that can keep interpreting, generating, and predicting how a public behaves.</p>
 <p>On data, we use recurring public sources, look for partners who measure the same populations, and will keep collecting measurements of our own.</p>
+
 <p>Something still unclear? <a href="https://github.com/Social-Atoms/social-sim-arena/issues" target="_blank" rel="noopener">Open an issue</a>, or write to <a href="mailto:hi@social-atoms.org">hi@social-atoms.org</a>.</p>
 </article>
-<aside class="right" aria-label="On this page"><div class="navlabel">On this page</div><a href="#static-benchmarks">Static benchmarks</a><a href="#forecast-arenas">Forecast arenas</a></aside></div>
+<aside class="right" aria-label="On this page"><div class="navlabel">On this page</div>
+<div class="navlabel">Comparison with related work</div>
+<a href="#static-benchmarks">Static benchmarks</a>
+<a href="#forecast-arenas">Forecast arenas</a>
+</aside></div>
 </div>
 <script>
 if(window.matchMedia&&matchMedia('(max-width:720px)').matches){var dn=document.querySelector('.docs-nav'); if(dn) dn.open=false;}
