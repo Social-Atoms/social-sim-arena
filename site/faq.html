@@ -7,7 +7,7 @@
 .layout{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,760px) 190px;gap:38px;padding:34px 24px 70px;align-items:start}.left,.right{position:sticky;top:34px}.left .back{display:block;margin-bottom:20px;color:var(--ink2);text-decoration:none;font-size:12px}.navlabel{font-size:10.5px;letter-spacing:.12em;color:var(--mut);text-transform:uppercase;margin:18px 0 5px}.left a,.right a{display:block;color:var(--ink2);text-decoration:none;padding:5px 8px;border-radius:4px;font-size:12.5px}.left a.on{background:#f0f0ed;color:var(--ink);font-weight:800}.left a:hover,.right a:hover{color:var(--link)}
 article{min-width:0}.eyebrow{font-size:11.5px;letter-spacing:.12em;color:var(--mut);text-transform:uppercase}h1{font-size:30px;line-height:1.1;color:var(--ink);margin:4px 0 8px;scroll-margin-top:74px}h2{font-size:21px;line-height:1.25;color:var(--ink);margin:38px 0 8px;scroll-margin-top:74px}h3{font-size:16px;color:var(--ink);margin:28px 0 8px;scroll-margin-top:74px}p{margin:7px 0}.lede{font-size:17px;max-width:650px}.rule{border:0;border-top:1px solid var(--line);margin:20px 0}
 .ask{margin:0 0 16px;font-size:15px;line-height:1.55;color:var(--ink)}
-.core u{text-decoration:underline;text-decoration-color:#b8b6ae;text-decoration-thickness:1.5px;text-underline-offset:4px}
+article b{color:var(--ink);font-weight:700}
 article a{color:var(--accent-ink);text-decoration:underline;text-underline-offset:2px}article a:hover{color:var(--accent)}
 .callout{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:5px;padding:12px 14px;background:#fff;margin:16px 0}.callout b{color:var(--ink)}
 ul.plain{margin:12px 0 18px;padding-left:20px}ul.plain li{font-size:14.5px;line-height:1.55;margin:0 0 10px;color:var(--ink2)}ul.plain b{color:var(--ink)}
@@ -52,12 +52,12 @@ ul.plain{margin:12px 0 18px;padding-left:20px}ul.plain li{font-size:14.5px;line-
 
 <h3 id="static-benchmarks">Static benchmarks</h3>
 <p class="ask"><b>Eval-via-forecasting seems like a solid reality check. Could it expose biases we miss in standard benchmarks?</b></p>
-<p>That is exactly where a live forecast adds something a static bench cannot.</p>
-<p>First, it is live. Forecasts lock before the real outcome exists, so a model cannot benefit from contamination or memorization. The questions and the scoring rules are pre-registered, and every forecast and every result is public.</p>
-<p>Second, the outcome is generated independently of us and of the model builders, through existing real-world surveys and trackers. We do not get to decide what the right answer should look like. The world resolves it.</p>
-<p>And we do not only look at the overall average. We also score demographic breakdowns, so a simulator cannot look good by getting the topline right while systematically misrepresenting particular groups.</p>
-<p class="core"><u>Does what we learn from standard benchmarks actually hold up in the real future?</u></p>
-<div class="callout">The lock, the shared cutoff, and the public timestamp are on the docs under <a href="docs.html#integrity">Integrity</a>. A longer account of fair evaluation, anti-cheating, and responsible use will live in the technical report.</div>
+<p>Good question! I think this is exactly where forecasting can add something beyond standard benchmarks.</p>
+<p>First, it's <b>live</b>: forecasts are locked before the real outcome even exists, so models/agents can't benefit from contamination or memorization. The questions and scoring rules are pre-registered, and every forecast and result is public.</p>
+<p>Second, <b>the outcome is generated independently</b> of us and the model builders, through existing real-world surveys and trackers. We don't get to decide what the "right answer" should look like. Instead, the world resolves it for us.</p>
+<p>And importantly, <b>we don't only look at the overall average</b>. We also evaluate demographic breakdowns, so a simulator can't look good just by getting the topline right while systematically misrepresenting particular groups.</p>
+<p>One-liner: Does what we learn from standard benchmarks actually hold up in the real future?</p>
+<p>More on fair evaluation, anti-cheating, and responsible use in our upcoming technical report. The lock, the shared cutoff, and the public timestamp are also on the docs under <a href="docs.html#integrity">Integrity</a>.</p>
 
 <h3 id="forecast-arenas">Forecast arenas</h3>
 <p class="ask"><b>Where is the difference from a forecast arena in the general sense?</b></p>
