@@ -12,6 +12,7 @@
   <a href="https://social-simulation-arena.com">Site</a> ·
   <a href="https://social-simulation-arena.com/docs.html">Docs</a> ·
   <a href="https://social-simulation-arena.com/background.html">Background</a> ·
+  <a href="https://social-simulation-arena.com/faq.html">FAQ</a> ·
   <a href="https://social-simulation-arena.com/index.html#leaderboard">Leaderboard</a>
 </p>
 
