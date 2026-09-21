@@ -385,6 +385,44 @@ def test_the_publish_gate_covers_every_field_a_page_reads_unguarded():
           f"{len(refresh.SITE_ROUND_TYPES)} type-checked)")
 
 
+def test_the_faq_is_on_every_nav_and_answers_the_two_comparisons():
+    """The FAQ is a general page. Related-work comparisons are one section
+    on it, so later questions can be added without inventing a new page.
+    A nav that forgets the FAQ, or a page that drops that section, is how
+    the comparison never gets found.
+    """
+    site = os.path.join(ROOT, "site")
+    missing_nav = []
+    for name in sorted(os.listdir(site)):
+        if not name.endswith(".html"):
+            continue
+        with open(os.path.join(site, name), encoding="utf-8") as fh:
+            body = fh.read()
+        if "page-tabs" not in body:
+            continue
+        if "faq.html" not in body:
+            missing_nav.append(name)
+    assert not missing_nav, (
+        "these pages have the site nav but no FAQ:\n  "
+        + "\n  ".join(missing_nav))
+
+    with open(os.path.join(site, "faq.html"), encoding="utf-8") as fh:
+        faq = fh.read()
+    for needle in (
+        'id="comparison-with-related-work"',
+        "Comparison with related work",
+        'id="static-benchmarks"',
+        'id="forecast-arenas"',
+        "contamination",
+        "demographic",
+        "ForecastBench",
+        "Prophet Arena",
+        "population",
+    ):
+        assert needle in faq, f"faq.html is missing {needle!r}"
+    print("ok test_the_faq_is_on_every_nav_and_answers_the_two_comparisons")
+
+
 def test_the_404_page_is_the_same_file_at_the_root():
     # Vercel serves a custom 404 from the output root; the page is authored in
     # site/ like every other page and copied to the root. The copy must not drift.
@@ -411,6 +449,7 @@ if __name__ == "__main__":
     test_no_page_promises_a_date_it_cannot_know()
     test_every_link_the_docs_send_a_participant_to_exists()
     test_the_publish_gate_covers_every_field_a_page_reads_unguarded()
+    test_the_faq_is_on_every_nav_and_answers_the_two_comparisons()
     test_the_404_page_is_the_same_file_at_the_root()
     test_the_site_logo_is_the_brand_folder_s_64_cut()
-    print("11 passed")
+    print("12 passed")

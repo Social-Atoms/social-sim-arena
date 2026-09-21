@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" type="image/svg+xml" href="logo.svg">
+<title>FAQ · Social Simulation Arena</title><meta name="description" content="Questions about Social Simulation Arena, including how it differs from related work.">
+<style>
+:root{--bg:#fff;--ink:#111110;--ink2:#4f4e49;--mut:#96948d;--line:#e0e0e0;--soft:#f6f6f3;--accent:#15803d;--accent-ink:#0a6a30;--link:var(--accent);}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink2);font:15.5px/1.55 var(--sans);-webkit-font-smoothing:antialiased}a{color:var(--link)}
+.layout{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,760px) 190px;gap:38px;padding:34px 24px 70px;align-items:start}.left,.right{position:sticky;top:34px}.left .back{display:block;margin-bottom:20px;color:var(--ink2);text-decoration:none;font-size:12px}.navlabel{font-size:10.5px;letter-spacing:.12em;color:var(--mut);text-transform:uppercase;margin:18px 0 5px}.left a,.right a{display:block;color:var(--ink2);text-decoration:none;padding:5px 8px;border-radius:4px;font-size:12.5px}.left a.on{background:#f0f0ed;color:var(--ink);font-weight:800}.left a:hover,.right a:hover{color:var(--link)}
+article{min-width:0}.eyebrow{font-size:11.5px;letter-spacing:.12em;color:var(--mut);text-transform:uppercase}h1{font-size:30px;line-height:1.1;color:var(--ink);margin:4px 0 8px;scroll-margin-top:74px}h2{font-size:21px;line-height:1.25;color:var(--ink);margin:38px 0 8px;scroll-margin-top:74px}h3{font-size:16px;color:var(--ink);margin:28px 0 8px;scroll-margin-top:74px}p{margin:7px 0}.lede{font-size:17px;max-width:650px}.rule{border:0;border-top:1px solid var(--line);margin:20px 0}
+.ask{margin:0 0 16px;font-size:15px;line-height:1.55;color:var(--ink)}
+article b{color:var(--ink);font-weight:700}
+article a{color:var(--accent-ink);text-decoration:underline;text-underline-offset:2px}article a:hover{color:var(--accent)}
+.callout{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:5px;padding:12px 14px;background:#fff;margin:16px 0}.callout b{color:var(--ink)}
+ul.plain{margin:12px 0 18px;padding-left:20px}ul.plain li{font-size:14.5px;line-height:1.55;margin:0 0 10px;color:var(--ink2)}ul.plain b{color:var(--ink)}
+.right{border-left:1px solid var(--line);padding-left:14px}.right .navlabel{margin-top:0}
+.docs-nav>summary{display:none}.left details.docs-nav{border:0;border-radius:0;margin:0;background:none}
+@media(max-width:1000px){.layout{grid-template-columns:190px minmax(0,1fr)}.right{display:none}}
+@media(max-width:720px){.layout{display:block;padding:18px 12px}.left{position:static;display:block;margin-bottom:20px;border:1px solid var(--line);border-radius:5px}.left .back{display:none}.docs-nav>summary{display:block;padding:10px 12px;font-weight:700;font-size:13.5px;color:var(--ink);cursor:pointer;list-style:none}.docs-nav>summary::-webkit-details-marker{display:none}.docs-nav[open]>summary{border-bottom:1px solid var(--line)}.left .navlabel{padding:8px 12px 2px}.left a{display:block;padding:8px 12px;border:0;border-radius:0}.left a+a{border-top:1px solid #f0efeb}h1{font-size:25px}}
+</style><link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=21">
+</head><body class="site-docs site-faq">
+<nav class="top site-nav" aria-label="Main navigation">
+  <div class="in">
+    <a class="brand" href="index.html#leaderboard"><img src="logo.svg" alt=""><span class="brand-name">Social Simulation Arena</span><span class="by">by MIT</span></a>
+    <div class="page-tabs">
+      <a class="ptab" href="index.html#leaderboard">Leaderboard</a>
+      <a class="ptab" href="index.html#questions">Questions</a>
+      <a class="ptab" href="index.html#calendar">Calendar</a>
+      <a class="nav-live" href="index.html#leaderboard" title="The arena is running: questions are being called, locked and scored"><span class="livedot" aria-hidden="true"></span>Live</a>
+      <a class="item" href="background.html">Background</a>
+      <a class="item on" aria-current="page" href="faq.html">FAQ</a>
+      <a class="item" href="docs.html">Docs</a>
+      <a class="item" href="https://github.com/Social-Atoms/social-sim-arena" target="_blank" rel="noopener">GitHub</a>
+    </div>
+    <div class="right">
+      <a class="cta" href="index.html#submit">Enter the arena</a>
+    </div>
+  </div>
+</nav>
+<script>/* On a phone the tabs scroll sideways: the current one is brought into view, and the row fades on whichever side has more. */(function(){const row=document.querySelector(".page-tabs");if(!row)return;document.querySelectorAll(".page-tabs a.on").forEach(a=>a.scrollIntoView({inline:"center",block:"nearest"}));const edges=()=>{row.classList.toggle("at-start",row.scrollLeft<=1);row.classList.toggle("at-end",row.scrollLeft+row.clientWidth>=row.scrollWidth-1);};row.addEventListener("scroll",edges,{passive:true});window.addEventListener("resize",edges);edges();})();</script>
+<div class="page-scroll">
+<div class="layout"><aside class="left" aria-label="FAQ"><a class="back" href="index.html">← Back to arena</a><details class="docs-nav" open><summary>Sections</summary>
+<div class="navlabel">Comparison with related work</div>
+<a class="on" href="#static-benchmarks">Static benchmarks</a>
+<a href="#forecast-arenas">Forecast arenas</a>
+</details></aside>
+<article>
+<div class="eyebrow">FAQ</div>
+<h1>FAQ</h1>
+<p class="lede">Questions people ask about the arena. New here? <a href="background.html">Read the background story</a>. Entering a simulator? <a href="docs.html#quickstart">Read the docs</a>. To add a question, open a pull request against this page.</p>
+<hr class="rule">
+
+<h2 id="comparison-with-related-work">Comparison with related work</h2>
+
+<h3 id="static-benchmarks">Static benchmarks</h3>
+<p class="ask"><b>Eval-via-forecasting seems like a solid reality check. Could it expose biases we miss in standard benchmarks?</b></p>
+<p>Good question! I think this is exactly where forecasting can add something beyond standard benchmarks.</p>
+<p>First, it's <b>live</b>: forecasts are locked before the real outcome even exists, so models/agents can't benefit from contamination or memorization. The questions and scoring rules are pre-registered, and every forecast and result is public.</p>
+<p>Second, <b>the outcome is generated independently</b> of us and the model builders, through existing real-world surveys and trackers. We don't get to decide what the "right answer" should look like. Instead, the world resolves it for us.</p>
+<p>And importantly, <b>we don't only look at the overall average</b>. We also evaluate demographic breakdowns, so a simulator can't look good just by getting the topline right while systematically misrepresenting particular groups.</p>
+<p>One-liner: Does what we learn from standard benchmarks actually hold up in the real future?</p>
+<p>More on fair evaluation, anti-cheating, and responsible use in our upcoming technical report. The lock, the shared cutoff, and the public timestamp are also on the docs under <a href="docs.html#integrity">Integrity</a>.</p>
+
+<h3 id="forecast-arenas">Forecast arenas</h3>
+<p class="ask"><b>Where is the difference from a forecast arena in the general sense?</b></p>
+<p>The object of the benchmark is different.</p>
+<p>Forecasting benches such as ForecastBench, FutureX, and Prophet Arena mainly test whether a system has general future-prediction ability, so many of their tasks are scattered, one-off events.</p>
+<p>SSA watches a population that already exists and is measured again and again. The same American consumers' sentiment about the economy can be asked every week. The question itself may not change; the public does, as the world does. What we are really testing is whether a simulator has that population modeled.</p>
+<p>Some Season 0 tasks therefore look like ordinary forecasting: predict the next observation. Population structure is already in the score — joint <a href="docs.html#task-map">subgroup profiles</a>, not only the national number. As sources expand, we will add tasks that press harder on population modeling:</p>
+<ul class="plain">
+<li><b>New-question extrapolation.</b> The first time a public is asked something with no history of its own — for example, how far people would authorize an AI agent to complete banking, shopping, and medical appointments for them — the forecast has to come from what is already known about that population.</li>
+<li><b>Intervention / counterfactual.</b> Tell a subset of people that a policy would cost an ordinary family $240 a year, then forecast how their attitudes move.</li>
+<li><b>Subgroup prediction.</b> Not only the overall number, but 18–29-year-old women, highly educated men, urban renters, first-time voters.</li>
+<li><b>Cross-question / temporal consistency.</b> The same population, different questions, different weeks — do the forecasts stay coherent?</li>
+</ul>
+<p>These tasks test heterogeneity inside the population, and consistency across questions, times, and subgroups.</p>
+<p>If the only goal is generic future prediction, the thing you train may be a very strong forecaster, or even a very strong researcher. That is a different object from a simulator that can keep interpreting, generating, and predicting how a public behaves.</p>
+<p>On data, we use recurring public sources, look for partners who measure the same populations, and will keep collecting measurements of our own.</p>
+
+<p>Something still unclear? <a href="https://github.com/Social-Atoms/social-sim-arena/issues" target="_blank" rel="noopener">Open an issue</a>, or write to <a href="mailto:hi@social-atoms.org">hi@social-atoms.org</a>.</p>
+</article>
+<aside class="right" aria-label="On this page"><div class="navlabel">On this page</div>
+<div class="navlabel">Comparison with related work</div>
+<a href="#static-benchmarks">Static benchmarks</a>
+<a href="#forecast-arenas">Forecast arenas</a>
+</aside></div>
+</div>
+<script>
+if(window.matchMedia&&matchMedia('(max-width:720px)').matches){var dn=document.querySelector('.docs-nav'); if(dn) dn.open=false;}
+const sectionLinks=document.querySelectorAll('.left a[href^="#"]');
+const setActiveSection=(hash,renameTab=true)=>sectionLinks.forEach(link=>{ const on=link.hash===hash; link.classList.toggle('on',on); if(on&&renameTab) document.title=link.textContent.trim()+' · FAQ · Social Simulation Arena'; });
+let settleUntil=0;
+sectionLinks.forEach(link=>link.addEventListener('click',()=>{settleUntil=Date.now()+700;setActiveSection(link.hash);}));
+const syncActiveSection=()=>{ settleUntil=Date.now()+700; setActiveSection(location.hash||'#static-benchmarks'); };
+const arrive=()=>{ if(!location.hash) return; settleUntil=Date.now()+700; const el=document.getElementById(location.hash.slice(1)); if(el) el.scrollIntoView({behavior:'instant'}); };
+arrive(); window.addEventListener('load', ()=>requestAnimationFrame(arrive));
+const sections=[...sectionLinks].map(link=>document.getElementById(link.hash.slice(1))).filter(Boolean);
+const scroller=document.querySelector('.page-scroll')||document.scrollingElement;
+const followScroll=()=>{ if(Date.now()<settleUntil||!sections.length) return;
+  let current=sections[0]; for(const el of sections) if(el.getBoundingClientRect().top<=90) current=el;
+  if(scroller.scrollTop+scroller.clientHeight>=scroller.scrollHeight-2) current=sections[sections.length-1];
+  setActiveSection('#'+current.id,false); };
+let queued=false; const onScroll=()=>{ if(queued) return; queued=true;
+  requestAnimationFrame(()=>{queued=false;followScroll();}); };
+scroller.addEventListener('scroll',onScroll,{passive:true}); window.addEventListener('scroll',onScroll,{passive:true});
+window.addEventListener('hashchange',syncActiveSection);
+syncActiveSection();
+</script>
+<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments);};</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body></html>
