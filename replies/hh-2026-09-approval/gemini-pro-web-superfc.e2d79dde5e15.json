@@ -1,0 +1,15 @@
+{
+  "entrant": "gemini-pro-web-superfc",
+  "input_hash": "e2d79dde5e15",
+  "logged_at": "2026-09-19T15:53:49Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt_sha256": "b164697bf4f105bc046e95c55106fdfc4985016c30021abdc744a51c071f7cb6",
+  "reply": "1. Outside view: The historical values for Trump's approval rating in this Harvard CAPS/Harris series are quite stable, drifting within a narrow band. The provided history shows 46, 43, 42, 43, and 42. A naive extrapolation from the last known data point in the series (July's 42%) would suggest an approval rating hovering around 42-44% for subsequent releases. The historical month-to-month shift averages around 1 to 2 points. \n\n2. Inside view: Recent search results from September clearly reveal the findings of the August Harvard CAPS/Harris poll, which was released publicly on September 2. This wave showed Trump's approval at exactly 44%, a 2-point increase from July. Because the tracker rules stipulate that a wave's date is its public release date (the \"production stamp\"), the August wave carries a September 2 date. Since the forecaster's lock is September 19, the August poll occurred *before* the lock, meaning it has already technically \"slid into history.\" Therefore, the *next* wave to be published after the lock will be the September wave (expected in late September or early October). Given the structural stability of Trump's approval ratings and the recent mild upswing to 44%, the September poll is highly likely to remain closely anchored to 44%, perhaps fluctuating by 1 or 2 points due to standard polling noise and typical midterm election dynamics. \n\n3. Pre-mortem: If this forecast turns out wrong, it will likely be because the maintainer's update protocol treats the delayed fetching of the August poll as the \"next wave published\" in the dataset, effectively resolving the question precisely at 44.0. Alternatively, if it correctly targets the unreleased September poll, a sudden political shock prior to midterms could drag the number back down to 42 or push it up to 46. Correcting for this simply means centering directly on the known August 44.0 value\u2014since it is the best prior for September and the exact answer if August is scored\u2014and assigning a standard deviation capable of comfortably absorbing a 1 to 2 point shift.\n\n4. Calibrate: Month-to-month changes in this series historically range from 1 to 3 points (e.g., 46 to 43). Using a mean of 44.0 and a standard deviation of 1.5 appropriately covers a 68% confidence interval from 42.5 to 45.5, which aligns with historical volatility and firmly captures the likeliest outcomes. \n\n{\"mean\": 44.0, \"sd\": 1.5}",
+  "round_id": "hh-2026-09-approval",
+  "usage": {
+    "input_tokens": 2861,
+    "output_tokens": 577,
+    "thinking_tokens": 5316
+  },
+  "via": "direct"
+}

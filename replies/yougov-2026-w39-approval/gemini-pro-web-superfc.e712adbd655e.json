@@ -1,0 +1,15 @@
+{
+  "entrant": "gemini-pro-web-superfc",
+  "input_hash": "e712adbd655e",
+  "logged_at": "2026-09-19T15:53:32Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt_sha256": "5e482c79639847ff00c04a0abb013d83b6cb2e0c3265e8755087cd2615f5c85d",
+  "reply": "1. Outside view. What is the base rate here? What has this series done historically, how much does it move between releases, and what would a naive extrapolation predict?\nHistorically, this series hovers around 35-36%, with recent values ranging from 33.0% to 38.0%. Week-to-week changes are typically between 1 and 3 points. A naive extrapolation using the historical mean of these recent values would predict approximately 35.6%. \n\n2. Inside view. What is specific to this release -- events, timing, anything that would move this particular number away from the base rate? Say how much each is worth, in the unit of the series.\nWhile we are missing the overall approval numbers for the first few weeks of September, the provided search results give us a reliable proxy: approval among college graduates fell steadily from 34% in late August (when the overall rating was 36%) to 30% by the September 4-8 poll. Since college graduates make up roughly one-third of the general population, a 4-point drop in this demographic translates to an expected drop of about 1.3 points in the overall approval rating, assuming non-college graduates' approval remained relatively flat. This points to a slightly lower overall approval rating, likely dipping to 34% or 35%. Therefore, the inside view pushes the estimate down by about 0.5 to 1.0 points from the naive baseline, to roughly 34.8%.\n\n3. Pre-mortem. Assume your answer turns out badly wrong. Write the most likely reason, then correct for it.\nIf the prediction is badly wrong, it is likely because non-college educated voters\u2014who make up the bulk of Trump's support base\u2014either rallied to compensate for the drop among college graduates (pushing the number back up to 36-37%), or abandoned him in tandem due to broader national issues or fatigue, which could drag the overall number down to match his previous low of 33%. To correct for this uncertainty over the missing three weeks of data, the standard deviation should be widened slightly compared to what a single-week forecast would require.\n\n4. Calibrate. Your sd should be wide enough that the true value falls inside one sd about two thirds of the time. Check it against how much this series actually moves between releases.\nGiven the 3-point maximum week-to-week move in the recent history and the missing September data, an SD of 1.4 is appropriate. This creates a 1-SD interval of approximately 33.6 to 36.4, cleanly capturing the typical range of this tracker over the late summer while leaning slightly lower to reflect the observed drop among educated voters.\n\n{\"mean\": 35.0, \"sd\": 1.4}",
+  "round_id": "yougov-2026-w39-approval",
+  "usage": {
+    "input_tokens": 2884,
+    "output_tokens": 602,
+    "thinking_tokens": 3150
+  },
+  "via": "direct"
+}
