@@ -1,8 +1,10 @@
 # The weekly bundle: question file in, answer file out
 
-> **Status: historical.** The bundle route is not offered in Season 0; outside
-> entrants enter through an endpoint only (`docs/agent-api.md`). The format and
-> the tools below still work and are kept for the record.
+> **Status: historical.** The bundle route is not offered in Season 0. Outside
+> entrants enter through an endpoint the arena calls
+> (`docs/agent-api.md`) or by signing each forecast and posting it themselves
+> (`docs/signed-submissions.md`); this weekly file-exchange is neither. The
+> format and the tools below still work and are kept for the record.
 
 Reference for Route B. If you are starting from scratch, read
 [`docs/participant-quickstart.md`](participant-quickstart.md) first — it is the
