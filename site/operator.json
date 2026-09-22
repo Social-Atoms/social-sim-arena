@@ -1,23 +1,9 @@
 {
   "alerts": [
     {
-      "id": "civiqs-2026-w39-angry-share/glm-web",
-      "kind": "entrant_round",
-      "last_error": "provider transport failure",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
-      "state": "retryable_failure"
-    },
-    {
       "id": "civiqs-2026-w39-approval/glm-web",
       "kind": "entrant_round",
       "last_error": "provider timeout",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
-      "state": "retryable_failure"
-    },
-    {
-      "id": "civiqs-2026-w39-approval/grok-web-superfc",
-      "kind": "entrant_round",
-      "last_error": "provider call failed",
       "required_action": "retry on the next refresh; keep other entrants' successes",
       "state": "retryable_failure"
     },
@@ -30,13 +16,6 @@
     },
     {
       "id": "civiqs-2026-w39-econ-now/glm-web",
-      "kind": "entrant_round",
-      "last_error": "provider transport failure",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
-      "state": "retryable_failure"
-    },
-    {
-      "id": "civiqs-2026-w39-family-finances/glm-web",
       "kind": "entrant_round",
       "last_error": "provider timeout",
       "required_action": "retry on the next refresh; keep other entrants' successes",
@@ -59,7 +38,7 @@
     {
       "id": "civiqs-2026-w39-inflation-concern/glm-web-superfc",
       "kind": "entrant_round",
-      "last_error": "provider transport failure",
+      "last_error": "provider timeout",
       "required_action": "retry on the next refresh; keep other entrants' successes",
       "state": "retryable_failure"
     },
@@ -82,9 +61,9 @@
     "entrant_rounds": {
       "missed_lock": 0,
       "queued": 0,
-      "retryable_failure": 10,
+      "retryable_failure": 7,
       "running": 0,
-      "succeeded": 95,
+      "succeeded": 98,
       "terminal_failure": 0
     },
     "sources": {
@@ -98,11 +77,11 @@
   "entrant_round_states": [
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-angry-share/claude-sonnet-web.json"
+        "forecast=forecasts/civiqs-2026-w39-angry-share/claude-sonnet-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -115,11 +94,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-angry-share/claude-sonnet-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-angry-share/claude-sonnet-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -132,11 +111,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-angry-share/deepseek-pro-web.json"
+        "forecast=forecasts/civiqs-2026-w39-angry-share/deepseek-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -149,11 +128,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web-superfc",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-angry-share/deepseek-pro-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-angry-share/deepseek-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -166,11 +145,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-angry-share/gemini-pro-web.json"
+        "forecast=forecasts/civiqs-2026-w39-angry-share/gemini-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -183,11 +162,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-angry-share/gemini-pro-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-angry-share/gemini-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -199,27 +178,29 @@
       "state": "succeeded"
     },
     {
-      "alert": true,
+      "alert": false,
       "attempts": 1,
       "entrant": "glm-web",
       "estimated_spend": 0.01041,
-      "evidence": [],
-      "last_error": "provider transport failure",
+      "evidence": [
+        "forecast=sealed/civiqs-2026-w39-angry-share/glm-web.json"
+      ],
+      "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": "2026-09-22T22:55:58Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": null,
+      "required_action": "none",
       "round_id": "civiqs-2026-w39-angry-share",
       "route": "ppapi:app-us.ppapi.ai",
-      "state": "retryable_failure"
+      "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "glm-web-superfc",
-      "estimated_spend": 0.01041,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-angry-share/glm-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-angry-share/glm-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -232,11 +213,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-angry-share/gpt-5.6-luna-web.json"
+        "forecast=forecasts/civiqs-2026-w39-angry-share/gpt-5.6-luna-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -249,11 +230,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-angry-share/gpt-5.6-luna-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-angry-share/gpt-5.6-luna-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -266,11 +247,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-angry-share/grok-web.json"
+        "forecast=forecasts/civiqs-2026-w39-angry-share/grok-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -283,11 +264,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-angry-share/grok-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-angry-share/grok-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -300,11 +281,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "test-jay",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-angry-share/test-jay.json"
+        "forecast=forecasts/civiqs-2026-w39-angry-share/test-jay.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -317,11 +298,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "worldvac-base",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-angry-share/worldvac-base.json"
+        "forecast=forecasts/civiqs-2026-w39-angry-share/worldvac-base.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -334,11 +315,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "zhengzheng-agent",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-angry-share/zhengzheng-agent.json"
+        "forecast=forecasts/civiqs-2026-w39-angry-share/zhengzheng-agent.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -351,11 +332,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-approval/claude-sonnet-web.json"
+        "forecast=forecasts/civiqs-2026-w39-approval/claude-sonnet-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -368,11 +349,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-approval/claude-sonnet-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-approval/claude-sonnet-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -385,11 +366,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-approval/deepseek-pro-web.json"
+        "forecast=forecasts/civiqs-2026-w39-approval/deepseek-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -402,11 +383,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web-superfc",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-approval/deepseek-pro-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-approval/deepseek-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -419,11 +400,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-approval/gemini-pro-web.json"
+        "forecast=forecasts/civiqs-2026-w39-approval/gemini-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -436,11 +417,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-approval/gemini-pro-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-approval/gemini-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -460,7 +441,7 @@
       "last_error": "provider timeout",
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": "2026-09-22T22:55:58Z",
+      "next_retry": "2026-09-23T03:16:12Z",
       "required_action": "retry on the next refresh; keep other entrants' successes",
       "round_id": "civiqs-2026-w39-approval",
       "route": "ppapi:app-us.ppapi.ai",
@@ -468,11 +449,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "glm-web-superfc",
-      "estimated_spend": 0.01041,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-approval/glm-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-approval/glm-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -485,11 +466,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-approval/gpt-5.6-luna-web.json"
+        "forecast=forecasts/civiqs-2026-w39-approval/gpt-5.6-luna-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -502,11 +483,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-approval/gpt-5.6-luna-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-approval/gpt-5.6-luna-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -519,11 +500,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-approval/grok-web.json"
+        "forecast=forecasts/civiqs-2026-w39-approval/grok-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -535,27 +516,29 @@
       "state": "succeeded"
     },
     {
-      "alert": true,
+      "alert": false,
       "attempts": 1,
       "entrant": "grok-web-superfc",
       "estimated_spend": 0.07065,
-      "evidence": [],
-      "last_error": "provider call failed",
+      "evidence": [
+        "forecast=sealed/civiqs-2026-w39-approval/grok-web-superfc.json"
+      ],
+      "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": "2026-09-22T22:55:58Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "next_retry": null,
+      "required_action": "none",
       "round_id": "civiqs-2026-w39-approval",
       "route": "ppapi:app-us.ppapi.ai",
-      "state": "retryable_failure"
+      "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "test-jay",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-approval/test-jay.json"
+        "forecast=forecasts/civiqs-2026-w39-approval/test-jay.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -568,11 +551,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "worldvac-base",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-approval/worldvac-base.json"
+        "forecast=forecasts/civiqs-2026-w39-approval/worldvac-base.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -585,11 +568,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "zhengzheng-agent",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-approval/zhengzheng-agent.json"
+        "forecast=forecasts/civiqs-2026-w39-approval/zhengzheng-agent.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -602,11 +585,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-direction/claude-sonnet-web.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-direction/claude-sonnet-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -619,11 +602,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-direction/claude-sonnet-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-direction/claude-sonnet-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -636,11 +619,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-direction/deepseek-pro-web.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-direction/deepseek-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -653,11 +636,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web-superfc",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-direction/deepseek-pro-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-direction/deepseek-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -670,11 +653,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-direction/gemini-pro-web.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-direction/gemini-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -687,128 +670,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web-superfc",
-      "estimated_spend": 0.046875,
-      "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-direction/gemini-pro-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-23T14:00:00Z",
-      "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-direction",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": true,
-      "attempts": 1,
-      "entrant": "glm-web",
-      "estimated_spend": 0.01041,
-      "evidence": [],
-      "last_error": "provider transport failure",
-      "next_deadline": "2026-09-23T14:00:00Z",
-      "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": "2026-09-22T22:55:58Z",
-      "required_action": "retry on the next refresh; keep other entrants' successes",
-      "round_id": "civiqs-2026-w39-econ-direction",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "retryable_failure"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "glm-web-superfc",
-      "estimated_spend": 0.01041,
-      "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-direction/glm-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-23T14:00:00Z",
-      "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-direction",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "gpt-5.6-luna-web",
-      "estimated_spend": 0.046875,
-      "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-direction/gpt-5.6-luna-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-23T14:00:00Z",
-      "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-direction",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "gpt-5.6-luna-web-superfc",
-      "estimated_spend": 0.046875,
-      "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-direction/gpt-5.6-luna-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-23T14:00:00Z",
-      "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-direction",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "grok-web",
-      "estimated_spend": 0.07065,
-      "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-direction/grok-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-23T14:00:00Z",
-      "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-direction",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "grok-web-superfc",
-      "estimated_spend": 0.07065,
-      "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-direction/grok-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-23T14:00:00Z",
-      "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-direction",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "test-jay",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-direction/test-jay.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-direction/gemini-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -816,142 +682,6 @@
       "next_retry": null,
       "required_action": "none",
       "round_id": "civiqs-2026-w39-econ-direction",
-      "route": "participant:social-simulation-arena.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "worldvac-base",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-direction/worldvac-base.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-23T14:00:00Z",
-      "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-direction",
-      "route": "participant:worldvac-ssa-agent.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "zhengzheng-agent",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-direction/zhengzheng-agent.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-23T14:00:00Z",
-      "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-direction",
-      "route": "participant:zhengzhengqimen.top",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "claude-sonnet-web",
-      "estimated_spend": 0.07065,
-      "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-now/claude-sonnet-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-23T14:00:00Z",
-      "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-now",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "claude-sonnet-web-superfc",
-      "estimated_spend": 0.07065,
-      "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-now/claude-sonnet-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-23T14:00:00Z",
-      "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-now",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "deepseek-pro-web",
-      "estimated_spend": 0.010348,
-      "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-now/deepseek-pro-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-23T14:00:00Z",
-      "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-now",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "deepseek-pro-web-superfc",
-      "estimated_spend": 0.010348,
-      "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-now/deepseek-pro-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-23T14:00:00Z",
-      "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-now",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "gemini-pro-web",
-      "estimated_spend": 0.046875,
-      "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-now/gemini-pro-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-23T14:00:00Z",
-      "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-now",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "gemini-pro-web-superfc",
-      "estimated_spend": 0.046875,
-      "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-now/gemini-pro-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-23T14:00:00Z",
-      "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-now",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "succeeded"
     },
@@ -964,138 +694,155 @@
       "last_error": "provider transport failure",
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": "2026-09-22T22:55:58Z",
+      "next_retry": "2026-09-23T03:16:12Z",
       "required_action": "retry on the next refresh; keep other entrants' successes",
-      "round_id": "civiqs-2026-w39-econ-now",
+      "round_id": "civiqs-2026-w39-econ-direction",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "retryable_failure"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "glm-web-superfc",
-      "estimated_spend": 0.01041,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-now/glm-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-direction/glm-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-now",
+      "round_id": "civiqs-2026-w39-econ-direction",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-now/gpt-5.6-luna-web.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-direction/gpt-5.6-luna-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-now",
+      "round_id": "civiqs-2026-w39-econ-direction",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-now/gpt-5.6-luna-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-direction/gpt-5.6-luna-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-now",
+      "round_id": "civiqs-2026-w39-econ-direction",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-now/grok-web.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-direction/grok-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-now",
+      "round_id": "civiqs-2026-w39-econ-direction",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-now/grok-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-direction/grok-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-now",
+      "round_id": "civiqs-2026-w39-econ-direction",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "test-jay",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-now/test-jay.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-direction/test-jay.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-now",
+      "round_id": "civiqs-2026-w39-econ-direction",
       "route": "participant:social-simulation-arena.com",
       "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "worldvac-base",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-now/worldvac-base.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-direction/worldvac-base.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
-      "round_id": "civiqs-2026-w39-econ-now",
+      "round_id": "civiqs-2026-w39-econ-direction",
       "route": "participant:worldvac-ssa-agent.com",
       "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "zhengzheng-agent",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-econ-now/zhengzheng-agent.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-direction/zhengzheng-agent.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-23T14:00:00Z",
+      "next_lock": "2026-09-23T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "civiqs-2026-w39-econ-direction",
+      "route": "participant:zhengzhengqimen.top",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 0,
+      "entrant": "claude-sonnet-web",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=forecasts/civiqs-2026-w39-econ-now/claude-sonnet-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1103,108 +850,91 @@
       "next_retry": null,
       "required_action": "none",
       "round_id": "civiqs-2026-w39-econ-now",
-      "route": "participant:zhengzhengqimen.top",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "claude-sonnet-web",
-      "estimated_spend": 0.07065,
-      "evidence": [
-        "forecast=sealed/civiqs-2026-w39-family-finances/claude-sonnet-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-09-23T14:00:00Z",
-      "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "civiqs-2026-w39-family-finances",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-family-finances/claude-sonnet-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-now/claude-sonnet-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
-      "round_id": "civiqs-2026-w39-family-finances",
+      "round_id": "civiqs-2026-w39-econ-now",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-family-finances/deepseek-pro-web.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-now/deepseek-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
-      "round_id": "civiqs-2026-w39-family-finances",
+      "round_id": "civiqs-2026-w39-econ-now",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web-superfc",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-family-finances/deepseek-pro-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-now/deepseek-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
-      "round_id": "civiqs-2026-w39-family-finances",
+      "round_id": "civiqs-2026-w39-econ-now",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-family-finances/gemini-pro-web.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-now/gemini-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
-      "round_id": "civiqs-2026-w39-family-finances",
+      "round_id": "civiqs-2026-w39-econ-now",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "succeeded"
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-family-finances/gemini-pro-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-econ-now/gemini-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
-      "round_id": "civiqs-2026-w39-family-finances",
+      "round_id": "civiqs-2026-w39-econ-now",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "succeeded"
     },
@@ -1217,11 +947,266 @@
       "last_error": "provider timeout",
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": "2026-09-22T22:55:58Z",
+      "next_retry": "2026-09-23T03:16:12Z",
       "required_action": "retry on the next refresh; keep other entrants' successes",
-      "round_id": "civiqs-2026-w39-family-finances",
+      "round_id": "civiqs-2026-w39-econ-now",
       "route": "ppapi:app-us.ppapi.ai",
       "state": "retryable_failure"
+    },
+    {
+      "alert": false,
+      "attempts": 0,
+      "entrant": "glm-web-superfc",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=forecasts/civiqs-2026-w39-econ-now/glm-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-23T14:00:00Z",
+      "next_lock": "2026-09-23T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "civiqs-2026-w39-econ-now",
+      "route": "ppapi:app-us.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 0,
+      "entrant": "gpt-5.6-luna-web",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=forecasts/civiqs-2026-w39-econ-now/gpt-5.6-luna-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-23T14:00:00Z",
+      "next_lock": "2026-09-23T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "civiqs-2026-w39-econ-now",
+      "route": "ppapi:app-us.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 0,
+      "entrant": "gpt-5.6-luna-web-superfc",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=forecasts/civiqs-2026-w39-econ-now/gpt-5.6-luna-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-23T14:00:00Z",
+      "next_lock": "2026-09-23T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "civiqs-2026-w39-econ-now",
+      "route": "ppapi:app-us.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 0,
+      "entrant": "grok-web",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=forecasts/civiqs-2026-w39-econ-now/grok-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-23T14:00:00Z",
+      "next_lock": "2026-09-23T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "civiqs-2026-w39-econ-now",
+      "route": "ppapi:app-us.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 0,
+      "entrant": "grok-web-superfc",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=forecasts/civiqs-2026-w39-econ-now/grok-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-23T14:00:00Z",
+      "next_lock": "2026-09-23T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "civiqs-2026-w39-econ-now",
+      "route": "ppapi:app-us.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 0,
+      "entrant": "test-jay",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=forecasts/civiqs-2026-w39-econ-now/test-jay.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-23T14:00:00Z",
+      "next_lock": "2026-09-23T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "civiqs-2026-w39-econ-now",
+      "route": "participant:social-simulation-arena.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 0,
+      "entrant": "worldvac-base",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=forecasts/civiqs-2026-w39-econ-now/worldvac-base.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-23T14:00:00Z",
+      "next_lock": "2026-09-23T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "civiqs-2026-w39-econ-now",
+      "route": "participant:worldvac-ssa-agent.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 0,
+      "entrant": "zhengzheng-agent",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=forecasts/civiqs-2026-w39-econ-now/zhengzheng-agent.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-23T14:00:00Z",
+      "next_lock": "2026-09-23T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "civiqs-2026-w39-econ-now",
+      "route": "participant:zhengzhengqimen.top",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 0,
+      "entrant": "claude-sonnet-web",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=forecasts/civiqs-2026-w39-family-finances/claude-sonnet-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-23T14:00:00Z",
+      "next_lock": "2026-09-23T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "civiqs-2026-w39-family-finances",
+      "route": "ppapi:app-us.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 0,
+      "entrant": "claude-sonnet-web-superfc",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=forecasts/civiqs-2026-w39-family-finances/claude-sonnet-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-23T14:00:00Z",
+      "next_lock": "2026-09-23T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "civiqs-2026-w39-family-finances",
+      "route": "ppapi:app-us.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 0,
+      "entrant": "deepseek-pro-web",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=forecasts/civiqs-2026-w39-family-finances/deepseek-pro-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-23T14:00:00Z",
+      "next_lock": "2026-09-23T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "civiqs-2026-w39-family-finances",
+      "route": "ppapi:app-us.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 0,
+      "entrant": "deepseek-pro-web-superfc",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=forecasts/civiqs-2026-w39-family-finances/deepseek-pro-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-23T14:00:00Z",
+      "next_lock": "2026-09-23T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "civiqs-2026-w39-family-finances",
+      "route": "ppapi:app-us.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 0,
+      "entrant": "gemini-pro-web",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=forecasts/civiqs-2026-w39-family-finances/gemini-pro-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-23T14:00:00Z",
+      "next_lock": "2026-09-23T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "civiqs-2026-w39-family-finances",
+      "route": "ppapi:app-us.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 0,
+      "entrant": "gemini-pro-web-superfc",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=forecasts/civiqs-2026-w39-family-finances/gemini-pro-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-23T14:00:00Z",
+      "next_lock": "2026-09-23T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "civiqs-2026-w39-family-finances",
+      "route": "ppapi:app-us.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "glm-web",
+      "estimated_spend": 0.01041,
+      "evidence": [
+        "forecast=sealed/civiqs-2026-w39-family-finances/glm-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-09-23T14:00:00Z",
+      "next_lock": "2026-09-23T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "civiqs-2026-w39-family-finances",
+      "route": "ppapi:app-us.ppapi.ai",
+      "state": "succeeded"
     },
     {
       "alert": true,
@@ -1232,7 +1217,7 @@
       "last_error": "provider transport failure",
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": "2026-09-22T22:55:58Z",
+      "next_retry": "2026-09-23T03:16:12Z",
       "required_action": "retry on the next refresh; keep other entrants' successes",
       "round_id": "civiqs-2026-w39-family-finances",
       "route": "ppapi:app-us.ppapi.ai",
@@ -1240,11 +1225,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-family-finances/gpt-5.6-luna-web.json"
+        "forecast=forecasts/civiqs-2026-w39-family-finances/gpt-5.6-luna-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1257,11 +1242,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-family-finances/gpt-5.6-luna-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-family-finances/gpt-5.6-luna-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1274,11 +1259,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-family-finances/grok-web.json"
+        "forecast=forecasts/civiqs-2026-w39-family-finances/grok-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1291,11 +1276,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-family-finances/grok-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-family-finances/grok-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1308,11 +1293,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "test-jay",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-family-finances/test-jay.json"
+        "forecast=forecasts/civiqs-2026-w39-family-finances/test-jay.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1325,11 +1310,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "worldvac-base",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-family-finances/worldvac-base.json"
+        "forecast=forecasts/civiqs-2026-w39-family-finances/worldvac-base.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1342,11 +1327,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "zhengzheng-agent",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-family-finances/zhengzheng-agent.json"
+        "forecast=forecasts/civiqs-2026-w39-family-finances/zhengzheng-agent.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1359,11 +1344,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-inflation-concern/claude-sonnet-web.json"
+        "forecast=forecasts/civiqs-2026-w39-inflation-concern/claude-sonnet-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1376,11 +1361,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-inflation-concern/claude-sonnet-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-inflation-concern/claude-sonnet-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1393,11 +1378,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-inflation-concern/deepseek-pro-web.json"
+        "forecast=forecasts/civiqs-2026-w39-inflation-concern/deepseek-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1410,11 +1395,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web-superfc",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-inflation-concern/deepseek-pro-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-inflation-concern/deepseek-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1427,11 +1412,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-inflation-concern/gemini-pro-web.json"
+        "forecast=forecasts/civiqs-2026-w39-inflation-concern/gemini-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1444,11 +1429,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-inflation-concern/gemini-pro-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-inflation-concern/gemini-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1468,7 +1453,7 @@
       "last_error": "provider timeout",
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": "2026-09-22T22:55:58Z",
+      "next_retry": "2026-09-23T03:16:12Z",
       "required_action": "retry on the next refresh; keep other entrants' successes",
       "round_id": "civiqs-2026-w39-inflation-concern",
       "route": "ppapi:app-us.ppapi.ai",
@@ -1480,10 +1465,10 @@
       "entrant": "glm-web-superfc",
       "estimated_spend": 0.01041,
       "evidence": [],
-      "last_error": "provider transport failure",
+      "last_error": "provider timeout",
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": "2026-09-22T22:55:58Z",
+      "next_retry": "2026-09-23T03:16:12Z",
       "required_action": "retry on the next refresh; keep other entrants' successes",
       "round_id": "civiqs-2026-w39-inflation-concern",
       "route": "ppapi:app-us.ppapi.ai",
@@ -1491,11 +1476,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-inflation-concern/gpt-5.6-luna-web.json"
+        "forecast=forecasts/civiqs-2026-w39-inflation-concern/gpt-5.6-luna-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1508,11 +1493,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-inflation-concern/gpt-5.6-luna-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-inflation-concern/gpt-5.6-luna-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1525,11 +1510,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-inflation-concern/grok-web.json"
+        "forecast=forecasts/civiqs-2026-w39-inflation-concern/grok-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1542,11 +1527,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-inflation-concern/grok-web-superfc.json"
+        "forecast=forecasts/civiqs-2026-w39-inflation-concern/grok-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1559,11 +1544,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "test-jay",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-inflation-concern/test-jay.json"
+        "forecast=forecasts/civiqs-2026-w39-inflation-concern/test-jay.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1576,11 +1561,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "worldvac-base",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-inflation-concern/worldvac-base.json"
+        "forecast=forecasts/civiqs-2026-w39-inflation-concern/worldvac-base.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1593,11 +1578,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "zhengzheng-agent",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/civiqs-2026-w39-inflation-concern/zhengzheng-agent.json"
+        "forecast=forecasts/civiqs-2026-w39-inflation-concern/zhengzheng-agent.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1610,11 +1595,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/umich-2026-09-final/claude-sonnet-web.json"
+        "forecast=forecasts/umich-2026-09-final/claude-sonnet-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1627,11 +1612,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/umich-2026-09-final/claude-sonnet-web-superfc.json"
+        "forecast=forecasts/umich-2026-09-final/claude-sonnet-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1644,11 +1629,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/umich-2026-09-final/deepseek-pro-web.json"
+        "forecast=forecasts/umich-2026-09-final/deepseek-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1661,11 +1646,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web-superfc",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/umich-2026-09-final/deepseek-pro-web-superfc.json"
+        "forecast=forecasts/umich-2026-09-final/deepseek-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1678,11 +1663,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/umich-2026-09-final/gemini-pro-web.json"
+        "forecast=forecasts/umich-2026-09-final/gemini-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1695,11 +1680,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/umich-2026-09-final/gemini-pro-web-superfc.json"
+        "forecast=forecasts/umich-2026-09-final/gemini-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1719,7 +1704,7 @@
       "last_error": "provider transport failure",
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": "2026-09-22T22:55:58Z",
+      "next_retry": "2026-09-23T03:16:12Z",
       "required_action": "retry on the next refresh; keep other entrants' successes",
       "round_id": "umich-2026-09-final",
       "route": "ppapi:app-us.ppapi.ai",
@@ -1727,11 +1712,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "glm-web-superfc",
-      "estimated_spend": 0.01041,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/umich-2026-09-final/glm-web-superfc.json"
+        "forecast=forecasts/umich-2026-09-final/glm-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1744,11 +1729,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/umich-2026-09-final/gpt-5.6-luna-web.json"
+        "forecast=forecasts/umich-2026-09-final/gpt-5.6-luna-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1761,11 +1746,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/umich-2026-09-final/gpt-5.6-luna-web-superfc.json"
+        "forecast=forecasts/umich-2026-09-final/gpt-5.6-luna-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1778,11 +1763,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/umich-2026-09-final/grok-web.json"
+        "forecast=forecasts/umich-2026-09-final/grok-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1795,11 +1780,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/umich-2026-09-final/grok-web-superfc.json"
+        "forecast=forecasts/umich-2026-09-final/grok-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1812,11 +1797,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "test-jay",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/umich-2026-09-final/test-jay.json"
+        "forecast=forecasts/umich-2026-09-final/test-jay.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1829,11 +1814,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "worldvac-base",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/umich-2026-09-final/worldvac-base.json"
+        "forecast=forecasts/umich-2026-09-final/worldvac-base.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1846,11 +1831,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "zhengzheng-agent",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/umich-2026-09-final/zhengzheng-agent.json"
+        "forecast=forecasts/umich-2026-09-final/zhengzheng-agent.json"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1862,7 +1847,7 @@
       "state": "succeeded"
     }
   ],
-  "generated_at": "2026-09-22T17:17:30Z",
+  "generated_at": "2026-09-22T21:29:26Z",
   "source_states": [
     {
       "alert": false,
@@ -1870,7 +1855,7 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=12",
-        "sources/aaii/2026-09-22.html sha256=34d6ba0ac551dc24975eb05aed70dd6a6a47da820938b66a0659a61b198960d1"
+        "sources/aaii/2026-09-22.html sha256=1dc5131e8868e1d96edf1abe18bc1c3a7a6f9b2b2d3068d6733f0b87010555cb"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1887,13 +1872,13 @@
       "estimated_spend": 0.0,
       "evidence": [
         "civiqs/approve_president_trump_2025 (29 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.age-18-34 (24 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.age-35-49 (25 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.age-50-64 (25 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.age-65_ (25 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.education-College_Graduate (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.education-Non-College_Graduate (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.education-Postgraduate (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.gender-Female (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.gender-Male (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.party-Democrat (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.party-Independent (25 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.party-Republican (29 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.race-Black_or_African-American (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.race-Hispanic_Latino (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.race-Other (26 snapshots; newest 2026-09-18); civiqs/approve_president_trump_2025.race-White (24 snapshots; newest 2026-09-18); civiqs/describe_feeling_us (26 snapshots; newest 2026-09-18); civiqs/economy_family_retro (27 snapshots; newest 2026-09-18); civiqs/economy_us_direction (27 snapshots; newest 2026-09-18); civiqs/economy_us_now (27 snapshots; newest 2026-09-18); civiqs/inflation_impact (27 snapshots; newest 2026-09-18)",
-        "fetched_days=4.7; changed_days=11.7; fetch_budget=2; change_budget=4; stale_keys=approve_president_trump_2025,approve_president_trump_2025.age-18-34,approve_president_trump_2025.age-35-49,approve_president_trump_2025.age-50-64,approve_president_trump_2025.age-65_,approve_president_trump_2025.education-College_Graduate,approve_president_trump_2025.education-Non-College_Graduate,approve_president_trump_2025.education-Postgraduate,approve_president_trump_2025.gender-Female,approve_president_trump_2025.gender-Male,approve_president_trump_2025.party-Democrat,approve_president_trump_2025.party-Independent,approve_president_trump_2025.party-Republican,approve_president_trump_2025.race-Black_or_African-American,approve_president_trump_2025.race-Hispanic_Latino,approve_president_trump_2025.race-Other,approve_president_trump_2025.race-White,economy_family_retro,economy_us_direction,economy_us_now,inflation_impact; failing_keys=approve_president_trump_2025,approve_president_trump_2025.age-18-34,approve_president_trump_2025.age-35-49,approve_president_trump_2025.age-50-64,approve_president_trump_2025.age-65_,approve_president_trump_2025.education-College_Graduate,approve_president_trump_2025.education-Non-College_Graduate,approve_president_trump_2025.education-Postgraduate,approve_president_trump_2025.gender-Female,approve_president_trump_2025.gender-Male,approve_president_trump_2025.party-Democrat,approve_president_trump_2025.party-Independent,approve_president_trump_2025.party-Republican,approve_president_trump_2025.race-Black_or_African-American,approve_president_trump_2025.race-Hispanic_Latino,approve_president_trump_2025.race-Other,approve_president_trump_2025.race-White,describe_feeling_us,economy_family_retro,economy_us_direction,economy_us_now,inflation_impact",
+        "fetched_days=4.9; changed_days=11.9; fetch_budget=2; change_budget=4; stale_keys=approve_president_trump_2025,approve_president_trump_2025.age-18-34,approve_president_trump_2025.age-35-49,approve_president_trump_2025.age-50-64,approve_president_trump_2025.age-65_,approve_president_trump_2025.education-College_Graduate,approve_president_trump_2025.education-Non-College_Graduate,approve_president_trump_2025.education-Postgraduate,approve_president_trump_2025.gender-Female,approve_president_trump_2025.gender-Male,approve_president_trump_2025.party-Democrat,approve_president_trump_2025.party-Independent,approve_president_trump_2025.party-Republican,approve_president_trump_2025.race-Black_or_African-American,approve_president_trump_2025.race-Hispanic_Latino,approve_president_trump_2025.race-Other,approve_president_trump_2025.race-White,economy_family_retro,economy_us_direction,economy_us_now,inflation_impact; failing_keys=approve_president_trump_2025,approve_president_trump_2025.age-18-34,approve_president_trump_2025.age-35-49,approve_president_trump_2025.age-50-64,approve_president_trump_2025.age-65_,approve_president_trump_2025.education-College_Graduate,approve_president_trump_2025.education-Non-College_Graduate,approve_president_trump_2025.education-Postgraduate,approve_president_trump_2025.gender-Female,approve_president_trump_2025.gender-Male,approve_president_trump_2025.party-Democrat,approve_president_trump_2025.party-Independent,approve_president_trump_2025.party-Republican,approve_president_trump_2025.race-Black_or_African-American,approve_president_trump_2025.race-Hispanic_Latino,approve_president_trump_2025.race-Other,approve_president_trump_2025.race-White,describe_feeling_us,economy_family_retro,economy_us_direction,economy_us_now,inflation_impact",
         "live attempt failed; same-source archive used"
       ],
       "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/app",
       "next_deadline": "2026-09-23T14:00:00Z",
       "next_lock": "2026-09-23T14:00:00Z",
-      "next_retry": "2026-09-22T23:17:30Z",
+      "next_retry": "2026-09-23T03:29:26Z",
       "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
       "route": "ssa.series:civiqs",
       "source": "civiqs",
@@ -1936,8 +1921,8 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=-0.0; fetch_budget=2; change_budget=7",
-        "sources/sb_approval/2026-09-22.csv sha256=1771455424b599624bbb5513d4b0e28d3b4b0eb6c22f58248b40191a935837e5"
+        "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
+        "sources/sb_approval/2026-09-22.csv sha256=baab8c3a22b6b0267aec397eb3c07d7b25f7330a3493823df5b1dc8f28ee9b2f"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -1953,8 +1938,8 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=-0.0; fetch_budget=2; change_budget=10",
-        "sources/sb_generic/2026-09-22.csv sha256=406217b9a64a64a8fd4d3cf083acbde76ddf0f069ef89fd20120eedc80e13bc0"
+        "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=10",
+        "sources/sb_generic/2026-09-22.csv sha256=7271f3ab7a8243d2e0a2904f0580b9a3d43109b08bc1d751c52d9fbb6f3413ad"
       ],
       "last_error": null,
       "next_deadline": "2026-09-23T14:00:00Z",
@@ -2018,7 +2003,7 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=11.1; fetch_budget=3; change_budget=40",
+        "fetched_days=-0.0; changed_days=11.3; fetch_budget=3; change_budget=40",
         "sources/umich/2026-09-22.json sha256=512b0530509d9a05b7b938bf0b3920ecf0eaea70f59f1a648cd6d068d20bc0ad"
       ],
       "last_error": null,
