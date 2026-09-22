@@ -95,7 +95,14 @@ ARCHIVE = os.path.join(ROOT, "sources", "umichparty")
 BINARY = "pdftotext"
 # The docid of the August 2026 addenda, which is the only one that has ever
 # existed. Not a base to increment from: see the module docstring.
-DOCID = 81624
+DOCID = 81858   # the September 2026 addenda, stamped 2026-09-11
+# Docids expire. 81624 was this default and now answers 33 bytes of
+# `Sorry, I...` HTML rather than a PDF -- the refusal to archive a
+# non-PDF body caught it, but a default that cannot resolve makes
+# `fetch_latest()` with no argument a confusing failure rather than a
+# useful one. Pointing this at a new month is still a maintainer
+# passing `docid=`, read off `reports.php?year=<year>`, where the entry
+# is titled `Tables Addenda of Political Party Variable`.
 BASE = "https://data.sca.isr.umich.edu/fetchdoc.php"
 UA = "social-simulation-arena/1.0 (research benchmark; contact via repository)"
 TIMEOUT = 60

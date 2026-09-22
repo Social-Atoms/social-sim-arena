@@ -308,6 +308,36 @@ def _with_snapshot(r, series, history):
         refresh.read_lock_snapshot = saved
 
 
+def test_a_new_period_outranks_a_revision_of_an_older_one():
+    """Michigan's September 2026 party addenda adds 2026-09-01 *and* restates
+    2026-08-01 from 39.1 to 40.2. Both are releases the frozen history does
+    not contain, and on date order the revision comes first -- so the three
+    `umich-party-2026-09-*` rounds, which ask for "September 2026
+    preliminary", were about to be answered with the revised August number.
+
+    Three wrong answers that look finished is what this module exists to
+    refuse, so a strictly later period wins. The preliminary/final pair the
+    original rule was written for still works: a final round's snapshot holds
+    the preliminary for its own month and no later month exists yet, so there
+    is nothing strictly later and the revision is what it resolves against --
+    which `test_a_revision_resolves_the_final_round` covers.
+    """
+    import ssa.refresh as refresh
+    real = refresh.read_lock_snapshot
+    refresh.read_lock_snapshot = lambda rid: {
+        "history": [{"date": "2026-07-01", "value": 42.8},
+                    {"date": "2026-08-01", "value": 39.1}]}
+    try:
+        published = _series([("2026-07-01", 42.8), ("2026-08-01", 40.2),
+                             ("2026-09-01", 35.2)], "umich_party_dem")
+        r = _round(series="umich_party_dem")
+        res, why = resolve.resolve_round(r, published, T("2026-09-30T00:00:00Z"))
+        assert why is None, why
+        assert (res["observed_date"], res["value"]) == ("2026-09-01", 35.2), res
+    finally:
+        refresh.read_lock_snapshot = real
+
+
 if __name__ == "__main__":
     for name, fn in sorted(list(globals().items())):
         if name.startswith("test_") and callable(fn):
