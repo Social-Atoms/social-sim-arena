@@ -110,10 +110,22 @@ def _records(rows, value_cols, subgroup=None, pollster=None, population=None,
     subgroup/pollster/population/sponsor are matched case-insensitively;
     pollster and sponsor are substring matches, so 'YouGov' catches the
     sponsor-suffixed variants and 'Economist' catches 'The Economist'.
+
+    `subgroup` may be a tuple, which means "any of these". A publisher can
+    rename the cut it files a series under without changing what it measures,
+    and then one series is two labels -- see `yougov_rv_approval`, where the
+    Economist/YouGov registered-voter reading moved from the `Voters` cut to
+    the `All polls` cut on 2026-09-08 because the headline itself moved to an
+    RV base. Matching either keeps one series rather than starting a second
+    one with three observations in it. Exact matches, still: this widens which
+    label is accepted, never which population.
     """
+    wanted = ((subgroup,) if isinstance(subgroup, str) else tuple(subgroup)) \
+        if subgroup else ()
+    wanted = {w.strip().lower() for w in wanted}
     out = []
     for r in rows:
-        if subgroup and (r.get("subgroup") or "").strip().lower() != subgroup.lower():
+        if wanted and (r.get("subgroup") or "").strip().lower() not in wanted:
             continue
         if pollster and pollster.lower() not in (r.get("pollster") or "").lower():
             continue
