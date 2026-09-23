@@ -315,6 +315,15 @@ _CELLS = [
     ("yougov_strong_approval", "YouGov",          "Strong",      "A",
      "percent of US adults who strongly approve of Donald Trump's job "
      "performance"),
+    # The same cut on the base the publisher moved to on 2026-09-08. A second
+    # id rather than a changed one, exactly as `yougov_rv_approval` sits beside
+    # `yougov_approval`: `yougov-2026-w39-strong-approval` already locked
+    # against the adult base with fourteen sealed forecasts behind it, and
+    # repointing its series would have answered an adults question with a
+    # voters number -- one that was public eleven days before that lock.
+    ("yougov_rv_strong_approval", "YouGov",        "Strong",      "RV",
+     "percent of US registered voters who strongly approve of Donald Trump's "
+     "job performance"),
     ("yougov_weak_approval",   "YouGov",          "Weak",        "A",
      "percent of US adults who somewhat approve of Donald Trump's job "
      "performance"),
@@ -435,6 +444,26 @@ for _sid, _pollster, _sub, _pop, _asks in _CELLS:
 # the adult one (82 overlapping waves: mean +2.87, sd 1.26), which is both
 # large enough to matter and noisy enough that no offset repairs it.
 SERIES["yougov_rv_approval"]["filters"]["subgroup"] = ("Voters", "All polls")
+
+# **`yougov_rv_strong_approval` starts where the cut became published.**
+#
+# Economist/YouGov moved its whole 2026-09-08 wave to a registered-voter base,
+# this cut with it. The adult-base `Strong` series therefore ends at
+# 2026-08-29 with 83 observations, and the RV one would begin at 2025-02-03 --
+# a single stray row from a week the publisher happened to report RV, then
+# nineteen months of nothing, then the three real waves.
+#
+# Three points behind a nineteen-month hole is a series persistence survives
+# and trend and ewma do not, so the floor is the wave the cut became the
+# published one. The old adult-base history is not spliced on: `Strong` on RV
+# runs above `Strong` on A for the same reason the headline does, and this
+# series is small enough that the offset would be most of it.
+#
+# `yougov_weak_approval`, `yougov_cost_approval` and `yougov_trade_approval`
+# are left on the adult base deliberately. They stop at 2026-08-29 too, and no
+# round asks for any of them -- registering a stalled series is visible, while
+# repointing one nothing depends on is churn.
+SERIES["yougov_rv_strong_approval"]["filters"]["since"] = "09/06/2026"
 
 for _sid, _pollster, _pop, _cadence, _note in _HOUSES:
     SERIES[_sid] = {

@@ -231,6 +231,61 @@ def test_a_withdrawn_round_keeps_its_evidence_and_leaves_the_season():
           f"({len(legacy)} withdrawn)")
 
 
+def test_no_round_asks_for_a_base_its_publisher_stopped_reporting():
+    """Economist/YouGov moved its whole wave to a registered-voter base on
+    2026-09-08, and the adult-base cuts stop at 2026-08-29. A round left
+    pointing at one of them locks, releases and never scores -- which costs an
+    entrant a call and the season a row, so the six that did were removed
+    rather than left to rot in the resolver's report.
+
+    `yougov_strong_approval` itself is kept on the adult base, with no future
+    round on it. `yougov-2026-w39-strong-approval` already locked against that
+    base with fourteen sealed forecasts behind it, and repointing its series
+    would have answered an adults question with a voters number -- one that
+    was public eleven days before that lock. So the new base is a new id.
+    """
+    import datetime as dt
+    now = dt.datetime.now(dt.timezone.utc)
+
+    def at(value):
+        return dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+    rounds = reviewed()["rounds"]
+    stalled = {"yougov_approval", "yougov_strong_approval",
+               "yougov_weak_approval", "yougov_cost_approval",
+               "yougov_trade_approval"}
+    future = [r for r in rounds if at(r["lock_at"]) > now]
+    on_stalled = [r["round_id"] for r in future if r.get("series") in stalled]
+    assert not on_stalled, \
+        f"these lock against a base the publisher no longer reports: {on_stalled}"
+
+    strong = [r for r in future if "strong-approval" in r["round_id"]]
+    assert strong, "the strong rounds vanished; they were meant to be moved"
+    for r in strong:
+        assert r["series"] == "yougov_rv_strong_approval", r["round_id"]
+        assert "registered voters" in r["question"], r["round_id"]
+
+
+def test_a_removed_round_leaves_no_forecast_or_snapshot_behind():
+    """`validate_submission.py` requires the round of every forecast file to
+    exist in the manifest, so a removed round has to take its files with it.
+    The civiqs standalone-cell directories predate this and are excluded by
+    name rather than silently tolerated."""
+    import glob
+    ids = {r["round_id"] for r in reviewed()["rounds"]}
+    known_orphans = {"_example"}
+
+    def orphans(paths, name):
+        return sorted(o for o in (name(p) for p in paths)
+                      if o not in ids and o not in known_orphans
+                      and not o.startswith("civiqs-"))
+
+    assert not orphans(glob.glob(os.path.join(ROOT, "forecasts", "*")),
+                       os.path.basename)
+    assert not orphans(glob.glob(os.path.join(ROOT, "locks", "*.json")),
+                       lambda p: os.path.basename(p)[:-len(".json")])
+
+
 if __name__ == "__main__":
     tests = [value for name, value in sorted(globals().items())
              if name.startswith("test_")]

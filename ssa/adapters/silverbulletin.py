@@ -104,7 +104,7 @@ def fetch_text(url, timeout=TIMEOUT, retries=RETRIES):
 
 
 def _records(rows, value_cols, subgroup=None, pollster=None, population=None,
-             sponsor=None):
+             sponsor=None, since=None):
     """Poll-level records, newest last.
 
     subgroup/pollster/population/sponsor are matched case-insensitively;
@@ -120,6 +120,14 @@ def _records(rows, value_cols, subgroup=None, pollster=None, population=None,
     one with three observations in it. Exact matches, still: this widens which
     label is accepted, never which population.
     """
+    # `since` drops waves before a date. A publisher that changes the base of
+    # a cut leaves the old base's rows in the file, and they are not the same
+    # measurement: `Strong` on the registered-voter base carries one stray
+    # 2025-02-03 row and then nothing until 2026-09-06, so without a floor the
+    # series is three real points behind a nineteen-month hole -- persistence
+    # survives that, trend and ewma do not. The floor is the date the cut
+    # became the published one, stated in the series spec rather than inferred.
+    floor = _date(since) if isinstance(since, str) else since
     wanted = ((subgroup,) if isinstance(subgroup, str) else tuple(subgroup)) \
         if subgroup else ()
     wanted = {w.strip().lower() for w in wanted}
@@ -135,6 +143,8 @@ def _records(rows, value_cols, subgroup=None, pollster=None, population=None,
             continue
         start, end = _date(r.get("startdate")), _date(r.get("enddate"))
         if not start or not end or end < start:
+            continue
+        if floor and end < floor:
             continue
         values = {c: _float(r.get(c)) for c in value_cols}
         if any(v is None for v in values.values()):
@@ -158,7 +168,7 @@ def _records(rows, value_cols, subgroup=None, pollster=None, population=None,
 
 
 def approval_polls(subgroup="All polls", pollster=None, population=None, rows=None,
-                   sponsor=None):
+                   sponsor=None, since=None):
     """Trump approval. Same record shape as votehub.approval_polls, so this is a
     drop-in replacement wherever poll records are averaged.
 
@@ -167,7 +177,7 @@ def approval_polls(subgroup="All polls", pollster=None, population=None, rows=No
     """
     rows = rows if rows is not None else fetch(APPROVAL_URL)
     recs = _records(rows, ("approve", "disapprove"), subgroup, pollster, population,
-                    sponsor)
+                    sponsor, since)
     for r in recs:
         r["net"] = round(r["approve"] - r["disapprove"], 2)
         # `value` is the quantity the averaging code scores by default, and
@@ -179,12 +189,12 @@ def approval_polls(subgroup="All polls", pollster=None, population=None, rows=No
 
 
 def generic_ballot_polls(subgroup="All polls", pollster=None, population=None, rows=None,
-                         sponsor=None):
+                         sponsor=None, since=None):
     """2026 generic congressional ballot. Same record shape as
     votehub.generic_ballot_polls; `value` and `margin` are both D minus R."""
     rows = rows if rows is not None else fetch(GENERIC_URL)
     recs = _records(rows, ("dem", "rep", "net"), subgroup, pollster, population,
-                    sponsor)
+                    sponsor, since)
     for r in recs:
         r["value"] = r["net"]
         r["margin"] = r["net"]
