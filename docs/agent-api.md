@@ -36,9 +36,13 @@ public; leave it out to be reached through the `github` account.
 `github` is the account that owns the entrant: only it, or a maintainer, may
 later change this file or file forecasts under this id (checked against the
 base branch's copy, so the owner cannot be rewritten by its own pull request).
-A registration with no `route` is one of the arena's own entries (the
-baselines and the models it runs itself); Season 0 admits outside entrants
-through an endpoint only.
+A registration carries a `route`, a `keys` array, or neither. A `route` is this
+document's contract: the arena calls that endpoint. `keys` is the other way in
+-- the entrant signs each forecast with the private half and POSTs it on its
+own schedule, which is [signed-submissions.md](signed-submissions.md), and
+[generating-a-key.md](generating-a-key.md) is the participant's side of it.
+Neither one means an arena entry: the baselines and the models the arena runs
+itself. Season 0 admits outside entrants through either route.
 
 **There is no credential in the registration, and none anywhere else.** The
 arena authenticates itself to the endpoint by signing every request

@@ -671,10 +671,19 @@ def test_a_friday_series_answers_a_friday_round_with_fridays_value():
 
 
 def test_a_revised_old_point_would_be_mistaken_for_the_release():
-    """Why the archive exists, stated as a test. If the series carried Civiqs's
-    live history, the nightly revision of the last pre-lock Friday would be the
-    first (date, value) pair the freeze did not contain -- and the resolver
-    would score the round against a July number."""
+    """Why the archive exists, stated as a test -- narrowed on 2026-09-22.
+
+    If the series carried Civiqs's live history, the nightly revision of the
+    last pre-lock Friday would be a (date, value) pair the freeze does not
+    contain, and the resolver could score the round against a July number.
+
+    `resolve.candidate` now prefers a strictly later period over a revision of
+    an older one, so the half of this hazard that has a real release to compete
+    with is handled in the resolver: with the new Friday present it is the new
+    Friday that resolves the round. The archive is still what prevents the
+    other half, which this test now pins -- a revision arriving *before* the
+    real release has nothing later to lose to, and is still mistaken for it.
+    """
     def day(d, v):
         return {"date": d, "value": v}
     revised = {"s": [day("2026-07-24", -22.5), day("2026-07-31", -23.1),
@@ -691,7 +700,19 @@ def test_a_revised_old_point_would_be_mistaken_for_the_release():
             revised)
     finally:
         refresh.read_lock_snapshot = saved
-    assert point["date"] == "2026-08-07", \
+    # The real release is in the data, so the resolver is no longer fooled.
+    assert point == day("2026-08-14", -24.4), point
+
+    # But strip it, leaving only the revision, and the hazard is back: this is
+    # the case the archive prevents and the resolver cannot.
+    refresh.read_lock_snapshot = lambda rid: {"history": lock_hist}
+    try:
+        early, _ = resolve.candidate(
+            {"round_id": "r", "series": "s", "lock_at": "2026-08-12T22:00:00Z"},
+            {"s": revised["s"][:-1]})
+    finally:
+        refresh.read_lock_snapshot = saved
+    assert early["date"] == "2026-08-07", \
         "this is the failure the archive prevents, demonstrated"
 
 
