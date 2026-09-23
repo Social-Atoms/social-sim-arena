@@ -1785,10 +1785,26 @@ def prompt_hash(entrant, prompt, via=None):
 
 # Concurrency is capped per provider, not just globally. A single pool lets one
 # slow vendor hold every slot while fast ones idle, and it aims the whole burst
-# at whichever provider happens to have the most entrants -- five of the fifteen
-# models sit behind one gateway. Per-provider limits let the global worker count
-# rise without any one vendor seeing a spike.
-PROVIDER_LIMIT = int(os.environ.get("SSA_PROVIDER_LIMIT", "12"))
+# at whichever provider happens to have the most entrants.
+#
+# **The ceiling assumed the entrants were spread out, and they no longer are.**
+# Twelve was chosen when the roster reached five vendors and only a handful of
+# models shared one gateway, so it meant twelve concurrent requests *per
+# vendor*. Since the sponsor's gateway became the only route, `_provider_key`
+# correctly resolves every entrant to one budget -- twelve simultaneous
+# requests at a single host.
+#
+# That looked like the cause when the first run on the gateway lost all 24 of
+# claude-sonnet's forecasts to timeouts, 400s and dropped connections. **It was
+# measured and it is not.** Against the same host, the same entrant, the same
+# parameter block and a production-sized prompt, 4, 8 and 12 concurrent calls
+# all returned 12/12 with a median of 17s. Whatever cost those forecasts, it
+# was not the width of the pool, and the ceiling stays at twelve.
+#
+# It is read from the environment so that a deployment behind one gateway can
+# match it to what that gateway turns out to tolerate -- without another change
+# here, and without anyone having to guess again.
+PROVIDER_LIMIT = int(os.environ.get("SSA_PROVIDER_LIMIT") or "12")
 _provider_locks = {}
 _locks_guard = threading.Lock()
 

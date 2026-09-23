@@ -840,9 +840,16 @@ def job_still_due(r, path, now):
     return left >= BUY_BY_SECONDS
 
 # Concurrent provider calls when filing forecasts. Each job is one call to one
-# provider, and the eleven entered models spread across five providers, so this
-# is a handful of concurrent requests per vendor rather than a burst at one.
-FILING_WORKERS = int(os.environ.get("SSA_FILING_WORKERS", "20"))
+# provider. Twenty was a handful per vendor while the roster spread across
+# five of them; behind a single gateway it is the whole pool aimed at one host,
+# and what actually protects that host is `harness.PROVIDER_LIMIT`, which is
+# keyed on the endpoint rather than the model. Raise this to keep fast vendors
+# busy; lower `SSA_PROVIDER_LIMIT` to stop any one endpoint being flooded.
+#
+# `or` rather than a dict default, for the reason `MAX_SPEND` states below: a
+# workflow passing an unset repository variable delivers the empty string, and
+# int("") raises at import -- before a single forecast is filed.
+FILING_WORKERS = int(os.environ.get("SSA_FILING_WORKERS") or "20")
 
 # What one refresh may spend before it refuses to run.
 #

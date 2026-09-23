@@ -275,6 +275,65 @@ def test_only_a_failure_that_survives_six_hours_moves_an_entrant():
         assert harness.terminal_failure(RuntimeError(t)) is False, t
 
 
+def test_every_gateway_entrant_draws_on_one_concurrency_budget():
+    """Why `SSA_PROVIDER_LIMIT` had to come down when the gateway went live.
+
+    `_provider_key` is the endpoint, not the model, so entrants that used to
+    be several vendors' worth of separate allowances become one. That is the
+    correct behaviour -- a host does not gain capacity because we call it
+    under more names -- but it means the ceiling reads as "requests at this
+    host", and the number in the code was chosen when it read "requests at
+    each vendor".
+
+    Measuring that host at 4, 8 and 12 concurrent production-sized calls
+    returned 12/12 every time, so twelve is not too many for this gateway and
+    the default stands. The property still has to hold, because the number is
+    only meaningful if one host really is one budget -- and the day an
+    endpoint does start shedding requests, this is what says the ceiling
+    describes the endpoint and not the model.
+    """
+    table = {"claude-opus": "c-opus", "gpt-5.6-sol": "g-sol",
+             "deepseek-pro": "ds-pro"}
+    with Keys(SA_BASELINE_HS="pp-test"), \
+            Sponsored("claude-opus,gpt-5.6-sol,deepseek-pro", table=table):
+        keys = {m: harness._provider_key(m) for m in table}
+        assert len(set(keys.values())) == 1, (
+            "three protocols, one host, and they must share one budget: "
+            f"{keys}")
+        assert "gw.example" in next(iter(keys.values())), keys
+    # Separate vendors are separate budgets again the moment the gateway is
+    # not the route, so the ceiling is per-vendor exactly when it should be.
+    with Keys(ANTHROPIC_API_KEY="k", OPENAI_API_KEY="k"), Routed(None):
+        assert harness._provider_key("claude-opus") != \
+            harness._provider_key("gpt-5.6-sol")
+
+
+def test_an_unset_repository_variable_does_not_crash_the_ceiling():
+    """A workflow passing a variable nobody set delivers the empty string, and
+    `int("")` raises at import -- before one forecast is filed, taking the
+    whole run with it. `SSA_MAX_SPEND` already carries this scar; the two
+    concurrency knobs are read the same way now that the workflow passes
+    them."""
+    import importlib
+    saved = {k: os.environ.get(k)
+             for k in ("SSA_PROVIDER_LIMIT", "SSA_FILING_WORKERS")}
+    os.environ["SSA_PROVIDER_LIMIT"] = ""
+    os.environ["SSA_FILING_WORKERS"] = ""
+    try:
+        importlib.reload(harness)
+        assert harness.PROVIDER_LIMIT == 12
+        from ssa import refresh
+        importlib.reload(refresh)
+        assert refresh.FILING_WORKERS == 20
+    finally:
+        for k, v in saved.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+        importlib.reload(harness)
+
+
 def test_the_jobs_own_routing_variables_name_only_models_that_exist():
     """The deployment check, and the only test here that reads the job.
 
