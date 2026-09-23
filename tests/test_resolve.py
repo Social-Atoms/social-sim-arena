@@ -45,7 +45,8 @@ def test_refuses_when_no_new_release_has_landed():
     """The clock passing does not mean the number exists yet."""
     s = _series([("2026-06-01", 49.5), ("2026-07-01", 55.2)])
     res, why = resolve.resolve_round(_round(), s, T("2026-08-20T00:00:00Z"))
-    assert res is None and "no release has landed" in why, why
+    assert res is None, res
+    assert "has not published since the lock" in why, why
 
 
 def test_monthly_label_dates_do_not_confuse_the_answer():
@@ -242,7 +243,14 @@ def test_a_late_wave_resolves_its_own_round_and_moves_no_deadline():
         res, why = resolve.resolve_round(r, _series(
             [(p["date"], p["value"]) for p in before], "yougov_approval"),
             T("2026-09-23T14:00:00Z"))
-        assert res is None and "no release has landed" in why, why
+        # The refusal names the series and the day it stopped, because the
+        # bare wording sat in the six-hourly report for two weeks over rounds
+        # nobody could act on without looking up which source was meant.
+        assert res is None, res
+        assert "has not published since the lock" in why, why
+        assert "yougov_approval" in why, why
+        assert "2026-09-13" in why, why          # its newest observation
+        assert not resolve.handled_elsewhere(why), why
 
         # Thursday, the wave enters. The deadline passed on Monday, so the
         # refresh that picks it up must not write it into the frozen history.
@@ -306,6 +314,32 @@ def _with_snapshot(r, series, history):
         return R.candidate(r, series)
     finally:
         refresh.read_lock_snapshot = saved
+
+
+def test_a_round_another_resolver_owns_is_not_reported_as_stuck():
+    """Eight of the fourteen skips on 2026-09-22 were ranking and profile
+    rounds, which `refresh.build_ranking_leaderboard` and
+    `refresh.build_profile_leaderboard` resolve. The scalar resolver refuses
+    them on purpose, and listing those refusals beside the six rounds that
+    needed a person is why nobody read either -- a report that is more than
+    half noise is not a report.
+
+    `handled_elsewhere` is the line between the two, and it compares against
+    the constants `resolve_round` returns rather than the shape of a sentence.
+    """
+    assert resolve.handled_elsewhere(resolve.ELSEWHERE_RANKING)
+    assert resolve.handled_elsewhere(resolve.ELSEWHERE_PROFILE)
+    # Everything that means "stuck" must fall on the other side, including the
+    # two refusals a human actually has to act on.
+    for why in ("'umich_party_dem' has not published since the lock: its "
+                "newest observation is 2026-08-01 and the frozen history "
+                "already ends at 2026-08-01",
+                "observation 2026-09-11=-26.1 is already the resolution for "
+                "civiqs-2026-w37-approval; two rounds cannot share one answer",
+                "no series 'house_seats' in the pipeline; this round resolves "
+                "by hand, see its `resolve` field",
+                "release_at 2026-10-30T22:00 has not passed"):
+        assert not resolve.handled_elsewhere(why), why
 
 
 if __name__ == "__main__":

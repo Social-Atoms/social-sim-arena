@@ -123,8 +123,36 @@ def candidate(r, series):
              if (p["date"], p["value"]) not in seen
              and p["date"] >= first_frozen_date]
     if not after:
-        return None, "no release has landed in the series since the lock yet"
+        # Name the source and the day it stopped. The bare version of this
+        # message stood in the six-hourly report for a fortnight over rounds
+        # nobody could act on without first going to look up which series they
+        # meant and whether it had moved -- so nobody did. A report that costs
+        # a lookup to read does not get read.
+        newest = max(p["date"] for p in points)
+        return None, (
+            f"'{r['series']}' has not published since the lock: its newest "
+            f"observation is {newest} and the frozen history already ends at "
+            f"{first_frozen_date}")
     return after[0], None
+
+
+# The two refusals that mean "another resolver owns this round", as opposed to
+# "this round is stuck". They are constants because `main` has to tell the two
+# apart to report them differently, and matching on the shape of a sentence is
+# not a contract. `resolve_round` returns these verbatim.
+ELSEWHERE_RANKING = ("ranking round: resolved as an ordered list by "
+                     "refresh.build_ranking_leaderboard, not as a scalar")
+ELSEWHERE_PROFILE = ("profile round: resolved as a cell vector by "
+                     "refresh.build_profile_leaderboard, not as a scalar")
+HANDLED_ELSEWHERE = (ELSEWHERE_RANKING, ELSEWHERE_PROFILE)
+
+
+def handled_elsewhere(why):
+    """True when a skip means another resolver owns the round, not that it is
+    blocked. Eight of the fourteen skips on 2026-09-22 were these, and mixing
+    them into one list is why the six that needed a person went unread for two
+    weeks."""
+    return why in HANDLED_ELSEWHERE
 
 
 def resolve_round(r, series, now):
@@ -140,8 +168,7 @@ def resolve_round(r, series, now):
         # without this it would take the "no series in the pipeline" path and be
         # reported as a round awaiting a human -- every week, for every ranking
         # round, drowning the reports that do need one.
-        return None, ("ranking round: resolved as an ordered list by "
-                      "refresh.build_ranking_leaderboard, not as a scalar")
+        return None, ELSEWHERE_RANKING
     if profile_round.is_profile(r):
         # A profile round's answer is a sixteen-cell vector, and this function
         # only knows how to produce a scalar. Refusing here is not tidiness:
@@ -151,8 +178,7 @@ def resolve_round(r, series, now):
         # number as the profile's resolution, and blocking the scalar round
         # that the number actually answers. `refresh.build_profile_leaderboard`
         # reads the vector from the cells' own series instead.
-        return None, ("profile round: resolved as a cell vector by "
-                      "refresh.build_profile_leaderboard, not as a scalar")
+        return None, ELSEWHERE_PROFILE
     point, why = candidate(r, series)
     if point is None:
         return None, why
@@ -250,10 +276,23 @@ def main(argv=None):
                   f"(observed {res['observed_date']}, {res['series']})")
     else:
         print("\nnothing new to resolve")
-    if skipped:
-        print(f"\nnot resolved ({len(skipped)}), each needs a human or more time:")
-        for rid, why in skipped:
+    stuck = [(rid, why) for rid, why in skipped if not handled_elsewhere(why)]
+    elsewhere = [rid for rid, why in skipped if handled_elsewhere(why)]
+    if stuck:
+        print(f"\nNEEDS ATTENTION ({len(stuck)}) -- past release and not "
+              f"resolvable from the pipeline:")
+        for rid, why in stuck:
             print(f"  {rid:32s} {why}")
+    else:
+        print("\nnothing is stuck")
+    if elsewhere:
+        # Counted, not listed. These are ranking and profile rounds, which
+        # `refresh.build_ranking_leaderboard` and
+        # `refresh.build_profile_leaderboard` resolve; the scalar resolver was
+        # never going to. Printing them one per line put eight lines of noise
+        # above six lines of work.
+        print(f"\nresolved by another resolver, not by this one "
+              f"({len(elsewhere)}): {', '.join(sorted(elsewhere))}")
 
     if new and do_write:
         merged = write(resolved, new)
