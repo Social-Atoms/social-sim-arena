@@ -415,6 +415,27 @@ for _sid, _pollster, _sub, _pop, _asks in _CELLS:
         },
     }
 
+
+# **One series, two labels, because the publisher moved its own headline.**
+#
+# Through 2026-08-29 Economist/YouGov filed an adult-base headline under
+# `All polls` and a registered-voter reading under `Voters`. From the
+# 2026-09-08 wave the headline itself is RV, filed under `All polls`, and the
+# separate `Voters` cut stops -- 82 observations, then nothing.
+#
+# The registered-voter measurement did not stop; its label moved. Accepting
+# either cut keeps `yougov_rv_approval` one series of 85 observations on one
+# population, so persistence and trend still mean what they meant. The two
+# labels never overlap on a date, so nothing is doubled.
+#
+# `yougov_approval` gets no such rescue and is not given one: it is defined as
+# the adult base, that base is no longer published, and answering an adults
+# question with a voters number is the kind of wrong resolution this
+# repository refuses elsewhere. The RV reading sits about three points above
+# the adult one (82 overlapping waves: mean +2.87, sd 1.26), which is both
+# large enough to matter and noisy enough that no offset repairs it.
+SERIES["yougov_rv_approval"]["filters"]["subgroup"] = ("Voters", "All polls")
+
 for _sid, _pollster, _pop, _cadence, _note in _HOUSES:
     SERIES[_sid] = {
         "label": f"{_pollster.split('/')[0]} Trump approval",
