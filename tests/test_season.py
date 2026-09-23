@@ -266,24 +266,40 @@ def test_no_round_asks_for_a_base_its_publisher_stopped_reporting():
         assert "registered voters" in r["question"], r["round_id"]
 
 
-def test_a_removed_round_leaves_no_forecast_or_snapshot_behind():
-    """`validate_submission.py` requires the round of every forecast file to
-    exist in the manifest, so a removed round has to take its files with it.
-    The civiqs standalone-cell directories predate this and are excluded by
-    name rather than silently tolerated."""
+def test_every_filed_forecast_belongs_to_a_live_or_withdrawn_round():
+    """The other half of `questions/legacy/`, and the half a test can enforce.
+
+    That directory exists because `yougov-xtab-2026-09` was pulled in
+    September by deleting the round, its forecast and its snapshot in one
+    commit, leaving no trace the question had ever been asked. The rule since:
+    out of the season, says why, evidence stays.
+
+    `test_a_withdrawn_round_keeps_its_evidence_and_leaves_the_season` checks
+    the rounds that are in `legacy/`. It cannot check the ones that should be
+    and are not, so this walks the evidence from the other end: a `forecasts/`
+    directory with no live round and no withdrawal record is a round that was
+    deleted rather than withdrawn, which is the shape of that mistake.
+
+    Written first as its own opposite -- asserting a removed round must leave
+    *nothing* behind -- which codified the practice `legacy/` replaced. Kept
+    pointing the right way as a reminder that a convention with a test behind
+    it can still be reversed by someone who did not read the commit that set
+    it.
+    """
     import glob
-    ids = {r["round_id"] for r in reviewed()["rounds"]}
-    known_orphans = {"_example"}
+    live = {r["round_id"] for r in reviewed()["rounds"]}
+    withdrawn = {os.path.basename(path)[:-len(".json")]
+                 for path in glob.glob(os.path.join(
+                     ROOT, "questions", "legacy", "*.json"))}
+    # `_example` is the file a new entrant copies; it answers no round.
+    allowed = live | withdrawn | {"_example"}
+    stray = sorted(os.path.basename(d)
+                   for d in glob.glob(os.path.join(ROOT, "forecasts", "*"))
+                   if os.path.isdir(d) and os.path.basename(d) not in allowed)
+    assert not stray, (
+        "these hold filed forecasts but are in neither the season nor "
+        f"questions/legacy/: {stray}")
 
-    def orphans(paths, name):
-        return sorted(o for o in (name(p) for p in paths)
-                      if o not in ids and o not in known_orphans
-                      and not o.startswith("civiqs-"))
-
-    assert not orphans(glob.glob(os.path.join(ROOT, "forecasts", "*")),
-                       os.path.basename)
-    assert not orphans(glob.glob(os.path.join(ROOT, "locks", "*.json")),
-                       lambda p: os.path.basename(p)[:-len(".json")])
 
 
 if __name__ == "__main__":
