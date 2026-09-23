@@ -122,6 +122,25 @@ def candidate(r, series):
     after = [p for p in points
              if (p["date"], p["value"]) not in seen
              and p["date"] >= first_frozen_date]
+    # A new period outranks a revision of an old one. Both are "releases the
+    # frozen history does not contain", and until 2026-09-22 the earlier of
+    # them won on date order -- which was right while a vintage only ever
+    # revised the month it also reported.
+    #
+    # Michigan's September party addenda does both: it adds 2026-09-01 and
+    # restates 2026-08-01 from 39.1 to 40.2. The three
+    # `umich-party-2026-09-*` rounds ask for "September 2026 preliminary", and
+    # taking the earlier candidate answered them with the revised August
+    # number instead -- three wrong resolutions that would have looked
+    # finished, which `resolve.py` exists to refuse.
+    #
+    # The preliminary/final pair this rule was written for is untouched: a
+    # final round's snapshot already holds the preliminary for its own month
+    # and no later month exists yet, so there is nothing strictly later and
+    # the revision is still what it resolves against.
+    later = [p for p in after if p["date"] > first_frozen_date]
+    if later:
+        after = later
     if not after:
         # Name the source and the day it stopped. The bare version of this
         # message stood in the six-hourly report for a fortnight over rounds
