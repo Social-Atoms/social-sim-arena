@@ -58,7 +58,14 @@ jobs:
         run: |
           rm -rf .git .vercel
           npm i -g vercel@latest
-          url=$(vercel deploy --yes --token=${{ secrets.VERCEL_TOKEN }})
+          # --archive=tgz: the repository crossed Vercel's 15,000-file upload
+          # ceiling on 2026-09-22 and every preview has failed since with
+          # `files should NOT have more than 15000 items, received 15445`.
+          # Nothing was deleted to get under it -- the count is forecasts,
+          # frozen corpora and source archives, which only grow, and which the
+          # season exists to accumulate. One tarball instead of 15,445 requests
+          # is what Vercel's own error suggests.
+          url=$(vercel deploy --yes --archive=tgz --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
       - name: publish the preview link in the run summary
