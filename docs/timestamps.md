@@ -6,6 +6,8 @@ fine for a reader who trusts us and worth nothing to one who does not, **because
 we can rewrite that history.** Wrong trust model for the one claim everything
 rests on.
 
+The whole sealing path, keys included, is drawn in [sealbox.md](sealbox.md).
+
 Every locked round is now timestamped through
 [OpenTimestamps](https://opentimestamps.org). The proof lands in a Bitcoin block
 that nobody involved here controls.
