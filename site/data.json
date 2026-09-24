@@ -1,23 +1,23 @@
 {
- "generated_at": "2026-09-24T11:43:40Z",
+ "generated_at": "2026-09-24T17:17:36Z",
  "season": 0,
  "trackers": {
   "trump_approval_avg": {
    "label": "Trump approval, adjusted average",
    "unit": "% approve",
-   "value": 39.3,
-   "asof": "2026-09-19",
-   "delta_30d": -0.5,
-   "n_polls_window": 44,
+   "value": 39.2,
+   "asof": "2026-09-21",
+   "delta_30d": -0.7,
+   "n_polls_window": 40,
    "source": "Silver Bulletin poll database, house-effect adjusted here, 21-day window"
   },
   "generic_ballot_avg": {
    "label": "2026 generic ballot, adjusted average",
    "unit": "margin, Dem minus Rep",
-   "value": 8.3,
-   "asof": "2026-09-19",
-   "delta_30d": 2.7,
-   "n_polls_window": 26,
+   "value": 8.4,
+   "asof": "2026-09-21",
+   "delta_30d": 2.5,
+   "n_polls_window": 25,
    "source": "Silver Bulletin poll database, house-effect adjusted here, 21-day window"
   },
   "yougov_approval": {
@@ -35847,7 +35847,7 @@
    "horizon_days": 2.0,
    "batch_id": "batch-2026-09-21",
    "domain": "consumer",
-   "status": "locked",
+   "status": "resolved",
    "history_source": "window snapshot",
    "baselines": {
     "persistence": {
@@ -35872,6 +35872,13 @@
     }
    },
    "scoreable": true,
+   "resolution": {
+    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
+    "observed_date": "2026-09-23",
+    "resolved_at": "2026-09-24T17:17:12Z",
+    "series": "aaii_bull_bear_spread",
+    "value": -15.4
+   },
    "n_forecasts": 21,
    "forecasts": {
     "apodex-futureflow": {
@@ -36000,7 +36007,90 @@
      "mean": 0.0,
      "sd": 1.0
     }
-   }
+   },
+   "scores": {
+    "apodex-futureflow": {
+     "crps": 1.682,
+     "skill": 0.7962
+    },
+    "claude-sonnet-web-superfc": {
+     "crps": 3.0981,
+     "skill": 0.6246
+    },
+    "claude-sonnet-web": {
+     "crps": 2.9866,
+     "skill": 0.6382
+    },
+    "climatology": {
+     "crps": 7.4669,
+     "skill": 0.0953
+    },
+    "crowd": {
+     "crps": 3.3598,
+     "skill": 0.5929
+    },
+    "deepseek-pro-web-superfc": {
+     "crps": 4.0925,
+     "skill": 0.5042
+    },
+    "deepseek-pro-web": {
+     "crps": 4.7968,
+     "skill": 0.4188
+    },
+    "ewma": {
+     "crps": 3.1304,
+     "skill": 0.6207
+    },
+    "gemini-pro-web-superfc": {
+     "crps": 2.6701,
+     "skill": 0.6765
+    },
+    "gemini-pro-web": {
+     "crps": 3.2709,
+     "skill": 0.6037
+    },
+    "glm-web-superfc": {
+     "crps": 3.7577,
+     "skill": 0.5447
+    },
+    "glm-web": {
+     "crps": 2.7937,
+     "skill": 0.6615
+    },
+    "gpt-5.6-luna-web-superfc": {
+     "crps": 3.5013,
+     "skill": 0.5758
+    },
+    "gpt-5.6-luna-web": {
+     "crps": 2.4846,
+     "skill": 0.699
+    },
+    "grok-web-superfc": {
+     "crps": 3.9202,
+     "skill": 0.525
+    },
+    "grok-web": {
+     "crps": 3.4025,
+     "skill": 0.5878
+    },
+    "persistence": {
+     "crps": 8.2537,
+     "skill": 0.0
+    },
+    "trend": {
+     "crps": 3.8711,
+     "skill": 0.531
+    },
+    "worldvac-base": {
+     "crps": 8.2537,
+     "skill": 0.0
+    },
+    "zhengzheng-agent": {
+     "crps": 14.8358,
+     "skill": -0.7975
+    }
+   },
+   "persistence_crps": 8.2537
   },
   {
    "round_id": "civiqs-2026-w39-angry-share",
@@ -38330,6 +38420,7 @@
     "trends_share_disney"
    ],
    "status": "open",
+   "history_source": "window snapshot",
    "baselines": null,
    "scoreable": true,
    "profile": {
@@ -38354,6 +38445,7 @@
      "trends_share_netflix": 57,
      "trends_share_disney": 57
     },
+    "history_source": "window snapshot",
     "baselines": {
      "persistence": {
       "trends_share_tesla": {
@@ -38384,10 +38476,10 @@
      }
     }
    },
-   "n_forecasts": 1,
+   "n_forecasts": 15,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "profile",
      "cells_n": 5,
      "cells": {
@@ -38412,6 +38504,62 @@
        "sd": 1.5
       }
      }
+    },
+    "claude-sonnet-web-superfc": {
+     "filed": "2026-09-24T17:09:26Z",
+     "sealed": true
+    },
+    "claude-sonnet-web": {
+     "filed": "2026-09-24T17:09:26Z",
+     "sealed": true
+    },
+    "deepseek-pro-web-superfc": {
+     "filed": "2026-09-24T17:13:59Z",
+     "sealed": true
+    },
+    "deepseek-pro-web": {
+     "filed": "2026-09-24T17:13:45Z",
+     "sealed": true
+    },
+    "gemini-pro-web-superfc": {
+     "filed": "2026-09-24T17:09:45Z",
+     "sealed": true
+    },
+    "gemini-pro-web": {
+     "filed": "2026-09-24T17:09:33Z",
+     "sealed": true
+    },
+    "glm-web": {
+     "filed": "2026-09-24T17:14:33Z",
+     "sealed": true
+    },
+    "gpt-5.6-luna-web-superfc": {
+     "filed": "2026-09-24T17:08:47Z",
+     "sealed": true
+    },
+    "gpt-5.6-luna-web": {
+     "filed": "2026-09-24T17:08:38Z",
+     "sealed": true
+    },
+    "grok-web-superfc": {
+     "filed": "2026-09-24T17:11:19Z",
+     "sealed": true
+    },
+    "grok-web": {
+     "filed": "2026-09-24T17:11:24Z",
+     "sealed": true
+    },
+    "test-jay": {
+     "filed": "2026-09-24T17:08:15Z",
+     "sealed": true
+    },
+    "worldvac-base": {
+     "filed": "2026-09-24T17:08:15Z",
+     "sealed": true
+    },
+    "zhengzheng-agent": {
+     "filed": "2026-09-24T17:08:35Z",
+     "sealed": true
     }
    }
   },
@@ -38442,6 +38590,7 @@
     "week_end": "2026-10-04",
     "rbo_p": 0.9,
     "exclusions": "main_page_and_namespaces_v1",
+    "history_source": "window snapshot",
     "history_weeks": 5,
     "baselines": {
      "persistence": {
@@ -38462,10 +38611,10 @@
      }
     }
    },
-   "n_forecasts": 1,
+   "n_forecasts": 12,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "ranking",
      "items_n": 10,
      "items": [
@@ -38480,6 +38629,50 @@
       "Robert_Kraft",
       "Neatsville,_Kentucky"
      ]
+    },
+    "claude-sonnet-web-superfc": {
+     "filed": "2026-09-24T17:10:08Z",
+     "sealed": true
+    },
+    "claude-sonnet-web": {
+     "filed": "2026-09-24T17:08:56Z",
+     "sealed": true
+    },
+    "gemini-pro-web-superfc": {
+     "filed": "2026-09-24T17:13:14Z",
+     "sealed": true
+    },
+    "glm-web": {
+     "filed": "2026-09-24T17:12:19Z",
+     "sealed": true
+    },
+    "gpt-5.6-luna-web-superfc": {
+     "filed": "2026-09-24T17:09:33Z",
+     "sealed": true
+    },
+    "gpt-5.6-luna-web": {
+     "filed": "2026-09-24T17:09:25Z",
+     "sealed": true
+    },
+    "grok-web-superfc": {
+     "filed": "2026-09-24T17:12:07Z",
+     "sealed": true
+    },
+    "grok-web": {
+     "filed": "2026-09-24T17:10:31Z",
+     "sealed": true
+    },
+    "test-jay": {
+     "filed": "2026-09-24T17:09:26Z",
+     "sealed": true
+    },
+    "worldvac-base": {
+     "filed": "2026-09-24T17:09:27Z",
+     "sealed": true
+    },
+    "zhengzheng-agent": {
+     "filed": "2026-09-24T17:09:48Z",
+     "sealed": true
     }
    }
   },
@@ -42157,7 +42350,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -42409,7 +42602,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -42661,7 +42854,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -42913,7 +43106,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -43028,25 +43221,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.28,
      "sd": 1.0
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.72,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.5,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.9,
      "sd": 1.21
@@ -43096,25 +43289,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -36.7,
      "sd": 2.67
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -39.23,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -41.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -41.79,
      "sd": 1.54
@@ -43164,25 +43357,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 56.35,
      "sd": 2.66
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 59.58,
      "sd": 1.14
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 60.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 59.75,
      "sd": 2.27
@@ -43369,7 +43562,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -43522,7 +43715,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "profile",
      "cells_n": 5,
      "cells": {
@@ -43600,7 +43793,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "ranking",
      "items_n": 10,
      "items": [
@@ -43661,25 +43854,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 3.27,
      "sd": 1.0
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 3.57,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 3.58,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 3.8,
      "sd": 1.8
@@ -43729,25 +43922,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 3.0,
      "sd": 1.0
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 3.21,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 3.19,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 3.32,
      "sd": 1.8
@@ -43797,25 +43990,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.28,
      "sd": 1.0
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.72,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.5,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.93,
      "sd": 1.3
@@ -43865,25 +44058,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -32.66,
      "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -34.43,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -36.6,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -36.18,
      "sd": 2.87
@@ -43933,25 +44126,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -29.7,
      "sd": 1.06
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -30.61,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -30.9,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -31.99,
      "sd": 1.3
@@ -44138,7 +44331,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -44291,7 +44484,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "profile",
      "cells_n": 5,
      "cells": {
@@ -44369,7 +44562,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "ranking",
      "items_n": 10,
      "items": [
@@ -44567,7 +44760,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -44720,7 +44913,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "profile",
      "cells_n": 5,
      "cells": {
@@ -44798,7 +44991,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "ranking",
      "items_n": 10,
      "items": [
@@ -44859,25 +45052,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 43.2,
      "sd": 1.64
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 42.84,
      "sd": 1.5
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 42.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 41.09,
      "sd": 3.98
@@ -45064,7 +45257,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -45155,23 +45348,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 8.31,
+     "mean": 8.38,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 9.18,
-     "sd": 1.85,
+     "mean": 9.45,
+     "sd": 1.83,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 7.51,
+     "mean": 7.64,
      "sd": 1.0,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 5.99,
-     "sd": 1.12,
+     "mean": 6.08,
+     "sd": 1.18,
      "method": "climatology"
     }
    },
@@ -45227,10 +45420,10 @@
      "sd": 2.0
     },
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
-     "mean": 5.99,
-     "sd": 1.12
+     "mean": 6.08,
+     "sd": 1.18
     },
     "crowd": {
      "filed": "2026-09-11T14:55Z",
@@ -45263,9 +45456,9 @@
      "sd": 0.8
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
-     "mean": 7.51,
+     "mean": 7.64,
      "sd": 1.0
     },
     "gemini-flash-zeroshot": {
@@ -45353,9 +45546,9 @@
      "sd": 1.2
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
-     "mean": 8.31,
+     "mean": 8.38,
      "sd": 1.5
     },
     "qwen-3.7-zeroshot": {
@@ -45383,10 +45576,10 @@
      "sd": 1.8
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
-     "mean": 9.18,
-     "sd": 1.85
+     "mean": 9.45,
+     "sd": 1.83
     }
    }
   },
@@ -46488,25 +46681,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -22.25,
      "sd": 1.98
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -25.92,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -27.7,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -27.55,
      "sd": 2.05
@@ -46556,25 +46749,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -32.66,
      "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -34.43,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -36.6,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -35.68,
      "sd": 2.66
@@ -46624,25 +46817,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -29.7,
      "sd": 1.06
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -30.61,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -30.9,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -31.71,
      "sd": 1.21
@@ -46692,25 +46885,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -22.25,
      "sd": 1.98
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -25.92,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -27.7,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -28.12,
      "sd": 2.21
@@ -46760,25 +46953,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -36.7,
      "sd": 2.67
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -39.23,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -41.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -42.55,
      "sd": 1.66
@@ -46828,25 +47021,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 56.35,
      "sd": 2.66
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 59.58,
      "sd": 1.14
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 60.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 59.83,
      "sd": 2.45
@@ -46896,25 +47089,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.28,
      "sd": 1.0
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.72,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.5,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.93,
      "sd": 1.39
@@ -46964,25 +47157,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -22.25,
      "sd": 1.98
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -25.92,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -27.7,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -28.12,
      "sd": 2.35
@@ -47032,25 +47225,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -36.7,
      "sd": 2.67
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -39.23,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -41.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -42.55,
      "sd": 1.77
@@ -47100,25 +47293,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -32.66,
      "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -34.43,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -36.6,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -36.18,
      "sd": 3.06
@@ -47168,25 +47361,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -29.7,
      "sd": 1.06
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -30.61,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -30.9,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -31.99,
      "sd": 1.39
@@ -47236,25 +47429,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 56.35,
      "sd": 2.66
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 59.58,
      "sd": 1.14
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 60.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 59.83,
      "sd": 2.61
@@ -47304,25 +47497,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.28,
      "sd": 1.0
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.72,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.5,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.93,
      "sd": 1.47
@@ -47372,25 +47565,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -22.25,
      "sd": 1.98
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -25.92,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -27.7,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -28.12,
      "sd": 2.49
@@ -47440,25 +47633,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -36.7,
      "sd": 2.67
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -39.23,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -41.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -42.55,
      "sd": 1.87
@@ -47508,25 +47701,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -32.66,
      "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -34.43,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -36.6,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -36.18,
      "sd": 3.24
@@ -47576,25 +47769,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -29.7,
      "sd": 1.06
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -30.61,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -30.9,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -31.99,
      "sd": 1.47
@@ -47644,25 +47837,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 56.35,
      "sd": 2.66
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 59.58,
      "sd": 1.14
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 60.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 59.83,
      "sd": 2.76
@@ -47750,7 +47943,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "profile",
      "cells_n": 5,
      "cells": {
@@ -47828,7 +48021,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "ranking",
      "items_n": 10,
      "items": [
@@ -47889,25 +48082,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.28,
      "sd": 1.0
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.72,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.5,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 29.93,
      "sd": 1.55
@@ -47957,25 +48150,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -22.25,
      "sd": 1.98
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -25.92,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -27.7,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -28.12,
      "sd": 2.62
@@ -48025,25 +48218,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -36.7,
      "sd": 2.67
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -39.23,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -41.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -42.55,
      "sd": 1.97
@@ -48093,25 +48286,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -32.66,
      "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -34.43,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -36.6,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -36.18,
      "sd": 3.41
@@ -48161,25 +48354,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -29.7,
      "sd": 1.06
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -30.61,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -30.9,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": -31.99,
      "sd": 1.55
@@ -48229,25 +48422,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 56.35,
      "sd": 2.66
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 59.58,
      "sd": 1.14
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 60.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 59.83,
      "sd": 2.91
@@ -48434,7 +48627,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -48867,25 +49060,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 39.42,
      "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 37.34,
      "sd": 1.25
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 35.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 36.67,
      "sd": 2.9
@@ -48935,25 +49128,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 19.33,
      "sd": 2.52
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 19.28,
      "sd": 2.5
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 17.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 12.97,
      "sd": 1.15
@@ -49003,25 +49196,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 39.42,
      "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 37.34,
      "sd": 1.25
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 35.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 36.33,
      "sd": 3.14
@@ -49071,25 +49264,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 19.33,
      "sd": 2.52
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 19.28,
      "sd": 2.5
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 17.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 10.3,
      "sd": 1.25
@@ -49139,25 +49332,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 39.42,
      "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 37.34,
      "sd": 1.25
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 35.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 36.13,
      "sd": 3.37
@@ -49207,25 +49400,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 19.33,
      "sd": 2.52
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 19.28,
      "sd": 2.5
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 17.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 8.77,
      "sd": 1.34
@@ -49275,25 +49468,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 39.42,
      "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 37.34,
      "sd": 1.25
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 35.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 36.13,
      "sd": 3.58
@@ -49343,25 +49536,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 19.33,
      "sd": 2.52
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 19.28,
      "sd": 2.5
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 17.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 8.77,
      "sd": 1.43
@@ -49411,25 +49604,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 39.42,
      "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 37.34,
      "sd": 1.25
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 35.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 36.13,
      "sd": 3.78
@@ -49479,25 +49672,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 19.33,
      "sd": 2.52
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 19.28,
      "sd": 2.5
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 17.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 8.77,
      "sd": 1.51
@@ -49684,7 +49877,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -49799,25 +49992,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 39.42,
      "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 37.34,
      "sd": 1.25
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 35.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 36.13,
      "sd": 3.97
@@ -49867,25 +50060,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 19.33,
      "sd": 2.52
     },
     "ewma": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 19.28,
      "sd": 2.5
     },
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 17.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "number",
      "mean": 8.77,
      "sd": 1.58
@@ -50072,7 +50265,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-24T11:41Z",
+     "filed": "2026-09-24T17:07Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -51458,25 +51651,31 @@
   }
  },
  "leaderboard": {
-  "resolved_rounds": 59,
+  "resolved_rounds": 60,
   "entries": [
    {
+    "entrant": "apodex-futureflow",
+    "rounds": 1,
+    "mean_crps": 1.682,
+    "mean_skill": 0.796
+   },
+   {
     "entrant": "persistence",
-    "rounds": 50,
-    "mean_crps": 2.011,
+    "rounds": 51,
+    "mean_crps": 2.134,
     "mean_skill": 0.0
    },
    {
     "entrant": "gemini-pro-web",
-    "rounds": 43,
-    "mean_crps": 1.63,
-    "mean_skill": -0.22
+    "rounds": 44,
+    "mean_crps": 1.667,
+    "mean_skill": -0.201
    },
    {
     "entrant": "claude-sonnet-web",
-    "rounds": 43,
-    "mean_crps": 1.538,
-    "mean_skill": -0.236
+    "rounds": 44,
+    "mean_crps": 1.571,
+    "mean_skill": -0.216
    },
    {
     "entrant": "qwen-3.7",
@@ -51486,15 +51685,21 @@
    },
    {
     "entrant": "gpt-5.6-luna-web-superfc",
-    "rounds": 40,
-    "mean_crps": 1.8,
-    "mean_skill": -0.301
+    "rounds": 41,
+    "mean_crps": 1.842,
+    "mean_skill": -0.28
    },
    {
     "entrant": "claude-sonnet-web-superfc",
-    "rounds": 43,
-    "mean_crps": 1.587,
-    "mean_skill": -0.314
+    "rounds": 44,
+    "mean_crps": 1.622,
+    "mean_skill": -0.292
+   },
+   {
+    "entrant": "worldvac-base",
+    "rounds": 3,
+    "mean_crps": 3.734,
+    "mean_skill": -0.295
    },
    {
     "entrant": "claude-opus-5-web-superfc",
@@ -51510,9 +51715,15 @@
    },
    {
     "entrant": "gemini-pro-web-superfc",
-    "rounds": 43,
-    "mean_crps": 2.011,
-    "mean_skill": -0.35
+    "rounds": 44,
+    "mean_crps": 2.026,
+    "mean_skill": -0.327
+   },
+   {
+    "entrant": "ewma",
+    "rounds": 51,
+    "mean_crps": 2.727,
+    "mean_skill": -0.374
    },
    {
     "entrant": "qwen-3.8-news",
@@ -51521,15 +51732,15 @@
     "mean_skill": -0.384
    },
    {
+    "entrant": "grok-web",
+    "rounds": 45,
+    "mean_crps": 1.952,
+    "mean_skill": -0.388
+   },
+   {
     "entrant": "claude-fable",
     "rounds": 11,
     "mean_crps": 1.395,
-    "mean_skill": -0.394
-   },
-   {
-    "entrant": "ewma",
-    "rounds": 50,
-    "mean_crps": 2.719,
     "mean_skill": -0.394
    },
    {
@@ -51537,18 +51748,6 @@
     "rounds": 11,
     "mean_crps": 1.248,
     "mean_skill": -0.405
-   },
-   {
-    "entrant": "grok-web",
-    "rounds": 44,
-    "mean_crps": 1.919,
-    "mean_skill": -0.411
-   },
-   {
-    "entrant": "worldvac-base",
-    "rounds": 2,
-    "mean_crps": 1.475,
-    "mean_skill": -0.443
    },
    {
     "entrant": "grok",
@@ -51563,6 +51762,24 @@
     "mean_skill": -0.499
    },
    {
+    "entrant": "grok-web-superfc",
+    "rounds": 45,
+    "mean_crps": 2.148,
+    "mean_skill": -0.549
+   },
+   {
+    "entrant": "gpt-5.6-luna-web",
+    "rounds": 42,
+    "mean_crps": 2.204,
+    "mean_skill": -0.561
+   },
+   {
+    "entrant": "deepseek-pro-web-superfc",
+    "rounds": 44,
+    "mean_crps": 2.095,
+    "mean_skill": -0.565
+   },
+   {
     "entrant": "gemini-flash-web",
     "rounds": 42,
     "mean_crps": 1.958,
@@ -51575,27 +51792,9 @@
     "mean_skill": -0.572
    },
    {
-    "entrant": "grok-web-superfc",
-    "rounds": 44,
-    "mean_crps": 2.107,
-    "mean_skill": -0.574
-   },
-   {
-    "entrant": "deepseek-pro-web-superfc",
-    "rounds": 43,
-    "mean_crps": 2.049,
-    "mean_skill": -0.59
-   },
-   {
     "entrant": "grok-news",
     "rounds": 8,
     "mean_crps": 3.115,
-    "mean_skill": -0.592
-   },
-   {
-    "entrant": "gpt-5.6-luna-web",
-    "rounds": 41,
-    "mean_crps": 2.197,
     "mean_skill": -0.592
    },
    {
@@ -51611,22 +51810,22 @@
     "mean_skill": -0.616
    },
    {
+    "entrant": "glm-web-superfc",
+    "rounds": 44,
+    "mean_crps": 2.093,
+    "mean_skill": -0.642
+   },
+   {
+    "entrant": "crowd",
+    "rounds": 50,
+    "mean_crps": 2.083,
+    "mean_skill": -0.648
+   },
+   {
     "entrant": "claude-opus-5",
     "rounds": 19,
     "mean_crps": 1.582,
     "mean_skill": -0.665
-   },
-   {
-    "entrant": "glm-web-superfc",
-    "rounds": 43,
-    "mean_crps": 2.055,
-    "mean_skill": -0.67
-   },
-   {
-    "entrant": "crowd",
-    "rounds": 49,
-    "mean_crps": 2.057,
-    "mean_skill": -0.673
    },
    {
     "entrant": "gpt-5.6-luna",
@@ -51689,16 +51888,22 @@
     "mean_skill": -0.768
    },
    {
+    "entrant": "deepseek-pro-web",
+    "rounds": 44,
+    "mean_crps": 2.329,
+    "mean_skill": -0.772
+   },
+   {
     "entrant": "gemini-pro-news",
     "rounds": 8,
     "mean_crps": 3.841,
     "mean_skill": -0.772
    },
    {
-    "entrant": "deepseek-pro-web",
-    "rounds": 43,
-    "mean_crps": 2.272,
-    "mean_skill": -0.8
+    "entrant": "zhengzheng-agent",
+    "rounds": 1,
+    "mean_crps": 14.836,
+    "mean_skill": -0.797
    },
    {
     "entrant": "kimi-web-superfc",
@@ -51725,6 +51930,12 @@
     "mean_skill": -0.816
    },
    {
+    "entrant": "glm-web",
+    "rounds": 44,
+    "mean_crps": 2.101,
+    "mean_skill": -0.817
+   },
+   {
     "entrant": "qwen-3.8-web",
     "rounds": 41,
     "mean_crps": 2.201,
@@ -51737,28 +51948,22 @@
     "mean_skill": -0.823
    },
    {
-    "entrant": "glm-web",
-    "rounds": 43,
-    "mean_crps": 2.085,
-    "mean_skill": -0.851
-   },
-   {
     "entrant": "glm-news",
     "rounds": 6,
     "mean_crps": 3.959,
     "mean_skill": -0.857
    },
    {
+    "entrant": "trend",
+    "rounds": 51,
+    "mean_crps": 4.761,
+    "mean_skill": -0.899
+   },
+   {
     "entrant": "grok-superfc",
     "rounds": 14,
     "mean_crps": 2.303,
     "mean_skill": -0.92
-   },
-   {
-    "entrant": "trend",
-    "rounds": 50,
-    "mean_crps": 4.778,
-    "mean_skill": -0.928
    },
    {
     "entrant": "kimi-web",
@@ -51948,9 +52153,9 @@
    },
    {
     "entrant": "climatology",
-    "rounds": 50,
-    "mean_crps": 5.624,
-    "mean_skill": -2.729
+    "rounds": 51,
+    "mean_crps": 5.66,
+    "mean_skill": -2.673
    },
    {
     "entrant": "claude-opus-5-zeroshot-superfc",
@@ -79691,646 +79896,646 @@
  "charts": {
   "approval_avg": [
    {
-    "date": "2025-03-15",
-    "value": 48.03
+    "date": "2025-03-17",
+    "value": 48.08
    },
    {
-    "date": "2025-03-22",
-    "value": 47.99
+    "date": "2025-03-24",
+    "value": 48.05
    },
    {
-    "date": "2025-03-29",
+    "date": "2025-03-31",
     "value": 47.81
    },
    {
-    "date": "2025-04-05",
-    "value": 46.92
+    "date": "2025-04-07",
+    "value": 46.59
    },
    {
-    "date": "2025-04-12",
-    "value": 46.04
+    "date": "2025-04-14",
+    "value": 46.0
    },
    {
-    "date": "2025-04-19",
-    "value": 45.9
+    "date": "2025-04-21",
+    "value": 45.73
    },
    {
-    "date": "2025-04-26",
-    "value": 45.39
+    "date": "2025-04-28",
+    "value": 45.56
    },
    {
-    "date": "2025-05-03",
-    "value": 45.41
+    "date": "2025-05-05",
+    "value": 45.53
    },
    {
-    "date": "2025-05-10",
-    "value": 45.5
+    "date": "2025-05-12",
+    "value": 45.98
    },
    {
-    "date": "2025-05-17",
-    "value": 46.1
+    "date": "2025-05-19",
+    "value": 46.48
    },
    {
-    "date": "2025-05-24",
-    "value": 46.67
+    "date": "2025-05-26",
+    "value": 47.02
    },
    {
-    "date": "2025-05-31",
-    "value": 47.63
+    "date": "2025-06-02",
+    "value": 47.72
    },
    {
-    "date": "2025-06-07",
-    "value": 46.99
+    "date": "2025-06-09",
+    "value": 47.14
    },
    {
-    "date": "2025-06-14",
-    "value": 46.43
+    "date": "2025-06-16",
+    "value": 46.95
    },
    {
-    "date": "2025-06-21",
-    "value": 46.76
+    "date": "2025-06-23",
+    "value": 46.8
    },
    {
-    "date": "2025-06-28",
-    "value": 46.46
+    "date": "2025-06-30",
+    "value": 46.52
    },
    {
-    "date": "2025-07-05",
-    "value": 46.43
+    "date": "2025-07-07",
+    "value": 45.96
    },
    {
-    "date": "2025-07-12",
-    "value": 45.46
-   },
-   {
-    "date": "2025-07-19",
-    "value": 45.02
-   },
-   {
-    "date": "2025-07-26",
-    "value": 44.9
-   },
-   {
-    "date": "2025-08-02",
-    "value": 44.97
-   },
-   {
-    "date": "2025-08-09",
-    "value": 44.7
-   },
-   {
-    "date": "2025-08-16",
-    "value": 44.94
-   },
-   {
-    "date": "2025-08-23",
-    "value": 45.11
-   },
-   {
-    "date": "2025-08-30",
-    "value": 45.15
-   },
-   {
-    "date": "2025-09-06",
-    "value": 45.09
-   },
-   {
-    "date": "2025-09-13",
-    "value": 45.16
-   },
-   {
-    "date": "2025-09-20",
-    "value": 45.35
-   },
-   {
-    "date": "2025-09-27",
-    "value": 45.21
-   },
-   {
-    "date": "2025-10-04",
-    "value": 44.89
-   },
-   {
-    "date": "2025-10-11",
-    "value": 44.94
-   },
-   {
-    "date": "2025-10-18",
+    "date": "2025-07-14",
     "value": 45.25
    },
    {
-    "date": "2025-10-25",
-    "value": 44.44
+    "date": "2025-07-21",
+    "value": 45.1
    },
    {
-    "date": "2025-11-01",
-    "value": 43.78
+    "date": "2025-07-28",
+    "value": 44.95
    },
    {
-    "date": "2025-11-08",
-    "value": 42.97
+    "date": "2025-08-04",
+    "value": 45.06
    },
    {
-    "date": "2025-11-15",
-    "value": 42.5
+    "date": "2025-08-11",
+    "value": 44.62
    },
    {
-    "date": "2025-11-22",
-    "value": 42.75
+    "date": "2025-08-18",
+    "value": 45.23
    },
    {
-    "date": "2025-11-29",
-    "value": 42.67
+    "date": "2025-08-25",
+    "value": 45.29
    },
    {
-    "date": "2025-12-06",
-    "value": 43.26
+    "date": "2025-09-01",
+    "value": 45.16
    },
    {
-    "date": "2025-12-13",
-    "value": 43.49
+    "date": "2025-09-08",
+    "value": 45.2
    },
    {
-    "date": "2025-12-20",
-    "value": 43.46
+    "date": "2025-09-15",
+    "value": 45.56
    },
    {
-    "date": "2025-12-27",
-    "value": 43.53
+    "date": "2025-09-22",
+    "value": 45.48
    },
    {
-    "date": "2026-01-03",
-    "value": 42.9
+    "date": "2025-09-29",
+    "value": 45.08
    },
    {
-    "date": "2026-01-10",
-    "value": 43.17
+    "date": "2025-10-06",
+    "value": 45.08
    },
    {
-    "date": "2026-01-17",
-    "value": 43.08
+    "date": "2025-10-13",
+    "value": 45.2
    },
    {
-    "date": "2026-01-24",
-    "value": 43.04
+    "date": "2025-10-20",
+    "value": 45.05
    },
    {
-    "date": "2026-01-31",
-    "value": 42.81
+    "date": "2025-10-27",
+    "value": 44.32
    },
    {
-    "date": "2026-02-07",
-    "value": 41.97
+    "date": "2025-11-03",
+    "value": 43.57
    },
    {
-    "date": "2026-02-14",
-    "value": 42.04
+    "date": "2025-11-10",
+    "value": 42.7
    },
    {
-    "date": "2026-02-21",
+    "date": "2025-11-17",
+    "value": 42.48
+   },
+   {
+    "date": "2025-11-24",
     "value": 42.64
    },
    {
-    "date": "2026-02-28",
+    "date": "2025-12-01",
+    "value": 42.59
+   },
+   {
+    "date": "2025-12-08",
+    "value": 43.32
+   },
+   {
+    "date": "2025-12-15",
+    "value": 43.64
+   },
+   {
+    "date": "2025-12-22",
+    "value": 43.42
+   },
+   {
+    "date": "2025-12-29",
+    "value": 43.46
+   },
+   {
+    "date": "2026-01-05",
+    "value": 42.88
+   },
+   {
+    "date": "2026-01-12",
     "value": 43.08
    },
    {
-    "date": "2026-03-07",
-    "value": 42.72
+    "date": "2026-01-19",
+    "value": 43.03
    },
    {
-    "date": "2026-03-14",
-    "value": 41.96
+    "date": "2026-01-26",
+    "value": 43.01
    },
    {
-    "date": "2026-03-21",
-    "value": 41.61
+    "date": "2026-02-02",
+    "value": 42.41
    },
    {
-    "date": "2026-03-28",
-    "value": 41.05
+    "date": "2026-02-09",
+    "value": 42.12
    },
    {
-    "date": "2026-04-04",
-    "value": 41.07
+    "date": "2026-02-16",
+    "value": 42.33
    },
    {
-    "date": "2026-04-11",
-    "value": 41.14
+    "date": "2026-02-23",
+    "value": 42.71
    },
    {
-    "date": "2026-04-18",
+    "date": "2026-03-02",
+    "value": 43.24
+   },
+   {
+    "date": "2026-03-09",
+    "value": 42.58
+   },
+   {
+    "date": "2026-03-16",
+    "value": 41.88
+   },
+   {
+    "date": "2026-03-23",
+    "value": 41.44
+   },
+   {
+    "date": "2026-03-30",
+    "value": 41.0
+   },
+   {
+    "date": "2026-04-06",
+    "value": 41.26
+   },
+   {
+    "date": "2026-04-13",
+    "value": 41.03
+   },
+   {
+    "date": "2026-04-20",
+    "value": 40.78
+   },
+   {
+    "date": "2026-04-27",
     "value": 40.68
    },
    {
-    "date": "2026-04-25",
-    "value": 40.66
+    "date": "2026-05-04",
+    "value": 40.11
    },
    {
-    "date": "2026-05-02",
-    "value": 40.23
+    "date": "2026-05-11",
+    "value": 40.09
    },
    {
-    "date": "2026-05-09",
-    "value": 40.16
+    "date": "2026-05-18",
+    "value": 39.54
    },
    {
-    "date": "2026-05-16",
-    "value": 39.85
-   },
-   {
-    "date": "2026-05-23",
-    "value": 39.87
-   },
-   {
-    "date": "2026-05-30",
-    "value": 39.97
-   },
-   {
-    "date": "2026-06-06",
-    "value": 39.72
-   },
-   {
-    "date": "2026-06-13",
-    "value": 39.74
-   },
-   {
-    "date": "2026-06-20",
-    "value": 40.15
-   },
-   {
-    "date": "2026-06-27",
-    "value": 40.5
-   },
-   {
-    "date": "2026-07-04",
-    "value": 40.37
-   },
-   {
-    "date": "2026-07-11",
-    "value": 40.64
-   },
-   {
-    "date": "2026-07-18",
-    "value": 40.54
-   },
-   {
-    "date": "2026-07-25",
-    "value": 40.33
-   },
-   {
-    "date": "2026-08-01",
-    "value": 40.26
-   },
-   {
-    "date": "2026-08-08",
-    "value": 39.85
-   },
-   {
-    "date": "2026-08-15",
-    "value": 39.94
-   },
-   {
-    "date": "2026-08-22",
+    "date": "2026-05-25",
     "value": 39.9
    },
    {
-    "date": "2026-08-29",
-    "value": 39.92
+    "date": "2026-06-01",
+    "value": 39.79
    },
    {
-    "date": "2026-09-05",
-    "value": 39.74
+    "date": "2026-06-08",
+    "value": 39.7
    },
    {
-    "date": "2026-09-12",
-    "value": 40.08
+    "date": "2026-06-15",
+    "value": 39.93
    },
    {
-    "date": "2026-09-19",
-    "value": 39.3
+    "date": "2026-06-22",
+    "value": 40.38
+   },
+   {
+    "date": "2026-06-29",
+    "value": 40.36
+   },
+   {
+    "date": "2026-07-06",
+    "value": 40.59
+   },
+   {
+    "date": "2026-07-13",
+    "value": 40.62
+   },
+   {
+    "date": "2026-07-20",
+    "value": 40.53
+   },
+   {
+    "date": "2026-07-27",
+    "value": 40.3
+   },
+   {
+    "date": "2026-08-03",
+    "value": 40.28
+   },
+   {
+    "date": "2026-08-10",
+    "value": 39.72
+   },
+   {
+    "date": "2026-08-17",
+    "value": 39.85
+   },
+   {
+    "date": "2026-08-24",
+    "value": 39.73
+   },
+   {
+    "date": "2026-08-31",
+    "value": 39.93
+   },
+   {
+    "date": "2026-09-07",
+    "value": 39.7
+   },
+   {
+    "date": "2026-09-14",
+    "value": 40.12
+   },
+   {
+    "date": "2026-09-21",
+    "value": 39.25
    }
   ],
   "generic_margin": [
    {
-    "date": "2025-03-15",
-    "value": -0.26
+    "date": "2025-03-17",
+    "value": -0.22
    },
    {
-    "date": "2025-03-22",
-    "value": -0.02
+    "date": "2025-03-24",
+    "value": -0.03
    },
    {
-    "date": "2025-03-29",
-    "value": 0.34
+    "date": "2025-03-31",
+    "value": 0.29
    },
    {
-    "date": "2025-04-05",
-    "value": 0.8
+    "date": "2025-04-07",
+    "value": 0.86
    },
    {
-    "date": "2025-04-12",
-    "value": 1.25
+    "date": "2025-04-14",
+    "value": 1.26
    },
    {
-    "date": "2025-04-19",
-    "value": 2.17
+    "date": "2025-04-21",
+    "value": 2.2
    },
    {
-    "date": "2025-04-26",
-    "value": 2.28
+    "date": "2025-04-28",
+    "value": 2.32
    },
    {
-    "date": "2025-05-03",
-    "value": 2.72
+    "date": "2025-05-05",
+    "value": 2.82
    },
    {
-    "date": "2025-05-10",
-    "value": 1.57
+    "date": "2025-05-12",
+    "value": 1.42
    },
    {
-    "date": "2025-05-17",
-    "value": 0.99
+    "date": "2025-05-19",
+    "value": 0.97
    },
    {
-    "date": "2025-05-24",
-    "value": 1.57
-   },
-   {
-    "date": "2025-05-31",
+    "date": "2025-05-26",
     "value": 1.51
    },
    {
-    "date": "2025-06-07",
-    "value": 1.37
+    "date": "2025-06-02",
+    "value": 1.59
    },
    {
-    "date": "2025-06-14",
-    "value": 1.5
+    "date": "2025-06-09",
+    "value": 2.24
    },
    {
-    "date": "2025-06-21",
-    "value": 1.22
+    "date": "2025-06-16",
+    "value": 1.36
    },
    {
-    "date": "2025-06-28",
-    "value": 1.6
+    "date": "2025-06-23",
+    "value": 1.21
    },
    {
-    "date": "2025-07-05",
-    "value": 1.92
+    "date": "2025-06-30",
+    "value": 1.61
    },
    {
-    "date": "2025-07-12",
-    "value": 1.78
+    "date": "2025-07-07",
+    "value": 2.04
    },
    {
-    "date": "2025-07-19",
-    "value": 2.34
+    "date": "2025-07-14",
+    "value": 1.64
    },
    {
-    "date": "2025-07-26",
-    "value": 2.78
+    "date": "2025-07-21",
+    "value": 2.05
    },
    {
-    "date": "2025-08-02",
-    "value": 3.53
+    "date": "2025-07-28",
+    "value": 3.12
    },
    {
-    "date": "2025-08-09",
-    "value": 3.14
+    "date": "2025-08-04",
+    "value": 3.62
    },
    {
-    "date": "2025-08-16",
-    "value": 3.09
+    "date": "2025-08-11",
+    "value": 2.99
    },
    {
-    "date": "2025-08-23",
-    "value": 2.22
+    "date": "2025-08-18",
+    "value": 2.95
    },
    {
-    "date": "2025-08-30",
-    "value": 2.77
+    "date": "2025-08-25",
+    "value": 1.75
    },
    {
-    "date": "2025-09-06",
-    "value": 2.84
+    "date": "2025-09-01",
+    "value": 3.01
    },
    {
-    "date": "2025-09-13",
-    "value": 2.56
+    "date": "2025-09-08",
+    "value": 2.91
    },
    {
-    "date": "2025-09-20",
-    "value": 2.46
-   },
-   {
-    "date": "2025-09-27",
-    "value": 2.1
-   },
-   {
-    "date": "2025-10-04",
-    "value": 2.41
-   },
-   {
-    "date": "2025-10-11",
-    "value": 2.87
-   },
-   {
-    "date": "2025-10-18",
-    "value": 3.03
-   },
-   {
-    "date": "2025-10-25",
+    "date": "2025-09-15",
     "value": 2.96
    },
    {
-    "date": "2025-11-01",
-    "value": 3.06
+    "date": "2025-09-22",
+    "value": 2.31
    },
    {
-    "date": "2025-11-08",
-    "value": 3.84
+    "date": "2025-09-29",
+    "value": 2.04
    },
    {
-    "date": "2025-11-15",
-    "value": 4.22
+    "date": "2025-10-06",
+    "value": 2.73
    },
    {
-    "date": "2025-11-22",
-    "value": 3.97
+    "date": "2025-10-13",
+    "value": 2.37
    },
    {
-    "date": "2025-11-29",
-    "value": 4.27
+    "date": "2025-10-20",
+    "value": 2.93
    },
    {
-    "date": "2025-12-06",
-    "value": 3.24
+    "date": "2025-10-27",
+    "value": 3.4
    },
    {
-    "date": "2025-12-13",
-    "value": 3.05
+    "date": "2025-11-03",
+    "value": 2.9
    },
    {
-    "date": "2025-12-20",
-    "value": 3.95
+    "date": "2025-11-10",
+    "value": 3.81
    },
    {
-    "date": "2025-12-27",
-    "value": 3.84
+    "date": "2025-11-17",
+    "value": 4.13
    },
    {
-    "date": "2026-01-03",
+    "date": "2025-11-24",
+    "value": 4.05
+   },
+   {
+    "date": "2025-12-01",
+    "value": 4.17
+   },
+   {
+    "date": "2025-12-08",
+    "value": 2.95
+   },
+   {
+    "date": "2025-12-15",
+    "value": 2.72
+   },
+   {
+    "date": "2025-12-22",
+    "value": 3.85
+   },
+   {
+    "date": "2025-12-29",
+    "value": 3.9
+   },
+   {
+    "date": "2026-01-05",
+    "value": 5.07
+   },
+   {
+    "date": "2026-01-12",
+    "value": 3.99
+   },
+   {
+    "date": "2026-01-19",
     "value": 4.69
    },
    {
-    "date": "2026-01-10",
-    "value": 4.08
+    "date": "2026-01-26",
+    "value": 4.34
    },
    {
-    "date": "2026-01-17",
-    "value": 4.51
+    "date": "2026-02-02",
+    "value": 4.54
    },
    {
-    "date": "2026-01-24",
-    "value": 4.42
+    "date": "2026-02-09",
+    "value": 4.54
    },
    {
-    "date": "2026-01-31",
-    "value": 4.53
+    "date": "2026-02-16",
+    "value": 4.78
    },
    {
-    "date": "2026-02-07",
-    "value": 4.65
+    "date": "2026-02-23",
+    "value": 4.8
    },
    {
-    "date": "2026-02-14",
-    "value": 4.55
+    "date": "2026-03-02",
+    "value": 4.4
    },
    {
-    "date": "2026-02-21",
-    "value": 4.81
+    "date": "2026-03-09",
+    "value": 3.99
    },
    {
-    "date": "2026-02-28",
-    "value": 4.33
+    "date": "2026-03-16",
+    "value": 4.76
    },
    {
-    "date": "2026-03-07",
-    "value": 4.1
+    "date": "2026-03-23",
+    "value": 4.68
    },
    {
-    "date": "2026-03-14",
-    "value": 4.77
+    "date": "2026-03-30",
+    "value": 4.92
    },
    {
-    "date": "2026-03-21",
-    "value": 4.7
+    "date": "2026-04-06",
+    "value": 4.39
    },
    {
-    "date": "2026-03-28",
-    "value": 4.91
+    "date": "2026-04-13",
+    "value": 5.25
    },
    {
-    "date": "2026-04-04",
-    "value": 4.48
+    "date": "2026-04-20",
+    "value": 4.92
    },
    {
-    "date": "2026-04-11",
-    "value": 5.01
+    "date": "2026-04-27",
+    "value": 4.73
    },
    {
-    "date": "2026-04-18",
-    "value": 4.94
+    "date": "2026-05-04",
+    "value": 4.8
    },
    {
-    "date": "2026-04-25",
-    "value": 4.61
+    "date": "2026-05-11",
+    "value": 5.54
    },
    {
-    "date": "2026-05-02",
-    "value": 4.77
+    "date": "2026-05-18",
+    "value": 5.86
    },
    {
-    "date": "2026-05-09",
-    "value": 5.52
+    "date": "2026-05-25",
+    "value": 5.69
    },
    {
-    "date": "2026-05-16",
-    "value": 5.88
+    "date": "2026-06-01",
+    "value": 5.06
    },
    {
-    "date": "2026-05-23",
-    "value": 5.68
+    "date": "2026-06-08",
+    "value": 5.07
    },
    {
-    "date": "2026-05-30",
-    "value": 5.13
-   },
-   {
-    "date": "2026-06-06",
+    "date": "2026-06-15",
     "value": 4.97
    },
    {
-    "date": "2026-06-13",
-    "value": 4.99
+    "date": "2026-06-22",
+    "value": 4.84
    },
    {
-    "date": "2026-06-20",
-    "value": 4.85
+    "date": "2026-06-29",
+    "value": 5.3
    },
    {
-    "date": "2026-06-27",
-    "value": 5.02
+    "date": "2026-07-06",
+    "value": 5.01
    },
    {
-    "date": "2026-07-04",
-    "value": 4.99
+    "date": "2026-07-13",
+    "value": 4.59
    },
    {
-    "date": "2026-07-11",
-    "value": 4.74
+    "date": "2026-07-20",
+    "value": 5.54
    },
    {
-    "date": "2026-07-18",
-    "value": 5.23
+    "date": "2026-07-27",
+    "value": 5.57
    },
    {
-    "date": "2026-07-25",
-    "value": 5.61
+    "date": "2026-08-03",
+    "value": 5.42
    },
    {
-    "date": "2026-08-01",
-    "value": 5.33
+    "date": "2026-08-10",
+    "value": 5.76
    },
    {
-    "date": "2026-08-08",
-    "value": 5.73
+    "date": "2026-08-17",
+    "value": 5.59
    },
    {
-    "date": "2026-08-15",
-    "value": 5.63
+    "date": "2026-08-24",
+    "value": 5.87
    },
    {
-    "date": "2026-08-22",
-    "value": 5.73
-   },
-   {
-    "date": "2026-08-29",
+    "date": "2026-08-31",
     "value": 5.99
    },
    {
-    "date": "2026-09-05",
-    "value": 7.0
+    "date": "2026-09-07",
+    "value": 7.61
    },
    {
-    "date": "2026-09-12",
-    "value": 7.82
+    "date": "2026-09-14",
+    "value": 7.88
    },
    {
-    "date": "2026-09-19",
-    "value": 8.31
+    "date": "2026-09-21",
+    "value": 8.38
    }
   ],
   "umich_sentiment": [
@@ -84167,36 +84372,36 @@
   ],
   "generic_ballot_margin": [
    {
-    "date": "2026-08-01",
-    "value": 5.44
+    "date": "2026-08-03",
+    "value": 5.54
    },
    {
-    "date": "2026-08-08",
-    "value": 5.94
+    "date": "2026-08-10",
+    "value": 5.89
    },
    {
-    "date": "2026-08-15",
-    "value": 5.81
+    "date": "2026-08-17",
+    "value": 5.72
    },
    {
-    "date": "2026-08-22",
-    "value": 5.87
+    "date": "2026-08-24",
+    "value": 5.99
    },
    {
-    "date": "2026-08-29",
-    "value": 6.15
+    "date": "2026-08-31",
+    "value": 6.12
    },
    {
-    "date": "2026-09-05",
-    "value": 7.05
+    "date": "2026-09-07",
+    "value": 7.7
    },
    {
-    "date": "2026-09-12",
-    "value": 7.89
+    "date": "2026-09-14",
+    "value": 7.92
    },
    {
-    "date": "2026-09-19",
-    "value": 8.31
+    "date": "2026-09-21",
+    "value": 8.38
    }
   ]
  },
@@ -87246,25 +87451,25 @@
   "sb_approval": {
    "source": "sb_approval",
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
-   "fetched_at": "2026-09-24T11:43:40Z",
-   "sha256": "958556b0ba7b6b422c00732a87a74df30b6d57287c6d70b028fdaef164964395",
-   "bytes": 1654029,
+   "fetched_at": "2026-09-24T17:17:37Z",
+   "sha256": "01c1e94b3f75ae733b03a7e95a3d5d40014eef1064e9c6981eec9f7a3854d822",
+   "bytes": 1657491,
    "file": "sources/sb_approval/2026-09-24.csv",
    "note": "Silver Bulletin poll database, published as a Google Sheet"
   },
   "sb_generic": {
    "source": "sb_generic",
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
-   "fetched_at": "2026-09-24T11:43:41Z",
-   "sha256": "17f06f6db6b13ef0992d02ae338beac86b67f7962165800cb4ed26128afa0196",
-   "bytes": 164121,
+   "fetched_at": "2026-09-24T17:17:37Z",
+   "sha256": "1685957c7b07564f0df8e71e218b7da310a3417d55868c9c88d684177437328b",
+   "bytes": 164678,
    "file": "sources/sb_generic/2026-09-24.csv",
    "note": "Silver Bulletin generic-ballot database, published as a Google Sheet"
   },
   "umich": {
    "source": "umich",
    "url": "http://www.sca.isr.umich.edu/files/tbmics.csv",
-   "fetched_at": "2026-09-24T11:43:41Z",
+   "fetched_at": "2026-09-24T17:17:37Z",
    "sha256": "512b0530509d9a05b7b938bf0b3920ecf0eaea70f59f1a648cd6d068d20bc0ad",
    "bytes": 14379,
    "file": "sources/umich/2026-09-24.json",
@@ -87273,9 +87478,9 @@
   "aaii": {
    "source": "aaii",
    "url": "https://www.aaii.com/sentimentsurvey/sent_results",
-   "fetched_at": "2026-09-24T11:43:41Z",
-   "sha256": "39294d90c6337dc6121dcbc1fa2e5662cdd6d99c7c061d9badef80aba382bc0f",
-   "bytes": 46413,
+   "fetched_at": "2026-09-24T17:17:38Z",
+   "sha256": "0dc4523cae65551a4d120de88611593bbd98dfd8edbf7fe34ec7169946508f1e",
+   "bytes": 46280,
    "file": "sources/aaii/2026-09-24.html",
    "note": "AAII sentiment survey results page, a ~22-week rolling window parsed against the response's own date 2026-09-24; the full 1987-present .xls is OLE2 and unreadable without a dependency"
   },
@@ -91340,8 +91545,8 @@
   {
    "source": "civiqs",
    "state": "ok",
-   "fetched_days": 0.5,
-   "changed_days": 3.5,
+   "fetched_days": 0.7,
+   "changed_days": 3.7,
    "budget_fetch_days": 2,
    "budget_change_days": 4,
    "url": null,
@@ -91350,176 +91555,176 @@
    "tracker_health": [
     {
      "key": "approve_president_trump_2025",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.age-18-34",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.age-35-49",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.age-50-64",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.age-65_",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.education-College_Graduate",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.education-Non-College_Graduate",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.education-Postgraduate",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.gender-Female",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.gender-Male",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.party-Democrat",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.party-Independent",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.party-Republican",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.race-Black_or_African-American",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.race-Hispanic_Latino",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.race-Other",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.race-White",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "describe_feeling_us",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 10,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "economy_family_retro",
-     "fetched_days": 0.5,
-     "changed_days": 1.5,
+     "fetched_days": 0.7,
+     "changed_days": 1.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-23"
     },
     {
      "key": "economy_us_direction",
-     "fetched_days": 0.5,
-     "changed_days": 2.5,
+     "fetched_days": 0.7,
+     "changed_days": 2.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "economy_us_now",
-     "fetched_days": 0.5,
-     "changed_days": 3.5,
+     "fetched_days": 0.7,
+     "changed_days": 3.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-21"
     },
     {
      "key": "inflation_impact",
-     "fetched_days": 0.5,
-     "changed_days": 3.5,
+     "fetched_days": 0.7,
+     "changed_days": 3.7,
      "change_budget_days": 4,
      "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-21"
@@ -91534,7 +91739,7 @@
   {
    "source": "sb_approval",
    "state": "ok",
-   "fetched_days": 0.0,
+   "fetched_days": -0.0,
    "changed_days": 0.0,
    "budget_fetch_days": 2,
    "budget_change_days": 7,
@@ -91555,7 +91760,7 @@
    "source": "umich",
    "state": "ok",
    "fetched_days": -0.0,
-   "changed_days": 12.9,
+   "changed_days": 13.1,
    "budget_fetch_days": 3,
    "budget_change_days": 40,
    "url": "http://www.sca.isr.umich.edu/files/tbmics.csv",
@@ -91563,7 +91768,7 @@
   }
  ],
  "operator_status": {
-  "generated_at": "2026-09-24T11:43:40Z",
+  "generated_at": "2026-09-24T17:17:36Z",
   "source_states": [
    {
     "attempts": 1,
@@ -91576,7 +91781,7 @@
     "required_action": "none",
     "evidence": [
      "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=12",
-     "sources/aaii/2026-09-24.html sha256=39294d90c6337dc6121dcbc1fa2e5662cdd6d99c7c061d9badef80aba382bc0f"
+     "sources/aaii/2026-09-24.html sha256=0dc4523cae65551a4d120de88611593bbd98dfd8edbf7fe34ec7169946508f1e"
     ],
     "alert": false,
     "source": "aaii",
@@ -91585,7 +91790,7 @@
    {
     "attempts": 1,
     "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Democrat; approve_president_trump_2025.party-Independent: HTTPError: 403 Client Error: ",
-    "next_retry": "2026-09-24T17:43:40Z",
+    "next_retry": "2026-09-24T23:17:36Z",
     "next_lock": "2026-09-25T14:00:00Z",
     "next_deadline": "2026-09-25T14:00:00Z",
     "route": "ssa.series:civiqs",
@@ -91593,7 +91798,7 @@
     "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
     "evidence": [
      "civiqs/approve_president_trump_2025 (32 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.age-18-34 (28 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.age-35-49 (29 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.age-50-64 (29 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.age-65_ (29 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.education-College_Graduate (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.education-Non-College_Graduate (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.education-Postgraduate (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.gender-Female (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.gender-Male (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.party-Democrat (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.party-Independent (29 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.party-Republican (33 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.race-Black_or_African-American (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.race-Hispanic_Latino (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.race-Other (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.race-White (28 snapshots; newest 2026-09-24); civiqs/describe_feeling_us (30 snapshots; newest 2026-09-24); civiqs/economy_us_direction (31 snapshots; newest 2026-09-24); civiqs/economy_us_now (31 snapshots; newest 2026-09-24); civiqs/inflation_impact (31 snapshots; newest 2026-09-24)",
-     "fetched_days=0.5; changed_days=3.5; fetch_budget=2; change_budget=4",
+     "fetched_days=0.7; changed_days=3.7; fetch_budget=2; change_budget=4",
      "live attempt failed; same-source archive used"
     ],
     "alert": true,
@@ -91642,8 +91847,8 @@
     "estimated_spend": 0.0,
     "required_action": "none",
     "evidence": [
-     "fetched_days=0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
-     "sources/sb_approval/2026-09-24.csv sha256=958556b0ba7b6b422c00732a87a74df30b6d57287c6d70b028fdaef164964395"
+     "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
+     "sources/sb_approval/2026-09-24.csv sha256=01c1e94b3f75ae733b03a7e95a3d5d40014eef1064e9c6981eec9f7a3854d822"
     ],
     "alert": false,
     "source": "sb_approval",
@@ -91660,7 +91865,7 @@
     "required_action": "none",
     "evidence": [
      "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=10",
-     "sources/sb_generic/2026-09-24.csv sha256=17f06f6db6b13ef0992d02ae338beac86b67f7962165800cb4ed26128afa0196"
+     "sources/sb_generic/2026-09-24.csv sha256=1685957c7b07564f0df8e71e218b7da310a3417d55868c9c88d684177437328b"
     ],
     "alert": false,
     "source": "sb_generic",
@@ -91724,7 +91929,7 @@
     "estimated_spend": 0.0,
     "required_action": "none",
     "evidence": [
-     "fetched_days=-0.0; changed_days=12.9; fetch_budget=3; change_budget=40",
+     "fetched_days=-0.0; changed_days=13.1; fetch_budget=3; change_budget=40",
      "sources/umich/2026-09-24.json sha256=512b0530509d9a05b7b938bf0b3920ecf0eaea70f59f1a648cd6d068d20bc0ad"
     ],
     "alert": false,
@@ -91780,7 +91985,508 @@
     "state": "healthy"
    }
   ],
-  "entrant_round_states": [],
+  "entrant_round_states": [
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web",
+    "estimated_spend": 0.07065,
+    "evidence": [
+     "forecast=sealed/trends-basket-2026-10-03/claude-sonnet-web.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "trends-basket-2026-10-03",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web-superfc",
+    "estimated_spend": 0.07065,
+    "evidence": [
+     "forecast=sealed/trends-basket-2026-10-03/claude-sonnet-web-superfc.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "trends-basket-2026-10-03",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web",
+    "estimated_spend": 0.010348,
+    "evidence": [
+     "forecast=sealed/trends-basket-2026-10-03/deepseek-pro-web.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "trends-basket-2026-10-03",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web-superfc",
+    "estimated_spend": 0.010348,
+    "evidence": [
+     "forecast=sealed/trends-basket-2026-10-03/deepseek-pro-web-superfc.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "trends-basket-2026-10-03",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "gemini-pro-web",
+    "estimated_spend": 0.046875,
+    "evidence": [
+     "forecast=sealed/trends-basket-2026-10-03/gemini-pro-web.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "trends-basket-2026-10-03",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "gemini-pro-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [
+     "forecast=sealed/trends-basket-2026-10-03/gemini-pro-web-superfc.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "trends-basket-2026-10-03",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "glm-web",
+    "estimated_spend": 0.01041,
+    "evidence": [
+     "forecast=sealed/trends-basket-2026-10-03/glm-web.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "trends-basket-2026-10-03",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "glm-web-superfc",
+    "estimated_spend": 0.01041,
+    "evidence": [],
+    "last_error": "provider transport failure",
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": "2026-09-24T23:07:49Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "trends-basket-2026-10-03",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web",
+    "estimated_spend": 0.046875,
+    "evidence": [
+     "forecast=sealed/trends-basket-2026-10-03/gpt-5.6-luna-web.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "trends-basket-2026-10-03",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [
+     "forecast=sealed/trends-basket-2026-10-03/gpt-5.6-luna-web-superfc.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "trends-basket-2026-10-03",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "grok-web",
+    "estimated_spend": 0.07065,
+    "evidence": [
+     "forecast=sealed/trends-basket-2026-10-03/grok-web.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "trends-basket-2026-10-03",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "grok-web-superfc",
+    "estimated_spend": 0.07065,
+    "evidence": [
+     "forecast=sealed/trends-basket-2026-10-03/grok-web-superfc.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "trends-basket-2026-10-03",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "test-jay",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/trends-basket-2026-10-03/test-jay.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "trends-basket-2026-10-03",
+    "route": "participant:social-simulation-arena.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "worldvac-base",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/trends-basket-2026-10-03/worldvac-base.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "trends-basket-2026-10-03",
+    "route": "participant:worldvac-ssa-agent.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "zhengzheng-agent",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/trends-basket-2026-10-03/zhengzheng-agent.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "trends-basket-2026-10-03",
+    "route": "participant:zhengzhengqimen.top",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web",
+    "estimated_spend": 0.07065,
+    "evidence": [
+     "forecast=sealed/wiki-top10-2026-10-04/claude-sonnet-web.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "wiki-top10-2026-10-04",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web-superfc",
+    "estimated_spend": 0.07065,
+    "evidence": [
+     "forecast=sealed/wiki-top10-2026-10-04/claude-sonnet-web-superfc.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "wiki-top10-2026-10-04",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web",
+    "estimated_spend": 0.010348,
+    "evidence": [],
+    "last_error": "provider transport failure",
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": "2026-09-24T23:07:49Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "wiki-top10-2026-10-04",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web-superfc",
+    "estimated_spend": 0.010348,
+    "evidence": [],
+    "last_error": "provider transport failure",
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": "2026-09-24T23:07:49Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "wiki-top10-2026-10-04",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gemini-pro-web",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": "2026-09-24T23:07:49Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "wiki-top10-2026-10-04",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "gemini-pro-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [
+     "forecast=sealed/wiki-top10-2026-10-04/gemini-pro-web-superfc.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "wiki-top10-2026-10-04",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "glm-web",
+    "estimated_spend": 0.01041,
+    "evidence": [
+     "forecast=sealed/wiki-top10-2026-10-04/glm-web.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "wiki-top10-2026-10-04",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "glm-web-superfc",
+    "estimated_spend": 0.01041,
+    "evidence": [],
+    "last_error": "provider transport failure",
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": "2026-09-24T23:07:49Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "wiki-top10-2026-10-04",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web",
+    "estimated_spend": 0.046875,
+    "evidence": [
+     "forecast=sealed/wiki-top10-2026-10-04/gpt-5.6-luna-web.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "wiki-top10-2026-10-04",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [
+     "forecast=sealed/wiki-top10-2026-10-04/gpt-5.6-luna-web-superfc.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "wiki-top10-2026-10-04",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "grok-web",
+    "estimated_spend": 0.07065,
+    "evidence": [
+     "forecast=sealed/wiki-top10-2026-10-04/grok-web.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "wiki-top10-2026-10-04",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "grok-web-superfc",
+    "estimated_spend": 0.07065,
+    "evidence": [
+     "forecast=sealed/wiki-top10-2026-10-04/grok-web-superfc.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "wiki-top10-2026-10-04",
+    "route": "ppapi:app-us.ppapi.ai",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "test-jay",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/wiki-top10-2026-10-04/test-jay.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "wiki-top10-2026-10-04",
+    "route": "participant:social-simulation-arena.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "worldvac-base",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/wiki-top10-2026-10-04/worldvac-base.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "wiki-top10-2026-10-04",
+    "route": "participant:worldvac-ssa-agent.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "zhengzheng-agent",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/wiki-top10-2026-10-04/zhengzheng-agent.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-09-25T14:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "wiki-top10-2026-10-04",
+    "route": "participant:zhengzhengqimen.top",
+    "state": "succeeded"
+   }
+  ],
   "counts": {
    "sources": {
     "deadline_risk": 0,
@@ -91792,13 +92498,48 @@
    "entrant_rounds": {
     "missed_lock": 0,
     "queued": 0,
-    "retryable_failure": 0,
+    "retryable_failure": 5,
     "running": 0,
-    "succeeded": 0,
+    "succeeded": 25,
     "terminal_failure": 0
    }
   },
   "alerts": [
+   {
+    "kind": "entrant_round",
+    "id": "trends-basket-2026-10-03/glm-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider transport failure",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "wiki-top10-2026-10-04/deepseek-pro-web",
+    "state": "retryable_failure",
+    "last_error": "provider transport failure",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "wiki-top10-2026-10-04/deepseek-pro-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider transport failure",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "wiki-top10-2026-10-04/gemini-pro-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "wiki-top10-2026-10-04/glm-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider transport failure",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
    {
     "kind": "source",
     "id": "civiqs",
