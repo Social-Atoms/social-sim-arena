@@ -104,7 +104,22 @@ HAND_ONLY = {
         "published before the 09-20 lock under a label the snapshot's filter "
         "did not read; the first point after the freeze was public before "
         "anyone answered. Resolve by hand or withdraw"),
+    # Asks for the certified House popular-vote margin, but its `series` is the
+    # generic-ballot polling average, which the pipeline carries -- so on its
+    # release the first point after the freeze would be a poll average, written
+    # as the election result.
+    "midterm-2026-house-margin": (
+        "resolves from certified House results, not from the generic-ballot "
+        "polling series it names; resolve by hand from the certified count"),
 }
+
+# Sources read once a day and scored on a reading taken after the lock.
+DAILY_SOURCES = {"civiqs"}
+
+
+def _source(series_id):
+    from . import series as series_registry
+    return (series_registry.SERIES.get(series_id) or {}).get("source")
 
 
 def candidate(r, series):
@@ -160,6 +175,18 @@ def candidate(r, series):
     # final round's snapshot already holds the preliminary for its own month
     # and no later month exists yet, so there is nothing strictly later and
     # the revision is still what it resolves against.
+    # A daily source is scored on a reading taken after the lock, so any
+    # reading dated before the lock was public while entrants answered. The
+    # frozen history cannot be trusted to have caught it: Civiqs reaches the
+    # repository only when a person pushes the Mac courier's archive, and the
+    # five `civiqs-2026-w38-*` scalar rounds froze at 09-16 on a history ending
+    # 09-04 because the 09-11 readings landed on 09-17 (#128). "The first point
+    # after the freeze" was then 09-11, five days before the lock, and all five
+    # resolved to it. Every correctly resolved Civiqs round is dated the Friday
+    # after its Wednesday lock, so this refusal touches none of them.
+    if _source(r["series"]) in DAILY_SOURCES:
+        lock_day = r["lock_at"][:10]
+        after = [p for p in after if p["date"] >= lock_day]
     later = [p for p in after if p["date"] > first_frozen_date]
     if later:
         after = later
