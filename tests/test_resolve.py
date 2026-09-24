@@ -372,6 +372,36 @@ def test_a_new_period_outranks_a_revision_of_an_older_one():
         refresh.read_lock_snapshot = real
 
 
+def test_a_round_named_hand_only_refuses_even_with_a_clean_candidate():
+    """`yougov-2026-w39-rv-approval` as it stands once the RV filter reads
+    both labels: its snapshot ends 2026-08-29, and the first point after it is
+    09-06 = 37 -- out on 09-09, eleven days before the 09-20 lock -- where the
+    round asked about the 09-19 wave = 35. Every other check passes, which is
+    exactly why it has to be refused by name."""
+    import ssa.refresh as refresh
+    real = refresh.read_lock_snapshot
+    refresh.read_lock_snapshot = lambda rid: {
+        "history": [{"date": "2026-08-22", "value": 40.0},
+                    {"date": "2026-08-29", "value": 38.0}]}
+    try:
+        published = _series([("2026-08-22", 40.0), ("2026-08-29", 38.0),
+                             ("2026-09-06", 37.0), ("2026-09-12", 40.0),
+                             ("2026-09-19", 35.0)], "yougov_rv_approval")
+        r = _round(rid="yougov-2026-w39-rv-approval", series="yougov_rv_approval",
+                   lock="2026-09-20T14:00:00Z", release="2026-09-22T14:00:00Z")
+        res, why = resolve.resolve_round(r, published, T("2026-09-24T00:00:00Z"))
+        assert res is None, res
+        assert why == resolve.HAND_ONLY["yougov-2026-w39-rv-approval"], why
+
+        # The same shape under any other id still resolves as before: the
+        # refusal is by name, not a rule that reaches other rounds.
+        other = dict(r, round_id="some-other-round")
+        res, why = resolve.resolve_round(other, published, T("2026-09-24T00:00:00Z"))
+        assert why is None and res["observed_date"] == "2026-09-06", (res, why)
+    finally:
+        refresh.read_lock_snapshot = real
+
+
 if __name__ == "__main__":
     for name, fn in sorted(list(globals().items())):
         if name.startswith("test_") and callable(fn):

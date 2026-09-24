@@ -87,11 +87,33 @@ def pre_lock_history(r, series):
             if p["date"] < freeze_date]
 
 
+# Rounds whose frozen history is known not to hold what was public at the
+# lock, so "the first release after the freeze" is not their answer. Named one
+# by one, because the general test for it -- two or more new periods dated
+# before the lock -- also matches Morning Consult rounds that resolved
+# correctly: Silver Bulletin files MC polls days late, so a week can carry two
+# points fielded before a lock and published after it.
+HAND_ONLY = {
+    # Frozen through a filter that read only the `Voters` label, so its history
+    # ends 2026-08-29; the 09-06 and 09-12 RV waves were already out under `All
+    # polls` before the 09-20 lock. With the filter repaired the first point
+    # after the freeze is 09-06 = 37, published 09-09, and not the 09-19 wave
+    # the round asked about.
+    "yougov-2026-w39-rv-approval": (
+        "frozen history ends 2026-08-29 but the 09-06 and 09-12 RV waves were "
+        "published before the 09-20 lock under a label the snapshot's filter "
+        "did not read; the first point after the freeze was public before "
+        "anyone answered. Resolve by hand or withdraw"),
+}
+
+
 def candidate(r, series):
     """(point, reason). The next release after the freeze, or why not.
 
     `point` is None whenever anything is unclear; `reason` always explains.
     """
+    if r.get("round_id") in HAND_ONLY:
+        return None, HAND_ONLY[r["round_id"]]
     points = series.get(r["series"])
     if not points:
         # Civiqs publishes only a JS dashboard, and Silver Bulletin has carried
