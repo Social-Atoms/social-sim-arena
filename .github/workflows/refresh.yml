@@ -157,6 +157,29 @@ jobs:
       - run: python tests/test_routes.py
         env:
           PYTHONPATH: .
+      # Civiqs refuses every GitHub runner (source-probe.yml, 2026-08-16), so
+      # its archive is fetched from a home connection by
+      # tools/local_source_archive.py and pushed to the `source-archive`
+      # branch, which main-guard does not cover. Before 2026-09-24 a person
+      # carried each archive to main by pull request, and when one landed
+      # late the five civiqs-2026-w38 rounds froze on a history two weeks old.
+      #
+      # Only files that branch has and this checkout lacks are copied in.
+      # Every archive is one file per day and the courier has only ever added
+      # files, so a new file is new data, and a file main already holds is
+      # never overwritten from outside. The commit step below already stages
+      # these directories, so they reach main with this run's data commit.
+      # continue-on-error: a courier problem must never stop the refresh.
+      - name: bring in the residential courier's archive
+        continue-on-error: true
+        run: |
+          if git fetch --no-tags origin '+refs/heads/source-archive:refs/remotes/origin/source-archive'; then
+            git diff --name-only --diff-filter=A -z HEAD origin/source-archive -- civiqs trends wikitop sources/yougov_xtab \
+              | xargs -0 -r git checkout origin/source-archive --
+            echo "courier archive: $(git status --porcelain -- civiqs trends wikitop sources/yougov_xtab | wc -l) new file(s) from source-archive"
+          else
+            echo "no source-archive branch; nothing to bring in"
+          fi
       # Both intake paths share the dedicated encrypted-data branch. Pull its
       # platform receipts into the untracked local cache before refresh reads
       # prior forecasts or reveals a locked round. The signed-forecast reveal
