@@ -270,6 +270,15 @@ def build_trackers(approval, generic, series, next_umich_release=None,
             "asof": yg["date"],
             "source": "Silver Bulletin poll database (poll-level)",
         }
+    yg_rv = latest(series.get("yougov_rv_approval") or [])
+    if yg_rv:
+        t["yougov_rv_approval"] = {
+            "label": "Economist/YouGov registered voters, latest wave",
+            "unit": "% approve",
+            "value": yg_rv["value"],
+            "asof": yg_rv["date"],
+            "source": "Silver Bulletin poll database (poll-level)",
+        }
     mc = latest(series.get("mc_approval") or [])
     if mc:
         t["mc_approval"] = {
@@ -2968,7 +2977,14 @@ def main():
         charts["approval_avg"] = average.weekly_series(approval, 80)
     if generic:
         charts["generic_margin"] = average.weekly_series(generic, 80)
-    for name in ("umich_sentiment", "yougov_approval", "mc_approval"):
+    # `yougov_rv_approval` is charted beside the adult series rather than in
+    # place of it: the adult line is what rounds up to w39 were asked about,
+    # and the publisher stopped reporting it on 2026-09-08, so on its own the
+    # Economist/YouGov task showed a line that ended a month before Season 0's
+    # entrants arrived. The RV series is one base throughout -- 85 waves -- so
+    # it charts without a splice.
+    for name in ("umich_sentiment", "yougov_approval", "yougov_rv_approval",
+                 "mc_approval"):
         if name in series:
             charts[name] = (series[name][-48:]
                             if name == "umich_sentiment" else series[name])

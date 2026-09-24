@@ -170,7 +170,24 @@ def test_the_economist_series_carry_only_economist_waves():
             if meta.get("source") != source or meta["tracker"] != "economist_yougov":
                 continue
             recs = polls(rows=rows, **meta["filters"])
-            assert len(recs) >= 8, sid
+            # Eight waves is the floor for a series that should carry the whole
+            # file, and it is there to catch a filter that matches almost
+            # nothing -- a renamed cut, a changed population, a typo. A series
+            # that declares `since` is deliberately short: it starts the day a
+            # cut became the published one, so counting what came before would
+            # be counting rows it is defined to exclude.
+            # `yougov_rv_strong_approval` begins 2026-09-06 and had three waves
+            # when it was registered. It still has to carry *every* wave after
+            # its floor, which is what the second assertion checks.
+            floor = meta["filters"].get("since")
+            assert len(recs) >= (1 if floor else 8), sid
+            if floor:
+                unfloored = {k: v for k, v in meta["filters"].items()
+                             if k != "since"}
+                after = [r for r in polls(rows=rows, **unfloored)
+                         if r["date"] >= sb._date(floor)]
+                assert len(recs) == len(after), \
+                    f"{sid} drops waves from after its own floor"
             assert all("economist" in r["sponsors"].lower() for r in recs), sid
     print("ok test_the_economist_series_carry_only_economist_waves")
 
