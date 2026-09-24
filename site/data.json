@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-23T21:30:13Z",
+ "generated_at": "2026-09-24T11:43:40Z",
  "season": 0,
  "trackers": {
   "trump_approval_avg": {
@@ -25,6 +25,13 @@
    "unit": "% approve",
    "value": 36.0,
    "asof": "2026-08-29",
+   "source": "Silver Bulletin poll database (poll-level)"
+  },
+  "yougov_rv_approval": {
+   "label": "Economist/YouGov registered voters, latest wave",
+   "unit": "% approve",
+   "value": 35.0,
+   "asof": "2026-09-19",
    "source": "Silver Bulletin poll database (poll-level)"
   },
   "mc_approval": {
@@ -30529,7 +30536,7 @@
    "horizon_days": 2.0,
    "batch_id": "batch-2026-09-14",
    "domain": "public-opinion",
-   "status": "awaiting_resolution",
+   "status": "resolved",
    "history_source": "window snapshot",
    "baselines": {
     "persistence": {
@@ -30554,6 +30561,13 @@
     }
    },
    "scoreable": true,
+   "resolution": {
+    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
+    "observed_date": "2026-09-18",
+    "resolved_at": "2026-09-24T04:46:59Z",
+    "series": "civiqs_net_approval",
+    "value": -27.7
+   },
    "n_forecasts": 29,
    "forecasts": {
     "claude-opus-5-web-superfc": {
@@ -30730,7 +30744,126 @@
      "mean": -24.91,
      "sd": 1.44
     }
-   }
+   },
+   "scores": {
+    "claude-opus-5-web-superfc": {
+     "crps": 1.6484,
+     "skill": 0.2091
+    },
+    "claude-opus-5-web": {
+     "crps": 1.8881,
+     "skill": 0.094
+    },
+    "claude-sonnet-web-superfc": {
+     "crps": 1.8413,
+     "skill": 0.1165
+    },
+    "claude-sonnet-web": {
+     "crps": 1.5487,
+     "skill": 0.2569
+    },
+    "climatology": {
+     "crps": 5.1845,
+     "skill": -1.4876
+    },
+    "crowd": {
+     "crps": 1.7162,
+     "skill": 0.1765
+    },
+    "deepseek-flash-web-superfc": {
+     "crps": 2.4267,
+     "skill": -0.1644
+    },
+    "deepseek-flash-web": {
+     "crps": 1.5545,
+     "skill": 0.2541
+    },
+    "deepseek-pro-web-superfc": {
+     "crps": 1.5545,
+     "skill": 0.2541
+    },
+    "deepseek-pro-web": {
+     "crps": 1.5487,
+     "skill": 0.2569
+    },
+    "ewma": {
+     "crps": 3.2958,
+     "skill": -0.5814
+    },
+    "gemini-flash-web-superfc": {
+     "crps": 1.3706,
+     "skill": 0.3424
+    },
+    "gemini-flash-web": {
+     "crps": 1.4094,
+     "skill": 0.3237
+    },
+    "gemini-pro-web-superfc": {
+     "crps": 1.5487,
+     "skill": 0.2569
+    },
+    "gemini-pro-web": {
+     "crps": 3.0487,
+     "skill": -0.4628
+    },
+    "glm-web-superfc": {
+     "crps": 1.6965,
+     "skill": 0.186
+    },
+    "glm-web": {
+     "crps": 1.9937,
+     "skill": 0.0434
+    },
+    "gpt-5.6-luna-web-superfc": {
+     "crps": 1.9937,
+     "skill": 0.0434
+    },
+    "gpt-5.6-luna-web": {
+     "crps": 1.3075,
+     "skill": 0.3726
+    },
+    "gpt-5.6-terra-web-superfc": {
+     "crps": 1.1857,
+     "skill": 0.4311
+    },
+    "gpt-5.6-terra-web": {
+     "crps": 1.3554,
+     "skill": 0.3496
+    },
+    "grok-web-superfc": {
+     "crps": 1.5981,
+     "skill": 0.2332
+    },
+    "grok-web": {
+     "crps": 1.8222,
+     "skill": 0.1257
+    },
+    "kimi-web-superfc": {
+     "crps": 1.694,
+     "skill": 0.1872
+    },
+    "kimi-web": {
+     "crps": 1.694,
+     "skill": 0.1872
+    },
+    "persistence": {
+     "crps": 2.0841,
+     "skill": 0.0
+    },
+    "qwen-3.8-web-superfc": {
+     "crps": 1.317,
+     "skill": 0.3681
+    },
+    "qwen-3.8-web": {
+     "crps": 1.5487,
+     "skill": 0.2569
+    },
+    "trend": {
+     "crps": 2.0064,
+     "skill": 0.0373
+    }
+   },
+   "persistence_crps": 2.0841
   },
   {
    "round_id": "civiqs-2026-w38-econ-direction",
@@ -36746,7 +36879,7 @@
     "civiqs_net_approval_male",
     "civiqs_net_approval_female"
    ],
-   "status": "open",
+   "status": "locked",
    "history_source": "window snapshot",
    "baselines": null,
    "scoreable": true,
@@ -36891,8 +37024,1002 @@
      }
     }
    },
-   "n_forecasts": 17,
+   "n_forecasts": 18,
    "forecasts": {
+    "apodex-futureflow": {
+     "filed": "2026-09-23T23:39Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_age_18_34": {
+       "mean": -50.4,
+       "sd": 2.2
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -36.3,
+       "sd": 2.1
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -10.7,
+       "sd": 2.7
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -9.5,
+       "sd": 2.3
+      },
+      "civiqs_net_approval_dem": {
+       "mean": -96.5,
+       "sd": 0.8
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -30.9,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -19.4,
+       "sd": 2.5
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -49.8,
+       "sd": 2.1
+      },
+      "civiqs_net_approval_female": {
+       "mean": -35.6,
+       "sd": 2.0
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -37.9,
+       "sd": 2.8
+      },
+      "civiqs_net_approval_male": {
+       "mean": -15.7,
+       "sd": 2.7
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -83.6,
+       "sd": 1.6
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -38.1,
+       "sd": 2.3
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -43.0,
+       "sd": 2.6
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -12.2,
+       "sd": 2.3
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 65.0,
+       "sd": 2.4
+      }
+     }
+    },
+    "claude-sonnet-web-superfc": {
+     "filed": "2026-09-23T04:44Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_age_18_34": {
+       "mean": -53.0,
+       "sd": 1.4
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -38.2,
+       "sd": 1.4
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -14.8,
+       "sd": 1.6
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -12.5,
+       "sd": 2.0
+      },
+      "civiqs_net_approval_dem": {
+       "mean": -96.9,
+       "sd": 0.35
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -32.5,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -22.5,
+       "sd": 1.3
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -52.5,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_female": {
+       "mean": -37.5,
+       "sd": 1.3
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -41.8,
+       "sd": 1.4
+      },
+      "civiqs_net_approval_male": {
+       "mean": -19.5,
+       "sd": 1.3
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -85.3,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -40.0,
+       "sd": 1.6
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -45.5,
+       "sd": 1.4
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -15.5,
+       "sd": 1.3
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 61.5,
+       "sd": 2.5
+      }
+     }
+    },
+    "claude-sonnet-web": {
+     "filed": "2026-09-23T04:43Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_age_18_34": {
+       "mean": -53.2,
+       "sd": 1.2
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -38.3,
+       "sd": 1.2
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -15.0,
+       "sd": 1.6
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -13.0,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_dem": {
+       "mean": -96.9,
+       "sd": 0.4
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -32.3,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -22.8,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -53.0,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_female": {
+       "mean": -37.8,
+       "sd": 1.3
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -42.0,
+       "sd": 1.1
+      },
+      "civiqs_net_approval_male": {
+       "mean": -19.6,
+       "sd": 1.3
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -85.4,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -40.0,
+       "sd": 1.3
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -45.3,
+       "sd": 1.3
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -15.8,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_rep": {
+       "mean": -61.5,
+       "sd": 2.5
+      }
+     }
+    },
+    "crowd": {
+     "filed": "2026-09-23T22:00Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_dem": {
+       "mean": -90.4,
+       "sd": 24.1692
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -38.9533,
+       "sd": 10.5925
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 49.9067,
+       "sd": 33.6364
+      },
+      "civiqs_net_approval_age_18_34": {
+       "mean": -49.2267,
+       "sd": 13.2416
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -35.46,
+       "sd": 9.5947
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -13.3733,
+       "sd": 4.0409
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -11.3467,
+       "sd": 3.5714
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -14.0867,
+       "sd": 4.087
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -79.4333,
+       "sd": 21.2579
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -37.2933,
+       "sd": 10.0804
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -42.34,
+       "sd": 11.4379
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -20.8267,
+       "sd": 5.8136
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -30.04,
+       "sd": 8.1013
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -48.6667,
+       "sd": 13.1291
+      },
+      "civiqs_net_approval_male": {
+       "mean": -17.9067,
+       "sd": 5.1036
+      },
+      "civiqs_net_approval_female": {
+       "mean": -34.8333,
+       "sd": 9.4128
+      }
+     }
+    },
+    "deepseek-pro-web-superfc": {
+     "filed": "2026-09-23T04:46Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_age_18_34": {
+       "mean": -53.3,
+       "sd": 1.6
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -38.5,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -14.1,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -12.7,
+       "sd": 1.9
+      },
+      "civiqs_net_approval_dem": {
+       "mean": -97.0,
+       "sd": 0.5
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -32.2,
+       "sd": 0.7
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -22.9,
+       "sd": 1.7
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -52.0,
+       "sd": 1.4
+      },
+      "civiqs_net_approval_female": {
+       "mean": -37.3,
+       "sd": 1.1
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -43.2,
+       "sd": 2.2
+      },
+      "civiqs_net_approval_male": {
+       "mean": -19.9,
+       "sd": 1.7
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -85.3,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -40.8,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -45.5,
+       "sd": 1.4
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -15.4,
+       "sd": 1.3
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 62.6,
+       "sd": 1.5
+      }
+     }
+    },
+    "deepseek-pro-web": {
+     "filed": "2026-09-23T04:46Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_age_18_34": {
+       "mean": -53.3,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -38.2,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -15.5,
+       "sd": 1.2
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -12.0,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_dem": {
+       "mean": -97.0,
+       "sd": 0.4
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -32.3,
+       "sd": 0.5
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -23.2,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -51.7,
+       "sd": 1.3
+      },
+      "civiqs_net_approval_female": {
+       "mean": -37.4,
+       "sd": 1.1
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -42.5,
+       "sd": 2.0
+      },
+      "civiqs_net_approval_male": {
+       "mean": -20.2,
+       "sd": 1.4
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -85.3,
+       "sd": 0.9
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -40.3,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -46.8,
+       "sd": 1.3
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -15.5,
+       "sd": 1.1
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 62.5,
+       "sd": 1.2
+      }
+     }
+    },
+    "gemini-pro-web-superfc": {
+     "filed": "2026-09-23T04:44Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_age_18_34": {
+       "mean": -52.3,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -37.8,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -14.0,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -11.9,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_dem": {
+       "mean": -96.7,
+       "sd": 0.6
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -32.2,
+       "sd": 1.4
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -22.1,
+       "sd": 1.6
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -51.6,
+       "sd": 1.6
+      },
+      "civiqs_net_approval_female": {
+       "mean": -37.1,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -41.3,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_male": {
+       "mean": -19.0,
+       "sd": 1.6
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -84.7,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -39.8,
+       "sd": 1.4
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -45.0,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -14.8,
+       "sd": 1.4
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 63.1,
+       "sd": 2.5
+      }
+     }
+    },
+    "gemini-pro-web": {
+     "filed": "2026-09-23T04:44Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_age_18_34": {
+       "mean": -52.7,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -37.5,
+       "sd": 1.2
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -14.5,
+       "sd": 1.6
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -12.3,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_dem": {
+       "mean": -96.8,
+       "sd": 0.5
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -32.3,
+       "sd": 1.2
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -22.2,
+       "sd": 1.6
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -52.5,
+       "sd": 2.0
+      },
+      "civiqs_net_approval_female": {
+       "mean": -37.3,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -41.5,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_male": {
+       "mean": -19.0,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -85.1,
+       "sd": 0.8
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -39.8,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -45.2,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -15.1,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 61.9,
+       "sd": 2.2
+      }
+     }
+    },
+    "glm-web-superfc": {
+     "filed": "2026-09-23T04:46Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_age_18_34": {
+       "mean": -53.0,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -38.5,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -14.5,
+       "sd": 2.0
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -12.0,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_dem": {
+       "mean": -97.0,
+       "sd": 0.5
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -32.5,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -22.5,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -52.5,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_female": {
+       "mean": -37.5,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -42.0,
+       "sd": 2.0
+      },
+      "civiqs_net_approval_male": {
+       "mean": -19.5,
+       "sd": 2.0
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -85.5,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -40.5,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -45.5,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -15.5,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 62.0,
+       "sd": 2.5
+      }
+     }
+    },
+    "glm-web": {
+     "filed": "2026-09-23T11:33Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_age_18_34": {
+       "mean": -52.2,
+       "sd": 0.8
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -37.6,
+       "sd": 0.8
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -13.5,
+       "sd": 1.2
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -11.2,
+       "sd": 1.2
+      },
+      "civiqs_net_approval_dem": {
+       "mean": -96.8,
+       "sd": 0.3
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -32.1,
+       "sd": 0.5
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -21.5,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -51.6,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_female": {
+       "mean": -36.8,
+       "sd": 0.8
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -41.2,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_male": {
+       "mean": -18.5,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -84.7,
+       "sd": 0.5
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -39.7,
+       "sd": 0.8
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -44.9,
+       "sd": 0.8
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -14.2,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 62.5,
+       "sd": 1.5
+      }
+     }
+    },
+    "gpt-5.6-luna-web-superfc": {
+     "filed": "2026-09-23T04:43Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_age_18_34": {
+       "mean": -53.3,
+       "sd": 1.4
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -38.3,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -15.4,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -13.5,
+       "sd": 1.6
+      },
+      "civiqs_net_approval_dem": {
+       "mean": -96.9,
+       "sd": 0.8
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -32.3,
+       "sd": 1.2
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -23.0,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -53.8,
+       "sd": 1.7
+      },
+      "civiqs_net_approval_female": {
+       "mean": -38.1,
+       "sd": 1.4
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -42.4,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_male": {
+       "mean": -19.8,
+       "sd": 1.4
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -85.6,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -40.0,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -45.5,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -16.0,
+       "sd": 1.4
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 61.2,
+       "sd": 2.3
+      }
+     }
+    },
+    "gpt-5.6-luna-web": {
+     "filed": "2026-09-23T04:43Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_age_18_34": {
+       "mean": -53.0,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -39.2,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -15.2,
+       "sd": 1.7
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -12.2,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_dem": {
+       "mean": -96.8,
+       "sd": 0.8
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -32.5,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -22.9,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -52.0,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_female": {
+       "mean": -38.0,
+       "sd": 1.7
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -42.3,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_male": {
+       "mean": -19.8,
+       "sd": 1.7
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -85.2,
+       "sd": 1.2
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -41.0,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -46.8,
+       "sd": 1.8
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -15.8,
+       "sd": 1.7
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 61.5,
+       "sd": 2.4
+      }
+     }
+    },
+    "grok-web-superfc": {
+     "filed": "2026-09-23T04:47Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_age_18_34": {
+       "mean": -53.5,
+       "sd": 0.58
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -37.2,
+       "sd": 0.58
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -15.6,
+       "sd": 0.58
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -13.8,
+       "sd": 0.58
+      },
+      "civiqs_net_approval_dem": {
+       "mean": -97.0,
+       "sd": 0.58
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -32.2,
+       "sd": 0.58
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -23.1,
+       "sd": 0.58
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -54.1,
+       "sd": 0.58
+      },
+      "civiqs_net_approval_female": {
+       "mean": -38.2,
+       "sd": 0.58
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -42.3,
+       "sd": 0.58
+      },
+      "civiqs_net_approval_male": {
+       "mean": -19.8,
+       "sd": 0.58
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -85.7,
+       "sd": 0.58
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -39.2,
+       "sd": 0.58
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -45.3,
+       "sd": 0.58
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -16.1,
+       "sd": 0.58
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 60.3,
+       "sd": 0.58
+      }
+     }
+    },
+    "grok-web": {
+     "filed": "2026-09-23T04:46Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_age_18_34": {
+       "mean": -53.3,
+       "sd": 0.4
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -38.6,
+       "sd": 2.0
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -14.8,
+       "sd": 1.2
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -12.7,
+       "sd": 2.4
+      },
+      "civiqs_net_approval_dem": {
+       "mean": -97.0,
+       "sd": 0.2
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -32.3,
+       "sd": 0.7
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -23.2,
+       "sd": 0.5
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -51.7,
+       "sd": 2.2
+      },
+      "civiqs_net_approval_female": {
+       "mean": -37.4,
+       "sd": 1.2
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -43.1,
+       "sd": 1.2
+      },
+      "civiqs_net_approval_male": {
+       "mean": -20.2,
+       "sd": 0.9
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -85.6,
+       "sd": 1.1
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -40.7,
+       "sd": 1.3
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -46.1,
+       "sd": 1.9
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -15.4,
+       "sd": 0.6
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 62.3,
+       "sd": 1.9
+      }
+     }
+    },
     "persistence": {
      "filed": "2026-09-23T21:28Z",
      "shape": "profile",
@@ -36964,69 +38091,218 @@
       }
      }
     },
-    "claude-sonnet-web-superfc": {
-     "filed": "2026-09-23T04:44:04Z",
-     "sealed": true
-    },
-    "claude-sonnet-web": {
-     "filed": "2026-09-23T04:43:42Z",
-     "sealed": true
-    },
-    "deepseek-pro-web-superfc": {
-     "filed": "2026-09-23T04:46:49Z",
-     "sealed": true
-    },
-    "deepseek-pro-web": {
-     "filed": "2026-09-23T04:46:18Z",
-     "sealed": true
-    },
-    "gemini-pro-web-superfc": {
-     "filed": "2026-09-23T04:44:37Z",
-     "sealed": true
-    },
-    "gemini-pro-web": {
-     "filed": "2026-09-23T04:44:39Z",
-     "sealed": true
-    },
-    "glm-web-superfc": {
-     "filed": "2026-09-23T04:46:22Z",
-     "sealed": true
-    },
-    "glm-web": {
-     "filed": "2026-09-23T11:33:48Z",
-     "sealed": true
-    },
-    "gpt-5.6-luna-web-superfc": {
-     "filed": "2026-09-23T04:43:35Z",
-     "sealed": true
-    },
-    "gpt-5.6-luna-web": {
-     "filed": "2026-09-23T04:43:45Z",
-     "sealed": true
-    },
-    "grok-web-superfc": {
-     "filed": "2026-09-23T04:47:21Z",
-     "sealed": true
-    },
-    "grok-web": {
-     "filed": "2026-09-23T04:46:48Z",
-     "sealed": true
-    },
     "test-jay": {
-     "filed": "2026-09-23T04:42:32Z",
-     "sealed": true
+     "filed": "2026-09-23T04:42Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_age_18_34": {
+       "mean": 50.0,
+       "sd": 5.0
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": 50.0,
+       "sd": 5.0
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": 50.0,
+       "sd": 5.0
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": 50.0,
+       "sd": 5.0
+      },
+      "civiqs_net_approval_dem": {
+       "mean": 50.0,
+       "sd": 5.0
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": 50.0,
+       "sd": 5.0
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": 50.0,
+       "sd": 5.0
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": 50.0,
+       "sd": 5.0
+      },
+      "civiqs_net_approval_female": {
+       "mean": 50.0,
+       "sd": 5.0
+      },
+      "civiqs_net_approval_ind": {
+       "mean": 50.0,
+       "sd": 5.0
+      },
+      "civiqs_net_approval_male": {
+       "mean": 50.0,
+       "sd": 5.0
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": 50.0,
+       "sd": 5.0
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": 50.0,
+       "sd": 5.0
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": 50.0,
+       "sd": 5.0
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": 50.0,
+       "sd": 5.0
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 50.0,
+       "sd": 5.0
+      }
+     }
     },
     "worldvac-base": {
-     "filed": "2026-09-23T04:42:32Z",
-     "sealed": true
+     "filed": "2026-09-23T04:42Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_age_18_34": {
+       "mean": -51.9,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": -37.7,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": -13.0,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": -10.9,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_dem": {
+       "mean": -96.7,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": -32.0,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": -21.1,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": -51.2,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_female": {
+       "mean": -36.5,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_ind": {
+       "mean": -40.8,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_male": {
+       "mean": -18.1,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": -84.5,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": -39.5,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": -44.7,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": -14.0,
+       "sd": 1.5
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 63.7,
+       "sd": 1.5
+      }
+     }
     },
     "zhengzheng-agent": {
-     "filed": "2026-09-23T04:42:56Z",
-     "sealed": true
-    },
-    "apodex-futureflow": {
-     "filed": "2026-09-23T00:10:04.854692Z",
-     "sealed": true
+     "filed": "2026-09-23T04:42Z",
+     "shape": "profile",
+     "cells_n": 16,
+     "cells": {
+      "civiqs_net_approval_age_18_34": {
+       "mean": 0.0,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_age_35_49": {
+       "mean": 0.0,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_age_50_64": {
+       "mean": 0.0,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_age_65_up": {
+       "mean": 0.0,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_dem": {
+       "mean": 0.0,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_edu_college": {
+       "mean": 0.0,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_edu_noncollege": {
+       "mean": 0.0,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_edu_postgrad": {
+       "mean": 0.0,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_female": {
+       "mean": 0.0,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_ind": {
+       "mean": 0.0,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_male": {
+       "mean": 0.0,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_race_black": {
+       "mean": 0.0,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_race_hispanic": {
+       "mean": 0.0,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_race_other": {
+       "mean": 0.0,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_race_white": {
+       "mean": 0.0,
+       "sd": 1.0
+      },
+      "civiqs_net_approval_rep": {
+       "mean": 0.0,
+       "sd": 1.0
+      }
+     }
     }
    }
   },
@@ -37111,7 +38387,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "profile",
      "cells_n": 5,
      "cells": {
@@ -37189,7 +38465,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "ranking",
      "items_n": 10,
      "items": [
@@ -40881,7 +42157,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -41133,7 +42409,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -41385,7 +42661,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -41637,7 +42913,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -41752,25 +43028,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.28,
      "sd": 1.0
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.72,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.5,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.9,
      "sd": 1.21
@@ -41820,25 +43096,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -36.7,
      "sd": 2.67
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -39.23,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -41.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -41.79,
      "sd": 1.54
@@ -41888,25 +43164,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 56.35,
      "sd": 2.66
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 59.58,
      "sd": 1.14
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 60.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 59.75,
      "sd": 2.27
@@ -42093,7 +43369,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -42246,7 +43522,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "profile",
      "cells_n": 5,
      "cells": {
@@ -42324,7 +43600,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "ranking",
      "items_n": 10,
      "items": [
@@ -42385,25 +43661,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 3.27,
      "sd": 1.0
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 3.57,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 3.58,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 3.8,
      "sd": 1.8
@@ -42453,25 +43729,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 3.0,
      "sd": 1.0
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 3.21,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 3.19,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 3.32,
      "sd": 1.8
@@ -42521,25 +43797,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.28,
      "sd": 1.0
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.72,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.5,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.93,
      "sd": 1.3
@@ -42589,25 +43865,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -32.66,
      "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -34.43,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -36.6,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -36.18,
      "sd": 2.87
@@ -42657,25 +43933,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -29.7,
      "sd": 1.06
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -30.61,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -30.9,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -31.99,
      "sd": 1.3
@@ -42862,7 +44138,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -43015,7 +44291,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "profile",
      "cells_n": 5,
      "cells": {
@@ -43093,7 +44369,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "ranking",
      "items_n": 10,
      "items": [
@@ -43291,7 +44567,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -43444,7 +44720,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "profile",
      "cells_n": 5,
      "cells": {
@@ -43522,7 +44798,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "ranking",
      "items_n": 10,
      "items": [
@@ -43583,25 +44859,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 43.2,
      "sd": 1.64
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 42.84,
      "sd": 1.5
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 42.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 41.09,
      "sd": 3.98
@@ -43788,7 +45064,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -43951,7 +45227,7 @@
      "sd": 2.0
     },
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 5.99,
      "sd": 1.12
@@ -43987,7 +45263,7 @@
      "sd": 0.8
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 7.51,
      "sd": 1.0
@@ -44077,7 +45353,7 @@
      "sd": 1.2
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 8.31,
      "sd": 1.5
@@ -44107,7 +45383,7 @@
      "sd": 1.8
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 9.18,
      "sd": 1.85
@@ -45212,25 +46488,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -22.25,
      "sd": 1.98
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -25.92,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -27.7,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -27.55,
      "sd": 2.05
@@ -45280,25 +46556,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -32.66,
      "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -34.43,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -36.6,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -35.68,
      "sd": 2.66
@@ -45348,25 +46624,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -29.7,
      "sd": 1.06
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -30.61,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -30.9,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -31.71,
      "sd": 1.21
@@ -45416,25 +46692,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -22.25,
      "sd": 1.98
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -25.92,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -27.7,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -28.12,
      "sd": 2.21
@@ -45484,25 +46760,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -36.7,
      "sd": 2.67
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -39.23,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -41.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -42.55,
      "sd": 1.66
@@ -45552,25 +46828,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 56.35,
      "sd": 2.66
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 59.58,
      "sd": 1.14
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 60.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 59.83,
      "sd": 2.45
@@ -45620,25 +46896,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.28,
      "sd": 1.0
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.72,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.5,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.93,
      "sd": 1.39
@@ -45688,25 +46964,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -22.25,
      "sd": 1.98
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -25.92,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -27.7,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -28.12,
      "sd": 2.35
@@ -45756,25 +47032,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -36.7,
      "sd": 2.67
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -39.23,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -41.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -42.55,
      "sd": 1.77
@@ -45824,25 +47100,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -32.66,
      "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -34.43,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -36.6,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -36.18,
      "sd": 3.06
@@ -45892,25 +47168,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -29.7,
      "sd": 1.06
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -30.61,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -30.9,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -31.99,
      "sd": 1.39
@@ -45960,25 +47236,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 56.35,
      "sd": 2.66
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 59.58,
      "sd": 1.14
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 60.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 59.83,
      "sd": 2.61
@@ -46028,25 +47304,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.28,
      "sd": 1.0
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.72,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.5,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.93,
      "sd": 1.47
@@ -46096,25 +47372,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -22.25,
      "sd": 1.98
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -25.92,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -27.7,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -28.12,
      "sd": 2.49
@@ -46164,25 +47440,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -36.7,
      "sd": 2.67
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -39.23,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -41.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -42.55,
      "sd": 1.87
@@ -46232,25 +47508,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -32.66,
      "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -34.43,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -36.6,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -36.18,
      "sd": 3.24
@@ -46300,25 +47576,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -29.7,
      "sd": 1.06
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -30.61,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -30.9,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -31.99,
      "sd": 1.47
@@ -46368,25 +47644,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 56.35,
      "sd": 2.66
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 59.58,
      "sd": 1.14
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 60.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 59.83,
      "sd": 2.76
@@ -46474,7 +47750,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "profile",
      "cells_n": 5,
      "cells": {
@@ -46552,7 +47828,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "ranking",
      "items_n": 10,
      "items": [
@@ -46613,25 +47889,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.28,
      "sd": 1.0
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.72,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.5,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 29.93,
      "sd": 1.55
@@ -46681,25 +47957,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -22.25,
      "sd": 1.98
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -25.92,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -27.7,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -28.12,
      "sd": 2.62
@@ -46749,25 +48025,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -36.7,
      "sd": 2.67
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -39.23,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -41.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -42.55,
      "sd": 1.97
@@ -46817,25 +48093,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -32.66,
      "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -34.43,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -36.6,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -36.18,
      "sd": 3.41
@@ -46885,25 +48161,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -29.7,
      "sd": 1.06
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -30.61,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -30.9,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": -31.99,
      "sd": 1.55
@@ -46953,25 +48229,25 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 56.35,
      "sd": 2.66
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 59.58,
      "sd": 1.14
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 60.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
      "mean": 59.83,
      "sd": 2.91
@@ -47158,7 +48434,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -47549,74 +48825,6 @@
    }
   },
   {
-   "round_id": "yougov-2026-w40-approval",
-   "tracker": "economist_yougov",
-   "series": "yougov_approval",
-   "question": "Economist/YouGov weekly tracker: percent of US adult citizens who approve of Donald Trump's job performance",
-   "unit": "% approve",
-   "release_at": "2026-09-29T14:00:00Z",
-   "release_estimated": true,
-   "lock_at": "2026-09-27T14:00:00Z",
-   "resolve": "topline PDF of the wave",
-   "target_type": "continuous_normal",
-   "deadline": "2026-09-27T14:00:00Z",
-   "published_at": "2026-09-20T14:00:00Z",
-   "horizon_days": 2.0,
-   "batch_id": "batch-2026-09-21",
-   "domain": "public-opinion",
-   "status": "open",
-   "baselines": {
-    "persistence": {
-     "mean": 36.0,
-     "sd": 1.5,
-     "method": "persistence"
-    },
-    "trend": {
-     "mean": 34.8,
-     "sd": 2.97,
-     "method": "trend_ols"
-    },
-    "ewma": {
-     "mean": 35.55,
-     "sd": 2.08,
-     "method": "ewma"
-    },
-    "climatology": {
-     "mean": 36.17,
-     "sd": 1.52,
-     "method": "climatology"
-    }
-   },
-   "scoreable": true,
-   "n_forecasts": 4,
-   "forecasts": {
-    "climatology": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 36.17,
-     "sd": 1.52
-    },
-    "ewma": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 35.55,
-     "sd": 2.08
-    },
-    "persistence": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 36.0,
-     "sd": 1.5
-    },
-    "trend": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 34.8,
-     "sd": 2.97
-    }
-   }
-  },
-  {
    "round_id": "yougov-2026-w40-rv-approval",
    "tracker": "economist_yougov",
    "series": "yougov_rv_approval",
@@ -47635,23 +48843,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 38.0,
+     "mean": 35.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 38.31,
-     "sd": 1.88,
+     "mean": 36.67,
+     "sd": 2.9,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 38.94,
-     "sd": 1.0,
+     "mean": 37.34,
+     "sd": 1.25,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 39.79,
-     "sd": 1.02,
+     "mean": 39.42,
+     "sd": 1.44,
      "method": "climatology"
     }
    },
@@ -47659,36 +48867,36 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 39.79,
-     "sd": 1.02
+     "mean": 39.42,
+     "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.94,
-     "sd": 1.0
+     "mean": 37.34,
+     "sd": 1.25
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.0,
+     "mean": 35.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.31,
-     "sd": 1.88
+     "mean": 36.67,
+     "sd": 2.9
     }
    }
   },
   {
    "round_id": "yougov-2026-w40-strong-approval",
    "tracker": "economist_yougov",
-   "series": "yougov_strong_approval",
-   "question": "Economist/YouGov weekly tracker: percent of US adults who strongly approve of Donald Trump's job performance",
+   "series": "yougov_rv_strong_approval",
+   "question": "Economist/YouGov weekly tracker: percent of US registered voters who strongly approve of Donald Trump's job performance",
    "unit": "% approve",
    "release_at": "2026-09-29T14:00:00Z",
    "release_estimated": true,
@@ -47703,23 +48911,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 19.0,
+     "mean": 17.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 16.86,
-     "sd": 3.9,
+     "mean": 12.97,
+     "sd": 1.15,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 18.34,
-     "sd": 2.0,
+     "mean": 19.28,
+     "sd": 2.5,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 19.75,
-     "sd": 1.62,
+     "mean": 19.33,
+     "sd": 2.52,
      "method": "climatology"
     }
    },
@@ -47727,96 +48935,28 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 19.75,
-     "sd": 1.62
+     "mean": 19.33,
+     "sd": 2.52
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 18.34,
-     "sd": 2.0
+     "mean": 19.28,
+     "sd": 2.5
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 19.0,
+     "mean": 17.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 16.86,
-     "sd": 3.9
-    }
-   }
-  },
-  {
-   "round_id": "yougov-2026-w41-approval",
-   "tracker": "economist_yougov",
-   "series": "yougov_approval",
-   "question": "Economist/YouGov weekly tracker: percent of US adult citizens who approve of Donald Trump's job performance",
-   "unit": "% approve",
-   "release_at": "2026-10-06T14:00:00Z",
-   "release_estimated": true,
-   "lock_at": "2026-10-04T14:00:00Z",
-   "resolve": "topline PDF of the wave",
-   "target_type": "continuous_normal",
-   "deadline": "2026-10-04T14:00:00Z",
-   "published_at": "2026-09-27T14:00:00Z",
-   "horizon_days": 2.0,
-   "batch_id": "batch-2026-09-28",
-   "domain": "public-opinion",
-   "status": "open",
-   "baselines": {
-    "persistence": {
-     "mean": 36.0,
-     "sd": 1.5,
-     "method": "persistence"
-    },
-    "trend": {
-     "mean": 34.8,
-     "sd": 3.13,
-     "method": "trend_ols"
-    },
-    "ewma": {
-     "mean": 35.55,
-     "sd": 2.08,
-     "method": "ewma"
-    },
-    "climatology": {
-     "mean": 36.17,
-     "sd": 1.52,
-     "method": "climatology"
-    }
-   },
-   "scoreable": true,
-   "n_forecasts": 4,
-   "forecasts": {
-    "climatology": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 36.17,
-     "sd": 1.52
-    },
-    "ewma": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 35.55,
-     "sd": 2.08
-    },
-    "persistence": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 36.0,
-     "sd": 1.5
-    },
-    "trend": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 34.8,
-     "sd": 3.13
+     "mean": 12.97,
+     "sd": 1.15
     }
    }
   },
@@ -47839,23 +48979,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 38.0,
+     "mean": 35.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 38.31,
-     "sd": 1.98,
+     "mean": 36.33,
+     "sd": 3.14,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 38.94,
-     "sd": 1.0,
+     "mean": 37.34,
+     "sd": 1.25,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 39.79,
-     "sd": 1.02,
+     "mean": 39.42,
+     "sd": 1.44,
      "method": "climatology"
     }
    },
@@ -47863,36 +49003,36 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 39.79,
-     "sd": 1.02
+     "mean": 39.42,
+     "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.94,
-     "sd": 1.0
+     "mean": 37.34,
+     "sd": 1.25
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.0,
+     "mean": 35.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.31,
-     "sd": 1.98
+     "mean": 36.33,
+     "sd": 3.14
     }
    }
   },
   {
    "round_id": "yougov-2026-w41-strong-approval",
    "tracker": "economist_yougov",
-   "series": "yougov_strong_approval",
-   "question": "Economist/YouGov weekly tracker: percent of US adults who strongly approve of Donald Trump's job performance",
+   "series": "yougov_rv_strong_approval",
+   "question": "Economist/YouGov weekly tracker: percent of US registered voters who strongly approve of Donald Trump's job performance",
    "unit": "% approve",
    "release_at": "2026-10-06T14:00:00Z",
    "release_estimated": true,
@@ -47907,23 +49047,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 19.0,
+     "mean": 17.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 16.86,
-     "sd": 4.12,
+     "mean": 10.3,
+     "sd": 1.25,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 18.34,
-     "sd": 2.0,
+     "mean": 19.28,
+     "sd": 2.5,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 19.75,
-     "sd": 1.62,
+     "mean": 19.33,
+     "sd": 2.52,
      "method": "climatology"
     }
    },
@@ -47931,96 +49071,28 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 19.75,
-     "sd": 1.62
+     "mean": 19.33,
+     "sd": 2.52
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 18.34,
-     "sd": 2.0
+     "mean": 19.28,
+     "sd": 2.5
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 19.0,
+     "mean": 17.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 16.86,
-     "sd": 4.12
-    }
-   }
-  },
-  {
-   "round_id": "yougov-2026-w42-approval",
-   "tracker": "economist_yougov",
-   "series": "yougov_approval",
-   "question": "Economist/YouGov weekly tracker: percent of US adult citizens who approve of Donald Trump's job performance",
-   "unit": "% approve",
-   "release_at": "2026-10-13T14:00:00Z",
-   "release_estimated": true,
-   "lock_at": "2026-10-11T14:00:00Z",
-   "resolve": "topline PDF of the wave",
-   "target_type": "continuous_normal",
-   "deadline": "2026-10-11T14:00:00Z",
-   "published_at": "2026-10-04T14:00:00Z",
-   "horizon_days": 2.0,
-   "batch_id": "batch-2026-10-05",
-   "domain": "public-opinion",
-   "status": "open",
-   "baselines": {
-    "persistence": {
-     "mean": 36.0,
-     "sd": 1.5,
-     "method": "persistence"
-    },
-    "trend": {
-     "mean": 34.8,
-     "sd": 3.29,
-     "method": "trend_ols"
-    },
-    "ewma": {
-     "mean": 35.55,
-     "sd": 2.08,
-     "method": "ewma"
-    },
-    "climatology": {
-     "mean": 36.17,
-     "sd": 1.52,
-     "method": "climatology"
-    }
-   },
-   "scoreable": true,
-   "n_forecasts": 4,
-   "forecasts": {
-    "climatology": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 36.17,
-     "sd": 1.52
-    },
-    "ewma": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 35.55,
-     "sd": 2.08
-    },
-    "persistence": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 36.0,
-     "sd": 1.5
-    },
-    "trend": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 34.8,
-     "sd": 3.29
+     "mean": 10.3,
+     "sd": 1.25
     }
    }
   },
@@ -48043,23 +49115,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 38.0,
+     "mean": 35.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 38.31,
-     "sd": 2.08,
+     "mean": 36.13,
+     "sd": 3.37,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 38.94,
-     "sd": 1.0,
+     "mean": 37.34,
+     "sd": 1.25,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 39.79,
-     "sd": 1.02,
+     "mean": 39.42,
+     "sd": 1.44,
      "method": "climatology"
     }
    },
@@ -48067,36 +49139,36 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 39.79,
-     "sd": 1.02
+     "mean": 39.42,
+     "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.94,
-     "sd": 1.0
+     "mean": 37.34,
+     "sd": 1.25
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.0,
+     "mean": 35.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.31,
-     "sd": 2.08
+     "mean": 36.13,
+     "sd": 3.37
     }
    }
   },
   {
    "round_id": "yougov-2026-w42-strong-approval",
    "tracker": "economist_yougov",
-   "series": "yougov_strong_approval",
-   "question": "Economist/YouGov weekly tracker: percent of US adults who strongly approve of Donald Trump's job performance",
+   "series": "yougov_rv_strong_approval",
+   "question": "Economist/YouGov weekly tracker: percent of US registered voters who strongly approve of Donald Trump's job performance",
    "unit": "% approve",
    "release_at": "2026-10-13T14:00:00Z",
    "release_estimated": true,
@@ -48111,23 +49183,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 19.0,
+     "mean": 17.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 16.86,
-     "sd": 4.33,
+     "mean": 8.77,
+     "sd": 1.34,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 18.34,
-     "sd": 2.0,
+     "mean": 19.28,
+     "sd": 2.5,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 19.75,
-     "sd": 1.62,
+     "mean": 19.33,
+     "sd": 2.52,
      "method": "climatology"
     }
    },
@@ -48135,96 +49207,28 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 19.75,
-     "sd": 1.62
+     "mean": 19.33,
+     "sd": 2.52
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 18.34,
-     "sd": 2.0
+     "mean": 19.28,
+     "sd": 2.5
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 19.0,
+     "mean": 17.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 16.86,
-     "sd": 4.33
-    }
-   }
-  },
-  {
-   "round_id": "yougov-2026-w43-approval",
-   "tracker": "economist_yougov",
-   "series": "yougov_approval",
-   "question": "Economist/YouGov weekly tracker: percent of US adult citizens who approve of Donald Trump's job performance",
-   "unit": "% approve",
-   "release_at": "2026-10-20T14:00:00Z",
-   "release_estimated": true,
-   "lock_at": "2026-10-18T14:00:00Z",
-   "resolve": "topline PDF of the wave",
-   "target_type": "continuous_normal",
-   "deadline": "2026-10-18T14:00:00Z",
-   "published_at": "2026-10-11T14:00:00Z",
-   "horizon_days": 2.0,
-   "batch_id": "batch-2026-10-12",
-   "domain": "public-opinion",
-   "status": "open",
-   "baselines": {
-    "persistence": {
-     "mean": 36.0,
-     "sd": 1.5,
-     "method": "persistence"
-    },
-    "trend": {
-     "mean": 34.8,
-     "sd": 3.44,
-     "method": "trend_ols"
-    },
-    "ewma": {
-     "mean": 35.55,
-     "sd": 2.08,
-     "method": "ewma"
-    },
-    "climatology": {
-     "mean": 36.17,
-     "sd": 1.52,
-     "method": "climatology"
-    }
-   },
-   "scoreable": true,
-   "n_forecasts": 4,
-   "forecasts": {
-    "climatology": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 36.17,
-     "sd": 1.52
-    },
-    "ewma": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 35.55,
-     "sd": 2.08
-    },
-    "persistence": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 36.0,
-     "sd": 1.5
-    },
-    "trend": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 34.8,
-     "sd": 3.44
+     "mean": 8.77,
+     "sd": 1.34
     }
    }
   },
@@ -48247,23 +49251,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 38.0,
+     "mean": 35.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 38.31,
-     "sd": 2.18,
+     "mean": 36.13,
+     "sd": 3.58,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 38.94,
-     "sd": 1.0,
+     "mean": 37.34,
+     "sd": 1.25,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 39.79,
-     "sd": 1.02,
+     "mean": 39.42,
+     "sd": 1.44,
      "method": "climatology"
     }
    },
@@ -48271,36 +49275,36 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 39.79,
-     "sd": 1.02
+     "mean": 39.42,
+     "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.94,
-     "sd": 1.0
+     "mean": 37.34,
+     "sd": 1.25
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.0,
+     "mean": 35.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.31,
-     "sd": 2.18
+     "mean": 36.13,
+     "sd": 3.58
     }
    }
   },
   {
    "round_id": "yougov-2026-w43-strong-approval",
    "tracker": "economist_yougov",
-   "series": "yougov_strong_approval",
-   "question": "Economist/YouGov weekly tracker: percent of US adults who strongly approve of Donald Trump's job performance",
+   "series": "yougov_rv_strong_approval",
+   "question": "Economist/YouGov weekly tracker: percent of US registered voters who strongly approve of Donald Trump's job performance",
    "unit": "% approve",
    "release_at": "2026-10-20T14:00:00Z",
    "release_estimated": true,
@@ -48315,23 +49319,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 19.0,
+     "mean": 17.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 16.86,
-     "sd": 4.52,
+     "mean": 8.77,
+     "sd": 1.43,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 18.34,
-     "sd": 2.0,
+     "mean": 19.28,
+     "sd": 2.5,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 19.75,
-     "sd": 1.62,
+     "mean": 19.33,
+     "sd": 2.52,
      "method": "climatology"
     }
    },
@@ -48339,96 +49343,28 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 19.75,
-     "sd": 1.62
+     "mean": 19.33,
+     "sd": 2.52
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 18.34,
-     "sd": 2.0
+     "mean": 19.28,
+     "sd": 2.5
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 19.0,
+     "mean": 17.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 16.86,
-     "sd": 4.52
-    }
-   }
-  },
-  {
-   "round_id": "yougov-2026-w44-approval",
-   "tracker": "economist_yougov",
-   "series": "yougov_approval",
-   "question": "Economist/YouGov weekly tracker: percent of US adult citizens who approve of Donald Trump's job performance",
-   "unit": "% approve",
-   "release_at": "2026-10-27T14:00:00Z",
-   "release_estimated": true,
-   "lock_at": "2026-10-25T14:00:00Z",
-   "resolve": "topline PDF of the wave",
-   "target_type": "continuous_normal",
-   "deadline": "2026-10-25T14:00:00Z",
-   "published_at": "2026-10-18T14:00:00Z",
-   "horizon_days": 2.0,
-   "batch_id": "batch-2026-10-19",
-   "domain": "public-opinion",
-   "status": "open",
-   "baselines": {
-    "persistence": {
-     "mean": 36.0,
-     "sd": 1.5,
-     "method": "persistence"
-    },
-    "trend": {
-     "mean": 34.8,
-     "sd": 3.58,
-     "method": "trend_ols"
-    },
-    "ewma": {
-     "mean": 35.55,
-     "sd": 2.08,
-     "method": "ewma"
-    },
-    "climatology": {
-     "mean": 36.17,
-     "sd": 1.52,
-     "method": "climatology"
-    }
-   },
-   "scoreable": true,
-   "n_forecasts": 4,
-   "forecasts": {
-    "climatology": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 36.17,
-     "sd": 1.52
-    },
-    "ewma": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 35.55,
-     "sd": 2.08
-    },
-    "persistence": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 36.0,
-     "sd": 1.5
-    },
-    "trend": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 34.8,
-     "sd": 3.58
+     "mean": 8.77,
+     "sd": 1.43
     }
    }
   },
@@ -48451,23 +49387,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 38.0,
+     "mean": 35.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 38.31,
-     "sd": 2.27,
+     "mean": 36.13,
+     "sd": 3.78,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 38.94,
-     "sd": 1.0,
+     "mean": 37.34,
+     "sd": 1.25,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 39.79,
-     "sd": 1.02,
+     "mean": 39.42,
+     "sd": 1.44,
      "method": "climatology"
     }
    },
@@ -48475,36 +49411,36 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 39.79,
-     "sd": 1.02
+     "mean": 39.42,
+     "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.94,
-     "sd": 1.0
+     "mean": 37.34,
+     "sd": 1.25
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.0,
+     "mean": 35.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.31,
-     "sd": 2.27
+     "mean": 36.13,
+     "sd": 3.78
     }
    }
   },
   {
    "round_id": "yougov-2026-w44-strong-approval",
    "tracker": "economist_yougov",
-   "series": "yougov_strong_approval",
-   "question": "Economist/YouGov weekly tracker: percent of US adults who strongly approve of Donald Trump's job performance",
+   "series": "yougov_rv_strong_approval",
+   "question": "Economist/YouGov weekly tracker: percent of US registered voters who strongly approve of Donald Trump's job performance",
    "unit": "% approve",
    "release_at": "2026-10-27T14:00:00Z",
    "release_estimated": true,
@@ -48519,23 +49455,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 19.0,
+     "mean": 17.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 16.86,
-     "sd": 4.71,
+     "mean": 8.77,
+     "sd": 1.51,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 18.34,
-     "sd": 2.0,
+     "mean": 19.28,
+     "sd": 2.5,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 19.75,
-     "sd": 1.62,
+     "mean": 19.33,
+     "sd": 2.52,
      "method": "climatology"
     }
    },
@@ -48543,28 +49479,28 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 19.75,
-     "sd": 1.62
+     "mean": 19.33,
+     "sd": 2.52
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 18.34,
-     "sd": 2.0
+     "mean": 19.28,
+     "sd": 2.5
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 19.0,
+     "mean": 17.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 16.86,
-     "sd": 4.71
+     "mean": 8.77,
+     "sd": 1.51
     }
    }
   },
@@ -48748,7 +49684,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -48821,74 +49757,6 @@
    }
   },
   {
-   "round_id": "yougov-2026-w45-approval",
-   "tracker": "economist_yougov",
-   "series": "yougov_approval",
-   "question": "Economist/YouGov weekly tracker: percent of US adult citizens who approve of Donald Trump's job performance",
-   "unit": "% approve",
-   "release_at": "2026-11-03T14:00:00Z",
-   "release_estimated": true,
-   "lock_at": "2026-11-01T14:00:00Z",
-   "resolve": "topline PDF of the wave",
-   "target_type": "continuous_normal",
-   "deadline": "2026-11-01T14:00:00Z",
-   "published_at": "2026-10-25T14:00:00Z",
-   "horizon_days": 2.0,
-   "batch_id": "batch-2026-10-26",
-   "domain": "public-opinion",
-   "status": "open",
-   "baselines": {
-    "persistence": {
-     "mean": 36.0,
-     "sd": 1.5,
-     "method": "persistence"
-    },
-    "trend": {
-     "mean": 34.8,
-     "sd": 3.72,
-     "method": "trend_ols"
-    },
-    "ewma": {
-     "mean": 35.55,
-     "sd": 2.08,
-     "method": "ewma"
-    },
-    "climatology": {
-     "mean": 36.17,
-     "sd": 1.52,
-     "method": "climatology"
-    }
-   },
-   "scoreable": true,
-   "n_forecasts": 4,
-   "forecasts": {
-    "climatology": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 36.17,
-     "sd": 1.52
-    },
-    "ewma": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 35.55,
-     "sd": 2.08
-    },
-    "persistence": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 36.0,
-     "sd": 1.5
-    },
-    "trend": {
-     "filed": "2026-09-23T21:28Z",
-     "shape": "number",
-     "mean": 34.8,
-     "sd": 3.72
-    }
-   }
-  },
-  {
    "round_id": "yougov-2026-w45-rv-approval",
    "tracker": "economist_yougov",
    "series": "yougov_rv_approval",
@@ -48907,23 +49775,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 38.0,
+     "mean": 35.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 38.31,
-     "sd": 2.36,
+     "mean": 36.13,
+     "sd": 3.97,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 38.94,
-     "sd": 1.0,
+     "mean": 37.34,
+     "sd": 1.25,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 39.79,
-     "sd": 1.02,
+     "mean": 39.42,
+     "sd": 1.44,
      "method": "climatology"
     }
    },
@@ -48931,36 +49799,36 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 39.79,
-     "sd": 1.02
+     "mean": 39.42,
+     "sd": 1.44
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.94,
-     "sd": 1.0
+     "mean": 37.34,
+     "sd": 1.25
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.0,
+     "mean": 35.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 38.31,
-     "sd": 2.36
+     "mean": 36.13,
+     "sd": 3.97
     }
    }
   },
   {
    "round_id": "yougov-2026-w45-strong-approval",
    "tracker": "economist_yougov",
-   "series": "yougov_strong_approval",
-   "question": "Economist/YouGov weekly tracker: percent of US adults who strongly approve of Donald Trump's job performance",
+   "series": "yougov_rv_strong_approval",
+   "question": "Economist/YouGov weekly tracker: percent of US registered voters who strongly approve of Donald Trump's job performance",
    "unit": "% approve",
    "release_at": "2026-11-03T14:00:00Z",
    "release_estimated": true,
@@ -48975,23 +49843,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 19.0,
+     "mean": 17.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 16.86,
-     "sd": 4.9,
+     "mean": 8.77,
+     "sd": 1.58,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 18.34,
-     "sd": 2.0,
+     "mean": 19.28,
+     "sd": 2.5,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 19.75,
-     "sd": 1.62,
+     "mean": 19.33,
+     "sd": 2.52,
      "method": "climatology"
     }
    },
@@ -48999,28 +49867,28 @@
    "n_forecasts": 4,
    "forecasts": {
     "climatology": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 19.75,
-     "sd": 1.62
+     "mean": 19.33,
+     "sd": 2.52
     },
     "ewma": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 18.34,
-     "sd": 2.0
+     "mean": 19.28,
+     "sd": 2.5
     },
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 19.0,
+     "mean": 17.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "number",
-     "mean": 16.86,
-     "sd": 4.9
+     "mean": 8.77,
+     "sd": 1.58
     }
    }
   },
@@ -49204,7 +50072,7 @@
    "n_forecasts": 1,
    "forecasts": {
     "persistence": {
-     "filed": "2026-09-23T21:28Z",
+     "filed": "2026-09-24T11:41Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -49966,6 +50834,22 @@
    "homepage": "https://github.com/Social-Atoms/social-sim-arena"
   },
   {
+   "entrant_id": "h2oai-superagent",
+   "name": "H2O.ai SuperAgent",
+   "organization": "H2O.ai",
+   "type": "participant",
+   "contact": "bench-ssa@h2o.ai",
+   "github": "mmalohlava",
+   "keys": [
+    {
+     "id": "bench-ssa-key",
+     "alg": "ed25519",
+     "public": "eXi/LbImo4V8vPSg9YgAhTrMdCfGnzqZ5VGArE+3LKE=",
+     "revoked": false
+    }
+   ]
+  },
+  {
    "entrant_id": "just4test",
    "name": "just4test",
    "organization": "social-sim",
@@ -50574,19 +51458,25 @@
   }
  },
  "leaderboard": {
-  "resolved_rounds": 58,
+  "resolved_rounds": 59,
   "entries": [
    {
     "entrant": "persistence",
-    "rounds": 49,
-    "mean_crps": 2.01,
+    "rounds": 50,
+    "mean_crps": 2.011,
     "mean_skill": 0.0
    },
    {
     "entrant": "gemini-pro-web",
-    "rounds": 42,
-    "mean_crps": 1.596,
-    "mean_skill": -0.214
+    "rounds": 43,
+    "mean_crps": 1.63,
+    "mean_skill": -0.22
+   },
+   {
+    "entrant": "claude-sonnet-web",
+    "rounds": 43,
+    "mean_crps": 1.538,
+    "mean_skill": -0.236
    },
    {
     "entrant": "qwen-3.7",
@@ -50595,16 +51485,22 @@
     "mean_skill": -0.237
    },
    {
-    "entrant": "claude-sonnet-web",
-    "rounds": 42,
-    "mean_crps": 1.538,
-    "mean_skill": -0.247
+    "entrant": "gpt-5.6-luna-web-superfc",
+    "rounds": 40,
+    "mean_crps": 1.8,
+    "mean_skill": -0.301
    },
    {
-    "entrant": "gpt-5.6-luna-web-superfc",
+    "entrant": "claude-sonnet-web-superfc",
+    "rounds": 43,
+    "mean_crps": 1.587,
+    "mean_skill": -0.314
+   },
+   {
+    "entrant": "claude-opus-5-web-superfc",
     "rounds": 39,
-    "mean_crps": 1.796,
-    "mean_skill": -0.31
+    "mean_crps": 2.12,
+    "mean_skill": -0.315
    },
    {
     "entrant": "claude-opus",
@@ -50613,22 +51509,10 @@
     "mean_skill": -0.317
    },
    {
-    "entrant": "claude-sonnet-web-superfc",
-    "rounds": 42,
-    "mean_crps": 1.581,
-    "mean_skill": -0.324
-   },
-   {
-    "entrant": "claude-opus-5-web-superfc",
-    "rounds": 38,
-    "mean_crps": 2.133,
-    "mean_skill": -0.329
-   },
-   {
     "entrant": "gemini-pro-web-superfc",
-    "rounds": 42,
-    "mean_crps": 2.022,
-    "mean_skill": -0.365
+    "rounds": 43,
+    "mean_crps": 2.011,
+    "mean_skill": -0.35
    },
    {
     "entrant": "qwen-3.8-news",
@@ -50637,15 +51521,15 @@
     "mean_skill": -0.384
    },
    {
-    "entrant": "ewma",
-    "rounds": 49,
-    "mean_crps": 2.707,
-    "mean_skill": -0.391
-   },
-   {
     "entrant": "claude-fable",
     "rounds": 11,
     "mean_crps": 1.395,
+    "mean_skill": -0.394
+   },
+   {
+    "entrant": "ewma",
+    "rounds": 50,
+    "mean_crps": 2.719,
     "mean_skill": -0.394
    },
    {
@@ -50656,9 +51540,9 @@
    },
    {
     "entrant": "grok-web",
-    "rounds": 43,
-    "mean_crps": 1.922,
-    "mean_skill": -0.423
+    "rounds": 44,
+    "mean_crps": 1.919,
+    "mean_skill": -0.411
    },
    {
     "entrant": "worldvac-base",
@@ -50674,14 +51558,32 @@
    },
    {
     "entrant": "claude-opus-5-web",
-    "rounds": 39,
-    "mean_crps": 2.192,
-    "mean_skill": -0.514
+    "rounds": 40,
+    "mean_crps": 2.185,
+    "mean_skill": -0.499
    },
    {
     "entrant": "gemini-flash-web",
-    "rounds": 41,
-    "mean_crps": 1.971,
+    "rounds": 42,
+    "mean_crps": 1.958,
+    "mean_skill": -0.568
+   },
+   {
+    "entrant": "gpt-5.6-terra-web-superfc",
+    "rounds": 39,
+    "mean_crps": 1.81,
+    "mean_skill": -0.572
+   },
+   {
+    "entrant": "grok-web-superfc",
+    "rounds": 44,
+    "mean_crps": 2.107,
+    "mean_skill": -0.574
+   },
+   {
+    "entrant": "deepseek-pro-web-superfc",
+    "rounds": 43,
+    "mean_crps": 2.049,
     "mean_skill": -0.59
    },
    {
@@ -50691,22 +51593,16 @@
     "mean_skill": -0.592
    },
    {
-    "entrant": "grok-web-superfc",
-    "rounds": 43,
-    "mean_crps": 2.119,
-    "mean_skill": -0.593
+    "entrant": "gpt-5.6-luna-web",
+    "rounds": 41,
+    "mean_crps": 2.197,
+    "mean_skill": -0.592
    },
    {
-    "entrant": "gpt-5.6-terra-web-superfc",
-    "rounds": 38,
-    "mean_crps": 1.827,
-    "mean_skill": -0.599
-   },
-   {
-    "entrant": "deepseek-pro-web-superfc",
-    "rounds": 42,
-    "mean_crps": 2.06,
-    "mean_skill": -0.61
+    "entrant": "gemini-flash-web-superfc",
+    "rounds": 41,
+    "mean_crps": 2.045,
+    "mean_skill": -0.614
    },
    {
     "entrant": "claude-sonnet-news",
@@ -50715,40 +51611,28 @@
     "mean_skill": -0.616
    },
    {
-    "entrant": "gpt-5.6-luna-web",
-    "rounds": 40,
-    "mean_crps": 2.219,
-    "mean_skill": -0.616
-   },
-   {
-    "entrant": "gemini-flash-web-superfc",
-    "rounds": 40,
-    "mean_crps": 2.062,
-    "mean_skill": -0.637
-   },
-   {
     "entrant": "claude-opus-5",
     "rounds": 19,
     "mean_crps": 1.582,
     "mean_skill": -0.665
    },
    {
+    "entrant": "glm-web-superfc",
+    "rounds": 43,
+    "mean_crps": 2.055,
+    "mean_skill": -0.67
+   },
+   {
+    "entrant": "crowd",
+    "rounds": 49,
+    "mean_crps": 2.057,
+    "mean_skill": -0.673
+   },
+   {
     "entrant": "gpt-5.6-luna",
     "rounds": 20,
     "mean_crps": 2.264,
     "mean_skill": -0.685
-   },
-   {
-    "entrant": "glm-web-superfc",
-    "rounds": 42,
-    "mean_crps": 2.063,
-    "mean_skill": -0.69
-   },
-   {
-    "entrant": "crowd",
-    "rounds": 48,
-    "mean_crps": 2.064,
-    "mean_skill": -0.691
    },
    {
     "entrant": "qwen-3.8",
@@ -50788,9 +51672,21 @@
    },
    {
     "entrant": "deepseek-flash-web-superfc",
-    "rounds": 41,
+    "rounds": 42,
     "mean_crps": 2.453,
-    "mean_skill": -0.765
+    "mean_skill": -0.751
+   },
+   {
+    "entrant": "qwen-3.8-web-superfc",
+    "rounds": 41,
+    "mean_crps": 2.722,
+    "mean_skill": -0.761
+   },
+   {
+    "entrant": "gpt-5.6-terra-web",
+    "rounds": 38,
+    "mean_crps": 1.76,
+    "mean_skill": -0.768
    },
    {
     "entrant": "gemini-pro-news",
@@ -50799,16 +51695,16 @@
     "mean_skill": -0.772
    },
    {
-    "entrant": "qwen-3.8-web-superfc",
-    "rounds": 40,
-    "mean_crps": 2.757,
-    "mean_skill": -0.789
+    "entrant": "deepseek-pro-web",
+    "rounds": 43,
+    "mean_crps": 2.272,
+    "mean_skill": -0.8
    },
    {
-    "entrant": "gpt-5.6-terra-web",
-    "rounds": 37,
-    "mean_crps": 1.771,
-    "mean_skill": -0.799
+    "entrant": "kimi-web-superfc",
+    "rounds": 41,
+    "mean_crps": 2.232,
+    "mean_skill": -0.8
    },
    {
     "entrant": "claude-sonnet-superfc",
@@ -50829,40 +51725,28 @@
     "mean_skill": -0.816
    },
    {
+    "entrant": "qwen-3.8-web",
+    "rounds": 41,
+    "mean_crps": 2.201,
+    "mean_skill": -0.818
+   },
+   {
     "entrant": "grok-news-superfc",
     "rounds": 8,
     "mean_crps": 3.493,
     "mean_skill": -0.823
    },
    {
-    "entrant": "deepseek-pro-web",
-    "rounds": 42,
-    "mean_crps": 2.289,
-    "mean_skill": -0.825
-   },
-   {
-    "entrant": "kimi-web-superfc",
-    "rounds": 40,
-    "mean_crps": 2.245,
-    "mean_skill": -0.825
-   },
-   {
-    "entrant": "qwen-3.8-web",
-    "rounds": 40,
-    "mean_crps": 2.217,
-    "mean_skill": -0.845
+    "entrant": "glm-web",
+    "rounds": 43,
+    "mean_crps": 2.085,
+    "mean_skill": -0.851
    },
    {
     "entrant": "glm-news",
     "rounds": 6,
     "mean_crps": 3.959,
     "mean_skill": -0.857
-   },
-   {
-    "entrant": "glm-web",
-    "rounds": 42,
-    "mean_crps": 2.087,
-    "mean_skill": -0.872
    },
    {
     "entrant": "grok-superfc",
@@ -50872,9 +51756,15 @@
    },
    {
     "entrant": "trend",
-    "rounds": 49,
-    "mean_crps": 4.835,
-    "mean_skill": -0.948
+    "rounds": 50,
+    "mean_crps": 4.778,
+    "mean_skill": -0.928
+   },
+   {
+    "entrant": "kimi-web",
+    "rounds": 40,
+    "mean_crps": 1.905,
+    "mean_skill": -0.959
    },
    {
     "entrant": "claude-opus-5-news-superfc",
@@ -50887,12 +51777,6 @@
     "rounds": 14,
     "mean_crps": 2.326,
     "mean_skill": -0.968
-   },
-   {
-    "entrant": "kimi-web",
-    "rounds": 39,
-    "mean_crps": 1.911,
-    "mean_skill": -0.989
    },
    {
     "entrant": "gpt-5.6-terra-superfc",
@@ -50919,16 +51803,16 @@
     "mean_skill": -1.08
    },
    {
+    "entrant": "deepseek-flash-web",
+    "rounds": 42,
+    "mean_crps": 2.703,
+    "mean_skill": -1.11
+   },
+   {
     "entrant": "claude-opus-5-news",
     "rounds": 8,
     "mean_crps": 3.56,
     "mean_skill": -1.142
-   },
-   {
-    "entrant": "deepseek-flash-web",
-    "rounds": 41,
-    "mean_crps": 2.731,
-    "mean_skill": -1.144
    },
    {
     "entrant": "deepseek-pro",
@@ -51064,9 +51948,9 @@
    },
    {
     "entrant": "climatology",
-    "rounds": 49,
-    "mean_crps": 5.633,
-    "mean_skill": -2.754
+    "rounds": 50,
+    "mean_crps": 5.624,
+    "mean_skill": -2.729
    },
    {
     "entrant": "claude-opus-5-zeroshot-superfc",
@@ -79981,6 +80865,348 @@
     "value": 36.0
    }
   ],
+  "yougov_rv_approval": [
+   {
+    "date": "2025-01-27",
+    "value": 50.0
+   },
+   {
+    "date": "2025-02-03",
+    "value": 48.0
+   },
+   {
+    "date": "2025-02-10",
+    "value": 47.0
+   },
+   {
+    "date": "2025-02-17",
+    "value": 50.0
+   },
+   {
+    "date": "2025-02-24",
+    "value": 48.0
+   },
+   {
+    "date": "2025-03-02",
+    "value": 49.0
+   },
+   {
+    "date": "2025-03-10",
+    "value": 48.0
+   },
+   {
+    "date": "2025-03-17",
+    "value": 47.0
+   },
+   {
+    "date": "2025-03-23",
+    "value": 48.0
+   },
+   {
+    "date": "2025-03-31",
+    "value": 46.0
+   },
+   {
+    "date": "2025-04-06",
+    "value": 45.0
+   },
+   {
+    "date": "2025-04-14",
+    "value": 45.0
+   },
+   {
+    "date": "2025-04-20",
+    "value": 44.0
+   },
+   {
+    "date": "2025-05-03",
+    "value": 44.0
+   },
+   {
+    "date": "2025-05-10",
+    "value": 45.0
+   },
+   {
+    "date": "2025-05-17",
+    "value": 45.0
+   },
+   {
+    "date": "2025-05-24",
+    "value": 46.0
+   },
+   {
+    "date": "2025-05-31",
+    "value": 46.0
+   },
+   {
+    "date": "2025-06-07",
+    "value": 45.0
+   },
+   {
+    "date": "2025-06-14",
+    "value": 44.0
+   },
+   {
+    "date": "2025-06-21",
+    "value": 43.0
+   },
+   {
+    "date": "2025-06-28",
+    "value": 45.0
+   },
+   {
+    "date": "2025-07-05",
+    "value": 43.0
+   },
+   {
+    "date": "2025-07-12",
+    "value": 43.0
+   },
+   {
+    "date": "2025-07-19",
+    "value": 43.0
+   },
+   {
+    "date": "2025-07-26",
+    "value": 44.0
+   },
+   {
+    "date": "2025-08-02",
+    "value": 43.0
+   },
+   {
+    "date": "2025-08-10",
+    "value": 44.0
+   },
+   {
+    "date": "2025-08-16",
+    "value": 43.0
+   },
+   {
+    "date": "2025-08-23",
+    "value": 43.0
+   },
+   {
+    "date": "2025-09-06",
+    "value": 43.0
+   },
+   {
+    "date": "2025-09-13",
+    "value": 43.0
+   },
+   {
+    "date": "2025-09-20",
+    "value": 43.0
+   },
+   {
+    "date": "2025-09-27",
+    "value": 43.0
+   },
+   {
+    "date": "2025-10-05",
+    "value": 43.0
+   },
+   {
+    "date": "2025-10-11",
+    "value": 44.0
+   },
+   {
+    "date": "2025-10-18",
+    "value": 43.0
+   },
+   {
+    "date": "2025-10-25",
+    "value": 43.0
+   },
+   {
+    "date": "2025-11-01",
+    "value": 43.0
+   },
+   {
+    "date": "2025-11-08",
+    "value": 43.0
+   },
+   {
+    "date": "2025-11-16",
+    "value": 43.0
+   },
+   {
+    "date": "2025-11-22",
+    "value": 43.0
+   },
+   {
+    "date": "2025-11-29",
+    "value": 42.0
+   },
+   {
+    "date": "2025-12-06",
+    "value": 43.0
+   },
+   {
+    "date": "2025-12-13",
+    "value": 43.0
+   },
+   {
+    "date": "2025-12-21",
+    "value": 42.0
+   },
+   {
+    "date": "2025-12-27",
+    "value": 42.0
+   },
+   {
+    "date": "2026-01-03",
+    "value": 43.0
+   },
+   {
+    "date": "2026-01-10",
+    "value": 44.0
+   },
+   {
+    "date": "2026-01-17",
+    "value": 41.0
+   },
+   {
+    "date": "2026-01-24",
+    "value": 41.0
+   },
+   {
+    "date": "2026-01-31",
+    "value": 42.0
+   },
+   {
+    "date": "2026-02-07",
+    "value": 40.0
+   },
+   {
+    "date": "2026-02-14",
+    "value": 43.0
+   },
+   {
+    "date": "2026-02-21",
+    "value": 42.0
+   },
+   {
+    "date": "2026-02-28",
+    "value": 42.0
+   },
+   {
+    "date": "2026-03-07",
+    "value": 43.0
+   },
+   {
+    "date": "2026-03-14",
+    "value": 41.0
+   },
+   {
+    "date": "2026-03-21",
+    "value": 41.0
+   },
+   {
+    "date": "2026-03-28",
+    "value": 39.0
+   },
+   {
+    "date": "2026-04-04",
+    "value": 41.0
+   },
+   {
+    "date": "2026-04-11",
+    "value": 41.0
+   },
+   {
+    "date": "2026-04-18",
+    "value": 41.0
+   },
+   {
+    "date": "2026-04-25",
+    "value": 40.0
+   },
+   {
+    "date": "2026-05-02",
+    "value": 40.0
+   },
+   {
+    "date": "2026-05-10",
+    "value": 41.0
+   },
+   {
+    "date": "2026-05-16",
+    "value": 41.0
+   },
+   {
+    "date": "2026-05-24",
+    "value": 38.0
+   },
+   {
+    "date": "2026-05-30",
+    "value": 39.0
+   },
+   {
+    "date": "2026-06-06",
+    "value": 39.0
+   },
+   {
+    "date": "2026-06-14",
+    "value": 41.0
+   },
+   {
+    "date": "2026-06-20",
+    "value": 39.0
+   },
+   {
+    "date": "2026-06-27",
+    "value": 40.0
+   },
+   {
+    "date": "2026-07-04",
+    "value": 40.0
+   },
+   {
+    "date": "2026-07-11",
+    "value": 40.0
+   },
+   {
+    "date": "2026-07-18",
+    "value": 40.0
+   },
+   {
+    "date": "2026-07-26",
+    "value": 39.0
+   },
+   {
+    "date": "2026-08-01",
+    "value": 39.0
+   },
+   {
+    "date": "2026-08-08",
+    "value": 38.0
+   },
+   {
+    "date": "2026-08-15",
+    "value": 40.0
+   },
+   {
+    "date": "2026-08-22",
+    "value": 40.0
+   },
+   {
+    "date": "2026-08-29",
+    "value": 38.0
+   },
+   {
+    "date": "2026-09-06",
+    "value": 37.0
+   },
+   {
+    "date": "2026-09-12",
+    "value": 40.0
+   },
+   {
+    "date": "2026-09-19",
+    "value": 35.0
+   }
+  ],
   "mc_approval": [
    {
     "date": "2025-01-25",
@@ -80559,18 +81785,6 @@
   ],
   "yougov_rv_approval": [
    {
-    "date": "2026-07-11",
-    "value": 40.0
-   },
-   {
-    "date": "2026-07-18",
-    "value": 40.0
-   },
-   {
-    "date": "2026-07-26",
-    "value": 39.0
-   },
-   {
     "date": "2026-08-01",
     "value": 39.0
    },
@@ -80589,6 +81803,18 @@
    {
     "date": "2026-08-29",
     "value": 38.0
+   },
+   {
+    "date": "2026-09-06",
+    "value": 37.0
+   },
+   {
+    "date": "2026-09-12",
+    "value": 40.0
+   },
+   {
+    "date": "2026-09-19",
+    "value": 35.0
    }
   ],
   "yougov_strong_approval": [
@@ -80623,6 +81849,20 @@
    {
     "date": "2026-08-29",
     "value": 19.0
+   }
+  ],
+  "yougov_rv_strong_approval": [
+   {
+    "date": "2026-09-06",
+    "value": 22.0
+   },
+   {
+    "date": "2026-09-12",
+    "value": 19.0
+   },
+   {
+    "date": "2026-09-19",
+    "value": 17.0
    }
   ],
   "yougov_weak_approval": [
@@ -81511,10 +82751,6 @@
   ],
   "aaii_bull_bear_spread": [
    {
-    "date": "2026-07-29",
-    "value": -11.1
-   },
-   {
     "date": "2026-08-05",
     "value": -1.0
    },
@@ -81541,6 +82777,10 @@
    {
     "date": "2026-09-16",
     "value": -24.5
+   },
+   {
+    "date": "2026-09-23",
+    "value": -15.4
    }
   ],
   "sce_inflation_1y": [
@@ -83105,7 +84345,7 @@
    "label": "Economist / YouGov approval",
    "group": "opinion",
    "domain": "public-opinion",
-   "population": "US adult citizens",
+   "population": "US registered voters (adult citizens for rounds before September 2026)",
    "cadence": "weekly, fielded over a weekend and published midweek",
    "question_type": "number",
    "unit": "%",
@@ -83116,7 +84356,8 @@
    },
    "match": {
     "series": [
-     "yougov_approval"
+     "yougov_approval",
+     "yougov_rv_approval"
     ]
    }
   },
@@ -83576,16 +84817,16 @@
  ],
  "entrant_status": {
   "apodex-futureflow": {
-   "asked": 76,
-   "answered": 8,
+   "asked": 77,
+   "answered": 9,
    "by_domain": {
     "consumer": {
      "asked": 22,
      "answered": 6
     },
     "public-opinion": {
-     "asked": 36,
-     "answered": 2
+     "asked": 37,
+     "answered": 3
     },
     "elections": {
      "asked": 6,
@@ -83603,7 +84844,7 @@
    "last_call_ok": null
   },
   "claude-fable-news": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -83611,7 +84852,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -83630,7 +84871,7 @@
    "last_call_ok": null
   },
   "claude-fable-persona": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -83638,7 +84879,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -83657,7 +84898,7 @@
    "last_call_ok": null
   },
   "claude-fable-superfc": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -83665,7 +84906,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -83684,7 +84925,7 @@
    "last_call_ok": null
   },
   "claude-fable-zeroshot": {
-   "asked": 76,
+   "asked": 77,
    "answered": 11,
    "by_domain": {
     "consumer": {
@@ -83692,7 +84933,7 @@
      "answered": 3
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 6
     },
     "elections": {
@@ -83711,7 +84952,7 @@
    "last_call_ok": null
   },
   "claude-fable": {
-   "asked": 76,
+   "asked": 77,
    "answered": 11,
    "by_domain": {
     "consumer": {
@@ -83719,7 +84960,7 @@
      "answered": 3
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 6
     },
     "elections": {
@@ -83738,7 +84979,7 @@
    "last_call_ok": null
   },
   "claude-opus-5-news": {
-   "asked": 76,
+   "asked": 77,
    "answered": 8,
    "by_domain": {
     "consumer": {
@@ -83746,7 +84987,7 @@
      "answered": 1
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 3
     },
     "elections": {
@@ -83765,7 +85006,7 @@
    "last_call_ok": true
   },
   "claude-opus-5-persona": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -83773,7 +85014,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -83792,7 +85033,7 @@
    "last_call_ok": null
   },
   "claude-opus-5-superfc": {
-   "asked": 76,
+   "asked": 77,
    "answered": 14,
    "by_domain": {
     "consumer": {
@@ -83800,7 +85041,7 @@
      "answered": 2
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 7
     },
     "elections": {
@@ -83819,7 +85060,7 @@
    "last_call_ok": true
   },
   "claude-opus-5-zeroshot": {
-   "asked": 76,
+   "asked": 77,
    "answered": 19,
    "by_domain": {
     "consumer": {
@@ -83827,7 +85068,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -83846,7 +85087,7 @@
    "last_call_ok": true
   },
   "claude-opus-5": {
-   "asked": 76,
+   "asked": 77,
    "answered": 19,
    "by_domain": {
     "consumer": {
@@ -83854,7 +85095,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -83873,7 +85114,7 @@
    "last_call_ok": true
   },
   "claude-opus-news": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -83881,7 +85122,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -83900,7 +85141,7 @@
    "last_call_ok": null
   },
   "claude-opus-persona": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -83908,7 +85149,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -83927,7 +85168,7 @@
    "last_call_ok": null
   },
   "claude-opus-superfc": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -83935,7 +85176,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -83954,7 +85195,7 @@
    "last_call_ok": null
   },
   "claude-opus-zeroshot": {
-   "asked": 76,
+   "asked": 77,
    "answered": 11,
    "by_domain": {
     "consumer": {
@@ -83962,7 +85203,7 @@
      "answered": 3
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 6
     },
     "elections": {
@@ -83981,7 +85222,7 @@
    "last_call_ok": null
   },
   "claude-opus": {
-   "asked": 76,
+   "asked": 77,
    "answered": 11,
    "by_domain": {
     "consumer": {
@@ -83989,7 +85230,7 @@
      "answered": 3
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 6
     },
     "elections": {
@@ -84008,7 +85249,7 @@
    "last_call_ok": null
   },
   "claude-sonnet-news": {
-   "asked": 76,
+   "asked": 77,
    "answered": 9,
    "by_domain": {
     "consumer": {
@@ -84016,7 +85257,7 @@
      "answered": 1
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 3
     },
     "elections": {
@@ -84035,7 +85276,7 @@
    "last_call_ok": true
   },
   "claude-sonnet-persona": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -84043,7 +85284,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -84062,7 +85303,7 @@
    "last_call_ok": null
   },
   "claude-sonnet-superfc": {
-   "asked": 76,
+   "asked": 77,
    "answered": 15,
    "by_domain": {
     "consumer": {
@@ -84070,7 +85311,7 @@
      "answered": 2
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 7
     },
     "elections": {
@@ -84089,7 +85330,7 @@
    "last_call_ok": true
   },
   "claude-sonnet-zeroshot": {
-   "asked": 76,
+   "asked": 77,
    "answered": 19,
    "by_domain": {
     "consumer": {
@@ -84097,7 +85338,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -84116,7 +85357,7 @@
    "last_call_ok": true
   },
   "claude-sonnet": {
-   "asked": 76,
+   "asked": 77,
    "answered": 21,
    "by_domain": {
     "consumer": {
@@ -84124,7 +85365,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -84143,7 +85384,7 @@
    "last_call_ok": true
   },
   "climatology": {
-   "asked": 76,
+   "asked": 77,
    "answered": 64,
    "by_domain": {
     "consumer": {
@@ -84151,7 +85392,7 @@
      "answered": 22
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 32
     },
     "elections": {
@@ -84170,16 +85411,16 @@
    "last_call_ok": null
   },
   "crowd": {
-   "asked": 76,
-   "answered": 73,
+   "asked": 77,
+   "answered": 74,
    "by_domain": {
     "consumer": {
      "asked": 22,
      "answered": 21
     },
     "public-opinion": {
-     "asked": 36,
-     "answered": 36
+     "asked": 37,
+     "answered": 37
     },
     "elections": {
      "asked": 6,
@@ -84197,7 +85438,7 @@
    "last_call_ok": null
   },
   "deepseek-flash-news": {
-   "asked": 76,
+   "asked": 77,
    "answered": 7,
    "by_domain": {
     "consumer": {
@@ -84205,7 +85446,7 @@
      "answered": 1
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 3
     },
     "elections": {
@@ -84224,7 +85465,7 @@
    "last_call_ok": true
   },
   "deepseek-flash-persona": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -84232,7 +85473,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -84251,7 +85492,7 @@
    "last_call_ok": null
   },
   "deepseek-flash-superfc": {
-   "asked": 76,
+   "asked": 77,
    "answered": 13,
    "by_domain": {
     "consumer": {
@@ -84259,7 +85500,7 @@
      "answered": 2
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 7
     },
     "elections": {
@@ -84278,7 +85519,7 @@
    "last_call_ok": true
   },
   "deepseek-flash-zeroshot": {
-   "asked": 76,
+   "asked": 77,
    "answered": 19,
    "by_domain": {
     "consumer": {
@@ -84286,7 +85527,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -84305,7 +85546,7 @@
    "last_call_ok": true
   },
   "deepseek-flash": {
-   "asked": 76,
+   "asked": 77,
    "answered": 19,
    "by_domain": {
     "consumer": {
@@ -84313,7 +85554,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -84332,7 +85573,7 @@
    "last_call_ok": true
   },
   "deepseek-pro-news": {
-   "asked": 76,
+   "asked": 77,
    "answered": 8,
    "by_domain": {
     "consumer": {
@@ -84340,7 +85581,7 @@
      "answered": 1
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 3
     },
     "elections": {
@@ -84359,7 +85600,7 @@
    "last_call_ok": true
   },
   "deepseek-pro-persona": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -84367,7 +85608,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -84386,7 +85627,7 @@
    "last_call_ok": null
   },
   "deepseek-pro-superfc": {
-   "asked": 76,
+   "asked": 77,
    "answered": 14,
    "by_domain": {
     "consumer": {
@@ -84394,7 +85635,7 @@
      "answered": 2
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 7
     },
     "elections": {
@@ -84413,7 +85654,7 @@
    "last_call_ok": true
   },
   "deepseek-pro-zeroshot": {
-   "asked": 76,
+   "asked": 77,
    "answered": 19,
    "by_domain": {
     "consumer": {
@@ -84421,7 +85662,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -84440,7 +85681,7 @@
    "last_call_ok": true
   },
   "deepseek-pro": {
-   "asked": 76,
+   "asked": 77,
    "answered": 20,
    "by_domain": {
     "consumer": {
@@ -84448,7 +85689,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -84467,7 +85708,7 @@
    "last_call_ok": true
   },
   "ewma": {
-   "asked": 76,
+   "asked": 77,
    "answered": 64,
    "by_domain": {
     "consumer": {
@@ -84475,7 +85716,7 @@
      "answered": 22
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 32
     },
     "elections": {
@@ -84494,7 +85735,7 @@
    "last_call_ok": null
   },
   "gemini-flash-news": {
-   "asked": 76,
+   "asked": 77,
    "answered": 7,
    "by_domain": {
     "consumer": {
@@ -84502,7 +85743,7 @@
      "answered": 1
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 3
     },
     "elections": {
@@ -84521,7 +85762,7 @@
    "last_call_ok": true
   },
   "gemini-flash-persona": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -84529,7 +85770,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -84548,7 +85789,7 @@
    "last_call_ok": null
   },
   "gemini-flash-superfc": {
-   "asked": 76,
+   "asked": 77,
    "answered": 14,
    "by_domain": {
     "consumer": {
@@ -84556,7 +85797,7 @@
      "answered": 2
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 6
     },
     "elections": {
@@ -84575,7 +85816,7 @@
    "last_call_ok": true
   },
   "gemini-flash-zeroshot": {
-   "asked": 76,
+   "asked": 77,
    "answered": 19,
    "by_domain": {
     "consumer": {
@@ -84583,7 +85824,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -84602,7 +85843,7 @@
    "last_call_ok": true
   },
   "gemini-flash": {
-   "asked": 76,
+   "asked": 77,
    "answered": 19,
    "by_domain": {
     "consumer": {
@@ -84610,7 +85851,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -84629,7 +85870,7 @@
    "last_call_ok": true
   },
   "gemini-pro-news": {
-   "asked": 76,
+   "asked": 77,
    "answered": 8,
    "by_domain": {
     "consumer": {
@@ -84637,7 +85878,7 @@
      "answered": 1
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 2
     },
     "elections": {
@@ -84656,7 +85897,7 @@
    "last_call_ok": true
   },
   "gemini-pro-persona": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -84664,7 +85905,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -84683,7 +85924,7 @@
    "last_call_ok": null
   },
   "gemini-pro-superfc": {
-   "asked": 76,
+   "asked": 77,
    "answered": 14,
    "by_domain": {
     "consumer": {
@@ -84691,7 +85932,7 @@
      "answered": 2
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 7
     },
     "elections": {
@@ -84710,7 +85951,7 @@
    "last_call_ok": true
   },
   "gemini-pro-zeroshot": {
-   "asked": 76,
+   "asked": 77,
    "answered": 19,
    "by_domain": {
     "consumer": {
@@ -84718,7 +85959,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -84737,7 +85978,7 @@
    "last_call_ok": true
   },
   "gemini-pro": {
-   "asked": 76,
+   "asked": 77,
    "answered": 21,
    "by_domain": {
     "consumer": {
@@ -84745,7 +85986,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -84764,7 +86005,7 @@
    "last_call_ok": true
   },
   "glm-news": {
-   "asked": 76,
+   "asked": 77,
    "answered": 6,
    "by_domain": {
     "consumer": {
@@ -84772,7 +86013,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 3
     },
     "elections": {
@@ -84791,7 +86032,7 @@
    "last_call_ok": true
   },
   "glm-persona": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -84799,7 +86040,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -84818,7 +86059,7 @@
    "last_call_ok": null
   },
   "glm-superfc": {
-   "asked": 76,
+   "asked": 77,
    "answered": 13,
    "by_domain": {
     "consumer": {
@@ -84826,7 +86067,7 @@
      "answered": 1
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 7
     },
     "elections": {
@@ -84845,7 +86086,7 @@
    "last_call_ok": true
   },
   "glm-zeroshot": {
-   "asked": 76,
+   "asked": 77,
    "answered": 18,
    "by_domain": {
     "consumer": {
@@ -84853,7 +86094,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -84872,7 +86113,7 @@
    "last_call_ok": true
   },
   "glm": {
-   "asked": 76,
+   "asked": 77,
    "answered": 18,
    "by_domain": {
     "consumer": {
@@ -84880,7 +86121,7 @@
      "answered": 3
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 9
     },
     "elections": {
@@ -84899,7 +86140,7 @@
    "last_call_ok": true
   },
   "gpt-5.6-luna-news": {
-   "asked": 76,
+   "asked": 77,
    "answered": 9,
    "by_domain": {
     "consumer": {
@@ -84907,7 +86148,7 @@
      "answered": 1
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 3
     },
     "elections": {
@@ -84926,7 +86167,7 @@
    "last_call_ok": true
   },
   "gpt-5.6-luna-persona": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -84934,7 +86175,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -84953,7 +86194,7 @@
    "last_call_ok": null
   },
   "gpt-5.6-luna-superfc": {
-   "asked": 76,
+   "asked": 77,
    "answered": 13,
    "by_domain": {
     "consumer": {
@@ -84961,7 +86202,7 @@
      "answered": 2
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 7
     },
     "elections": {
@@ -84980,7 +86221,7 @@
    "last_call_ok": true
   },
   "gpt-5.6-luna-zeroshot": {
-   "asked": 76,
+   "asked": 77,
    "answered": 19,
    "by_domain": {
     "consumer": {
@@ -84988,7 +86229,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -85007,7 +86248,7 @@
    "last_call_ok": true
   },
   "gpt-5.6-luna": {
-   "asked": 76,
+   "asked": 77,
    "answered": 20,
    "by_domain": {
     "consumer": {
@@ -85015,7 +86256,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -85034,7 +86275,7 @@
    "last_call_ok": true
   },
   "gpt-5.6-sol-news": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -85042,7 +86283,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -85061,7 +86302,7 @@
    "last_call_ok": null
   },
   "gpt-5.6-sol-persona": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -85069,7 +86310,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -85088,7 +86329,7 @@
    "last_call_ok": null
   },
   "gpt-5.6-sol-superfc": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -85096,7 +86337,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -85115,7 +86356,7 @@
    "last_call_ok": null
   },
   "gpt-5.6-sol-zeroshot": {
-   "asked": 76,
+   "asked": 77,
    "answered": 11,
    "by_domain": {
     "consumer": {
@@ -85123,7 +86364,7 @@
      "answered": 3
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 6
     },
     "elections": {
@@ -85142,7 +86383,7 @@
    "last_call_ok": null
   },
   "gpt-5.6-sol": {
-   "asked": 76,
+   "asked": 77,
    "answered": 11,
    "by_domain": {
     "consumer": {
@@ -85150,7 +86391,7 @@
      "answered": 3
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 6
     },
     "elections": {
@@ -85169,7 +86410,7 @@
    "last_call_ok": null
   },
   "gpt-5.6-terra-news": {
-   "asked": 76,
+   "asked": 77,
    "answered": 8,
    "by_domain": {
     "consumer": {
@@ -85177,7 +86418,7 @@
      "answered": 1
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 3
     },
     "elections": {
@@ -85196,7 +86437,7 @@
    "last_call_ok": true
   },
   "gpt-5.6-terra-persona": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -85204,7 +86445,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -85223,7 +86464,7 @@
    "last_call_ok": null
   },
   "gpt-5.6-terra-superfc": {
-   "asked": 76,
+   "asked": 77,
    "answered": 14,
    "by_domain": {
     "consumer": {
@@ -85231,7 +86472,7 @@
      "answered": 2
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 7
     },
     "elections": {
@@ -85250,7 +86491,7 @@
    "last_call_ok": true
   },
   "gpt-5.6-terra-zeroshot": {
-   "asked": 76,
+   "asked": 77,
    "answered": 19,
    "by_domain": {
     "consumer": {
@@ -85258,7 +86499,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -85277,7 +86518,7 @@
    "last_call_ok": true
   },
   "gpt-5.6-terra": {
-   "asked": 76,
+   "asked": 77,
    "answered": 20,
    "by_domain": {
     "consumer": {
@@ -85285,7 +86526,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -85304,7 +86545,7 @@
    "last_call_ok": true
   },
   "grok-news": {
-   "asked": 76,
+   "asked": 77,
    "answered": 8,
    "by_domain": {
     "consumer": {
@@ -85312,7 +86553,7 @@
      "answered": 1
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 3
     },
     "elections": {
@@ -85331,7 +86572,7 @@
    "last_call_ok": true
   },
   "grok-persona": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -85339,7 +86580,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -85358,7 +86599,7 @@
    "last_call_ok": null
   },
   "grok-superfc": {
-   "asked": 76,
+   "asked": 77,
    "answered": 14,
    "by_domain": {
     "consumer": {
@@ -85366,7 +86607,7 @@
      "answered": 2
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 7
     },
     "elections": {
@@ -85385,7 +86626,7 @@
    "last_call_ok": true
   },
   "grok-zeroshot": {
-   "asked": 76,
+   "asked": 77,
    "answered": 19,
    "by_domain": {
     "consumer": {
@@ -85393,7 +86634,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -85412,7 +86653,7 @@
    "last_call_ok": true
   },
   "grok": {
-   "asked": 76,
+   "asked": 77,
    "answered": 20,
    "by_domain": {
     "consumer": {
@@ -85420,7 +86661,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -85438,8 +86679,8 @@
    "last_call_at": "2026-08-18T07:16:08Z",
    "last_call_ok": true
   },
-  "just4test": {
-   "asked": 76,
+  "h2oai-superagent": {
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -85447,7 +86688,34 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
+     "answered": 0
+    },
+    "elections": {
+     "asked": 6,
+     "answered": 0
+    },
+    "attention": {
+     "asked": 12,
+     "answered": 0
+    }
+   },
+   "calls": 0,
+   "failures": 0,
+   "recent_failures": [],
+   "last_call_at": null,
+   "last_call_ok": null
+  },
+  "just4test": {
+   "asked": 77,
+   "answered": 0,
+   "by_domain": {
+    "consumer": {
+     "asked": 22,
+     "answered": 0
+    },
+    "public-opinion": {
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -85477,7 +86745,7 @@
    "last_call_ok": false
   },
   "kimi-zeroshot": {
-   "asked": 76,
+   "asked": 77,
    "answered": 13,
    "by_domain": {
     "consumer": {
@@ -85485,7 +86753,7 @@
      "answered": 2
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 7
     },
     "elections": {
@@ -85504,7 +86772,7 @@
    "last_call_ok": true
   },
   "kimi": {
-   "asked": 76,
+   "asked": 77,
    "answered": 13,
    "by_domain": {
     "consumer": {
@@ -85512,7 +86780,7 @@
      "answered": 2
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 7
     },
     "elections": {
@@ -85531,16 +86799,16 @@
    "last_call_ok": true
   },
   "persistence": {
-   "asked": 76,
-   "answered": 76,
+   "asked": 77,
+   "answered": 77,
    "by_domain": {
     "consumer": {
      "asked": 22,
      "answered": 22
     },
     "public-opinion": {
-     "asked": 36,
-     "answered": 36
+     "asked": 37,
+     "answered": 37
     },
     "elections": {
      "asked": 6,
@@ -85558,7 +86826,7 @@
    "last_call_ok": null
   },
   "qwen-3.7-news": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -85566,7 +86834,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -85585,7 +86853,7 @@
    "last_call_ok": null
   },
   "qwen-3.7-persona": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -85593,7 +86861,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -85612,7 +86880,7 @@
    "last_call_ok": null
   },
   "qwen-3.7-superfc": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -85620,7 +86888,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -85639,7 +86907,7 @@
    "last_call_ok": null
   },
   "qwen-3.7-zeroshot": {
-   "asked": 76,
+   "asked": 77,
    "answered": 11,
    "by_domain": {
     "consumer": {
@@ -85647,7 +86915,7 @@
      "answered": 3
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 6
     },
     "elections": {
@@ -85666,7 +86934,7 @@
    "last_call_ok": null
   },
   "qwen-3.7": {
-   "asked": 76,
+   "asked": 77,
    "answered": 11,
    "by_domain": {
     "consumer": {
@@ -85674,7 +86942,7 @@
      "answered": 3
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 6
     },
     "elections": {
@@ -85693,7 +86961,7 @@
    "last_call_ok": null
   },
   "qwen-3.8-news": {
-   "asked": 76,
+   "asked": 77,
    "answered": 5,
    "by_domain": {
     "consumer": {
@@ -85701,7 +86969,7 @@
      "answered": 1
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 2
     },
     "elections": {
@@ -85720,7 +86988,7 @@
    "last_call_ok": true
   },
   "qwen-3.8-persona": {
-   "asked": 76,
+   "asked": 77,
    "answered": 0,
    "by_domain": {
     "consumer": {
@@ -85728,7 +86996,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 0
     },
     "elections": {
@@ -85747,7 +87015,7 @@
    "last_call_ok": null
   },
   "qwen-3.8-superfc": {
-   "asked": 76,
+   "asked": 77,
    "answered": 8,
    "by_domain": {
     "consumer": {
@@ -85755,7 +87023,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 6
     },
     "elections": {
@@ -85774,7 +87042,7 @@
    "last_call_ok": true
   },
   "qwen-3.8-zeroshot": {
-   "asked": 76,
+   "asked": 77,
    "answered": 19,
    "by_domain": {
     "consumer": {
@@ -85782,7 +87050,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -85801,7 +87069,7 @@
    "last_call_ok": true
   },
   "qwen-3.8": {
-   "asked": 76,
+   "asked": 77,
    "answered": 20,
    "by_domain": {
     "consumer": {
@@ -85809,7 +87077,7 @@
      "answered": 4
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 10
     },
     "elections": {
@@ -85828,7 +87096,7 @@
    "last_call_ok": true
   },
   "ssa-testing-team": {
-   "asked": 76,
+   "asked": 77,
    "answered": 1,
    "by_domain": {
     "consumer": {
@@ -85836,7 +87104,7 @@
      "answered": 0
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 1
     },
     "elections": {
@@ -85855,16 +87123,16 @@
    "last_call_ok": null
   },
   "test-jay": {
-   "asked": 76,
-   "answered": 15,
+   "asked": 77,
+   "answered": 16,
    "by_domain": {
     "consumer": {
      "asked": 22,
      "answered": 6
     },
     "public-opinion": {
-     "asked": 36,
-     "answered": 8
+     "asked": 37,
+     "answered": 9
     },
     "elections": {
      "asked": 6,
@@ -85875,14 +87143,14 @@
      "answered": 0
     }
    },
-   "calls": 15,
+   "calls": 16,
    "failures": 0,
    "recent_failures": [],
-   "last_call_at": "2026-09-22T17:06:45Z",
+   "last_call_at": "2026-09-23T04:42:32Z",
    "last_call_ok": true
   },
   "trend": {
-   "asked": 76,
+   "asked": 77,
    "answered": 64,
    "by_domain": {
     "consumer": {
@@ -85890,7 +87158,7 @@
      "answered": 22
     },
     "public-opinion": {
-     "asked": 36,
+     "asked": 37,
      "answered": 32
     },
     "elections": {
@@ -85909,16 +87177,16 @@
    "last_call_ok": null
   },
   "worldvac-base": {
-   "asked": 76,
-   "answered": 15,
+   "asked": 77,
+   "answered": 16,
    "by_domain": {
     "consumer": {
      "asked": 22,
      "answered": 6
     },
     "public-opinion": {
-     "asked": 36,
-     "answered": 8
+     "asked": 37,
+     "answered": 9
     },
     "elections": {
      "asked": 6,
@@ -85929,7 +87197,7 @@
      "answered": 0
     }
    },
-   "calls": 15,
+   "calls": 16,
    "failures": 2,
    "recent_failures": [
     {
@@ -85943,20 +87211,20 @@
      "error": "RuntimeError: ssa-agent @ https://worldvac-ssa-agent.com/forecast HTTP 401: {\"error\": \"unknown key id 'ssa-live'\"}"
     }
    ],
-   "last_call_at": "2026-09-22T17:06:46Z",
+   "last_call_at": "2026-09-23T04:42:32Z",
    "last_call_ok": true
   },
   "zhengzheng-agent": {
-   "asked": 76,
-   "answered": 8,
+   "asked": 77,
+   "answered": 9,
    "by_domain": {
     "consumer": {
      "asked": 22,
      "answered": 6
     },
     "public-opinion": {
-     "asked": 36,
-     "answered": 2
+     "asked": 37,
+     "answered": 3
     },
     "elections": {
      "asked": 6,
@@ -85967,10 +87235,10 @@
      "answered": 0
     }
    },
-   "calls": 8,
+   "calls": 9,
    "failures": 0,
    "recent_failures": [],
-   "last_call_at": "2026-09-22T17:07:08Z",
+   "last_call_at": "2026-09-23T04:42:56Z",
    "last_call_ok": true
   }
  },
@@ -85978,38 +87246,38 @@
   "sb_approval": {
    "source": "sb_approval",
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
-   "fetched_at": "2026-09-23T21:30:16Z",
-   "sha256": "b4ab09cf4b26bbe88c04b352e4dc9e4e70ca68be841da6502b2909fc95f25269",
+   "fetched_at": "2026-09-24T11:43:40Z",
+   "sha256": "958556b0ba7b6b422c00732a87a74df30b6d57287c6d70b028fdaef164964395",
    "bytes": 1654029,
-   "file": "sources/sb_approval/2026-09-23.csv",
+   "file": "sources/sb_approval/2026-09-24.csv",
    "note": "Silver Bulletin poll database, published as a Google Sheet"
   },
   "sb_generic": {
    "source": "sb_generic",
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
-   "fetched_at": "2026-09-23T21:30:17Z",
-   "sha256": "a50c20f42924559c04069a26b71e224fad1b61118227eaca805de81993770638",
-   "bytes": 163897,
-   "file": "sources/sb_generic/2026-09-23.csv",
+   "fetched_at": "2026-09-24T11:43:41Z",
+   "sha256": "17f06f6db6b13ef0992d02ae338beac86b67f7962165800cb4ed26128afa0196",
+   "bytes": 164121,
+   "file": "sources/sb_generic/2026-09-24.csv",
    "note": "Silver Bulletin generic-ballot database, published as a Google Sheet"
   },
   "umich": {
    "source": "umich",
    "url": "http://www.sca.isr.umich.edu/files/tbmics.csv",
-   "fetched_at": "2026-09-23T21:30:17Z",
+   "fetched_at": "2026-09-24T11:43:41Z",
    "sha256": "512b0530509d9a05b7b938bf0b3920ecf0eaea70f59f1a648cd6d068d20bc0ad",
    "bytes": 14379,
-   "file": "sources/umich/2026-09-23.json",
+   "file": "sources/umich/2026-09-24.json",
    "note": "Surveys of Consumers, University of Michigan (sca.isr.umich.edu): tbmics.csv for finals and tbcics.csv for the current preliminary, newest reading 2026-09-01; hash-covered canonical raw composite of http://www.sca.isr.umich.edu/files/tbmics.csv and http://www.sca.isr.umich.edu/files/tbcics.csv"
   },
   "aaii": {
    "source": "aaii",
    "url": "https://www.aaii.com/sentimentsurvey/sent_results",
-   "fetched_at": "2026-09-23T21:30:36Z",
-   "sha256": "b8ad72404d7399142a05326f2e5d0c3ee632b84adaee3134ed56425d72a8905a",
-   "bytes": 46125,
-   "file": "sources/aaii/2026-09-23.html",
-   "note": "AAII sentiment survey results page, a ~22-week rolling window parsed against the response's own date 2026-09-23; the full 1987-present .xls is OLE2 and unreadable without a dependency"
+   "fetched_at": "2026-09-24T11:43:41Z",
+   "sha256": "39294d90c6337dc6121dcbc1fa2e5662cdd6d99c7c061d9badef80aba382bc0f",
+   "bytes": 46413,
+   "file": "sources/aaii/2026-09-24.html",
+   "note": "AAII sentiment survey results page, a ~22-week rolling window parsed against the response's own date 2026-09-24; the full 1987-present .xls is OLE2 and unreadable without a dependency"
   },
   "repo": "https://github.com/Social-Atoms/social-sim-arena"
  },
@@ -89715,6 +90983,40 @@
    "ok": false,
    "detail": "Success! Timestamp complete"
   },
+  "civiqs-profile-2026-w39": {
+   "round_id": "civiqs-profile-2026-w39",
+   "manifest": true,
+   "manifest_file": "stamps/civiqs-profile-2026-w39.json",
+   "manifest_sha256": "95bab7c6a1b3b7c2c47c348870a03ccd4c688fdbc64bc8e46e71eb474e49630d",
+   "proof": true,
+   "proof_file": "stamps/civiqs-profile-2026-w39.json.ots",
+   "bitcoin_attested": true,
+   "lock_at": "2026-09-23T22:00:00Z",
+   "built_at": "2026-09-24T04:46:28Z",
+   "forecast_sha256": {
+    "apodex-futureflow": "ce4ac559fa69aa1247a5d62adb91b1f88cad56c55343978be3ae3c8f8c3014ef",
+    "claude-sonnet-web": "6f31727f90c2238c031aff127a43144eb62cb77c5eb55bbad63f7274433092ac",
+    "claude-sonnet-web-superfc": "a8ce96264001ea08ebef118f3b84b54fe0684eec5acc72a988d769fcbc3b48c7",
+    "crowd": "0108c4fabd388990d21303b4e4c8afb0a96fd6ac45b71e6400cc2831f2f55b14",
+    "deepseek-pro-web": "d238c5eb953e9fac97b6da5e070ba1177f8b0a0ff984f0a742a3ee8aab66458f",
+    "deepseek-pro-web-superfc": "15646986d738e4e76a98fec79442fc1c1e80a26edc1094986ce70be154f0c967",
+    "gemini-pro-web": "7dd96ef200d50056107c89fd66644e3903846dda4c897ebe3d95c47a3384bfef",
+    "gemini-pro-web-superfc": "8e8ef310a2a6f1591036aea63e3bdbaa94e958889d29ed518b39fe3326522ecf",
+    "glm-web": "eced8db9ad3987804a9eb17dd2588dd5bfa16d4d4a94d5a0a8f96c3c3e164c01",
+    "glm-web-superfc": "55862b3fe3152a89903448baf51c7382cfeb7aa4777a818644ab0fb7a5b230d4",
+    "gpt-5.6-luna-web": "e369020e4d1a750d8a52bad835210f5b1b890afc1fad1b22162075c1630245c2",
+    "gpt-5.6-luna-web-superfc": "fb23494c8df47a155941bb8d68655466d8e5bb91dd773bd089e10c62c83c9826",
+    "grok-web": "6e468ad9cdfda952d2143e7513ab9c6a7a6c12f8da8eb3c5c6982a3e31f96a7f",
+    "grok-web-superfc": "dc864846c14a67f9b8d8278ee9f0d9f5ffa5eb58c7534f7baae9b409bfaa053e",
+    "persistence": "a327a70d4b7f34a7f74f93cfb8a74757951efc784502a7ce756bcef411367ae0",
+    "test-jay": "f23cf953888ba259e9d98cd43444632d8415a4258870a0ba29b3a4e2eed5f145",
+    "worldvac-base": "c93c0a627c12a7aa25bd01cefa8c4da644afd5def2385759129c9f4d41ed7160",
+    "zhengzheng-agent": "74d87d377d15b2a1967d2448faafae323d8f345e34b6f751959933707f5a9f6b"
+   },
+   "action": "upgraded",
+   "ok": false,
+   "detail": "Success! Timestamp complete"
+  },
   "yougov-xtab-2026-w38": {
    "round_id": "yougov-xtab-2026-w38",
    "manifest": true,
@@ -90033,13 +91335,13 @@
    "budget_fetch_days": 3,
    "budget_change_days": 12,
    "url": "https://www.aaii.com/sentimentsurvey/sent_results",
-   "file": "sources/aaii/2026-09-23.html"
+   "file": "sources/aaii/2026-09-24.html"
   },
   {
    "source": "civiqs",
    "state": "ok",
-   "fetched_days": 0.9,
-   "changed_days": 2.9,
+   "fetched_days": 0.5,
+   "changed_days": 3.5,
    "budget_fetch_days": 2,
    "budget_change_days": 4,
    "url": null,
@@ -90048,183 +91350,183 @@
    "tracker_health": [
     {
      "key": "approve_president_trump_2025",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.age-18-34",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.age-35-49",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.age-50-64",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.age-65_",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.education-College_Graduate",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.education-Non-College_Graduate",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.education-Postgraduate",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.gender-Female",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.gender-Male",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.party-Democrat",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.party-Independent",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.party-Republican",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.race-Black_or_African-American",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.race-Hispanic_Latino",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.race-Other",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "approve_president_trump_2025.race-White",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "describe_feeling_us",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 10,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "economy_family_retro",
-     "fetched_days": 0.9,
-     "changed_days": 2.9,
+     "fetched_days": 0.5,
+     "changed_days": 1.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
-     "newest_reading": "2026-09-21"
+     "newest_snapshot": "2026-09-24",
+     "newest_reading": "2026-09-23"
     },
     {
      "key": "economy_us_direction",
-     "fetched_days": 0.9,
-     "changed_days": 1.9,
+     "fetched_days": 0.5,
+     "changed_days": 2.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-22"
     },
     {
      "key": "economy_us_now",
-     "fetched_days": 0.9,
-     "changed_days": 2.9,
+     "fetched_days": 0.5,
+     "changed_days": 3.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-21"
     },
     {
      "key": "inflation_impact",
-     "fetched_days": 0.9,
-     "changed_days": 2.9,
+     "fetched_days": 0.5,
+     "changed_days": 3.5,
      "change_budget_days": 4,
-     "newest_snapshot": "2026-09-23",
+     "newest_snapshot": "2026-09-24",
      "newest_reading": "2026-09-21"
     }
    ],
-   "newest_snapshot": "2026-09-23",
-   "newest_reading": "2026-09-22",
+   "newest_snapshot": "2026-09-24",
+   "newest_reading": "2026-09-23",
    "stale_keys": [],
    "failing_keys": [],
    "missing_keys": []
@@ -90232,12 +91534,12 @@
   {
    "source": "sb_approval",
    "state": "ok",
-   "fetched_days": -0.0,
+   "fetched_days": 0.0,
    "changed_days": 0.0,
    "budget_fetch_days": 2,
    "budget_change_days": 7,
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
-   "file": "sources/sb_approval/2026-09-23.csv"
+   "file": "sources/sb_approval/2026-09-24.csv"
   },
   {
    "source": "sb_generic",
@@ -90247,34 +91549,34 @@
    "budget_fetch_days": 2,
    "budget_change_days": 10,
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
-   "file": "sources/sb_generic/2026-09-23.csv"
+   "file": "sources/sb_generic/2026-09-24.csv"
   },
   {
    "source": "umich",
    "state": "ok",
    "fetched_days": -0.0,
-   "changed_days": 12.3,
+   "changed_days": 12.9,
    "budget_fetch_days": 3,
    "budget_change_days": 40,
    "url": "http://www.sca.isr.umich.edu/files/tbmics.csv",
-   "file": "sources/umich/2026-09-23.json"
+   "file": "sources/umich/2026-09-24.json"
   }
  ],
  "operator_status": {
-  "generated_at": "2026-09-23T21:30:13Z",
+  "generated_at": "2026-09-24T11:43:40Z",
   "source_states": [
    {
     "attempts": 1,
     "last_error": null,
     "next_retry": null,
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_deadline": "2026-09-23T22:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_deadline": "2026-09-25T14:00:00Z",
     "route": "https://www.aaii.com/sentimentsurvey/sent_results",
     "estimated_spend": 0.0,
     "required_action": "none",
     "evidence": [
      "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=12",
-     "sources/aaii/2026-09-23.html sha256=b8ad72404d7399142a05326f2e5d0c3ee632b84adaee3134ed56425d72a8905a"
+     "sources/aaii/2026-09-24.html sha256=39294d90c6337dc6121dcbc1fa2e5662cdd6d99c7c061d9badef80aba382bc0f"
     ],
     "alert": false,
     "source": "aaii",
@@ -90282,28 +91584,28 @@
    },
    {
     "attempts": 1,
-    "last_error": "economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact",
-    "next_retry": "2026-09-24T03:30:13Z",
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_deadline": "2026-09-23T22:00:00Z",
+    "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Democrat; approve_president_trump_2025.party-Independent: HTTPError: 403 Client Error: ",
+    "next_retry": "2026-09-24T17:43:40Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_deadline": "2026-09-25T14:00:00Z",
     "route": "ssa.series:civiqs",
     "estimated_spend": 0.0,
-    "required_action": "restore live access now or hold affected rounds before the deadline; the same-source archive is not a new release",
+    "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
     "evidence": [
-     "civiqs/economy_family_retro (30 snapshots; newest 2026-09-23); civiqs/economy_us_now (30 snapshots; newest 2026-09-23); civiqs/inflation_impact (30 snapshots; newest 2026-09-23)",
-     "fetched_days=0.9; changed_days=2.9; fetch_budget=2; change_budget=4",
+     "civiqs/approve_president_trump_2025 (32 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.age-18-34 (28 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.age-35-49 (29 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.age-50-64 (29 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.age-65_ (29 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.education-College_Graduate (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.education-Non-College_Graduate (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.education-Postgraduate (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.gender-Female (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.gender-Male (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.party-Democrat (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.party-Independent (29 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.party-Republican (33 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.race-Black_or_African-American (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.race-Hispanic_Latino (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.race-Other (30 snapshots; newest 2026-09-24); civiqs/approve_president_trump_2025.race-White (28 snapshots; newest 2026-09-24); civiqs/describe_feeling_us (30 snapshots; newest 2026-09-24); civiqs/economy_us_direction (31 snapshots; newest 2026-09-24); civiqs/economy_us_now (31 snapshots; newest 2026-09-24); civiqs/inflation_impact (31 snapshots; newest 2026-09-24)",
+     "fetched_days=0.5; changed_days=3.5; fetch_budget=2; change_budget=4",
      "live attempt failed; same-source archive used"
     ],
     "alert": true,
     "source": "civiqs",
-    "state": "deadline_risk"
+    "state": "stale"
    },
    {
     "attempts": 1,
     "last_error": null,
     "next_retry": null,
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_deadline": "2026-09-23T22:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_deadline": "2026-09-25T14:00:00Z",
     "route": "ssa.series:hhpoll",
     "estimated_spend": 0.0,
     "required_action": "none",
@@ -90318,8 +91620,8 @@
     "attempts": 1,
     "last_error": null,
     "next_retry": null,
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_deadline": "2026-09-23T22:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_deadline": "2026-09-25T14:00:00Z",
     "route": "ssa.ranking:ranking_wikitop",
     "estimated_spend": 0.0,
     "required_action": "none",
@@ -90334,14 +91636,14 @@
     "attempts": 1,
     "last_error": null,
     "next_retry": null,
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_deadline": "2026-09-23T22:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_deadline": "2026-09-25T14:00:00Z",
     "route": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
     "estimated_spend": 0.0,
     "required_action": "none",
     "evidence": [
-     "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
-     "sources/sb_approval/2026-09-23.csv sha256=b4ab09cf4b26bbe88c04b352e4dc9e4e70ca68be841da6502b2909fc95f25269"
+     "fetched_days=0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
+     "sources/sb_approval/2026-09-24.csv sha256=958556b0ba7b6b422c00732a87a74df30b6d57287c6d70b028fdaef164964395"
     ],
     "alert": false,
     "source": "sb_approval",
@@ -90351,14 +91653,14 @@
     "attempts": 1,
     "last_error": null,
     "next_retry": null,
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_deadline": "2026-09-23T22:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_deadline": "2026-09-25T14:00:00Z",
     "route": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
     "estimated_spend": 0.0,
     "required_action": "none",
     "evidence": [
      "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=10",
-     "sources/sb_generic/2026-09-23.csv sha256=a50c20f42924559c04069a26b71e224fad1b61118227eaca805de81993770638"
+     "sources/sb_generic/2026-09-24.csv sha256=17f06f6db6b13ef0992d02ae338beac86b67f7962165800cb4ed26128afa0196"
     ],
     "alert": false,
     "source": "sb_generic",
@@ -90368,8 +91670,8 @@
     "attempts": 1,
     "last_error": null,
     "next_retry": null,
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_deadline": "2026-09-23T22:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_deadline": "2026-09-25T14:00:00Z",
     "route": "ssa.series:sce",
     "estimated_spend": 0.0,
     "required_action": "none",
@@ -90384,8 +91686,8 @@
     "attempts": 1,
     "last_error": null,
     "next_retry": null,
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_deadline": "2026-09-23T22:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_deadline": "2026-09-25T14:00:00Z",
     "route": "ssa.series:trends",
     "estimated_spend": 0.0,
     "required_action": "none",
@@ -90400,8 +91702,8 @@
     "attempts": 1,
     "last_error": null,
     "next_retry": null,
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_deadline": "2026-09-23T22:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_deadline": "2026-09-25T14:00:00Z",
     "route": "ssa.series:trends_basket",
     "estimated_spend": 0.0,
     "required_action": "none",
@@ -90416,14 +91718,14 @@
     "attempts": 1,
     "last_error": null,
     "next_retry": null,
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_deadline": "2026-09-23T22:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_deadline": "2026-09-25T14:00:00Z",
     "route": "http://www.sca.isr.umich.edu/files/tbmics.csv",
     "estimated_spend": 0.0,
     "required_action": "none",
     "evidence": [
-     "fetched_days=-0.0; changed_days=12.3; fetch_budget=3; change_budget=40",
-     "sources/umich/2026-09-23.json sha256=512b0530509d9a05b7b938bf0b3920ecf0eaea70f59f1a648cd6d068d20bc0ad"
+     "fetched_days=-0.0; changed_days=12.9; fetch_budget=3; change_budget=40",
+     "sources/umich/2026-09-24.json sha256=512b0530509d9a05b7b938bf0b3920ecf0eaea70f59f1a648cd6d068d20bc0ad"
     ],
     "alert": false,
     "source": "umich",
@@ -90433,8 +91735,8 @@
     "attempts": 1,
     "last_error": null,
     "next_retry": null,
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_deadline": "2026-09-23T22:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_deadline": "2026-09-25T14:00:00Z",
     "route": "ssa.series:umichparty",
     "estimated_spend": 0.0,
     "required_action": "none",
@@ -90449,8 +91751,8 @@
     "attempts": 1,
     "last_error": null,
     "next_retry": null,
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_deadline": "2026-09-23T22:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_deadline": "2026-09-25T14:00:00Z",
     "route": "ssa.series:wikipedia",
     "estimated_spend": 0.0,
     "required_action": "none",
@@ -90465,8 +91767,8 @@
     "attempts": 1,
     "last_error": null,
     "next_retry": null,
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_deadline": "2026-09-23T22:00:00Z",
+    "next_lock": "2026-09-25T14:00:00Z",
+    "next_deadline": "2026-09-25T14:00:00Z",
     "route": "ssa.series:yougov_xtab",
     "estimated_spend": 0.0,
     "required_action": "none",
@@ -90478,269 +91780,13 @@
     "state": "healthy"
    }
   ],
-  "entrant_round_states": [
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-sonnet-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/civiqs-profile-2026-w39/claude-sonnet-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-23T22:00:00Z",
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "civiqs-profile-2026-w39",
-    "route": "ppapi:app-us.ppapi.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "claude-sonnet-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/civiqs-profile-2026-w39/claude-sonnet-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-23T22:00:00Z",
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "civiqs-profile-2026-w39",
-    "route": "ppapi:app-us.ppapi.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-pro-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/civiqs-profile-2026-w39/deepseek-pro-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-23T22:00:00Z",
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "civiqs-profile-2026-w39",
-    "route": "ppapi:app-us.ppapi.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "deepseek-pro-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/civiqs-profile-2026-w39/deepseek-pro-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-23T22:00:00Z",
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "civiqs-profile-2026-w39",
-    "route": "ppapi:app-us.ppapi.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-pro-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/civiqs-profile-2026-w39/gemini-pro-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-23T22:00:00Z",
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "civiqs-profile-2026-w39",
-    "route": "ppapi:app-us.ppapi.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gemini-pro-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/civiqs-profile-2026-w39/gemini-pro-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-23T22:00:00Z",
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "civiqs-profile-2026-w39",
-    "route": "ppapi:app-us.ppapi.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "glm-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/civiqs-profile-2026-w39/glm-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-23T22:00:00Z",
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "civiqs-profile-2026-w39",
-    "route": "ppapi:app-us.ppapi.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "glm-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/civiqs-profile-2026-w39/glm-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-23T22:00:00Z",
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "civiqs-profile-2026-w39",
-    "route": "ppapi:app-us.ppapi.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-luna-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/civiqs-profile-2026-w39/gpt-5.6-luna-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-23T22:00:00Z",
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "civiqs-profile-2026-w39",
-    "route": "ppapi:app-us.ppapi.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "gpt-5.6-luna-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/civiqs-profile-2026-w39/gpt-5.6-luna-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-23T22:00:00Z",
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "civiqs-profile-2026-w39",
-    "route": "ppapi:app-us.ppapi.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "grok-web",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/civiqs-profile-2026-w39/grok-web.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-23T22:00:00Z",
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "civiqs-profile-2026-w39",
-    "route": "ppapi:app-us.ppapi.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "grok-web-superfc",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/civiqs-profile-2026-w39/grok-web-superfc.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-23T22:00:00Z",
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "civiqs-profile-2026-w39",
-    "route": "ppapi:app-us.ppapi.ai",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "test-jay",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/civiqs-profile-2026-w39/test-jay.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-23T22:00:00Z",
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "civiqs-profile-2026-w39",
-    "route": "participant:social-simulation-arena.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "worldvac-base",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/civiqs-profile-2026-w39/worldvac-base.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-23T22:00:00Z",
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "civiqs-profile-2026-w39",
-    "route": "participant:worldvac-ssa-agent.com",
-    "state": "succeeded"
-   },
-   {
-    "alert": false,
-    "attempts": 0,
-    "entrant": "zhengzheng-agent",
-    "estimated_spend": 0.0,
-    "evidence": [
-     "forecast=forecasts/civiqs-profile-2026-w39/zhengzheng-agent.json"
-    ],
-    "last_error": null,
-    "next_deadline": "2026-09-23T22:00:00Z",
-    "next_lock": "2026-09-23T22:00:00Z",
-    "next_retry": null,
-    "required_action": "none",
-    "round_id": "civiqs-profile-2026-w39",
-    "route": "participant:zhengzhengqimen.top",
-    "state": "succeeded"
-   }
-  ],
+  "entrant_round_states": [],
   "counts": {
    "sources": {
-    "deadline_risk": 1,
+    "deadline_risk": 0,
     "healthy": 12,
     "retryable_failure": 0,
-    "stale": 0,
+    "stale": 1,
     "unresolvable": 0
    },
    "entrant_rounds": {
@@ -90748,7 +91794,7 @@
     "queued": 0,
     "retryable_failure": 0,
     "running": 0,
-    "succeeded": 15,
+    "succeeded": 0,
     "terminal_failure": 0
    }
   },
@@ -90756,9 +91802,9 @@
    {
     "kind": "source",
     "id": "civiqs",
-    "state": "deadline_risk",
-    "last_error": "economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact",
-    "required_action": "restore live access now or hold affected rounds before the deadline; the same-source archive is not a new release"
+    "state": "stale",
+    "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Democrat; approve_president_trump_2025.party-Independent: HTTPError: 403 Client Error: ",
+    "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release"
    }
   ]
  },
@@ -90771,6 +91817,7 @@
   "yougov_immig_approval": "sb_approval",
   "yougov_rv_approval": "sb_approval",
   "yougov_strong_approval": "sb_approval",
+  "yougov_rv_strong_approval": "sb_approval",
   "yougov_weak_approval": "sb_approval",
   "yougov_cost_approval": "sb_approval",
   "yougov_trade_approval": "sb_approval",

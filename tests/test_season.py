@@ -231,6 +231,77 @@ def test_a_withdrawn_round_keeps_its_evidence_and_leaves_the_season():
           f"({len(legacy)} withdrawn)")
 
 
+def test_no_round_asks_for_a_base_its_publisher_stopped_reporting():
+    """Economist/YouGov moved its whole wave to a registered-voter base on
+    2026-09-08, and the adult-base cuts stop at 2026-08-29. A round left
+    pointing at one of them locks, releases and never scores -- which costs an
+    entrant a call and the season a row, so the six that did were removed
+    rather than left to rot in the resolver's report.
+
+    `yougov_strong_approval` itself is kept on the adult base, with no future
+    round on it. `yougov-2026-w39-strong-approval` already locked against that
+    base with fourteen sealed forecasts behind it, and repointing its series
+    would have answered an adults question with a voters number -- one that
+    was public eleven days before that lock. So the new base is a new id.
+    """
+    import datetime as dt
+    now = dt.datetime.now(dt.timezone.utc)
+
+    def at(value):
+        return dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+    rounds = reviewed()["rounds"]
+    stalled = {"yougov_approval", "yougov_strong_approval",
+               "yougov_weak_approval", "yougov_cost_approval",
+               "yougov_trade_approval"}
+    future = [r for r in rounds if at(r["lock_at"]) > now]
+    on_stalled = [r["round_id"] for r in future if r.get("series") in stalled]
+    assert not on_stalled, \
+        f"these lock against a base the publisher no longer reports: {on_stalled}"
+
+    strong = [r for r in future if "strong-approval" in r["round_id"]]
+    assert strong, "the strong rounds vanished; they were meant to be moved"
+    for r in strong:
+        assert r["series"] == "yougov_rv_strong_approval", r["round_id"]
+        assert "registered voters" in r["question"], r["round_id"]
+
+
+def test_every_filed_forecast_belongs_to_a_live_or_withdrawn_round():
+    """The other half of `questions/legacy/`, and the half a test can enforce.
+
+    That directory exists because `yougov-xtab-2026-09` was pulled in
+    September by deleting the round, its forecast and its snapshot in one
+    commit, leaving no trace the question had ever been asked. The rule since:
+    out of the season, says why, evidence stays.
+
+    `test_a_withdrawn_round_keeps_its_evidence_and_leaves_the_season` checks
+    the rounds that are in `legacy/`. It cannot check the ones that should be
+    and are not, so this walks the evidence from the other end: a `forecasts/`
+    directory with no live round and no withdrawal record is a round that was
+    deleted rather than withdrawn, which is the shape of that mistake.
+
+    Written first as its own opposite -- asserting a removed round must leave
+    *nothing* behind -- which codified the practice `legacy/` replaced. Kept
+    pointing the right way as a reminder that a convention with a test behind
+    it can still be reversed by someone who did not read the commit that set
+    it.
+    """
+    import glob
+    live = {r["round_id"] for r in reviewed()["rounds"]}
+    withdrawn = {os.path.basename(path)[:-len(".json")]
+                 for path in glob.glob(os.path.join(
+                     ROOT, "questions", "legacy", "*.json"))}
+    # `_example` is the file a new entrant copies; it answers no round.
+    allowed = live | withdrawn | {"_example"}
+    stray = sorted(os.path.basename(d)
+                   for d in glob.glob(os.path.join(ROOT, "forecasts", "*"))
+                   if os.path.isdir(d) and os.path.basename(d) not in allowed)
+    assert not stray, (
+        "these hold filed forecasts but are in neither the season nor "
+        f"questions/legacy/: {stray}")
+
+
+
 if __name__ == "__main__":
     tests = [value for name, value in sorted(globals().items())
              if name.startswith("test_")]

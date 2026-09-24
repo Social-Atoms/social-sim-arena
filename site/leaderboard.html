@@ -324,7 +324,7 @@ function targetCards(data){
   const ca = data.charts||{}, per = (data.backtest&&data.backtest.per_series)||{}, t = data.trackers||{};
   const defs = [
     {key:'umich_sentiment', chart:'umich_sentiment', label:'Michigan consumer sentiment', unit:'', tracker:'umich_sentiment'},
-    {key:'yougov_approval', chart:'yougov_approval', label:'Economist/YouGov · Trump approval', unit:'%', tracker:'yougov_approval'},
+    {key:'yougov_approval', chart:'yougov_rv_approval', label:'Economist/YouGov · Trump approval (registered voters)', unit:'%', tracker:'yougov_rv_approval'},
     {key:'mc_approval', chart:'mc_approval', label:'Morning Consult · Trump approval', unit:'%', tracker:'mc_approval'},
     {key:'yougov_generic_margin', chart:'generic_margin', label:'Generic ballot margin · Dem minus Rep', unit:'', zero:true, tracker:'generic_ballot_avg'},
   ];

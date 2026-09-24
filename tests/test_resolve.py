@@ -372,6 +372,90 @@ def test_a_new_period_outranks_a_revision_of_an_older_one():
         refresh.read_lock_snapshot = real
 
 
+def test_a_round_named_hand_only_refuses_even_with_a_clean_candidate():
+    """`yougov-2026-w39-rv-approval` as it stands once the RV filter reads
+    both labels: its snapshot ends 2026-08-29, and the first point after it is
+    09-06 = 37 -- out on 09-09, eleven days before the 09-20 lock -- where the
+    round asked about the 09-19 wave = 35. Every other check passes, which is
+    exactly why it has to be refused by name."""
+    import ssa.refresh as refresh
+    real = refresh.read_lock_snapshot
+    refresh.read_lock_snapshot = lambda rid: {
+        "history": [{"date": "2026-08-22", "value": 40.0},
+                    {"date": "2026-08-29", "value": 38.0}]}
+    try:
+        published = _series([("2026-08-22", 40.0), ("2026-08-29", 38.0),
+                             ("2026-09-06", 37.0), ("2026-09-12", 40.0),
+                             ("2026-09-19", 35.0)], "yougov_rv_approval")
+        r = _round(rid="yougov-2026-w39-rv-approval", series="yougov_rv_approval",
+                   lock="2026-09-20T14:00:00Z", release="2026-09-22T14:00:00Z")
+        res, why = resolve.resolve_round(r, published, T("2026-09-24T00:00:00Z"))
+        assert res is None, res
+        assert why == resolve.HAND_ONLY["yougov-2026-w39-rv-approval"], why
+
+        # The same shape under any other id still resolves as before: the
+        # refusal is by name, not a rule that reaches other rounds.
+        other = dict(r, round_id="some-other-round")
+        res, why = resolve.resolve_round(other, published, T("2026-09-24T00:00:00Z"))
+        assert why is None and res["observed_date"] == "2026-09-06", (res, why)
+    finally:
+        refresh.read_lock_snapshot = real
+
+
+def test_a_civiqs_reading_dated_before_the_lock_is_not_the_answer():
+    """`civiqs-2026-w38-econ-now` as it happened. Locked 2026-09-16; its
+    history froze ending 09-04 because the 09-11 readings reached the
+    repository on 09-17 (the Mac courier's archive is pushed by hand). The
+    first point after the freeze was then 09-11 = -34.8, public five days
+    before the lock, and the round resolved to it. The answer is the Friday
+    after the lock, 09-18 = -36.6; before that lands, it must wait."""
+    import ssa.refresh as refresh
+    real = refresh.read_lock_snapshot
+    refresh.read_lock_snapshot = lambda rid: {
+        "history": [{"date": "2026-08-28", "value": -33.0},
+                    {"date": "2026-09-04", "value": -34.1}]}
+    try:
+        r = _round(rid="civiqs-2026-w38-econ-now", series="civiqs_net_econ_now",
+                   lock="2026-09-16T14:00:00Z", release="2026-09-18T14:00:00Z")
+        stale = _series([("2026-08-28", -33.0), ("2026-09-04", -34.1),
+                         ("2026-09-11", -34.8)], "civiqs_net_econ_now")
+        res, why = resolve.resolve_round(r, stale, T("2026-09-18T20:00:00Z"))
+        assert res is None and "has not published since the lock" in why, (res, why)
+
+        landed = {"civiqs_net_econ_now": stale["civiqs_net_econ_now"]
+                  + [{"date": "2026-09-18", "value": -36.6}]}
+        res, why = resolve.resolve_round(r, landed, T("2026-09-19T00:00:00Z"))
+        assert why is None, why
+        assert (res["observed_date"], res["value"]) == ("2026-09-18", -36.6), res
+    finally:
+        refresh.read_lock_snapshot = real
+
+
+def test_a_non_daily_source_keeps_its_wave_fielded_before_the_lock():
+    """The Civiqs rule must not reach weekly polls: a YouGov wave is dated by
+    its field start, before the lock, and published after it."""
+    import ssa.refresh as refresh
+    real = refresh.read_lock_snapshot
+    refresh.read_lock_snapshot = lambda rid: {
+        "history": [{"date": "2026-09-12", "value": 40.0}]}
+    try:
+        r = _round(series="yougov_rv_approval", lock="2026-09-20T14:00:00Z",
+                   release="2026-09-22T14:00:00Z")
+        s = _series([("2026-09-12", 40.0), ("2026-09-19", 35.0)], "yougov_rv_approval")
+        res, why = resolve.resolve_round(r, s, T("2026-09-24T00:00:00Z"))
+        assert why is None and res["observed_date"] == "2026-09-19", (res, why)
+    finally:
+        refresh.read_lock_snapshot = real
+
+
+def test_the_house_margin_is_never_resolved_from_a_poll_average():
+    r = _round(rid="midterm-2026-house-margin", series="generic_ballot_margin",
+               lock="2026-10-30T22:00:00Z", release="2026-12-01T00:00:00Z")
+    s = _series([("2026-10-20", 8.0), ("2026-11-10", 7.5)], "generic_ballot_margin")
+    res, why = resolve.resolve_round(r, s, T("2026-12-02T00:00:00Z"))
+    assert res is None and "certified" in why, (res, why)
+
+
 if __name__ == "__main__":
     for name, fn in sorted(list(globals().items())):
         if name.startswith("test_") and callable(fn):
