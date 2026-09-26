@@ -143,6 +143,28 @@ forecast's notes carry `via=direct` or `via=openrouter` — so a file says which
 endpoint answered it without anyone having to reconstruct the configuration
 that was live that week.
 
+**Does not change — how the reply travels (streamed, from 2026-09-25).** Every
+OpenAI-protocol call is now streamed, as Anthropic calls already were. The
+request the model sees is identical — same model, same messages, no limit added
+— so this is not a condition change. It exists because buffered reasoning
+replies put nothing on the connection for minutes, and on the sponsor's gateway
+that silence was cut at five to six minutes: glm-5.2 and deepseek-v4-pro calls
+came back as "provider transport failure" while the gateway logged them as
+completed and billed them. A reply that ends with no answer because the model
+used its whole output allowance is now reported as `provider output limit`
+rather than folded into transport failures.
+
+**Changes, and is recorded — glm-5.2's web query turn (from 2026-09-25).** The
+web condition asks each model, before it forecasts, for up to four search
+queries. For glm-5.2 only, that one turn is sent with `reasoning_effort: low`
+and `max_tokens: 16000`, and is asked once more if it hits the cap. At its
+defaults glm reasoned to its 65,536-token ceiling on this four-query request
+and returned nothing, which failed `trends-basket-2026-10-03/glm-web-superfc`
+on every refresh; measured on that prompt, "low" answered 5 times in 6. The
+forecast turn — what glm is asked and how it answers the question itself — is
+untouched, and the other five models are unchanged. The measurements are in
+`QUERY_PARAMS`, `ssa/harness.py`.
+
 **Refused outright — the `web` context.** OpenRouter serves Claude and GPT but
 does not proxy Anthropic's `web_search_20260209` or OpenAI's hosted
 `web_search`. Its own `:online` plugin is third-party search bolted on, which

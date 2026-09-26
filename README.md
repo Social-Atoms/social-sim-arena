@@ -105,3 +105,21 @@ Social Simulation Arena is a project initiated by [Social Atoms](https://github.
 <!-- contributors:end -->
 
 Every avatar links to its profile. The wall is drawn by `tools/contributors_wall.py` from the GitHub roster; run it when someone new lands a commit. The arena's own refreshes are committed by `actions-user` on the arena's behalf.
+
+## Citing
+
+If you use the arena, its protocol, or its data, cite it as software. GitHub's "Cite this repository" button offers the same entry in APA and BibTeX, from [CITATION.cff](CITATION.cff).
+
+```bibtex
+@software{socialsimulationarena2026,
+  author  = {Li, Chance Jiajie and Liu, Xuan and Shang, Haoyang and Zou, Xinkai and Zhang, Cedegao E. and Jiang, Hang and {Social Simulation Arena Team}},
+  title   = {Social Simulation Arena},
+  year    = {2026},
+  version = {season-0},
+  url     = {https://social-simulation-arena.com},
+  note    = {https://github.com/Social-Atoms/social-sim-arena}
+}
+```
+
+Papers that describe the arena will be listed here as they appear.
+
