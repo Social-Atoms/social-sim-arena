@@ -99,9 +99,28 @@ Social Simulation Arena is a project initiated by [Social Atoms](https://github.
 <a href="https://github.com/chenchenplus" title="chenchenplus"><img src="brand/contributors/chenchenplus.svg" width="64" height="64" alt="chenchenplus"></a>
 <a href="https://github.com/mmalohlava" title="mmalohlava"><img src="brand/contributors/mmalohlava.svg" width="64" height="64" alt="mmalohlava"></a>
 <a href="https://github.com/jayzou-test" title="jayzou-test"><img src="brand/contributors/jayzou-test.svg" width="64" height="64" alt="jayzou-test"></a>
+<a href="https://github.com/maxwell-gao" title="maxwell-gao"><img src="brand/contributors/maxwell-gao.svg" width="64" height="64" alt="maxwell-gao"></a>
 <a href="https://github.com/rain21232" title="rain21232"><img src="brand/contributors/rain21232.svg" width="64" height="64" alt="rain21232"></a>
 <a href="https://github.com/testing-shang" title="testing-shang"><img src="brand/contributors/testing-shang.svg" width="64" height="64" alt="testing-shang"></a>
 </p>
 <!-- contributors:end -->
 
 Every avatar links to its profile. The wall is drawn by `tools/contributors_wall.py` from the GitHub roster; run it when someone new lands a commit. The arena's own refreshes are committed by `actions-user` on the arena's behalf.
+
+## Citing
+
+If you use the arena, its protocol, or its data, cite it as software. GitHub's "Cite this repository" button offers the same entry in APA and BibTeX, from [CITATION.cff](CITATION.cff).
+
+```bibtex
+@software{socialsimulationarena2026,
+  author  = {Li, Chance Jiajie and Liu, Xuan and Shang, Haoyang and Zou, Xinkai and Zhang, Cedegao E. and Jiang, Hang and {Social Simulation Arena Team}},
+  title   = {Social Simulation Arena},
+  year    = {2026},
+  version = {season-0},
+  url     = {https://social-simulation-arena.com},
+  note    = {https://github.com/Social-Atoms/social-sim-arena}
+}
+```
+
+Papers that describe the arena will be listed here as they appear.
+

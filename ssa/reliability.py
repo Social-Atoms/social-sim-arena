@@ -131,6 +131,8 @@ def public_entrant_error(error):
     lower = (error_text(error) or "").lower()
     if re.search(r"\bno [a-z0-9_]+ in the environment\b", lower):
         return "provider credential not configured"
+    if "output limit" in lower or "finish_reason=length" in lower:
+        return "provider output limit"
     if "timeout" in lower or "timed out" in lower:
         return "provider timeout"
     if "rate limit" in lower:

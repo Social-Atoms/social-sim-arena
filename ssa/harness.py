@@ -1842,7 +1842,8 @@ def _provider_slot(entrant, via=None):
 # host that accepts unknown fields and ignores them, publishing a "web" entrant
 # byte-identical to its closed-book twin. See docs/conditions.md.
 
-def call_provider(entrant, prompt, with_usage=False, context=None, via=None):
+def call_provider(entrant, prompt, with_usage=False, context=None, via=None,
+                  params=None):
     """One completion.
 
     Returns the reply text, or (text, usage) when with_usage is set. `usage` is
@@ -1861,6 +1862,9 @@ def call_provider(entrant, prompt, with_usage=False, context=None, via=None):
         context = context or context_of_id
     rt = route(entrant, via)
     cfg = {"params": dict(rt["params"])}
+    # `params` is a per-call addition on top of the route's own, used only by
+    # turns that are not the forecast itself (see QUERY_PARAMS).
+    cfg["params"].update(params or {})
     # A participant route carries no credential (the arena signs instead);
     # every provider route names one.
     key = os.environ[rt["env"]] if rt["env"] else ""
@@ -1949,23 +1953,94 @@ def _extract_text(data, what):
                        f"{json.dumps(data)[:300]}")
 
 
+class OutputLimit(RuntimeError):
+    """The model spent its whole output allowance and returned no answer.
+
+    Its own class because it is a different failure from a dead connection: the
+    provider finished and billed the call, the model simply never stopped
+    reasoning. Callers that can cap and retry a cheap turn catch this and only
+    this.
+    """
+
+
 def _call_openai(cfg, base, key, mid, prompt):
+    """Streamed, for the reason `_call_anthropic` is.
+
+    Buffered, a reasoning model's reply arrives in one piece after the whole
+    think, and the connection carries nothing until then. On the sponsor's
+    gateway that silence was cut somewhere between five and six minutes in
+    (2026-09-22..25): glm-5.2 and deepseek-v4-pro calls kept coming back as
+    "provider transport failure" while the gateway's own log shows them
+    completing -- 353 s and 18,039 tokens for one, 719 s for another -- and
+    billing, with the answer never reaching us. The same glm call, streamed,
+    delivered its first chunk after 2.7 s and never went more than 2.7 s
+    between chunks over 703 s.
+
+    Nothing about the request the model sees changes -- same model, same
+    messages, same (absent) limits -- so answers and the backtest cache keyed
+    on (call identity, prompt) are unaffected. `stream_options.include_usage`
+    asks for the token report on the final chunk, so cost stays measured.
+    """
     # No max_tokens: the model's own ceiling applies. A caller can still set one
     # through cfg["params"], and the rename retry below covers that case.
-    body = {"model": mid, "messages": [{"role": "user", "content": prompt}]}
+    body = {"model": mid, "messages": [{"role": "user", "content": prompt}],
+            "stream": True, "stream_options": {"include_usage": True}}
     body.update(cfg.get("params") or {})
     url = base + "/chat/completions"
     headers = {"Authorization": "Bearer " + key} if key else {}
-    r = requests.post(url, headers=headers, json=body, timeout=TIMEOUT)
+    what = f"{mid} @ {base}"
+    r = requests.post(url, headers=headers, json=body, timeout=TIMEOUT,
+                      stream=True)
     # Newer OpenAI models replaced max_tokens with max_completion_tokens and
     # reject the old name outright. Retry once on the rename rather than make
     # every caller know which vintage its model is.
     if (r.status_code == 400 and "max_completion_tokens" in (r.text or "")
             and "max_tokens" in body):
         body["max_completion_tokens"] = body.pop("max_tokens")
-        r = requests.post(url, headers=headers, json=body, timeout=TIMEOUT)
-    data = _check(r, f"{mid} @ {base}")
-    return _extract_text(data, mid), _usage(data)
+        r = requests.post(url, headers=headers, json=body, timeout=TIMEOUT,
+                          stream=True)
+    if r.status_code >= 400:
+        _check(r, what)                     # raises with the provider's reason
+    # An endpoint that ignores `stream` answers with one JSON body; read it as
+    # the buffered path always did rather than find no events in it.
+    if "json" in (r.headers.get("Content-Type") or "").lower():
+        data = _check(r, what)
+        return _extract_text(data, mid), _usage(data)
+
+    text, usage, finish = [], {}, None
+    for raw in r.iter_lines(decode_unicode=True):
+        if not raw or not raw.startswith("data:"):
+            continue                      # blank separators, comments, keep-alives
+        payload = raw[5:].strip()
+        if not payload or payload == "[DONE]":
+            continue
+        try:
+            ev = json.loads(payload)
+        except ValueError:
+            continue
+        if ev.get("error"):
+            err = ev["error"]
+            detail = err.get("message") if isinstance(err, dict) else err
+            raise RuntimeError(f"{what} stream error: {detail}")
+        if ev.get("usage"):
+            usage = ev["usage"]
+        for ch in ev.get("choices") or []:
+            delta = ch.get("delta") or {}
+            # reasoning_content carries the thinking, which is not the answer
+            if delta.get("content"):
+                text.append(delta["content"])
+            if ch.get("finish_reason"):
+                finish = ch["finish_reason"]
+
+    out = "".join(text)
+    if not out.strip():
+        if finish == "length":
+            raise OutputLimit(
+                f"{what}: reached the output limit while reasoning "
+                f"(finish_reason=length) and returned no answer")
+        raise RuntimeError(f"{what}: stream ended with no text "
+                           f"(finish_reason={finish})")
+    return out, _usage({"usage": usage})
 
 
 class PartialReply(RuntimeError):
@@ -2677,7 +2752,7 @@ def forecast_persona(entrant, r, history=None, previous=None):
 
 # --- entry point -----------------------------------------------------------
 
-def _provider_text(entrant, prompt):
+def _provider_text(entrant, prompt, params=None):
     """One reply over the same road _ask drives: direct, then the standby.
 
     The query turn needs route awareness for the same reason the forecast
@@ -2687,10 +2762,13 @@ def _provider_text(entrant, prompt):
     vendor directly. The raw reply is not logged to replies/: the parsed
     queries are frozen into search/rounds/, which is the audit record here.
     """
+    # Only a model with a query-turn entry passes `params`; every other call
+    # is made exactly as before.
+    extra = {"params": params} if params else {}
     rt = route(entrant)
     if not route_is_down(rt):
         try:
-            return call_provider(entrant, prompt)
+            return call_provider(entrant, prompt, **extra)
         except Exception as e:                       # noqa: BLE001
             if not terminal_failure(e):
                 raise
@@ -2699,7 +2777,7 @@ def _provider_text(entrant, prompt):
     if sb is None:
         raise RuntimeError(
             f"{entrant}: configured route is down and no standby exists")
-    return call_provider(entrant, prompt, via=sb["via"])
+    return call_provider(entrant, prompt, via=sb["via"], **extra)
 
 
 # Every entrant for a round is called inside this window before the round's
@@ -2779,6 +2857,32 @@ def filed_in_window(notes, lock_at):
     return 0 <= age <= FILE_WINDOW_SECONDS
 
 
+# Request settings for the web condition's *query* turn only -- "reply with at
+# most four search queries as JSON" -- per model, on top of its route's params.
+# The forecast turn never reads this table: what an entrant is asked and how it
+# answers the forecast is unchanged.
+#
+# glm-5.2, from 2026-09-25. Asked for four queries at its default reasoning
+# effort with no output cap (the arena sets none), it reasoned for 65,536
+# tokens -- the gateway's default ceiling -- and returned no text at all,
+# finish_reason=length, 703 s, $0.26. It had written usable queries half-way
+# through and then kept re-deliberating (one query repeated 36 times). That is
+# the call that had been failing trends-basket-2026-10-03/glm-web-superfc on
+# every refresh; its input was the same 528 tokens. Measured on that prompt:
+#   default effort, no cap .............. 0/1 answered
+#   cap 8,000 ...........................  1/2
+#   cap 8,000, temperature 0.6 ..........  0/1
+#   cap 8,000, reasoning_effort "low" ...  5/6, most in 13-26 s
+#   cap 8,000, reasoning_effort "none" ..  4/4 in ~2.5 s, but half named a
+#                                          stale "iPhone 17"
+# So "low", with the cap raised to 16,000 because one success used 6,619 and a
+# single retry when the cap is hit (`_retrieve`). The other five models show no
+# such failure and are left exactly as they were.
+QUERY_PARAMS = {
+    "glm": {"reasoning_effort": "low", "max_tokens": 16000},
+}
+
+
 def _retrieve(entrant, r, history):
     """The web condition's first turn, run once per (round, entrant) and frozen.
 
@@ -2799,8 +2903,19 @@ def _retrieve(entrant, r, history):
         if _gathered_in_window(frozen, r):
             return frozen
         os.remove(search_adapter.round_path(r["round_id"], entrant))
-    queries = parse_queries(_provider_text(
-        entrant, build_query_prompt(r, history, "web")))
+    params = QUERY_PARAMS.get(resolve(entrant)[0])
+    prompt = build_query_prompt(r, history, "web")
+    # A capped query turn that hits its cap is asked once more: the failure is
+    # the model looping, not the question, and a second draw usually commits.
+    attempts = 2 if params else 1
+    for attempt in range(attempts):
+        try:
+            reply = _provider_text(entrant, prompt, params=params)
+            break
+        except OutputLimit:
+            if attempt + 1 == attempts:
+                raise
+    queries = parse_queries(reply)
     records = search_adapter.gather(queries)
     if not records:
         raise RuntimeError(
