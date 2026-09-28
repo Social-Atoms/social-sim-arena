@@ -174,7 +174,8 @@ def test_a_ranking_contract_that_cannot_be_scored_fails():
 
 
 def test_every_committed_bundle_is_the_byte_identical_reviewed_projection():
-    rounds = season.require_valid(reviewed())
+    # Rounds voided after their lock were still listed in their batch.
+    rounds = season.require_valid(bundle.as_asked(reviewed()))
     directory = os.path.join(ROOT, "questions", "bundles")
     paths = sorted(name for name in os.listdir(directory) if name.endswith(".json"))
     assert paths
