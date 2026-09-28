@@ -2241,6 +2241,7 @@ function renderTaskChart(key){
   const data=window.__data;if(!data)return; const d=TASKS[key],bt=data.backtest||{},nameOf={};
   window.__matched='';  // read by the board note
   (data.entrants||[]).forEach(e=>nameOf[e.entrant_id]=e.name);
+  (data.teams||[]).forEach(t=>nameOf[t.team_id]=t.name);
   const unitSeg=document.getElementById('unit-seg'),rangeSeg=document.getElementById('range-seg');
   const showUnits=(level,arena,crps)=>{ unitSeg.style.display=''; unitSeg.querySelector('[data-unit="level"]').style.display=level?'':'none'; unitSeg.querySelector('[data-unit="arena"]').style.display=arena?'':'none'; unitSeg.querySelector('[data-unit="crps"]').style.display=crps?'':'none'; };
   const mark=unit=>unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.unit===unit));
@@ -2290,6 +2291,7 @@ function renderBoard(mode){
   const key=window.__tab||'agg',d=TASKS[key]||TASKS.agg;
   const nameOf = {}, typeOf = {};
   (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; });
+  (data.teams||[]).forEach(t => { nameOf[t.team_id]=t.name; typeOf[t.team_id]='team'; });
   const btMap = {}; ((data.backtest&&data.backtest.overall)||[]).forEach(e=>btMap[e.entrant]=e);
   let entries=[],metricKey='mean_crps',metricLabel='CRPS',title=d.label,tag='',note='',appendPending=false,replay=false;
   const liveRows=liveBoard(data,key,mode);

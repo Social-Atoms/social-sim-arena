@@ -365,6 +365,9 @@ function render(data){
 
   const nameOf = {}, typeOf = {};
   (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; });
+  // A GitHub owner with several accounts ranks as one team row (refresh.load_teams).
+  (data.teams||[]).forEach(t => { nameOf[t.team_id]=t.name; typeOf[t.team_id]='team'; });
+  const inTeam = new Set((data.teams||[]).flatMap(t => t.members));
   // The third number is a CRPS in points on the scalar boards, an energy score
   // in cell-space on the profile board, and a rank-distance on the ranking
   // board. They are not comparable, which is why the column is relabelled
@@ -443,7 +446,8 @@ function render(data){
         'Walk-forward replay over '+((data.backtest&&data.backtest.n_rounds)||0)+' real historical releases; every forecast uses only data published before its release. The crowd pools all models in a round into one distribution, and already beats each of them.';
     } else {
       const scores = {}; (data.leaderboard.entries||[]).forEach(e => scores[e.entrant]=e);
-      const ids = (data.entrants||[]).map(e=>e.entrant_id);
+      const ids = (data.entrants||[]).map(e=>e.entrant_id).filter(id=>!inTeam.has(id))
+        .concat((data.teams||[]).map(t=>t.team_id));
       const scored = ids.filter(id=>scores[id]).sort((a,b)=>scores[b].mean_skill-scores[a].mean_skill);
       const pending = ids.filter(id=>!scores[id]);
       let rank = 0;

@@ -2055,6 +2055,78 @@ BASELINE_IDS = {"persistence", "trend", "ewma", "climatology"}
 # rather than a registration field on purpose: a flag anyone can set is a way
 # to be scored by nobody while sitting in the pool.
 HOUSE_TEST_IDS = {"test-jay", "just4test"}
+
+
+def load_teams(entrants=None):
+    """{team_id: team} for GitHub owners with more than one participant entrant.
+
+    The overall score is per GitHub id (maintainer decision, 2026-09-28). A team
+    that splits one method across several accounts -- Astraculum's four vac-*
+    domain accounts under one owner -- is ranked as one row, so it is compared
+    with every other team on the same rounds rather than as four partial rows.
+    Per-round detail stays per account; only the boards aggregate.
+    """
+    by_owner = {}
+    for e in (entrants if entrants is not None else load_entrants()):
+        if (e.get("type") != "participant" or not e.get("github")
+                or e["entrant_id"] in HOUSE_TEST_IDS):
+            continue
+        by_owner.setdefault(e["github"], []).append(e)
+    teams = {}
+    for owner, members in sorted(by_owner.items()):
+        if len(members) < 2:
+            continue
+        orgs = sorted({m.get("organization") for m in members} - {None, ""})
+        tid = f"team-{owner.lower()}"
+        teams[tid] = {
+            "team_id": tid,
+            "github": owner,
+            "name": f"{orgs[0] if orgs else owner} · @{owner}",
+            "members": sorted(m["entrant_id"] for m in members),
+        }
+    return teams
+
+
+def _submitted_at(round_id, entrant, fc):
+    """When a forecast was submitted: the signed request's timestamp for a
+    sealed submission, else the `filed=` stamp an endpoint forecast carries."""
+    path = os.path.join(ROOT, "reveal-receipts", round_id, entrant + ".json")
+    try:
+        with open(path) as fh:
+            return json.load(fh)["headers"]["timestamp"]
+    except (OSError, ValueError, KeyError):
+        pass
+    for part in (fc.get("notes") or "").split(","):
+        part = part.strip()
+        if part.startswith("filed="):
+            return part[len("filed="):]
+    return ""
+
+
+def board_keys(round_id, rdir, teams):
+    """{entrant: board key, or None} for the team members who answered a round.
+
+    A team's row takes, per round, the member forecast submitted first; a
+    second member answering the same round is still scored on the round's own
+    table but does not count toward the team twice. Entrants not in a team are
+    absent, and are keyed by their own id.
+    """
+    member_of = {m: tid for tid, t in teams.items() for m in t["members"]}
+    present = {}
+    for fn in os.listdir(rdir):
+        eid = fn[:-5]
+        if fn.endswith(".json") and eid in member_of:
+            with open(os.path.join(rdir, fn)) as fh:
+                fc = json.load(fh)
+            present.setdefault(member_of[eid], []).append(
+                (_submitted_at(round_id, eid, fc), eid))
+    keys = {}
+    for tid, filed in present.items():
+        filed.sort()
+        keys[filed[0][1]] = tid
+        for _, eid in filed[1:]:
+            keys[eid] = None
+    return keys
 NOT_A_COMPETITOR = BASELINE_IDS | HOUSE_TEST_IDS
 
 
@@ -2112,8 +2184,9 @@ def published_lists(weeks=12):
         return {}
 
 
-def build_leaderboard(rounds, resolved):
-    """Real scores only. Empty until rounds resolve."""
+def build_leaderboard(rounds, resolved, teams=None):
+    """Real scores only. Empty until rounds resolve. Teams rank as one row."""
+    teams = load_teams() if teams is None else teams
     entries = {}
     for r in rounds:
         res = resolved.get(r["round_id"])
@@ -2127,6 +2200,7 @@ def build_leaderboard(rounds, resolved):
             continue
         # The round keeps every entrant's own score, so the site can draw the season
         # question by question, not only the means the board averages.
+        keys = board_keys(r["round_id"], rdir, teams)
         scores = {}
         for fn in sorted(os.listdir(rdir)):
             if fn[:-5] in HOUSE_TEST_IDS:
@@ -2138,9 +2212,11 @@ def build_leaderboard(rounds, resolved):
             if not scoreable_forecast(fc):
                 continue
             c = scoring.crps_forecast(fc["topline"], outcome)
-            e = entries.setdefault(fc["entrant"], {"crps": [], "skill": []})
-            e["crps"].append(c)
-            e["skill"].append(scoring.skill(c, per_crps))
+            key = keys.get(fc["entrant"], fc["entrant"])
+            if key is not None:
+                e = entries.setdefault(key, {"crps": [], "skill": []})
+                e["crps"].append(c)
+                e["skill"].append(scoring.skill(c, per_crps))
             scores[fc["entrant"]] = {"crps": round(c, 4),
                                      "skill": round(scoring.skill(c, per_crps), 4)}
         r["scores"] = scores
@@ -2176,7 +2252,7 @@ def profile_outcome(r, resolved, series):
     return list(detail["vector"]), detail
 
 
-def build_profile_leaderboard(rounds, resolved, series):
+def build_profile_leaderboard(rounds, resolved, series, teams=None):
     """The profile board: energy score and skill, per entrant per profile round.
 
     Kept apart from `build_leaderboard` rather than folded into it, because the
@@ -2192,6 +2268,7 @@ def build_profile_leaderboard(rounds, resolved, series):
     a model that sat out the hard weeks cannot flatter itself with an average
     over the easy ones.
     """
+    teams = load_teams() if teams is None else teams
     per_round, entries, skipped = [], {}, []
     scored_rounds = 0
     for r in rounds:
@@ -2216,6 +2293,7 @@ def build_profile_leaderboard(rounds, resolved, series):
         if not os.path.isdir(rdir):
             skipped.append((r["round_id"], "no forecasts filed"))
             continue
+        keys = board_keys(r["round_id"], rdir, teams)
         rows = []
         for fn in sorted(os.listdir(rdir)):
             if fn[:-5] in HOUSE_TEST_IDS:
@@ -2245,7 +2323,10 @@ def build_profile_leaderboard(rounds, resolved, series):
                 "mean_cell_crps": round(sc["mean_cell_crps"], 4),
             }
             rows.append(row)
-            e = entries.setdefault(fc["entrant"],
+            key = keys.get(fc["entrant"], fc["entrant"])
+            if key is None:
+                continue
+            e = entries.setdefault(key,
                                    {"energy": [], "skill": [], "level": [],
                                     "structure": [], "rounds": []})
             for k in ("energy", "skill", "level", "structure"):
@@ -2319,7 +2400,7 @@ def ranking_outcome(r, resolved, spec):
     return list(detail["items"]), detail
 
 
-def build_ranking_leaderboard(rounds, resolved, ranking_obs=None):
+def build_ranking_leaderboard(rounds, resolved, ranking_obs=None, teams=None):
     """The ranking board: list loss and skill, per entrant per ranking round.
 
     A third section rather than rows on either board above, for the reason the
@@ -2334,6 +2415,7 @@ def build_ranking_leaderboard(rounds, resolved, ranking_obs=None):
     `matched` is the table to cite, for the reason `ssa/model_backtest.py`
     gives: it holds only entrants who answered *every* scored ranking round.
     """
+    teams = load_teams() if teams is None else teams
     per_round, entries, skipped = [], {}, []
     scored_rounds = 0
     for r in rounds:
@@ -2367,6 +2449,7 @@ def build_ranking_leaderboard(rounds, resolved, ranking_obs=None):
         if not os.path.isdir(rdir):
             skipped.append((r["round_id"], "no forecasts filed"))
             continue
+        keys = board_keys(r["round_id"], rdir, teams)
         rows = []
         for fn in sorted(os.listdir(rdir)):
             if fn[:-5] in HOUSE_TEST_IDS:
@@ -2398,7 +2481,10 @@ def build_ranking_leaderboard(rounds, resolved, ranking_obs=None):
                 if k in sc:
                     row[k] = sc[k]
             rows.append(row)
-            e = entries.setdefault(fc["entrant"],
+            key = keys.get(fc["entrant"], fc["entrant"])
+            if key is None:
+                continue
+            e = entries.setdefault(key,
                                    {"loss": [], "skill": [], "rounds": []})
             e["loss"].append(row["loss"])
             e["skill"].append(row["skill"])
@@ -2888,9 +2974,10 @@ def main():
             health_row, next_lock=next_lock, next_deadline=next_deadline)
     operator_status = run_status.write(OPERATOR)
     print_operator_status(run_status)
-    board = build_leaderboard(rounds, resolved)
-    profile_board = build_profile_leaderboard(rounds, resolved, series)
-    ranking_board = build_ranking_leaderboard(rounds, resolved, ranking_obs)
+    teams = load_teams()
+    board = build_leaderboard(rounds, resolved, teams)
+    profile_board = build_profile_leaderboard(rounds, resolved, series, teams)
+    ranking_board = build_ranking_leaderboard(rounds, resolved, ranking_obs, teams)
     attach_round_scores(rounds, profile_board, ranking_board)
     replay_series = {
         name: series[name]
@@ -2998,6 +3085,8 @@ def main():
         "trackers": trackers,
         "rounds": rounds,
         "entrants": load_entrants(),
+        # Boards rank a GitHub owner with several accounts as one row (load_teams).
+        "teams": list(teams.values()),
         # Who has left the arena and since when; the board's Standard view keeps to the rest.
         "retired": retirement(rounds, load_entrants(), now),
         "leaderboard": {
