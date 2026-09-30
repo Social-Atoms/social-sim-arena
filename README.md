@@ -112,7 +112,7 @@ If you use the arena, its protocol, or its data, cite it as software. GitHub's "
 
 ```bibtex
 @software{socialsimulationarena2026,
-  author  = {Li, Chance Jiajie and Liu, Xuan and Shang, Haoyang and Zou, Xinkai and Zhang, Cedegao E. and Jiang, Hang and {Social Simulation Arena Team}},
+  author  = {Li, Chance Jiajie and Liu, Xuan and Shang, Haoyang and Zou, Xinkai and Mo, Zhenze and Zhang, Cedegao E. and Jiang, Hang and {Social Simulation Arena Team}},
   title   = {Social Simulation Arena},
   year    = {2026},
   version = {season-0},
