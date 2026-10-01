@@ -2058,6 +2058,41 @@ HOUSE_TEST_IDS = {"test-jay", "just4test"}
 NOT_A_COMPETITOR = BASELINE_IDS | HOUSE_TEST_IDS
 
 
+# The common start of the Season 0 main board (maintainer decision, 2026-10-01):
+# the first lock after the last of the current teams registered (YuLan-OneSim,
+# 2026-09-28; h2oai-marina, 2026-09-29). From here every team was able to answer
+# every round, so the board compares everyone on the same questions.
+SEASON0_MAIN_START = "2026-09-30T00:00:00Z"
+
+
+def build_main_board(rounds, start=SEASON0_MAIN_START):
+    """One board over every shape since `start`, on the shared unit: skill.
+
+    Number, profile and ranking rounds are scored by different rules, but each
+    round's skill is measured against that round's own persistence-style null,
+    so it is comparable across shapes. Run after `attach_round_scores`, when
+    every resolved round carries `scores`. `answered` is out of the rounds
+    scored in the window, so a missed question is visible next to the mean
+    rather than silently dropped from it.
+    """
+    scored = [r for r in rounds
+              if r.get("lock_at", "") >= start and r.get("scores")]
+    per = {}
+    for r in scored:
+        for entrant, sc in r["scores"].items():
+            if entrant in HOUSE_TEST_IDS or not isinstance(sc.get("skill"), (int, float)):
+                continue
+            per.setdefault(entrant, []).append(sc["skill"])
+    entries = [{"entrant": e,
+                "rounds": len(v),
+                "answered": f"{len(v)}/{len(scored)}",
+                "mean_skill": round(sum(v) / len(v), 4)}
+               for e, v in per.items()]
+    entries.sort(key=lambda x: -x["mean_skill"])
+    return {"since": start, "scored_rounds": len(scored),
+            "round_ids": [r["round_id"] for r in scored], "entries": entries}
+
+
 def attach_round_scores(rounds, profile_board, ranking_board):
     """Copy each scored profile and ranking round's per-entrant scores onto the
     round itself, the way build_leaderboard leaves them on number rounds, so
@@ -2892,6 +2927,7 @@ def main():
     profile_board = build_profile_leaderboard(rounds, resolved, series)
     ranking_board = build_ranking_leaderboard(rounds, resolved, ranking_obs)
     attach_round_scores(rounds, profile_board, ranking_board)
+    main_board = build_main_board(rounds)
     replay_series = {
         name: series[name]
         for name in ("umich_sentiment", "yougov_approval", "mc_approval",
@@ -3004,6 +3040,8 @@ def main():
             "resolved_rounds": sum(1 for r in rounds if r["status"] == "resolved"),
             "entries": board,
         },
+        # Season 0 main board: every shape, from one common start (build_main_board).
+        "season0_main": main_board,
         # The joint sixteen-cell rounds, scored with the energy score. A
         # separate section rather than rows on the board above: the two use
         # different scoring rules on different objects, and only `skill` is
