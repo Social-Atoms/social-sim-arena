@@ -1,0 +1,69 @@
+[
+  {
+    "cells": [
+      "trends_share_tesla",
+      "trends_share_iphone",
+      "trends_share_samsung",
+      "trends_share_netflix",
+      "trends_share_disney"
+    ],
+    "lock_at": "2026-10-30T14:00:00Z",
+    "profile_noun": "brand",
+    "question": "Google Trends, United States: the share of weekly search interest taken by each of Tesla, iPhone, Samsung, Netflix and Disney for the week Sun Nov 1 - Sat Nov 7, 2026. All five are measured in one comparison request, so their weekly indices sit on a single shared scale; forecast each brand's percentage of the five-brand total. The five shares add to 100.",
+    "release_at": "2026-11-07T14:00:00Z",
+    "release_estimated": true,
+    "resolve": "the first archived five-query comparison snapshot (US, web search, trailing 12-month window) carrying the completed week ending 2026-11-07; each brand's value divided by the sum over the five, in percent",
+    "round_id": "trends-basket-2026-11-07",
+    "series": "trends_share_iphone",
+    "target_type": "profile_energy",
+    "tracker": "google_trends",
+    "unit": "percent of the five-brand basket (the five add to 100)"
+  },
+  {
+    "lock_at": "2026-10-30T14:00:00Z",
+    "question": "The ordered top-10 articles on the English Wikipedia by pageviews for the week Mon Nov 2 - Sun Nov 8, 2026. The seven daily top-1000 lists published by Wikimedia are summed per article and ranked; Main_Page and every non-article namespace (Special:, Wikipedia:, Portal:, Help:, File:, Template:, Category:, Draft:, User:, Talk: and their _talk: variants) are excluded. Give the ten article titles in order, rank 1 first.",
+    "ranking": {
+      "access": "all-access",
+      "exclusions": "main_page_and_namespaces_v1",
+      "kind": "wiki_top10",
+      "length": 10,
+      "loss": "rbo",
+      "project": "en.wikipedia",
+      "rbo_p": 0.9,
+      "week_end": "2026-11-08",
+      "week_start": "2026-11-02"
+    },
+    "release_at": "2026-11-10T14:00:00Z",
+    "release_estimated": false,
+    "resolve": "Wikimedia daily top endpoint (top/en.wikipedia/all-access), the week's seven archived daily lists summed per article, exclusion rule main_page_and_namespaces_v1 applied, top 10 by weekly total, ties broken by title ascending. An article absent from a day's top-1000 contributes zero for that day.",
+    "round_id": "wiki-top10-2026-11-08",
+    "series": "wiki_top10_en",
+    "target_type": "ranking_list",
+    "tracker": "wikipedia",
+    "unit": "ordered list of 10 en.wikipedia article titles, canonical underscore form, rank 1 first"
+  },
+  {
+    "lock_at": "2026-11-01T14:00:00Z",
+    "question": "Economist/YouGov weekly tracker: percent of US adult citizens who approve of Donald Trump's job performance",
+    "release_at": "2026-11-03T14:00:00Z",
+    "release_estimated": true,
+    "resolve": "topline PDF of the wave",
+    "round_id": "yougov-2026-w45-approval",
+    "series": "yougov_approval",
+    "target_type": "continuous_normal",
+    "tracker": "economist_yougov",
+    "unit": "% approve"
+  },
+  {
+    "lock_at": "2026-11-01T14:00:00Z",
+    "question": "Economist/YouGov generic congressional ballot: the Democratic margin (Democratic percent minus Republican percent) for the 2026 US House elections",
+    "release_at": "2026-11-03T14:00:00Z",
+    "release_estimated": true,
+    "resolve": "topline PDF of the wave",
+    "round_id": "yougov-2026-w45-generic-margin",
+    "series": "yougov_generic_margin",
+    "target_type": "continuous_normal",
+    "tracker": "economist_yougov",
+    "unit": "net points, Democratic minus Republican"
+  }
+]
