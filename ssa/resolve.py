@@ -283,9 +283,12 @@ def resolve_all(season, series, resolved, now):
         # different observation, which is exactly how Michigan's preliminary
         # and final stay distinct while sharing a date.
         key = (rd["series"], res["observed_date"], res["value"])
+        # A voided resolution (#178) no longer answers anything, so it cannot
+        # hold an observation against a live round.
         owner = claimed.get(key) or next(
             (o for o, v in resolved.items()
-             if v.get("series") == rd["series"]
+             if not v.get("voided")
+             and v.get("series") == rd["series"]
              and v.get("observed_date") == res["observed_date"]
              and v.get("value") == res["value"]), None)
         if owner:

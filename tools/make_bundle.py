@@ -33,6 +33,10 @@ SEASON = os.path.join(ROOT, "questions", "season0.json")
 def load_rounds(path):
     with open(path, encoding="utf-8") as fh:
         data = json.load(fh)
+    if os.path.abspath(path) == os.path.abspath(SEASON):
+        # A past batch includes the rounds voided after their lock: they were
+        # listed and answered. See `bundle.as_asked`.
+        data = bundle_lib.as_asked(data)
     return season_lib.require_valid(data)
 
 

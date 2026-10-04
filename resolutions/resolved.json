@@ -4,7 +4,11 @@
     "observed_date": "2026-08-26",
     "resolved_at": "2026-08-27T22:21:52Z",
     "series": "aaii_bull_bear_spread",
-    "value": -11.5
+    "value": -11.5,
+    "voided": {
+      "at": "2026-09-28T00:17:05Z",
+      "why": "entrants and the persistence null were shown different histories. Forecasts were filed up to seven days before the lock, or the source revised a value between filing and lock, so the last value in a model's prompt (-3.2) is not the one persistence was built on (-4.4). A skill score measured against a null that saw different data is not a comparison. Current code files inside the 24h window. Voided for every entrant; see #178 (B)."
+    }
   },
   "aaii-2026-09-03": {
     "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
@@ -53,7 +57,11 @@
     "observed_date": "2026-08-28",
     "resolved_at": "2026-08-28T22:24:17Z",
     "series": "civiqs_net_approval",
-    "value": -23.3
+    "value": -23.3,
+    "voided": {
+      "at": "2026-09-28T00:17:05Z",
+      "why": "entrants and the persistence null were shown different histories. Forecasts were filed up to seven days before the lock, or the source revised a value between filing and lock, so the last value in a model's prompt (-23.7 / -24.2) is not the one persistence was built on (-22.6). A skill score measured against a null that saw different data is not a comparison. Current code files inside the 24h window. Voided for every entrant; see #178 (B)."
+    }
   },
   "civiqs-2026-w36-approval": {
     "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
@@ -70,11 +78,20 @@
     "value": -26.1
   },
   "civiqs-2026-w38-angry-share": {
-    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
-    "observed_date": "2026-09-11",
-    "resolved_at": "2026-09-18T16:23:26Z",
+    "corrected": {
+      "at": "2026-09-28T00:17:05Z",
+      "replaces": {
+        "observed_date": "2026-09-11",
+        "resolved_at": "2026-09-18T16:23:26Z",
+        "value": 30.2
+      },
+      "why": "the Civiqs archive landed after the lock, so the frozen history ended 2026-09-04 and the resolver took 2026-09-11, a reading public before the 2026-09-16 lock. The round asks for the Friday 2026-09-18 reading. Guarded since #175 (DAILY_SOURCES). Tracked in #178 (A)."
+    },
+    "method": "the observation the round's question names, re-derived by tools/correct_season0_178.py from the round's own source",
+    "observed_date": "2026-09-18",
+    "resolved_at": "2026-09-28T00:17:05Z",
     "series": "civiqs_angry_share",
-    "value": 30.2
+    "value": 29.5
   },
   "civiqs-2026-w38-approval": {
     "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
@@ -84,32 +101,68 @@
     "value": -27.7
   },
   "civiqs-2026-w38-econ-direction": {
-    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
-    "observed_date": "2026-09-11",
-    "resolved_at": "2026-09-18T16:23:26Z",
+    "corrected": {
+      "at": "2026-09-28T00:17:05Z",
+      "replaces": {
+        "observed_date": "2026-09-11",
+        "resolved_at": "2026-09-18T16:23:26Z",
+        "value": -38.5
+      },
+      "why": "the Civiqs archive landed after the lock, so the frozen history ended 2026-09-04 and the resolver took 2026-09-11, a reading public before the 2026-09-16 lock. The round asks for the Friday 2026-09-18 reading. Guarded since #175 (DAILY_SOURCES). Tracked in #178 (A)."
+    },
+    "method": "the observation the round's question names, re-derived by tools/correct_season0_178.py from the round's own source",
+    "observed_date": "2026-09-18",
+    "resolved_at": "2026-09-28T00:17:05Z",
     "series": "civiqs_net_econ_direction",
-    "value": -38.5
+    "value": -41.3
   },
   "civiqs-2026-w38-econ-now": {
-    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
-    "observed_date": "2026-09-11",
-    "resolved_at": "2026-09-18T16:23:26Z",
+    "corrected": {
+      "at": "2026-09-28T00:17:05Z",
+      "replaces": {
+        "observed_date": "2026-09-11",
+        "resolved_at": "2026-09-18T16:23:26Z",
+        "value": -34.8
+      },
+      "why": "the Civiqs archive landed after the lock, so the frozen history ended 2026-09-04 and the resolver took 2026-09-11, a reading public before the 2026-09-16 lock. The round asks for the Friday 2026-09-18 reading. Guarded since #175 (DAILY_SOURCES). Tracked in #178 (A)."
+    },
+    "method": "the observation the round's question names, re-derived by tools/correct_season0_178.py from the round's own source",
+    "observed_date": "2026-09-18",
+    "resolved_at": "2026-09-28T00:17:05Z",
     "series": "civiqs_net_econ_now",
-    "value": -34.8
+    "value": -36.6
   },
   "civiqs-2026-w38-family-finances": {
-    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
-    "observed_date": "2026-09-11",
-    "resolved_at": "2026-09-18T16:23:26Z",
+    "corrected": {
+      "at": "2026-09-28T00:17:05Z",
+      "replaces": {
+        "observed_date": "2026-09-11",
+        "resolved_at": "2026-09-18T16:23:26Z",
+        "value": -30.9
+      },
+      "why": "the Civiqs archive landed after the lock, so the frozen history ended 2026-09-04 and the resolver took 2026-09-11, a reading public before the 2026-09-16 lock. The round asks for the Friday 2026-09-18 reading. Guarded since #175 (DAILY_SOURCES). Tracked in #178 (A)."
+    },
+    "method": "the observation the round's question names, re-derived by tools/correct_season0_178.py from the round's own source",
+    "observed_date": "2026-09-18",
+    "resolved_at": "2026-09-28T00:17:05Z",
     "series": "civiqs_net_family_finances",
     "value": -30.9
   },
   "civiqs-2026-w38-inflation-concern": {
-    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
-    "observed_date": "2026-09-11",
-    "resolved_at": "2026-09-18T16:23:26Z",
+    "corrected": {
+      "at": "2026-09-28T00:17:05Z",
+      "replaces": {
+        "observed_date": "2026-09-11",
+        "resolved_at": "2026-09-18T16:23:26Z",
+        "value": 59.0
+      },
+      "why": "the Civiqs archive landed after the lock, so the frozen history ended 2026-09-04 and the resolver took 2026-09-11, a reading public before the 2026-09-16 lock. The round asks for the Friday 2026-09-18 reading. Guarded since #175 (DAILY_SOURCES). Tracked in #178 (A)."
+    },
+    "method": "the observation the round's question names, re-derived by tools/correct_season0_178.py from the round's own source",
+    "observed_date": "2026-09-18",
+    "resolved_at": "2026-09-28T00:17:05Z",
     "series": "civiqs_net_inflation_concern",
-    "value": 59.0
+    "value": 60.3
   },
   "civiqs-2026-w39-angry-share": {
     "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
@@ -242,7 +295,11 @@
     "observed_date": "2026-08-28",
     "resolved_at": "2026-08-29T16:50:12Z",
     "series": "civiqs_net_approval_rep",
-    "value": 68.3
+    "value": 68.3,
+    "voided": {
+      "at": "2026-09-28T00:17:05Z",
+      "why": "entrants and the persistence null were shown different histories. Forecasts were filed up to seven days before the lock, or the source revised a value between filing and lock, so the last value in a model's prompt (66.8) is not the one persistence was built on (68.3). A skill score measured against a null that saw different data is not a comparison. Current code files inside the 24h window. Voided for every entrant; see #178 (B)."
+    }
   },
   "civiqs-rep-2026-w36": {
     "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
@@ -259,18 +316,36 @@
     "value": 42.9
   },
   "mc-2026-w35-approval": {
-    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
-    "observed_date": "2026-08-15",
-    "resolved_at": "2026-08-25T19:08:49Z",
-    "series": "mc_approval",
-    "value": 42.87
-  },
-  "mc-2026-w36-approval": {
-    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
+    "corrected": {
+      "at": "2026-09-28T00:17:05Z",
+      "replaces": {
+        "observed_date": "2026-08-15",
+        "resolved_at": "2026-08-25T19:08:49Z",
+        "value": 42.87
+      },
+      "why": "Silver Bulletin restated the 2026-08-15 Morning Consult wave from 42.9 to 42.87, a rounding change, and the resolver counted it as a new release. mc-2026-w35-approval was scored on that restatement instead of its own week's wave. This is that wave. Tracked in #178 (A) and #177."
+    },
+    "method": "the observation the round's question names, re-derived by tools/correct_season0_178.py from the round's own source",
     "observed_date": "2026-08-22",
-    "resolved_at": "2026-09-02T16:33:24Z",
+    "resolved_at": "2026-09-28T00:17:05Z",
     "series": "mc_approval",
     "value": 43.12
+  },
+  "mc-2026-w36-approval": {
+    "corrected": {
+      "at": "2026-09-28T00:17:05Z",
+      "replaces": {
+        "observed_date": "2026-08-22",
+        "resolved_at": "2026-09-02T16:33:24Z",
+        "value": 43.12
+      },
+      "why": "Knock-on from mc-2026-w35-approval: once that round had taken the restatement, this round took the wave that belonged to w35. This is this week's own wave, 8/28-31. Tracked in #178 (A)."
+    },
+    "method": "the observation the round's question names, re-derived by tools/correct_season0_178.py from the round's own source",
+    "observed_date": "2026-08-29",
+    "resolved_at": "2026-09-28T00:17:05Z",
+    "series": "mc_approval",
+    "value": 41.04
   },
   "mc-2026-w37-approval": {
     "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
@@ -308,18 +383,36 @@
     "value": 3.187808990478516
   },
   "trends-2026-08-29-iphone": {
-    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
-    "observed_date": "2026-08-22",
-    "resolved_at": "2026-09-01T16:52:16Z",
+    "corrected": {
+      "at": "2026-09-28T00:17:05Z",
+      "replaces": {
+        "observed_date": "2026-08-22",
+        "resolved_at": "2026-09-01T16:52:16Z",
+        "value": 53
+      },
+      "why": "the round locked eight days before the week it asks about, so 'the first point after the frozen history' was the week before that week. The question names the week; this is that week's value. Tracked in #178 (A) and, for the resolver rule, #177."
+    },
+    "method": "the observation the round's question names, re-derived by tools/correct_season0_178.py from the round's own source",
+    "observed_date": "2026-08-29",
+    "resolved_at": "2026-09-28T00:17:05Z",
     "series": "trends_iphone",
-    "value": 53
+    "value": 49
   },
   "trends-2026-08-29-tesla": {
-    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
-    "observed_date": "2026-08-22",
-    "resolved_at": "2026-09-01T16:52:16Z",
+    "corrected": {
+      "at": "2026-09-28T00:17:05Z",
+      "replaces": {
+        "observed_date": "2026-08-22",
+        "resolved_at": "2026-09-01T16:52:16Z",
+        "value": 74
+      },
+      "why": "the round locked eight days before the week it asks about, so 'the first point after the frozen history' was the week before that week. The question names the week; this is that week's value. Tracked in #178 (A) and, for the resolver rule, #177."
+    },
+    "method": "the observation the round's question names, re-derived by tools/correct_season0_178.py from the round's own source",
+    "observed_date": "2026-08-29",
+    "resolved_at": "2026-09-28T00:17:05Z",
     "series": "trends_tesla",
-    "value": 74
+    "value": 68
   },
   "umich-2026-08-final": {
     "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
@@ -380,18 +473,36 @@
     "value": 73.4
   },
   "wiki-2026-08-30-taylor-swift": {
-    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
-    "observed_date": "2026-08-23",
-    "resolved_at": "2026-09-01T16:52:16Z",
+    "corrected": {
+      "at": "2026-09-28T00:17:05Z",
+      "replaces": {
+        "observed_date": "2026-08-23",
+        "resolved_at": "2026-09-01T16:52:16Z",
+        "value": 81.9
+      },
+      "why": "the round locked eight days before the week it asks about, so 'the first point after the frozen history' was the week before that week. The question names the week; this is that week's value. Tracked in #178 (A) and, for the resolver rule, #177."
+    },
+    "method": "the observation the round's question names, re-derived by tools/correct_season0_178.py from the round's own source",
+    "observed_date": "2026-08-30",
+    "resolved_at": "2026-09-28T00:17:05Z",
     "series": "wiki_views_taylor_swift",
-    "value": 81.9
+    "value": 88.2
   },
   "wiki-2026-08-30-trump": {
-    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
-    "observed_date": "2026-08-23",
-    "resolved_at": "2026-09-01T16:52:16Z",
+    "corrected": {
+      "at": "2026-09-28T00:17:05Z",
+      "replaces": {
+        "observed_date": "2026-08-23",
+        "resolved_at": "2026-09-01T16:52:16Z",
+        "value": 201.0
+      },
+      "why": "the round locked eight days before the week it asks about, so 'the first point after the frozen history' was the week before that week. The question names the week; this is that week's value. Tracked in #178 (A) and, for the resolver rule, #177."
+    },
+    "method": "the observation the round's question names, re-derived by tools/correct_season0_178.py from the round's own source",
+    "observed_date": "2026-08-30",
+    "resolved_at": "2026-09-28T00:17:05Z",
     "series": "wiki_views_trump",
-    "value": 201.0
+    "value": 291.0
   },
   "yougov-2026-w34-approval": {
     "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
@@ -412,14 +523,22 @@
     "observed_date": "2026-08-22",
     "resolved_at": "2026-08-25T19:08:49Z",
     "series": "yougov_approval",
-    "value": 36.0
+    "value": 36.0,
+    "voided": {
+      "at": "2026-09-28T00:17:05Z",
+      "why": "entrants and the persistence null were shown different histories. Forecasts were filed up to seven days before the lock, or the source revised a value between filing and lock, so the last value in a model's prompt (33) is not the one persistence was built on (35). A skill score measured against a null that saw different data is not a comparison. Current code files inside the 24h window. Voided for every entrant; see #178 (B)."
+    }
   },
   "yougov-2026-w35-generic": {
     "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
     "observed_date": "2026-08-22",
     "resolved_at": "2026-08-25T19:08:49Z",
     "series": "yougov_generic_margin",
-    "value": 6.0
+    "value": 6.0,
+    "voided": {
+      "at": "2026-09-28T00:17:05Z",
+      "why": "entrants and the persistence null were shown different histories. Forecasts were filed up to seven days before the lock, or the source revised a value between filing and lock, so the last value in a model's prompt (6) is not the one persistence was built on (7). A skill score measured against a null that saw different data is not a comparison. Current code files inside the 24h window. Voided for every entrant; see #178 (B)."
+    }
   },
   "yougov-2026-w36-approval": {
     "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
@@ -440,21 +559,33 @@
     "observed_date": "2026-09-06",
     "resolved_at": "2026-09-09T16:36:59Z",
     "series": "yougov_generic_margin",
-    "value": 11.0
+    "value": 11.0,
+    "voided": {
+      "at": "2026-09-28T00:17:05Z",
+      "why": "the question asks for the registered-voter generic ballot, but Economist/YouGov moved it to likely voters from the 9/4-8 wave (n about 1,400 to about 1,000; margin 6 to 11-14). The resolved value is a likely-voter number, and no registered-voter reading exists to correct it to. Voided for every entrant; see #178 (A, rows 12-14)."
+    }
   },
   "yougov-2026-w38-generic": {
     "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
     "observed_date": "2026-09-12",
     "resolved_at": "2026-09-15T17:00:45Z",
     "series": "yougov_generic_margin",
-    "value": 12.0
+    "value": 12.0,
+    "voided": {
+      "at": "2026-09-28T00:17:05Z",
+      "why": "the question asks for the registered-voter generic ballot, but Economist/YouGov moved it to likely voters from the 9/4-8 wave (n about 1,400 to about 1,000; margin 6 to 11-14). The resolved value is a likely-voter number, and no registered-voter reading exists to correct it to. Voided for every entrant; see #178 (A, rows 12-14)."
+    }
   },
   "yougov-2026-w39-generic": {
     "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
     "observed_date": "2026-09-19",
     "resolved_at": "2026-09-22T17:17:06Z",
     "series": "yougov_generic_margin",
-    "value": 14.0
+    "value": 14.0,
+    "voided": {
+      "at": "2026-09-28T00:17:05Z",
+      "why": "the question asks for the registered-voter generic ballot, but Economist/YouGov moved it to likely voters from the 9/4-8 wave (n about 1,400 to about 1,000; margin 6 to 11-14). The resolved value is a likely-voter number, and no registered-voter reading exists to correct it to. Voided for every entrant; see #178 (A, rows 12-14)."
+    }
   },
   "yougov-2026-w40-rv-approval": {
     "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",

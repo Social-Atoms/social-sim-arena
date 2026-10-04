@@ -2293,7 +2293,15 @@ function renderBoard(mode){
   const btMap = {}; ((data.backtest&&data.backtest.overall)||[]).forEach(e=>btMap[e.entrant]=e);
   let entries=[],metricKey='mean_crps',metricLabel='CRPS',title=d.label,tag='',note='',appendPending=false,replay=false;
   const liveRows=liveBoard(data,key,mode);
-  if(key==='agg' && liveRows.length){
+  // Season 0 main: every shape since the common start, so every team is ranked on
+  // the same questions (refresh.build_main_board). Shown on the default view once a
+  // round in that window has resolved; until then the board below is unchanged.
+  const main=data.season0_main;
+  if(key==='agg' && mode==='all' && main && (main.entries||[]).length){
+    entries=activeRows(main.entries.map(e=>({entrant:e.entrant,rounds:e.rounds,mean_skill:e.mean_skill,mean_crps:null,baseline:isBaseline(e.entrant)})),data);
+    title='Season 0 main'; tag='live';
+    note='Season 0 main board: every question (number, profile and ranking) that closed on or after '+String(main.since||'').slice(0,10)+', when every current team could answer it; '+(main.scored_rounds||0)+' scored so far. Ranked by mean skill against each question\u2019s persistence reference; the Questions column says how many of them each row answered, so a skipped question shows.';
+  }else if(key==='agg' && liveRows.length){
     entries=activeRows(liveRows,data); title='Overall standings'; tag='live';
     note='Season 0, every number question. One row per active entrant (every setup still filing), with persistence as the reference and the crowd as the pool of all answers; the score is the mean over the resolved questions it answered in this window, and the Questions column says how many of them.';
   }else if(key==='agg'){
