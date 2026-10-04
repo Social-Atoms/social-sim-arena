@@ -68,11 +68,25 @@ def _published_keys(root):
 
 
 def _rounds(root):
+    """Every round a receipt may name: the season plus `questions/legacy/`.
+
+    A round withdrawn or voided after its lock (#178, #187) was answered while
+    it was live, so its receipts are still valid history: the signature and
+    the deadline are checked against the definition it had, read from legacy.
+    Reading the season alone rejected those receipts as invalid and stopped
+    every refresh from filing (2026-10-04).
+    """
     with open(os.path.join(root, "questions", "season0.json"),
               encoding="utf-8") as fh:
         doc = json.load(fh)
     rows = doc.get("rounds", doc) if isinstance(doc, dict) else doc
-    return {row["round_id"]: row for row in rows}
+    out = {row["round_id"]: row for row in rows}
+    legacy = Path(root) / "questions" / "legacy"
+    for path in sorted(legacy.glob("*.json")) if legacy.is_dir() else []:
+        with open(path, encoding="utf-8") as fh:
+            row = json.load(fh)
+        out.setdefault(row["round_id"], row)
+    return out
 
 
 def validate_platform_receipt(path, body, root=ROOT):

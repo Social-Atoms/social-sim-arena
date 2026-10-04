@@ -161,5 +161,26 @@ class PlatformSealSyncTests(unittest.TestCase):
             "sealed/round-one/model-one.json"))
 
 
+
+    def test_a_round_voided_into_legacy_still_validates_its_receipts(self):
+        """#190 moved answered rounds into questions/legacy/. Their receipts are
+        history, so the sync must still find the round definition there; reading
+        only the season rejected them and stopped every refresh (2026-10-04)."""
+        import json as _json, tempfile as _tempfile
+        from pathlib import Path as _Path
+        from tools import sync_platform_seals as sync
+        with _tempfile.TemporaryDirectory() as tmp:
+            q = _Path(tmp) / "questions"
+            (q / "legacy").mkdir(parents=True)
+            (q / "season0.json").write_text(_json.dumps(
+                {"rounds": [{"round_id": "live-r", "lock_at": "2026-10-01T14:00:00Z"}]}))
+            (q / "legacy" / "old-r.json").write_text(_json.dumps(
+                {"round_id": "old-r", "lock_at": "2026-09-20T14:00:00Z",
+                 "withdrawn_at": "2026-09-28T00:00:00Z", "withdrawn_reason": "x" * 50}))
+            rounds = sync._rounds(tmp)
+            self.assertEqual(set(rounds), {"live-r", "old-r"})
+            self.assertEqual(rounds["old-r"]["lock_at"], "2026-09-20T14:00:00Z")
+
+
 if __name__ == "__main__":
     unittest.main()
