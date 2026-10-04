@@ -292,6 +292,31 @@ def next_batch_id(rounds, now=None):
     return open_ids[0]
 
 
+def as_asked(document, legacy_dir=None):
+    """The season as entrants were asked it: the reviewed rounds plus every
+    round withdrawn *after* its lock.
+
+    A round voided after its lock (#178, #187) was listed, answered and sealed
+    before anyone knew it would not be scored, so it is part of the batch that
+    was published. Rebuilding a past bundle without it would describe a listing
+    that never went out. A round withdrawn *before* its lock was never asked,
+    and stays out. The withdrawal fields are dropped so the round validates as
+    the definition it was when it was listed.
+    """
+    import glob
+    legacy_dir = legacy_dir or os.path.join(ROOT, "questions", "legacy")
+    rounds = list(document["rounds"])
+    live = {r["round_id"] for r in rounds}
+    for path in sorted(glob.glob(os.path.join(legacy_dir, "*.json"))):
+        with open(path, encoding="utf-8") as fh:
+            r = json.load(fh)
+        if r["round_id"] in live or r.get("withdrawn_at", "") <= r["lock_at"]:
+            continue
+        rounds.append({k: v for k, v in r.items()
+                       if k not in ("withdrawn_at", "withdrawn_reason")})
+    return dict(document, rounds=rounds)
+
+
 def build_bundle(rounds, batch_id=None, now=None):
     """The question bundle for one batch, from frozen round definitions.
 
