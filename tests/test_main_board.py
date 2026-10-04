@@ -27,6 +27,9 @@ def test_only_rounds_from_the_common_start_count_across_shapes():
     assert rows["a"]["answered"] == "2/3" and rows["a"]["mean_skill"] == 0.3
     assert rows["b"]["answered"] == "2/3" and rows["b"]["mean_skill"] == -0.05
     assert [e["entrant"] for e in board["entries"]] == ["a", "b"]
+    assert rows["a"]["mean_crps"] == 1 and rows["a"]["crps_rounds"] == 1, \
+        "CRPS is averaged over number questions only"
+    assert rows["b"]["mean_crps"] is None
 
 
 def test_an_empty_window_is_an_empty_board_not_an_error():
