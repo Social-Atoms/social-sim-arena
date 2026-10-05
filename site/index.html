@@ -1357,14 +1357,24 @@ function tipShow(tip, ev, html){
 const DEFAULT_VISIBLE_MODELS = 5;   // five models, EWMA and the crowd: seven lines
 const MODEL_SELECTION_KEY = 'ssa.chart-models.v1';
 function defaultKeep(data){
-  // The default comparison: the top models on the season's overall board once it has one (the backtest's until then), persistence, EWMA and the crowd. Pure.
-  // In the season, only entrants with a real record qualify for the default (at least half as many
-  // resolved questions as the most-answered entrant), so the opening chart is the established field, not a
-  // lucky first week.
-  const live = (data && data.rounds) ? liveBoard(data,'agg','all') : [];
-  const models = live.length ? activeRows(live,data) : [];
-  const floor = models.length ? Math.ceil(Math.max(...models.map(r=>r.rounds))/2) : 0;
-  const board = live.length ? models.filter(r=>r.rounds>=floor).concat(live.filter(r=>isBaseline(r.entrant))) : (((data||{}).backtest||{}).overall || []);
+  // The default comparison: the top of the board the page opens on, persistence, EWMA and the crowd. Pure.
+  // Once the Season 0 main board exists (every shape since the common start, see refresh.build_main_board)
+  // the opening chart follows its order, whoever is on top: the external entrants are ranked there on the
+  // same questions as the models, and the chart should show how they are doing. An entrant qualifies once
+  // it answered at least half of that board's scored questions, so one lucky answer does not open the chart.
+  // Before the main board, the season's overall board with the same half-the-field floor; the backtest's
+  // until the season has one.
+  const main = (data||{}).season0_main;
+  let board;
+  if(main && (main.entries||[]).length){
+    const floor = Math.ceil((main.scored_rounds||0)/2);
+    board = activeRows(main.entries.map(e=>({entrant:e.entrant,rounds:e.rounds,mean_skill:e.mean_skill,baseline:isBaseline(e.entrant)})),data).filter(r=>r.rounds>=floor);
+  } else {
+    const live = (data && data.rounds) ? liveBoard(data,'agg','all') : [];
+    const models = live.length ? activeRows(live,data) : [];
+    const floor = models.length ? Math.ceil(Math.max(...models.map(r=>r.rounds))/2) : 0;
+    board = live.length ? models.filter(r=>r.rounds>=floor).concat(live.filter(r=>isBaseline(r.entrant))) : (((data||{}).backtest||{}).overall || []);
+  }
   const keep = new Set(['persistence','ewma','crowd']);
   let n = 0;
   for(const row of board){
