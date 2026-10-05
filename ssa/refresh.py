@@ -2077,16 +2077,24 @@ def build_main_board(rounds, start=SEASON0_MAIN_START):
     """
     scored = [r for r in rounds
               if r.get("lock_at", "") >= start and r.get("scores")]
-    per = {}
+    per, crps = {}, {}
     for r in scored:
         for entrant, sc in r["scores"].items():
             if entrant in HOUSE_TEST_IDS or not isinstance(sc.get("skill"), (int, float)):
                 continue
             per.setdefault(entrant, []).append(sc["skill"])
+            # CRPS shares a unit only across number questions; profile and
+            # ranking rounds carry energy / list loss instead, so they are left
+            # out of this column rather than averaged with it.
+            if isinstance(sc.get("crps"), (int, float)):
+                crps.setdefault(entrant, []).append(sc["crps"])
     entries = [{"entrant": e,
                 "rounds": len(v),
                 "answered": f"{len(v)}/{len(scored)}",
-                "mean_skill": round(sum(v) / len(v), 4)}
+                "mean_skill": round(sum(v) / len(v), 4),
+                "mean_crps": (round(sum(crps[e]) / len(crps[e]), 4)
+                              if crps.get(e) else None),
+                "crps_rounds": len(crps.get(e, []))}
                for e, v in per.items()]
     entries.sort(key=lambda x: -x["mean_skill"])
     return {"since": start, "scored_rounds": len(scored),

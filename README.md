@@ -110,7 +110,31 @@ Every avatar links to its profile. The wall is drawn by `tools/contributors_wall
 
 ## Citing
 
-If you use the arena, its protocol, or its data, cite it as software. GitHub's "Cite this repository" button offers the same entry in APA and BibTeX, from [CITATION.cff](CITATION.cff).
+If you use the arena, its protocol, or its data, please cite the [paper on Zenodo](https://zenodo.org/records/23140107). GitHub's "Cite this repository" button offers the paper in APA and BibTeX through the `preferred-citation` entry in [CITATION.cff](CITATION.cff).
+
+Li, C. J., Liu, X., Shang, H., Zou, X., Mo, Z., Zhang, C. E., & Jiang, H. (2026). *Social Simulation Arena: A Prospective Benchmark for Social Simulation* (Version v0.1). Zenodo. https://doi.org/10.5281/zenodo.23140107
+
+```bibtex
+@misc{li2026socialsimulationarena,
+  author    = {Li, Chance Jiajie and Liu, Xuan and Shang, Haoyang and Zou, Xinkai and Mo, Zhenze and Zhang, Cedegao E. and Jiang, Hang},
+  title     = {Social Simulation Arena: A Prospective Benchmark for Social Simulation},
+  year      = {2026},
+  month     = sep,
+  publisher = {Zenodo},
+  version   = {v0.1},
+  doi       = {10.5281/zenodo.23140107},
+  url       = {https://zenodo.org/records/23140107},
+  note      = {Preprint; protocol snapshot v0.1}
+}
+```
+
+This is a living paper with a growing author list. Future versions may expand both the paper and its authorship. Cite the version you used so the citation preserves that version's authors and content.
+
+- **Version DOI (v0.1):** [10.5281/zenodo.23140107](https://doi.org/10.5281/zenodo.23140107), published September 30, 2026.
+- **Concept DOI (all versions):** [10.5281/zenodo.23140106](https://doi.org/10.5281/zenodo.23140106), which always resolves to the latest version.
+- **Paper license:** [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/).
+
+The Season 0 software citation remains available in the top-level metadata of [CITATION.cff](CITATION.cff):
 
 ```bibtex
 @software{socialsimulationarena2026,
@@ -122,6 +146,4 @@ If you use the arena, its protocol, or its data, cite it as software. GitHub's "
   note    = {https://github.com/Social-Atoms/social-sim-arena}
 }
 ```
-
-Papers that describe the arena will be listed here as they appear.
 

@@ -732,7 +732,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
             <div class="chartctl" role="group" aria-label="Chart filters">
               <div class="model-toolbar" id="model-toolbar" style="display:none;"></div>
               <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker<span class="th-help" role="tooltip">The published series itself, with each question's forecasts drawn on it.</span></button><button data-unit="arena" class="on">Score<span class="th-help" role="tooltip">Arena score: 0 is persistence (copying the last release), 100 is a perfect oracle. Averaged over every matched release in the window. Higher is better.</span></button><button data-unit="crps">CRPS<span class="th-help" role="tooltip">CRPS, the error in the question's own unit: how far the whole forecast distribution sat from the published number. Lower is better.</span></button></div>
-              <div class="seg mini" id="range-seg" role="group" aria-label="Time window for the chart and the board"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0" class="on">All</button></div>
+              <div class="seg mini" id="range-seg" role="group" aria-label="Time window for the chart and the board"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0" class="on">All</button><button data-range="-1" title="Season 0 main: every question closing from Sep 30, when all current teams could answer, so everyone is ranked on the same questions">S0</button></div>
             </div>
             <div class="legend-strip" id="legend-strip" style="display:none;"></div>
           </div>
@@ -845,15 +845,27 @@ const MCOLORS = { 'gpt-5.5':'#10a37f','claude-opus':'#d97757','gemini-pro':'#428
 const VENDORS = [
   [/^claude/, 'claude', 'Anthropic'], [/^gpt/, 'openai', 'OpenAI'], [/^gemini/, 'gemini', 'Google'],
   [/^grok/, 'grok', 'xAI'], [/^deepseek/, 'deepseek', 'DeepSeek'], [/^qwen/, 'qwen', 'Qwen'], [/^glm/, 'zhipu', 'Zhipu'],
-  [/^kimi/, 'kimi', 'Moonshot']
+  [/^kimi/, 'kimi', 'Moonshot'],
+  // External entrants: one row per team, matched on the ids the team registered.
+  [/^vac-|^worldvac/, 'astraculum', 'Astraculum'], [/^h2oai/, 'h2oai', 'H2O.ai'], [/^apodex/, 'apodex', 'Apodex'],
+  [/^yulan/, 'yulan', 'Renmin University of China'], [/^zhengzheng/, 'ucsd', 'UC San Diego']
 ];
+const VCOLOR_MODEL_VENDORS = new Set(['claude','openai','gemini','grok','deepseek','qwen','zhipu','kimi']);
 const vendorOf = id => { for(const [re,key] of VENDORS) if(re.test(id)) return key; return null; };
-const LOGO_VENDORS = new Set(['claude','openai','gemini','grok','deepseek','qwen','zhipu','kimi','crowd']);   // the crowd wears its own mark, in the site's green
+// The mark each vendor wears, by file: SVG where the vendor publishes a vector mark, PNG where
+// it does not (sources in logos/README.md). The crowd wears its own mark, in the site's green.
+const LOGO_FILES = {claude:'claude.svg', openai:'openai.svg', gemini:'gemini.svg', grok:'grok.svg', deepseek:'deepseek.svg', qwen:'qwen.svg', zhipu:'zhipu.svg', kimi:'kimi.svg', crowd:'crowd.svg',
+  astraculum:'astraculum.svg', h2oai:'h2oai.svg', apodex:'apodex.png', yulan:'yulan.png', ucsd:'ucsd.svg'};
+const logoSrc = v => LOGO_FILES[v] ? 'logos/'+LOGO_FILES[v]+'?r3' : null;
 const vendorName = key => { for(const [,k,n] of VENDORS) if(k===key) return n; return key; };
-const VCOLOR = {claude:'#C87B60', openai:'#3F9581', gemini:'#6B92D4', grok:'#111110', deepseek:'#7783D8', qwen:'#907FD2', zhipu:'#588FBE', kimi:'#4C8A99', crowd:'#15803d'};
-const avColor = id => { const v = id==='crowd' ? 'crowd' : vendorOf(id); return v ? VCOLOR[v] : '#a8a69e'; };
+const VCOLOR = {claude:'#C87B60', openai:'#3F9581', gemini:'#6B92D4', grok:'#111110', deepseek:'#7783D8', qwen:'#907FD2', zhipu:'#588FBE', kimi:'#4C8A99', crowd:'#15803d',
+  astraculum:'#3b4a5c', h2oai:'#d9a300', apodex:'#002c47', yulan:'#aa0227', ucsd:'#c69214'};
+// A team whose published mark sits on its own ground keeps that ground on the tile, while its
+// lines use VCOLOR: ink for Astraculum's mark, H2O.ai's yellow, UC San Diego navy under the trident.
+const TILE = {astraculum:'#111110', h2oai:'#ffe600', ucsd:'#182b49'};
+const avColor = id => { const v = id==='crowd' ? 'crowd' : vendorOf(id); return v ? (TILE[v] || VCOLOR[v]) : '#a8a69e'; };
 const avatar = (id, tone) => { const v = id==='crowd' ? 'crowd' : vendorOf(id);
-  return '<span class="av" style="background:'+(tone||avColor(id))+'" aria-hidden="true">'+(LOGO_VENDORS.has(v)?'<img class="lg" src="logos/'+v+'.svg?r2" onerror="this.remove()" alt="">':'')+esc(initOf(id))+'</span>'; };
+  return '<span class="av" style="background:'+(tone||avColor(id))+'" aria-hidden="true">'+(logoSrc(v)?'<img class="lg" src="'+logoSrc(v)+'" onerror="this.remove()" alt="">':'')+esc(initOf(id))+'</span>'; };
 // Every model wears its vendor's hue; siblings inside a family split on
 // lightness, so a vendor reads as one color at a glance and as distinct
 // lines up close. Harness arms inherit their model's color.
@@ -864,6 +876,8 @@ const MODEL_SHADE = {
   'deepseek-pro':0, 'deepseek-flash':1,
   'qwen-3.8':0, 'qwen-3.7':1,
   'grok':0, 'glm':0, 'kimi':0,
+  'vac-sentiment-expectations':0, 'vac-public-opinion':1, 'vac-population-profiles':2, 'vac-collective-attention':3, 'worldvac-base':4,
+  'h2oai-marina':0, 'h2oai-superagent':1, 'apodex-futureflow':0, 'yulan-onesim':0, 'zhengzheng-agent':0,
 };
 const stemOf = id => String(id).replace(/(-(zeroshot|news|persona|superfc|web))+$/,'');
 function vshade(hex, k){
@@ -879,6 +893,9 @@ const colorOf = id => {
   return MCOLORS[id] || '#b3b1aa';
 };
 const INITIALS = { crowd:'CR', ewma:'EW', trend:'TR', climatology:'CL', persistence:'PS' };
+// The word under an entrant's name. External teams registered for Season 0 are its founding entrants; the
+// registry still says `participant`, which is the generic word the protocol uses.
+const typeWord = t => t==='llm' ? 'LLM' : t==='baseline' ? 'Baseline' : t==='participant' ? 'Season 0 founding entrant' : t ? t.charAt(0).toUpperCase()+t.slice(1) : 'Entrant';
 const initOf = id => INITIALS[id] || String(id).slice(0,2).toUpperCase();
 
 const esc = s => { const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; };
@@ -979,7 +996,8 @@ function crpsNormal(mu, sd, y){
   return sd*(z*(2*Phi-1)+2*phi-1/Math.sqrt(Math.PI));
 }
 // Where a vendor's model comes from, for the entrant page; a registration's own homepage wins when it names one.
-const VENDOR_HOME={claude:['Anthropic','https://www.anthropic.com'], openai:['OpenAI','https://openai.com'], gemini:['Google DeepMind','https://deepmind.google'], grok:['xAI','https://x.ai'], deepseek:['DeepSeek','https://www.deepseek.com'], qwen:['Qwen','https://qwen.ai'], zhipu:['Zhipu AI','https://www.zhipuai.cn'], kimi:['Moonshot AI','https://www.moonshot.ai']};
+const VENDOR_HOME={astraculum:['Astraculum','https://astraculum.com'], h2oai:['H2O.ai','https://h2o.ai'], apodex:['Apodex','https://apodex.com'], yulan:['YuLan-OneSim','https://github.com/RUC-GSAI/YuLan-OneSim'], ucsd:['UC San Diego','https://ucsd.edu'],
+  claude:['Anthropic','https://www.anthropic.com'], openai:['OpenAI','https://openai.com'], gemini:['Google DeepMind','https://deepmind.google'], grok:['xAI','https://x.ai'], deepseek:['DeepSeek','https://www.deepseek.com'], qwen:['Qwen','https://qwen.ai'], zhipu:['Zhipu AI','https://www.zhipuai.cn'], kimi:['Moonshot AI','https://www.moonshot.ai']};
 const DOMAIN_LABEL={'public-opinion':'Public opinion',consumer:'Sentiment & expectations',attention:'Collective attention',elections:'Elections'};
 function rankChart(traj, id){
   // The entrant's rank at each checkpoint of the backtest, 1 at the top. Drawn at a fixed
@@ -1043,7 +1061,7 @@ function renderEntrant(id){
                                                               : '<span class="bad">failed</span> · '+st.failures+' failed attempt'+(st.failures===1?'':'s'));
   // ---- header ----
   let h='<div class="ent-head"><span class="ent-avatar">'+avatar(id)+'</span><div class="ent-id"><div class="eyebrow page-eyebrow">Entrant</div><h2 class="page-title">'+esc(name)+'</h2>'
-    +'<div class="ent-meta"><span><b>'+esc(e.type==='llm'?'LLM':e.type==='baseline'?'Baseline':(e.type||'entrant'))+'</b></span>'
+    +'<div class="ent-meta"><span><b>'+esc(typeWord(e.type))+'</b></span>'
     +(e.inherited?'<span>setup '+esc(variantWords(id))+'</span>':(e.arms||[]).length?'<span>setup '+esc((e.arms||[]).join(', '))+'</span>':'')
     +(()=>{ const own = e.homepage && !/social-sim-arena/.test(e.homepage) ? ['homepage', e.homepage] : null;
             const v = vendorOf(id), home = own || (v && VENDOR_HOME[v]) || null;
@@ -1356,16 +1374,43 @@ function tipShow(tip, ev, html){
 // Start with a small comparison, chosen from the published standings.
 const DEFAULT_VISIBLE_MODELS = 5;   // five models, EWMA and the crowd: seven lines
 const MODEL_SELECTION_KEY = 'ssa.chart-models.v1';
+const DEFAULT_TEAMS = 4;   // external teams on the opening chart, the best entrant of each
 function defaultKeep(data){
-  // The default comparison: the top models on the season's overall board once it has one (the backtest's until then), persistence, EWMA and the crowd. Pure.
-  // In the season, only entrants with a real record qualify for the default (at least half as many
-  // resolved questions as the most-answered entrant), so the opening chart is the established field, not a
-  // lucky first week.
+  // The default comparison, drawn from the board the page opens on. Pure.
+  // Once the Season 0 main board exists (every shape since the common start, see refresh.build_main_board),
+  // from the full-season board the page opens on:
+  //   the top four external teams, one entrant each, so the chart shows how the real entrants are doing;
+  //   every model vendor's best arm, except the vendor whose best arm is the worst of them, so the chart
+  //   keeps the field in view without the one line that drags its floor down;
+  //   the crowd. Persistence is the zero line; no statistical reference, EWMA's dive is not worth the room.
+  // An entrant qualifies once it answered at least half of the main board's scored questions, so one lucky
+  // answer does not open the chart. Before the main board: the season's overall board, top five models with
+  // at least half the most-answered entrant's questions, EWMA and the crowd; the backtest's until then.
+  const main = (data||{}).season0_main, byId = {};
+  ((data||{}).entrants||[]).forEach(e=>byId[e.entrant_id]=e);
+  const keep = new Set(['persistence','crowd']);
+  if(main && (main.entries||[]).length && data.rounds){
+    const floor = Math.ceil((main.scored_rounds||0)/2);
+    const rows = activeRows(liveBoard(data,'agg','all'),data)
+      .filter(r=>r.rounds>=floor && !r.baseline && r.entrant!=='crowd');
+    const reg = id => byId[stemOf(id)] || byId[id] || {};
+    const vendor = id => vendorOf(stemOf(id));
+    const isModel = id => { const v = vendor(id); return !!v && VCOLOR_MODEL_VENDORS.has(v); };
+    const teamOf = id => { const v = vendor(id); return (v && !VCOLOR_MODEL_VENDORS.has(v)) ? v : (reg(id).organization || id); };
+    const isTeam = id => reg(id).type === 'participant';
+    const teams = new Set();
+    for(const r of rows){ if(!isTeam(r.entrant) || teams.has(teamOf(r.entrant))) continue; teams.add(teamOf(r.entrant)); keep.add(r.entrant); if(teams.size>=DEFAULT_TEAMS) break; }
+    const best = [], seen = new Set();   // in board order, so the last is the worst vendor's best
+    for(const r of rows){ const v = vendor(r.entrant); if(!isModel(r.entrant) || seen.has(v)) continue; seen.add(v); best.push(r.entrant); }
+    if(best.length >= 3) best.pop();
+    best.forEach(id=>keep.add(id));
+    return keep;
+  }
+  keep.add('ewma');
   const live = (data && data.rounds) ? liveBoard(data,'agg','all') : [];
   const models = live.length ? activeRows(live,data) : [];
   const floor = models.length ? Math.ceil(Math.max(...models.map(r=>r.rounds))/2) : 0;
   const board = live.length ? models.filter(r=>r.rounds>=floor).concat(live.filter(r=>isBaseline(r.entrant))) : (((data||{}).backtest||{}).overall || []);
-  const keep = new Set(['persistence','ewma','crowd']);
   let n = 0;
   for(const row of board){
     if(row.baseline || isBaseline(row.entrant) || row.entrant==='crowd' || keep.has(row.entrant)) continue;
@@ -1745,10 +1790,10 @@ function aggChart(traj, nameOf, unit){
     if(nm.length > maxCh) nm = nm.slice(0, maxCh-1)+'…';
     g += `<line x1="${X(traj.length-1)}" x2="${X(traj.length-1)+8}" y1="${Y(last)}" y2="${ly}" stroke="${colorOf(s)}" stroke-width="1" opacity=".5"/>`;
     g += `<circle cx="${X(traj.length-1)}" cy="${Y(last)}" r="3" fill="${colorOf(s)}" stroke="#fff" stroke-width="1.5"/>`;
-    g += `<rect x="${X(traj.length-1)+8}" y="${ly-8.5}" width="19" height="17" rx="3" fill="${colorOf(s)}"/>`;
-    const lv = s==='crowd' ? 'crowd' : vendorOf(s);
-    if(lv && LOGO_VENDORS.has(lv)){
-      g += `<image href="logos/${lv}.svg?r2" x="${X(traj.length-1)+10.5}" y="${ly-6}" width="14" height="12"/>`;
+    const lv = s==='crowd' ? 'crowd' : vendorOf(stemOf(s));
+    g += `<rect x="${X(traj.length-1)+8}" y="${ly-8.5}" width="19" height="17" rx="3" fill="${(lv && TILE[lv]) || colorOf(s)}"/>`;
+    if(lv && logoSrc(lv)){
+      g += `<image href="${logoSrc(lv)}" x="${X(traj.length-1)+10.5}" y="${ly-6}" width="14" height="12" preserveAspectRatio="xMidYMid meet"/>`;
     } else {
       g += `<text x="${X(traj.length-1)+17.5}" y="${ly+3.5}" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">${initOf(s)}</text>`;
     }
@@ -2147,6 +2192,8 @@ function liveBoard(data,key,mode){
   const now=Date.now(), cut=mode==='d30'?now-30*86400e3:mode==='m6'?now-182*86400e3:null;
   let rs=scoredRounds(data,key);
   if(mode==='last') rs=rs.slice(-1); else if(cut) rs=rs.filter(r=>Date.parse(resolvedAt(r))>=cut);
+  // S0: the Season 0 main window, by lock time (refresh.SEASON0_MAIN_START).
+  if(mode==='s0'){ const since=(data.season0_main||{}).since||'2026-09-30T00:00:00Z'; rs=rs.filter(r=>(r.lock_at||'')>=since); }
   const acc={};
   rs.forEach(r=>Object.entries(r.scores).forEach(([id,sc])=>{ if(typeof sc.skill!=='number') return; const a=acc[id]||(acc[id]={n:0,s:0,c:0,cn:0}); a.n++; a.s+=sc.skill; if(typeof sc.crps==='number'){ a.c+=sc.crps; a.cn++; } }));
   return Object.entries(acc).map(([id,a])=>({entrant:id,rounds:a.n,mean_skill:a.s/a.n,mean_crps:a.cn?a.c/a.cn:null,baseline:isBaseline(id)})).sort((x,y)=>y.mean_skill-x.mean_skill);
@@ -2283,7 +2330,7 @@ function renderTaskChart(key){
   seriesChart(key,data);
 }
 
-const SPANLABEL = {all:'the releases every entrant answered', m6:'the releases every entrant answered', d30:'the releases every entrant answered', last:'the releases every entrant answered'};
+const SPANLABEL = {all:'the releases every entrant answered', m6:'the releases every entrant answered', d30:'the releases every entrant answered', last:'the releases every entrant answered', s0:'the releases every entrant answered'};
 function renderBoard(mode){
   const data = window.__data; if(!data) return;
   window.__board = mode; if(typeof syncHash==='function') syncHash();
@@ -2293,14 +2340,14 @@ function renderBoard(mode){
   const btMap = {}; ((data.backtest&&data.backtest.overall)||[]).forEach(e=>btMap[e.entrant]=e);
   let entries=[],metricKey='mean_crps',metricLabel='CRPS',title=d.label,tag='',note='',appendPending=false,replay=false;
   const liveRows=liveBoard(data,key,mode);
-  // Season 0 main: every shape since the common start, so every team is ranked on
-  // the same questions (refresh.build_main_board). Shown on the default view once a
-  // round in that window has resolved; until then the board below is unchanged.
+  // Season 0 main (the S0 range): every shape since the common start, so every team
+  // is ranked on the same questions (refresh.build_main_board). All keeps the
+  // full-season board.
   const main=data.season0_main;
-  if(key==='agg' && mode==='all' && main && (main.entries||[]).length){
-    entries=activeRows(main.entries.map(e=>({entrant:e.entrant,rounds:e.rounds,mean_skill:e.mean_skill,mean_crps:null,baseline:isBaseline(e.entrant)})),data);
+  if(key==='agg' && mode==='s0' && main && (main.entries||[]).length){
+    entries=activeRows(main.entries.map(e=>({entrant:e.entrant,rounds:e.rounds,mean_skill:e.mean_skill,mean_crps:(typeof e.mean_crps==='number'?e.mean_crps:null),baseline:isBaseline(e.entrant)})),data);
     title='Season 0 main'; tag='live';
-    note='Season 0 main board: every question (number, profile and ranking) that closed on or after '+String(main.since||'').slice(0,10)+', when every current team could answer it; '+(main.scored_rounds||0)+' scored so far. Ranked by mean skill against each question\u2019s persistence reference; the Questions column says how many of them each row answered, so a skipped question shows.';
+    note='Season 0 main board: every question (number, profile and ranking) that closed on or after '+String(main.since||'').slice(0,10)+', when every current team could answer it; '+(main.scored_rounds||0)+' scored so far. Ranked by mean skill against each question\u2019s persistence reference; the Questions column says how many of them each row answered, so a skipped question shows. CRPS is averaged over the number questions only (profile and ranking questions use other scores).';
   }else if(key==='agg' && liveRows.length){
     entries=activeRows(liveRows,data); title='Overall standings'; tag='live';
     note='Season 0, every number question. One row per active entrant (every setup still filing), with persistence as the reference and the crowd as the pool of all answers; the score is the mean over the resolved questions it answered in this window, and the Questions column says how many of them.';
@@ -2373,7 +2420,7 @@ function renderBoard(mode){
     const state=entrantState(id,data);
     const details = [
       setup==='zs' ? 'Zero-shot' : setup==='r10' ? 'Recent-10' : variant,   // the registered name's setup, else the id's
-      entryType==='llm' ? 'LLM' : entryType.charAt(0).toUpperCase()+entryType.slice(1),
+      typeWord(entryType),
       id==='persistence' ? 'Reference' : '',
       retiredWords(id,data),
       s && s.mock ? 'Placeholder' : ''
@@ -2394,6 +2441,12 @@ function renderBoard(mode){
   const orderT = {llm:0, baseline:1};
   // An entrant with nothing scored yet has no row: the board ranks results, the Questions page lists who is in.
   entries = entries.filter(e=>(e.rounds||0)>0);
+  if(mode==='s0'){
+    // The reference sits on top, unranked, so 'better than copying the last release' reads at a glance.
+    const ref=entries.find(e=>e.entrant==='persistence');
+    const rest=entries.filter(e=>e.entrant!=='persistence');
+    body.innerHTML=(ref?row(ref.entrant,ref,null):'')+rest.map((e,i)=>row(e.entrant,e,i+1)).join('');
+  } else
   body.innerHTML = entries.map((e,i)=>row(e.entrant,e,i+1)).join('');
   if(!body.innerHTML){
     const nx=taskRounds(d,data).filter(r=>r.status!=='resolved').sort((a,b)=>a.release_at.localeCompare(b.release_at))[0];
@@ -2925,7 +2978,7 @@ function showPage(k){
 }
 
 const CHART_KEYS = Object.keys(TASKS);
-const SPAN_KEYS = ['all','m6','d30','last'];
+const SPAN_KEYS = ['all','m6','d30','last','s0'];
 function chartUrlState(){
   // What the chart shows beyond scope and window: the metric when it is not Score, and the
   // entrant selection when it differs from the default, so a shared link shows the same lines.
@@ -3057,7 +3110,7 @@ function qfOpen(on){ qf.open=on; const pop=document.getElementById('qf-pop'), t=
 })();
 document.getElementById('task-search').oninput=e=>{window.__roundQuery=e.target.value;roundsList(window.__data);};
 document.querySelectorAll('#round-status-seg button').forEach(b=>b.onclick=()=>{window.__roundStatus=b.dataset.status;roundsList(window.__data);});
-const RANGE_TO_SPAN = {0:'all', 6:'m6', 1:'d30'}, SPAN_TO_RANGE = {all:0, m6:6, d30:1, last:0};
+const RANGE_TO_SPAN = {0:'all', 6:'m6', 1:'d30', '-1':'s0'}, SPAN_TO_RANGE = {all:0, m6:6, d30:1, last:0, s0:-1};
 function setRange(months){
   window.__range = months;
   document.querySelectorAll('#range-seg button').forEach(x=>x.classList.toggle('on', Number(x.dataset.range)===months));
