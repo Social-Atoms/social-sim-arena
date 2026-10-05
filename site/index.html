@@ -1371,12 +1371,12 @@ function tipShow(tip, ev, html){
 // Start with a small comparison, chosen from the published standings.
 const DEFAULT_VISIBLE_MODELS = 5;   // five models, EWMA and the crowd: seven lines
 const MODEL_SELECTION_KEY = 'ssa.chart-models.v1';
-const DEFAULT_TEAMS = 3;   // external teams on the opening chart, the best entrant of each
+const DEFAULT_TEAMS = 4;   // external teams on the opening chart, the best entrant of each
 function defaultKeep(data){
   // The default comparison, drawn from the board the page opens on. Pure.
   // Once the Season 0 main board exists (every shape since the common start, see refresh.build_main_board),
   // from the full-season board the page opens on:
-  //   the top three external teams, one entrant each, so the chart shows how the real entrants are doing;
+  //   the top four external teams, one entrant each, so the chart shows how the real entrants are doing;
   //   every model vendor's best arm, except the vendor whose best arm is the worst of them, so the chart
   //   keeps the field in view without the one line that drags its floor down;
   //   the crowd. Persistence is the zero line; no statistical reference, EWMA's dive is not worth the room.
