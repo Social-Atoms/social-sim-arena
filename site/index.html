@@ -847,6 +847,7 @@ const VENDORS = [
   [/^grok/, 'grok', 'xAI'], [/^deepseek/, 'deepseek', 'DeepSeek'], [/^qwen/, 'qwen', 'Qwen'], [/^glm/, 'zhipu', 'Zhipu'],
   [/^kimi/, 'kimi', 'Moonshot']
 ];
+const VCOLOR_MODEL_VENDORS = new Set(['claude','openai','gemini','grok','deepseek','qwen','zhipu','kimi']);
 const vendorOf = id => { for(const [re,key] of VENDORS) if(re.test(id)) return key; return null; };
 const LOGO_VENDORS = new Set(['claude','openai','gemini','grok','deepseek','qwen','zhipu','kimi','crowd']);   // the crowd wears its own mark, in the site's green
 const vendorName = key => { for(const [,k,n] of VENDORS) if(k===key) return n; return key; };
@@ -1356,26 +1357,43 @@ function tipShow(tip, ev, html){
 // Start with a small comparison, chosen from the published standings.
 const DEFAULT_VISIBLE_MODELS = 5;   // five models, EWMA and the crowd: seven lines
 const MODEL_SELECTION_KEY = 'ssa.chart-models.v1';
+const DEFAULT_TEAMS = 3;   // external teams on the opening chart, the best entrant of each
 function defaultKeep(data){
-  // The default comparison: the top of the board the page opens on, persistence, EWMA and the crowd. Pure.
-  // Once the Season 0 main board exists (every shape since the common start, see refresh.build_main_board)
-  // the opening chart follows its order, whoever is on top: the external entrants are ranked there on the
-  // same questions as the models, and the chart should show how they are doing. An entrant qualifies once
-  // it answered at least half of that board's scored questions, so one lucky answer does not open the chart.
-  // Before the main board, the season's overall board with the same half-the-field floor; the backtest's
-  // until the season has one.
-  const main = (data||{}).season0_main;
-  let board;
-  if(main && (main.entries||[]).length){
+  // The default comparison, drawn from the board the page opens on. Pure.
+  // Once the Season 0 main board exists (every shape since the common start, see refresh.build_main_board),
+  // from the full-season board the page opens on:
+  //   the top three external teams, one entrant each, so the chart shows how the real entrants are doing;
+  //   every model vendor's best arm, except the vendor whose best arm is the worst of them, so the chart
+  //   keeps the field in view without the one line that drags its floor down;
+  //   the crowd. Persistence is the zero line; no statistical reference, EWMA's dive is not worth the room.
+  // An entrant qualifies once it answered at least half of the main board's scored questions, so one lucky
+  // answer does not open the chart. Before the main board: the season's overall board, top five models with
+  // at least half the most-answered entrant's questions, EWMA and the crowd; the backtest's until then.
+  const main = (data||{}).season0_main, byId = {};
+  ((data||{}).entrants||[]).forEach(e=>byId[e.entrant_id]=e);
+  const keep = new Set(['persistence','crowd']);
+  if(main && (main.entries||[]).length && data.rounds){
     const floor = Math.ceil((main.scored_rounds||0)/2);
-    board = activeRows(main.entries.map(e=>({entrant:e.entrant,rounds:e.rounds,mean_skill:e.mean_skill,baseline:isBaseline(e.entrant)})),data).filter(r=>r.rounds>=floor);
-  } else {
-    const live = (data && data.rounds) ? liveBoard(data,'agg','all') : [];
-    const models = live.length ? activeRows(live,data) : [];
-    const floor = models.length ? Math.ceil(Math.max(...models.map(r=>r.rounds))/2) : 0;
-    board = live.length ? models.filter(r=>r.rounds>=floor).concat(live.filter(r=>isBaseline(r.entrant))) : (((data||{}).backtest||{}).overall || []);
+    const rows = activeRows(liveBoard(data,'agg','all'),data)
+      .filter(r=>r.rounds>=floor && !r.baseline && r.entrant!=='crowd');
+    const reg = id => byId[stemOf(id)] || byId[id] || {};
+    const vendor = id => vendorOf(stemOf(id));
+    const isModel = id => { const v = vendor(id); return !!v && VCOLOR_MODEL_VENDORS.has(v); };
+    const teamOf = id => { const v = vendor(id); return (v && !VCOLOR_MODEL_VENDORS.has(v)) ? v : (reg(id).organization || id); };
+    const isTeam = id => reg(id).type === 'participant';
+    const teams = new Set();
+    for(const r of rows){ if(!isTeam(r.entrant) || teams.has(teamOf(r.entrant))) continue; teams.add(teamOf(r.entrant)); keep.add(r.entrant); if(teams.size>=DEFAULT_TEAMS) break; }
+    const best = [], seen = new Set();   // in board order, so the last is the worst vendor's best
+    for(const r of rows){ const v = vendor(r.entrant); if(!isModel(r.entrant) || seen.has(v)) continue; seen.add(v); best.push(r.entrant); }
+    if(best.length >= 3) best.pop();
+    best.forEach(id=>keep.add(id));
+    return keep;
   }
-  const keep = new Set(['persistence','ewma','crowd']);
+  keep.add('ewma');
+  const live = (data && data.rounds) ? liveBoard(data,'agg','all') : [];
+  const models = live.length ? activeRows(live,data) : [];
+  const floor = models.length ? Math.ceil(Math.max(...models.map(r=>r.rounds))/2) : 0;
+  const board = live.length ? models.filter(r=>r.rounds>=floor).concat(live.filter(r=>isBaseline(r.entrant))) : (((data||{}).backtest||{}).overall || []);
   let n = 0;
   for(const row of board){
     if(row.baseline || isBaseline(row.entrant) || row.entrant==='crowd' || keep.has(row.entrant)) continue;
