@@ -893,9 +893,9 @@ const colorOf = id => {
   return MCOLORS[id] || '#b3b1aa';
 };
 const INITIALS = { crowd:'CR', ewma:'EW', trend:'TR', climatology:'CL', persistence:'PS' };
-// The word under an entrant's name. External teams registered for Season 0 are its founding teams; the
+// The word under an entrant's name. External teams registered for Season 0 are its founding entrants; the
 // registry still says `participant`, which is the generic word the protocol uses.
-const typeWord = t => t==='llm' ? 'LLM' : t==='baseline' ? 'Baseline' : t==='participant' ? 'Season 0 founding team' : t ? t.charAt(0).toUpperCase()+t.slice(1) : 'Entrant';
+const typeWord = t => t==='llm' ? 'LLM' : t==='baseline' ? 'Baseline' : t==='participant' ? 'Season 0 founding entrant' : t ? t.charAt(0).toUpperCase()+t.slice(1) : 'Entrant';
 const initOf = id => INITIALS[id] || String(id).slice(0,2).toUpperCase();
 
 const esc = s => { const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; };
