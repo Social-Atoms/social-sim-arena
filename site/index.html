@@ -848,20 +848,20 @@ const VENDORS = [
   [/^kimi/, 'kimi', 'Moonshot'],
   // External entrants: one row per team, matched on the ids the team registered.
   [/^vac-|^worldvac/, 'astraculum', 'Astraculum'], [/^h2oai/, 'h2oai', 'H2O.ai'], [/^apodex/, 'apodex', 'Apodex'],
-  [/^yulan/, 'yulan', 'Renmin University of China'], [/^zhengzheng/, 'uiuc', 'UIUC']
+  [/^yulan/, 'yulan', 'Renmin University of China'], [/^zhengzheng/, 'ucsd', 'UC San Diego']
 ];
 const vendorOf = id => { for(const [re,key] of VENDORS) if(re.test(id)) return key; return null; };
 // The mark each vendor wears, by file: SVG where the vendor publishes a vector mark, PNG where
 // it does not (sources in logos/README.md). The crowd wears its own mark, in the site's green.
 const LOGO_FILES = {claude:'claude.svg', openai:'openai.svg', gemini:'gemini.svg', grok:'grok.svg', deepseek:'deepseek.svg', qwen:'qwen.svg', zhipu:'zhipu.svg', kimi:'kimi.svg', crowd:'crowd.svg',
-  astraculum:'astraculum.svg', h2oai:'h2oai.svg', apodex:'apodex.png', yulan:'yulan.png', uiuc:'uiuc.svg'};
+  astraculum:'astraculum.svg', h2oai:'h2oai.svg', apodex:'apodex.png', yulan:'yulan.png', ucsd:'ucsd.svg'};
 const logoSrc = v => LOGO_FILES[v] ? 'logos/'+LOGO_FILES[v]+'?r3' : null;
 const vendorName = key => { for(const [,k,n] of VENDORS) if(k===key) return n; return key; };
 const VCOLOR = {claude:'#C87B60', openai:'#3F9581', gemini:'#6B92D4', grok:'#111110', deepseek:'#7783D8', qwen:'#907FD2', zhipu:'#588FBE', kimi:'#4C8A99', crowd:'#15803d',
-  astraculum:'#3b4a5c', h2oai:'#d9a300', apodex:'#002c47', yulan:'#aa0227', uiuc:'#ff5f05'};
+  astraculum:'#3b4a5c', h2oai:'#d9a300', apodex:'#002c47', yulan:'#aa0227', ucsd:'#c69214'};
 // A team whose published mark sits on its own ground keeps that ground on the tile, while its
-// lines use VCOLOR: ink for Astraculum's mark, H2O.ai's yellow, Illinois navy under the Block I.
-const TILE = {astraculum:'#111110', h2oai:'#ffe600', uiuc:'#13294b'};
+// lines use VCOLOR: ink for Astraculum's mark, H2O.ai's yellow, UC San Diego navy under the trident.
+const TILE = {astraculum:'#111110', h2oai:'#ffe600', ucsd:'#182b49'};
 const avColor = id => { const v = id==='crowd' ? 'crowd' : vendorOf(id); return v ? (TILE[v] || VCOLOR[v]) : '#a8a69e'; };
 const avatar = (id, tone) => { const v = id==='crowd' ? 'crowd' : vendorOf(id);
   return '<span class="av" style="background:'+(tone||avColor(id))+'" aria-hidden="true">'+(logoSrc(v)?'<img class="lg" src="'+logoSrc(v)+'" onerror="this.remove()" alt="">':'')+esc(initOf(id))+'</span>'; };
@@ -992,7 +992,7 @@ function crpsNormal(mu, sd, y){
   return sd*(z*(2*Phi-1)+2*phi-1/Math.sqrt(Math.PI));
 }
 // Where a vendor's model comes from, for the entrant page; a registration's own homepage wins when it names one.
-const VENDOR_HOME={astraculum:['Astraculum','https://astraculum.com'], h2oai:['H2O.ai','https://h2o.ai'], apodex:['Apodex','https://apodex.com'], yulan:['YuLan-OneSim','https://github.com/RUC-GSAI/YuLan-OneSim'], uiuc:['University of Illinois Urbana-Champaign','https://illinois.edu'],
+const VENDOR_HOME={astraculum:['Astraculum','https://astraculum.com'], h2oai:['H2O.ai','https://h2o.ai'], apodex:['Apodex','https://apodex.com'], yulan:['YuLan-OneSim','https://github.com/RUC-GSAI/YuLan-OneSim'], ucsd:['UC San Diego','https://ucsd.edu'],
   claude:['Anthropic','https://www.anthropic.com'], openai:['OpenAI','https://openai.com'], gemini:['Google DeepMind','https://deepmind.google'], grok:['xAI','https://x.ai'], deepseek:['DeepSeek','https://www.deepseek.com'], qwen:['Qwen','https://qwen.ai'], zhipu:['Zhipu AI','https://www.zhipuai.cn'], kimi:['Moonshot AI','https://www.moonshot.ai']};
 const DOMAIN_LABEL={'public-opinion':'Public opinion',consumer:'Sentiment & expectations',attention:'Collective attention',elections:'Elections'};
 function rankChart(traj, id){

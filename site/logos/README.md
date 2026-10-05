@@ -22,7 +22,7 @@ mark was published on where that differs from the team's line colour (`VCOLOR`).
 | `h2oai.svg` | H2O.ai (`h2oai-*`) | the square H2O.ai mark from h2o.ai's site header, viewBox tightened to the word so it reads at 27 px; tile the mark's own yellow |
 | `apodex.png` | Apodex (`apodex-futureflow`) | the site favicon at apodex.com (navy ground, white mark; no vector mark is published); tile the same navy |
 | `yulan.png` | Renmin University of China (`yulan-onesim`) | the magnolia from the YuLan-OneSim repository logo (`assets/onesim.png`, github.com/RUC-GSAI/YuLan-OneSim), cropped to the flower on its own crimson; tile the same crimson |
-| `uiuc.svg` | UIUC (`zhengzheng-agent`) | the Illinois Block I as published (orange on navy); tile Illinois navy |
+| `ucsd.svg` | UC San Diego (`zhengzheng-agent`) | the Triton trident, the two trident paths of the athletics mark in the ucsdtritons.com footer SVG (gold on navy), lettering dropped; tile UC San Diego navy |
 
 Marks identify the team on the board and nothing more; each belongs to its owner. Checked 5 Oct 2026.
 
