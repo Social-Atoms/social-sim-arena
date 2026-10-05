@@ -255,6 +255,8 @@ table.lb .who>span:last-child{min-width:0;}
 /* A narrow board shortens a name with an ellipsis; it never breaks a name or its small print onto a second line. */
 table.lb .who .model-name,table.lb .who .model-meta{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 table.lb .who b{color:var(--ink);font-weight:700;}
+table.lb .medal{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:7px;vertical-align:1px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);}
+table.lb .medal-1{background:#d4a017;}table.lb .medal-2{background:#a9aeb6;}table.lb .medal-3{background:#b87333;}
 table.lb .who .type{font-size:11px;color:var(--mut);}
 /* A heading with a title= explanation says so, rather than hiding it. */
 table.lb thead th.has-help{cursor:help;}
@@ -2425,7 +2427,8 @@ function renderBoard(mode){
     const refLine = ref && btMap[id] ? '<br><span class="type">last season '+((btMap[id].mean_skill>0?'+':'')+(btMap[id].mean_skill*100).toFixed(1))+'%</span>' : '';
     return '<tr'+(state?' class="off"':'')+'><td class="rank">'+(rank||'·')+'</td>'
       + '<td><span class="who">'+avatar(id)
-      + '<span class="who-text"><b class="model-name"><a href="#entrant/'+esc(id)+'">'+esc((nameOf[id]||forecasterName(id,data)).split(' (')[0].split(' · ')[0])+'</a></b>'
+      + '<span class="who-text"><b class="model-name"><a href="#entrant/'+esc(id)+'">'+esc((nameOf[id]||forecasterName(id,data)).split(' (')[0].split(' · ')[0])+'</a>'
+      + (rank>=1 && rank<=3 && !state && !isBaseline(id) && id!=='crowd' ? '<span class="medal medal-'+rank+'" title="'+['','1st','2nd','3rd'][rank]+' on this board" aria-label="'+['','first','second','third'][rank]+' place"></span>' : '')+'</b>'
       + '<span class="model-meta">'+details.map(detail=>'<span>'+esc(detail)+'</span>').join(' <span aria-hidden="true">·</span> ')+'</span></span></span></td>'
       + '<td class="num skill'+(pos?' pos':'')+'">'+skillTxt+subSkill+refLine+'</td>'
       + '<td class="num">'+(s && typeof s[metricKey]==='number' ? s[metricKey].toFixed(metricLabel==='Loss'||metricLabel==='Rank loss'?3:2) : '·')+'</td>'
