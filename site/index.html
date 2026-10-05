@@ -893,6 +893,9 @@ const colorOf = id => {
   return MCOLORS[id] || '#b3b1aa';
 };
 const INITIALS = { crowd:'CR', ewma:'EW', trend:'TR', climatology:'CL', persistence:'PS' };
+// The word under an entrant's name. External teams registered for Season 0 are its founding entrants; the
+// registry still says `participant`, which is the generic word the protocol uses.
+const typeWord = t => t==='llm' ? 'LLM' : t==='baseline' ? 'Baseline' : t==='participant' ? 'Season 0 founding entrant' : t ? t.charAt(0).toUpperCase()+t.slice(1) : 'Entrant';
 const initOf = id => INITIALS[id] || String(id).slice(0,2).toUpperCase();
 
 const esc = s => { const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; };
@@ -1058,7 +1061,7 @@ function renderEntrant(id){
                                                               : '<span class="bad">failed</span> · '+st.failures+' failed attempt'+(st.failures===1?'':'s'));
   // ---- header ----
   let h='<div class="ent-head"><span class="ent-avatar">'+avatar(id)+'</span><div class="ent-id"><div class="eyebrow page-eyebrow">Entrant</div><h2 class="page-title">'+esc(name)+'</h2>'
-    +'<div class="ent-meta"><span><b>'+esc(e.type==='llm'?'LLM':e.type==='baseline'?'Baseline':(e.type||'entrant'))+'</b></span>'
+    +'<div class="ent-meta"><span><b>'+esc(typeWord(e.type))+'</b></span>'
     +(e.inherited?'<span>setup '+esc(variantWords(id))+'</span>':(e.arms||[]).length?'<span>setup '+esc((e.arms||[]).join(', '))+'</span>':'')
     +(()=>{ const own = e.homepage && !/social-sim-arena/.test(e.homepage) ? ['homepage', e.homepage] : null;
             const v = vendorOf(id), home = own || (v && VENDOR_HOME[v]) || null;
@@ -2417,7 +2420,7 @@ function renderBoard(mode){
     const state=entrantState(id,data);
     const details = [
       setup==='zs' ? 'Zero-shot' : setup==='r10' ? 'Recent-10' : variant,   // the registered name's setup, else the id's
-      entryType==='llm' ? 'LLM' : entryType.charAt(0).toUpperCase()+entryType.slice(1),
+      typeWord(entryType),
       id==='persistence' ? 'Reference' : '',
       retiredWords(id,data),
       s && s.mock ? 'Placeholder' : ''
