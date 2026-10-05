@@ -845,15 +845,26 @@ const MCOLORS = { 'gpt-5.5':'#10a37f','claude-opus':'#d97757','gemini-pro':'#428
 const VENDORS = [
   [/^claude/, 'claude', 'Anthropic'], [/^gpt/, 'openai', 'OpenAI'], [/^gemini/, 'gemini', 'Google'],
   [/^grok/, 'grok', 'xAI'], [/^deepseek/, 'deepseek', 'DeepSeek'], [/^qwen/, 'qwen', 'Qwen'], [/^glm/, 'zhipu', 'Zhipu'],
-  [/^kimi/, 'kimi', 'Moonshot']
+  [/^kimi/, 'kimi', 'Moonshot'],
+  // External entrants: one row per team, matched on the ids the team registered.
+  [/^vac-|^worldvac/, 'astraculum', 'Astraculum'], [/^h2oai/, 'h2oai', 'H2O.ai'], [/^apodex/, 'apodex', 'Apodex'],
+  [/^yulan/, 'yulan', 'Renmin University of China'], [/^zhengzheng/, 'uiuc', 'UIUC']
 ];
 const vendorOf = id => { for(const [re,key] of VENDORS) if(re.test(id)) return key; return null; };
-const LOGO_VENDORS = new Set(['claude','openai','gemini','grok','deepseek','qwen','zhipu','kimi','crowd']);   // the crowd wears its own mark, in the site's green
+// The mark each vendor wears, by file: SVG where the vendor publishes a vector mark, PNG where
+// it does not (sources in logos/README.md). The crowd wears its own mark, in the site's green.
+const LOGO_FILES = {claude:'claude.svg', openai:'openai.svg', gemini:'gemini.svg', grok:'grok.svg', deepseek:'deepseek.svg', qwen:'qwen.svg', zhipu:'zhipu.svg', kimi:'kimi.svg', crowd:'crowd.svg',
+  astraculum:'astraculum.svg', h2oai:'h2oai.svg', apodex:'apodex.png', yulan:'yulan.png', uiuc:'uiuc.svg'};
+const logoSrc = v => LOGO_FILES[v] ? 'logos/'+LOGO_FILES[v]+'?r3' : null;
 const vendorName = key => { for(const [,k,n] of VENDORS) if(k===key) return n; return key; };
-const VCOLOR = {claude:'#C87B60', openai:'#3F9581', gemini:'#6B92D4', grok:'#111110', deepseek:'#7783D8', qwen:'#907FD2', zhipu:'#588FBE', kimi:'#4C8A99', crowd:'#15803d'};
-const avColor = id => { const v = id==='crowd' ? 'crowd' : vendorOf(id); return v ? VCOLOR[v] : '#a8a69e'; };
+const VCOLOR = {claude:'#C87B60', openai:'#3F9581', gemini:'#6B92D4', grok:'#111110', deepseek:'#7783D8', qwen:'#907FD2', zhipu:'#588FBE', kimi:'#4C8A99', crowd:'#15803d',
+  astraculum:'#3b4a5c', h2oai:'#d9a300', apodex:'#002c47', yulan:'#aa0227', uiuc:'#ff5f05'};
+// A team whose published mark sits on its own ground keeps that ground on the tile, while its
+// lines use VCOLOR: ink for Astraculum's mark, H2O.ai's yellow, Illinois navy under the Block I.
+const TILE = {astraculum:'#111110', h2oai:'#ffe600', uiuc:'#13294b'};
+const avColor = id => { const v = id==='crowd' ? 'crowd' : vendorOf(id); return v ? (TILE[v] || VCOLOR[v]) : '#a8a69e'; };
 const avatar = (id, tone) => { const v = id==='crowd' ? 'crowd' : vendorOf(id);
-  return '<span class="av" style="background:'+(tone||avColor(id))+'" aria-hidden="true">'+(LOGO_VENDORS.has(v)?'<img class="lg" src="logos/'+v+'.svg?r2" onerror="this.remove()" alt="">':'')+esc(initOf(id))+'</span>'; };
+  return '<span class="av" style="background:'+(tone||avColor(id))+'" aria-hidden="true">'+(logoSrc(v)?'<img class="lg" src="'+logoSrc(v)+'" onerror="this.remove()" alt="">':'')+esc(initOf(id))+'</span>'; };
 // Every model wears its vendor's hue; siblings inside a family split on
 // lightness, so a vendor reads as one color at a glance and as distinct
 // lines up close. Harness arms inherit their model's color.
@@ -864,6 +875,8 @@ const MODEL_SHADE = {
   'deepseek-pro':0, 'deepseek-flash':1,
   'qwen-3.8':0, 'qwen-3.7':1,
   'grok':0, 'glm':0, 'kimi':0,
+  'vac-sentiment-expectations':0, 'vac-public-opinion':1, 'vac-population-profiles':2, 'vac-collective-attention':3, 'worldvac-base':4,
+  'h2oai-marina':0, 'h2oai-superagent':1, 'apodex-futureflow':0, 'yulan-onesim':0, 'zhengzheng-agent':0,
 };
 const stemOf = id => String(id).replace(/(-(zeroshot|news|persona|superfc|web))+$/,'');
 function vshade(hex, k){
@@ -979,7 +992,8 @@ function crpsNormal(mu, sd, y){
   return sd*(z*(2*Phi-1)+2*phi-1/Math.sqrt(Math.PI));
 }
 // Where a vendor's model comes from, for the entrant page; a registration's own homepage wins when it names one.
-const VENDOR_HOME={claude:['Anthropic','https://www.anthropic.com'], openai:['OpenAI','https://openai.com'], gemini:['Google DeepMind','https://deepmind.google'], grok:['xAI','https://x.ai'], deepseek:['DeepSeek','https://www.deepseek.com'], qwen:['Qwen','https://qwen.ai'], zhipu:['Zhipu AI','https://www.zhipuai.cn'], kimi:['Moonshot AI','https://www.moonshot.ai']};
+const VENDOR_HOME={astraculum:['Astraculum','https://astraculum.com'], h2oai:['H2O.ai','https://h2o.ai'], apodex:['Apodex','https://apodex.com'], yulan:['YuLan-OneSim','https://github.com/RUC-GSAI/YuLan-OneSim'], uiuc:['University of Illinois Urbana-Champaign','https://illinois.edu'],
+  claude:['Anthropic','https://www.anthropic.com'], openai:['OpenAI','https://openai.com'], gemini:['Google DeepMind','https://deepmind.google'], grok:['xAI','https://x.ai'], deepseek:['DeepSeek','https://www.deepseek.com'], qwen:['Qwen','https://qwen.ai'], zhipu:['Zhipu AI','https://www.zhipuai.cn'], kimi:['Moonshot AI','https://www.moonshot.ai']};
 const DOMAIN_LABEL={'public-opinion':'Public opinion',consumer:'Sentiment & expectations',attention:'Collective attention',elections:'Elections'};
 function rankChart(traj, id){
   // The entrant's rank at each checkpoint of the backtest, 1 at the top. Drawn at a fixed
@@ -1745,10 +1759,10 @@ function aggChart(traj, nameOf, unit){
     if(nm.length > maxCh) nm = nm.slice(0, maxCh-1)+'…';
     g += `<line x1="${X(traj.length-1)}" x2="${X(traj.length-1)+8}" y1="${Y(last)}" y2="${ly}" stroke="${colorOf(s)}" stroke-width="1" opacity=".5"/>`;
     g += `<circle cx="${X(traj.length-1)}" cy="${Y(last)}" r="3" fill="${colorOf(s)}" stroke="#fff" stroke-width="1.5"/>`;
-    g += `<rect x="${X(traj.length-1)+8}" y="${ly-8.5}" width="19" height="17" rx="3" fill="${colorOf(s)}"/>`;
-    const lv = s==='crowd' ? 'crowd' : vendorOf(s);
-    if(lv && LOGO_VENDORS.has(lv)){
-      g += `<image href="logos/${lv}.svg?r2" x="${X(traj.length-1)+10.5}" y="${ly-6}" width="14" height="12"/>`;
+    const lv = s==='crowd' ? 'crowd' : vendorOf(stemOf(s));
+    g += `<rect x="${X(traj.length-1)+8}" y="${ly-8.5}" width="19" height="17" rx="3" fill="${(lv && TILE[lv]) || colorOf(s)}"/>`;
+    if(lv && logoSrc(lv)){
+      g += `<image href="${logoSrc(lv)}" x="${X(traj.length-1)+10.5}" y="${ly-6}" width="14" height="12" preserveAspectRatio="xMidYMid meet"/>`;
     } else {
       g += `<text x="${X(traj.length-1)+17.5}" y="${ly+3.5}" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">${initOf(s)}</text>`;
     }
