@@ -104,6 +104,15 @@ HAND_ONLY = {
         "published before the 09-20 lock under a label the snapshot's filter "
         "did not read; the first point after the freeze was public before "
         "anyone answered. Resolve by hand or withdraw"),
+    # The round asks for the next Harvard-Harris wave after its 09-20 lock: the
+    # September wave (fielded 09-26..28, Key Results posted 09-30, approve 42).
+    # Its frozen history ends with July, so "the first point after the freeze"
+    # would be the August wave (produced 09-03) -- public before the lock.
+    # Resolve by hand on the September wave once its topline is archived.
+    "hh-2026-09-approval": (
+        "the first point after the freeze is the August wave (produced "
+        "09-03), public before the 09-20 lock; the round answers to the "
+        "September wave (fielded 09-26..28). Resolve by hand on that wave"),
     # Asks for the certified House popular-vote margin, but its `series` is the
     # generic-ballot polling average, which the pipeline carries -- so on its
     # release the first point after the freeze would be a poll average, written
