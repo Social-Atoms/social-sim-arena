@@ -386,29 +386,34 @@ def test_the_publish_gate_covers_every_field_a_page_reads_unguarded():
 
 
 def test_the_faq_is_on_every_nav_and_answers_the_two_comparisons():
-    """The FAQ is a general page. Related-work comparisons are one section
-    on it, so later questions can be added without inventing a new page.
-    A nav that forgets the FAQ, or a page that drops that section, is how
-    the comparison never gets found.
+    """The FAQ is a section of the docs (moved there 2026-10-06, so the nav
+    has one fewer item). No page links the old faq.html; the old address
+    forwards into the docs with its anchor; and the docs still answer the
+    two related-work comparisons, which is how the comparison gets found.
     """
     site = os.path.join(ROOT, "site")
-    missing_nav = []
+    stale = []
     for name in sorted(os.listdir(site)):
-        if not name.endswith(".html"):
+        if not name.endswith(".html") or name == "faq.html":
             continue
         with open(os.path.join(site, name), encoding="utf-8") as fh:
             body = fh.read()
-        if "page-tabs" not in body:
-            continue
-        if "faq.html" not in body:
-            missing_nav.append(name)
-    assert not missing_nav, (
-        "these pages have the site nav but no FAQ:\n  "
-        + "\n  ".join(missing_nav))
+        if "faq.html" in body:
+            stale.append(name)
+    assert not stale, (
+        "these pages still link faq.html, which only forwards now:\n  "
+        + "\n  ".join(stale))
 
     with open(os.path.join(site, "faq.html"), encoding="utf-8") as fh:
-        faq = fh.read()
+        stub = fh.read()
+    assert "docs.html#faq" in stub and "location.hash" in stub, \
+        "faq.html must forward into the docs and keep its anchor"
+
+    with open(os.path.join(site, "docs.html"), encoding="utf-8") as fh:
+        docs = fh.read()
     for needle in (
+        'id="faq"',
+        'href="#faq"',
         'id="comparison-with-related-work"',
         "Comparison with related work",
         'id="static-benchmarks"',
@@ -419,7 +424,7 @@ def test_the_faq_is_on_every_nav_and_answers_the_two_comparisons():
         "Prophet Arena",
         "population",
     ):
-        assert needle in faq, f"faq.html is missing {needle!r}"
+        assert needle in docs, f"docs.html is missing {needle!r}"
     print("ok test_the_faq_is_on_every_nav_and_answers_the_two_comparisons")
 
 
