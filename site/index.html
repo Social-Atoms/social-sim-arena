@@ -682,7 +682,6 @@ table.ent td a.row{color:inherit;text-decoration:none;}
       <a class="ptab" href="#calendar" data-page="calendar">Calendar</a>
       <a class="nav-live" href="#leaderboard" title="The arena is running: questions are being called, locked and scored"><span class="livedot" aria-hidden="true"></span>Live</a>
       <a class="item" href="background.html">Background</a>
-      <a class="item" href="faq.html">FAQ</a>
       <a class="item" href="docs.html">Docs</a>
       <a class="item" href="https://github.com/Social-Atoms/social-sim-arena" target="_blank" rel="noopener">GitHub</a>
     </div>
@@ -1391,10 +1390,10 @@ function defaultKeep(data){
   const main = (data||{}).season0_main, byId = {};
   ((data||{}).entrants||[]).forEach(e=>byId[e.entrant_id]=e);
   const keep = new Set(['persistence','crowd']);
-  if(main && (main.entries||[]).length && data.rounds){
-    const floor = Math.ceil((main.scored_rounds||0)/2);
-    const rows = activeRows(liveBoard(data,'agg','all'),data)
-      .filter(r=>r.rounds>=floor && !r.baseline && r.entrant!=='crowd');
+  const rows = (main && (main.entries||[]).length && data.rounds)
+    ? activeRows(liveBoard(data,'agg','all'),data).filter(r=>r.rounds>=Math.ceil((main.scored_rounds||0)/2) && !r.baseline && r.entrant!=='crowd')
+    : [];
+  if(rows.length){   // no scored rows (a season before its first resolution) falls through to the old rule
     const reg = id => byId[stemOf(id)] || byId[id] || {};
     const vendor = id => vendorOf(stemOf(id));
     const isModel = id => { const v = vendor(id); return !!v && VCOLOR_MODEL_VENDORS.has(v); };
@@ -1542,8 +1541,8 @@ function openModelPicker(open, restoreFocus=false){
 const taskPicker = {open:false, query:''};
 function withinTaskPicker(el){ const host=document.getElementById('task-picker'); return !!(host && el && host.contains(el)); }
 // Focusing a search box on open is a convenience with a mouse and a nuisance on a phone, where it
-// raises the keyboard over the list; so only pointer-and-hover devices get it.
-const wantsKeyboard = () => !!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+// raises the keyboard over the list; a touch-only device (no hover, coarse pointer) is left alone.
+const wantsKeyboard = () => !(window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
 function openTaskPicker(open, restoreFocus=false){
   const trigger=document.getElementById('task-trigger'), pop=document.getElementById('task-pop');
   if(!trigger||!pop) return;
