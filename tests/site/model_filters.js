@@ -35,7 +35,7 @@ function fixture(storage = new Map(), payload = backtestOnly) {
     }
     return inputs;
   };
-  const api = new Function(script+'\nreturn {render, renderTaskChart, renderLegend, matchingModels, coerceUnknown, modelInfo, selectModels, resetModels, setPickerFilter, modelPicker, TASKS};')();
+  const api = new Function(script+'\nreturn {render, renderTaskChart, renderLegend, matchingModels, coerceUnknown, modelInfo, selectModels, resetModels, setPickerFilter, modelPicker, TASKS, defaultKeep, vendorOf, stemOf, VCOLOR_MODEL_VENDORS};')();
   api.render(payload);
   api.renderTaskChart('agg');
   return {api, els, win, doc, svg, events, stripEvents, storage, options};
@@ -146,6 +146,17 @@ f.api.selectModels(['ewma'],false);
 assert.ok(f.win.__hidden.has('ewma'));
 f.api.resetModels();
 assert.ok(!f.win.__hidden.has('ewma'));
-// With the season's scores present, the default comparison is the season's top five active entrants, EWMA and the crowd.
-{ const live = fixture(new Map(), data); const sel = live.api.modelPicker.ids.filter(id=>!live.win.__hidden.has(id)); assert.equal(sel.length, 7, 'the season picks its own default'); assert.ok(sel.includes('ewma')); assert.ok(sel.includes('crowd')); assert.ok(sel.every(id=>!live.win.__data.retired[id])); }
+// With the season's scores present, the default comparison is the board's top teams (one entrant each),
+// every model vendor's best arm but the worst, and the crowd; no statistical reference (decided 2026-10-05).
+{ const live = fixture(new Map(), data); const sel = live.api.modelPicker.ids.filter(id=>!live.win.__hidden.has(id));
+  const keep = live.api.defaultKeep(live.win.__data);
+  assert.ok(sel.includes('crowd')); assert.ok(!sel.includes('ewma'), 'no statistical reference by default');
+  assert.deepEqual(new Set(sel), new Set([...keep].filter(id=>live.api.modelPicker.ids.includes(id))), 'the chart draws exactly the default');
+  const byId = {}; live.win.__data.entrants.forEach(e=>byId[e.entrant_id]=e);
+  const teams = sel.filter(id=>(byId[live.api.stemOf(id)]||byId[id]||{}).type==='participant');
+  assert.ok(teams.length>=1 && teams.length<=4, 'one to four teams: '+teams.join(','));
+  assert.equal(new Set(teams.map(id=>(byId[id]||{}).organization||id)).size, teams.length, 'one entrant per team');
+  const vendors = sel.map(id=>live.api.vendorOf(live.api.stemOf(id))).filter(v=>v && live.api.VCOLOR_MODEL_VENDORS.has(v));
+  assert.equal(new Set(vendors).size, vendors.length, 'one arm per vendor');
+  assert.ok(sel.every(id=>!live.win.__data.retired[id])); }
 console.log('ok malformed and unavailable storage');
