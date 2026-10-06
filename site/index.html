@@ -65,7 +65,9 @@ main{flex:1 1 auto;min-height:0;display:flex;width:100%;margin:0 auto;}
 .task-option:hover{background:#f5f6f5;color:var(--ink);}
 .task-option.on{background:#f0f2f0;color:var(--ink);font-weight:700;}
 .task-option .task-pop-count{color:var(--mut);font-size:11px;font-weight:400;margin-left:8px;font-variant-numeric:tabular-nums;}
-.task-option .task-pop-meta{margin-left:auto;color:var(--mut);font-size:11px;font-weight:400;white-space:nowrap;flex-shrink:0;}
+.task-option .task-pop-meta{margin-left:auto;color:var(--mut);font-size:11px;font-weight:400;white-space:nowrap;flex:0 1 auto;min-width:0;max-width:46%;overflow:hidden;text-overflow:ellipsis;}
+.task-option .model-option-name{flex:1 1 auto;}
+@media (max-width:640px){ .task-option .task-pop-meta{display:none;} }   /* a phone shows the task, not its population note */
 .chartcol,.task-shell{display:contents;}
 .tasknav{min-width:0;overflow-y:auto;padding:var(--panel-head-top) 10px 18px;background:#fff;}
 .panel-resizer{position:relative;cursor:col-resize;touch-action:none;outline:none;z-index:6;}
@@ -1534,16 +1536,19 @@ function openModelPicker(open, restoreFocus=false){
   const trigger = document.getElementById('model-trigger');
   trigger.setAttribute('aria-expanded', String(open));
   document.getElementById('model-pop').hidden = !open;
-  if(open){ renderModelOptions(); document.getElementById('model-search').focus(); }
+  if(open){ renderModelOptions(); if(wantsKeyboard()) document.getElementById('model-search').focus(); }
   else if(restoreFocus) trigger.focus();
 }
 const taskPicker = {open:false, query:''};
 function withinTaskPicker(el){ const host=document.getElementById('task-picker'); return !!(host && el && host.contains(el)); }
+// Focusing a search box on open is a convenience with a mouse and a nuisance on a phone, where it
+// raises the keyboard over the list; so only pointer-and-hover devices get it.
+const wantsKeyboard = () => !!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
 function openTaskPicker(open, restoreFocus=false){
   const trigger=document.getElementById('task-trigger'), pop=document.getElementById('task-pop');
   if(!trigger||!pop) return;
   taskPicker.open=open; trigger.setAttribute('aria-expanded',String(open)); pop.hidden=!open;
-  if(open){ renderTaskOptions(); const s=document.getElementById('task-pick-search'); if(s){ s.value=taskPicker.query; s.focus(); } }
+  if(open){ renderTaskOptions(); const s=document.getElementById('task-pick-search'); if(s){ s.value=taskPicker.query; if(wantsKeyboard()) s.focus(); } }
   else if(restoreFocus) trigger.focus();
 }
 function renderTaskOptions(){
