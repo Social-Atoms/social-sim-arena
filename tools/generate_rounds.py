@@ -53,7 +53,8 @@ import json
 import os
 import re
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -1146,6 +1147,357 @@ def sce_candidates(rounds, weeks, now, through=None):
     return out, None
 
 
+# ---------------------------------------------------------------------------
+# AAII and the University of Michigan: two families that ran on hand-written
+# rounds and stopped when the hands did (last reviewed releases 2026-09-24
+# and 2026-09-25). Both extend a reviewed contract the way SCE does: the
+# newest reviewed round is the template, its spacing and wording are checked
+# rather than trusted, and the release day comes from the publisher's own
+# calendar -- a weekday rhythm for AAII, a typed-in table for Michigan --
+# never from the data.
+
+AAII_SERIES = "aaii_bull_bear_spread"
+AAII_ID = re.compile(r"^aaii-(\d{4}-\d{2}-\d{2})$")
+# The results page dates its row by the Wednesday the voting week ends and
+# the Thursday release names it; that date is the one thing the template
+# rewrites. The question is carried forward verbatim.
+AAII_RESOLVE = "results page row for the voting week ending {week_end}"
+
+UMICH_SERIES = "umich_sentiment"
+UMICH_PARTY = {"umich_party_dem": ("dem", "Democrats"),
+               "umich_party_ind": ("ind", "Independents"),
+               "umich_party_rep": ("rep", "Republicans")}
+UMICH_ID = re.compile(r"^umich-(\d{4}-\d{2})-(prelim|final)$")
+UMICH_PARTY_ID = re.compile(r"^umich-party-(\d{4}-\d{2})-(dem|ind|rep)$")
+UMICH_STAGES = ("prelim", "final")
+UMICH_STAGE_WORD = {"prelim": "preliminary", "final": "final"}
+UMICH_QUESTION = ("University of Michigan consumer sentiment index, "
+                  "{month} {stage}")
+UMICH_PARTY_QUESTION = ("University of Michigan Index of Consumer Sentiment "
+                        "among {party}, {month} preliminary")
+UMICH_PARTY_RESOLVE = ("party addenda PDF published with the {month_name} "
+                       "preliminary")
+# Releases are 10:00 Eastern on the calendar day. The reviewed rounds write
+# that as 14:00Z, which is the same clock in summer; a winter release falls
+# an hour later in UTC, as the SCE rounds already do for 11:00 Eastern.
+UMICH_RELEASE_LOCAL = (10, 0)
+UMICH_TZ = ZoneInfo("America/New_York")
+# (preliminary, final) release day per survey month, copied by hand from the
+# Surveys of Consumers calendar: data.sca.isr.umich.edu/survey-info.php links
+# "2026 Release Dates" (fetchdoc.php?docid=79628; 2027 is docid=81621). Both
+# days fall inside the survey month. The family stops at the first month
+# nobody has entered, and `main` names it rather than ending in silence.
+UMICH_RELEASES = {
+    "2026-01": ("2026-01-09", "2026-01-23"),
+    "2026-02": ("2026-02-06", "2026-02-20"),
+    "2026-03": ("2026-03-13", "2026-03-27"),
+    "2026-04": ("2026-04-10", "2026-04-24"),
+    "2026-05": ("2026-05-08", "2026-05-22"),
+    "2026-06": ("2026-06-12", "2026-06-26"),
+    "2026-07": ("2026-07-17", "2026-07-31"),
+    "2026-08": ("2026-08-14", "2026-08-28"),
+    "2026-09": ("2026-09-11", "2026-09-25"),
+    "2026-10": ("2026-10-09", "2026-10-23"),
+    "2026-11": ("2026-11-06", "2026-11-20"),
+    "2026-12": ("2026-12-04", "2026-12-18"),
+}
+
+# Series whose rounds come from these calendars, so the registry gate loop
+# leaves them alone the way it leaves the SCE horizons alone.
+CALENDAR_FAMILIES = frozenset({AAII_SERIES, UMICH_SERIES, *UMICH_PARTY})
+
+
+def _clock(ts):
+    return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+
+
+def _stamp(dt):
+    return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _month_name(month):
+    """`September`, the way the party rounds name a month."""
+    return datetime.strptime(month, "%Y-%m").strftime("%B")
+
+
+def _umich_release(day):
+    """The UTC instant of a Michigan release on `day`: 10:00 Eastern."""
+    y, m, d = (int(x) for x in day.split("-"))
+    hour, minute = UMICH_RELEASE_LOCAL
+    return datetime(y, m, d, hour, minute, tzinfo=UMICH_TZ).astimezone(
+        timezone.utc)
+
+
+def aaii_template(rounds):
+    """(newest reviewed AAII round, lock offset).
+
+    Raises when a reviewed round is not named by its release day, when the
+    reviewed rounds disagree on the lock spacing or on the release weekday
+    and hour, when their questions differ (the question is carried forward
+    verbatim, so two wordings means one was edited and the template cannot
+    know which to carry), or when a resolve rule does not name the Wednesday
+    before its release the way the family does.
+    """
+    got = sorted((r for r in rounds if r.get("series") == AAII_SERIES),
+                 key=lambda r: r["release_at"])
+    if not got:
+        raise ValueError(
+            "no reviewed AAII round to template from; this generator extends "
+            "an existing contract rather than inventing one")
+    offsets, clocks, questions = set(), set(), set()
+    for r in got:
+        m = AAII_ID.match(r["round_id"])
+        if not m or m.group(1) != r["release_at"][:10]:
+            raise ValueError(f"{r['round_id']} is not named by its release day")
+        rel, lock = _clock(r["release_at"]), _clock(r["lock_at"])
+        offsets.add(lock - rel)
+        clocks.add((rel.weekday(), rel.hour, rel.minute))
+        questions.add(r["question"])
+        week_end = (rel - timedelta(days=1)).date().isoformat()
+        if r["resolve"] != AAII_RESOLVE.format(week_end=week_end):
+            raise ValueError(
+                f"{r['round_id']}'s resolve rule does not name the Wednesday "
+                "before its release the way the family does")
+    for what, seen in (("lock/release spacings", offsets),
+                       ("release clocks", clocks),
+                       ("question wordings", questions)):
+        if len(seen) != 1:
+            raise ValueError(
+                f"the reviewed AAII rounds use {len(seen)} different {what}")
+    return got[-1], offsets.pop()
+
+
+def aaii_candidates(rounds, weeks, now, through=None):
+    """The next weekly AAII rounds, rolled forward from the newest reviewed
+    one at seven-day steps. `weeks` counts rounds. Beyond MAX_WEEKS_AHEAD the
+    walk stops quietly, as the other families do.
+
+    The survey has no holiday calendar in this table: a Thanksgiving week is
+    generated like any other and is the reviewer's to drop.
+    """
+    tpl, lock_off = aaii_template(rounds)
+    release = _clock(tpl["release_at"])
+    out = []
+    while through is not None or len(out) < weeks:
+        release = release + timedelta(days=7)
+        lock = release + lock_off
+        if through is not None and release.date() > through:
+            break
+        if through is None and (release - now).days > MAX_WEEKS_AHEAD * 7:
+            break
+        if lock <= now or not publishable(lock, now):
+            continue
+        week_end = (release - timedelta(days=1)).date().isoformat()
+        out.append({
+            "round_id": f"aaii-{release.date().isoformat()}",
+            "tracker": tpl["tracker"],
+            "series": AAII_SERIES,
+            "question": tpl["question"],
+            "unit": tpl["unit"],
+            "release_at": _stamp(release),
+            "release_estimated": tpl.get("release_estimated", False),
+            "lock_at": _stamp(lock),
+            "resolve": AAII_RESOLVE.format(week_end=week_end),
+            "target_type": tpl["target_type"],
+        })
+    return out
+
+
+def _umich_check_calendar(rid, month, stage, release_at):
+    """The typed-in calendar is checked against a reviewed round, not trusted."""
+    days = UMICH_RELEASES.get(month)
+    day = days[UMICH_STAGES.index(stage)] if days else None
+    if day != release_at[:10]:
+        raise ValueError(
+            f"UMICH_RELEASES disagrees with {rid}: {day} against "
+            f"{release_at[:10]}")
+    if _stamp(_umich_release(day)) != release_at:
+        raise ValueError(
+            f"{rid} does not release at {UMICH_RELEASE_LOCAL[0]:02d}:"
+            f"{UMICH_RELEASE_LOCAL[1]:02d} Eastern; the calendar day is the "
+            "contract and the clock is the publisher's")
+
+
+def _umich_day(month, stage):
+    """The calendar day for (month, stage), or None when nobody entered it."""
+    days = UMICH_RELEASES.get(month)
+    if days is None:
+        return None
+    day = days[UMICH_STAGES.index(stage)]
+    if day[:7] != month:
+        raise ValueError(
+            f"UMICH_RELEASES[{month!r}] names {day}, outside the survey "
+            "month; both Michigan releases fall inside it")
+    return day
+
+
+def umich_template(rounds):
+    """(newest reviewed Michigan sentiment round, lock offset).
+
+    Raises when a reviewed round's calendar day or clock disagrees with
+    `UMICH_RELEASES`, when the reviewed rounds use more than one lock
+    spacing, when `UMICH_QUESTION` no longer rebuilds a reviewed wording, or
+    when the newest round's resolve rule has drifted off the publisher's
+    site. The resolve rule names no month, so it is carried verbatim.
+    """
+    got = sorted((r for r in rounds if r.get("series") == UMICH_SERIES),
+                 key=lambda r: r["release_at"])
+    if not got:
+        raise ValueError(
+            "no reviewed Michigan round to template from; this generator "
+            "extends an existing contract rather than inventing one")
+    offsets = set()
+    for r in got:
+        m = UMICH_ID.match(r["round_id"])
+        if not m:
+            raise ValueError(f"{r['round_id']} does not name a survey month "
+                             "and stage")
+        month, stage = m.groups()
+        _umich_check_calendar(r["round_id"], month, stage, r["release_at"])
+        offsets.add(_clock(r["lock_at"]) - _clock(r["release_at"]))
+        rebuilt = UMICH_QUESTION.format(month=_month_phrase(month),
+                                        stage=UMICH_STAGE_WORD[stage])
+        if r["question"] != rebuilt:
+            raise ValueError(
+                f"UMICH_QUESTION no longer reproduces {r['round_id']}'s "
+                "wording; the reviewed question changed and the template did "
+                "not")
+    if len(offsets) != 1:
+        raise ValueError(
+            f"the reviewed Michigan rounds use {len(offsets)} different "
+            f"lock/release spacings: {sorted(map(str, offsets))}")
+    if "sca.isr.umich.edu" not in got[-1]["resolve"]:
+        raise ValueError(
+            f"{got[-1]['round_id']}'s resolve rule no longer points at the "
+            "publisher's site; it is carried verbatim, so it has to")
+    return got[-1], offsets.pop()
+
+
+def umich_candidates(rounds, weeks, now, through=None):
+    """(future Michigan sentiment rounds, the first survey month the calendar
+    does not cover). Preliminary and final alternate; `weeks` counts
+    releases."""
+    tpl, lock_off = umich_template(rounds)
+    month, stage = UMICH_ID.match(tpl["round_id"]).groups()
+    out = []
+    while through is not None or len(out) < weeks:
+        if stage == "prelim":
+            stage = "final"
+        else:
+            month, stage = _next_month(month), "prelim"
+        if through is not None and date.fromisoformat(f"{month}-01") > through:
+            break
+        day = _umich_day(month, stage)
+        if day is None:
+            return out, month
+        release = _umich_release(day)
+        lock = release + lock_off
+        if through is not None and release.date() > through:
+            break
+        if through is None and (release - now).days > MAX_WEEKS_AHEAD * 7:
+            break
+        if lock <= now or not publishable(lock, now):
+            continue
+        out.append({
+            "round_id": f"umich-{month}-{stage}",
+            "tracker": tpl["tracker"],
+            "series": UMICH_SERIES,
+            "question": UMICH_QUESTION.format(
+                month=_month_phrase(month), stage=UMICH_STAGE_WORD[stage]),
+            "unit": tpl["unit"],
+            "release_at": _stamp(release),
+            "release_estimated": tpl.get("release_estimated", False),
+            "lock_at": _stamp(lock),
+            "resolve": tpl["resolve"],
+            "target_type": tpl["target_type"],
+        })
+    return out, None
+
+
+def umich_party_template(rounds):
+    """(newest reviewed party round, lock offset).
+
+    The three party cuts ride the preliminary release of their month. Their
+    source is a PDF a maintainer fetches each month (`umichparty.fetch_latest`),
+    so generating the rounds schedules the question, not the answer.
+    """
+    got = sorted((r for r in rounds if r.get("series") in UMICH_PARTY),
+                 key=lambda r: (r["release_at"], r["round_id"]))
+    if not got:
+        raise ValueError(
+            "no reviewed Michigan party round to template from; this "
+            "generator extends an existing contract rather than inventing one")
+    offsets = set()
+    for r in got:
+        m = UMICH_PARTY_ID.match(r["round_id"])
+        if not m:
+            raise ValueError(f"{r['round_id']} does not name a survey month "
+                             "and party")
+        month, party = m.groups()
+        if UMICH_PARTY[r["series"]][0] != party:
+            raise ValueError(f"{r['round_id']} is filed under {r['series']}")
+        _umich_check_calendar(r["round_id"], month, "prelim", r["release_at"])
+        offsets.add(_clock(r["lock_at"]) - _clock(r["release_at"]))
+        rebuilt = UMICH_PARTY_QUESTION.format(
+            party=UMICH_PARTY[r["series"]][1], month=_month_phrase(month))
+        if r["question"] != rebuilt:
+            raise ValueError(
+                f"UMICH_PARTY_QUESTION no longer reproduces "
+                f"{r['round_id']}'s wording")
+        if r["resolve"] != UMICH_PARTY_RESOLVE.format(
+                month_name=_month_name(month)):
+            raise ValueError(
+                f"{r['round_id']}'s resolve rule does not name its month the "
+                "way the family does; that name is the one thing the template "
+                "rewrites")
+    if len(offsets) != 1:
+        raise ValueError(
+            f"the reviewed Michigan party rounds use {len(offsets)} different "
+            f"lock/release spacings: {sorted(map(str, offsets))}")
+    return got[-1], offsets.pop()
+
+
+def umich_party_candidates(rounds, weeks, now, through=None):
+    """(future party rounds, three a month on the preliminary release, and
+    the first survey month the calendar does not cover). `weeks` counts
+    months."""
+    tpl, lock_off = umich_party_template(rounds)
+    month = UMICH_PARTY_ID.match(tpl["round_id"]).group(1)
+    out, months = [], 0
+    while through is not None or months < weeks:
+        month = _next_month(month)
+        if through is not None and date.fromisoformat(f"{month}-01") > through:
+            break
+        day = _umich_day(month, "prelim")
+        if day is None:
+            return out, month
+        release = _umich_release(day)
+        lock = release + lock_off
+        if through is not None and release.date() > through:
+            break
+        if through is None and (release - now).days > MAX_WEEKS_AHEAD * 7:
+            break
+        if lock <= now or not publishable(lock, now):
+            continue
+        months += 1
+        for sid, (suffix, party) in UMICH_PARTY.items():
+            out.append({
+                "round_id": f"umich-party-{month}-{suffix}",
+                "tracker": tpl["tracker"],
+                "series": sid,
+                "question": UMICH_PARTY_QUESTION.format(
+                    party=party, month=_month_phrase(month)),
+                "unit": tpl["unit"],
+                "release_at": _stamp(release),
+                "release_estimated": tpl.get("release_estimated", False),
+                "lock_at": _stamp(lock),
+                "resolve": UMICH_PARTY_RESOLVE.format(
+                    month_name=_month_name(month)),
+                "target_type": tpl["target_type"],
+            })
+    return out, None
+
+
 def week_phrase(start, end):
     """`Mon Aug 31 - Sun Sep 6, 2026`, the way the reviewed rounds write it.
 
@@ -1345,7 +1697,7 @@ def main():
     hist_by_series = load_history()
     made, refused = [], []
     for sid in sorted(SERIES):
-        if sid in SCE_HORIZONS:
+        if sid in SCE_HORIZONS or sid in CALENDAR_FAMILIES:
             continue    # rolled forward below; the row is not the template
         meta = SERIES[sid]
         hist = hist_by_series.get(sid) or []
@@ -1418,6 +1770,41 @@ def main():
         made.append(r)
     if why:
         refused.extend((sid, why) for sid in SCE_HORIZONS)
+
+    # AAII: one round a week on the Thursday results post, rolled forward
+    # from the newest reviewed round. Michigan: preliminary and final each
+    # month on the official calendar, with the three party cuts riding the
+    # preliminary. Like SCE, these skip the gate loop, read their rights
+    # verdict here, and name the first month the typed-in calendar lacks.
+    rights = RIGHTS.get("aaii", "unresolved")
+    if rights not in inventory.GENERATING_RIGHTS:
+        refused.append((AAII_SERIES, {"gate": "rights", "state": rights,
+                                      "source": "aaii"}))
+    else:
+        for r in aaii_candidates(rounds, weeks, now, through=through):
+            r["_sn"] = r["_move"] = float("nan")    # no history is loaded for it
+            r["_new_series"] = False
+            made.append(r)
+    for source, roll, sids in (
+            ("umich", umich_candidates, (UMICH_SERIES,)),
+            ("umichparty", umich_party_candidates, tuple(UMICH_PARTY))):
+        rights = RIGHTS.get(source, "unresolved")
+        if rights not in inventory.GENERATING_RIGHTS:
+            refused.extend((sid, {"gate": "rights", "state": rights,
+                                  "source": source}) for sid in sids)
+            continue
+        got, unentered = roll(rounds, weeks, now, through=through)
+        for r in got:
+            r["_sn"] = r["_move"] = float("nan")
+            r["_new_series"] = False
+            made.append(r)
+        if unentered:
+            refused.extend((sid, {
+                "gate": "calendar", "source": source,
+                "detail": f"no release day entered for the {unentered} "
+                          "survey month; copy it from the Surveys of "
+                          "Consumers release calendar into UMICH_RELEASES"})
+                for sid in sids)
     refused.sort(key=lambda x: x[0])
 
     made.sort(key=lambda r: (r["lock_at"], r["round_id"]))
