@@ -1,9 +1,16 @@
 {
   "alerts": [
     {
+      "id": "aaii",
+      "kind": "source",
+      "last_error": "AAII response carries no Date header; refusing to infer the rows' year from the local clock",
+      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
+      "state": "stale"
+    },
+    {
       "id": "civiqs",
       "kind": "source",
-      "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Democrat; approve_president_trump_2025.party-Independent: HTTPError: 403 Client Error: ",
+      "last_error": "inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Democrat; approve_president_trump_2025.age-35-49: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=35-49; approve_president_trump_2025.age-50-64: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=50-64; approve_president_trump_2025.age-65_: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=65%2B; approve_president_trump_2025.race-Black_or_African-American: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?race=Black%20or%20African-American; approve_president_trump_2025.gender-Male: HTTPError: 403 Cli",
       "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
       "state": "stale"
     }
@@ -19,20 +26,20 @@
     },
     "sources": {
       "deadline_risk": 0,
-      "healthy": 12,
+      "healthy": 11,
       "retryable_failure": 0,
-      "stale": 1,
+      "stale": 2,
       "unresolvable": 0
     }
   },
   "entrant_round_states": [
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/trends-basket-2026-10-17/claude-sonnet-web.json"
+        "forecast=forecasts/trends-basket-2026-10-17/claude-sonnet-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -45,11 +52,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/trends-basket-2026-10-17/claude-sonnet-web-superfc.json"
+        "forecast=forecasts/trends-basket-2026-10-17/claude-sonnet-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -62,11 +69,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/trends-basket-2026-10-17/deepseek-pro-web.json"
+        "forecast=forecasts/trends-basket-2026-10-17/deepseek-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -79,11 +86,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web-superfc",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/trends-basket-2026-10-17/deepseek-pro-web-superfc.json"
+        "forecast=forecasts/trends-basket-2026-10-17/deepseek-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -96,11 +103,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/trends-basket-2026-10-17/gemini-pro-web.json"
+        "forecast=forecasts/trends-basket-2026-10-17/gemini-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -113,11 +120,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/trends-basket-2026-10-17/gemini-pro-web-superfc.json"
+        "forecast=forecasts/trends-basket-2026-10-17/gemini-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -130,11 +137,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "glm-web",
-      "estimated_spend": 0.01041,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/trends-basket-2026-10-17/glm-web.json"
+        "forecast=forecasts/trends-basket-2026-10-17/glm-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -147,11 +154,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "glm-web-superfc",
-      "estimated_spend": 0.01041,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/trends-basket-2026-10-17/glm-web-superfc.json"
+        "forecast=forecasts/trends-basket-2026-10-17/glm-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -164,11 +171,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/trends-basket-2026-10-17/gpt-5.6-luna-web.json"
+        "forecast=forecasts/trends-basket-2026-10-17/gpt-5.6-luna-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -181,11 +188,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/trends-basket-2026-10-17/gpt-5.6-luna-web-superfc.json"
+        "forecast=forecasts/trends-basket-2026-10-17/gpt-5.6-luna-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -198,11 +205,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/trends-basket-2026-10-17/grok-web.json"
+        "forecast=forecasts/trends-basket-2026-10-17/grok-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -215,11 +222,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/trends-basket-2026-10-17/grok-web-superfc.json"
+        "forecast=forecasts/trends-basket-2026-10-17/grok-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -232,11 +239,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "test-jay",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/trends-basket-2026-10-17/test-jay.json"
+        "forecast=forecasts/trends-basket-2026-10-17/test-jay.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -249,11 +256,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "worldvac-base",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/trends-basket-2026-10-17/worldvac-base.json"
+        "forecast=forecasts/trends-basket-2026-10-17/worldvac-base.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -266,11 +273,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "zhengzheng-agent",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/trends-basket-2026-10-17/zhengzheng-agent.json"
+        "forecast=forecasts/trends-basket-2026-10-17/zhengzheng-agent.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -283,11 +290,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/wiki-top10-2026-10-18/claude-sonnet-web.json"
+        "forecast=forecasts/wiki-top10-2026-10-18/claude-sonnet-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -300,11 +307,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "claude-sonnet-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/wiki-top10-2026-10-18/claude-sonnet-web-superfc.json"
+        "forecast=forecasts/wiki-top10-2026-10-18/claude-sonnet-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -317,11 +324,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/wiki-top10-2026-10-18/deepseek-pro-web.json"
+        "forecast=forecasts/wiki-top10-2026-10-18/deepseek-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -334,11 +341,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "deepseek-pro-web-superfc",
-      "estimated_spend": 0.010348,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/wiki-top10-2026-10-18/deepseek-pro-web-superfc.json"
+        "forecast=forecasts/wiki-top10-2026-10-18/deepseek-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -351,11 +358,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/wiki-top10-2026-10-18/gemini-pro-web.json"
+        "forecast=forecasts/wiki-top10-2026-10-18/gemini-pro-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -368,11 +375,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gemini-pro-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/wiki-top10-2026-10-18/gemini-pro-web-superfc.json"
+        "forecast=forecasts/wiki-top10-2026-10-18/gemini-pro-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -385,11 +392,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "glm-web",
-      "estimated_spend": 0.01041,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/wiki-top10-2026-10-18/glm-web.json"
+        "forecast=forecasts/wiki-top10-2026-10-18/glm-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -402,11 +409,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "glm-web-superfc",
-      "estimated_spend": 0.01041,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/wiki-top10-2026-10-18/glm-web-superfc.json"
+        "forecast=forecasts/wiki-top10-2026-10-18/glm-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -419,11 +426,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/wiki-top10-2026-10-18/gpt-5.6-luna-web.json"
+        "forecast=forecasts/wiki-top10-2026-10-18/gpt-5.6-luna-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -436,11 +443,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "gpt-5.6-luna-web-superfc",
-      "estimated_spend": 0.046875,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/wiki-top10-2026-10-18/gpt-5.6-luna-web-superfc.json"
+        "forecast=forecasts/wiki-top10-2026-10-18/gpt-5.6-luna-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -453,11 +460,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/wiki-top10-2026-10-18/grok-web.json"
+        "forecast=forecasts/wiki-top10-2026-10-18/grok-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -470,11 +477,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "grok-web-superfc",
-      "estimated_spend": 0.07065,
+      "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/wiki-top10-2026-10-18/grok-web-superfc.json"
+        "forecast=forecasts/wiki-top10-2026-10-18/grok-web-superfc.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -487,11 +494,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "test-jay",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/wiki-top10-2026-10-18/test-jay.json"
+        "forecast=forecasts/wiki-top10-2026-10-18/test-jay.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -504,11 +511,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "worldvac-base",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/wiki-top10-2026-10-18/worldvac-base.json"
+        "forecast=forecasts/wiki-top10-2026-10-18/worldvac-base.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -521,11 +528,11 @@
     },
     {
       "alert": false,
-      "attempts": 1,
+      "attempts": 0,
       "entrant": "zhengzheng-agent",
       "estimated_spend": 0.0,
       "evidence": [
-        "forecast=sealed/wiki-top10-2026-10-18/zhengzheng-agent.json"
+        "forecast=forecasts/wiki-top10-2026-10-18/zhengzheng-agent.json"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -537,38 +544,39 @@
       "state": "succeeded"
     }
   ],
-  "generated_at": "2026-10-08T23:28:51Z",
+  "generated_at": "2026-10-09T06:11:01Z",
   "source_states": [
     {
-      "alert": false,
+      "alert": true,
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=12",
-        "sources/aaii/2026-10-08.html sha256=6f08e7a197fd7d51d1162941a8ae91beaf8d9eec15def70c55c76d782302fe67"
+        "fetched_days=0.3; changed_days=0.3; fetch_budget=3; change_budget=12",
+        "live attempt failed; same-source archive used",
+        "same-source sources/aaii/2026-10-08.html sha256=6f08e7a197fd7d51d1162941a8ae91beaf8d9eec15def70c55c76d782302fe67 parsed_asof=2026-10-08"
       ],
-      "last_error": null,
+      "last_error": "AAII response carries no Date header; refusing to infer the rows' year from the local clock",
       "next_deadline": "2026-10-09T14:00:00Z",
       "next_lock": "2026-10-09T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
+      "next_retry": "2026-10-09T12:11:01Z",
+      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
       "route": "https://www.aaii.com/sentimentsurvey/sent_results",
       "source": "aaii",
-      "state": "healthy"
+      "state": "stale"
     },
     {
       "alert": true,
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "civiqs/approve_president_trump_2025 (43 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.age-18-34 (40 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.age-35-49 (41 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.age-50-64 (42 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.age-65_ (41 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.education-College_Graduate (43 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.education-Non-College_Graduate (43 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.education-Postgraduate (43 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.gender-Female (43 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.gender-Male (43 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.party-Democrat (42 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.party-Independent (42 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.party-Republican (44 snapshots; newest 2026-10-07); civiqs/approve_president_trump_2025.race-Black_or_African-American (43 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.race-Hispanic_Latino (44 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.race-Other (44 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.race-White (42 snapshots; newest 2026-10-08); civiqs/describe_feeling_us (42 snapshots; newest 2026-10-08); civiqs/economy_us_direction (43 snapshots; newest 2026-10-08); civiqs/economy_us_now (43 snapshots; newest 2026-10-07); civiqs/inflation_impact (42 snapshots; newest 2026-10-08)",
-        "fetched_days=2.0; changed_days=11.0; fetch_budget=2; change_budget=4; stale_keys=economy_us_now,inflation_impact",
+        "civiqs/approve_president_trump_2025.age-35-49 (41 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.age-50-64 (42 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.age-65_ (41 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.gender-Male (43 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.party-Democrat (42 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.race-Black_or_African-American (43 snapshots; newest 2026-10-08); civiqs/inflation_impact (42 snapshots; newest 2026-10-08)",
+        "fetched_days=1.3; changed_days=11.3; fetch_budget=2; change_budget=4; stale_keys=inflation_impact",
         "live attempt failed; same-source archive used"
       ],
-      "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Democrat; approve_president_trump_2025.party-Independent: HTTPError: 403 Client Error: ",
+      "last_error": "inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Democrat; approve_president_trump_2025.age-35-49: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=35-49; approve_president_trump_2025.age-50-64: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=50-64; approve_president_trump_2025.age-65_: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=65%2B; approve_president_trump_2025.race-Black_or_African-American: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?race=Black%20or%20African-American; approve_president_trump_2025.gender-Male: HTTPError: 403 Cli",
       "next_deadline": "2026-10-09T14:00:00Z",
       "next_lock": "2026-10-09T14:00:00Z",
-      "next_retry": "2026-10-09T05:28:51Z",
+      "next_retry": "2026-10-09T12:11:01Z",
       "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
       "route": "ssa.series:civiqs",
       "source": "civiqs",
@@ -612,7 +620,7 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
-        "sources/sb_approval/2026-10-08.csv sha256=f85dd8c6c766dc230aecfaff63e447c678e6042af99dadaee4b10e2e577145e8"
+        "sources/sb_approval/2026-10-09.csv sha256=c985de1da1b60ace954bdde861e5491e840a368cb4d788817fc83d0479074356"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -629,7 +637,7 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=10",
-        "sources/sb_generic/2026-10-08.csv sha256=0fb09e7dfa04155bbb27c2e8c1a4f076c9803c27570f70c7aa9b4037af264bdd"
+        "sources/sb_generic/2026-10-09.csv sha256=d08684ad3d75fc7be5f8561fba9388516a5c47c51a7bdbb91deca138c3555ed0"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -693,8 +701,8 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=13.3; fetch_budget=3; change_budget=40",
-        "sources/umich/2026-10-08.json sha256=a5aa98b53b23ce479f42e8d2ea2228a27bd4222e301870e45ead51303e5a6214"
+        "fetched_days=-0.0; changed_days=13.5; fetch_budget=3; change_budget=40",
+        "sources/umich/2026-10-09.json sha256=a5aa98b53b23ce479f42e8d2ea2228a27bd4222e301870e45ead51303e5a6214"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
