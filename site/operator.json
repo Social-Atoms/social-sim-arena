@@ -1,18 +1,11 @@
 {
   "alerts": [
     {
-      "id": "aaii",
-      "kind": "source",
-      "last_error": "AAII response carries no Date header; refusing to infer the rows' year from the local clock",
-      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
-      "state": "stale"
-    },
-    {
       "id": "civiqs",
       "kind": "source",
-      "last_error": "inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Democrat; approve_president_trump_2025.age-35-49: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=35-49; approve_president_trump_2025.age-50-64: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=50-64; approve_president_trump_2025.age-65_: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=65%2B; approve_president_trump_2025.race-Black_or_African-American: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?race=Black%20or%20African-American; approve_president_trump_2025.gender-Male: HTTPError: 403 Cli",
-      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
-      "state": "stale"
+      "last_error": "economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Democrat; approve_president_trump_2025.age-35-49: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=35-49; approve_president_trump_2025.age-50-64: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=50-64; approve_president_trump_2025.age-65_: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=65%2B; approve_president_trump_2025.race-B",
+      "required_action": "restore live access now or hold affected rounds before the deadline; the same-source archive is not a new release",
+      "state": "deadline_risk"
     }
   ],
   "counts": {
@@ -25,10 +18,10 @@
       "terminal_failure": 0
     },
     "sources": {
-      "deadline_risk": 0,
-      "healthy": 11,
+      "deadline_risk": 1,
+      "healthy": 12,
       "retryable_failure": 0,
-      "stale": 2,
+      "stale": 0,
       "unresolvable": 0
     }
   },
@@ -544,43 +537,42 @@
       "state": "succeeded"
     }
   ],
-  "generated_at": "2026-10-09T06:11:01Z",
+  "generated_at": "2026-10-09T13:15:10Z",
   "source_states": [
     {
-      "alert": true,
+      "alert": false,
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=0.3; changed_days=0.3; fetch_budget=3; change_budget=12",
-        "live attempt failed; same-source archive used",
-        "same-source sources/aaii/2026-10-08.html sha256=6f08e7a197fd7d51d1162941a8ae91beaf8d9eec15def70c55c76d782302fe67 parsed_asof=2026-10-08"
+        "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=12",
+        "sources/aaii/2026-10-09.html sha256=ddc14c7562bcbf062d7efa64729275341aa69a09c99a504432443889819acc11"
       ],
-      "last_error": "AAII response carries no Date header; refusing to infer the rows' year from the local clock",
+      "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
       "next_lock": "2026-10-09T14:00:00Z",
-      "next_retry": "2026-10-09T12:11:01Z",
-      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
+      "next_retry": null,
+      "required_action": "none",
       "route": "https://www.aaii.com/sentimentsurvey/sent_results",
       "source": "aaii",
-      "state": "stale"
+      "state": "healthy"
     },
     {
       "alert": true,
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "civiqs/approve_president_trump_2025.age-35-49 (41 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.age-50-64 (42 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.age-65_ (41 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.gender-Male (43 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.party-Democrat (42 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.race-Black_or_African-American (43 snapshots; newest 2026-10-08); civiqs/inflation_impact (42 snapshots; newest 2026-10-08)",
-        "fetched_days=1.3; changed_days=11.3; fetch_budget=2; change_budget=4; stale_keys=inflation_impact",
+        "civiqs/approve_president_trump_2025.age-35-49 (41 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.age-50-64 (42 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.age-65_ (41 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.gender-Male (43 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.party-Democrat (42 snapshots; newest 2026-10-08); civiqs/approve_president_trump_2025.race-Black_or_African-American (43 snapshots; newest 2026-10-08); civiqs/economy_family_retro (44 snapshots; newest 2026-10-09); civiqs/economy_us_now (44 snapshots; newest 2026-10-09); civiqs/inflation_impact (42 snapshots; newest 2026-10-08)",
+        "fetched_days=1.6; changed_days=11.6; fetch_budget=2; change_budget=4; stale_keys=inflation_impact",
         "live attempt failed; same-source archive used"
       ],
-      "last_error": "inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Democrat; approve_president_trump_2025.age-35-49: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=35-49; approve_president_trump_2025.age-50-64: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=50-64; approve_president_trump_2025.age-65_: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=65%2B; approve_president_trump_2025.race-Black_or_African-American: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?race=Black%20or%20African-American; approve_president_trump_2025.gender-Male: HTTPError: 403 Cli",
+      "last_error": "economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Democrat; approve_president_trump_2025.age-35-49: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=35-49; approve_president_trump_2025.age-50-64: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=50-64; approve_president_trump_2025.age-65_: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?age=65%2B; approve_president_trump_2025.race-B",
       "next_deadline": "2026-10-09T14:00:00Z",
       "next_lock": "2026-10-09T14:00:00Z",
-      "next_retry": "2026-10-09T12:11:01Z",
-      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
+      "next_retry": "2026-10-09T19:15:10Z",
+      "required_action": "restore live access now or hold affected rounds before the deadline; the same-source archive is not a new release",
       "route": "ssa.series:civiqs",
       "source": "civiqs",
-      "state": "stale"
+      "state": "deadline_risk"
     },
     {
       "alert": false,
@@ -619,8 +611,8 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
-        "sources/sb_approval/2026-10-09.csv sha256=c985de1da1b60ace954bdde861e5491e840a368cb4d788817fc83d0479074356"
+        "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
+        "sources/sb_approval/2026-10-09.csv sha256=b3976ed89b88fad83296ce3580a441bf84a37437c9196ad3b02b7f7813a29b3a"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -637,7 +629,7 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=10",
-        "sources/sb_generic/2026-10-09.csv sha256=d08684ad3d75fc7be5f8561fba9388516a5c47c51a7bdbb91deca138c3555ed0"
+        "sources/sb_generic/2026-10-09.csv sha256=7c0082613380ead053a04599c951cd40ab785136905c592e28357c451e777e43"
       ],
       "last_error": null,
       "next_deadline": "2026-10-09T14:00:00Z",
@@ -701,7 +693,7 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=13.5; fetch_budget=3; change_budget=40",
+        "fetched_days=-0.0; changed_days=13.8; fetch_budget=3; change_budget=40",
         "sources/umich/2026-10-09.json sha256=a5aa98b53b23ce479f42e8d2ea2228a27bd4222e301870e45ead51303e5a6214"
       ],
       "last_error": null,
