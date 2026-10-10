@@ -61,10 +61,9 @@ that would be ten titles nobody chose, scored as though somebody had. Use
 to leave those rounds unanswered — an unanswered round simply scores nothing
 and is listed on the receipt.
 
-`--quantiles` emits the quantile form instead of `mean`/`sd`. The arena scores
-the two with the same CRPS, so the choice is about which one you can state
-honestly, not which one scores better; use quantiles when your belief is skewed
-or fat-tailed and a normal would misstate it.
+Every distribution is `mean` and `sd`. Quantile sets are no longer accepted:
+with levels chosen by the entrant, the score rewarded which levels were reported
+rather than how good the forecast was.
 
 ## A real week
 

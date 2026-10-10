@@ -105,10 +105,9 @@ question, and the intake refuses it rather than reshaping it.
 
 Rules the schema enforces:
 
-- **A distribution, not a point.** Either `mean` plus a strictly positive `sd`,
-  or a `quantiles` map that includes `"0.5"` and does not decrease as the level
-  rises. Both are scored with the same CRPS, so pick the one you can state
-  honestly — quantiles when your belief is skewed or fat-tailed. A point guess
+- **A distribution, not a point.** `mean` plus a strictly positive `sd`, scored
+  with CRPS. Quantile sets are not accepted: with levels chosen by the entrant,
+  the score rewarded which levels were reported rather than the forecast. A point guess
   is refused: CRPS on a spike is just absolute error, and a forecaster who never
   states an uncertainty cannot be told apart from one who is always sure.
 - **A profile carries every declared cell and only those.** The energy score is

@@ -372,7 +372,8 @@ def test_an_endpoint_answers_in_one_shape_and_it_is_the_filed_one():
     quantile set and no committed forecast holds one, so what the second shape
     actually bought was a second parser to keep in step with
     `tools/validate_submission.py`. The rule is narrower than the file schema on
-    purpose: a hand-committed file may still carry quantiles and
+    purpose: the file schema still describes quantiles (the crowd's pooled file
+    carries them; the validator refuses them from entrants since 2026-10-10) and
     `scoring.crps_forecast` still scores them, so the claim that formats compete
     on equal terms is untouched -- this is only what a live reply may contain.
     """
@@ -415,7 +416,7 @@ def test_an_endpoint_answers_in_one_shape_and_it_is_the_filed_one():
                  {"round_id": "aaii-2026-09-10", "entrant": "acme-forecast",
                   "profile": prof, "notes": "n"}):
         jsonschema.validate(body, schema)
-    # …and the file schema is unchanged: a committed quantile forecast still
+    # …and the file schema is unchanged (the crowd file uses it): a quantile body still
     # validates and still scores, which is the half that was not narrowed.
     jsonschema.validate({"round_id": "aaii-2026-09-10", "entrant": "human-crowd",
                          "topline": {"quantiles": q}, "notes": "n"}, schema)
