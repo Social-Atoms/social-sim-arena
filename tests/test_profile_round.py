@@ -168,7 +168,8 @@ def test_the_schema_takes_a_profile_and_still_takes_a_topline():
     base = {"round_id": "civiqs-profile-test", "entrant": "some-model"}
     assert accepts({**base, "profile": a_profile()})
     assert accepts({**base, "topline": {"mean": -24.0, "sd": 2.0}})
-    # a cell may use either accepted distribution format
+    # the file schema still describes the quantile form, because the crowd's
+    # pooled file carries it; the validator refuses it from entrants
     q = a_profile()
     q[CELLS[0]] = {"quantiles": {"0.1": -40.0, "0.5": -35.0, "0.9": -30.0}}
     assert accepts({**base, "profile": q})
@@ -297,22 +298,16 @@ def test_the_validator_refuses_a_profile_with_a_hole_or_an_invention():
         assert not ok and "did not ask for" in msg, msg
 
 
-def test_the_validator_holds_a_profile_cell_to_the_quantile_rules():
-    """The semantic rules a JSON schema cannot express apply to every cell, not
-    only to a topline."""
+def test_the_validator_refuses_a_quantile_profile_cell():
+    """Entrants answer every cell with mean and sd; a quantile cell is refused
+    by name, in a profile as in a topline."""
     with FakeRepo() as repo:
         p = a_profile()
-        p[CELLS[0]] = {"quantiles": {"0.1": -40.0, "0.9": -30.0}}   # no median
-        ok, msg = repo.check("civiqs-profile-test", "nomedian",
+        p[CELLS[0]] = {"quantiles": {"0.1": -40.0, "0.5": -35.0, "0.9": -30.0}}
+        ok, msg = repo.check("civiqs-profile-test", "quantcell",
                              {"round_id": "civiqs-profile-test",
-                              "entrant": "nomedian", "profile": p})
-        assert not ok and "median" in msg, msg
-
-        p[CELLS[0]] = {"quantiles": {"0.1": -30.0, "0.5": -35.0, "0.9": -40.0}}
-        ok, msg = repo.check("civiqs-profile-test", "backwards",
-                             {"round_id": "civiqs-profile-test",
-                              "entrant": "backwards", "profile": p})
-        assert not ok and "non-decreasing" in msg, msg
+                              "entrant": "quantcell", "profile": p})
+        assert not ok and "not accepted" in msg, msg
 
 
 # --- the harness parse -----------------------------------------------------
