@@ -1,0 +1,15 @@
+{
+  "entrant": "glm-web-superfc",
+  "input_hash": "d2fb4fb452fe",
+  "logged_at": "2026-10-06T22:45:17Z",
+  "model": "glm-5.2",
+  "prompt_sha256": "30b0aef01d4b91bd063425cf8cd7ef360413a5546cc5c3af937143af814186c9",
+  "reply": "Looking at this systematically:\n\n**Outside view:** The series barely moves week-to-week (mean 0.58 points). Last Friday's value is the strongest predictor for most subgroups. Several subgroups show mild downward trends over the 10-week window, but the smoothed MRP model means changes are gradual. The most volatile subgroups are independents (mean abs weekly change ~2.6), males (~2.0), and age 65+ (~1.9); the most stable are Democrats (~0.3), Black voters (~0.8), and college grads (~0.9).\n\n**Inside view:** The news cycle is consistently negative for Trump \u00e2\u0080\u0094 Reuters/Ipsos at record low 32%, AP-NORC showing economic dissatisfaction, Hispanic voters souring significantly, independents favoring Democrats. This aligns with and reinforces existing downward trends, particularly for Hispanics (-44.1, declining ~2pts/week recently) and independents. However, Civiqs smoothing means the news is already partially baked in. I expect slight continued decline in trend-moving subgroups, with possible mean reversion in subgroups that had large one-week swings (age 35-49 dropped 3.8 to -40.0; race_other swung between -40.7 and -44.7).\n\n**Pre-mortem:** The most likely failure mode is overestimating movement \u00e2\u0080\u0094 the MRP smoothing dampens news-driven shifts, so even a bad news week may only move things 0.5-1 point. I've kept most forecasts within ~0.5 of last week's value, with wider SDs on volatile subgroups to account for their swinginess.\n\n**Calibration:** SDs are set proportional to each subgroup's historical mean absolute weekly change, providing appropriate uncertainty bands.\n\n{\"civiqs_net_approval_dem\": {\"mean\": -96.4, \"sd\": 0.4}, \"civiqs_net_approval_ind\": {\"mean\": -39.5, \"sd\": 2.5}, \"civiqs_net_approval_rep\": {\"mean\": 64.5, \"sd\": 1.2}, \"civiqs_net_approval_age_18_34\": {\"mean\": -52.3, \"sd\": 1.3}, \"civiqs_net_approval_age_35_49\": {\"mean\": -39.5, \"sd\": 2.0}, \"civiqs_net_approval_age_50_64\": {\"mean\": -9.5, \"sd\": 1.5}, \"civiqs_net_approval_age_65_up\": {\"mean\": -8.8, \"sd\": 1.8}, \"civiqs_net_approval_race_white\": {\"mean\": -12.2, \"sd\": 1.6}, \"civiqs_net_approval_race_black\": {\"mean\": -84.1, \"sd\": 0.8}, \"civiqs_net_approval_race_hispanic\": {\"mean\": -45.0, \"sd\": 1.6}, \"civiqs_net_approval_race_other\": {\"mean\": -43.5, \"sd\": 2.0}, \"civiqs_net_approval_edu_noncollege\": {\"mean\": -20.3, \"sd\": 1.7}, \"civiqs_net_approval_edu_college\": {\"mean\": -31.0, \"sd\": 0.9}, \"civiqs_net_approval_edu_postgrad\": {\"mean\": -49.8, \"sd\": 1.4}, \"civiqs_net_approval_male\": {\"mean\": -16.5, \"sd\": 2.0}, \"civiqs_net_approval_female\": {\"mean\": -36.0, \"sd\": 1.0}}",
+  "round_id": "civiqs-profile-2026-w41",
+  "usage": {
+    "input_tokens": 5418,
+    "output_tokens": 9657,
+    "thinking_tokens": 8865
+  },
+  "via": "ppapi"
+}
