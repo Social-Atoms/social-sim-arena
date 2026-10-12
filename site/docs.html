@@ -33,6 +33,8 @@ ul.plain li{font-size:13px;line-height:1.55;margin:0 0 6px;color:var(--ink2)}
 @media(max-width:720px){.alts{grid-template-columns:1fr}}
 .ask{margin:0 0 16px;font-size:15px;line-height:1.55;color:var(--ink)}
 article h4{font-size:14px;margin:22px 0 6px;color:var(--ink);}
+/* Every linked heading uses the same anchor spacing, including FAQ subheadings. */
+article :is(h1,h2,h3,h4)[id]{scroll-margin-top:74px}
 </style><link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=21">
 </head><body class="site-docs">
 <nav class="top site-nav" aria-label="Main navigation">
@@ -600,29 +602,54 @@ document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{const t=
 const sectionLinks=document.querySelectorAll('.left a[href^="#"]');
 // The tab's title follows the section, so a link to #scoring reads Scoring, not Quickstart.
 const setActiveSection=(hash,renameTab=true)=>sectionLinks.forEach(link=>{ const on=link.hash===hash; link.classList.toggle('on',on); if(on&&renameTab) document.title=link.textContent.trim()+' · Docs · Social Simulation Arena'; });
-let settleUntil=0;
-sectionLinks.forEach(link=>link.addEventListener('click',()=>{settleUntil=Date.now()+700;setActiveSection(link.hash);}));
+const scroller=document.querySelector('.page-scroll')||document.scrollingElement;
+const sections=[...sectionLinks].map(link=>document.getElementById(link.hash.slice(1))).filter(Boolean);
+// Measure in the same coordinate system as native anchor scrolling: the scroll box's
+// viewport plus the heading's CSS scroll margin, not a fixed screen coordinate.
+const scrollOrigin=()=>scroller===document.scrollingElement?0:scroller.getBoundingClientRect().top+scroller.clientTop;
+const anchorMargin=el=>parseFloat(getComputedStyle(el).scrollMarginTop)||0;
+const destinationTop=el=>Math.max(0,Math.min(scroller.scrollHeight-scroller.clientHeight,
+  scroller.scrollTop+el.getBoundingClientRect().top-scrollOrigin()-anchorMargin(el)));
+let navigationTarget=null;
+// Long smooth scrolls can exceed 700 ms. Keep the requested section selected until
+// it actually arrives (including a short section clamped at the bottom of the page).
+document.querySelectorAll('.layout a[href^="#"], .layout a[href^="docs.html#"]').forEach(link=>link.addEventListener('click',event=>{
+  if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey) return;
+  navigationTarget=document.getElementById(link.hash.slice(1));
+  if(navigationTarget) setActiveSection(link.hash);
+}));
 // Anchors are the section names. Links written before the rename still land.
 const RENAMED={'#endpoint-route':'#agent-endpoint','#signed-submission':'#signed-forecast-submission','#register':'#register-as-an-entrant','#states':'#question-states','#entrant-states':'#retirement','#reference':'#full-contracts'};
-const syncActiveSection=()=>{ settleUntil=Date.now()+700; const to=RENAMED[location.hash]; if(to){ location.replace(to); const el=document.getElementById(to.slice(1)); if(el) el.scrollIntoView(); return; } setActiveSection(location.hash||'#quickstart'); };
+const syncActiveSection=()=>{ const to=RENAMED[location.hash]; if(to){ location.replace(to); const el=document.getElementById(to.slice(1)); if(el) el.scrollIntoView(); return; } navigationTarget=document.getElementById(location.hash.slice(1)); setActiveSection(location.hash||'#quickstart'); };
 // The page scrolls in its own box under the header; a hash in the address is brought into view on arrival.
-const arrive=()=>{ if(!location.hash) return; settleUntil=Date.now()+700; const el=document.getElementById(location.hash.slice(1)); if(el) el.scrollIntoView({behavior:'instant'}); };
-arrive(); window.addEventListener('load', ()=>requestAnimationFrame(arrive));
+const arrive=()=>{ if(!location.hash) return; const hash=RENAMED[location.hash]||location.hash; const el=document.getElementById(hash.slice(1)); if(el){ navigationTarget=el; setActiveSection(hash); el.scrollIntoView({behavior:'instant'}); } };
+window.addEventListener('load', ()=>requestAnimationFrame(arrive));
 // Reading moves the highlight as well as clicking: the current section is the last heading to have
 // passed under the header. The tab keeps the name you navigated to -- scrolling is not a destination.
-const sections=[...sectionLinks].map(link=>document.getElementById(link.hash.slice(1))).filter(Boolean);
 // The article scrolls inside .page-scroll, not the window, so that is where the scroll event is.
-const scroller=document.querySelector('.page-scroll')||document.scrollingElement;
-const followScroll=()=>{ if(Date.now()<settleUntil||!sections.length) return;
-  let current=sections[0]; for(const el of sections) if(el.getBoundingClientRect().top<=90) current=el;
+const followScroll=()=>{ if(!sections.length) return;
+  if(navigationTarget){
+    if(Math.abs(scroller.scrollTop-destinationTop(navigationTarget))<=2) navigationTarget=null;
+    return;
+  }
+  let current=sections[0]; for(const el of sections) if(el.getBoundingClientRect().top<=scrollOrigin()+anchorMargin(el)+2) current=el;
   // The last section is usually too short to reach the header; at the end it is the one being read.
   if(scroller.scrollTop+scroller.clientHeight>=scroller.scrollHeight-2) current=sections[sections.length-1];
   setActiveSection('#'+current.id,false); };
 let queued=false; const onScroll=()=>{ if(queued) return; queued=true;
   requestAnimationFrame(()=>{queued=false;followScroll();}); };
 scroller.addEventListener('scroll',onScroll,{passive:true}); window.addEventListener('scroll',onScroll,{passive:true});
+// A reader can interrupt native smooth scrolling; do not keep the clicked item pinned.
+const interruptNavigation=()=>{navigationTarget=null;};
+scroller.addEventListener('wheel',interruptNavigation,{passive:true});
+scroller.addEventListener('touchstart',interruptNavigation,{passive:true});
+scroller.addEventListener('pointerdown',interruptNavigation,{passive:true});
+document.addEventListener('keydown',event=>{
+  if(['ArrowUp','ArrowDown','PageUp','PageDown','Home','End',' '].includes(event.key)) interruptNavigation();
+});
+window.addEventListener('resize',onScroll);
 window.addEventListener('hashchange',syncActiveSection);
-syncActiveSection();
+syncActiveSection(); arrive();
 </script>
 <!-- Vercel Web Analytics: page views only, no cookies, no cross-site identity. The script is served
      from this domain by the platform, so it is absent (a harmless 404) on a local server. -->
