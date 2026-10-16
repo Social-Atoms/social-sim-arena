@@ -9,3 +9,5 @@
 **How a question resolves.** On the official value published on the site at 10:00 ET for the named print (preliminary or final); the party question on the addenda PDF published with that print.
 
 **What to watch.** A label-dated monthly series cannot be frozen by a date filter, so a question on it relies on the lock snapshot of the history the entrants were handed.
+
+**How questions are scheduled.** The release days are typed into `UMICH_RELEASES` in `tools/generate_rounds.py` from the calendar the survey posts a year ahead (data.sca.isr.umich.edu/survey-info.php, "Release Dates"); the generator checks that table against every reviewed round before rolling the next preliminary and final forward, at 10:00 Eastern, which is 14:00Z in summer and 15:00Z in winter. The three party rounds ride the preliminary release and still resolve from the addenda PDF a maintainer fetches (`umichparty.fetch_latest`). When a year's calendar posts, add its rows; the generator names the first month it lacks rather than stopping quietly.
