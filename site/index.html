@@ -234,6 +234,19 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .lbcol .lbhead h2{margin:0;font-size:18px;line-height:26px;font-weight:800;color:var(--ink);letter-spacing:.03em;flex:1 1 200px;overflow-wrap:anywhere;}
 .lbcol .lbhead h2 span#lb-title{display:none;}   /* the task is named at the left already; the word alone heads the board */
 .lbhead .seg{flex-wrap:wrap;}
+.lbcontrols{padding:4px 14px 8px;display:flex;flex-wrap:wrap;gap:5px 10px;}
+.lbcontrols[hidden],#pairwise-table[hidden],#legacy-leaderboard[hidden],#pairwise-summary[hidden]{display:none;}
+.lbcontrols [data-pairwise-only][hidden]{display:none;}
+.lbcontrols .seg{flex-wrap:wrap;}
+.lbcontrols .seg button{font-size:11px;padding:4px 7px;}
+#pairwise-summary{margin:0;padding:0 16px 8px;font-size:12px;color:var(--mut);}
+#pairwise-table{table-layout:fixed;}
+#pairwise-table col.pairwise-col{width:65px;}
+#pairwise-table col.coverage-col{width:62px;}
+#pairwise-table th,#pairwise-table td{padding-left:4px;padding-right:4px;}
+#pairwise-table .model-name{font-size:12px;}
+#pairwise-table .who .model-meta{font-size:10px;white-space:normal;overflow:visible;}
+#pairwise-table td.num{font-size:12px;white-space:nowrap;}
 .lbcol .scroll{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-gutter:stable;padding:0 8px 0 6px;}
 .lbcol .scroll::-webkit-scrollbar-track{margin-top:34px;}   /* the site's scrollbar (typography.css), starting under the column heads */
 table.lb tr.off td{color:var(--mut);}
@@ -732,8 +745,8 @@ table.ent td a.row{color:inherit;text-decoration:none;}
           <div class="chart-filters" id="chart-filters">
             <div class="chartctl" role="group" aria-label="Chart filters">
               <div class="model-toolbar" id="model-toolbar" style="display:none;"></div>
-              <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker<span class="th-help" role="tooltip">The published series itself, with each question's forecasts drawn on it.</span></button><button data-unit="arena" class="on">Score<span class="th-help" role="tooltip">Arena score: 0 is persistence (copying the last release), 100 is a perfect oracle. Averaged over every matched release in the window. Higher is better.</span></button><button data-unit="crps">CRPS<span class="th-help" role="tooltip">CRPS, the error in the question's own unit: how far the whole forecast distribution sat from the published number. Lower is better.</span></button></div>
-              <div class="seg mini" id="range-seg" role="group" aria-label="Time window for the chart and the board"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0" class="on">All</button><button data-range="-1" title="Season 0 main: every question closing from Sep 30, when all current teams could answer, so everyone is ranked on the same questions">S0</button></div>
+              <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker<span class="th-help" role="tooltip">The published series itself, with each question's forecasts drawn on it.</span></button><button data-unit="arena" class="on">Skill<span class="th-help" role="tooltip">Arena score: 0 is persistence (copying the last release), 100 is a perfect oracle. Averaged over every matched release in the window. Higher is better.</span></button><button data-unit="crps">CRPS<span class="th-help" role="tooltip">CRPS, the error in the question's own unit: how far the whole forecast distribution sat from the published number. Lower is better.</span></button></div>
+              <div class="seg mini" id="range-seg" role="group" aria-label="Time window for the chart and Original skill board"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0" class="on">All</button><button data-range="-1" title="Season 0 main: every question closing from Sep 30, when all current teams could answer, so everyone is ranked on the same questions">S0</button></div>
             </div>
             <div class="legend-strip" id="legend-strip" style="display:none;"></div>
           </div>
@@ -754,8 +767,29 @@ table.ent td a.row{color:inherit;text-decoration:none;}
         <h2 class="has-help" id="lb-how"><b>Leaderboard</b> <span id="lb-title">Overall</span><span class="th-help" id="lb-note" role="tooltip"></span></h2>
         <div class="task-live"><time id="data-updated" title="Data refreshed every 6 hours"></time></div>
       </div>
+      <div class="lbcontrols" id="pairwise-controls">
+        <div class="seg mini" role="group" aria-label="Leaderboard scoring">
+          <button type="button" data-ranking="pairwise" class="on" aria-pressed="true">Pairwise</button>
+          <button type="button" data-ranking="skill" aria-pressed="false">Original skill</button>
+        </div>
+        <div class="seg mini" role="group" aria-label="Pairwise comparison field" data-pairwise-only>
+          <button type="button" data-field="mixed" class="on" aria-pressed="true">With models</button>
+          <button type="button" data-field="external" aria-pressed="false">External only</button>
+        </div>
+        <div class="seg mini" role="group" aria-label="Pairwise question window" data-pairwise-only>
+          <button type="button" data-pw-scope="all" class="on" aria-pressed="true">All</button>
+          <button type="button" data-pw-scope="s0" aria-pressed="false">S0</button>
+          <button type="button" data-pw-scope="matched" aria-pressed="false">Common</button>
+        </div>
+      </div>
+      <p id="pairwise-summary" aria-live="polite"></p>
       <div class="scroll">
-        <table class="lb">
+        <table class="lb" id="pairwise-table" aria-label="Pairwise win-rate leaderboard">
+          <colgroup><col class="rank-col"><col><col class="pairwise-col"><col class="coverage-col"></colgroup>
+          <thead><tr><th scope="col">#</th><th scope="col">Method</th><th scope="col" class="num" title="Average percentage of submitted opponents beaten per question; ties count as half a win; missing answers score zero.">Pairwise</th><th scope="col" class="num" title="Answered questions / all comparable questions in this window.">Answered</th></tr></thead>
+          <tbody id="pairwise-body"><tr><td colspan="4">loading…</td></tr></tbody>
+        </table>
+        <table class="lb" id="legacy-leaderboard" hidden>
           <colgroup><col class="rank-col"><col><col class="score-col"><col class="loss-col"><col class="rounds-col"></colgroup>
           <thead><tr><th></th><th>Entrant</th><th class="num" id="lb-score-head">Score</th><th class="num" id="lb-loss-head">CRPS</th><th class="num" id="lb-rounds-head">Questions</th></tr></thead>
           <tbody id="lb-body"><tr><td colspan="5" style="color:var(--mut);">loading…</td></tr></tbody>
@@ -839,6 +873,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 
 </main>
 
+<script src="pairwise.js"></script>
 <script>
 const RAW  = 'https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/site/data.json';
 const ENTITY = { crowd:'#15803d', ewma:'#4b4a46', trend:'#8b897f', climatology:'#c6c4bc', persistence:'#b3b1aa' };
@@ -1572,7 +1607,7 @@ function ensureModelPicker(){
   const strip = document.getElementById('legend-strip');
   const toolbar = document.getElementById('model-toolbar'), controls = document.getElementById('chart-filters');
   strip.innerHTML = '<div class="model-chips" id="model-chips" role="group" aria-label="Selected chart entrants"></div>';
-  toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop" title="Which entrants the chart draws, one line each; the count is out of the active entrants unless the status filter says otherwise. The board beside it lists the same active entrants, one row each.">Chart: <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
+  toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop" title="Which entrants the chart draws, one line each; the count is out of the active entrants unless the status filter says otherwise. Pairwise standings use their own fixed comparison field; chart selections do not change the ranking.">Chart: <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
     + '<button type="button" class="model-action" id="model-reset" title="Show the top 5 entrants, EWMA and the crowd">Reset</button>'
     + '<section class="model-pop" id="model-pop" aria-label="Choose chart entrants" hidden>'
     + '<div class="model-search-row"><input type="search" id="model-search" placeholder="Search entrants or labs" aria-label="Search entrants or labs" autocomplete="off">'
@@ -2457,6 +2492,48 @@ function renderBoard(mode){
     body.innerHTML='<tr><td colspan="6" style="padding:18px;color:var(--mut);">No defensible historical replay is available for this task.'+(nx?' The first live result is '+esc(nx.round_id)+' on '+esc(fmtDate(nx.release_at))+'.':'')+'</td></tr>';
   }
   document.getElementById('lb-note').textContent=note;
+  renderPairwiseBoard();
+}
+
+// Competition standings are computed from already-published raw round losses.
+// The chart and Original skill view retain their existing scientific scores.
+function renderPairwiseBoard(){
+  const data=window.__data;if(!data)return;
+  const overall=(window.__tab||'agg')==='agg';
+  const ranking=window.__ranking||'pairwise';
+  const scope=window.__pairwiseScope||(window.__board==='s0'?'s0':'all');
+  const active=overall&&ranking==='pairwise';
+  document.getElementById('pairwise-controls').hidden=!overall;
+  document.getElementById('pairwise-table').hidden=!active;
+  document.getElementById('legacy-leaderboard').hidden=active;
+  document.getElementById('pairwise-summary').hidden=!active;
+  document.querySelectorAll('[data-pairwise-only]').forEach(el=>el.hidden=ranking!=='pairwise');
+  for(const [selector,key,value] of [['[data-ranking]','ranking',ranking],['[data-field]','field',window.__pairwiseField||'mixed'],['[data-pw-scope]','pwScope',scope]]){
+    document.querySelectorAll(selector).forEach(b=>{const on=b.dataset[key]===value;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));});
+  }
+  if(!active)return;
+  const body=document.getElementById('pairwise-body');
+  const summary=document.getElementById('pairwise-summary');
+  try{
+    const board=window.SSAPairwise.build(data,{field:window.__pairwiseField||'mixed',scope});
+    window.__pairwiseBoard=board;
+    const labels={all:'All history',s0:'S0 · locks from '+board.since.slice(0,10),matched:'Common submissions'};
+    summary.textContent=labels[board.scope]+' · '+board.scored_rounds+' questions · '+board.methods+' methods';
+    document.getElementById('lb-title').textContent='Pairwise standings';
+    document.getElementById('lb-note').textContent='Each question has equal weight. Pairwise is the percentage of submitted opponents beaten, with ties worth half a win. Missing answers score zero; questions with fewer than two submitted methods are excluded. All includes pre-registration gaps; Common uses only questions every selected method answered. Vac combines its four specialist accounts; worldVac and H2O Marina are separate, unselected alternatives. Top 3 splits tied boundary places. Skill is unchanged and averages answered questions only. The chart continues to show original skill or CRPS.';
+    body.innerHTML=board.entries.map(e=>{
+      const grouped=e.members.length>1;
+      const label=e.name===e.entrant?forecasterName(e.entrant,data):e.name;
+      const name=grouped?esc(label):'<a href="#entrant/'+attr(e.entrant)+'">'+esc(label)+'</a>';
+      const skill=e.mean_skill===null?'·':(e.mean_skill>0?'+':'')+(100*e.mean_skill).toFixed(1)+'%';
+      const top=Number.isInteger(e.top3)?String(e.top3):e.top3.toFixed(2);
+      return '<tr><td class="rank">'+e.rank+'</td><td><span class="who">'+avatar(e.entrant)+'<span class="who-text"><b class="model-name"'+(grouped?' title="Four specialist accounts combined; worldVac is separate"':'')+'>'+name+'</b><span class="model-meta">Top 3 '+top+' · Skill '+skill+'</span></span></span></td><td class="num">'+e.pairwise.toFixed(2)+'</td><td class="num">'+e.answered+'</td></tr>';
+    }).join('')||'<tr><td colspan="4" style="padding:18px;color:var(--mut);">'+(board.scope==='matched'?'No resolved question has answers from every selected method yet.':'No resolved question has at least two selected methods yet.')+'</td></tr>';
+  }catch(error){
+    window.__pairwiseBoard=null;
+    summary.textContent='Pairwise standings unavailable';
+    body.innerHTML='<tr><td colspan="4" style="padding:18px;color:var(--mut);">'+esc(error.message)+'</td></tr>';
+  }
 }
 
 // What a round asks for, in three words. Without it the front page presents a
@@ -2989,6 +3066,12 @@ function chartUrlState(){
   const tab = window.__tab || 'agg', p = new URLSearchParams();
   const unit = tab === 'agg' ? (window.__unitAgg || 'arena') : (window.__unitSer || 'arena');
   if(unit !== 'arena') p.set('unit', unit);
+  if(tab==='agg'){
+    if(window.__ranking==='skill') p.set('ranking','skill');
+    if(window.__pairwiseField==='external') p.set('field','external');
+    const defaultScope=window.__board==='s0'?'s0':'all';
+    if(window.__pairwiseScope&&window.__pairwiseScope!==defaultScope) p.set('pw',window.__pairwiseScope);
+  }
   if(window.__data && modelPicker.ids && modelPicker.ids.length){
     const hidden = window.__hidden || new Set(), keep = defaultKeep(window.__data);
     const now = modelPicker.ids.filter(id => !hidden.has(id)), dflt = modelPicker.ids.filter(id => keep.has(id));
@@ -3025,6 +3108,9 @@ function applyHash(){
     window.__tab = CHART_KEYS.includes(parts[1]) ? parts[1] : 'agg';
     const span = SPAN_KEYS.includes(parts[2]) ? parts[2] : 'all';
     window.__board = span; if(typeof setRange==='function') setRange(SPAN_TO_RANGE[span]||0);
+    window.__ranking=q.get('ranking')==='skill'?'skill':'pairwise';
+    window.__pairwiseField=q.get('field')==='external'?'external':'mixed';
+    window.__pairwiseScope=['all','s0','matched'].includes(q.get('pw'))?q.get('pw'):(span==='s0'?'s0':'all');
     const unit = q.get('unit');
     if(['arena','crps','level'].includes(unit)){ window.__unitAgg = unit === 'level' ? 'arena' : unit; window.__unitSer = unit; }
     window.__urlEntrants = q.get('entrants') ? q.get('entrants').split(',').filter(Boolean) : null;
@@ -3121,8 +3207,12 @@ function setRange(months){
 }
 document.querySelectorAll('#range-seg button').forEach(b=> b.onclick = ()=>{
   setRange(Number(b.dataset.range));
+  window.__pairwiseScope=window.__range===-1?'s0':'all';
   if(window.__data){ setTab(window.__tab||'agg'); renderBoard(RANGE_TO_SPAN[window.__range]||'all'); }
 });
+document.querySelectorAll('[data-ranking]').forEach(b=>b.onclick=()=>{window.__ranking=b.dataset.ranking;renderBoard(window.__board||'all');});
+document.querySelectorAll('[data-field]').forEach(b=>b.onclick=()=>{window.__pairwiseField=b.dataset.field;renderBoard(window.__board||'all');});
+document.querySelectorAll('[data-pw-scope]').forEach(b=>b.onclick=()=>{window.__pairwiseScope=b.dataset.pwScope;renderBoard(window.__board||'all');});
 document.querySelectorAll('#unit-seg button').forEach(b=> b.onclick = ()=>{
   const tab = window.__tab || 'agg';
   if(tab==='agg') window.__unitAgg = b.dataset.unit; else window.__unitSer = b.dataset.unit;
