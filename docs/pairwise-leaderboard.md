@@ -44,9 +44,9 @@ excluding missing answers. Vac's disjoint specialist answers are combined
 before this average. Pairwise and Top 3 are rank summaries and do not inherit
 the propriety of the underlying probabilistic scoring rules.
 
-## Fixed comparison field
+## Active comparison field
 
-The prepared proposal uses five external methods: Apodex-FutureFlow,
+The current team selections are: Apodex-FutureFlow,
 H2O.ai SuperAgent, Vac, YuLan-OneSim, and ZhengZheng Forecaster. Vac combines
 only `vac-public-opinion`, `vac-sentiment-expectations`,
 `vac-population-profiles`, and `vac-collective-attention`.
@@ -58,15 +58,21 @@ the outcome of a particular question. Multiple specialist answers from Vac
 on one question stop the board with an explanation instead of choosing the
 best answer after resolution.
 
-With models adds the twelve named current web/web-superfc configurations in
-`site/pairwise.js`. Retired historical configurations, crowd, statistical
-baselines and house tests never compete in this field. Roster changes must be
-explicit, dated changes: a different opponent field can change standings.
-Chart selections do not change the comparison field.
+The roster is discovered from the published entrant registry and resolved
+scores. Registered participants enter automatically after their first valid
+scored answer. With models also includes active registered LLM methods and
+their generated harness variants. Retired methods, crowd, statistical
+baselines and known house tests are excluded. The current snapshot contains
+five external methods and twelve model configurations; these are not size
+limits. Existing team selections above remain explicit overrides.
 
-External only recomputes each question with only the five external methods;
-it does not filter an already-computed mixed ranking. A method with no
-answers still occupies its declared slot in the Common eligibility check.
+External only recomputes each question using external methods; it does not
+filter an already-computed mixed ranking. A registration with no scored answer
+does not enter the field or shrink Common. After the first scored answer, a
+new entrant changes the opponent field and may shrink Common, even to empty.
+Retirements can also change the field. Historical totals are recomputed for
+the current active roster; they are not frozen historical league standings.
+Chart selections do not change the comparison field.
 
 ## Windows
 
@@ -76,7 +82,7 @@ answers still occupies its declared slot in the Common eligibility check.
 - **S0**: comparable questions with `lock_at >= season0_main.since`
   (currently 2026-09-30T00:00:00Z). Resolution dates do not select this window.
 - **Common**: the intersection of scored submissions from every method in
-  the selected fixed field, across all resolved history. No common question
+  the selected active field, across all resolved history. No common question
   means an explicit empty board, not a fallback to a different window.
 
 Changing the field recomputes both the eligible questions and the opponents.

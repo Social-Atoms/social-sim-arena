@@ -1607,7 +1607,7 @@ function ensureModelPicker(){
   const strip = document.getElementById('legend-strip');
   const toolbar = document.getElementById('model-toolbar'), controls = document.getElementById('chart-filters');
   strip.innerHTML = '<div class="model-chips" id="model-chips" role="group" aria-label="Selected chart entrants"></div>';
-  toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop" title="Which entrants the chart draws, one line each; the count is out of the active entrants unless the status filter says otherwise. Pairwise standings use their own fixed comparison field; chart selections do not change the ranking.">Chart: <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
+  toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop" title="Which entrants the chart draws, one line each; the count is out of the active entrants unless the status filter says otherwise. Pairwise standings use their own active comparison field; chart selections do not change the ranking.">Chart: <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
     + '<button type="button" class="model-action" id="model-reset" title="Show the top 5 entrants, EWMA and the crowd">Reset</button>'
     + '<section class="model-pop" id="model-pop" aria-label="Choose chart entrants" hidden>'
     + '<div class="model-search-row"><input type="search" id="model-search" placeholder="Search entrants or labs" aria-label="Search entrants or labs" autocomplete="off">'
@@ -2520,7 +2520,7 @@ function renderPairwiseBoard(){
     const labels={all:'All history',s0:'S0 · locks from '+board.since.slice(0,10),matched:'Common submissions'};
     summary.textContent=labels[board.scope]+' · '+board.scored_rounds+' questions · '+board.methods+' methods';
     document.getElementById('lb-title').textContent='Pairwise standings';
-    document.getElementById('lb-note').textContent='Each question has equal weight. Pairwise is the percentage of submitted opponents beaten, with ties worth half a win. Missing answers score zero; questions with fewer than two submitted methods are excluded. All includes pre-registration gaps; Common uses only questions every selected method answered. Vac combines its four specialist accounts; worldVac and H2O Marina are separate, unselected alternatives. Top 3 splits tied boundary places. Skill is unchanged and averages answered questions only. The chart continues to show original skill or CRPS.';
+    document.getElementById('lb-note').textContent='Registered entrants join after their first valid scored answer. Each question has equal weight. Pairwise is the percentage of submitted opponents beaten, with ties worth half a win. Missing answers score zero; questions with fewer than two submitted methods are excluded. All includes pre-registration gaps; Common uses only questions every selected method answered. Vac combines its four specialist accounts; worldVac and H2O Marina are separate, unselected alternatives. Top 3 splits tied boundary places. Skill is unchanged and averages answered questions only. The chart continues to show original skill or CRPS.';
     body.innerHTML=board.entries.map(e=>{
       const grouped=e.members.length>1;
       const label=e.name===e.entrant?forecasterName(e.entrant,data):e.name;
