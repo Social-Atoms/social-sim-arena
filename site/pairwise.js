@@ -1,4 +1,4 @@
-/* A fixed comparison field. Scores come only from the public round payload. */
+/* Active registered methods. Scores come only from the public round payload. */
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -6,7 +6,7 @@
 })(typeof window !== 'undefined' ? window : globalThis, function () {
   'use strict';
 
-  // The proposed field for this leaderboard version; never choose a team's
+  // Explicit method selections for multi-account teams; never choose a team's
   // best answer after resolution. worldVac and Marina are separate methods,
   // not fallbacks for the selected Vac and SuperAgent methods.
   const EXTERNAL = [
@@ -19,14 +19,8 @@
     {id: 'yulan-onesim', name: 'YuLan-OneSim'},
     {id: 'zhengzheng-agent', name: 'ZhengZheng Forecaster'}
   ];
-  const MODELS = [
-    'claude-sonnet-web', 'claude-sonnet-web-superfc',
-    'deepseek-pro-web', 'deepseek-pro-web-superfc',
-    'gemini-pro-web', 'gemini-pro-web-superfc',
-    'glm-web', 'glm-web-superfc',
-    'gpt-5.6-luna-web', 'gpt-5.6-luna-web-superfc',
-    'grok-web', 'grok-web-superfc'
-  ].map(id => ({id}));
+  const EXCLUDED = new Set(['crowd', 'persistence', 'trend', 'ewma', 'climatology',
+    'test-jay', 'just4test', 'ssa-testing-team', 'worldvac-base', 'h2oai-marina']);
 
   function lossOf(score) {
     if (!score) return null;
@@ -36,13 +30,48 @@
     return Number.isFinite(value) && value >= 0 ? value : null;
   }
 
+  function rosterOf(data, field) {
+    const registered = new Map((data.entrants || []).map(e => [e.entrant_id, e]));
+    const answered = new Set();
+    for (const r of data.rounds || []) {
+      if (r.status && r.status !== 'resolved') continue;
+      for (const [id, score] of Object.entries(r.scores || {})) {
+        if (lossOf(score) !== null) answered.add(id);
+      }
+    }
+    const active = id => !EXCLUDED.has(id) && !(data.retired || {})[id]
+      && (!registered.has(id) || registered.get(id).status !== 'retired');
+    const roster = [], consumed = new Set();
+    for (const method of EXTERNAL) {
+      const members = method.members || [method.id];
+      members.forEach(id => consumed.add(id));
+      if (members.some(id => registered.has(id) && answered.has(id) && active(id))) roster.push(method);
+    }
+    // Generated harness variants may not have their own registration record;
+    // resolve their type from the longest registered model-id prefix. A retired
+    // base registration does not retire a distinct active web variant.
+    const modelBases = [...registered.values()].filter(e => e.type === 'llm')
+      .sort((a, b) => b.entrant_id.length - a.entrant_id.length);
+    for (const id of [...answered].sort()) {
+      if (consumed.has(id) || !active(id)) continue;
+      const entry = registered.get(id);
+      if (entry && entry.type === 'participant') {
+        roster.push({id, name: entry.name || id});
+      } else if (field === 'mixed' && ((entry && entry.type === 'llm') ||
+        (!entry && modelBases.some(e => id.startsWith(e.entrant_id + '-'))))) {
+        roster.push({id});
+      }
+    }
+    return roster;
+  }
+
   function build(data, options) {
     options = options || {};
     const field = options.field || 'mixed', scope = options.scope || 'all';
     if (!['mixed', 'external'].includes(field) || !['all', 's0', 'matched'].includes(scope)) {
       throw new Error('Unknown pairwise field or question window');
     }
-    const roster = options.roster || EXTERNAL.concat(field === 'mixed' ? MODELS : []);
+    const roster = options.roster || rosterOf(data, field);
     const ids = roster.map(m => m.id), accounts = roster.flatMap(m => m.members || [m.id]);
     if (new Set(ids).size !== ids.length || new Set(accounts).size !== accounts.length) {
       throw new Error('An account cannot occupy two comparison slots');
@@ -69,16 +98,22 @@
       candidates.push(r.round_id);
       if (scope === 'matched' && scores.size !== roster.length) continue;
       roundIds.push(r.round_id);
-      for (const [id, score] of scores) {
-        const own = lossOf(score), values = [...scores.values()].map(lossOf);
-        const better = values.filter(v => v < own).length;
-        const tied = values.filter(v => v === own).length;
-        const worse = values.length - better - tied;
-        const a = acc.get(id);
-        a.answered++;
-        a.points += 100 * (worse + .5 * (tied - 1)) / (values.length - 1);
-        a.top3 += Math.max(0, Math.min(tied, Math.min(3, values.length) - better)) / tied;
-        if (Number.isFinite(score.skill)) { a.skill += score.skill; a.skillN++; }
+      // Sort once and count tied groups: O(m log m), rather than enumerating
+      // every pair as the field grows.
+      const ordered = [...scores].map(([id, score]) => ({id, score, loss: lossOf(score)}))
+        .sort((a, b) => a.loss - b.loss);
+      for (let start = 0; start < ordered.length;) {
+        let end = start + 1;
+        while (end < ordered.length && ordered[end].loss === ordered[start].loss) end++;
+        const tied = end - start, n = ordered.length;
+        const points = 100 * (n - end + .5 * (tied - 1)) / (n - 1);
+        const top3 = Math.max(0, Math.min(tied, Math.min(3, n) - start)) / tied;
+        for (let i = start; i < end; i++) {
+          const {id, score} = ordered[i], a = acc.get(id);
+          a.answered++; a.points += points; a.top3 += top3;
+          if (Number.isFinite(score.skill)) { a.skill += score.skill; a.skillN++; }
+        }
+        start = end;
       }
     }
     const n = roundIds.length;
@@ -89,11 +124,13 @@
         pairwise: a.points / n, top3: a.top3,
         mean_skill: a.skillN ? a.skill / a.skillN : null};
     }).sort((a, b) => b.pairwise - a.pairwise || a.entrant.localeCompare(b.entrant)) : [];
-    for (const e of entries) {
-      e.rank = 1 + entries.filter(other => other.pairwise > e.pairwise + 1e-9).length;
+    let rank = 1, rankValue = entries.length ? entries[0].pairwise : 0;
+    for (let i = 0; i < entries.length; i++) {
+      if (rankValue - entries[i].pairwise > 1e-9) { rank = i + 1; rankValue = entries[i].pairwise; }
+      entries[i].rank = rank;
     }
     return {field, scope, since, entries, scored_rounds: n, round_ids: roundIds,
       comparable_rounds: candidates.length, excluded_rounds: excluded, methods: roster.length};
   }
-  return {build, lossOf, external: EXTERNAL, models: MODELS};
+  return {build, lossOf, rosterOf, external: EXTERNAL};
 });

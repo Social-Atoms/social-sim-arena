@@ -69,8 +69,39 @@ const near = (a,b) => assert(Math.abs(a-b)<1e-8, `${a} != ${b}`);
   near(byId(build(rr)).c.pairwise,50);
   near(byId(build(rr,'all',[{id:'b'},{id:'c'}])).c.pairwise,100);
 }
-assert.equal(pw.external.length,5);assert.equal(pw.models.length,12);
+// Newly scored registered entrants and model variants join automatically.
+{
+  const data={entrants:[{entrant_id:'new-team',name:'New team',type:'participant'},
+    {entrant_id:'new-model',type:'llm'}, {entrant_id:'waiting',type:'participant'},
+    {entrant_id:'retired-team',type:'participant',status:'retired'},
+    {entrant_id:'ssa-testing-team',type:'participant'},
+    {entrant_id:'worldvac-base',type:'participant'}, {entrant_id:'h2oai-marina',type:'participant'}],
+    retired:{'old-model-web':{}},rounds:[round('new',{'new-team':sc(1),'new-model-web':sc(2),
+      'new-model':sc(3),'old-model-web':sc(0),'retired-team':sc(0),
+      'ssa-testing-team':sc(0),'worldvac-base':sc(0),'h2oai-marina':sc(0),crowd:sc(0)})]};
+  assert.deepEqual(pw.rosterOf(data,'external').map(x=>x.id),['new-team']);
+  assert.deepEqual(pw.rosterOf(data,'mixed').map(x=>x.id),['new-model','new-model-web','new-team']);
+  assert.equal(pw.build(data).methods,3);
+  data.entrants.push({entrant_id:'later-team',type:'participant'});
+  data.rounds.push(round('later',{'new-team':sc(1),'later-team':sc(2)}));
+  assert.equal(pw.build(data,{field:'external'}).methods,2);
+  assert.deepEqual(pw.build(data,{field:'external',scope:'matched'}).round_ids,['later']);
+}
+assert.equal(pw.external.length,5);
 assert(!pw.external.some(m=>['worldvac-base','h2oai-marina','crowd'].includes(m.id)));
+// A growing, tied field agrees with explicit pair enumeration.
+{
+  const methods=Array.from({length:101},(_,i)=>({id:'entry-'+i}));
+  const scores=Object.fromEntries(methods.map((m,i)=>[m.id,sc(i%13)]));
+  const rows=byId(build([round('large',scores)],'all',methods));
+  for(const m of methods){
+    const own=scores[m.id].crps;
+    const wins=methods.filter(x=>x.id!==m.id&&scores[x.id].crps>own).length;
+    const ties=methods.filter(x=>x.id!==m.id&&scores[x.id].crps===own).length;
+    near(rows[m.id].pairwise,100*(wins+.5*ties)/100);
+  }
+  near(Object.values(rows).reduce((s,r)=>s+r.top3,0),3);
+}
 
 // Run the actual landing-page renderer in the existing DOM harness.
 const root = path.resolve(__dirname,'../..');
