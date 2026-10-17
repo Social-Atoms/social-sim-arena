@@ -120,12 +120,20 @@ for (const field of ['mixed','external']) for (const scope of ['all','s0','match
   renderBoard('all');
   assert(!els['pairwise-table'].hidden);assert(els['legacy-leaderboard'].hidden);
   const got=window.__pairwiseBoard;assert(got,els['pairwise-body'].textContent);
-  assert.equal(got.field,field);assert.equal(got.scope,scope);
+  assert.equal(got.field,'mixed');assert.equal(got.scope,scope);
   assert(!els['pairwise-body'].innerHTML.includes('#entrant/vac-combined'));
   assert(!els['pairwise-body'].innerHTML.includes('Crowd'));
 }
+assert(!html.includes('External only'));
+assert(!html.includes('data-pw-scope'));
+assert(html.indexOf('id="common-questions"')>html.indexOf('>S0</button>'));
 window.__pairwiseScope=undefined;renderBoard('s0');
 assert.equal(window.__pairwiseBoard.scope,'s0');
+els['common-questions'].onclick();
+assert.equal(window.__pairwiseBoard.scope,'matched');
+assert(!els['common-questions'].hidden);
+assert(chartUrlState().includes('pw=matched'));
+assert(!chartUrlState().includes('field='));
 window.__ranking='skill';renderBoard('s0');
 assert(els['pairwise-table'].hidden);assert(!els['legacy-leaderboard'].hidden);
 window.__ranking='pairwise';window.__tab='civiqs-approval';renderBoard('all');

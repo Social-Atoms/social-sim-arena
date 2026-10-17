@@ -236,7 +236,6 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .lbhead .seg{flex-wrap:wrap;}
 .lbcontrols{padding:4px 14px 8px;display:flex;flex-wrap:wrap;gap:5px 10px;}
 .lbcontrols[hidden],#pairwise-table[hidden],#legacy-leaderboard[hidden],#pairwise-summary[hidden]{display:none;}
-.lbcontrols [data-pairwise-only][hidden]{display:none;}
 .lbcontrols .seg{flex-wrap:wrap;}
 .lbcontrols .seg button{font-size:11px;padding:4px 7px;}
 #pairwise-summary{margin:0;padding:0 16px 8px;font-size:12px;color:var(--mut);}
@@ -746,7 +745,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
             <div class="chartctl" role="group" aria-label="Chart filters">
               <div class="model-toolbar" id="model-toolbar" style="display:none;"></div>
               <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker<span class="th-help" role="tooltip">The published series itself, with each question's forecasts drawn on it.</span></button><button data-unit="arena" class="on">Skill<span class="th-help" role="tooltip">Arena score: 0 is persistence (copying the last release), 100 is a perfect oracle. Averaged over every matched release in the window. Higher is better.</span></button><button data-unit="crps">CRPS<span class="th-help" role="tooltip">CRPS, the error in the question's own unit: how far the whole forecast distribution sat from the published number. Lower is better.</span></button></div>
-              <div class="seg mini" id="range-seg" role="group" aria-label="Time window for the chart and Original skill board"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0" class="on">All</button><button data-range="-1" title="Season 0 main: every question closing from Sep 30, when all current teams could answer, so everyone is ranked on the same questions">S0</button></div>
+              <div class="seg mini" id="range-seg" role="group" aria-label="Chart history and Overall question set"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0" class="on">All</button><button data-range="-1" title="Season 0 main: every question closing from Sep 30, when all current teams could answer, so everyone is ranked on the same questions">S0</button><button type="button" id="common-questions" title="Rank all active participants and models on the questions every method answered. The chart retains its existing history view." aria-pressed="false">Common</button></div>
             </div>
             <div class="legend-strip" id="legend-strip" style="display:none;"></div>
           </div>
@@ -771,15 +770,6 @@ table.ent td a.row{color:inherit;text-decoration:none;}
         <div class="seg mini" role="group" aria-label="Leaderboard scoring">
           <button type="button" data-ranking="pairwise" class="on" aria-pressed="true">Pairwise</button>
           <button type="button" data-ranking="skill" aria-pressed="false">Original skill</button>
-        </div>
-        <div class="seg mini" role="group" aria-label="Pairwise comparison field" data-pairwise-only>
-          <button type="button" data-field="mixed" class="on" aria-pressed="true">With models</button>
-          <button type="button" data-field="external" aria-pressed="false">External only</button>
-        </div>
-        <div class="seg mini" role="group" aria-label="Pairwise question window" data-pairwise-only>
-          <button type="button" data-pw-scope="all" class="on" aria-pressed="true">All</button>
-          <button type="button" data-pw-scope="s0" aria-pressed="false">S0</button>
-          <button type="button" data-pw-scope="matched" aria-pressed="false">Common</button>
         </div>
       </div>
       <p id="pairwise-summary" aria-live="polite"></p>
@@ -2507,15 +2497,19 @@ function renderPairwiseBoard(){
   document.getElementById('pairwise-table').hidden=!active;
   document.getElementById('legacy-leaderboard').hidden=active;
   document.getElementById('pairwise-summary').hidden=!active;
-  document.querySelectorAll('[data-pairwise-only]').forEach(el=>el.hidden=ranking!=='pairwise');
-  for(const [selector,key,value] of [['[data-ranking]','ranking',ranking],['[data-field]','field',window.__pairwiseField||'mixed'],['[data-pw-scope]','pwScope',scope]]){
+  const common=document.getElementById('common-questions');
+  common.hidden=!overall;
+  common.classList.toggle('on',active&&scope==='matched');
+  common.setAttribute('aria-pressed',String(active&&scope==='matched'));
+  document.querySelectorAll('#range-seg [data-range]').forEach(b=>b.classList.toggle('on',!(active&&scope==='matched')&&Number(b.dataset.range)===(window.__range||0)));
+  for(const [selector,key,value] of [['[data-ranking]','ranking',ranking]]){
     document.querySelectorAll(selector).forEach(b=>{const on=b.dataset[key]===value;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));});
   }
   if(!active)return;
   const body=document.getElementById('pairwise-body');
   const summary=document.getElementById('pairwise-summary');
   try{
-    const board=window.SSAPairwise.build(data,{field:window.__pairwiseField||'mixed',scope});
+    const board=window.SSAPairwise.build(data,{field:'mixed',scope});
     window.__pairwiseBoard=board;
     const labels={all:'All history',s0:'S0 · locks from '+board.since.slice(0,10),matched:'Common submissions'};
     summary.textContent=labels[board.scope]+' · '+board.scored_rounds+' questions · '+board.methods+' methods';
@@ -3068,7 +3062,6 @@ function chartUrlState(){
   if(unit !== 'arena') p.set('unit', unit);
   if(tab==='agg'){
     if(window.__ranking==='skill') p.set('ranking','skill');
-    if(window.__pairwiseField==='external') p.set('field','external');
     const defaultScope=window.__board==='s0'?'s0':'all';
     if(window.__pairwiseScope&&window.__pairwiseScope!==defaultScope) p.set('pw',window.__pairwiseScope);
   }
@@ -3109,7 +3102,6 @@ function applyHash(){
     const span = SPAN_KEYS.includes(parts[2]) ? parts[2] : 'all';
     window.__board = span; if(typeof setRange==='function') setRange(SPAN_TO_RANGE[span]||0);
     window.__ranking=q.get('ranking')==='skill'?'skill':'pairwise';
-    window.__pairwiseField=q.get('field')==='external'?'external':'mixed';
     window.__pairwiseScope=['all','s0','matched'].includes(q.get('pw'))?q.get('pw'):(span==='s0'?'s0':'all');
     const unit = q.get('unit');
     if(['arena','crps','level'].includes(unit)){ window.__unitAgg = unit === 'level' ? 'arena' : unit; window.__unitSer = unit; }
@@ -3203,16 +3195,15 @@ document.querySelectorAll('#round-status-seg button').forEach(b=>b.onclick=()=>{
 const RANGE_TO_SPAN = {0:'all', 6:'m6', 1:'d30', '-1':'s0'}, SPAN_TO_RANGE = {all:0, m6:6, d30:1, last:0, s0:-1};
 function setRange(months){
   window.__range = months;
-  document.querySelectorAll('#range-seg button').forEach(x=>x.classList.toggle('on', Number(x.dataset.range)===months));
+  document.querySelectorAll('#range-seg [data-range]').forEach(x=>x.classList.toggle('on', Number(x.dataset.range)===months));
 }
-document.querySelectorAll('#range-seg button').forEach(b=> b.onclick = ()=>{
+document.querySelectorAll('#range-seg [data-range]').forEach(b=> b.onclick = ()=>{
   setRange(Number(b.dataset.range));
   window.__pairwiseScope=window.__range===-1?'s0':'all';
   if(window.__data){ setTab(window.__tab||'agg'); renderBoard(RANGE_TO_SPAN[window.__range]||'all'); }
 });
 document.querySelectorAll('[data-ranking]').forEach(b=>b.onclick=()=>{window.__ranking=b.dataset.ranking;renderBoard(window.__board||'all');});
-document.querySelectorAll('[data-field]').forEach(b=>b.onclick=()=>{window.__pairwiseField=b.dataset.field;renderBoard(window.__board||'all');});
-document.querySelectorAll('[data-pw-scope]').forEach(b=>b.onclick=()=>{window.__pairwiseScope=b.dataset.pwScope;renderBoard(window.__board||'all');});
+document.getElementById('common-questions').onclick=()=>{window.__ranking='pairwise';window.__pairwiseScope='matched';if(window.__data)renderBoard(window.__board||'all');};
 document.querySelectorAll('#unit-seg button').forEach(b=> b.onclick = ()=>{
   const tab = window.__tab || 'agg';
   if(tab==='agg') window.__unitAgg = b.dataset.unit; else window.__unitSer = b.dataset.unit;
