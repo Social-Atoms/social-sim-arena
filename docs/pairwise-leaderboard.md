@@ -60,14 +60,13 @@ best answer after resolution.
 
 The roster is discovered from the published entrant registry and resolved
 scores. Registered participants enter automatically after their first valid
-scored answer. With models also includes active registered LLM methods and
+scored answer. The public board also includes active registered LLM methods and
 their generated harness variants. Retired methods, crowd, statistical
 baselines and known house tests are excluded. The current snapshot contains
 five external methods and twelve model configurations; these are not size
 limits. Existing team selections above remain explicit overrides.
 
-External only recomputes each question using external methods; it does not
-filter an already-computed mixed ranking. A registration with no scored answer
+A registration with no scored answer
 does not enter the field or shrink Common. After the first scored answer, a
 new entrant changes the opponent field and may shrink Common, even to empty.
 Retirements can also change the field. Historical totals are recomputed for
@@ -82,7 +81,7 @@ Chart selections do not change the comparison field.
 - **S0**: comparable questions with `lock_at >= season0_main.since`
   (currently 2026-09-30T00:00:00Z). Resolution dates do not select this window.
 - **Common**: the intersection of scored submissions from every method in
-  the selected active field, across all resolved history. No common question
+  the active field, across all resolved history. No common question
   means an explicit empty board, not a fallback to a different window.
 
 Changing the field recomputes both the eligible questions and the opponents.
@@ -102,3 +101,8 @@ PYTHONPATH=. python tests/test_pairwise.py
 The browser reads `rounds[].scores` already present in `site/data.json`.
 There is no new forecast call, source pull or generated score artifact to
 refresh. A deployment can compute the proposal from an existing payload.
+
+The public page offers one comparison field, including models. All and S0 use
+the existing range controls; Common sits immediately beside S0 and switches
+the Overall ranking to the shared-question intersection. The chart retains
+its existing history view. There is no External only public control or URL mode.
