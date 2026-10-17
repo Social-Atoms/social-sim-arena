@@ -40,7 +40,7 @@
       }
     }
     const active = id => !EXCLUDED.has(id) && !(data.retired || {})[id]
-      && (!registered.has(id) || registered.get(id).status !== 'retired');
+      && (!registered.has(id) || !['retired','revoked'].includes(registered.get(id).status));
     const roster = [], consumed = new Set();
     for (const method of EXTERNAL) {
       const members = method.members || [method.id];
