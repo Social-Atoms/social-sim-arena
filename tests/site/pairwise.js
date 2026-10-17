@@ -125,6 +125,10 @@ for (const field of ['mixed','external']) for (const scope of ['all','s0','match
   assert(!els['pairwise-body'].innerHTML.includes('Crowd'));
 }
 assert(!html.includes('External only'));
+for(const id of ['common-help','pairwise-help','pairwise-column-help']) {
+  assert(html.includes('aria-describedby="'+id+'"'));
+  assert(html.includes('id="'+id+'" role="tooltip"'));
+}
 assert(!html.includes('data-pw-scope'));
 assert(html.indexOf('id="common-questions"')>html.indexOf('>S0</button>'));
 window.__pairwiseScope=undefined;renderBoard('s0');

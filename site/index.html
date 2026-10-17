@@ -745,7 +745,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
             <div class="chartctl" role="group" aria-label="Chart filters">
               <div class="model-toolbar" id="model-toolbar" style="display:none;"></div>
               <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker<span class="th-help" role="tooltip">The published series itself, with each question's forecasts drawn on it.</span></button><button data-unit="arena" class="on">Skill<span class="th-help" role="tooltip">Arena score: 0 is persistence (copying the last release), 100 is a perfect oracle. Averaged over every matched release in the window. Higher is better.</span></button><button data-unit="crps">CRPS<span class="th-help" role="tooltip">CRPS, the error in the question's own unit: how far the whole forecast distribution sat from the published number. Lower is better.</span></button></div>
-              <div class="seg mini" id="range-seg" role="group" aria-label="Chart history and Overall question set"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0" class="on">All</button><button data-range="-1" title="Season 0 main: every question closing from Sep 30, when all current teams could answer, so everyone is ranked on the same questions">S0</button><button type="button" id="common-questions" title="Rank all active participants and models on the questions every method answered. The chart retains its existing history view." aria-pressed="false">Common</button></div>
+              <div class="seg mini" id="range-seg" role="group" aria-label="Chart history and Overall question set"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0" class="on">All</button><button data-range="-1" title="Season 0 main: every question closing from Sep 30, when all current teams could answer, so everyone is ranked on the same questions">S0</button><button type="button" id="common-questions" aria-label="Common" aria-describedby="common-help" aria-pressed="false">Common<span class="th-help" id="common-help" role="tooltip">Only questions answered by every active method in the standings, including models. Every method is compared on the same question set. New entrants can change this set. The chart keeps its history view.</span></button></div>
             </div>
             <div class="legend-strip" id="legend-strip" style="display:none;"></div>
           </div>
@@ -768,7 +768,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
       </div>
       <div class="lbcontrols" id="pairwise-controls">
         <div class="seg mini" role="group" aria-label="Leaderboard scoring">
-          <button type="button" data-ranking="pairwise" class="on" aria-pressed="true">Pairwise</button>
+          <button type="button" data-ranking="pairwise" class="on" aria-label="Pairwise" aria-describedby="pairwise-help" aria-pressed="true">Pairwise<span class="th-help" id="pairwise-help" role="tooltip">For each question: wins + half of ties, divided by submitted opponents. Average equally across questions, on a 0–100 scale. Missing answers score zero; questions with fewer than two methods are excluded. Higher is better.</span></button>
           <button type="button" data-ranking="skill" aria-pressed="false">Original skill</button>
         </div>
       </div>
@@ -776,7 +776,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
       <div class="scroll">
         <table class="lb" id="pairwise-table" aria-label="Pairwise win-rate leaderboard">
           <colgroup><col class="rank-col"><col><col class="pairwise-col"><col class="coverage-col"></colgroup>
-          <thead><tr><th scope="col">#</th><th scope="col">Method</th><th scope="col" class="num" title="Average percentage of submitted opponents beaten per question; ties count as half a win; missing answers score zero.">Pairwise</th><th scope="col" class="num" title="Answered questions / all comparable questions in this window.">Answered</th></tr></thead>
+          <thead><tr><th scope="col">#</th><th scope="col">Method</th><th scope="col" class="num has-help" tabindex="0" aria-describedby="pairwise-column-help">Pairwise<span class="th-help" id="pairwise-column-help" role="tooltip">For each question: wins + half of ties, divided by submitted opponents. Average equally across questions, on a 0–100 scale. Missing answers score zero; questions with fewer than two methods are excluded. Higher is better.</span></th><th scope="col" class="num" title="Answered questions / all comparable questions in this window.">Answered</th></tr></thead>
           <tbody id="pairwise-body"><tr><td colspan="4">loading…</td></tr></tbody>
         </table>
         <table class="lb" id="legacy-leaderboard" hidden>
