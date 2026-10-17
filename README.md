@@ -138,7 +138,7 @@ The Season 0 software citation remains available in the top-level metadata of [C
 
 ```bibtex
 @software{socialsimulationarena2026,
-  author  = {Li, Chance Jiajie and Liu, Xuan and Shang, Haoyang and Zou, Xinkai and Zhang, Cedegao E. and Jiang, Hang and {Social Simulation Arena Team}},
+  author  = {Li, Chance Jiajie and Liu, Xuan and Shang, Haoyang and Zou, Xinkai and Mo, Zhenze and Zhang, Cedegao E. and Jiang, Hang and {Social Simulation Arena Team}},
   title   = {Social Simulation Arena},
   year    = {2026},
   version = {season-0},
