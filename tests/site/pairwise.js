@@ -74,10 +74,11 @@ const near = (a,b) => assert(Math.abs(a-b)<1e-8, `${a} != ${b}`);
   const data={entrants:[{entrant_id:'new-team',name:'New team',type:'participant'},
     {entrant_id:'new-model',type:'llm'}, {entrant_id:'waiting',type:'participant'},
     {entrant_id:'retired-team',type:'participant',status:'retired'},
+    {entrant_id:'revoked-team',type:'participant',status:'revoked'},
     {entrant_id:'ssa-testing-team',type:'participant'},
     {entrant_id:'worldvac-base',type:'participant'}, {entrant_id:'h2oai-marina',type:'participant'}],
     retired:{'old-model-web':{}},rounds:[round('new',{'new-team':sc(1),'new-model-web':sc(2),
-      'new-model':sc(3),'old-model-web':sc(0),'retired-team':sc(0),
+      'new-model':sc(3),'old-model-web':sc(0),'retired-team':sc(0),'revoked-team':sc(0),
       'ssa-testing-team':sc(0),'worldvac-base':sc(0),'h2oai-marina':sc(0),crowd:sc(0)})]};
   assert.deepEqual(pw.rosterOf(data,'external').map(x=>x.id),['new-team']);
   assert.deepEqual(pw.rosterOf(data,'mixed').map(x=>x.id),['new-model','new-model-web','new-team']);
