@@ -111,6 +111,28 @@ def test_every_workflow_pins_a_python_the_code_supports():
     print("ok test_every_workflow_pins_a_python_the_code_supports")
 
 
+def test_a_manual_agent_probe_publishes_and_refreshes_the_dev_result():
+    probe = text(".github/workflows/source-probe.yml")
+    preview = text(".github/workflows/preview.yml")
+    agent_job = probe.split("agent-endpoint-probe:", 1)[1]
+    assert "contents: write" in agent_job and "actions: write" in agent_job
+    assert 'probe.record_public_result("site/agent-probes.json", result)' in probe
+    assert "historical_round_id" in probe
+    assert "probe.historical_demo_case" in probe
+    assert "probe.public_historical_demo_result" in probe
+    assert 'git add site/agent-probes.json' in probe
+    assert '"show"' in probe and 'f"HEAD:entrants/{entrant_id}.json"' in probe
+    assert 'gh workflow run preview.yml --ref "${GITHUB_REF_NAME}"' in probe
+    # A token-authored probe commit will not trigger push workflows, so the
+    # dispatched run itself has to be allowed to move the stable dev alias.
+    assert "github.event_name == 'workflow_dispatch'" in preview
+    alias = preview.split("- name: stable alias for the dev branch", 1)[1]
+    assert "workflow_dispatch" in alias.split("- name:", 1)[0]
+    assert "PREVIEW_BRANCH" in preview
+    assert "github.rest.pulls.list" in preview
+    print("ok test_a_manual_agent_probe_publishes_and_refreshes_the_dev_result")
+
+
 def test_refresh_commits_every_irreplaceable_archive():
     body = text(".github/workflows/refresh.yml")
     staged = command_with("git add -A", body).split()
