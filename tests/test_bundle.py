@@ -194,8 +194,8 @@ def test_accepted_answers_become_the_records_ci_already_accepts():
     schema = read(os.path.join(ROOT, "schema", "forecast.schema.json"))
     checks = submission_checks()
     doc = read(SANDBOX)
-    for use_quantiles in (False, True):
-        response = build_answers(doc, quantiles=use_quantiles)
+    for _ in (0,):
+        response = build_answers(doc)
         out = bundle.normalise(response, doc, now=before_deadline(doc))
         assert out["receipt"]["rejected"] == 0, out["results"]
         for rid, record in out["records"].items():
@@ -241,6 +241,20 @@ def test_a_point_guess_is_refused_without_taking_the_file_down_with_it():
     verdict = {r["round_id"]: r for r in out["results"]}
     bad = verdict["sandbox-approval-2028-w01"]
     assert bad["reason"] == "invalid_answer", bad
+    assert out["receipt"]["accepted"] == 2, out["results"]
+
+
+def test_a_quantile_answer_is_refused():
+    """Entrant-chosen quantile levels let a few extreme levels score a belief
+    better than its own mean and sd, so the intake takes mean and sd only."""
+    doc = read(SANDBOX)
+    response = build_answers(doc)
+    response["answers"][0]["topline"] = {
+        "quantiles": {"0.01": 1.0, "0.5": 3.0, "0.99": 5.0}}
+    out = bundle.normalise(response, doc, now=before_deadline(doc))
+    verdict = {r["round_id"]: r for r in out["results"]}
+    bad = verdict["sandbox-approval-2028-w01"]
+    assert bad["status"] != "accepted", bad
     assert out["receipt"]["accepted"] == 2, out["results"]
 
 
@@ -504,8 +518,7 @@ def test_the_canonical_hash_is_the_arenas_and_has_not_moved():
 
 # ------------------------------------------------------------------ helpers
 
-def build_answers(bundle_doc, entrant_id="demo_bundle_entrant",
-                  quantiles=False):
+def build_answers(bundle_doc, entrant_id="demo_bundle_entrant"):
     """The shipped example entrant, run in process on an arbitrary bundle.
 
     Tests run the participant's own starter code rather than a private fixture:
@@ -526,8 +539,7 @@ def build_answers(bundle_doc, entrant_id="demo_bundle_entrant",
         elif q["target_type"] == "ranking_list" and not q.get("items"):
             anchors[q["round_id"]] = [f"item_{i}"
                                       for i in range(q["ranking_length"])]
-    return module.build_response(bundle_doc, entrant_id, anchors, quantiles,
-                                 False)
+    return module.build_response(bundle_doc, entrant_id, anchors, False)
 
 
 def test_the_shipped_example_response_is_what_the_example_entrant_produces():
@@ -543,7 +555,7 @@ def test_the_shipped_example_response_is_what_the_example_entrant_produces():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     produced = module.build_response(doc, "demo_bundle_entrant", anchors,
-                                     False, False)
+                                     False)
     assert produced == read(SANDBOX_RESPONSE), \
         "examples/bundle/sandbox-response.json is stale; regenerate it"
 

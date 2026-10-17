@@ -465,6 +465,7 @@ def forecast_record(answer, question, entrant_id, notes):
     rid = question["round_id"]
     checks.check_answer_matches_round(rid, record, _round_shim(question))
     for label, dist in checks.answer_blocks(record):
+        checks.refuse_quantiles(rid, label, dist)
         checks.check_shape(rid, label, dist)
         checks.check_quantiles(rid, label, dist)
     return record

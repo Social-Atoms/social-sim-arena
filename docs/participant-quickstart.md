@@ -200,8 +200,8 @@ names the batch and its deadline when a round is late. Validation is repeated
 when the pull request lands: opening one before the deadline is not enough if
 it merges after it.
 
-Distribution rounds require uncertainty: either `mean` plus a strictly positive
-`sd`, or at least three ordered quantiles including `0.5`. Profile rounds
+Distribution rounds require uncertainty: `mean` plus a strictly positive `sd`.
+Quantile sets are not accepted (since 2026-10-10). Profile rounds
 require every named cell. Ranking rounds require the exact length and, when
 supplied, the fixed item basket in predicted order.
 

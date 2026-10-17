@@ -258,8 +258,8 @@ def test_the_highlight_follows_the_scroll_and_listens_where_the_page_scrolls():
     assert re.search(r"setActiveSection\('#'\+current\.id,\s*false\)", script), (
         "scrolling moves the highlight but does not rename the tab")
     assert "scroller.scrollHeight" in script, "the last short section still activates at the end"
-    assert "const arrive=()=>{ if(!location.hash) return; settleUntil=Date.now()+700;" in script, (
-        "arriving at an anchor must keep that section highlighted while the browser scrolls")
+    assert "navigationTarget" in script and "destinationTop" in script, (
+        "anchor navigation must keep its section selected until the actual destination is reached")
     print("ok test_the_highlight_follows_the_scroll_and_listens_where_the_page_scrolls")
 
 
@@ -268,7 +268,7 @@ def test_navigation_labels_match_their_section_titles():
     headings = {
         section_id: html.unescape(label)
         for section_id, label in re.findall(
-            r'<h[12] id="([^"]+)">([^<]+)</h[12]>', body
+            r'<h[1-4] id="([^"]+)">([^<]+)</h[1-4]>', body
         )
     }
     for aria_label in ("Documentation", "On this page"):

@@ -74,7 +74,7 @@ def response_for(question_bundle, anchors):
     entrant = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(entrant)
     response = entrant.build_response(
-        question_bundle, "demo_bundle_entrant", anchors, False, False)
+        question_bundle, "demo_bundle_entrant", anchors, False)
     with open(EXPECTED_RESPONSE, "rb") as fh:
         committed_bytes = fh.read()
     if pretty_bytes(response) != committed_bytes:

@@ -7,7 +7,7 @@
   "definitions": {
     "distribution": {
       "type": "object",
-      "description": "Either a normal (mean + sd) or a quantile set. Quantiles let you express skew and fat tails; both formats are scored with CRPS (a topline) or pooled into the energy score (a profile cell). A point guess is not a distribution and is rejected.",
+      "description": "Entrants submit a normal: mean and sd, scored with CRPS (a topline) or pooled into the energy score (a profile cell). The quantile form is kept only for the arena's own crowd pool; tools/validate_submission.py refuses it from entrants. A point guess is not a distribution and is rejected.",
       "additionalProperties": false,
       "properties": {
         "mean": { "type": "number", "description": "Center of the predictive distribution, in the round's unit." },

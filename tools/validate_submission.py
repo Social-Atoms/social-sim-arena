@@ -348,6 +348,20 @@ def check_shape(rel, label, t):
             fail(f"{rel}: {label} needs mean+sd (sd > 0) or quantiles")
 
 
+def refuse_quantiles(rel, label, t):
+    """Entrants answer with mean and sd. Quantile sets were accepted until
+    2026-10-10 and are now refused: the score averaged pinball loss over
+    whichever levels an entrant chose to report, so a few extreme levels scored
+    the same belief far better than its mean and sd did (a N(0,1) belief: 0.56
+    as mean/sd, 0.30 as quantiles at .01/.5/.99). A format that rewards
+    choosing levels over knowing more is not a fair one. No entrant ever
+    submitted quantiles. The crowd's own pooled file still carries them; it is
+    written by `refresh.file_crowd_forecasts`, not submitted."""
+    if isinstance(t, dict) and "quantiles" in t:
+        fail(f"{rel}: {label} uses quantiles, which are not accepted; answer "
+             "with mean and sd (sd > 0)")
+
+
 def check_quantiles(rel, label, t):
     """Semantic rules the JSON schema cannot express: the median is present,
     levels are strictly inside (0, 1), and values do not decrease."""
@@ -493,6 +507,7 @@ def validate_answer_contract(body, round_def):
     token = _API_VALIDATION.set(True)
     try:
         for label, block in answer_blocks(body):
+            refuse_quantiles('submission', label, block)
             check_shape('submission', label, block)
             check_quantiles('submission', label, block)
         check_answer_matches_round('submission', body, round_def)
@@ -527,6 +542,8 @@ def validate(path, now=None, author=None, base_ref=None):
     # "needs mean+sd (sd > 0) or quantiles" in one line, not a page of schema.
     if isinstance(fc, dict):
         for label, t in answer_blocks(fc):
+            if fc.get("entrant") != "crowd":
+                refuse_quantiles(rel, label, t)
             check_shape(rel, label, t)
     try:
         import jsonschema
