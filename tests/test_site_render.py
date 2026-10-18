@@ -139,16 +139,16 @@ def test_question_and_forecast_pages_score_each_shape_its_own_way():
     print("ok test_question_and_forecast_pages_score_each_shape_its_own_way")
 
 
-def test_agent_results_are_visible_without_getting_an_official_rank():
+def test_endpoint_demos_do_not_enter_the_leaderboard():
     if not _node():
-        print("ok test_agent_results_are_visible_without_getting_an_official_rank "
+        print("ok test_endpoint_demos_do_not_enter_the_leaderboard "
               "(skipped: no node on PATH)")
         return
     got = subprocess.run([_node(), AGENT_PROBE], capture_output=True, text=True,
                          cwd=ROOT, timeout=120)
     sys.stdout.write(got.stdout)
     assert got.returncode == 0, got.stderr or got.stdout
-    print("ok test_agent_results_are_visible_without_getting_an_official_rank")
+    print("ok test_endpoint_demos_do_not_enter_the_leaderboard")
 
 
 def test_resizable_panels_and_chart_widths():
@@ -459,7 +459,7 @@ def test_the_site_logo_is_the_brand_folder_s_64_cut():
 if __name__ == "__main__":
     test_every_leaderboard_tab_renders_something_a_participant_can_read()
     test_the_landing_page_names_each_round_shape_and_the_right_deadline()
-    test_agent_results_are_visible_without_getting_an_official_rank()
+    test_endpoint_demos_do_not_enter_the_leaderboard()
     test_resizable_panels_and_chart_widths()
     test_model_filter_selection_and_persistence()
     test_question_and_forecast_pages_score_each_shape_its_own_way()

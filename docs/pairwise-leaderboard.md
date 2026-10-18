@@ -2,8 +2,10 @@
 
 Proposed aggregation change, prepared 2026-10-16. This changes the Overall
 competition standings, not frozen forecasts, resolutions, or the scoring of
-individual answers. The Original skill view and task-specific boards retain
-their existing calculations. The chart continues to show original skill/CRPS.
+individual answers. Both Overall metrics use the same methods, grouping and question window.
+Original skill retains the published per-question skill formula and averages
+answered questions in that shared window. Task-specific boards and the chart
+retain their existing scientific scores.
 
 ## Question score and total
 
@@ -31,18 +33,14 @@ opponent on each one. It does not mean a perfect prediction of the outcome.
 With full coverage, 50 means an average half-win against submitted opponents.
 With missing answers, the total reflects both coverage and relative results.
 
-The auxiliary Top 3 column splits tied places across the boundary. For
-example, with one clear winner and three tied runners-up, each runner-up gets
-2/3 of a top-three credit. With fewer than three submissions, every submission
-gets one credit. Consequently a top-three appearance is less selective in a
-small field. The total is a count of appearances (possibly fractional), not a
-percentage or a proper score.
-
 Skill is unchanged: the average of published per-question
 `1 - entrant_loss / persistence_loss` over the method's answered questions,
 excluding missing answers. Vac's disjoint specialist answers are combined
-before this average. Pairwise and Top 3 are rank summaries and do not inherit
-the propriety of the underlying probabilistic scoring rules.
+before this average. Pairwise is a rank summary and does not inherit the
+propriety of the underlying probabilistic scoring rules. The page displays
+Pairwise win rate or Original skill, never auxiliary Top 3/skill annotations
+in a method subtitle. Both views share the original method/setup labels and
+exclude test accounts and historical endpoint demos.
 
 ## Active comparison field
 

@@ -27,24 +27,17 @@ window.__ranking='skill';
 render(data);
 renderBoard('all');
 
-const body = els['lb-body'].innerHTML;
-const note = els['lb-note'].textContent;
-const row = body.split('</tr>').find(x => x.includes('just4test')) || '';
 const problems = [];
-for (const want of ['just4test', 'TEST ✓', 'Season 0 founding entrant', 'API test passed',
-                    'μ 50', 'σ 1', 'actions/runs/34279400481']) {
-  if (!row.includes(want)) problems.push(`test row is missing ${want}`);
+function checkExcluded(){
+  for(const scope of ['all','s0','matched'])for(const ranking of ['pairwise','skill']){
+    window.__pairwiseScope=scope;window.__ranking=ranking;renderBoard(scope==='s0'?'s0':'all');
+    const body=els[ranking==='pairwise'?'pairwise-body':'lb-body'].innerHTML;
+    for(const text of ['just4test','TEST ✓','Historical demo','Action ↗']){
+      if(body.includes(text))problems.push(ranking+'/'+scope+' exposes '+text);
+    }
+  }
 }
-if (!row.includes('<td class="rank">·</td>')) problems.push('test row received a rank');
-if (!row.endsWith('<td class="num">·</td><td class="num">0</td>')) {
-  problems.push('test row received a loss or a scored round');
-}
-if (!note.includes('non-scored endpoint check')) {
-  problems.push('leaderboard does not explain that TEST is non-scored');
-}
-if (!body.startsWith('<tr class="probe-row')) {
-  problems.push('the freshly tested participant is not immediately visible at the top');
-}
+checkExcluded();
 
 // The same row may hold one transparently retrospective real-round score. It
 // gets the production score/loss columns and one round, but still no rank.
@@ -67,25 +60,9 @@ applyAgentProbes(data, {
 window.__ranking='skill';
 render(data);
 renderBoard('all');
-const demoBody = els['lb-body'].innerHTML;
-const demoNote = els['lb-note'].textContent;
-const demoRow = demoBody.split('</tr>').find(x => x.includes('just4test')) || '';
-for (const want of ['Historical demo', '1 resolved question', 'μ 34.5', 'σ 1',
-                    '<td class="num skill pos">+74</td>',
-                    '<td class="num">0.33</td><td class="num">1</td>']) {
-  if (!demoRow.includes(want)) problems.push(`historical demo row is missing ${want}`);
-}
-if (!demoRow.includes('<td class="rank">·</td>')) {
-  problems.push('historical demo received an official rank');
-}
-if (!demoNote.includes('retrospective') || !demoNote.includes('no official rank')) {
-  problems.push('historical demo disclosure is missing');
-}
-window.__ranking='pairwise';
-renderBoard('all');
-if (els['pairwise-body'].innerHTML.includes('just4test')) problems.push('historical demo entered Pairwise');
+checkExcluded();
 if (problems.length) {
   console.error(problems.join('\n'));
   process.exit(1);
 }
-console.log('just4test renders as either TEST ✓ or a scored, unranked historical demo');
+console.log('endpoint probes and historical demos stay out of both leaderboard metrics');

@@ -83,7 +83,7 @@
       throw new Error('An account cannot occupy two comparison slots');
     }
     const since = (data.season0_main || {}).since || '2026-09-30T00:00:00Z';
-    const acc = new Map(ids.map(id => [id, {answered: 0, points: 0, top3: 0, skill: 0, skillN: 0}]));
+    const acc = new Map(ids.map(id => [id, {answered: 0, points: 0, top3: 0, skill: 0, skillN: 0, crps: 0, crpsN: 0}]));
     const roundIds = [], candidates = [], seen = new Set();
     let excluded = 0;
     for (const r of data.rounds || []) {
@@ -119,6 +119,7 @@
           const {id, score} = ordered[i], a = acc.get(id);
           a.answered++; a.points += points; a.top3 += top3;
           if (Number.isFinite(score.skill)) { a.skill += score.skill; a.skillN++; }
+          if (Number.isFinite(score.crps)) { a.crps += score.crps; a.crpsN++; }
         }
         start = end;
       }
@@ -129,7 +130,8 @@
       return {entrant: method.id, name: method.name || method.id, members: method.members || [method.id],
         rounds: a.answered, total_rounds: n, answered: a.answered + '/' + n,
         pairwise: a.points / n, top3: a.top3,
-        mean_skill: a.skillN ? a.skill / a.skillN : null};
+        mean_skill: a.skillN ? a.skill / a.skillN : null,
+        mean_crps: a.crpsN ? a.crps / a.crpsN : null};
     }).sort((a, b) => b.pairwise - a.pairwise || a.entrant.localeCompare(b.entrant)) : [];
     let rank = 1, rankValue = entries.length ? entries[0].pairwise : 0;
     for (let i = 0; i < entries.length; i++) {
