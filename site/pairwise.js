@@ -84,9 +84,13 @@
     }
     const since = (data.season0_main || {}).since || '2026-09-30T00:00:00Z';
     const acc = new Map(ids.map(id => [id, {answered: 0, points: 0, top3: 0, skill: 0, skillN: 0, crps: 0, crpsN: 0}]));
-    const roundIds = [], candidates = [], seen = new Set();
+    const roundIds = [], candidates = [], seen = new Set(), trajectory = [];
     let excluded = 0;
-    for (const r of data.rounds || []) {
+    // Resolution order gives a running score, with a stable order inside ties.
+    const dateOf = r => String((r.resolution || {}).resolved_at || r.release_at || r.lock_at || '');
+    const rounds = [...(data.rounds || [])].sort((a, b) =>
+      dateOf(a).localeCompare(dateOf(b)) || String(a.round_id).localeCompare(String(b.round_id)));
+    for (const r of rounds) {
       if (!r.scores || (r.status && r.status !== 'resolved')) continue;
       if (scope === 's0' && (!r.lock_at || r.lock_at < since)) continue;
       if (seen.has(r.round_id)) throw new Error('Duplicate scored question: ' + r.round_id);
@@ -123,6 +127,16 @@
         }
         start = end;
       }
+      const date = dateOf(r).slice(0, 10), count = roundIds.length;
+      const point = {date, n: count, pairwise: {}, skills: {}, crps: {}, live: true};
+      for (const [id, a] of acc) {
+        point.pairwise[id] = a.points / count;
+        if (a.skillN) point.skills[id] = a.skill / a.skillN;
+        if (a.crpsN) point.crps[id] = a.crps / a.crpsN;
+      }
+      // Publish one checkpoint per day after incorporating every resolved question.
+      if (trajectory.length && trajectory[trajectory.length - 1].date === date) trajectory.pop();
+      trajectory.push(point);
     }
     const n = roundIds.length;
     const entries = n ? roster.map(method => {
@@ -138,7 +152,7 @@
       if (rankValue - entries[i].pairwise > 1e-9) { rank = i + 1; rankValue = entries[i].pairwise; }
       entries[i].rank = rank;
     }
-    return {field, scope, since, entries, scored_rounds: n, round_ids: roundIds,
+    return {field, scope, since, entries, trajectory, scored_rounds: n, round_ids: roundIds,
       comparable_rounds: candidates.length, excluded_rounds: excluded, methods: roster.length};
   }
   return {build, lossOf, rosterOf, external: EXTERNAL};

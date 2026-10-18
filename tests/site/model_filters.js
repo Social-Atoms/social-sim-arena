@@ -37,6 +37,7 @@ function fixture(storage = new Map(), payload = backtestOnly) {
   };
   const api = new Function(script+'\nreturn {render, renderTaskChart, renderLegend, matchingModels, coerceUnknown, modelInfo, selectModels, resetModels, setPickerFilter, modelPicker, TASKS, defaultKeep, vendorOf, stemOf, VCOLOR_MODEL_VENDORS};')();
   api.render(payload);
+  if(payload===backtestOnly)win.__unitAgg='arena'; // Explicit legacy backtest view for picker mechanics.
   api.renderTaskChart('agg');
   return {api, els, win, doc, svg, events, stripEvents, storage, options};
 }
@@ -148,9 +149,12 @@ f.api.resetModels();
 assert.ok(!f.win.__hidden.has('ewma'));
 // With the season's scores present, the default comparison is the board's top teams (one entrant each),
 // every model vendor's best arm but the worst, and the crowd; no statistical reference (decided 2026-10-05).
+const winlessRoster=f=>new Set(f.win.SSAPairwise.build(f.win.__data,{scope:'all'}).entries.map(e=>e.entrant));
 { const live = fixture(new Map(), data); const sel = live.api.modelPicker.ids.filter(id=>!live.win.__hidden.has(id));
   const keep = live.api.defaultKeep(live.win.__data);
-  assert.ok(sel.includes('crowd')); assert.ok(!sel.includes('ewma'), 'no statistical reference by default');
+  assert.ok(!sel.includes('crowd')); assert.ok(!sel.includes('ewma'), 'Overall curves use the standings roster, without references');
+  const roster=winlessRoster(live);
+  assert.deepEqual(new Set(live.api.modelPicker.ids),roster,'chart picker and leaderboard use the same methods');
   assert.deepEqual(new Set(sel), new Set([...keep].filter(id=>live.api.modelPicker.ids.includes(id))), 'the chart draws exactly the default');
   const byId = {}; live.win.__data.entrants.forEach(e=>byId[e.entrant_id]=e);
   const teams = sel.filter(id=>(byId[live.api.stemOf(id)]||byId[id]||{}).type==='participant');

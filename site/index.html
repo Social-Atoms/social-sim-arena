@@ -746,8 +746,8 @@ table.ent td a.row{color:inherit;text-decoration:none;}
           <div class="chart-filters" id="chart-filters">
             <div class="chartctl" role="group" aria-label="Chart filters">
               <div class="model-toolbar" id="model-toolbar" style="display:none;"></div>
-              <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker<span class="th-help" role="tooltip">The published series itself, with each question's forecasts drawn on it.</span></button><button data-unit="arena" class="on">Skill<span class="th-help" role="tooltip">Arena score: 0 is persistence (copying the last release), 100 is a perfect oracle. Averaged over every matched release in the window. Higher is better.</span></button><button data-unit="crps">CRPS<span class="th-help" role="tooltip">CRPS, the error in the question's own unit: how far the whole forecast distribution sat from the published number. Lower is better.</span></button></div>
-              <div class="seg mini" id="range-seg" role="group" aria-label="Chart history and Overall question set"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0" class="on">All</button><button data-range="-1" title="Season 0 main: every question closing from Sep 30, when all current teams could answer, so everyone is ranked on the same questions">S0</button><button type="button" id="common-questions" aria-label="Common" aria-describedby="common-help" aria-pressed="false">Common<span class="th-help" id="common-help" role="tooltip">Only questions answered by every active method in the standings, including models. Every method is compared on the same question set. New entrants can change this set. The chart keeps its history view.</span></button></div>
+              <div class="seg mini" id="unit-seg"><button data-unit="pairwise">Pairwise win rate<span class="th-help" role="tooltip">Running mean of per-question win rates on the selected All, S0 or Common question set. Wins count 1, ties ½, missing answers 0. The final value matches the standings. Higher is better.</span></button><button data-unit="level">Tracker<span class="th-help" role="tooltip">The published series itself, with each question's forecasts drawn on it.</span></button><button data-unit="arena" class="on">Skill<span class="th-help" role="tooltip">Arena score: 0 is persistence (copying the last release), 100 is a perfect oracle. Averaged over every matched release in the window. Higher is better.</span></button><button data-unit="crps">CRPS<span class="th-help" role="tooltip">CRPS, the error in the question's own unit: how far the whole forecast distribution sat from the published number. Lower is better.</span></button></div>
+              <div class="seg mini" id="range-seg" role="group" aria-label="Chart history and Overall question set"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0" class="on">All</button><button data-range="-1" title="Season 0 main: every question closing from Sep 30, when all current teams could answer, so everyone is ranked on the same questions">S0</button><button type="button" id="common-questions" aria-label="Common" aria-describedby="common-help" aria-pressed="false">Common<span class="th-help" id="common-help" role="tooltip">Only questions answered by every active method in the standings, including models. Every method is compared on the same question set. New entrants can change this set. The Pairwise curve uses the same question set.</span></button></div>
             </div>
             <div class="legend-strip" id="legend-strip" style="display:none;"></div>
           </div>
@@ -1701,7 +1701,7 @@ function renderLegend(ids, nameOf){
 }
 function aggChart(traj, nameOf, unit){
   const svg = clearChart(), tip = pane().querySelector('.tooltip');
-  if(!traj || traj.length<2){ svg.style.display='none'; return; }
+  if(!traj || !traj.length){ svg.style.display='none'; return; }
   const pw = svg.clientWidth, ph = svg.clientHeight;
   if(pw < 80 || ph < 80){ svg.style.display='none'; return; }
   const bt0 = (window.__data && window.__data.backtest) || {};
@@ -1716,7 +1716,7 @@ function aggChart(traj, nameOf, unit){
   const arenaAt = (t,s) => t.live ? (t.skills && t.skills[s]!=null ? 100*t.skills[s] : null)
       : (t.crps && t.crps[s]!=null && t.crps.persistence!=null) ? arenaOf(t.crps[s], t.crps.persistence) : null;
   const val0 = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null)
-      : unit==='arena' ? arenaAt(t,s) : t.skills[s];
+      : unit==='arena' ? arenaAt(t,s) : unit==='pairwise' ? t.pairwise[s] : t.skills[s];
   // Only entrants the data actually scores. Falling back to 0 for a missing
   // value drew two lies: `crowd` is not computed in the model backtest at all
   // and got a full line at exactly 0% skill, and every model was drawn flat at
@@ -1732,7 +1732,7 @@ function aggChart(traj, nameOf, unit){
   }
   if((unit==='crps' || unit==='arena') && !traj[traj.length-1].crps){ unit='skill'; }
   const val = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null)
-      : unit==='arena' ? arenaAt(t,s) : t.skills[s];
+      : unit==='arena' ? arenaAt(t,s) : unit==='pairwise' ? t.pairwise[s] : t.skills[s];
   const monthsA = window.__range || 0;
   if(monthsA > 0){
     const cutoff = dnum(traj[traj.length-1].date) - monthsA*30.44*86400000;
@@ -1748,10 +1748,11 @@ function aggChart(traj, nameOf, unit){
   if(unit==='skill'){ lo=Math.min(lo,0); hi=Math.max(hi,0); }
   if(unit==='arena'){ lo=Math.min(lo,0); hi=Math.max(hi,100); }
   const pad=(hi-lo)*0.08||0.05; lo-=pad; hi+=pad;
-  const X = i => P.l + i/(traj.length-1)*(W-P.l-P.r);
+  if(unit==='pairwise'){ lo=0; hi=100; }
+  const X = i => P.l + i/Math.max(1,traj.length-1)*(W-P.l-P.r);
   const Y = v => P.t + (hi-v)/(hi-lo)*(H-P.t-P.b);
-  const fmtV = v => unit==='crps' ? v.toFixed(2) : unit==='arena' ? v.toFixed(0) : (v>0?'+':'')+(v*100).toFixed(1)+'%';
-  const fmtT = v => unit==='crps' ? v.toFixed(1) : unit==='arena' ? v.toFixed(0) : (v>0?'+':'')+(v*100).toFixed(0)+'%';
+  const fmtV = v => unit==='crps' ? v.toFixed(2) : unit==='pairwise' ? v.toFixed(2) : unit==='arena' ? v.toFixed(0) : (v>0?'+':'')+(v*100).toFixed(1)+'%';
+  const fmtT = v => unit==='crps' ? v.toFixed(1) : (unit==='arena'||unit==='pairwise') ? v.toFixed(0) : (v>0?'+':'')+(v*100).toFixed(0)+'%';
   let g = `<defs><linearGradient id="lead" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="#15803d" stop-opacity=".10"/>
     <stop offset="1" stop-color="#15803d" stop-opacity="0"/></linearGradient>
@@ -1828,7 +1829,7 @@ function aggChart(traj, nameOf, unit){
     } else {
       g += `<text x="${X(traj.length-1)+17.5}" y="${ly+3.5}" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">${initOf(s)}</text>`;
     }
-    g += `<a href="#entrant/${esc(s)}"><text x="${X(traj.length-1)+31}" y="${ly+4}" font-size="12.5" font-weight="600" fill="#4f4e49">${esc(nm)} ${fmtV(last)}</text></a>`;
+    g += `${['vac-combined','anonymous-combined'].includes(s)?'':'<a href="#entrant/'+esc(s)+'">'}<text x="${X(traj.length-1)+31}" y="${ly+4}" font-size="12.5" font-weight="600" fill="#4f4e49">${esc(nm)} ${fmtV(last)}</text>${['vac-combined','anonymous-combined'].includes(s)?'':'</a>'}`;
   });
   g += `<line class="xh" x1="0" x2="0" y1="${P.t}" y2="${H-P.b}" stroke="#96948d" stroke-dasharray="3 3" style="display:none"/>`;
   svg.innerHTML = g;
@@ -2189,7 +2190,7 @@ function rankingChart(d,data){
 // ---- the season, question by question ----
 // The ids a score trajectory carries: baselines first (never persistence, which is the zero line), then entrants, then the crowd.
 function trajIds(traj){
-  const ids=new Set(); (traj||[]).forEach(t=>{ Object.keys(t.skills||{}).forEach(id=>ids.add(id)); Object.keys(t.crps||{}).forEach(id=>ids.add(id)); });
+  const ids=new Set(); (traj||[]).forEach(t=>{ Object.keys(t.pairwise||{}).forEach(id=>ids.add(id)); Object.keys(t.skills||{}).forEach(id=>ids.add(id)); Object.keys(t.crps||{}).forEach(id=>ids.add(id)); });
   ids.delete('persistence');
   const base=['climatology','trend','ewma'].filter(id=>ids.has(id)), rest=[...ids].filter(id=>!isBaseline(id)&&id!=='crowd').sort();
   return base.concat(rest).concat(ids.has('crowd')?['crowd']:[]);
@@ -2260,7 +2261,7 @@ function ensurePick(traj){
   coerceUnknown(ids);   // establishes the saved or default selection before it is inspected
   const keep=window.__keep||new Set();
   if(ids.some(id=>keep.has(id))) return;
-  const last=traj[traj.length-1], data=window.__data||{}, rank=id=>((last.skills||{})[id]??-9);
+  const last=traj[traj.length-1], data=window.__data||{}, rank=id=>((last.pairwise||last.skills||{})[id]??-9);
   const models=ids.filter(id=>!isBaseline(id)&&id!=='crowd'), active=models.filter(id=>!entrantState(id,data));
   const top=(active.length?active:models).sort((a,b)=>rank(b)-rank(a)).slice(0,DEFAULT_VISIBLE_MODELS);
   selectModels(top.concat(ids.filter(id=>id==='ewma'||id==='crowd')), true);
@@ -2320,7 +2321,7 @@ function renderTaskChart(key){
   window.__matched='';  // read by the board note
   (data.entrants||[]).forEach(e=>nameOf[e.entrant_id]=e.name);
   const unitSeg=document.getElementById('unit-seg'),rangeSeg=document.getElementById('range-seg');
-  const showUnits=(level,arena,crps)=>{ unitSeg.style.display=''; unitSeg.querySelector('[data-unit="level"]').style.display=level?'':'none'; unitSeg.querySelector('[data-unit="arena"]').style.display=arena?'':'none'; unitSeg.querySelector('[data-unit="crps"]').style.display=crps?'':'none'; };
+  const showUnits=(level,arena,crps)=>{ unitSeg.style.display=''; unitSeg.querySelector('[data-unit="pairwise"]').style.display=key==='agg'?'':'none'; unitSeg.querySelector('[data-unit="level"]').style.display=level?'':'none'; unitSeg.querySelector('[data-unit="arena"]').style.display=arena?'':'none'; unitSeg.querySelector('[data-unit="crps"]').style.display=crps?'':'none'; };
   const mark=unit=>unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.unit===unit));
   const src=d.srcUrl?' · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>':'';
   const live=liveTrajectory(data,key), hasLive=live.length>=2;
@@ -2335,9 +2336,18 @@ function renderTaskChart(key){
   document.getElementById('chart-filters').style.visibility='';
   if(key==='agg'){
     showUnits(false,true,true); rangeSeg.style.display='';
-    const unit=window.__unitAgg||'arena'; mark(unit);
-    const traj=hasLive?live:(bt.trajectory||[]);
-    if(traj.length>=2) scoreView(traj,hasLive,unit); else chartMessage('No scored questions yet','The first questions of the season resolve within days of their release.');
+    const unit=window.__unitAgg||(window.__ranking==='skill'?'arena':'pairwise'); mark(unit);
+    const scope=window.__pairwiseScope||(window.__board==='s0'?'s0':'all');
+    const board=window.SSAPairwise.build(data,{field:'mixed',scope}),traj=board.trajectory;
+    if(traj.length){
+      ensurePick(traj);
+      const names={}; board.entries.forEach(e=>names[e.entrant]=e.name===e.entrant?forecasterName(e.entrant,data):e.name);
+      window.__matched=board.scored_rounds+' questions resolved';
+      window.__caption='<span class="replay-tag">'+({all:'ALL',s0:'S0',matched:'COMMON'}[scope])+'</span> · '+(unit==='pairwise'?'Pairwise win rate · running mean across all selected questions; missing answers score zero':unit==='arena'?'Original skill · running mean across answered questions':'CRPS · running mean across answered number questions')+' · '+board.scored_rounds+' resolved questions';
+      aggChart(traj,names,unit); renderLegend(trajIds(traj),names);
+    } else if(scope==='all'&&unit!=='pairwise'&&!hasLive&&(bt.trajectory||[]).length>=2){
+      scoreView(bt.trajectory,false,unit);
+    } else chartMessage('No scored questions in this set','Select All or S0 to compare available answers.');
     return;
   }
   if(d.kind==='profile'||d.kind==='ranking'){
@@ -3116,8 +3126,9 @@ function chartUrlState(){
   // What the chart shows beyond scope and window: the metric when it is not Score, and the
   // entrant selection when it differs from the default, so a shared link shows the same lines.
   const tab = window.__tab || 'agg', p = new URLSearchParams();
-  const unit = tab === 'agg' ? (window.__unitAgg || 'arena') : (window.__unitSer || 'arena');
-  if(unit !== 'arena') p.set('unit', unit);
+  const defaultUnit=tab==='agg'&&window.__ranking!=='skill'?'pairwise':'arena';
+  const unit = tab === 'agg' ? (window.__unitAgg || defaultUnit) : (window.__unitSer || 'arena');
+  if(unit !== defaultUnit) p.set('unit', unit);
   if(tab==='agg'){
     if(window.__ranking==='skill') p.set('ranking','skill');
     const defaultScope=window.__board==='s0'?'s0':'all';
@@ -3162,7 +3173,8 @@ function applyHash(){
     window.__ranking=q.get('ranking')==='skill'?'skill':'pairwise';
     window.__pairwiseScope=['all','s0','matched'].includes(q.get('pw'))?q.get('pw'):(span==='s0'?'s0':'all');
     const unit = q.get('unit');
-    if(['arena','crps','level'].includes(unit)){ window.__unitAgg = unit === 'level' ? 'arena' : unit; window.__unitSer = unit; }
+    window.__unitAgg=['pairwise','arena','crps'].includes(unit)?unit:(window.__ranking==='skill'?'arena':'pairwise');
+    window.__unitSer=['arena','crps','level'].includes(unit)?unit:'arena';
     window.__urlEntrants = q.get('entrants') ? q.get('entrants').split(',').filter(Boolean) : null;
   }
   if(pg === 'entrant') window.__entrant = parts[1] || '';
@@ -3260,13 +3272,18 @@ document.querySelectorAll('#range-seg [data-range]').forEach(b=> b.onclick = ()=
   window.__pairwiseScope=window.__range===-1?'s0':'all';
   if(window.__data){ setTab(window.__tab||'agg'); renderBoard(RANGE_TO_SPAN[window.__range]||'all'); }
 });
-document.querySelectorAll('[data-ranking]').forEach(b=>b.onclick=()=>{window.__ranking=b.dataset.ranking;renderBoard(window.__board||'all');});
-document.getElementById('common-questions').onclick=()=>{window.__pairwiseScope='matched';if(window.__data)renderBoard(window.__board||'all');};
-document.querySelectorAll('#unit-seg button').forEach(b=> b.onclick = ()=>{
+function setRanking(ranking){
+  window.__ranking=ranking; window.__unitAgg=ranking==='skill'?'arena':'pairwise';
+  if(window.__data){ setTab(window.__tab||'agg'); renderBoard(window.__board||'all'); }
+}
+document.querySelectorAll('[data-ranking]').forEach(b=>b.onclick=()=>setRanking(b.dataset.ranking));
+document.getElementById('common-questions').onclick=()=>{window.__pairwiseScope='matched';if(window.__data){setTab(window.__tab||'agg');renderBoard(window.__board||'all');}};
+function setChartUnit(unit){
   const tab = window.__tab || 'agg';
-  if(tab==='agg') window.__unitAgg = b.dataset.unit; else window.__unitSer = b.dataset.unit;
+  if(tab==='agg') window.__unitAgg = unit; else window.__unitSer = unit;
   if(window.__data) setTab(tab);
-});
+}
+document.querySelectorAll('#unit-seg button').forEach(b=> b.onclick = ()=>setChartUnit(b.dataset.unit));
 document.querySelectorAll('#span-seg button').forEach(b=> b.onclick = ()=>{
   renderBoard(b.dataset.span);
 });

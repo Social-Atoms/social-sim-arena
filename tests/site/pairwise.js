@@ -12,6 +12,25 @@ const build = (rounds, scope='all', methods=roster) => pw.build({rounds}, {scope
 const byId = board => Object.fromEntries(board.entries.map(e => [e.entrant,e]));
 const near = (a,b) => assert(Math.abs(a-b)<1e-8, `${a} != ${b}`);
 
+// The running curves share the exact scoring pass with the final standings.
+{
+  const rr=[
+    {...round('later',{b:sc(1),c:sc(2)}),release_at:'2026-10-03T00:00:00Z'},
+    {...round('first',{a:sc(1),b:sc(2),c:sc(2)}),release_at:'2026-10-01T00:00:00Z'},
+    {...round('same-day',{a:sc(3),b:sc(2),c:sc(1)}),release_at:'2026-10-01T12:00:00Z'}];
+  const b=build(rr),traj=b.trajectory;
+  assert.deepEqual(traj.map(t=>[t.date,t.n]),[['2026-10-01',2],['2026-10-03',3]]);
+  near(traj[0].pairwise.a,50); near(traj[1].pairwise.a,100/3);
+  for(const e of b.entries){
+    near(traj.at(-1).pairwise[e.entrant],e.pairwise);
+    near(traj.at(-1).skills[e.entrant],e.mean_skill);
+    near(traj.at(-1).crps[e.entrant],e.mean_crps);
+  }
+  assert.equal(build(rr,'matched').trajectory.at(-1).n,2);
+  assert.deepEqual(build([]).trajectory,[]);
+  assert.equal(build(rr.slice(0,1)).trajectory.length,1);
+  assert.deepEqual(build([...rr].reverse()).trajectory,traj);
+}
 // Every round has the same weight; missing is zero and is not a beaten opponent.
 {
   const rr=[round('one',{a:sc(1),b:sc(2),c:sc(3)}), round('two',{b:sc(1),c:sc(2)})];
@@ -134,8 +153,9 @@ assert(!pw.external.some(m=>['worldvac-base','h2oai-marina','crowd'].includes(m.
 
 // Run the actual landing-page renderer in the existing DOM harness.
 const root = path.resolve(__dirname,'../..');
-const {installGlobals, leaks}=require('./dom_stub.js');
+const {installGlobals, leaks, node}=require('./dom_stub.js');
 const {els}=installGlobals();
+document.documentElement=node('html');
 const html=fs.readFileSync(path.join(root,'site/index.html'),'utf8');
 assert(html.includes('<script src="pairwise.js"></script>'));
 const script=(html.match(/<script>([\s\S]*?)<\/script>/g)||[])
@@ -189,6 +209,44 @@ for(const scope of ['all','s0','matched']){
   window.__ranking='skill';renderBoard('s0');
   assert(!els['lb-body'].innerHTML.includes('#entrant/anon-a1'));
   window.__data=published;window.__ranking='pairwise';
+}
+// All/S0/Common endpoints and roster match the corresponding right-hand board.
+for(const scope of ['all','s0','matched']){
+  const b=pw.build(published,{scope});
+  if(!b.entries.length)continue;
+  const end=b.trajectory.at(-1);
+  assert.equal(end.n,b.scored_rounds);
+  assert.deepEqual(Object.keys(end.pairwise).sort(),b.entries.map(e=>e.entrant).sort());
+  for(const e of b.entries)near(end.pairwise[e.entrant],e.pairwise);
+}
+// Bounded axis, no persistence/oracle references, and a useful one-point chart.
+{
+  const svg=node('svg'),tip=node();svg.clientWidth=800;svg.clientHeight=360;
+  const chartPane=document.getElementById('chartpane'),originalQuery=chartPane.querySelector;
+  chartPane.querySelector=sel=>sel==='svg'?svg:tip;
+  window.__hidden=new Set();window.__keep=new Set(['a','b']);window.__seenIds=new Set(['a','b']);
+  const traj=[{date:'2026-10-01',n:1,pairwise:{a:100,b:0},skills:{},crps:{},live:true}];
+  aggChart(traj,{a:'A',b:'B'},'pairwise');
+  assert(!/NaN|undefined|oracle|persistence/.test(svg.innerHTML));
+  assert(svg.innerHTML.includes('100.00'));assert(svg.innerHTML.includes('0.00'));
+  assert.equal((svg.innerHTML.match(/<circle /g)||[]).length,2);
+  chartPane.querySelector=originalQuery;
+}
+// Right-to-left synchronization is one-way; chart-only choices survive shared URLs.
+window.__data=published;window.__tab='agg';window.__pairwiseScope='all';
+setRanking('skill'); assert.equal(window.__unitAgg,'arena');
+setChartUnit('pairwise'); assert.equal(window.__ranking,'skill');
+assert(chartUrlState().includes('unit=pairwise'));assert(chartUrlState().includes('ranking=skill'));
+setRanking('pairwise');assert.equal(window.__unitAgg,'pairwise');
+setChartUnit('crps');assert.equal(window.__ranking,'pairwise');
+assert(chartUrlState().includes('unit=crps'));
+for(const [hash,unit,ranking] of [
+  ['#leaderboard','pairwise','pairwise'],
+  ['#leaderboard/agg/all?ranking=skill','arena','skill'],
+  ['#leaderboard/agg/all?ranking=skill&unit=pairwise','pairwise','skill'],
+  ['#leaderboard/agg/all?unit=arena','arena','pairwise']]){
+  location.hash=hash;applyHash();
+  assert.equal(window.__unitAgg,unit);assert.equal(window.__ranking,ranking);
 }
 assert(!html.includes('External only'));
 for(const id of ['common-help','pairwise-help','pairwise-column-help']) {
