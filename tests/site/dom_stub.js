@@ -65,7 +65,7 @@ function makeDom() {
     querySelector: () => node(),
     querySelectorAll: () => [],
     addEventListener() {}, removeEventListener() {},
-    body: node('body'),
+    body: node('body'), documentElement: node('html'),
   };
   return {els, document};
 }

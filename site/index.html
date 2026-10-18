@@ -746,8 +746,8 @@ table.ent td a.row{color:inherit;text-decoration:none;}
           <div class="chart-filters" id="chart-filters">
             <div class="chartctl" role="group" aria-label="Chart filters">
               <div class="model-toolbar" id="model-toolbar" style="display:none;"></div>
-              <div class="seg mini" id="unit-seg"><button data-unit="pairwise">Pairwise win rate<span class="th-help" role="tooltip">Running mean of per-question win rates on the selected All, S0 or Common question set. Wins count 1, ties ½, missing answers 0. The final value matches the standings. Higher is better.</span></button><button data-unit="level">Tracker<span class="th-help" role="tooltip">The published series itself, with each question's forecasts drawn on it.</span></button><button data-unit="arena" class="on">Skill<span class="th-help" role="tooltip">Arena score: 0 is persistence (copying the last release), 100 is a perfect oracle. Averaged over every matched release in the window. Higher is better.</span></button><button data-unit="crps">CRPS<span class="th-help" role="tooltip">CRPS, the error in the question's own unit: how far the whole forecast distribution sat from the published number. Lower is better.</span></button></div>
-              <div class="seg mini" id="range-seg" role="group" aria-label="Chart history and Overall question set"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0" class="on">All</button><button data-range="-1" title="Season 0 main: every question closing from Sep 30, when all current teams could answer, so everyone is ranked on the same questions">S0</button><button type="button" id="common-questions" aria-label="Common" aria-describedby="common-help" aria-pressed="false">Common<span class="th-help" id="common-help" role="tooltip">Only questions answered by every active method in the standings, including models. Every method is compared on the same question set. New entrants can change this set. The Pairwise curve uses the same question set.</span></button></div>
+              <div class="seg mini" id="unit-seg"><button data-unit="pairwise" class="on">Pairwise win rate<span class="th-help" role="tooltip">Running mean of per-question win rates on the selected All, S0 or Common question set. Wins count 1, ties ½, missing answers 0. The final value matches the standings. Higher is better.</span></button><button data-unit="level">Tracker<span class="th-help" role="tooltip">The published series itself, with each question's forecasts drawn on it.</span></button><button data-unit="arena">Skill<span class="th-help" role="tooltip">Arena score: 0 is persistence (copying the last release), 100 is a perfect oracle. Averaged over every matched release in the window. Higher is better.</span></button><button data-unit="crps">CRPS<span class="th-help" role="tooltip">CRPS, the error in the question's own unit: how far the whole forecast distribution sat from the published number. Lower is better.</span></button></div>
+              <div class="seg mini" id="range-seg" role="group" aria-label="Chart history and Overall question set"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0">All</button><button data-range="-1" class="on" title="Season 0 main: every question closing from Sep 30, when all current teams could answer, so everyone is ranked on the same questions">S0</button><button type="button" id="common-questions" aria-label="Common" aria-describedby="common-help" aria-pressed="false">Common<span class="th-help" id="common-help" role="tooltip">Only questions answered by every active method in the standings, including models. Every method is compared on the same question set. New entrants can change this set. The Pairwise curve uses the same question set.</span></button></div>
             </div>
             <div class="legend-strip" id="legend-strip" style="display:none;"></div>
           </div>
@@ -3146,7 +3146,7 @@ function syncHash(){
   let h = pg;
   if(pg === 'leaderboard'){
     const q = chartUrlState();
-    if(tab !== 'agg' || span !== 'all' || q) h = 'leaderboard/' + tab + '/' + span + q;
+    if(tab !== 'agg' || span !== 's0' || q) h = 'leaderboard/' + tab + '/' + span + q;
   }
   if(pg === 'questions' && typeof qf !== 'undefined' && qf.sel.size === 1) h = 'questions/task/' + [...qf.sel][0];
   if(pg === 'entrant') h = 'entrant/' + (window.__entrant || '');
@@ -3163,12 +3163,12 @@ function applyHash(){
   const raw = (location.hash || '').slice(1), qi = raw.indexOf('?');
   const parts = (qi < 0 ? raw : raw.slice(0, qi)).split('/'), q = new URLSearchParams(qi < 0 ? '' : raw.slice(qi + 1));
   parts[0] = HASH_ALIASES[parts[0]] || parts[0];
-  const pg = PAGES.includes(parts[0]) ? parts[0] : null;
+  const pg = PAGES.includes(parts[0]) ? parts[0] : (!raw ? 'leaderboard' : null);
   if(!pg) return;
   if(pg === 'leaderboard'){
-    // The URL is the whole state: a bare #leaderboard is Overall over all rounds, whatever was open before.
+    // A bare entry opens S0 Pairwise; explicit task, window and metric links retain their choices.
     window.__tab = CHART_KEYS.includes(parts[1]) ? parts[1] : 'agg';
-    const span = SPAN_KEYS.includes(parts[2]) ? parts[2] : 'all';
+    const span = SPAN_KEYS.includes(parts[2]) ? parts[2] : (window.__tab==='agg'?'s0':'all');
     window.__board = span; if(typeof setRange==='function') setRange(SPAN_TO_RANGE[span]||0);
     window.__ranking=q.get('ranking')==='skill'?'skill':'pairwise';
     window.__pairwiseScope=['all','s0','matched'].includes(q.get('pw'))?q.get('pw'):(span==='s0'?'s0':'all');
