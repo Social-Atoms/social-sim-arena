@@ -2393,13 +2393,13 @@ function renderBoard(mode){
   (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; });
   const btMap = {}; ((data.backtest&&data.backtest.overall)||[]).forEach(e=>btMap[e.entrant]=e);
   let entries=[],metricKey='mean_crps',metricLabel='CRPS',title=d.label,tag='',note='',appendPending=false,replay=false;
-  const liveRows=liveBoard(data,key,mode);
+  const liveRows=liveBoard(data,key,mode).filter(e=>mode!=='s0'||!/^anon-a[1-6]$/.test(e.entrant));
   // Season 0 main (the S0 range): every shape since the common start, so every team
   // is ranked on the same questions (refresh.build_main_board). All keeps the
   // full-season board.
   const main=data.season0_main;
   if(key==='agg' && mode==='s0' && main && (main.entries||[]).length){
-    entries=activeRows(main.entries.map(e=>({entrant:e.entrant,rounds:e.rounds,mean_skill:e.mean_skill,mean_crps:(typeof e.mean_crps==='number'?e.mean_crps:null),baseline:isBaseline(e.entrant)})),data);
+    entries=activeRows(main.entries.filter(e=>!/^anon-a[1-6]$/.test(e.entrant)).map(e=>({entrant:e.entrant,rounds:e.rounds,mean_skill:e.mean_skill,mean_crps:(typeof e.mean_crps==='number'?e.mean_crps:null),baseline:isBaseline(e.entrant)})),data);
     title='Season 0 main'; tag='live';
     note='Season 0 main board: every question (number, profile and ranking) that closed on or after '+String(main.since||'').slice(0,10)+', when every current team could answer it; '+(main.scored_rounds||0)+' scored so far. Ranked by mean skill against each question\u2019s persistence reference; the Questions column says how many of them each row answered, so a skipped question shows. CRPS is averaged over the number questions only (profile and ranking questions use other scores).';
   }else if(key==='agg' && liveRows.length){
@@ -2565,14 +2565,14 @@ function renderPairwiseBoard(){
     const labels={all:'All history',s0:'S0 · locks from '+board.since.slice(0,10),matched:'Common submissions'};
     summary.textContent=labels[board.scope]+' · '+board.scored_rounds+' questions · '+board.methods+' methods';
     document.getElementById('lb-title').textContent='Pairwise standings';
-    document.getElementById('lb-note').textContent='Registered entrants join after their first valid scored answer. Each question has equal weight. Pairwise is the percentage of submitted opponents beaten, with ties worth half a win. Missing answers score zero; questions with fewer than two submitted methods are excluded. All includes pre-registration gaps; Common uses only questions every selected method answered. Vac combines its four specialist accounts; worldVac and H2O Marina are separate, unselected alternatives. Top 3 splits tied boundary places. Skill is unchanged and averages answered questions only. The chart continues to show original skill or CRPS.';
+    document.getElementById('lb-note').textContent='Registered entrants join after their first valid scored answer. Each question has equal weight. Pairwise is the percentage of submitted opponents beaten, with ties worth half a win. Missing answers score zero; questions with fewer than two submitted methods are excluded. All includes pre-registration gaps; Common uses only questions every selected method answered. Vac combines its four specialist accounts; worldVac and H2O Marina are separate, unselected alternatives. Anonymous A1–A6 count as one team in All only; same-question answers use A1 first, then A2 through A6. Top 3 splits tied boundary places. Skill is unchanged and averages answered questions only. The chart continues to show original skill or CRPS.';
     body.innerHTML=board.entries.map(e=>{
       const grouped=e.members.length>1;
       const label=e.name===e.entrant?forecasterName(e.entrant,data):e.name;
       const name=grouped?esc(label):'<a href="#entrant/'+attr(e.entrant)+'">'+esc(label)+'</a>';
       const skill=e.mean_skill===null?'·':(e.mean_skill>0?'+':'')+(100*e.mean_skill).toFixed(1)+'%';
       const top=Number.isInteger(e.top3)?String(e.top3):e.top3.toFixed(2);
-      return '<tr><td class="rank">'+e.rank+'</td><td><span class="who">'+avatar(e.entrant)+'<span class="who-text"><b class="model-name"'+(grouped?' title="Four specialist accounts combined; worldVac is separate"':'')+'>'+name+'</b><span class="model-meta">Top 3 '+top+' · Skill '+skill+'</span></span></span></td><td class="num">'+e.pairwise.toFixed(2)+'</td><td class="num">'+e.answered+'</td></tr>';
+      return '<tr><td class="rank">'+e.rank+'</td><td><span class="who">'+avatar(e.entrant)+'<span class="who-text"><b class="model-name"'+(grouped?' title="'+(e.entrant==='anonymous-combined'?'A1–A6 count as one team; same-question priority A1, then A2 through A6. Overall only.':'Four specialist accounts combined; worldVac is separate')+'"':'')+'>'+name+'</b><span class="model-meta">Top 3 '+top+' · Skill '+skill+'</span></span></span></td><td class="num">'+e.pairwise.toFixed(2)+'</td><td class="num">'+e.answered+'</td></tr>';
     }).join('')||'<tr><td colspan="4" style="padding:18px;color:var(--mut);">'+(board.scope==='matched'?'No resolved question has answers from every selected method yet.':'No resolved question has at least two selected methods yet.')+'</td></tr>';
   }catch(error){
     window.__pairwiseBoard=null;

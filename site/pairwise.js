@@ -17,7 +17,9 @@
       'vac-population-profiles', 'vac-collective-attention'
     ]},
     {id: 'yulan-onesim', name: 'YuLan-OneSim'},
-    {id: 'zhengzheng-agent', name: 'ZhengZheng Forecaster'}
+    {id: 'zhengzheng-agent', name: 'ZhengZheng Forecaster'},
+    {id: 'anonymous-combined', name: 'Anonymous', scope: 'all', duplicate: 'priority',
+      members: ['anon-a1', 'anon-a2', 'anon-a3', 'anon-a4', 'anon-a5', 'anon-a6']}
   ];
   const EXCLUDED = new Set(['crowd', 'persistence', 'trend', 'ewma', 'climatology',
     'test-jay', 'just4test', 'ssa-testing-team', 'worldvac-base', 'h2oai-marina']);
@@ -30,7 +32,7 @@
     return Number.isFinite(value) && value >= 0 ? value : null;
   }
 
-  function rosterOf(data, field) {
+  function rosterOf(data, field, scope = 'all') {
     const registered = new Map((data.entrants || []).map(e => [e.entrant_id, e]));
     const answered = new Set();
     for (const r of data.rounds || []) {
@@ -45,6 +47,7 @@
     for (const method of EXTERNAL) {
       const members = method.members || [method.id];
       members.forEach(id => consumed.add(id));
+      if (method.scope && method.scope !== scope) continue;
       if (members.some(id => registered.has(id) && answered.has(id) && active(id))) roster.push(method);
     }
     // Generated harness variants may not have their own registration record;
@@ -71,7 +74,7 @@
     if (!['mixed', 'external'].includes(field) || !['all', 's0', 'matched'].includes(scope)) {
       throw new Error('Unknown pairwise field or question window');
     }
-    const roster = options.roster || rosterOf(data, field);
+    const roster = options.roster || rosterOf(data, field, scope);
     const ids = roster.map(m => m.id), accounts = roster.flatMap(m => m.members || [m.id]);
     if (new Set(ids).size !== ids.length || new Set(accounts).size !== accounts.length) {
       throw new Error('An account cannot occupy two comparison slots');
@@ -88,10 +91,11 @@
       const scores = new Map();
       for (const method of roster) {
         const available = (method.members || [method.id]).filter(id => lossOf(r.scores[id]) !== null);
-        if (available.length > 1) {
+        if (available.length > 1 && method.duplicate !== 'priority') {
           throw new Error(method.name + ' has multiple answers for ' + r.round_id +
             '; an official method must be selected before ranking this question.');
         }
+        // Priority follows declared member order, independent of loss or skill.
         if (available.length) scores.set(method.id, r.scores[available[0]]);
       }
       if (scores.size < 2) { excluded++; continue; }

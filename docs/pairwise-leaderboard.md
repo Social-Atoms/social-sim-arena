@@ -106,3 +106,15 @@ The public page offers one comparison field, including models. All and S0 use
 the existing range controls; Common sits immediately beside S0 and switches
 the Overall ranking to the shared-question intersection. The chart retains
 its existing history view. There is no External only public control or URL mode.
+
+## Anonymous team
+
+Anonymous A1–A6 form one All-only method, `anonymous-combined`. They do not
+enter S0 or the Common opponent field/intersection. On a question answered
+by multiple accounts, use the first valid scored answer in the fixed order
+A1, A2, A3, A4, A5, A6. Thus A1 wins any overlap when it has a valid answer;
+without A1, the lowest-numbered available account is used. Never choose by
+observed loss or skill, never average the six scores, and count at most one
+answer/opponent/Top 3 credit for the team per question. Registration must be
+approved separately; defining this group does not itself admit its accounts.
+Vac's existing overlap error remains unchanged.

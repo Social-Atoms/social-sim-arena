@@ -63,6 +63,29 @@ const near = (a,b) => assert(Math.abs(a-b)<1e-8, `${a} != ${b}`);
     'vac-sentiment-expectations':sc(0),a:sc(2)})],'all',methods),/multiple answers/);
   assert.throws(()=>build(rr,'all',[...methods,{id:'vac-public-opinion'}]),/two comparison slots/);
 }
+// Anonymous occupies one All-only slot; priority never selects by score.
+{
+  const anon=pw.external.find(m=>m.id==='anonymous-combined');
+  const entrants=anon.members.map(entrant_id=>({entrant_id,type:'participant'}));
+  entrants.push({entrant_id:'apodex-futureflow',type:'participant'});
+  const rr=[round('a1',{'anon-a1':sc(9,-.9),'anon-a2':sc(0,.9),'apodex-futureflow':sc(3)}),
+    round('a4',{'anon-a4':sc(.1,.4),'apodex-futureflow':sc(2)}),
+    round('a2',{'anon-a2':sc(5,-.2),'anon-a3':sc(0,.8),'apodex-futureflow':sc(3)}),
+    round('invalid-a1',{'anon-a1':sc(NaN),'anon-a2':sc(.5,.3),'apodex-futureflow':sc(2)}),
+    round('only-anon',Object.fromEntries(anon.members.map(id=>[id,sc(1)])))];
+  const data={entrants,rounds:rr};
+  const board=pw.build(data);assert.equal(board.methods,2);assert.equal(board.scored_rounds,4);
+  assert.equal(board.entries.filter(e=>e.entrant==='anonymous-combined').length,1);
+  assert(!board.entries.some(e=>anon.members.includes(e.entrant)));
+  near(byId(board)['anonymous-combined'].pairwise,50);
+  near(byId(board)['anonymous-combined'].mean_skill,(-.9+.4-.2+.3)/4);
+  // More accounts cannot manufacture a contested question or shrink Common.
+  assert(!board.round_ids.includes('only-anon'));
+  for(const scope of ['s0','matched']) {
+    const b=pw.build(data,{scope});assert.equal(b.methods,1);
+    assert(!b.entries.some(e=>e.entrant==='anonymous-combined'||anon.members.includes(e.entrant)));
+  }
+}
 // Switching cohorts re-ranks each question, not merely filters a mixed leaderboard.
 {
   const rr=[round('x',{a:sc(1),b:sc(3),c:sc(2)})];
@@ -88,7 +111,7 @@ const near = (a,b) => assert(Math.abs(a-b)<1e-8, `${a} != ${b}`);
   assert.equal(pw.build(data,{field:'external'}).methods,2);
   assert.deepEqual(pw.build(data,{field:'external',scope:'matched'}).round_ids,['later']);
 }
-assert.equal(pw.external.length,5);
+assert.equal(pw.external.length,6);
 assert(!pw.external.some(m=>['worldvac-base','h2oai-marina','crowd'].includes(m.id)));
 // A growing, tied field agrees with explicit pair enumeration.
 {
@@ -124,6 +147,25 @@ for (const field of ['mixed','external']) for (const scope of ['all','s0','match
   assert.equal(got.field,'mixed');assert.equal(got.scope,scope);
   assert(!els['pairwise-body'].innerHTML.includes('#entrant/vac-combined'));
   assert(!els['pairwise-body'].innerHTML.includes('Crowd'));
+}
+// The visible board also groups Anonymous and keeps it out of S0/Common.
+{
+  const fixture=JSON.parse(JSON.stringify(published));
+  const anon=pw.external.find(m=>m.id==='anonymous-combined');
+  fixture.entrants.push(...anon.members.map(entrant_id=>({entrant_id,type:'participant',name:entrant_id})));
+  const scored=fixture.rounds.find(r=>r.status==='resolved'&&Object.keys(r.scores||{}).length>2);
+  assert(scored);scored.scores['anon-a1']=sc(100,-1);scored.scores['anon-a2']=sc(0,1);
+  window.__data=fixture;window.__ranking='pairwise';window.__pairwiseScope='all';renderBoard('all');
+  assert.equal((els['pairwise-body'].innerHTML.match(/<b class="model-name" title="A1/g)||[]).length,1);
+  assert(!els['pairwise-body'].innerHTML.includes('#entrant/anon-a'));
+  for(const scope of ['s0','matched']) {
+    window.__pairwiseScope=scope;renderBoard('s0');
+    assert(!els['pairwise-body'].innerHTML.includes('Anonymous'));
+  }
+  fixture.season0_main.entries.push({entrant:'anon-a1',rounds:1,mean_skill:10,mean_crps:0});
+  window.__ranking='skill';renderBoard('s0');
+  assert(!els['lb-body'].innerHTML.includes('#entrant/anon-a1'));
+  window.__data=published;window.__ranking='pairwise';
 }
 assert(!html.includes('External only'));
 for(const id of ['common-help','pairwise-help','pairwise-column-help']) {
