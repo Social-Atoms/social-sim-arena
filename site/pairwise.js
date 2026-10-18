@@ -48,7 +48,10 @@
       const members = method.members || [method.id];
       members.forEach(id => consumed.add(id));
       if (method.scope && method.scope !== scope) continue;
-      if (members.some(id => registered.has(id) && answered.has(id) && active(id))) roster.push(method);
+      if (members.some(id => registered.has(id) && answered.has(id) && active(id))) {
+        roster.push(method.duplicate === 'priority'
+          ? {...method, members: members.filter(id => registered.has(id) && active(id))} : method);
+      }
     }
     // Generated harness variants may not have their own registration record;
     // resolve their type from the longest registered model-id prefix. A retired
