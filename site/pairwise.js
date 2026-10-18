@@ -8,7 +8,7 @@
 
   // Explicit method selections for multi-account teams; never choose a team's
   // best answer after resolution. worldVac and Marina are separate methods,
-  // not fallbacks for the selected Vac and SuperAgent methods.
+  // discovered from registrations, never fallbacks for Vac or SuperAgent.
   const EXTERNAL = [
     {id: 'apodex-futureflow', name: 'Apodex-FutureFlow'},
     {id: 'h2oai-superagent', name: 'H2O.ai SuperAgent'},
@@ -21,7 +21,7 @@
     {id: 'anonymous-combined', name: 'Anonymous', scope: 'all', duplicate: 'priority',
       members: ['anon-a1', 'anon-a2', 'anon-a3', 'anon-a4', 'anon-a5', 'anon-a6']}
   ];
-  const EXCLUDED = new Set(['test-jay', 'just4test', 'ssa-testing-team', 'worldvac-base', 'h2oai-marina']);
+  const EXCLUDED = new Set(['test-jay', 'just4test', 'ssa-testing-team']);
 
   function lossOf(score) {
     if (!score) return null;
