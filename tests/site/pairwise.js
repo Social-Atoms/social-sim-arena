@@ -153,6 +153,22 @@ for (const field of ['mixed','external']) for (const scope of ['all','s0','match
   assert(!els['pairwise-body'].innerHTML.includes('#entrant/vac-combined'));
   assert(!els['pairwise-body'].innerHTML.includes('Crowd'));
 }
+// Metric switches preserve the exact entrant set, metadata and question set.
+for(const scope of ['all','s0','matched']){
+  window.__pairwiseScope=scope;window.__ranking='pairwise';renderBoard('all');
+  const board=window.__pairwiseBoard;
+  const extract=body=>Object.fromEntries([...body.matchAll(/<tr data-entrant="([^"]+)"[^>]*><td[^>]*>.*?<\/td><td>([\s\S]*?)<\/td>/g)].map(m=>[m[1],m[2]]));
+  const pair=extract(els['pairwise-body'].innerHTML);
+  assert.equal(Object.keys(pair).length,board.entries.length);
+  assert(!els['pairwise-body'].innerHTML.includes('Top 3'));
+  assert(!els['pairwise-body'].innerHTML.includes('Skill '));
+  assert.equal(els['lb-title'].textContent,'Pairwise win rate');
+  window.__ranking='skill';renderBoard('all');
+  assert.deepEqual(extract(els['lb-body'].innerHTML),pair);
+  assert.deepEqual(window.__pairwiseBoard.round_ids,board.round_ids);
+  assert.equal(els['lb-title'].textContent,'Original skill');
+  for(const id of ['just4test','test-jay','ssa-testing-team','crowd','persistence'])assert(!(id in pair));
+}
 // The visible board also groups Anonymous and keeps it out of S0/Common.
 {
   const fixture=JSON.parse(JSON.stringify(published));

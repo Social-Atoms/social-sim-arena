@@ -240,11 +240,9 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .lbcontrols .seg button{font-size:11px;padding:4px 7px;}
 #pairwise-summary{margin:0;padding:0 16px 8px;font-size:12px;color:var(--mut);}
 #pairwise-table{table-layout:fixed;}
-#pairwise-table col.pairwise-col{width:65px;}
+#pairwise-table col.pairwise-col{width:90px;}
 #pairwise-table col.coverage-col{width:62px;}
 #pairwise-table th,#pairwise-table td{padding-left:4px;padding-right:4px;}
-#pairwise-table .model-name{font-size:12px;}
-#pairwise-table .who .model-meta{font-size:10px;white-space:normal;overflow:visible;}
 #pairwise-table td.num{font-size:12px;white-space:nowrap;}
 .lbcol .scroll{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-gutter:stable;padding:0 8px 0 6px;}
 .lbcol .scroll::-webkit-scrollbar-track{margin-top:34px;}   /* the site's scrollbar (typography.css), starting under the column heads */
@@ -772,7 +770,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
       </div>
       <div class="lbcontrols" id="pairwise-controls">
         <div class="seg mini" role="group" aria-label="Leaderboard scoring">
-          <button type="button" data-ranking="pairwise" class="on" aria-label="Pairwise" aria-describedby="pairwise-help" aria-pressed="true">Pairwise<span class="th-help" id="pairwise-help" role="tooltip">For each question: wins + half of ties, divided by submitted opponents. Average equally across questions, on a 0–100 scale. Missing answers score zero; questions with fewer than two methods are excluded. Higher is better.</span></button>
+          <button type="button" data-ranking="pairwise" class="on" aria-label="Pairwise win rate" aria-describedby="pairwise-help" aria-pressed="true">Pairwise win rate<span class="th-help" id="pairwise-help" role="tooltip">For each question: wins + half of ties, divided by submitted opponents. Average equally across questions, on a 0–100 scale. Missing answers score zero; questions with fewer than two methods are excluded. Higher is better.</span></button>
           <button type="button" data-ranking="skill" aria-pressed="false">Original skill</button>
         </div>
       </div>
@@ -780,7 +778,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
       <div class="scroll">
         <table class="lb" id="pairwise-table" aria-label="Pairwise win-rate leaderboard">
           <colgroup><col class="rank-col"><col><col class="pairwise-col"><col class="coverage-col"></colgroup>
-          <thead><tr><th scope="col">#</th><th scope="col">Method</th><th scope="col" class="num has-help" tabindex="0" aria-describedby="pairwise-column-help">Pairwise<span class="th-help" id="pairwise-column-help" role="tooltip">For each question: wins + half of ties, divided by submitted opponents. Average equally across questions, on a 0–100 scale. Missing answers score zero; questions with fewer than two methods are excluded. Higher is better.</span></th><th scope="col" class="num" title="Answered questions / all comparable questions in this window.">Answered</th></tr></thead>
+          <thead><tr><th scope="col">#</th><th scope="col">Method</th><th scope="col" class="num has-help" tabindex="0" aria-describedby="pairwise-column-help">Pairwise win rate<span class="th-help" id="pairwise-column-help" role="tooltip">For each question: wins + half of ties, divided by submitted opponents. Average equally across questions, on a 0–100 scale. Missing answers score zero; questions with fewer than two methods are excluded. Higher is better.</span></th><th scope="col" class="num" title="Answered questions / all comparable questions in this window.">Answered</th></tr></thead>
           <tbody id="pairwise-body"><tr><td colspan="4">loading…</td></tr></tbody>
         </table>
         <table class="lb" id="legacy-leaderboard" hidden>
@@ -2506,78 +2504,86 @@ function renderBoard(mode){
   }
   const body = document.getElementById('lb-body');
   window.__perRow = entries.find(e=>e.entrant==='persistence') || null;
-  const seen = new Set(entries.map(e=>e.entrant));
-  const orderT = {llm:0, baseline:1};
-  // Preview-only probe records are unranked and never enter the official
-  // Pairwise field. Show them in the Original skill history view only.
-  const rest=(key==='agg' && mode!=='s0' && window.__ranking==='skill')
-    ? (data.entrants||[]).filter(e=>!seen.has(e.entrant_id)&&(window.__agentProbes||{})[e.entrant_id]) : [];
-  const tested=rest.map(e=>row(e.entrant_id,null,null)).join('');
   // An entrant with nothing scored yet has no row: the board ranks results, the Questions page lists who is in.
-  entries = entries.filter(e=>(e.rounds||0)>0);
+  entries = entries.filter(e=>(e.rounds||0)>0&&!['just4test','test-jay','ssa-testing-team'].includes(e.entrant));
   if(mode==='s0'){
     // The reference sits on top, unranked, so 'better than copying the last release' reads at a glance.
     const ref=entries.find(e=>e.entrant==='persistence');
     const rest=entries.filter(e=>e.entrant!=='persistence');
     body.innerHTML=(ref?row(ref.entrant,ref,null):'')+rest.map((e,i)=>row(e.entrant,e,i+1)).join('');
   } else
-  body.innerHTML = tested+entries.map((e,i)=>row(e.entrant,e,i+1)).join('');
+  body.innerHTML = entries.map((e,i)=>row(e.entrant,e,i+1)).join('');
   if(!body.innerHTML){
     const nx=taskRounds(d,data).filter(r=>r.status!=='resolved').sort((a,b)=>a.release_at.localeCompare(b.release_at))[0];
     body.innerHTML='<tr><td colspan="6" style="padding:18px;color:var(--mut);">No defensible historical replay is available for this task.'+(nx?' The first live result is '+esc(nx.round_id)+' on '+esc(fmtDate(nx.release_at))+'.':'')+'</td></tr>';
-  }
-  const shownProbes=rest.map(e=>(window.__agentProbes||{})[e.entrant_id]).filter(Boolean);
-  if(shownProbes.some(p=>p.kind==='historical_demo')){
-    note+=' Historical demo rows answer one already-resolved real question from its committed lock snapshot. Their loss is real, but they are retrospective and receive no official rank.';
-  }else if(shownProbes.length){
-    note+=' TEST ✓ is a non-scored endpoint check; it receives no rank, loss, or Arena score until a real round resolves.';
   }
   document.getElementById('lb-note').textContent=note;
   renderPairwiseBoard();
 }
 
-// Competition standings are computed from already-published raw round losses.
-// The chart and Original skill view retain their existing scientific scores.
+// Both Overall metrics share eligibility, grouping, question windows and labels.
+function standingIdentity(entry,data){
+  const id=entry.entrant, members=entry.members||[id];
+  const grouped=members.length>1||members[0]!==id;
+  const record=(data.entrants||[]).find(e=>e.entrant_id===id)
+    ||(grouped?(data.entrants||[]).find(e=>members.includes(e.entrant_id)):null);
+  const label=entry.name===id?forecasterName(id,data):(entry.name||forecasterName(id,data));
+  const name=grouped?esc(label):'<a href="#entrant/'+attr(id)+'">'+esc(label.split(' (')[0].split(' · ')[0])+'</a>';
+  const setup=condTag(record&&record.name);
+  const details=[setup==='zs'?'Zero-shot':setup==='r10'?'Recent-10':variantOf(id),
+    typeWord(record&&record.type||(grouped?'participant':'llm')),retiredWords(id,data),
+    entry.mock?'Placeholder':''].filter(Boolean);
+  const title=grouped?' title="'+(id==='anonymous-combined'
+    ?'A1–A6 count as one team; same-question priority A1, then A2 through A6. Overall only.'
+    :'Four specialist accounts combined; worldVac is separate')+'"':'';
+  return '<span class="who">'+avatar(id)+'<span class="who-text"><b class="model-name"'+title+'>'+name
+    +'</b><span class="model-meta">'+details.map(detail=>'<span>'+esc(detail)+'</span>').join(' <span aria-hidden="true">·</span> ')
+    +'</span></span></span>';
+}
 function renderPairwiseBoard(){
   const data=window.__data;if(!data)return;
   const overall=(window.__tab||'agg')==='agg';
   const ranking=window.__ranking||'pairwise';
   const scope=window.__pairwiseScope||(window.__board==='s0'?'s0':'all');
-  const active=overall&&ranking==='pairwise';
+  const pairwise=ranking==='pairwise';
   document.getElementById('pairwise-controls').hidden=!overall;
-  document.getElementById('pairwise-table').hidden=!active;
-  document.getElementById('legacy-leaderboard').hidden=active;
-  document.getElementById('pairwise-summary').hidden=!active;
-  const common=document.getElementById('common-questions');
-  common.hidden=!overall;
-  common.classList.toggle('on',active&&scope==='matched');
-  common.setAttribute('aria-pressed',String(active&&scope==='matched'));
-  document.querySelectorAll('#range-seg [data-range]').forEach(b=>b.classList.toggle('on',!(active&&scope==='matched')&&Number(b.dataset.range)===(window.__range||0)));
-  for(const [selector,key,value] of [['[data-ranking]','ranking',ranking]]){
-    document.querySelectorAll(selector).forEach(b=>{const on=b.dataset[key]===value;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));});
-  }
-  if(!active)return;
-  const body=document.getElementById('pairwise-body');
+  document.getElementById('pairwise-table').hidden=!overall||!pairwise;
+  document.getElementById('legacy-leaderboard').hidden=overall&&pairwise;
+  document.getElementById('pairwise-summary').hidden=!overall;
+  const common=document.getElementById('common-questions');common.hidden=!overall;
+  common.classList.toggle('on',overall&&scope==='matched');
+  common.setAttribute('aria-pressed',String(overall&&scope==='matched'));
+  document.querySelectorAll('#range-seg [data-range]').forEach(b=>b.classList.toggle('on',!(overall&&scope==='matched')&&Number(b.dataset.range)===(window.__range||0)));
+  document.querySelectorAll('[data-ranking]').forEach(b=>{const on=b.dataset.ranking===ranking;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));});
+  if(!overall)return;
+  const body=document.getElementById(pairwise?'pairwise-body':'lb-body');
   const summary=document.getElementById('pairwise-summary');
   try{
     const board=window.SSAPairwise.build(data,{field:'mixed',scope});
     window.__pairwiseBoard=board;
     const labels={all:'All history',s0:'S0 · locks from '+board.since.slice(0,10),matched:'Common submissions'};
     summary.textContent=labels[board.scope]+' · '+board.scored_rounds+' questions · '+board.methods+' methods';
-    document.getElementById('lb-title').textContent='Pairwise standings';
-    document.getElementById('lb-note').textContent='Registered entrants join after their first valid scored answer. Each question has equal weight. Pairwise is the percentage of submitted opponents beaten, with ties worth half a win. Missing answers score zero; questions with fewer than two submitted methods are excluded. All includes pre-registration gaps; Common uses only questions every selected method answered. Vac combines its four specialist accounts; worldVac and H2O Marina are separate, unselected alternatives. Anonymous A1–A6 count as one team in All only; same-question answers use A1 first, then A2 through A6. Top 3 splits tied boundary places. Skill is unchanged and averages answered questions only. The chart continues to show original skill or CRPS.';
-    body.innerHTML=board.entries.map(e=>{
-      const grouped=e.members.length>1;
-      const label=e.name===e.entrant?forecasterName(e.entrant,data):e.name;
-      const name=grouped?esc(label):'<a href="#entrant/'+attr(e.entrant)+'">'+esc(label)+'</a>';
-      const skill=e.mean_skill===null?'·':(e.mean_skill>0?'+':'')+(100*e.mean_skill).toFixed(1)+'%';
-      const top=Number.isInteger(e.top3)?String(e.top3):e.top3.toFixed(2);
-      return '<tr><td class="rank">'+e.rank+'</td><td><span class="who">'+avatar(e.entrant)+'<span class="who-text"><b class="model-name"'+(grouped?' title="'+(e.entrant==='anonymous-combined'?'A1–A6 count as one team; same-question priority A1, then A2 through A6. Overall only.':'Four specialist accounts combined; worldVac is separate')+'"':'')+'>'+name+'</b><span class="model-meta">Top 3 '+top+' · Skill '+skill+'</span></span></span></td><td class="num">'+e.pairwise.toFixed(2)+'</td><td class="num">'+e.answered+'</td></tr>';
-    }).join('')||'<tr><td colspan="4" style="padding:18px;color:var(--mut);">'+(board.scope==='matched'?'No resolved question has answers from every selected method yet.':'No resolved question has at least two selected methods yet.')+'</td></tr>';
+    document.getElementById('lb-title').textContent=pairwise?'Pairwise win rate':'Original skill';
+    document.getElementById('lb-note').textContent=pairwise
+      ?'Pairwise win rate: the percentage of submitted opponents beaten per question, with ties worth half a win. Questions have equal weight; missing answers score zero; questions with fewer than two methods are excluded. Both metrics use the same methods and question window. All includes pre-registration gaps. Common uses only questions every selected method answered. Anonymous A1–A6 form one All-only team, using A1 first then A2 through A6. The chart retains its Skill/CRPS history.'
+      :'Original skill: the mean published persistence-relative skill over answered questions in this window. Methods, grouping and questions are identical to Pairwise win rate. CRPS averages numeric questions only. Missing answers are excluded from mean skill; Pairwise win rate counts them as zero.';
+    const entries=board.entries.slice();
+    if(!pairwise)entries.sort((a,b)=>(b.mean_skill??-Infinity)-(a.mean_skill??-Infinity)||a.entrant.localeCompare(b.entrant));
+    window.__standingEntries=entries;
+    let rank=1,previous=null;
+    body.innerHTML=entries.map((entry,i)=>{
+      const value=pairwise?entry.pairwise:entry.mean_skill;
+      if(i&&value!==previous)rank=i+1;previous=value;
+      const identity=standingIdentity(entry,data);
+      const start='<tr data-entrant="'+attr(entry.entrant)+'"><td class="rank">'+(value===null?'·':pairwise?entry.rank:rank)+'</td><td>'+identity+'</td>';
+      if(pairwise)return start+'<td class="num">'+entry.pairwise.toFixed(2)+'</td><td class="num">'+entry.answered+'</td></tr>';
+      const score=value===null?'·':(value>0?'+':'')+(100*value).toFixed(0);
+      return start+'<td class="num skill'+(value>0?' pos':'')+'">'+score+'</td><td class="num">'+(entry.mean_crps===null?'·':entry.mean_crps.toFixed(2))+'</td><td class="num">'+entry.rounds+'</td></tr>';
+    }).join('')||'<tr><td colspan="'+(pairwise?4:5)+'" style="padding:18px;color:var(--mut);">'+(board.scope==='matched'?'No resolved question has answers from every selected method yet.':'No resolved question has at least two selected methods yet.')+'</td></tr>';
   }catch(error){
-    window.__pairwiseBoard=null;
-    summary.textContent='Pairwise standings unavailable';
-    body.innerHTML='<tr><td colspan="4" style="padding:18px;color:var(--mut);">'+esc(error.message)+'</td></tr>';
+    window.__pairwiseBoard=null;window.__standingEntries=[];
+    summary.textContent='Standings unavailable';
+    body.innerHTML='<tr><td colspan="'+(pairwise?4:5)+'" style="padding:18px;color:var(--mut);">'+esc(error.message)+'</td></tr>';
   }
 }
 
@@ -3254,7 +3260,7 @@ document.querySelectorAll('#range-seg [data-range]').forEach(b=> b.onclick = ()=
   if(window.__data){ setTab(window.__tab||'agg'); renderBoard(RANGE_TO_SPAN[window.__range]||'all'); }
 });
 document.querySelectorAll('[data-ranking]').forEach(b=>b.onclick=()=>{window.__ranking=b.dataset.ranking;renderBoard(window.__board||'all');});
-document.getElementById('common-questions').onclick=()=>{window.__ranking='pairwise';window.__pairwiseScope='matched';if(window.__data)renderBoard(window.__board||'all');};
+document.getElementById('common-questions').onclick=()=>{window.__pairwiseScope='matched';if(window.__data)renderBoard(window.__board||'all');};
 document.querySelectorAll('#unit-seg button').forEach(b=> b.onclick = ()=>{
   const tab = window.__tab || 'agg';
   if(tab==='agg') window.__unitAgg = b.dataset.unit; else window.__unitSer = b.dataset.unit;
