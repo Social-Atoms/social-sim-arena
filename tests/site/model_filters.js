@@ -149,11 +149,12 @@ assert.ok(f.win.__hidden.has('ewma'));
 f.api.resetModels();
 assert.ok(!f.win.__hidden.has('ewma'));
 // With the season's scores present, the default comparison is the board's top teams (one entrant each),
-// every model vendor's best arm but the worst, and the crowd; no statistical reference (decided 2026-10-05).
+// every model vendor's best arm but the worst, and all reference methods including Crowd.
 const winlessRoster=f=>new Set(f.win.SSAPairwise.build(f.win.__data,{scope:'all'}).entries.map(e=>e.entrant));
 { const live = fixture(new Map(), data); const sel = live.api.modelPicker.ids.filter(id=>!live.win.__hidden.has(id));
   const keep = live.api.defaultKeep(live.win.__data);
-  assert.ok(!sel.includes('crowd')); assert.ok(!sel.includes('ewma'), 'Overall curves use the standings roster, without references');
+  assert.ok(sel.includes('crowd'));
+  for(const id of ['persistence','trend','ewma','climatology'])assert.ok(sel.includes(id),'reference visible: '+id);
   const roster=winlessRoster(live);
   assert.deepEqual(new Set(live.api.modelPicker.ids),roster,'chart picker and leaderboard use the same methods');
   assert.deepEqual(new Set(sel), new Set([...keep].filter(id=>live.api.modelPicker.ids.includes(id))), 'the chart draws exactly the default');
