@@ -179,6 +179,8 @@ for(const scope of ['all','s0','matched']){
   window.__data=fixture;window.__ranking='pairwise';window.__pairwiseScope='all';renderBoard('all');
   assert.equal((els['pairwise-body'].innerHTML.match(/<b class="model-name" title="A1/g)||[]).length,1);
   assert(!els['pairwise-body'].innerHTML.includes('#entrant/anon-a'));
+  assert(standingIdentity(window.__pairwiseBoard.entries.find(e=>e.entrant==='anonymous-combined'),fixture).includes('Participant'));
+  assert(!standingIdentity(window.__pairwiseBoard.entries.find(e=>e.entrant==='anonymous-combined'),fixture).includes('Season 0'));
   for(const scope of ['s0','matched']) {
     window.__pairwiseScope=scope;renderBoard('s0');
     assert(!els['pairwise-body'].innerHTML.includes('Anonymous'));
@@ -203,6 +205,9 @@ assert(!els['common-questions'].hidden);
 assert(chartUrlState().includes('pw=matched'));
 assert(!chartUrlState().includes('field='));
 window.__ranking='skill';renderBoard('s0');
+els['common-questions'].onclick();
+assert.equal(window.__ranking,'skill');
+assert.equal(window.__pairwiseBoard.scope,'matched');
 assert(els['pairwise-table'].hidden);assert(!els['legacy-leaderboard'].hidden);
 window.__ranking='pairwise';window.__tab='civiqs-approval';renderBoard('all');
 assert(els['pairwise-controls'].hidden);assert(els['pairwise-table'].hidden);

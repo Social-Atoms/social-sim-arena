@@ -2530,8 +2530,9 @@ function standingIdentity(entry,data){
   const label=entry.name===id?forecasterName(id,data):(entry.name||forecasterName(id,data));
   const name=grouped?esc(label):'<a href="#entrant/'+attr(id)+'">'+esc(label.split(' (')[0].split(' · ')[0])+'</a>';
   const setup=condTag(record&&record.name);
+  const overallOnly=(window.SSAPairwise.external.find(m=>m.id===id)||{}).scope==='all';
   const details=[setup==='zs'?'Zero-shot':setup==='r10'?'Recent-10':variantOf(id),
-    typeWord(record&&record.type||(grouped?'participant':'llm')),retiredWords(id,data),
+    overallOnly?'Participant':typeWord(record&&record.type||(grouped?'participant':'llm')),retiredWords(id,data),
     entry.mock?'Placeholder':''].filter(Boolean);
   const title=grouped?' title="'+(id==='anonymous-combined'
     ?'A1–A6 count as one team; same-question priority A1, then A2 through A6. Overall only.'
