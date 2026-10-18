@@ -1,11 +1,10 @@
 # Pairwise leaderboard
 
-Proposed aggregation change, prepared 2026-10-16. This changes the Overall
-competition standings, not frozen forecasts, resolutions, or the scoring of
-individual answers. Both Overall metrics use the same methods, grouping and question window.
+The Overall competition standings aggregate published question scores without
+changing frozen forecasts, resolutions or the scoring of individual answers. Both Overall metrics use the same methods, grouping and question window.
 Original skill retains the published per-question skill formula and averages
-answered questions in that shared window. Task-specific boards and the chart
-retain their existing scientific scores.
+answered questions in that shared window. Task-specific boards retain their existing scientific scores. The Overall chart
+has separate Pairwise win rate, Original skill and CRPS views.
 
 ## Question score and total
 
@@ -44,14 +43,13 @@ exclude test accounts and historical endpoint demos.
 
 ## Active comparison field
 
-The current team selections are: Apodex-FutureFlow,
-H2O.ai SuperAgent, Vac, YuLan-OneSim, and ZhengZheng Forecaster. Vac combines
+The current external methods are Apodex-FutureFlow, H2O.ai SuperAgent,
+H2O.ai Marina, Vac, worldVac, YuLan-OneSim and ZhengZheng Forecaster. Vac combines
 only `vac-public-opinion`, `vac-sentiment-expectations`,
 `vac-population-profiles`, and `vac-collective-attention`.
 
-worldVac and H2O.ai Marina are distinct alternatives, not fallback answers;
-they are not selected in this proposed field. Team selections must be
-confirmed before this proposal is published. No method is selected based on
+worldVac and H2O.ai Marina are independent methods, included alongside Vac
+and SuperAgent rather than used as fallback answers. No method is selected based on
 the outcome of a particular question. Multiple specialist answers from Vac
 on one question stop the board with an explanation instead of choosing the
 best answer after resolution.
@@ -59,10 +57,11 @@ best answer after resolution.
 The roster is discovered from the published entrant registry and resolved
 scores. Registered participants enter automatically after their first valid
 scored answer. The public board also includes active registered LLM methods and
-their generated harness variants. Retired methods, crowd, statistical
-baselines and known house tests are excluded. The current snapshot contains
-five external methods and twelve model configurations; these are not size
-limits. Existing team selections above remain explicit overrides.
+their generated harness variants, plus registered statistical baselines and
+Crowd. Persistence, Trend, EWMA, Climatology and Crowd occupy ordinary
+comparison slots. Retired/revoked registrations and known house tests are
+excluded. The roster has no fixed size limit. Vac and Anonymous use the explicit
+grouping rules described here; other registered methods remain independent.
 
 A registration with no scored answer
 does not enter the field or shrink Common. After the first scored answer, a
@@ -82,6 +81,10 @@ Chart selections do not change the comparison field.
   the active field, across all resolved history. No common question
   means an explicit empty board, not a fallback to a different window.
 
+Trend, EWMA and Climatology currently answer number questions only. Their
+missing profile/ranking answers score zero in All/S0, and their coverage also
+constrains Common to questions they answered.
+
 Changing the field recomputes both the eligible questions and the opponents.
 All and S0 totals can move down when newly resolved questions are added;
 adding one's own answer to an existing fixed question set cannot reduce its
@@ -98,12 +101,37 @@ PYTHONPATH=. python tests/test_pairwise.py
 
 The browser reads `rounds[].scores` already present in `site/data.json`.
 There is no new forecast call, source pull or generated score artifact to
-refresh. A deployment can compute the proposal from an existing payload.
+refresh. A deployment computes the standings from an existing payload.
 
 The public page offers one comparison field, including models. All and S0 use
 the existing range controls; Common sits immediately beside S0 and switches
-the Overall ranking to the shared-question intersection. The chart retains
-its existing history view. There is no External only public control or URL mode.
+the Overall ranking and curves to the shared-question intersection. New visits
+and the bare leaderboard entry default to S0 Pairwise win rate. Explicit All,
+metric and entrant selections remain shareable. There is no External only
+public control or URL mode.
+
+## Curves and display defaults
+
+Pairwise curves use the same scoring pass and current active method roster
+as the standings. They accumulate equally weighted question points in
+resolution order, combine same-day resolutions into one checkpoint, and
+end at the displayed score. A single-question window shows a score point.
+The Pairwise axis is 0–100, with no oracle or persistence-reference labels.
+
+Changing the right-hand metric selects its matching left-hand curve. The
+chart can independently select Pairwise, Skill or CRPS without changing
+the standings metric. Skill/CRPS curves use the shared grouped methods and
+question window; those means omit unanswered questions, as their standings
+columns do.
+
+Default curves show every eligible external method, including both H2O
+methods and both Vac methods, with no top-N or answer-coverage gate. Add
+representative model variants (the best arm per vendor in S0, omitting the
+lowest vendor when at least three are available), Persistence and Crowd.
+Trend, EWMA and Climatology remain selectable. Hiding a curve never removes
+a method from scoring or Common. Explicit manual selections persist; the
+updated selection-storage version avoids inheriting the previous defaults
+that hid teams.
 
 ## Anonymous team
 
