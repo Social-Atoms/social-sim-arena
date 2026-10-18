@@ -21,8 +21,7 @@
     {id: 'anonymous-combined', name: 'Anonymous', scope: 'all', duplicate: 'priority',
       members: ['anon-a1', 'anon-a2', 'anon-a3', 'anon-a4', 'anon-a5', 'anon-a6']}
   ];
-  const EXCLUDED = new Set(['crowd', 'persistence', 'trend', 'ewma', 'climatology',
-    'test-jay', 'just4test', 'ssa-testing-team', 'worldvac-base', 'h2oai-marina']);
+  const EXCLUDED = new Set(['test-jay', 'just4test', 'ssa-testing-team', 'worldvac-base', 'h2oai-marina']);
 
   function lossOf(score) {
     if (!score) return null;
@@ -63,9 +62,9 @@
       const entry = registered.get(id);
       if (entry && entry.type === 'participant') {
         roster.push({id, name: entry.name || id});
-      } else if (field === 'mixed' && ((entry && entry.type === 'llm') ||
+      } else if (field === 'mixed' && ((entry && ['llm','baseline'].includes(entry.type)) ||
         (!entry && modelBases.some(e => id.startsWith(e.entrant_id + '-'))))) {
-        roster.push({id});
+        roster.push({id, ...(entry && entry.type === 'baseline' ? {name: entry.name || id} : {})});
       }
     }
     return roster;

@@ -1421,6 +1421,7 @@ function defaultKeep(data){
     ? activeRows(liveBoard(data,'agg','all'),data).filter(r=>r.rounds>=Math.ceil((main.scored_rounds||0)/2) && !r.baseline && r.entrant!=='crowd')
     : [];
   if(rows.length){   // no scored rows (a season before its first resolution) falls through to the old rule
+    ['trend','ewma','climatology'].forEach(id=>keep.add(id));
     const reg = id => byId[stemOf(id)] || byId[id] || {};
     const vendor = id => vendorOf(stemOf(id));
     const isModel = id => { const v = vendor(id); return !!v && VCOLOR_MODEL_VENDORS.has(v); };
@@ -2188,11 +2189,12 @@ function rankingChart(d,data){
 }
 
 // ---- the season, question by question ----
-// The ids a score trajectory carries: baselines first (never persistence, which is the zero line), then entrants, then the crowd.
+// Pairwise scores persistence as a competitor; older skill curves use its zero reference line.
 function trajIds(traj){
   const ids=new Set(); (traj||[]).forEach(t=>{ Object.keys(t.pairwise||{}).forEach(id=>ids.add(id)); Object.keys(t.skills||{}).forEach(id=>ids.add(id)); Object.keys(t.crps||{}).forEach(id=>ids.add(id)); });
-  ids.delete('persistence');
-  const base=['climatology','trend','ewma'].filter(id=>ids.has(id)), rest=[...ids].filter(id=>!isBaseline(id)&&id!=='crowd').sort();
+  const pairwise=(traj||[]).some(t=>t.pairwise);
+  if(!pairwise) ids.delete('persistence');
+  const base=['persistence','climatology','trend','ewma'].filter(id=>ids.has(id)), rest=[...ids].filter(id=>!isBaseline(id)&&id!=='crowd').sort();
   return base.concat(rest).concat(ids.has('crowd')?['crowd']:[]);
 }
 function resolvedAt(r){ return String((r.resolution||{}).resolved_at||r.release_at||''); }

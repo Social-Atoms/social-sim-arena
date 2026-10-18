@@ -110,6 +110,20 @@ const near = (a,b) => assert(Math.abs(a-b)<1e-8, `${a} != ${b}`);
     assert(!b.entries.some(e=>e.entrant==='anonymous-combined'||anon.members.includes(e.entrant)));
   }
 }
+// Registered statistical references and Crowd compete normally, with shared coverage rules.
+{
+  const refs=['persistence','trend','ewma','climatology'];
+  const data={entrants:[...refs.map(id=>({entrant_id:id,name:id,type:'baseline'})),
+    {entrant_id:'crowd',type:'baseline'},{entrant_id:'team',type:'participant'}],
+    rounds:[round('number',{team:sc(2),persistence:sc(1),trend:sc(3),ewma:sc(4),climatology:sc(5),crowd:sc(0)}),
+      round('profile',{team:{energy:1,skill:.5},persistence:{energy:2,skill:0}})]};
+  const b=pw.build(data),rows=byId(b);
+  assert.equal(b.methods,6);assert(rows.crowd);assert.equal(rows.trend.answered,'1/2');
+  near(rows.persistence.pairwise,40);near(rows.team.pairwise,80);near(rows.crowd.pairwise,50);
+  assert.equal(pw.build(data,{scope:'matched'}).scored_rounds,1);
+  assert.equal(pw.build(data,{field:'external'}).methods,1);
+  const end=b.trajectory.at(-1);for(const e of b.entries)near(end.pairwise[e.entrant],e.pairwise);
+}
 // Switching cohorts re-ranks each question, not merely filters a mixed leaderboard.
 {
   const rr=[round('x',{a:sc(1),b:sc(3),c:sc(2)})];
@@ -171,7 +185,7 @@ for (const field of ['mixed','external']) for (const scope of ['all','s0','match
   const got=window.__pairwiseBoard;assert(got,els['pairwise-body'].textContent);
   assert.equal(got.field,'mixed');assert.equal(got.scope,scope);
   assert(!els['pairwise-body'].innerHTML.includes('#entrant/vac-combined'));
-  assert(!els['pairwise-body'].innerHTML.includes('Crowd'));
+  assert(els['pairwise-body'].innerHTML.includes('Crowd'));
 }
 // Metric switches preserve the exact entrant set, metadata and question set.
 for(const scope of ['all','s0','matched']){
@@ -187,7 +201,7 @@ for(const scope of ['all','s0','matched']){
   assert.deepEqual(extract(els['lb-body'].innerHTML),pair);
   assert.deepEqual(window.__pairwiseBoard.round_ids,board.round_ids);
   assert.equal(els['lb-title'].textContent,'Original skill');
-  for(const id of ['just4test','test-jay','ssa-testing-team','crowd','persistence'])assert(!(id in pair));
+  for(const id of ['just4test','test-jay','ssa-testing-team'])assert(!(id in pair));
 }
 // The visible board also groups Anonymous and keeps it out of S0/Common.
 {
@@ -215,6 +229,7 @@ for(const scope of ['all','s0','matched']){
   const b=pw.build(published,{scope});
   if(!b.entries.length)continue;
   const end=b.trajectory.at(-1);
+  assert(trajIds(b.trajectory).includes('persistence'));
   assert.equal(end.n,b.scored_rounds);
   assert.deepEqual(Object.keys(end.pairwise).sort(),b.entries.map(e=>e.entrant).sort());
   for(const e of b.entries)near(end.pairwise[e.entrant],e.pairwise);
