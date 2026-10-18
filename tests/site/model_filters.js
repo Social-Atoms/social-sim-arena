@@ -36,6 +36,7 @@ function fixture(storage = new Map(), payload = backtestOnly) {
     return inputs;
   };
   const api = new Function(script+'\nreturn {render, renderTaskChart, renderLegend, matchingModels, coerceUnknown, modelInfo, selectModels, resetModels, setPickerFilter, modelPicker, TASKS, defaultKeep, vendorOf, stemOf, VCOLOR_MODEL_VENDORS};')();
+  if(payload===backtestOnly)win.location.hash='#leaderboard/agg/all?ranking=skill';
   api.render(payload);
   if(payload===backtestOnly)win.__unitAgg='arena'; // Explicit legacy backtest view for picker mechanics.
   api.renderTaskChart('agg');

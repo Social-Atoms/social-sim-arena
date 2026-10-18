@@ -219,6 +219,21 @@ for(const scope of ['all','s0','matched']){
   assert.deepEqual(Object.keys(end.pairwise).sort(),b.entries.map(e=>e.entrant).sort());
   for(const e of b.entries)near(end.pairwise[e.entrant],e.pairwise);
 }
+// New visitors and the bare navigation entry open S0 Pairwise on both sides.
+for(const hash of ['', '#leaderboard']){
+  location.hash=hash;window.__ranking='skill';window.__unitAgg='crps';
+  window.__board='all';window.__pairwiseScope='matched';applyHash();
+  assert.equal(window.__board,'s0');assert.equal(window.__range,-1);
+  assert.equal(window.__pairwiseScope,'s0');assert.equal(window.__ranking,'pairwise');
+  assert.equal(window.__unitAgg,'pairwise');assert.equal(window.__pairwiseBoard.scope,'s0');
+}
+location.hash='#leaderboard/agg/all';applyHash();
+assert.equal(window.__board,'all');assert.equal(window.__pairwiseScope,'all');
+// All must stay explicit in shared URLs; it can no longer collapse into #leaderboard.
+let savedHash='';const replaceState=history.replaceState;
+history.replaceState=(_state,_title,hash)=>{savedHash=hash;};syncHash();
+assert(savedHash.startsWith('#leaderboard/agg/all'));
+history.replaceState=replaceState;
 // Bounded axis, no persistence/oracle references, and a useful one-point chart.
 {
   const svg=node('svg'),tip=node();svg.clientWidth=800;svg.clientHeight=360;
