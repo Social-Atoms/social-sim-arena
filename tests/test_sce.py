@@ -368,14 +368,16 @@ def test_history_files_a_successful_fetch_and_serves_it():
     d = tempfile.mkdtemp(prefix="ssa-sce-")
     saved_archive, saved_fetch = sce.ARCHIVE, sce.fetch_bytes
     sce.ARCHIVE = d
-    sce.fetch_bytes = lambda *a, **k: full_history()
+    # Capture one response: rebuilding an XLSX also changes its ZIP timestamps.
+    fetched = full_history()
+    sce.fetch_bytes = lambda *a, **k: fetched
     try:
         rows = sce.history(fetch=True, today="2026-08-26")
         assert len(rows) == 158
         assert len(sce.archived_days()) == 1, sce.archived_days()
         # The vintage on disk is byte-identical to what was fetched.
         body, _ = sce.read_archived()
-        assert body == full_history()
+        assert body == fetched
     finally:
         sce.ARCHIVE, sce.fetch_bytes = saved_archive, saved_fetch
         shutil.rmtree(d, ignore_errors=True)
