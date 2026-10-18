@@ -79,6 +79,11 @@ const near = (a,b) => assert(Math.abs(a-b)<1e-8, `${a} != ${b}`);
   assert(!board.entries.some(e=>anon.members.includes(e.entrant)));
   near(byId(board)['anonymous-combined'].pairwise,50);
   near(byId(board)['anonymous-combined'].mean_skill,(-.9+.4-.2+.3)/4);
+  // A revoked priority account cannot supply the team's answer.
+  const revoked=JSON.parse(JSON.stringify(data));
+  revoked.entrants.find(e=>e.entrant_id==='anon-a1').status='revoked';
+  revoked.rounds=[rr[0]];
+  near(byId(pw.build(revoked))['anonymous-combined'].pairwise,100);
   // More accounts cannot manufacture a contested question or shrink Common.
   assert(!board.round_ids.includes('only-anon'));
   for(const scope of ['s0','matched']) {
