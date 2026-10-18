@@ -161,9 +161,9 @@ const winlessRoster=f=>new Set(f.win.SSAPairwise.build(f.win.__data,{scope:'all'
   const byId = {}; live.win.__data.entrants.forEach(e=>byId[e.entrant_id]=e);
   const methods=live.win.SSAPairwise.build(live.win.__data,{scope:'all'}).entries;
   const teams=methods.filter(e=>e.members.some(id=>(byId[id]||{}).type==='participant'));
-  assert(teams.length>=5);
+  assert(teams.length>=7);
   assert(teams.every(e=>sel.includes(e.entrant)), 'every external team is drawn, including grouped Vac and YuLan');
-  assert(sel.includes('vac-combined'));assert(sel.includes('yulan-onesim'));
+  for(const id of ['vac-combined','worldvac-base','h2oai-superagent','h2oai-marina','yulan-onesim'])assert(sel.includes(id),'official method drawn: '+id);
   const vendors = sel.map(id=>live.api.vendorOf(live.api.stemOf(id))).filter(v=>v && live.api.VCOLOR_MODEL_VENDORS.has(v));
   assert.equal(new Set(vendors).size, vendors.length, 'one arm per vendor');
   assert.ok(sel.every(id=>!live.win.__data.retired[id])); }

@@ -124,6 +124,20 @@ const near = (a,b) => assert(Math.abs(a-b)<1e-8, `${a} != ${b}`);
   assert.equal(pw.build(data,{field:'external'}).methods,1);
   const end=b.trajectory.at(-1);for(const e of b.entries)near(end.pairwise[e.entrant],e.pairwise);
 }
+// Each team's two methods stay independent; neither gets absorbed by the other slot.
+{
+  const ids=['h2oai-superagent','h2oai-marina','vac-public-opinion','worldvac-base'];
+  const data={entrants:ids.map(entrant_id=>({entrant_id,type:'participant',name:entrant_id})),
+    rounds:[round('separate',Object.fromEntries(ids.map((id,i)=>[id,sc(i+1)])))]};
+  for(const scope of ['all','s0','matched']){
+    const b=pw.build(data,{scope}),rows=byId(b);
+    assert.equal(b.methods,4);assert.equal(b.scored_rounds,1);
+    assert.deepEqual(Object.keys(rows).sort(),['h2oai-marina','h2oai-superagent','vac-combined','worldvac-base']);
+    near(rows['h2oai-superagent'].pairwise,100);near(rows['h2oai-marina'].pairwise,200/3);
+    near(rows['vac-combined'].pairwise,100/3);near(rows['worldvac-base'].pairwise,0);
+    for(const id of Object.keys(rows))near(b.trajectory.at(-1).pairwise[id],rows[id].pairwise);
+  }
+}
 // Switching cohorts re-ranks each question, not merely filters a mixed leaderboard.
 {
   const rr=[round('x',{a:sc(1),b:sc(3),c:sc(2)})];
@@ -136,11 +150,10 @@ const near = (a,b) => assert(Math.abs(a-b)<1e-8, `${a} != ${b}`);
     {entrant_id:'new-model',type:'llm'}, {entrant_id:'waiting',type:'participant'},
     {entrant_id:'retired-team',type:'participant',status:'retired'},
     {entrant_id:'revoked-team',type:'participant',status:'revoked'},
-    {entrant_id:'ssa-testing-team',type:'participant'},
-    {entrant_id:'worldvac-base',type:'participant'}, {entrant_id:'h2oai-marina',type:'participant'}],
+    {entrant_id:'ssa-testing-team',type:'participant'}],
     retired:{'old-model-web':{}},rounds:[round('new',{'new-team':sc(1),'new-model-web':sc(2),
       'new-model':sc(3),'old-model-web':sc(0),'retired-team':sc(0),'revoked-team':sc(0),
-      'ssa-testing-team':sc(0),'worldvac-base':sc(0),'h2oai-marina':sc(0),crowd:sc(0)})]};
+      'ssa-testing-team':sc(0),crowd:sc(0)})]};
   assert.deepEqual(pw.rosterOf(data,'external').map(x=>x.id),['new-team']);
   assert.deepEqual(pw.rosterOf(data,'mixed').map(x=>x.id),['new-model','new-model-web','new-team']);
   assert.equal(pw.build(data).methods,3);
@@ -184,6 +197,7 @@ for (const field of ['mixed','external']) for (const scope of ['all','s0','match
   assert(!els['pairwise-table'].hidden);assert(els['legacy-leaderboard'].hidden);
   const got=window.__pairwiseBoard;assert(got,els['pairwise-body'].textContent);
   assert.equal(got.field,'mixed');assert.equal(got.scope,scope);
+  for(const id of ['h2oai-marina','worldvac-base'])assert(got.entries.some(e=>e.entrant===id));
   assert(!els['pairwise-body'].innerHTML.includes('#entrant/vac-combined'));
   assert(els['pairwise-body'].innerHTML.includes('Crowd'));
 }
