@@ -1399,53 +1399,45 @@ function tipShow(tip, ev, html){
   tip.style.left = tx+'px'; tip.style.top = '14px';
 }
 
-// Start with a small comparison, chosen from the published standings.
-const DEFAULT_VISIBLE_MODELS = 5;   // five models, EWMA and the crowd: seven lines
-const MODEL_SELECTION_KEY = 'ssa.chart-models.v1';
-const DEFAULT_TEAMS = 4;   // external teams on the opening chart, the best entrant of each
+// Start with every scored external team, representative models, and two references.
+const DEFAULT_VISIBLE_MODELS = 5;
+// New default policy: do not reuse old selections that hid teams and enabled every baseline.
+const MODEL_SELECTION_KEY = 'ssa.chart-models.v2';
 function defaultKeep(data){
-  // The default comparison, drawn from the board the page opens on. Pure.
-  // Once the Season 0 main board exists (every shape since the common start, see refresh.build_main_board),
-  // from the full-season board the page opens on:
-  //   the top four external teams, one entrant each, so the chart shows how the real entrants are doing;
-  //   every model vendor's best arm, except the vendor whose best arm is the worst of them, so the chart
-  //   keeps the field in view without the one line that drags its floor down;
-  //   the crowd and statistical baselines. Overall Pairwise treats persistence as an ordinary opponent;
-  //   task-specific skill charts still use its zero reference line.
-  // An entrant qualifies once it answered at least half of the main board's scored questions, so one lucky
-  // answer does not open the chart. Before the main board: the season's overall board, top five models with
-  // at least half the most-answered entrant's questions, EWMA and the crowd; the backtest's until then.
-  const main = (data||{}).season0_main, byId = {};
-  ((data||{}).entrants||[]).forEach(e=>byId[e.entrant_id]=e);
-  const keep = new Set(['persistence','crowd']);
-  const rows = (main && (main.entries||[]).length && data.rounds)
-    ? activeRows(liveBoard(data,'agg','all'),data).filter(r=>r.rounds>=Math.ceil((main.scored_rounds||0)/2) && !r.baseline && r.entrant!=='crowd')
-    : [];
-  if(rows.length){   // no scored rows (a season before its first resolution) falls through to the old rule
-    ['trend','ewma','climatology'].forEach(id=>keep.add(id));
-    const reg = id => byId[stemOf(id)] || byId[id] || {};
-    const vendor = id => vendorOf(stemOf(id));
-    const isModel = id => { const v = vendor(id); return !!v && VCOLOR_MODEL_VENDORS.has(v); };
-    const teamOf = id => { const v = vendor(id); return (v && !VCOLOR_MODEL_VENDORS.has(v)) ? v : (reg(id).organization || id); };
-    const isTeam = id => reg(id).type === 'participant';
-    const teams = new Set();
-    for(const r of rows){ if(!isTeam(r.entrant) || teams.has(teamOf(r.entrant))) continue; teams.add(teamOf(r.entrant)); keep.add(r.entrant); if(teams.size>=DEFAULT_TEAMS) break; }
-    const best = [], seen = new Set();   // in board order, so the last is the worst vendor's best
-    for(const r of rows){ const v = vendor(r.entrant); if(!isModel(r.entrant) || seen.has(v)) continue; seen.add(v); best.push(r.entrant); }
-    if(best.length >= 3) best.pop();
-    best.forEach(id=>keep.add(id));
-    return keep;
+  data=data||{};
+  const keep=new Set(['persistence','crowd']);
+  if(data.rounds&&window.SSAPairwise){
+    const all=window.SSAPairwise.build(data,{field:'mixed',scope:'all'});
+    if(all.entries.length){
+      const registered=new Map((data.entrants||[]).map(e=>[e.entrant_id,e]));
+      // Use the same official team slots as the standings, without a top-N or coverage gate.
+      all.entries.forEach(e=>{
+        if(e.members.some(id=>(registered.get(id)||{}).type==='participant'))keep.add(e.entrant);
+      });
+      const s0=window.SSAPairwise.build(data,{field:'mixed',scope:'s0'});
+      const rows=s0.entries.length?s0.entries:all.entries;
+      const best=[],seen=new Set();
+      for(const r of rows){
+        const v=vendorOf(stemOf(r.entrant));
+        if(!v||!VCOLOR_MODEL_VENDORS.has(v)||seen.has(v))continue;
+        seen.add(v);best.push(r.entrant);
+      }
+      if(best.length>=3)best.pop();
+      best.forEach(id=>keep.add(id));
+      return keep;
+    }
   }
+  // Before live scores exist, keep the historical backtest comparison.
   keep.add('ewma');
-  const live = (data && data.rounds) ? liveBoard(data,'agg','all') : [];
-  const models = live.length ? activeRows(live,data) : [];
-  const floor = models.length ? Math.ceil(Math.max(...models.map(r=>r.rounds))/2) : 0;
-  const board = live.length ? models.filter(r=>r.rounds>=floor).concat(live.filter(r=>isBaseline(r.entrant))) : (((data||{}).backtest||{}).overall || []);
-  let n = 0;
+  const live=data.rounds?liveBoard(data,'agg','all'):[];
+  const models=live.length?activeRows(live,data):[];
+  const floor=models.length?Math.ceil(Math.max(...models.map(r=>r.rounds))/2):0;
+  const board=live.length?models.filter(r=>r.rounds>=floor).concat(live.filter(r=>isBaseline(r.entrant))):((data.backtest||{}).overall||[]);
+  let n=0;
   for(const row of board){
-    if(row.baseline || isBaseline(row.entrant) || row.entrant==='crowd' || keep.has(row.entrant)) continue;
+    if(row.baseline||isBaseline(row.entrant)||row.entrant==='crowd'||keep.has(row.entrant))continue;
     keep.add(row.entrant);
-    if(++n >= DEFAULT_VISIBLE_MODELS) break;
+    if(++n>=DEFAULT_VISIBLE_MODELS)break;
   }
   return keep;
 }
