@@ -63,10 +63,21 @@ comparison slots. Retired/revoked registrations and known house tests are
 excluded. The roster has no fixed size limit. Vac and Anonymous use the explicit
 grouping rules described here; other registered methods remain independent.
 
-A registration with no scored answer
-does not enter the field or shrink Common. After the first scored answer, a
-new entrant changes the opponent field and may shrink Common, even to empty.
-Retirements can also change the field. Historical totals are recomputed for
+Season 0 eligibility was fixed on 2026-10-19 to the exact 24 method IDs in
+`SEASON0_METHODS` in `site/pairwise.js`: the seven external methods above,
+twelve existing model variants, and five baselines. No prefix matching,
+registration time or first-answer time can grant a new method this eligibility.
+Vac is one method, with its existing four-account mapping preserved.
+
+A registration with no scored answer does not enter any field. After its first
+valid scored answer, a later participant, model or harness variant joins All
+only. It cannot become an S0/Common opponent or shrink their shared-question
+intersection. Anonymous remains one All-only group. This is a current-season
+eligibility rule, not registration approval or a rule for future seasons.
+This freezes eligibility, not forecasts or results. Crowd continues to pool
+available submissions under its existing rules, so new teams may contribute
+to future Crowd forecasts; existing published scores are not rewritten here.
+Retirements and revocations can still change the active field. Historical totals are recomputed for
 the current active roster; they are not frozen historical league standings.
 Chart selections do not change the comparison field.
 
@@ -75,10 +86,10 @@ Chart selections do not change the comparison field.
 - **All**: every comparable resolved question in the published season data.
   Registration dates do not trim this window, so it measures historical
   contribution and penalizes pre-registration absence.
-- **S0**: comparable questions with `lock_at >= season0_main.since`
+- **S0**: only active methods in the fixed Season 0 cohort; comparable questions with `lock_at >= season0_main.since`
   (currently 2026-09-30T00:00:00Z). Resolution dates do not select this window.
 - **Common**: the intersection of scored submissions from every method in
-  the active field, across all resolved history. No common question
+  the active fixed Season 0 cohort, across all resolved history (not just S0 dates). No common question
   means an explicit empty board, not a fallback to a different window.
 
 Trend, EWMA and Climatology currently answer number questions only. Their

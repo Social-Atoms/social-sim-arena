@@ -160,7 +160,8 @@ const near = (a,b) => assert(Math.abs(a-b)<1e-8, `${a} != ${b}`);
   data.entrants.push({entrant_id:'later-team',type:'participant'});
   data.rounds.push(round('later',{'new-team':sc(1),'later-team':sc(2)}));
   assert.equal(pw.build(data,{field:'external'}).methods,2);
-  assert.deepEqual(pw.build(data,{field:'external',scope:'matched'}).round_ids,['later']);
+  assert.deepEqual(pw.build(data,{field:'external',scope:'matched'}).round_ids,[]);
+  assert.equal(pw.build(data,{scope:'s0'}).methods,0);
 }
 assert.equal(pw.external.length,6);
 assert(!pw.external.some(m=>['worldvac-base','h2oai-marina','crowd'].includes(m.id)));
@@ -191,6 +192,52 @@ vm.runInThisContext(script,{filename:'index-inline.js'});
 const latestPath=process.argv[2] || path.join(root,'site/data.json');
 const published=JSON.parse(fs.readFileSync(latestPath,'utf8'));
 window.__data=published;window.__tab='agg';
+
+// Freeze eligibility before scoring: new teams, aliases, model variants and
+// baselines cannot alter S0/Common opponents, scores, curves or intersection.
+{
+  const fixture=JSON.parse(JSON.stringify(published));
+  const late=['njusim-mace','socialai-x','jev-direct','jev-persona','xixi-social',
+    ...Array.from({length:6},(_,i)=>'anon-a'+(i+1))];
+  fixture.entrants.push(...late.map(entrant_id=>({entrant_id,name:entrant_id,type:'participant'})),
+    {entrant_id:'late-model',name:'Late model',type:'llm'},{entrant_id:'late-baseline',name:'Late baseline',type:'baseline'});
+  const laterIds=[...late,'late-model-web','late-baseline','gemini-pro-web-late-arm'];
+  // Perfect, fully covered newcomers still get no Season 0 eligibility.
+  for(const r of fixture.rounds)if(r.status==='resolved'&&r.scores){
+    for(const id of laterIds)r.scores[id]=sc(0,1);
+  }
+  assert.equal(pw.season0Methods.length,24);
+  assert.equal(new Set(pw.season0Methods).size,24);
+  assert(Object.isFrozen(pw.season0Methods));
+  for(const scope of ['s0','matched']) {
+    const original=pw.build(published,{scope});
+    assert.deepEqual(pw.build(fixture,{scope}),original);
+    for(const ranking of ['pairwise','skill']) {
+      window.__data=fixture;window.__ranking=ranking;window.__pairwiseScope=scope;
+      renderBoard('all');
+      assert.deepEqual(window.__pairwiseBoard,original);
+      const body=els[ranking==='pairwise'?'pairwise-body':'lb-body'].innerHTML;
+      for(const id of laterIds)assert(!body.includes('data-entrant="'+id+'"'));
+    }
+  }
+  const all=pw.build(fixture);
+  for(const id of ['njusim-mace','socialai-x','jev-direct','jev-persona','xixi-social',
+    'anonymous-combined','late-model-web','late-baseline','gemini-pro-web-late-arm'])
+    assert(all.entries.some(e=>e.entrant===id),id+' missing from All');
+  // A legitimate future round answered only by existing methods still enters
+  // Common; withholding every late method's answer cannot remove it.
+  const old=pw.rosterOf(published,'mixed','matched');
+  const scores=Object.fromEntries(old.map((m,i)=>[(m.members||[m.id])[0],sc(i+1)]));
+  const future=round('future-cohort-only',scores,'2026-10-26T00:00:00Z');
+  fixture.rounds.push(future);
+  const control={...published,rounds:[...published.rounds,future]};
+  for(const scope of ['s0','matched']) {
+    assert.deepEqual(pw.build(fixture,{scope}),pw.build(control,{scope}));
+    assert(pw.build(fixture,{scope}).round_ids.includes('future-cohort-only'));
+  }
+  window.__data=published;
+}
+
 for (const field of ['mixed','external']) for (const scope of ['all','s0','matched']) {
   window.__ranking='pairwise';window.__pairwiseField=field;window.__pairwiseScope=scope;
   renderBoard('all');
