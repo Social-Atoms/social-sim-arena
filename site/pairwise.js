@@ -22,6 +22,21 @@
       members: ['anon-a1', 'anon-a2', 'anon-a3', 'anon-a4', 'anon-a5', 'anon-a6']}
   ];
   const EXCLUDED = new Set(['test-jay', 'just4test', 'ssa-testing-team']);
+  // Frozen Season 0 eligibility, agreed 2026-10-19. Exact method IDs, not
+  // prefixes or first-answer dates: later registrations/variants are All-only.
+  // Common uses this same cohort across history, not the expanding All field.
+  const SEASON0_METHODS = Object.freeze([
+    'apodex-futureflow', 'h2oai-superagent', 'h2oai-marina',
+    'vac-combined', 'worldvac-base', 'yulan-onesim', 'zhengzheng-agent',
+    'claude-sonnet-web', 'claude-sonnet-web-superfc',
+    'deepseek-pro-web', 'deepseek-pro-web-superfc',
+    'gemini-pro-web', 'gemini-pro-web-superfc',
+    'glm-web', 'glm-web-superfc',
+    'gpt-5.6-luna-web', 'gpt-5.6-luna-web-superfc',
+    'grok-web', 'grok-web-superfc',
+    'persistence', 'trend', 'ewma', 'climatology', 'crowd'
+  ]);
+  const season0Eligible = new Set(SEASON0_METHODS);
 
   function lossOf(score) {
     if (!score) return null;
@@ -42,10 +57,12 @@
     }
     const active = id => !EXCLUDED.has(id) && !(data.retired || {})[id]
       && (!registered.has(id) || !['retired','revoked'].includes(registered.get(id).status));
+    const eligible = id => scope === 'all' || season0Eligible.has(id);
     const roster = [], consumed = new Set();
     for (const method of EXTERNAL) {
       const members = method.members || [method.id];
       members.forEach(id => consumed.add(id));
+      if (!eligible(method.id)) continue;
       if (method.scope && method.scope !== scope) continue;
       if (members.some(id => registered.has(id) && answered.has(id) && active(id))) {
         roster.push(method.duplicate === 'priority'
@@ -58,7 +75,7 @@
     const modelBases = [...registered.values()].filter(e => e.type === 'llm')
       .sort((a, b) => b.entrant_id.length - a.entrant_id.length);
     for (const id of [...answered].sort()) {
-      if (consumed.has(id) || !active(id)) continue;
+      if (consumed.has(id) || !active(id) || !eligible(id)) continue;
       const entry = registered.get(id);
       if (entry && entry.type === 'participant') {
         roster.push({id, name: entry.name || id});
@@ -154,5 +171,5 @@
     return {field, scope, since, entries, trajectory, scored_rounds: n, round_ids: roundIds,
       comparable_rounds: candidates.length, excluded_rounds: excluded, methods: roster.length};
   }
-  return {build, lossOf, rosterOf, external: EXTERNAL};
+  return {build, lossOf, rosterOf, external: EXTERNAL, season0Methods: SEASON0_METHODS};
 });
