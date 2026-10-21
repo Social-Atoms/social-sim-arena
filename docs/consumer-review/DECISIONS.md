@@ -1,8 +1,8 @@
 # Decision Memo
 
-Status: proposals pending HaoYang / Chance / research-team decisions. The source
-research's recommendations are not approved policy. Existing source gates and
-the Pairwise main board remain authoritative.
+Status: concrete proposals for organizer review. These recommendations are
+implemented in the source-evaluation documents and are not formal task activation.
+Existing source gates and the Pairwise main board remain authoritative.
 
 | Decision | Current constraint | Evidence and gap | Proposed position | Decision owner |
 | --- | --- | --- | --- | --- |
@@ -34,3 +34,12 @@ All seven decisions are pending. No external review request or issue comment was
 sent, no organizer response was invented, and no source state was changed to
 approved. Reviewers should record dates, names, scope and conditions before a
 formal activation PR is prepared.
+
+The recommended positions are: reopen ACSI evaluation but defer activation until
+forward-calendar, first-print and rights evidence is complete; permit one annual
+multi-item round or a separate board without multiplying main-board weight; use
+separate non-US domains and skip US persona weighting where inappropriate; treat
+firm supply as input or a separate board and use Mint only after fixed-supply
+checks; require a Class B protocol before TSA or Steam player streams; keep a
+Kalshi comparison outside the main score with a lock-time price archive; and
+audit Brand Movers/Ratings separately from YouGov crosstabs.

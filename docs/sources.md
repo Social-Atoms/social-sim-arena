@@ -107,6 +107,27 @@ at 0.31 points a week; five of the other nine emotions in the same tracker moved
 
 ---
 
+### 1.5 Consumer and market extensions
+
+Supply-side figures are inputs by default, not targets of the social-simulation
+ranking. A fixed-supply product may be a target only when a third party publishes
+on a schedule, buyers are general-public demand, the product does not instantly
+sell out, and batch releases are known. Firm-supply targets belong on a separate
+board. Running totals must be converted to the change in the named period; the
+cumulative total remains a diagnostic.
+
+For weekly rankings with a live or daily companion list, lock before the measured
+week starts. Candidate lists, new-item treatment and missing-answer rules must be
+fixed before the lock. A "biggest movers" list uses a prospective 20-30 item
+candidate universe and asks for entry probabilities rather than relying on a
+persistence baseline. A non-US population may use a separate domain and must not
+be weighted with US personas unless the instrument supports that population.
+
+Class B streams require a written protocol for observation window, lock, sampling,
+missing values, delays, revisions and settlement before an adapter or round is
+added. A market-price baseline is a separate diagnostic: archive its lock-time
+price and report whether a forecast beats it outside the main Pairwise score.
+
 ## 2. What the adapter must do
 
 Copy `ssa/adapters/newsdigest.py` or `ssa/adapters/civiqs.py`. Both carry the
