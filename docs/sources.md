@@ -125,8 +125,10 @@ be weighted with US personas unless the instrument supports that population.
 
 Class B streams require a written protocol for observation window, lock, sampling,
 missing values, delays, revisions and settlement before an adapter or round is
-added. A market-price baseline is a separate diagnostic: archive its lock-time
-price and report whether a forecast beats it outside the main Pairwise score.
+added. A market-price baseline would be a separate diagnostic rather than part
+of the main Pairwise score, but Kalshi's current data terms do not authorize the
+archived public-price use this benchmark would require. Do not implement it
+without explicit written permission.
 
 ## 2. What the adapter must do
 
