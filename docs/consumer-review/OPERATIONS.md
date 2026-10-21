@@ -72,6 +72,15 @@ row counts and SHA256 before archiving it. Alerts key off the expected wave,
 not file modification time. A missing wave cannot settle a round, and a late
 file retains its true acquisition time.
 
+YouGov's [BrandIndex product page](https://yougov.com/business/products/brandindex)
+advertises tailored snapshots and flexible API data delivery, but neither is a
+public authorization for the arena's current crosstab workbook. A fixed file
+delivery schedule and a license covering this exact tracker were not established
+by the public materials. The operational choice is manual download plus offline
+validation (see `tools/ingest_yougov_xtab.py`); do not schedule the existing
+public download endpoint. Contract an API or fixed delivery only with written
+terms specifying the product, retrieval method, analysis and redistribution.
+
 ## Civiqs Stable-Machine Plan
 
 The preferred deployment is a small self-hosted runner or scheduled VM with
