@@ -464,6 +464,60 @@ INVENTORY = {
             "catching up since, so lock times come from the published "
             "calendar, never from a rule."),
     },
+    "consumer_michigan_inflation": {
+        "publisher": "University of Michigan Surveys of Consumers",
+        "adapter": "ssa/adapters/consumer.py",
+        "role": TARGET,
+        "state": PERMISSION_NEEDED,
+        "rights": APPROVED,
+        "evidence": "Official national inflation CSVs are public and the existing Michigan national-table approval applies. The extension keeps preliminary and final vintages separate and does not create rounds until release-day evidence is reviewed.",
+        "revisit": "Approve the named 1-year series after release-calendar and first-print checks.",
+    },
+    "consumer_sce_extensions": {
+        "publisher": "Federal Reserve Bank of New York",
+        "adapter": "ssa/adapters/consumer.py",
+        "role": TARGET,
+        "state": PERMISSION_NEEDED,
+        "rights": APPROVED,
+        "evidence": "The official SCE workbook carries the repository's existing reproduction/distribution license. Nine candidate monthly indicators are parsed by exact sheet and header; only spending, stock-price and unemployment probabilities are prioritized for review.",
+        "revisit": "Approve selected indicators after release-day vintage and movement checks.",
+    },
+    "consumer_mint": {
+        "publisher": "United States Mint",
+        "adapter": "ssa/adapters/consumer.py",
+        "role": TARGET,
+        "state": PERMISSION_NEEDED,
+        "rights": APPROVED,
+        "evidence": "The official cumulative-sales page states that the data may be republished with the United States Mint cited. Automated requests returned 403, so the adapter accepts manually downloaded CSVs and derives period increments.",
+        "revisit": "Approve a fixed-supply product only after buyer, batch, sellout and schedule checks.",
+    },
+    "consumer_nyt": {
+        "publisher": "The New York Times Books API",
+        "adapter": "ssa/adapters/consumer.py",
+        "role": TARGET,
+        "state": PERMISSION_NEEDED,
+        "rights": UNRESOLVED,
+        "evidence": "The official Books API specification documents the api-key endpoint and list history. Developer terms and attribution requirements were not machine-readable in this audit, so raw responses remain gated from public publication.",
+        "revisit": "Record API terms, attribution, edition and historical-list permissions.",
+    },
+    "consumer_netflix": {
+        "publisher": "Netflix Top 10",
+        "adapter": None,
+        "role": TARGET,
+        "state": REJECTED,
+        "rights": REJECTED,
+        "evidence": "Netflix Terms of Use prohibit robots, spiders, scrapers, automated access, data-mining methods and machine-learning testing, benchmarking or validation using service information without authorization.",
+        "revisit": "Written authorization covering automated retrieval and benchmark use.",
+    },
+    "consumer_steam": {
+        "publisher": "Valve Steam Charts",
+        "adapter": "ssa/adapters/consumer.py",
+        "role": TARGET,
+        "state": PERMISSION_NEEDED,
+        "rights": UNRESOLVED,
+        "evidence": "Steam's Subscriber Agreement prohibits scripts, bots and non-human-controlled systems from interacting with Steam. Steam Web API terms permit personal-use Steam Data subject to their terms, but do not establish a public benchmark license for the chart page.",
+        "revisit": "Written permission or a documented API license covering chart retrieval and public benchmark use.",
+    },
     "acsi": {
         "publisher": "American Customer Satisfaction Index",
         "adapter": None,
@@ -471,14 +525,16 @@ INVENTORY = {
         "state": REJECTED,
         "rights": UNRESOLVED,
         "evidence": (
-            "Quarterly national and sector scores are free; company-level "
-            "detail is paid. Issue #36 raised it as the closest free thing to "
-            "brand and category perception and closed without a verdict. Four "
-            "releases a year cannot fill a weekly batch, and no adapter "
-            "exists, so it is out for season 0. Terms were never audited."),
+            "The 2026 local review captured 106 official release pages and 47 "
+            "public benchmark pages, with 692 instruments and 2,203 score "
+            "observations. Industries publish throughout the year, while an "
+            "individual company may be annual or sparser. Publisher footers "
+            "prohibit advertising or promotional use without express prior "
+            "written consent. Full terms and redistribution permission remain "
+            "unresolved, so the source stays outside generation."),
         "revisit": (
-            "A season whose cadence tolerates quarterly rounds, or a use for "
-            "the sector scores as a slow-moving companion series."),
+            "Written rights clarification, an official forward calendar or "
+            "approved calendar exception, and first-print evidence."),
     },
     "mc_ics": {
         "publisher": "Morning Consult",
