@@ -16,7 +16,7 @@
 | Running totals | Score period increments | Keep cumulative totals as diagnostics and publish seasonal gain baselines where relevant |
 | Cadence | Monthly is standard; annual multi-item gets one large round or separate board | Do not multiply one release into many main-board rounds |
 | Class B streams | Protocol first | No TSA or Steam concurrent-player round until window/sampling/missing/revision rules are frozen |
-| Prediction markets | Optional separate baseline | Archive the lock-time price and report “beats market” outside the main score |
+| Prediction markets | Do not implement Kalshi under current terms | Archive/sharing and software-development uses require prior written consent; main score unchanged |
 | New YouGov products | Separate rights audit | Brand Movers/Ratings do not inherit crosstab permission |
 | YouGov crosstabs | Automate validation after manual download | Check expected wave, completeness, hash and archive; alert on wave identity |
 | Civiqs | Stable-machine proposal | Preserve last valid vintage as stale, never settle from stale, and record true recapture time |
