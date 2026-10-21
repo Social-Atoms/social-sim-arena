@@ -40,6 +40,7 @@ URLS = {
     "sce": "https://www.newyorkfed.org/medialibrary/interactives/sce/sce/downloads/data/frbny-sce-data.xlsx",
 }
 AUTOMATED = {"michigan_finals", "michigan_current", "netflix", "nyt", "sce", "steam"}
+PERMISSION_REQUIRED = {"netflix", "steam", "nyt", "acsi"}
 
 
 def nyt_key(root):
@@ -295,7 +296,8 @@ def main(argv=None):
     subs = parser.add_subparsers(dest="command", required=True)
     subs.add_parser("configure-nyt")
     fetch = subs.add_parser("collect")
-    fetch.add_argument("--sources", nargs="+", choices=sorted(PARSERS), default=list(URLS))
+    fetch.add_argument("--sources", nargs="+", choices=sorted(PARSERS),
+                       default=sorted(set(URLS) - PERMISSION_REQUIRED))
     fetch.add_argument("--timeout", type=int, default=20)
     fetch.add_argument("--fetch-sce", action="store_true")
     one = subs.add_parser("fetch")
@@ -322,6 +324,12 @@ def main(argv=None):
     if args.command == "configure-nyt":
         configure_nyt(args.archive)
         return
+    requested = (args.sources if args.command == "collect" else
+                 [args.source] if args.command in {"fetch", "history"} else [])
+    blocked = sorted(set(requested) & PERMISSION_REQUIRED)
+    if blocked:
+        raise ValueError("Network collection is disabled pending source terms: "
+                         + ", ".join(blocked) + "; use authorized manual import")
     if args.command == "collect":
         for source in args.sources:
             print(f"Collecting {source}", flush=True)

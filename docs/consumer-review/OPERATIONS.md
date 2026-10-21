@@ -62,3 +62,26 @@ first-print evidence. Separate collection from paid forecast execution, retain
 private/public artifact boundaries, and hold affected rounds when release
 evidence is missing. These are proposed deployment requirements, not a new
 competing admission checklist.
+
+## YouGov Crosstab Operations
+
+Manual download remains the retrieval boundary until written permission for
+automation exists. After a maintainer downloads a workbook, the operator path
+must check the expected wave identifier, required demographic groups, headers,
+row counts and SHA256 before archiving it. Alerts key off the expected wave,
+not file modification time. A missing wave cannot settle a round, and a late
+file retains its true acquisition time.
+
+## Civiqs Stable-Machine Plan
+
+The preferred deployment is a small self-hosted runner or scheduled VM with
+outbound HTTPS, encrypted storage and a deploy key limited to the archive branch.
+The smallest always-on VM is expected to cost under USD 10 per month; the current
+fetch path requires no Civiqs credential. A maintainer-operated Mac launch agent
+is the fallback but has higher sleep and network risk. This document changes no
+deployment and does not run collection on another machine.
+
+On a missed fetch, retain the last valid snapshot with an explicit stale flag.
+Never settle a round from stale data. A later successful fetch records the true
+acquisition time and the revised vintage used for recovery. Courier and refresh
+remain separate.
