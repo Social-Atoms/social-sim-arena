@@ -5,6 +5,8 @@ All collection/parser/test details below describe a separate local prototype;
 that implementation and its private artifacts are not included in this PR.
 Reviewer feedback, source admission and formal task activation remain pending.
 See the [evidence summary](EVIDENCE.md) for coverage, observed checks and limits.
+See the [terms audit](TERMS.md) and [final response matrix](FINAL_MATRIX.md)
+for source permissions and handoff decisions.
 Follow-up implementation will be split by source.
 
 Prepared on 2026-10-21 and extended on 2026-10-22 for local review. This implements the evidence-collection
@@ -47,9 +49,10 @@ Many histories remain sparse, and retrospective first-print status is unverified
 ## Evidence Access
 
 The [evidence summary](EVIDENCE.md) documents data shapes, coverage, tests and
-limitations. The seven-source dataset, original publisher artifacts, schema and
+limitations. The Michigan, SCE and Mint data, original artifacts, schema and
 provenance are in the [review snapshot release](https://github.com/Social-Atoms/social-sim-arena/releases/tag/consumer-data-review-2026-10-22)
-attachment. Credentials are not included. The snapshot does not establish
+attachment. NYT, Netflix, Steam and ACSI remain excluded after the terms audit.
+Credentials are not included. The snapshot does not establish
 release-day first prints or grant formal source admission.
 
 ## Review Records
