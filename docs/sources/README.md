@@ -16,3 +16,8 @@ One page per source the arena scores against. Each says the same five things, in
 | Wikimedia | [wikimedia.md](wikimedia.md) | Wikipedia weekly top 10 | `ssa/adapters/wikipedia.py` |
 
 Two rules hold across every page. A number is read from an archive the arena keeps, never from whatever the publisher shows at the moment of scoring, so every resolution can be checked later. And a source that goes quiet fails loudly rather than serving something stale; [sources.md](../sources.md) is the process for adding a source and says why.
+
+Seven proposed consumer/market sources have a separate
+[review index](../consumer-review/README.md) and
+[evidence summary](../consumer-review/EVIDENCE.md). Their collection prototypes
+do not make them active arena tasks; organizer review is pending.
