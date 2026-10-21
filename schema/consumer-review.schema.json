@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SSA consumer review archive (not a formal round)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "series", "lists", "provenance", "sources", "review_status"],
+  "properties": {
+    "format": {"const": "ssa.consumer.review.v1"},
+    "review_status": {"const": "pending"},
+    "series": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array", "minItems": 1,
+        "items": {
+          "type": "object", "additionalProperties": false,
+          "required": ["date", "value"],
+          "properties": {"date": {"type": "string", "format": "date"}, "value": {"type": "number"}}
+        }
+      }
+    },
+    "lists": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array", "minItems": 1,
+        "items": {
+          "type": "object", "additionalProperties": false,
+          "required": ["week_end", "items"],
+          "properties": {
+            "week_end": {"type": "string", "format": "date"},
+            "items": {"type": "array", "minItems": 10, "maxItems": 10, "uniqueItems": true,
+              "items": {"type": "string", "minLength": 1}}
+          }
+        }
+      }
+    },
+    "provenance": {"type": "object"},
+    "sources": {
+      "type": "object",
+      "propertyNames": {"enum": ["nyt", "michigan_finals", "michigan_current", "mint", "steam", "netflix", "sce", "acsi"]},
+      "additionalProperties": {
+        "type": "object",
+        "required": ["at", "status", "detail"],
+        "properties": {
+          "at": {"type": "string", "format": "date-time"},
+          "status": {"enum": ["collected", "corpus_only", "credential_required", "transport_failure", "http_failure", "access_challenge", "manual_import_required", "parse_failure", "missing_archive"]},
+          "detail": {"type": "string"}
+        }
+      }
+    }
+  }
+}
