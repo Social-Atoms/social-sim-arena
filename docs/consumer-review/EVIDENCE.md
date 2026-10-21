@@ -32,8 +32,9 @@ diagnostic totals, sparse annual instruments and aggregates.
 
 These tests were run on the separate implementation branch, not on this
 documentation-only branch. Follow-up source PRs must expose the relevant code
-and fixtures for independent review. The acquired data and original artifacts
-are attached to the review snapshot release linked from the index.
+and fixtures for independent review. The permission-cleared Michigan, SCE and
+Mint artifacts are attached to the review snapshot release linked from the
+index. Other source prototypes remain local pending source-specific rights.
 
 Historical downloads retain their actual capture times. They do not establish
 the original first print or justify a formal forecasting lock. No paid forecast
