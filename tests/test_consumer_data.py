@@ -27,6 +27,16 @@ CURRENT = (b",,,EXPECTED CHANGE IN PRICES\nDATE OF SURVEY,,,NEXT YEAR,,NEXT 5 YE
 
 
 class ConsumerTests(unittest.TestCase):
+    def test_restricted_sources_cannot_be_requested_through_network_cli(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for command in (["collect", "--sources", "netflix"],
+                            ["fetch", "steam", tool.URLS["steam"]],
+                            ["history", "nyt"], ["history", "acsi"]):
+                with self.subTest(command=command), mock.patch.object(tool.requests, "get",
+                        side_effect=AssertionError("Unexpected network request")), \
+                        self.assertRaisesRegex(ValueError, "disabled pending source terms"):
+                    tool.main(["--archive", directory, *command])
+
     def test_nyt_local_key_is_private_used_automatically_and_never_logged(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
