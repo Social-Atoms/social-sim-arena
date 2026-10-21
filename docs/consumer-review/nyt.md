@@ -9,16 +9,15 @@ an organizer decision.
 **Where it is published.** Official Books API:
 `https://api.nytimes.com/svc/books/v3/lists/current/hardcover-fiction.json`.
 The research references `https://developer.nytimes.com/docs/books-product/1/overview`.
-A user-supplied key successfully authenticated on 2026-10-22 (Asia/Shanghai).
+An authenticated Books API request succeeded on 2026-10-22 (Asia/Shanghai).
 Archived 52 consecutive Hardcover Fiction top-ten lists, with publication labels
-from 2025-11-02 through 2026-10-25. Acquired dates and the latest top ten are in
-`.local/consumer/NYT_REPORT.md`. The account and application were created by the
-user; no login password is stored.
+from 2025-11-02 through 2026-10-25. The collection archive retains acquisition
+dates and ISBN-level identifiers. Account credentials are excluded from the PR.
 
 **How the arena reads it.** Proposed, not live: `nyt_books` accepts a dated list
 or overview JSON, validates complete top-ten ranks and ISBN13 identifiers, and
 preserves publication and bestseller dates separately. The CLI reads only the
-`NYT_API_KEY` environment variable or the private local key file written by
+`NYT_API_KEY` environment variable or a private credential file written by
 `configure-nyt`; request errors and manifests omit the key. The prototype is not
 included in this documentation-only PR.
 Authenticated requests do not follow redirects. An authorized local JSON export can be imported without network access.

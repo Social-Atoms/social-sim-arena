@@ -9,7 +9,7 @@ as ordinary individual consumers without evidence. Running totals are diagnostic
 `https://www.usmint.gov/about/production-sales-figures/cumulative-sales`.
 Research reports publication Tuesday by 17:00 Eastern for sales through Sunday;
 that contract still needs live confirmation. Automated access previously returned
-403. The user supplied two original official CSV downloads for report dates
+403. Two manually downloaded official CSV reports have period ends
 2026-10-11 and 2026-10-18. Each contains 698 unique SKUs, all matched across the
 two dates. Raw bytes, hashes, labels and capture times are retained privately.
 
@@ -21,9 +21,9 @@ end. Dates must be Sundays, counts nonnegative integers, and SKU/date pairs uniq
 After joining archived reports in calendar order, it computes differences only
 between adjacent seven-day periods. It retains negative changes, skips gaps, and
 flags revised cumulative values while preserving the earliest retained capture.
-The two supplied reports yield 1,396 cumulative observations and 698 weekly-change
-observations: 131 positive, 555 zero and 12 negative. Details and original evidence
-pointers are in `.local/consumer/MINT_REPORT.md`.
+The two reports yield 1,396 cumulative observations and 698 weekly-change
+observations: 131 positive, 555 zero and 12 negative. Original evidence and
+source hashes are recorded in the separate data snapshot.
 
 **How a question resolves.** Pending product and schedule review. A task needs a
 fixed measurement interval, official release and audit policy, premeasurement
@@ -36,5 +36,5 @@ weekly histories are needed to assess movement. All 698 SKUs are archived for
 review; they are not 698 approved fixed-limit forecasting targets. Retired
 products, total limits versus batch supply, replenishment, dealer mix, SKU units,
 corrections and holiday delays need review. Automated access remains unresolved;
-user-supplied official exports work. Owners, cadence, rights, historical first
+manual official exports work. Owners, cadence, rights, historical first
 prints and formal target admission remain pending.

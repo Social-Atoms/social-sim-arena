@@ -9,14 +9,14 @@ will be reviewed in follow-up PRs. No runtime changes are included here.
 | Source documentation/index | Needed: seven evidence cards and truthful implementation state | Added review cards and an index link |
 | Inventory | Needed: correct ACSI's factual quarterly/paywall shorthand | Evidence recorded here; inventory and admission states unchanged in this PR |
 | Source admission rules | Pending decisions, not permission to rewrite policy | Decision memo only |
-| Scalar history shape | Reuse existing `{date, value}` contract | New parsers emit the same records |
-| Ranking history shape | Reuse existing `{week_end, items}` contract with explicit date semantics | New parsers emit the same records; rich provenance remains separate |
-| Site data | Local review copy needed; public snapshot must retain its meaning | Append candidate histories into an ignored local copy; original fields/rounds remain intact |
+| Scalar history shape | Reuse existing `{date, value}` contract | Prototype validates the shape; no parser change in this PR |
+| Ranking history shape | Reuse existing `{week_end, items}` contract with explicit date semantics | Prototype validates the shape; no parser change in this PR |
+| Site data | Review copy must preserve the public snapshot | Prototype checks preservation; no site-data change in this PR |
 | SERIES / PUBLICATION / task registry | Formal targets and forward contracts not yet reviewed | No active registration or schedule changes |
 | Templates / official round JSON / resolver | Need source-specific time, candidate, missing-answer and first-print review | No official round changes; no locked-question edits |
 | Baselines / score | Existing code can measure compatible histories | Offline persistence/movement diagnostics only; no new aggregation |
 | Participant examples / API schemas | No participant I/O contract change | No changes needed |
-| Deployment artifacts | Private raw data must remain private even in local deployment builds | Explicitly exclude `.local` in `.vercelignore`; existing Git ignore already covers it |
+| Deployment artifacts | Collection credentials and private working files must remain private | No deployment configuration changed in this PR; existing Git and Vercel exclusions remain in place |
 | Operational documentation | Needed: real code paths, failures, ownership gaps | Added operations review; no deployment claim |
 
 ## Suggested PR Boundaries

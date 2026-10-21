@@ -8,7 +8,7 @@ included here. Organizer verification and source admission remain pending.
 | --- | --- | --- |
 | NYT Hardcover Fiction | 52 weekly top-ten lists, publication labels 2025-11-02 through 2026-10-25 | ISBN edition policy, rights and first prints |
 | Michigan inflation | 586 one-year and 481 long-horizon monthly values through October 2026 preliminary | Sparse earlier months; historical preliminary vintages |
-| US Mint | Two official user-downloaded reports, 2026-10-11 and 2026-10-18; 698 matched SKUs | One weekly change per SKU; automation still returned 403 |
+| US Mint | Two manually downloaded official reports, 2026-10-11 and 2026-10-18; 698 matched SKUs | One weekly change per SKU; automation still returned 403 |
 | Steam US | 52 consecutive weekly revenue top-ten lists | Exact measurement cutoff, candidate policy and rights |
 | Netflix US | 277 film and 277 TV weekly lists through 2026-10-18 | Country export does not provide US views; title/season policy |
 | SCE extensions | Nine indicators with 160 monthly values each, June 2013-September 2026 | Signal selection; current-vintage workbook |
@@ -32,8 +32,8 @@ diagnostic totals, sparse annual instruments and aggregates.
 
 These tests were run on the separate implementation branch, not on this
 documentation-only branch. Follow-up source PRs must expose the relevant code
-and authorized fixtures for independent review. Raw evidence can be reviewed
-through an approved private channel after source-specific rights review.
+and fixtures for independent review. The acquired data and original artifacts
+are attached to the review snapshot release linked from the index.
 
 Historical downloads retain their actual capture times. They do not establish
 the original first print or justify a formal forecasting lock. No paid forecast

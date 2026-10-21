@@ -8,8 +8,8 @@ crosstab workbook is 2026-10-16 with wave date 2026-10-12. No scheduled YouGov
 download was enabled or executed for this task.
 
 `tools/local_source_archive.py` already implements Civiqs/Trends/Wikipedia
-collection and has commit/push behavior. It was deliberately not executed:
-the user's no-push requirement also applies to helper scripts. The refresh
+collection and has commit/push behavior. It was not executed during source
+evaluation. The refresh
 workflow imports newly added archive files from the `source-archive` branch
 before processing. Code inspection verifies that path; it does not prove the
 current external courier host, launchd schedule, or remote delivery is healthy.
