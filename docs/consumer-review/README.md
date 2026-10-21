@@ -49,9 +49,10 @@ Many histories remain sparse, and retrospective first-print status is unverified
 ## Evidence Access
 
 The [evidence summary](EVIDENCE.md) documents data shapes, coverage, tests and
-limitations. The seven-source dataset, original publisher artifacts, schema and
+limitations. The Michigan, SCE and Mint data, original artifacts, schema and
 provenance are in the [review snapshot release](https://github.com/Social-Atoms/social-sim-arena/releases/tag/consumer-data-review-2026-10-22)
-attachment. Credentials are not included. The snapshot does not establish
+attachment. NYT, Netflix, Steam and ACSI remain excluded after the terms audit.
+Credentials are not included. The snapshot does not establish
 release-day first prints or grant formal source admission.
 
 ## Review Records

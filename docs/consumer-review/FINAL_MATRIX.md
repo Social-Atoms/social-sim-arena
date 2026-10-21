@@ -21,18 +21,10 @@
 | YouGov crosstabs | Automate validation after manual download | Check expected wave, completeness, hash and archive; alert on wave identity |
 | Civiqs | Stable-machine proposal | Preserve last valid vintage as stale, never settle from stale, and record true recapture time |
 
-Other-candidate conclusions: Substack and Apple charts wait for a Class B protocol;
-Cloudflare Radar is deferred because its CC BY-NC license is unsuitable for a
-public benchmark without a separate determination; openFDA and NY Fed Global
-Supply Chain Pressure are input/separate-board candidates; Treasury auctions are
-separate-board only because bidders are institutions; quarterly user counts are
-deferred under cadence; Nielsen/Circana require methodology and rights review;
-YouTube Shorts lacks a stable downloadable archive; YouGov Brand Movers/Ratings
-wait for separate terms review; Gallup waits for a complete series and calendar;
-Bank of America consumer checkpoint remains a paid/rights question; TSA,
-Recreation.gov, IMDb and Steam concurrent players wait for the Class B protocol;
-non-US confidence becomes a separate domain proposal; Seattle checkouts, IRS,
-CMS, NBA, CDC and annual events are one-special-round-per-season candidates;
-Treasury savings bonds stays rejected because its cumulative report does not
-measure new purchases; Fannie Mae, Kickstarter and Netflix subscriber counts stay
-closed for discontinuation/terms reasons.
+Every Section 2 candidate and Section 7 exploratory design has a one-line
+disposition in [Other Candidates](OTHER_CANDIDATES.md). The separate
+[Class B protocol](CLASS_B_PROTOCOL.md) controls live-stream pilots. The
+survey's rejected examples stay rejected: Fannie Mae is discontinued,
+Kickstarter's crawling restriction blocks retrieval, Netflix subscriber counts
+are no longer published, Treasury savings bonds do not measure new purchases,
+and Redfin's weekly file appeared stale in the cited survey.

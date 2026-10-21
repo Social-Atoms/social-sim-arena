@@ -18,6 +18,12 @@ import is the supported route. All seven source adapters must retain raw hashes,
 capture dates and source URLs even when the public release contains only derived
 records.
 
+YouGov's [public-data license](https://yougov.com/about/terms/public-data-license)
+prohibits automated scripts, bots and crawlers without express written permission,
+and prohibits training or developing ML models from licensed data. Brand Movers
+and Ratings need separate retrieval/use/redistribution decisions and do not
+inherit a crosstab position. Manual wave validation does not make network calls.
+
 ## Operational Consequences
 
 - Netflix is stopped for automated benchmark use until written authorization.
