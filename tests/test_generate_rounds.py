@@ -751,6 +751,181 @@ def test_sce_rounds_are_still_rights_gated():
     print("ok test_sce_rounds_are_still_rights_gated")
 
 
+def _newest(series):
+    return max((r for r in _season() if r.get("series") in series),
+               key=lambda r: (r["release_at"], r["round_id"]))
+
+
+def test_aaii_rolls_weekly_from_the_newest_reviewed_round():
+    """Thursday results post, seven days on, same clock, same question,
+    and a resolve rule that names the Wednesday the voting week ends."""
+    rounds = _season()
+    tpl = _newest({gen.AAII_SERIES})
+    now = gen._clock(tpl["release_at"])
+    out = gen.aaii_candidates(rounds, 2, now)
+    rel0 = gen._clock(tpl["release_at"])
+    assert [r["round_id"] for r in out] == [
+        f"aaii-{(rel0 + timedelta(days=7 * k)).date().isoformat()}"
+        for k in (1, 2)], out
+    lock_off = gen._clock(tpl["lock_at"]) - rel0
+    for k, r in enumerate(out, start=1):
+        rel = gen._clock(r["release_at"])
+        assert rel == rel0 + timedelta(days=7 * k), r["release_at"]
+        assert gen._clock(r["lock_at"]) - rel == lock_off, r["round_id"]
+        assert r["question"] == tpl["question"]
+        assert r["resolve"] == gen.AAII_RESOLVE.format(
+            week_end=(rel - timedelta(days=1)).date().isoformat()), r["resolve"]
+        assert r["series"] == gen.AAII_SERIES and r["tracker"] == tpl["tracker"]
+        assert r["unit"] == tpl["unit"]
+        assert r["target_type"] == tpl["target_type"]
+        assert gen.batches.governed_by_batch(r["lock_at"])
+    print("ok test_aaii_rolls_weekly_from_the_newest_reviewed_round")
+
+
+def test_aaii_refuses_a_drifted_resolve_or_a_split_spacing():
+    rounds = [dict(r) for r in _season() if r.get("series") == gen.AAII_SERIES]
+    now = gen._clock(max(r["release_at"] for r in rounds))
+
+    drifted = [dict(r) for r in rounds]
+    top = max(drifted, key=lambda r: r["release_at"])
+    week_end = (gen._clock(top["release_at"]) - timedelta(days=1)).date()
+    top["resolve"] = top["resolve"].replace(
+        week_end.isoformat(), (week_end + timedelta(days=1)).isoformat())
+    try:
+        gen.aaii_candidates(drifted, 1, now)
+    except ValueError as e:
+        assert "does not name the Wednesday" in str(e), e
+    else:
+        raise AssertionError("a resolve naming the wrong week rolled forward")
+
+    split = [dict(r) for r in rounds]
+    lock = gen._clock(split[0]["lock_at"])
+    split[0]["lock_at"] = gen._stamp(lock - timedelta(days=1))
+    try:
+        gen.aaii_candidates(split, 1, now)
+    except ValueError as e:
+        assert "different lock/release spacings" in str(e), e
+    else:
+        raise AssertionError("inconsistent spacings were templated from anyway")
+    print("ok test_aaii_refuses_a_drifted_resolve_or_a_split_spacing")
+
+
+def test_umich_rolls_both_stages_on_the_entered_calendar():
+    """Preliminary then final, on days somebody typed in, at 10:00 Eastern
+    whatever that is in UTC that month."""
+    rounds = _season()
+    tpl = _newest({gen.UMICH_SERIES})
+    month, stage = gen.UMICH_ID.match(tpl["round_id"]).groups()
+    assert stage == "final", "fixture: the newest reviewed round is not a final"
+    nxt = gen._next_month(month)
+    days = (f"{nxt}-10", f"{nxt}-24")
+    now = gen._clock(tpl["release_at"])
+    with mock.patch.dict(gen.UMICH_RELEASES, {nxt: days}):
+        out, unentered = gen.umich_candidates(rounds, 2, now)
+    assert unentered is None, unentered
+    assert [r["round_id"] for r in out] == [f"umich-{nxt}-prelim",
+                                            f"umich-{nxt}-final"], out
+    lock_off = gen._clock(tpl["lock_at"]) - gen._clock(tpl["release_at"])
+    for r, day, word in zip(out, days, ("preliminary", "final")):
+        assert r["release_at"] == gen._stamp(gen._umich_release(day)), r
+        assert gen._clock(r["lock_at"]) - gen._clock(r["release_at"]) == lock_off
+        assert r["question"] == gen.UMICH_QUESTION.format(
+            month=gen._month_phrase(nxt), stage=word), r["question"]
+        assert r["resolve"] == tpl["resolve"]
+        assert r["unit"] == tpl["unit"] and r["tracker"] == tpl["tracker"]
+        assert r["target_type"] == tpl["target_type"]
+        assert gen.batches.governed_by_batch(r["lock_at"])
+    # 10:00 Eastern is 14:00Z in summer and 15:00Z in winter.
+    assert gen._stamp(gen._umich_release("2026-09-11")) == "2026-09-11T14:00:00Z"
+    assert gen._stamp(gen._umich_release("2026-11-06")) == "2026-11-06T15:00:00Z"
+    print("ok test_umich_rolls_both_stages_on_the_entered_calendar")
+
+
+def test_umich_party_rides_the_preliminary_release():
+    rounds = _season()
+    tpl = _newest(set(gen.UMICH_PARTY))
+    month = gen.UMICH_PARTY_ID.match(tpl["round_id"]).group(1)
+    nxt = gen._next_month(month)
+    days = (f"{nxt}-10", f"{nxt}-24")
+    now = gen._clock(tpl["release_at"])
+    with mock.patch.dict(gen.UMICH_RELEASES, {nxt: days}):
+        out, unentered = gen.umich_party_candidates(rounds, 1, now)
+    assert unentered is None, unentered
+    assert [r["round_id"] for r in out] == [
+        f"umich-party-{nxt}-{suffix}" for suffix, _ in gen.UMICH_PARTY.values()]
+    for r, (sid, (suffix, party)) in zip(out, gen.UMICH_PARTY.items()):
+        assert r["series"] == sid
+        assert r["release_at"] == gen._stamp(gen._umich_release(days[0])), r
+        assert r["question"] == gen.UMICH_PARTY_QUESTION.format(
+            party=party, month=gen._month_phrase(nxt)), r["question"]
+        assert r["resolve"] == gen.UMICH_PARTY_RESOLVE.format(
+            month_name=gen._month_name(nxt)), r["resolve"]
+        assert r["unit"] == tpl["unit"] and r["tracker"] == tpl["tracker"]
+    print("ok test_umich_party_rides_the_preliminary_release")
+
+
+def test_umich_calendar_is_checked_and_its_end_is_named():
+    rounds = _season()
+    tpl = _newest({gen.UMICH_SERIES})
+    month = gen.UMICH_ID.match(tpl["round_id"]).group(1)
+    now = gen._clock(tpl["release_at"])
+    # A typed-in day that contradicts a reviewed round is a typo, not a plan.
+    prelim, final = gen.UMICH_RELEASES[month]
+    wrong = (date.fromisoformat(prelim) + timedelta(days=1)).isoformat()
+    with mock.patch.dict(gen.UMICH_RELEASES, {month: (wrong, final)}):
+        for roll in (gen.umich_candidates, gen.umich_party_candidates):
+            try:
+                roll(rounds, 1, now)
+            except ValueError as e:
+                assert "disagrees" in str(e), e
+            else:
+                raise AssertionError("a day nobody reviewed was templated from")
+    # A day outside the survey month cannot be a Michigan release.
+    nxt = gen._next_month(month)
+    with mock.patch.dict(gen.UMICH_RELEASES, {nxt: (f"{gen._next_month(nxt)}-01", f"{nxt}-24")}):
+        try:
+            gen.umich_candidates(rounds, 1, now)
+        except ValueError as e:
+            assert "outside the survey month" in str(e), e
+        else:
+            raise AssertionError("a release outside its month was kept")
+    # When the calendar runs out, the month is named, not skipped.
+    reviewed = {m: gen.UMICH_RELEASES[m] for m in gen.UMICH_RELEASES
+                if m <= month}
+    with mock.patch.dict(gen.UMICH_RELEASES, reviewed, clear=True):
+        assert gen.umich_candidates(rounds, 1, now) == ([], nxt)
+        assert gen.umich_party_candidates(rounds, 1, now) == ([], nxt)
+    print("ok test_umich_calendar_is_checked_and_its_end_is_named")
+
+
+def test_calendar_families_skip_the_gate_loop_but_not_the_rights_check():
+    """AAII and Michigan roll from their calendars, so the registry gate must
+    not also report them as unsupported; a withdrawn verdict still refuses
+    them by name."""
+    import contextlib
+    import io
+    tpl = _newest({gen.AAII_SERIES})
+    argv = [sys.argv[0], "--rejects", "--now", tpl["release_at"]]
+    buf = io.StringIO()
+    with mock.patch.object(sys, "argv", argv), contextlib.redirect_stdout(buf):
+        gen.main()
+    for line in buf.getvalue().splitlines():
+        if "unsupported_family" in line:
+            for sid in gen.CALENDAR_FAMILIES:
+                assert sid not in line, line
+    buf = io.StringIO()
+    with mock.patch.dict(gen.RIGHTS, {"aaii": "unresolved",
+                                      "umichparty": "unresolved"}), \
+            mock.patch.object(sys, "argv", argv), \
+            contextlib.redirect_stdout(buf):
+        gen.main()
+    lines = [ln for ln in buf.getvalue().splitlines()
+             if gen.AAII_SERIES in ln or "umich_party_" in ln]
+    assert len(lines) == 4 and all('"gate": "rights"' in ln for ln in lines), \
+        lines
+    print("ok test_calendar_families_skip_the_gate_loop_but_not_the_rights_check")
+
+
 def test_declined_families_carry_their_decision():
     """Considered and declined is not the same refusal as never templated.
 
@@ -1022,8 +1197,14 @@ if __name__ == "__main__":
     test_sce_refuses_drifted_wording_split_spacings_and_a_wrong_day()
     test_sce_names_the_first_month_the_calendar_does_not_cover()
     test_sce_rounds_are_still_rights_gated()
+    test_aaii_rolls_weekly_from_the_newest_reviewed_round()
+    test_aaii_refuses_a_drifted_resolve_or_a_split_spacing()
+    test_umich_rolls_both_stages_on_the_entered_calendar()
+    test_umich_party_rides_the_preliminary_release()
+    test_umich_calendar_is_checked_and_its_end_is_named()
+    test_calendar_families_skip_the_gate_loop_but_not_the_rights_check()
     test_declined_families_carry_their_decision()
     test_the_headline_profile_round_no_longer_stops_in_september()
     test_a_sixteen_cell_question_is_not_interpolated_to_another_width()
     test_no_test_here_writes_into_the_repositorys_candidate_directory()
-    print("34 passed")
+    print("40 passed")

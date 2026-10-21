@@ -9,3 +9,5 @@
 **How a question resolves.** On the results-page row for the named voting week.
 
 **What to watch.** The rolling window clears the roughly fifteen weeks the baselines need with little margin; the archive is what makes the history longer than the page.
+
+**How questions are scheduled.** `tools/generate_rounds.py` rolls one round a week forward from the newest reviewed AAII round: the Thursday 14:00Z release, a lock 48 hours earlier, the question carried verbatim and a resolve rule naming the Wednesday the voting week ends. It keeps no holiday calendar, so a week the survey skips is the reviewer's to drop before the candidate is promoted into `questions/season0.json`.
