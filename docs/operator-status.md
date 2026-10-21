@@ -38,6 +38,13 @@ Every row always contains `attempts`, `last_error`, `next_retry`, `next_lock`,
 
 ## Artifact safety
 
+For a manual Civiqs archive review, `python tools/check_civiqs_archive.py
+<archive-key> <expected-YYYY-MM-DD>` exits nonzero if either the latest capture
+day or the newest reading precedes the expected period. This is a read-only
+operator preflight, not a replacement for the existing resolution and provenance
+guards. Recovery retains the actual snapshot capture day; it cannot backdate a
+first-print observation.
+
 - Source loaders and per-source derivations are isolated. They all run even if
   one fails, and each validated success is preserved. A sibling 403 cannot
   erase it. With a valid same-source archive, dependent forecasting may
