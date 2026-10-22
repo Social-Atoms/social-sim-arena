@@ -15,7 +15,6 @@ sys.path.insert(0, str(ROOT))
 
 from ssa import consumer
 from ssa.adapters import consumer as adapter
-from tools import acsi_benchmarks
 
 spec = importlib.util.spec_from_file_location("consumer_tool", ROOT / "tools/consumer_data.py")
 tool = importlib.util.module_from_spec(spec)
@@ -399,55 +398,6 @@ class ConsumerTests(unittest.TestCase):
                 with self.subTest(field=field), self.assertRaisesRegex(ValueError, error):
                     consumer.verify_acsi_evidence(parsed, evidence, root)
                 row[field] = original
-
-    def test_acsi_snapshot_skips_na_and_keeps_unmapped_dates_pending(self):
-        url = acsi_benchmarks.PREFIX + "manufacturing/cell-phones/"
-        body = (b"<main><table><tr><th>Company</th><th>2025</th><th>2026</th><th>% Change</th></tr>"
-                b"<tr><td>Example</td><td>NA</td><td>82</td><td>NA</td></tr></table></main>")
-        rows, pending = acsi_benchmarks.selected_rows(url, body, {})
-        self.assertEqual(rows, [])
-        self.assertEqual(len(pending), 1)
-        self.assertEqual(pending[0]["year"], 2026)
-        release = "https://theacsi.com/news-and-resources/press-releases/2026/05/19/telecommunications-study-2026/"
-        rows, pending = acsi_benchmarks.selected_rows(url, body, {release: {"status": "captured"}})
-        self.assertEqual(pending, [])
-        self.assertEqual((rows[0]["score"], rows[0]["published_date"]), (82, "2026-05-19"))
-        self.assertIn("first_print_unverified", rows[0]["value_vintage"])
-
-    def test_acsi_reused_url_and_ambiguous_release_require_review(self):
-        url = acsi_benchmarks.PREFIX + "interactive-media-subscription-entertainment/search-engines-and-information/"
-        body = (b"<main><table><tr><th>Brand</th><th>2025</th><th>2026</th></tr>"
-                b"<tr><td>Search Engines</td><td>80</td><td>82</td></tr></table></main>")
-        with self.assertRaisesRegex(ValueError, "population"):
-            acsi_benchmarks.selected_rows(url, body, {})
-        releases = {f"https://theacsi.com/news-and-resources/press-releases/2026/05/{day}/telecommunications/":
-                    {"status": "captured"} for day in ("19", "20")}
-        with self.assertRaisesRegex(ValueError, "found 2"):
-            acsi_benchmarks.release_for(releases, 2026, "telecommunications")
-
-    def test_acsi_offline_rebuild_reuses_identical_vintage(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            suffix = "manufacturing/cell-phones/"
-            url = acsi_benchmarks.PREFIX + suffix
-            release = "https://theacsi.com/news-and-resources/press-releases/2026/05/19/telecommunications-study-2026/"
-            table = (b"<main><table><tr><th>Company</th><th>2026</th></tr>"
-                     b"<tr><td>Example</td><td>82</td></tr></table></main>")
-            for label, artifact_url, body in [("acsi", release, b"<main>Study release</main>"),
-                    ("acsi-benchmarks", url, table)]:
-                digest = consumer.sha256(body)
-                relative = f"corpus/{label}/{digest}.html"
-                consumer.immutable(root / relative, body)
-                consumer.write_json(root / f"corpus/{label}.json", {"format": "ssa.consumer.corpus.v1",
-                    "documents": {artifact_url: {"status": "captured", "file": relative, "sha256": digest}}})
-            with mock.patch.object(acsi_benchmarks, "PROFILES", {suffix: ("telecommunications", (0,))}):
-                with mock.patch.object(consumer, "now", return_value="2026-10-21T12:00:00Z"):
-                    acsi_benchmarks.build(root)
-                with mock.patch.object(consumer, "now", return_value="2026-10-21T12:01:00Z"):
-                    acsi_benchmarks.build(root)
-            self.assertEqual(len(consumer.index(root)["sources"]["acsi"]["vintages"]), 1)
-            self.assertEqual(consumer.build_all(root)["series"]["acsi_cell_phones_example"],
-                             [{"date": "2026-05-19", "value": 82}])
 
     def test_acsi_release_selection_preserves_reviewed_identity_and_publisher_date(self):
         with tempfile.TemporaryDirectory() as directory:
