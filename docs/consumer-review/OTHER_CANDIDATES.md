@@ -4,6 +4,41 @@ These are disposition decisions for Section 2 of the source survey, not
 additional collection work in this batch. “Seasonal special” means one
 prospective question per season rather than weekly rounds.
 
+## What the dispositions mean
+
+Sources fall into two classes:
+
+- **Class A**: a third party publishes the number on a schedule announced in
+  advance. The round locks 48 hours before the release, so the answer does not
+  exist at lock time, and someone outside the arena chose both the measure and
+  the date.
+- **Class B**: a continuous stream, such as a live chart, a daily count or a
+  running rating, that the arena would read at times it chooses. The arena then
+  sets the observation window as well as reading the answer, so it both writes
+  the question and resolves it, and it must archive every reading itself
+  because the publisher keeps no dated copy.
+
+**Wait for Class B** means the source is not added until the arena adopts a
+protocol for Class B sources (issue #17): when a reading is taken, how the
+window is fixed before the lock, and how each reading is archived and hashed
+so that it can be checked later. A question pinned to a date a third party
+sets, such as a rating seven days after an announced release, reduces the
+problem but still needs that protocol. "And terms" means the source's terms
+of use must also clear first.
+
+The other labels:
+
+| Disposition | Meaning |
+| --- | --- |
+| Input only | Entrants may read it as context; it is never a scored target. Used for numbers firms decide, such as supply or inventories. |
+| Separate board | May be scored, but on a leaderboard kept apart from the social-simulation ranking. |
+| Next batch | A plausible Class A source; the open checks in its row come first. |
+| Next domain batch | As next batch, but scored as its own domain, apart from U.S. rounds. |
+| Defer | Blocked by something outside the arena's control, such as paid data, a licence or a missing archive. |
+| Seasonal special | One prospective question per season rather than weekly rounds. |
+| One large round or separate board | An annual release with many items counts once, not as dozens of rounds. |
+| Wait for rights / terms | Usable in principle, but no round until the source's terms are cleared. |
+
 | Candidate | Disposition | Reason |
 | --- | --- | --- |
 | Substack leaderboards | Wait for Class B | No declared release time; cited page returned 404. |
