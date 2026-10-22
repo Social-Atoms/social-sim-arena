@@ -11,11 +11,12 @@ Fifty-two consecutive weekly charts were captured, with starts from 2025-10-21
 through 2026-10-13. Latest measured interval is labeled October 13-20.
 The page's browsing currency/context is not the chart's country definition.
 
-**How the arena reads it.** The new offline parser reads inert
-`valve-ssr-data` JSON, requires the weekly route and `weekly.strCountryCode=US`,
-checks exactly one typed ID per entry, and extracts ranks 1-10. Historical
-requests must return the requested week. Each original HTML page and parsed list
-is hashed and retained. Earlier captured versions are never overwritten.
+**How the arena reads it.** No code on `dev`. The prototype parser and collector were merged to `dev` and then removed pending source terms; this card is an evaluation record only, and the description below is of that removed code. The offline parser
+read inert `valve-ssr-data` JSON, required the weekly route and
+`weekly.strCountryCode=US`, checked exactly one typed ID per entry, and extracted
+ranks 1-10. Historical requests had to return the requested week. Each original
+HTML page and parsed list was hashed and retained; earlier captured versions were
+never overwritten.
 
 **How a question resolves.** Proposed, not active: a ranking task over the
 publisher's dated US chart, with deadline and visible history frozen before the

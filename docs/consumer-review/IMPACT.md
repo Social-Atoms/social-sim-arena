@@ -1,17 +1,23 @@
 # Document and Integration Impact
 
-This PR is documentation only. Implementation details below describe a separate
-local prototype; source adapters, inventory changes and deployment configuration
-will be reviewed in follow-up PRs. No runtime changes are included here.
+Code state on `dev`: offline parsers and a local review collector exist for
+the three candidate sources only, Michigan inflation, NY Fed SCE extensions and
+US Mint (manual import): `ssa/adapters/consumer.py`, `ssa/consumer.py`,
+`tools/consumer_data.py` and `tests/test_consumer_*.py`. None of it schedules a
+round, and their inventory rights stay `unresolved` until maintainer sign-off.
+Prototype code for NYT, Netflix, Steam and ACSI was merged and then removed
+pending source terms; their cards below are evaluation records only.
+Inventory rows exist for all seven sources; none has generating rights. No
+refresh, round, site or deployment change is included.
 
 | Surface | Assessment | Action in this change |
 | --- | --- | --- |
 | Source documentation/index | Needed: seven evidence cards and truthful implementation state | Added review cards and an index link |
-| Inventory | Needed: correct ACSI's factual quarterly/paywall shorthand | Evidence recorded here; inventory and admission states unchanged in this PR |
+| Inventory | Needed: record each source's state; ACSI reopen proposal | Rows added as `unresolved`/`rejected`; ACSI row unchanged apart from a pointer to the proposal in [acsi.md](acsi.md) |
 | Source admission rules | Pending decisions, not permission to rewrite policy | Decision memo only |
-| Scalar history shape | Reuse existing `{date, value}` contract | Prototype validates the shape; no parser change in this PR |
-| Ranking history shape | Reuse existing `{week_end, items}` contract with explicit date semantics | Prototype validates the shape; no parser change in this PR |
-| Site data | Review copy must preserve the public snapshot | Prototype checks preservation; no site-data change in this PR |
+| Scalar history shape | Reuse existing `{date, value}` contract | Michigan/SCE/Mint parsers on `dev` emit it; no existing parser changed |
+| Ranking history shape | Reuse existing `{week_end, items}` contract with explicit date semantics | No ranking parser remains on `dev`; the NYT/Netflix/Steam prototypes were removed pending terms |
+| Site data | Review copy must preserve the public snapshot | `tools/consumer_data.py build` checks preservation; no site-data change |
 | SERIES / PUBLICATION / task registry | Formal targets and forward contracts not yet reviewed | No active registration or schedule changes |
 | Templates / official round JSON / resolver | Need source-specific time, candidate, missing-answer and first-print review | No official round changes; no locked-question edits |
 | Baselines / score | Existing code can measure compatible histories | Offline persistence/movement diagnostics only; no new aggregation |
