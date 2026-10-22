@@ -1,18 +1,17 @@
 """Offline consumer-source parsers; network retrieval lives in the collection tool.
 
-Scalar output uses the arena's ``{date, value}`` records. Ranking output uses
-``{week_end, items}``. Metadata and vintage evidence never masquerade as values.
+Only Michigan inflation, the NY Fed SCE extensions and US Mint (manual import)
+are parsed here; parsers for NYT, Netflix, Steam and ACSI were removed while
+their terms are unresolved. Output uses the arena's ``{date, value}`` records.
+Metadata and vintage evidence never masquerade as values.
 """
 import csv
 import io
-import json
 import math
 import re
-import unicodedata
 import zipfile
 from collections import defaultdict
-from datetime import date, datetime, timedelta, timezone
-from html.parser import HTMLParser
+from datetime import date, datetime, timedelta
 from xml.etree import ElementTree as ET
 
 from . import sce, umich
@@ -42,12 +41,6 @@ SCE_FIELDS = {
         "Job finding expectations", "Mean probability of finding a job in the next three months if one loses a job today",
         "percent probability"),
 }
-
-
-def entity_slug(value):
-    """ASCII token for a publisher label; entity equivalence uses explicit aliases."""
-    text = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode().lower()
-    return re.sub(r"[^a-z0-9]+", "_", text).strip("_")
 
 
 def iso_day(value):
@@ -100,95 +93,6 @@ def ordered(rows):
 
 def result(series=None, lists=None, metadata=None):
     return {"series": series or {}, "lists": lists or {}, "metadata": metadata or {}}
-
-
-class PublisherHTML(HTMLParser):
-    """Read inert publisher HTML without executing scripts or browser state."""
-    def __init__(self):
-        super().__init__(convert_charrefs=True)
-        self.links, self.scripts, self.text = [], {}, []
-        self.script = None
-        self.ignored = 0
-
-    def handle_starttag(self, tag, attrs):
-        attrs = dict(attrs)
-        if tag == "a" and attrs.get("href"):
-            self.links.append(attrs["href"])
-        if tag == "script":
-            self.script = attrs.get("id")
-            if self.script:
-                self.scripts[self.script] = ""
-        if tag in {"script", "style"}:
-            self.ignored += 1
-
-    def handle_endtag(self, tag):
-        if tag in {"script", "style"}:
-            self.ignored = max(0, self.ignored - 1)
-            self.script = None
-
-    def handle_data(self, data):
-        if self.script:
-            self.scripts[self.script] += data
-        if not self.ignored and data.strip():
-            self.text.append(data.strip())
-
-
-def publisher_html(body):
-    parser = PublisherHTML()
-    parser.feed(body.decode("utf-8") if isinstance(body, bytes) else body)
-    return parser
-
-
-class PublisherTables(HTMLParser):
-    """Read literal cells in main-content tables without running publisher code."""
-    def __init__(self):
-        super().__init__(convert_charrefs=True)
-        self.tables, self.table, self.row, self.cell = [], None, None, None
-        self.in_main = False
-        self.spanning = set()
-
-    def handle_starttag(self, tag, attrs):
-        if tag == "main":
-            self.in_main = True
-        if not self.in_main:
-            return
-        if tag == "table":
-            if self.table is not None:
-                raise ValueError("Nested publisher tables are not supported")
-            self.table = []
-        elif tag == "tr" and self.table is not None:
-            self.row = []
-        elif tag in {"th", "td"} and self.row is not None:
-            if any(key in {"rowspan", "colspan"} and value != "1" for key, value in attrs):
-                self.spanning.add(len(self.tables))
-            self.cell = []
-
-    def handle_data(self, data):
-        if self.cell is not None and data.strip():
-            self.cell.append(data.strip())
-
-    def handle_endtag(self, tag):
-        if tag in {"th", "td"} and self.cell is not None:
-            self.row.append(" ".join(" ".join(self.cell).split()))
-            self.cell = None
-        elif tag == "tr" and self.row is not None:
-            self.table.append(self.row)
-            self.row = None
-        elif tag == "table" and self.table is not None:
-            self.tables.append(self.table)
-            self.table = None
-        elif tag == "main":
-            self.in_main = False
-
-
-def publisher_tables(body, selected=None):
-    parser = PublisherTables()
-    parser.feed(body.decode("utf-8") if isinstance(body, bytes) else body)
-    if selected is not None:
-        if selected < 0 or selected in parser.spanning:
-            raise ValueError("Spanning cells require an explicit table mapping")
-        return parser.tables[selected]
-    return parser.tables
 
 
 def michigan_finals(body):
@@ -275,142 +179,6 @@ def sce_extensions(body, fields=None):
         "fields": {sid: {"sheet": field[0], "header": field[1]} for sid, field in fields.items()}})
 
 
-def ranked(groups, expected=10):
-    out = defaultdict(list)
-    for (sid, week), entries in sorted(groups.items()):
-        ranks = [rank for rank, item in entries]
-        items = [item for rank, item in sorted(entries)]
-        if len(set(items)) != len(items) or sorted(ranks) != list(range(1, expected + 1)):
-            raise ValueError(f"Incomplete/duplicate ranking for {sid}, {week}")
-        out[sid].append({"week_end": week, "items": items})
-    if not out:
-        raise ValueError("No complete rankings")
-    return dict(out)
-
-
-def netflix_country(body):
-    rows = table(body, ("country_name", "country_iso2", "week", "category", "weekly_rank",
-                        "show_title", "season_title"), delimiter="\t")
-    groups = defaultdict(list)
-    for row in rows:
-        if row["country_iso2"] != "US":
-            continue
-        week = row["week"]
-        if iso_day(week).weekday() != 6:
-            raise ValueError("Netflix week must end on Sunday")
-        category = row["category"]
-        if category not in ("Films", "TV"):
-            raise ValueError(f"Unrecognized Netflix category {category!r}")
-        title = row["show_title"].strip()
-        if not title:
-            raise ValueError("Empty Netflix title")
-        item = json.dumps([title, row["season_title"].strip()], ensure_ascii=True, separators=(",", ":"))
-        groups[("netflix_us_" + category.lower(), week)].append((int(row["weekly_rank"]), item))
-    return result(lists=ranked(groups), metadata={
-        "country": "US", "unit": "official weekly rank", "historical_first_print": False,
-        "entity_id": "JSON [show_title, season_title]; publisher has no stable title ID in this export",
-        "measurement": "Monday through Sunday; no country-level views inferred"})
-
-
-def nyt_books(body):
-    payload = json.loads(text_body(body))
-    if payload.get("status") != "OK":
-        raise ValueError("NYT response is not an OK Books API payload")
-    data = payload["results"]
-    if not isinstance(data, dict):
-        raise ValueError("Expected one dated NYT list or overview")
-    published = data["published_date"]
-    bestseller = data["bestsellers_date"]
-    iso_day(published)
-    iso_day(bestseller)
-    lists = data.get("lists", [data])
-    groups, markers = defaultdict(list), {}
-    for listing in lists:
-        slug = listing["list_name_encoded"]
-        if not re.fullmatch(r"[a-z0-9-]+", slug):
-            raise ValueError("Unsafe NYT list name")
-        entries = []
-        for book in listing["books"]:
-            isbn = str(book["primary_isbn13"])
-            if not re.fullmatch(r"\d{13}", isbn) or isbn == "0" * 13:
-                raise ValueError("NYT book lacks an unambiguous ISBN13")
-            entries.append((int(book["rank"]), isbn))
-            markers[isbn] = {key: book.get(key) for key in ("title", "author", "dagger", "asterisk")}
-        if len(entries) < 10:
-            raise ValueError("NYT list has fewer than ten entries")
-        groups[("nyt_" + slug.replace("-", "_"), published)] = [item for item in entries if item[0] <= 10]
-    return result(lists=ranked(groups), metadata={
-        "publication_date": published, "bestsellers_date": bestseller,
-        "date_semantics": "week_end is the publisher's list publication date, not the sales-window end",
-        "books": markers, "historical_first_print": False})
-
-
-def steam_transcription(body):
-    rows = table(body, ("country", "week_start", "week_end_exclusive", "rank", "entity_type", "entity_id"))
-    groups, periods = defaultdict(list), {}
-    for row in rows:
-        if row["country"] != "US":
-            raise ValueError("Steam review import requires US rows only")
-        start, end = iso_day(row["week_start"]), iso_day(row["week_end_exclusive"])
-        if start.weekday() != 1 or end - start != timedelta(days=7):
-            raise ValueError("Steam measurement period must be Tuesday to Tuesday")
-        kind, eid = row["entity_type"], row["entity_id"]
-        if kind not in ("app", "sub", "bundle") or not eid.isdigit():
-            raise ValueError("Steam entity must preserve its app/sub/bundle identity")
-        week = (end - timedelta(days=1)).isoformat()
-        groups[("steam_us_top_sellers", week)].append((int(row["rank"]), f"{kind}:{eid}"))
-        periods[week] = {"start": start.isoformat(), "end_exclusive": end.isoformat()}
-    return result(lists=ranked(groups), metadata={
-        "import_type": "manual transcription; verify against archived official page",
-        "measurement_periods": periods, "unit": "revenue rank", "historical_first_print": False})
-
-
-def steam_official(body):
-    page = publisher_html(body)
-    payload = json.loads(page.scripts["valve-ssr-data"])
-    if payload["route"] != "/charts/topsellers/:country?/:week?":
-        raise ValueError("Expected weekly Steam chart, not a live sales chart")
-    loaders = [json.loads(item) if isinstance(item, str) else item for item in payload["loaderData"]]
-    weeks = [item["weekly"] for item in loaders if "weekly" in item]
-    if len(weeks) != 1 or weeks[0]["strCountryCode"] != "US":
-        raise ValueError("Steam embedded chart does not identify the US weekly list")
-    data = weeks[0]
-    start = datetime.fromtimestamp(data["rtWeekStart"], timezone.utc).date()
-    if start.weekday() != 1:
-        raise ValueError("Steam week label must start on Tuesday")
-    end = start + timedelta(days=7)
-    entries = []
-    entity_labels = {}
-    ranks = data["rgRanks"]
-    if len({row["nRank"] for row in ranks}) != len(ranks):
-        raise ValueError("Steam chart repeats a rank")
-    for row in ranks:
-        if row["nRank"] > 10:
-            continue
-        keys = [(kind, row["itemKey"][key]) for kind, key in
-                (("app", "appid"), ("sub", "packageid"), ("bundle", "bundleid"))
-                if row["itemKey"].get(key)]
-        if len(keys) != 1:
-            raise ValueError("Steam item lacks an unambiguous typed entity ID")
-        kind, entity = keys[0]
-        if not isinstance(entity, int) or entity <= 0:
-            raise ValueError("Invalid Steam entity ID")
-        entries.append((row["nRank"], f"{kind}:{entity}"))
-        entity_labels[f"{kind}:{entity}"] = {"rank_last_week": row.get("nRankLastWeek"),
-                                            "first_top100": row.get("bFirstTop100")}
-    week_end = (end - timedelta(days=1)).isoformat()
-    return result(lists=ranked({("steam_us_top_sellers", week_end): entries}), metadata={
-        "country": "US", "unit": "revenue rank", "historical_first_print": False,
-        "measurement_periods": {week_end: {"start_day_label": start.isoformat(), "end_exclusive_day_label": end.isoformat()}},
-        "week_boundary_timezone": "America/Los_Angeles; exact measurement cutoff requires review",
-        "publisher_week_timestamp": data["rtWeekStart"], "entities": entity_labels,
-        "note": "rtWeekStart is a publisher calendar label, not evidence of a midnight UTC measurement cutoff"})
-
-
-def steam(body):
-    return steam_official(body) if body.lstrip().startswith(b"<") else steam_transcription(body)
-
-
 def mint_transcription(body):
     rows = table(body, ("product_id", "period_end", "cumulative_net_sales"))
     products = defaultdict(list)
@@ -476,41 +244,9 @@ def mint(body):
     return parsed
 
 
-def acsi_transcription(body):
-    rows = table(body, ("industry_id", "company_id", "company_name", "study_year", "published_date", "score", "evidence_url", "evidence_quote"))
-    out = defaultdict(list)
-    studies = []
-    for row in rows:
-        industry, company = row["industry_id"], row["company_id"]
-        if not all(re.fullmatch(r"[a-z0-9_-]+", key) for key in (industry, company)):
-            raise ValueError("ACSI requires explicit stable company/industry IDs")
-        year = int(row["study_year"])
-        day = iso_day(row["published_date"])
-        if not 2021 <= day.year <= 2026:
-            raise ValueError("ACSI review scope is releases published in 2021 through 2026")
-        if year < 1994:
-            raise ValueError("ACSI study year predates the index")
-        if day.year < year:
-            raise ValueError("ACSI publication predates study year")
-        if not row["evidence_url"].startswith(("https://theacsi.org/", "https://theacsi.com/")):
-            raise ValueError("ACSI evidence must identify the official publisher")
-        if not row["evidence_quote"].strip() or not row["company_name"].strip():
-            raise ValueError("ACSI company scores require an explicit name and evidence quotation")
-        out[f"acsi_{industry}_{company}"].append({"date": day.isoformat(), "value": number(row["score"], 0, 100)})
-        studies.append(dict(row))
-    return result({sid: ordered(points) for sid, points in out.items()}, metadata={
-        "studies": studies, "historical_first_print": False,
-        "import_type": "manual transcription; first-print status requires independent evidence",
-        "unit": "ACSI score, 0-100; cadence is measured per company and industry"})
-
-
 PARSERS = {
     "michigan_finals": michigan_finals,
     "michigan_current": michigan_current,
     "sce": sce_extensions,
-    "netflix": netflix_country,
-    "nyt": nyt_books,
-    "steam": steam,
     "mint": mint,
-    "acsi": acsi_transcription,
 }
