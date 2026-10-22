@@ -469,8 +469,8 @@ INVENTORY = {
         "adapter": "ssa/adapters/consumer.py",
         "role": TARGET,
         "state": PERMISSION_NEEDED,
-        "rights": APPROVED,
-        "evidence": "Official national inflation CSVs are public and the existing Michigan national-table approval applies. The extension keeps preliminary and final vintages separate and does not create rounds until release-day evidence is reviewed.",
+        "rights": UNRESOLVED,
+        "evidence": "Official national inflation CSVs are public and the existing Michigan national-table approval is the proposed basis. The extension keeps preliminary and final vintages separate and does not create rounds until release-day evidence is reviewed. Rights await maintainer sign-off.",
         "revisit": "Approve the named 1-year series after release-calendar and first-print checks.",
     },
     "consumer_sce_extensions": {
@@ -478,8 +478,8 @@ INVENTORY = {
         "adapter": "ssa/adapters/consumer.py",
         "role": TARGET,
         "state": PERMISSION_NEEDED,
-        "rights": APPROVED,
-        "evidence": "The official SCE workbook carries the repository's existing reproduction/distribution license. Nine candidate monthly indicators are parsed by exact sheet and header; only spending, stock-price and unemployment probabilities are prioritized for review.",
+        "rights": UNRESOLVED,
+        "evidence": "The official SCE workbook carries the repository's existing reproduction/distribution license; whether it covers these extensions awaits maintainer sign-off. Nine candidate monthly indicators are parsed by exact sheet and header; only spending, stock-price and unemployment probabilities are prioritized for review.",
         "revisit": "Approve selected indicators after release-day vintage and movement checks.",
     },
     "consumer_mint": {
@@ -487,13 +487,13 @@ INVENTORY = {
         "adapter": "ssa/adapters/consumer.py",
         "role": TARGET,
         "state": PERMISSION_NEEDED,
-        "rights": APPROVED,
-        "evidence": "The official cumulative-sales page states that the data may be republished with the United States Mint cited. Automated requests returned 403, so the adapter accepts manually downloaded CSVs and derives period increments.",
-        "revisit": "Approve a fixed-supply product only after buyer, batch, sellout and schedule checks.",
+        "rights": UNRESOLVED,
+        "evidence": "The official cumulative-sales page is reported to permit republication with the United States Mint cited. Automated requests returned 403, so the adapter accepts manually downloaded CSVs and derives period increments. Rights await maintainer sign-off.",
+        "revisit": "Quote the republication statement verbatim with its URL (https://www.usmint.gov/about/production-sales-figures/cumulative-sales) before approval. Approve a fixed-supply product only after buyer, batch, sellout and schedule checks.",
     },
     "consumer_nyt": {
         "publisher": "The New York Times Books API",
-        "adapter": "ssa/adapters/consumer.py",
+        "adapter": None,
         "role": TARGET,
         "state": PERMISSION_NEEDED,
         "rights": UNRESOLVED,
@@ -511,7 +511,7 @@ INVENTORY = {
     },
     "consumer_steam": {
         "publisher": "Valve Steam Charts",
-        "adapter": "ssa/adapters/consumer.py",
+        "adapter": None,
         "role": TARGET,
         "state": PERMISSION_NEEDED,
         "rights": UNRESOLVED,
@@ -525,16 +525,15 @@ INVENTORY = {
         "state": REJECTED,
         "rights": UNRESOLVED,
         "evidence": (
-            "The 2026 local review captured 106 official release pages and 47 "
-            "public benchmark pages, with 692 instruments and 2,203 score "
-            "observations. Industries publish throughout the year, while an "
-            "individual company may be annual or sparser. Publisher footers "
-            "prohibit advertising or promotional use without express prior "
-            "written consent. Full terms and redistribution permission remain "
-            "unresolved, so the source stays outside generation."),
+            "Quarterly national and sector scores are free; company-level "
+            "detail is paid. Issue #36 raised it as the closest free thing to "
+            "brand and category perception and closed without a verdict. Four "
+            "releases a year cannot fill a weekly batch, and no adapter "
+            "exists, so it is out for season 0. Terms were never audited. "
+            "A reopen proposal is pending in docs/consumer-review/acsi.md."),
         "revisit": (
-            "Written rights clarification, an official forward calendar or "
-            "approved calendar exception, and first-print evidence."),
+            "A season whose cadence tolerates quarterly rounds, or a use for "
+            "the sector scores as a slow-moving companion series."),
     },
     "mc_ics": {
         "publisher": "Morning Consult",
