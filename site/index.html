@@ -1403,7 +1403,15 @@ function tipShow(tip, ev, html){
 const DEFAULT_VISIBLE_MODELS = 5;
 // New default policy: do not reuse old selections that hid teams and enabled every baseline.
 const MODEL_SELECTION_KEY = 'ssa.chart-models.v2';
+// Scored and listed as usual, but off the chart until a reader ticks them: their
+// range flattens every other line on the default view.
+const DEFAULT_HIDDEN_ENTRANTS = new Set(['zhengzheng-agent']);
 function defaultKeep(data){
+  const keep=defaultKeepAll(data);
+  DEFAULT_HIDDEN_ENTRANTS.forEach(id=>keep.delete(id));
+  return keep;
+}
+function defaultKeepAll(data){
   data=data||{};
   const keep=new Set(['persistence','crowd']);
   if(data.rounds&&window.SSAPairwise){
