@@ -21,8 +21,11 @@ tool = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(tool)
 
 FINALS = b"Month,YYYY,PX_MD,PX5_MD\nAugust,2026,4.0,3.3\nSeptember,2026,4.6,3.4\n"
-CURRENT = (b",,,EXPECTED CHANGE IN PRICES\nDATE OF SURVEY,,,NEXT YEAR,,NEXT 5 YEARS\n"
-           b"September,2026,,4.6,,3.4\nOctober (P),2026,,4.7,,3.5\n")
+# Layout of the real tbcpx1px5.csv: CRLF, 15 columns, blank padding rows.
+PAD = b"," * 14 + b"\r\n"
+CURRENT = (b",,,EXPECTED CHANGE IN PRICES,,,,,,,,,,,\r\n" + PAD + PAD +
+           b"DATE OF SURVEY,,,NEXT YEAR,,NEXT 5 YEARS,,,,,,,,,\r\n" + PAD +
+           b"September,2026,,4.6,,3.4,,,,,,,,,\r\nOctober (P),2026,,4.7,,3.5,,,,,,,,,\r\n" + PAD)
 
 
 class ConsumerTests(unittest.TestCase):
