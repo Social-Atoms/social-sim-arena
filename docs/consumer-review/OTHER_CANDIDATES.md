@@ -38,6 +38,7 @@ The other labels:
 | Seasonal special | One prospective question per season rather than weekly rounds. |
 | One large round or separate board | An annual release with many items counts once, not as dozens of rounds. |
 | Wait for rights / terms | Usable in principle, but no round until the source's terms are cleared. |
+| Wait for cadence / rule | Terms are fine; blocked only by publication frequency or by a question rule not yet adopted. |
 
 | Candidate | Disposition | Reason |
 | --- | --- | --- |
@@ -52,9 +53,9 @@ The other labels:
 | Nielsen Streaming Top 10 | Next batch | Publication delay, candidate identity and terms not yet fixed. |
 | Circana U.S. games | Defer | Underlying data is paid and digital methodology changed. |
 | YouTube Shorts songs | Defer | No stable downloadable first-print archive. |
-| YouGov Brand Movers | Wait for product-specific rights | Biggest-mover candidate policy and manual data access required. |
-| YouGov BrandIndex Lite | Wait for Class B and terms | Continuous dashboard; export/authorization not established. |
-| YouGov Ratings | Wait for rights/cadence | Quarterly scores and product-specific terms. |
+| YouGov Brand Movers | Wait for biggest-mover rule | Published on YouGov's public sites, so the same Public Data License as the crosstabs applies (CC BY-NC 4.0, manual pull). Needs the pre-lock candidate list first. |
+| YouGov BrandIndex Lite | Wait for Class B and terms | Continuous dashboard; BrandIndex is a paid product outside the Public Data License, and no export is authorised. |
+| YouGov Ratings | Wait for cadence | Same Public Data License as the crosstabs; scores update quarterly, below the weekly cadence. |
 | Gallup Economic Confidence | Defer | Forward calendar and complete official history not established. |
 | Bank of America Consumer Checkpoint | Defer | Release day and rights not fixed; PDF detail. |
 | TSA checkpoint counts | Wait for Class B | Arena would define the weekly window and archive its samples. |
