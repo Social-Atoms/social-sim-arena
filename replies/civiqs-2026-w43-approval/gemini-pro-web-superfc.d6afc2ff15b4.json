@@ -1,0 +1,15 @@
+{
+  "entrant": "gemini-pro-web-superfc",
+  "input_hash": "d6afc2ff15b4",
+  "logged_at": "2026-10-20T17:01:48Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt_sha256": "876276492925b31902fba17bd232a3749d8fd4d180b92d033502dabfe34682a9",
+  "reply": "1. Outside view. The series tracks Donald Trump's net job approval using an MRP model over a rolling online panel, meaning it moves smoothly. The historical week-to-week mean change is 0.58 points. The last three weeks have been remarkably stable: -26.7, -26.8, and -26.7. A naive extrapolation heavily anchors on -26.7. \n\n2. Inside view. As of late October 2026, the midterms are approaching, and voter opinions are deeply calcified. Recent news coverage points to Trump's approval being consistently near record lows (around 34% approve, 60-61% disapprove), and the Civiqs tracker has plateaued in this range. There are no clear recent external shocks (e.g., sudden massive scandals, economic collapses, or specific legislative breakthroughs between October 16 and October 20) in the search data that would suggest a sharp divergence from this plateau. We expect the October 23 reading to be largely identical to the past three weeks.\n\n3. Pre-mortem. If this forecast is badly wrong, it is likely because a late-breaking event (an \"October surprise\") shifts the electorate dramatically in the final days before the midterms, pushing the rolling average up or down by over a point. Given the smoothed nature of the MRP, however, any such shock would still be dampened. I will correct by ensuring the standard deviation accurately reflects the historical volatility without over-tightening.\n\n4. Calibrate. The mean week-to-week change is 0.58. In a normal distribution, if the mean absolute deviation is 0.58, the standard deviation is approximately 0.72. Therefore, setting the SD to 0.7 is appropriate to ensure the true value falls within one SD roughly two-thirds of the time.\n\n```json\n{\"mean\": -26.7, \"sd\": 0.7}\n```",
+  "round_id": "civiqs-2026-w43-approval",
+  "usage": {
+    "input_tokens": 2954,
+    "output_tokens": 421,
+    "thinking_tokens": 1497
+  },
+  "via": "ppapi"
+}
