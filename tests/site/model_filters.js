@@ -35,7 +35,7 @@ function fixture(storage = new Map(), payload = backtestOnly) {
     }
     return inputs;
   };
-  const api = new Function(script+'\nreturn {render, renderTaskChart, renderLegend, matchingModels, coerceUnknown, modelInfo, selectModels, resetModels, setPickerFilter, modelPicker, TASKS, defaultKeep, vendorOf, stemOf, VCOLOR_MODEL_VENDORS};')();
+  const api = new Function(script+'\nreturn {render, renderTaskChart, renderLegend, matchingModels, coerceUnknown, modelInfo, selectModels, resetModels, setPickerFilter, modelPicker, TASKS, defaultKeep, vendorOf, stemOf, VCOLOR_MODEL_VENDORS, DEFAULT_HIDDEN_ENTRANTS};')();
   if(payload===backtestOnly)win.location.hash='#leaderboard/agg/all?ranking=skill';
   api.render(payload);
   if(payload===backtestOnly)win.__unitAgg='arena'; // Explicit legacy backtest view for picker mechanics.
@@ -162,7 +162,9 @@ const winlessRoster=f=>new Set(f.win.SSAPairwise.build(f.win.__data,{scope:'all'
   const methods=live.win.SSAPairwise.build(live.win.__data,{scope:'all'}).entries;
   const teams=methods.filter(e=>e.members.some(id=>(byId[id]||{}).type==='participant'));
   assert(teams.length>=7);
-  assert(teams.every(e=>sel.includes(e.entrant)), 'every external team is drawn, including grouped Vac and YuLan');
+  const offChart=live.api.DEFAULT_HIDDEN_ENTRANTS;
+  assert(teams.every(e=>offChart.has(e.entrant)!==sel.includes(e.entrant)), 'every external team is drawn, including grouped Vac and YuLan, except the named off-chart ones');
+  assert(live.api.modelPicker.ids.includes('zhengzheng-agent') && !sel.includes('zhengzheng-agent'), 'ZhengZheng stays pickable but starts off the chart');
   for(const id of ['vac-combined','worldvac-base','h2oai-superagent','h2oai-marina','yulan-onesim'])assert(sel.includes(id),'official method drawn: '+id);
   const vendors = sel.map(id=>live.api.vendorOf(live.api.stemOf(id))).filter(v=>v && live.api.VCOLOR_MODEL_VENDORS.has(v));
   assert.equal(new Set(vendors).size, vendors.length, 'one arm per vendor');
