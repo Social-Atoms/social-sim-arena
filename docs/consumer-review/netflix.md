@@ -12,11 +12,12 @@ lists, from week ending 2021-07-04 to 2026-10-18. The research's publication
 contract is Tuesday following a Monday-Sunday measurement week; confirm exact
 publication time before scheduling.
 
-**How the arena reads it.** The offline TSV parser requires exact field names,
-filters US explicitly, validates Sunday labels and full ranks 1-10, and refuses
-duplicates or missing titles. A JSON pair `[show_title, season_title]` is used as
-a collision-resistant local key because this export lacks stable title IDs.
-Raw and normalized snapshots are immutable and local.
+**How the arena reads it.** No code on `dev`. The prototype parser and collector were merged to `dev` and then removed pending source terms; this card is an evaluation record only, and the description below is of that removed code. The offline TSV
+parser required exact field names, filtered US explicitly, validated Sunday labels
+and full ranks 1-10, and refused duplicates or missing titles. A JSON pair
+`[show_title, season_title]` was used as a collision-resistant local key because
+this export lacks stable title IDs. Raw and normalized snapshots were immutable
+and local.
 
 **How a question resolves.** Proposed ranking bridge only. Freeze submissions
 and entrant-visible history before Monday's measurement starts, then capture the

@@ -14,17 +14,15 @@ Archived 52 consecutive Hardcover Fiction top-ten lists, with publication labels
 from 2025-11-02 through 2026-10-25. The collection archive retains acquisition
 dates and ISBN-level identifiers. Account credentials are excluded from the PR.
 
-**How the arena reads it.** Proposed, not live: `nyt_books` accepts a dated list
-or overview JSON, validates complete top-ten ranks and ISBN13 identifiers, and
-preserves publication and bestseller dates separately. The CLI reads only the
-`NYT_API_KEY` environment variable or a private credential file written by
-`configure-nyt`; request errors and manifests omit the key. The prototype is not
-included in this documentation-only PR.
-Authenticated requests do not follow redirects. An authorized local JSON export can be imported without network access.
-The bounded `history nyt --weeks 52` command keeps at least 13 seconds between
-requests, skips retained weeks, checks the returned publication date and list,
-and stops on the first failed response without retrying. Synthetic test fixtures
-are never mixed into acquired data.
+**How the arena reads it.** No code on `dev`. The prototype parser and collector were merged to `dev` and then removed pending source terms; this card is an evaluation record only, and the description below is of that removed code. It accepted a
+dated list or overview JSON, validated complete top-ten ranks and ISBN13
+identifiers, and preserved publication and bestseller dates separately. The API
+key came from the environment or a private local file and was omitted from
+request errors and manifests; authenticated requests did not follow redirects.
+The bounded history collection kept at least 13 seconds between requests,
+skipped retained weeks, checked the returned publication date and list, and
+stopped on the first failed response without retrying. Synthetic test fixtures
+were never mixed into acquired data.
 
 **How a question resolves.** Pending review. The local ranking bridge uses the
 publication date as its `week_end` label and records that it is not the sales

@@ -30,11 +30,12 @@ including the existing 78 scalar histories and one ranking history. New data
 accounts for 6,804 scalar observations and 658 weekly lists. Counts include
 diagnostic totals, sparse annual instruments and aggregates.
 
-These tests were run on the separate implementation branch, not on this
-documentation-only branch. Follow-up source PRs must expose the relevant code
-and fixtures for independent review. The permission-cleared Michigan, SCE and
-Mint artifacts are attached to the review snapshot release linked from the
-index. Other source prototypes remain local pending source-specific rights.
+These counts come from the local prototype run. On `dev`, the Michigan, SCE and
+Mint parsers, collector and offline tests are in the repository; the NYT,
+Netflix, Steam and ACSI code that produced the other counts was removed pending
+source terms, so those numbers cannot be reproduced from `dev`. The Michigan,
+SCE and Mint artifacts are attached to the review snapshot release linked from
+the index; their rights still await maintainer sign-off.
 
 Historical downloads retain their actual capture times. They do not establish
 the original first print or justify a formal forecasting lock. No paid forecast

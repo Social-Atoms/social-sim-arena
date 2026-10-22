@@ -13,7 +13,11 @@ They include industry, national, and other announcements. Public industry pages
 also contain brand-score tables: 47 pages are archived and 46 have explicitly
 selected national tables. These captures do not prove original first prints.
 
-**How the arena reads it.** A local corpus manifest records URL, original HTML,
+**How the arena reads it.** No code on `dev`. The prototype corpus collector,
+benchmark-table scraper (`tools/` script) and transcription importer were merged
+to `dev` and then removed pending source terms; this card is an evaluation
+record only, and the description below is of that removed code and its local
+results. A local corpus manifest records URL, original HTML,
 hash, fetch time, and status. The original four-brand sample is extended by
 explicit scores in automobile, travel, restaurant, electronics, finance,
 insurance, retail and telecommunications release prose. A table importer adds

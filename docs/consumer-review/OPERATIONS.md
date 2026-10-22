@@ -27,7 +27,9 @@ that newer reliability behavior.
 
 ## New Local Collector
 
-`tools/consumer_data.py` never imports refresh/provider execution or runs git.
+`tools/consumer_data.py` covers Michigan finals/current, SCE and Mint only
+(`collect`, `fetch`, `import`, `build`, `verify`); Mint is a manual import because
+its endpoint returns 403. It never imports refresh/provider execution or runs git.
 Network fetches are explicit, bounded requests without automatic retries.
 Normal TLS validation stays enabled. Failed parses cannot advance a valid
 vintage pointer. Original and normalized bodies are content-addressed; replay
@@ -41,10 +43,10 @@ or resolve official tasks.
 
 ## Offline Failure Exercises
 
-`tests/test_consumer_data.py` exercises HTML returned as data, incomplete ranks,
-duplicate months, non-finite values, changed headings, wrong Steam country/week,
-missing Mint weeks, negative sales corrections, raw tampering, missing API keys,
-and a failed live attempt with an earlier valid archive. It also checks that
+`tests/test_consumer_data.py` exercises HTML returned as data, duplicate months,
+non-finite values, changed headings, missing Mint weeks, negative sales
+corrections, raw tampering, rejection of the removed sources at the CLI, and a
+failed live attempt with an earlier valid archive. It also checks that
 append does not overwrite existing histories/rounds and that offline verification
 does not fetch. No test uses live sources, endpoints, or paid models.
 

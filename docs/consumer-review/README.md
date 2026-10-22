@@ -1,9 +1,16 @@
 # Consumer Source Review
 
-This is a documentation-only proposal to `dev` for two market-track organizers.
-All collection/parser/test details below describe a separate local prototype;
-that implementation and its private artifacts are not included in this PR.
-Reviewer feedback, source admission and formal task activation remain pending.
+This is a proposal to `dev` for two market-track organizers. Reviewer feedback,
+source admission and formal task activation remain pending.
+
+Code state on `dev`: offline parsers and a local review collector exist for
+the three candidate sources only, Michigan inflation, NY Fed SCE extensions and
+US Mint (manual import): `ssa/adapters/consumer.py`, `ssa/consumer.py`,
+`tools/consumer_data.py` and `tests/test_consumer_*.py`. None of it schedules a
+round, and their inventory rights stay `unresolved` until maintainer sign-off.
+Prototype code for NYT, Netflix, Steam and ACSI was merged and then removed
+pending source terms; their cards below are evaluation records only.
+
 See the [evidence summary](EVIDENCE.md) for coverage, observed checks and limits.
 See the [terms audit](TERMS.md) and [final response matrix](FINAL_MATRIX.md)
 for source permissions and handoff decisions.

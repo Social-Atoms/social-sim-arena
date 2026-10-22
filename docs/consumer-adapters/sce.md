@@ -9,4 +9,9 @@ registered as rounds.
 The values are monthly US household-head measures. A question locks before the
 named release day, freezes the workbook vintage, and resolves against the exact
 release-day file. The measurement month is not the release date. The existing
-SCE license record remains the rights basis. No task is activated here.
+SCE license record is the proposed rights basis; the inventory row stays
+`unresolved` until maintainer sign-off. No task is activated here.
+
+Code: `sce_extensions` in `ssa/adapters/consumer.py`, collected by
+`tools/consumer_data.py` from the committed `sources/sce/` workbook unless
+`--fetch-sce` is given.
