@@ -36,13 +36,13 @@
     "provenance": {"type": "object"},
     "sources": {
       "type": "object",
-      "propertyNames": {"enum": ["nyt", "michigan_finals", "michigan_current", "mint", "steam", "netflix", "sce", "acsi"]},
+      "propertyNames": {"enum": ["michigan_finals", "michigan_current", "mint", "sce"]},
       "additionalProperties": {
         "type": "object",
         "required": ["at", "status", "detail"],
         "properties": {
           "at": {"type": "string", "format": "date-time"},
-          "status": {"enum": ["collected", "corpus_only", "credential_required", "transport_failure", "http_failure", "access_challenge", "manual_import_required", "parse_failure", "missing_archive"]},
+          "status": {"enum": ["collected", "transport_failure", "http_failure", "access_challenge", "manual_import_required", "parse_failure", "missing_archive"]},
           "detail": {"type": "string"}
         }
       }

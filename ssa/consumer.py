@@ -8,7 +8,6 @@ import fcntl
 import hashlib
 import json
 import os
-import re
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -19,16 +18,11 @@ from .adapters import consumer as adapters
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ARCHIVE = ROOT / ".local" / "consumer"
-MAIN_SOURCES = ("nyt", "michigan", "mint", "steam", "netflix", "sce", "acsi")
 HOSTS = {
-    "nyt": {"api.nytimes.com", "www.nytimes.com"},
     "michigan_finals": {"www.sca.isr.umich.edu", "sca.isr.umich.edu"},
     "michigan_current": {"www.sca.isr.umich.edu", "sca.isr.umich.edu"},
     "mint": {"www.usmint.gov", "usmint.gov"},
-    "steam": {"store.steampowered.com"},
-    "netflix": {"www.netflix.com", "top10.netflix.com"},
     "sce": {"www.newyorkfed.org", "newyorkfed.org"},
-    "acsi": {"theacsi.com", "theacsi.org"},
 }
 
 
@@ -112,82 +106,13 @@ def record_attempt(root, source, status, detail, **evidence):
     update_index(root, source, {"at": now(), "status": status, "detail": detail, **evidence})
 
 
-def verify_acsi_evidence(parsed, evidence_body, root):
-    corpus = json.loads(evidence_body)
-    if corpus.get("format") != "ssa.consumer.corpus.v1":
-        raise ValueError("ACSI transcription requires a captured publisher corpus manifest")
-    cached = {}
-
-    def captured(url):
-        official_url("acsi", url)
-        if url in cached:
-            return cached[url]
-        artifact = corpus["documents"][url]
-        if artifact["status"] != "captured":
-            raise ValueError("ACSI evidence was not captured successfully")
-        body = archive_path(root, artifact["file"]).read_bytes()
-        if sha256(body) != artifact["sha256"]:
-            raise ValueError("ACSI evidence artifact hash mismatch")
-        text = " ".join(adapters.publisher_html(body).text)
-        cached[url] = (body, text)
-        return cached[url]
-
-    tables = {}
-    for row in parsed["metadata"]["studies"]:
-        url = row["evidence_url"]
-        body, text = captured(url)
-        kind = row.get("evidence_kind", "release_quotation")
-        if kind == "benchmark_table":
-            text = " ".join(text.split())
-        if row["evidence_quote"] not in text:
-            raise ValueError(f"ACSI evidence quotation not found for {row['company_id']}, {row['study_year']}")
-        score = adapters.number(row["score"], 0, 100)
-        if not score.is_integer() or not re.search(rf"(?<!\d){int(score)}(?!\d)", row["evidence_quote"]):
-            raise ValueError("ACSI company score is not supported by the evidence quotation")
-        if kind == "benchmark_table":
-            table_index, row_index = int(row["evidence_table"]), int(row["evidence_row"])
-            if min(table_index, row_index) < 0 or row_index == 0:
-                raise ValueError("ACSI score evidence requires a data row")
-            key = (url, table_index)
-            if key not in tables:
-                tables[key] = adapters.publisher_tables(body, selected=table_index)
-            table = tables[key]
-            cells = table[row_index]
-            column = int(row["evidence_column"])
-            if column < 0:
-                raise ValueError("ACSI score evidence requires a nonnegative column")
-            if table[0] != json.loads(row["evidence_header"]):
-                raise ValueError("ACSI benchmark table headers differ from the selected evidence")
-            if not re.search(rf"(?<!\d){row['study_year']}(?!\d)", table[0][column]):
-                raise ValueError("ACSI selected score column is not the study year")
-            if adapters.number(cells[column]) != score:
-                raise ValueError("ACSI score differs from the selected table cell")
-            if row["evidence_quote"] != " ".join(cell for cell in cells if cell):
-                raise ValueError("ACSI evidence quotation differs from the selected table row")
-            name_column = int(row["evidence_name_column"])
-            if name_column < 0 or name_column == column:
-                raise ValueError("ACSI company evidence requires a distinct name column")
-            if cells[name_column].strip("*") != row["company_name"].strip("*"):
-                raise ValueError("ACSI company name differs from the selected table row")
-            url = row["release_url"]
-            captured(url)
-        elif kind != "release_quotation":
-            raise ValueError("Unsupported ACSI evidence kind")
-        url_date = row["published_date"].replace("-", "/")
-        if f"/{url_date}/" not in url:
-            raise ValueError("ACSI publication date does not match the cited release URL")
-
-
 def ingest(source, body, url, root=DEFAULT_ARCHIVE, captured_at=None,
            evidence_body=None, evidence_suffix=".html", published_at=None):
     """Validate before archiving. A failed parse cannot replace a good vintage."""
     url = official_url(source, url)
     parsed = adapters.PARSERS[source](body)
-    manual = source in {"steam", "mint", "acsi"} and not body.lstrip().startswith(b"<")
-    if manual and not evidence_body:
+    if source == "mint" and not evidence_body:
         raise ValueError("A manual transcription needs the original publisher artifact as evidence")
-    if source == "acsi":
-        verify_acsi_evidence(parsed, evidence_body, root)
     if published_at is not None:
         dt = datetime.fromisoformat(published_at.replace("Z", "+00:00"))
         if dt.tzinfo is None:
@@ -240,8 +165,6 @@ def read_vintage(root, relative):
         path = archive_path(root, manifest["evidence_file"])
         if sha256(path.read_bytes()) != path.stem:
             raise ValueError("Publisher evidence hash mismatch")
-        if source == "acsi":
-            verify_acsi_evidence(rebuilt, path.read_bytes(), root)
     return rebuilt, manifest
 
 
@@ -256,7 +179,7 @@ def build_all(root=DEFAULT_ARCHIVE):
         parsed, manifest = read_vintage(root, entry["latest_valid"])
         if manifest["source"] != source:
             raise ValueError("Index points to a different source's vintage")
-        if source in {"steam", "nyt", "acsi", "mint"}:
+        if source == "mint":
             combined_series, combined_lists, revisions = {}, {}, []
             for vintage in entry.get("vintages", [entry["latest_valid"]]):
                 prior, _ = read_vintage(root, vintage)
@@ -270,19 +193,18 @@ def build_all(root=DEFAULT_ARCHIVE):
                             by_date.setdefault(day, point)
             parsed = {**parsed, "series": {sid: [points[k] for k in sorted(points)] for sid, points in combined_series.items()},
                       "lists": {sid: [points[k] for k in sorted(points)] for sid, points in combined_lists.items()}}
-            if source == "mint":
-                products = {sid[len("mint_"):-len("_cumulative")]: points
-                            for sid, points in parsed["series"].items() if sid.endswith("_cumulative")}
-                derived = adapters.mint_series(products)
-                parsed["series"] = derived["series"]
-                parsed["metadata"] = {**parsed["metadata"],
-                    "skipped_nonweekly_differences": derived["metadata"]["skipped_nonweekly_differences"],
-                    "report_dates": sorted({point["date"] for points in products.values() for point in points})}
+            products = {sid[len("mint_"):-len("_cumulative")]: points
+                        for sid, points in parsed["series"].items() if sid.endswith("_cumulative")}
+            derived = adapters.mint_series(products)
+            parsed["series"] = derived["series"]
+            parsed["metadata"] = {**parsed["metadata"],
+                "skipped_nonweekly_differences": derived["metadata"]["skipped_nonweekly_differences"],
+                "report_dates": sorted({point["date"] for points in products.values() for point in points})}
             states[source]["vintages"] = entry.get("vintages", [entry["latest_valid"]])
             states[source]["revision_conflicts"] = revisions
         states[source]["vintage"] = entry["latest_valid"]
         states[source]["metadata"] = parsed["metadata"]
-        if states[source]["status"] not in {"collected", "corpus_only"}:
+        if states[source]["status"] != "collected":
             states[source]["using_previous_vintage"] = True
         for sid, points in parsed["series"].items():
             if source == "michigan_current":
