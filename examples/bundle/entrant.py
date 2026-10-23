@@ -19,25 +19,13 @@ though somebody had. `--anchor` is how you supply what the model actually
 believes; without it, only questions with a self-evident structure (a fixed
 ranking basket, a numeric round with a stated centre) can be answered at all.
 
-**Both accepted distribution formats round-trip.** `--quantiles` emits the
-quantile form instead of mean/sd for scalar and profile answers; the arena
-scores the two with the same CRPS, so the choice is about which one you can
-state honestly, not about which one scores better. Use quantiles when your
-belief is skewed or fat-tailed and a normal would misstate it.
+**Distributions are mean and sd.** The arena stopped accepting quantile sets
+on 2026-10-10: with levels chosen by the entrant, the score rewarded which
+levels were reported rather than how good the forecast was.
 """
 import argparse
 import json
 import sys
-
-# The quantile levels this example emits. Any levels are accepted as long as
-# 0.5 is among them and the values do not decrease; these five are just a
-# readable spread.
-LEVELS = (0.05, 0.25, 0.5, 0.75, 0.95)
-
-# z-scores for the levels above, so the quantile form and the mean/sd form
-# describe the same normal. Writing one belief two ways and having them
-# disagree is a bug an entrant would ship without noticing.
-Z = {0.05: -1.6449, 0.25: -0.6745, 0.5: 0.0, 0.75: 0.6745, 0.95: 1.6449}
 
 # The width of the default prior, in the question's own unit. Wide on purpose:
 # an example that shipped a confident default would score badly and teach the
@@ -49,14 +37,11 @@ class Unanswerable(RuntimeError):
     """This question needs an anchor and none was supplied."""
 
 
-def distribution(centre, sd, as_quantiles):
-    if not as_quantiles:
-        return {"mean": round(centre, 4), "sd": round(sd, 4)}
-    return {"quantiles": {f"{level}": round(centre + Z[level] * sd, 4)
-                          for level in LEVELS}}
+def distribution(centre, sd):
+    return {"mean": round(centre, 4), "sd": round(sd, 4)}
 
 
-def answer_for(question, anchor, as_quantiles):
+def answer_for(question, anchor):
     """The one function a real entrant replaces.
 
     `anchor` is whatever `--anchor` supplied for this round_id, or None. What it
@@ -72,7 +57,7 @@ def answer_for(question, anchor, as_quantiles):
                 f"{rid}: a scalar round needs a centre. Put "
                 f'{{"{rid}": <number>}} in your --anchor file, in the '
                 f"round's unit ({question['unit']}).")
-        return {"topline": distribution(float(anchor), DEFAULT_SD, as_quantiles)}
+        return {"topline": distribution(float(anchor), DEFAULT_SD)}
 
     if target == "profile_energy":
         cells = question["cells"]
@@ -82,8 +67,7 @@ def answer_for(question, anchor, as_quantiles):
                 f"{len(cells)} cells, and only those cells. Put "
                 f'{{"{rid}": {{"<cell>": <number>, ...}}}} in your --anchor '
                 f"file. Cells: {', '.join(cells)}.")
-        return {"profile": {cell: distribution(float(anchor[cell]), DEFAULT_SD,
-                                               as_quantiles)
+        return {"profile": {cell: distribution(float(anchor[cell]), DEFAULT_SD)
                             for cell in cells}}
 
     if target == "ranking_list":
@@ -112,13 +96,12 @@ def answer_for(question, anchor, as_quantiles):
         "different question.")
 
 
-def build_response(bundle, entrant_id, anchors, as_quantiles, skip_unanswerable):
+def build_response(bundle, entrant_id, anchors, skip_unanswerable):
     answers = []
     skipped = []
     for question in bundle["questions"]:
         try:
-            answer = answer_for(question, anchors.get(question["round_id"]),
-                                as_quantiles)
+            answer = answer_for(question, anchors.get(question["round_id"]))
         except Unanswerable as err:
             if not skip_unanswerable:
                 raise
@@ -147,8 +130,6 @@ def main(argv=None):
     ap.add_argument("--bundle", required=True, help="the question bundle")
     ap.add_argument("--entrant", required=True, help="your registered entrant id")
     ap.add_argument("--anchor", help="JSON map of round_id -> centre / cells / order")
-    ap.add_argument("--quantiles", action="store_true",
-                    help="emit the quantile form instead of mean+sd")
     ap.add_argument("--skip-unanswerable", action="store_true",
                     help="leave rounds you have no anchor for unanswered "
                          "(they simply score nothing) instead of failing")
@@ -162,7 +143,7 @@ def main(argv=None):
         with open(args.anchor, encoding="utf-8") as fh:
             anchors = json.load(fh)
 
-    response = build_response(bundle, args.entrant, anchors, args.quantiles,
+    response = build_response(bundle, args.entrant, anchors,
                               args.skip_unanswerable)
     text = json.dumps(response, indent=2, sort_keys=True) + "\n"
     if args.out:

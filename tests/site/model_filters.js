@@ -7,7 +7,7 @@ const root = path.resolve(__dirname, '../..');
 const html = fs.readFileSync(path.join(root, 'site/index.html'), 'utf8');
 const script = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join('\n');
 const data = JSON.parse(fs.readFileSync(path.join(root, 'site/data.json'), 'utf8'));
-const storageKey = 'ssa.chart-models.v1';
+const storageKey = 'ssa.chart-models.v2';
 // The picker's mechanics are checked against the backtest roster, which the site falls back to when no
 // question has resolved; the season's own default is checked at the end against the real payload.
 const backtestOnly = JSON.parse(JSON.stringify(data)); backtestOnly.rounds.forEach(r=>{ delete r.scores; });
@@ -36,7 +36,9 @@ function fixture(storage = new Map(), payload = backtestOnly) {
     return inputs;
   };
   const api = new Function(script+'\nreturn {render, renderTaskChart, renderLegend, matchingModels, coerceUnknown, modelInfo, selectModels, resetModels, setPickerFilter, modelPicker, TASKS, defaultKeep, vendorOf, stemOf, VCOLOR_MODEL_VENDORS, DEFAULT_HIDDEN_ENTRANTS};')();
+  if(payload===backtestOnly)win.location.hash='#leaderboard/agg/all?ranking=skill';
   api.render(payload);
+  if(payload===backtestOnly)win.__unitAgg='arena'; // Explicit legacy backtest view for picker mechanics.
   api.renderTaskChart('agg');
   return {api, els, win, doc, svg, events, stripEvents, storage, options};
 }
@@ -146,19 +148,38 @@ f.api.selectModels(['ewma'],false);
 assert.ok(f.win.__hidden.has('ewma'));
 f.api.resetModels();
 assert.ok(!f.win.__hidden.has('ewma'));
-// With the season's scores present, the default comparison is every external team (one entrant each, minus the named off-chart ones),
-// every model vendor's best arm but the worst, and the crowd; no statistical reference (decided 2026-10-05).
+// Default live curves show every official team slot, representative models, Persistence and Crowd.
+const winlessRoster=f=>new Set(f.win.SSAPairwise.build(f.win.__data,{scope:'all'}).entries.map(e=>e.entrant));
 { const live = fixture(new Map(), data); const sel = live.api.modelPicker.ids.filter(id=>!live.win.__hidden.has(id));
   const keep = live.api.defaultKeep(live.win.__data);
-  assert.ok(sel.includes('crowd')); assert.ok(!sel.includes('ewma'), 'no statistical reference by default');
+  assert.ok(sel.includes('crowd'));
+  assert.ok(sel.includes('persistence'));
+  for(const id of ['trend','ewma','climatology'])assert.ok(!sel.includes(id),'reference available but not drawn: '+id);
+  const roster=winlessRoster(live);
+  assert.deepEqual(new Set(live.api.modelPicker.ids),roster,'chart picker and leaderboard use the same methods');
   assert.deepEqual(new Set(sel), new Set([...keep].filter(id=>live.api.modelPicker.ids.includes(id))), 'the chart draws exactly the default');
   const byId = {}; live.win.__data.entrants.forEach(e=>byId[e.entrant_id]=e);
-  const teams = sel.filter(id=>(byId[live.api.stemOf(id)]||byId[id]||{}).type==='participant');
-  assert.ok(teams.length>=1, 'at least one team');
-  if(live.api.modelPicker.ids.includes('yulan-onesim')) assert.ok(sel.includes('yulan-onesim'), 'every team is drawn, however few questions it answered');
-  assert.ok([...live.api.DEFAULT_HIDDEN_ENTRANTS].every(id=>!sel.includes(id)), 'named entrants start off the chart');
-  assert.equal(new Set(teams.map(id=>(byId[id]||{}).organization||id)).size, teams.length, 'one entrant per team');
+  const methods=live.win.SSAPairwise.build(live.win.__data,{scope:'all'}).entries;
+  const teams=methods.filter(e=>e.members.some(id=>(byId[id]||{}).type==='participant'));
+  assert(teams.length>=7);
+  const offChart=live.api.DEFAULT_HIDDEN_ENTRANTS;
+  assert(teams.every(e=>offChart.has(e.entrant)!==sel.includes(e.entrant)), 'every external team is drawn, including grouped Vac and YuLan, except the named off-chart ones');
+  assert(live.api.modelPicker.ids.includes('zhengzheng-agent') && !sel.includes('zhengzheng-agent'), 'ZhengZheng stays pickable but starts off the chart');
+  for(const id of ['vac-combined','worldvac-base','h2oai-superagent','h2oai-marina','yulan-onesim'])assert(sel.includes(id),'official method drawn: '+id);
   const vendors = sel.map(id=>live.api.vendorOf(live.api.stemOf(id))).filter(v=>v && live.api.VCOLOR_MODEL_VENDORS.has(v));
   assert.equal(new Set(vendors).size, vendors.length, 'one arm per vendor');
   assert.ok(sel.every(id=>!live.win.__data.retired[id])); }
-console.log('ok malformed and unavailable storage');
+{
+  const payload=JSON.parse(JSON.stringify(data));
+  payload.entrants.push({entrant_id:'new-team',name:'New team',type:'participant'},
+    {entrant_id:'anon-a1',name:'Anonymous A1',type:'participant'});
+  const rr=payload.rounds.find(r=>r.status==='resolved'&&r.scores);
+  rr.scores['new-team']={crps:100,skill:-1};rr.scores['anon-a1']={crps:200,skill:-2};
+  const added=fixture(new Map(),payload),keep=added.api.defaultKeep(payload);
+  assert(keep.has('new-team'));assert(keep.has('anonymous-combined'));
+  assert(!keep.has('anon-a1'));assert(keep.has('vac-combined'));
+  const menu=added.api.modelPicker.ids;
+  for(const id of ['trend','ewma','climatology'])assert(menu.includes(id));
+  added.api.selectModels(['ewma'],true);assert(!added.win.__hidden.has('ewma'));
+}
+console.log('ok malformed and unavailable storage; all teams visible without coverage or top-N limits');

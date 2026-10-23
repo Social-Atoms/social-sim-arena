@@ -234,6 +234,16 @@ body.resizing-panels,body.resizing-panels *{cursor:col-resize!important;user-sel
 .lbcol .lbhead h2{margin:0;font-size:18px;line-height:26px;font-weight:800;color:var(--ink);letter-spacing:.03em;flex:1 1 200px;overflow-wrap:anywhere;}
 .lbcol .lbhead h2 span#lb-title{display:none;}   /* the task is named at the left already; the word alone heads the board */
 .lbhead .seg{flex-wrap:wrap;}
+.lbcontrols{padding:4px 14px 8px;display:flex;flex-wrap:wrap;gap:5px 10px;}
+.lbcontrols[hidden],#pairwise-table[hidden],#legacy-leaderboard[hidden],#pairwise-summary[hidden]{display:none;}
+.lbcontrols .seg{flex-wrap:wrap;}
+.lbcontrols .seg button{font-size:11px;padding:4px 7px;}
+#pairwise-summary{margin:0;padding:0 16px 8px;font-size:12px;color:var(--mut);}
+#pairwise-table{table-layout:fixed;}
+#pairwise-table col.pairwise-col{width:90px;}
+#pairwise-table col.coverage-col{width:62px;}
+#pairwise-table th,#pairwise-table td{padding-left:4px;padding-right:4px;}
+#pairwise-table td.num{font-size:12px;white-space:nowrap;}
 .lbcol .scroll{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-gutter:stable;padding:0 8px 0 6px;}
 .lbcol .scroll::-webkit-scrollbar-track{margin-top:34px;}   /* the site's scrollbar (typography.css), starting under the column heads */
 table.lb tr.off td{color:var(--mut);}
@@ -277,6 +287,10 @@ th.has-help:focus{outline:none;}
 table.lb .skill{font-weight:800;color:var(--ink);font-size:15px;}
 table.lb .pend{color:#c9c7c0;font-weight:600;letter-spacing:.15em;}
 table.lb .skill.pos{color:var(--accent-ink);}
+table.lb tr.probe-row td{background:#f7fbf7;}
+table.lb .probe-pass{display:inline-block;color:#176b3a;background:#e5f5e9;border:1px solid #b8ddc2;border-radius:999px;padding:2px 6px;font-size:10px;font-weight:800;letter-spacing:.04em;white-space:nowrap;}
+table.lb .probe-run{color:var(--accent-ink);font-weight:700;text-decoration:none;}
+table.lb .probe-run:hover{text-decoration:underline;}
 .av{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;border-radius:4px;color:#fff;font-weight:800;font-size:10.5px;flex:0 0 auto;position:relative;overflow:hidden;}
 .av .lg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:4px;background:inherit;}
 .lchip .av,.model-option .av{width:18px;height:18px;border-radius:3px;font-size:8px;}
@@ -732,8 +746,8 @@ table.ent td a.row{color:inherit;text-decoration:none;}
           <div class="chart-filters" id="chart-filters">
             <div class="chartctl" role="group" aria-label="Chart filters">
               <div class="model-toolbar" id="model-toolbar" style="display:none;"></div>
-              <div class="seg mini" id="unit-seg"><button data-unit="level">Tracker<span class="th-help" role="tooltip">The published series itself, with each question's forecasts drawn on it.</span></button><button data-unit="arena" class="on">Score<span class="th-help" role="tooltip">Arena score: 0 is persistence (copying the last release), 100 is a perfect oracle. Averaged over every matched release in the window. Higher is better.</span></button><button data-unit="crps">CRPS<span class="th-help" role="tooltip">CRPS, the error in the question's own unit: how far the whole forecast distribution sat from the published number. Lower is better.</span></button></div>
-              <div class="seg mini" id="range-seg" role="group" aria-label="Time window for the chart and the board"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0" class="on">All</button><button data-range="-1" title="Season 0 main: every question closing from Sep 30, when all current teams could answer, so everyone is ranked on the same questions">S0</button></div>
+              <div class="seg mini" id="unit-seg"><button data-unit="pairwise" class="on">Pairwise win rate<span class="th-help" role="tooltip">Running mean of per-question win rates on the selected All, S0 or Common question set. Wins count 1, ties ½, missing answers 0. The final value matches the standings. Higher is better.</span></button><button data-unit="level">Tracker<span class="th-help" role="tooltip">The published series itself, with each question's forecasts drawn on it.</span></button><button data-unit="arena">Skill<span class="th-help" role="tooltip">Arena score: 0 is persistence (copying the last release), 100 is a perfect oracle. Averaged over every matched release in the window. Higher is better.</span></button><button data-unit="crps">CRPS<span class="th-help" role="tooltip">CRPS, the error in the question's own unit: how far the whole forecast distribution sat from the published number. Lower is better.</span></button></div>
+              <div class="seg mini" id="range-seg" role="group" aria-label="Chart history and Overall question set"><button data-range="1">30D</button><button data-range="6">6M</button><button data-range="0">All</button><button data-range="-1" class="on" title="Season 0: questions closing from Sep 30, using the fixed 24-method cohort. Later methods enter All only.">S0</button><button type="button" id="common-questions" aria-label="Common" aria-describedby="common-help" aria-pressed="false">Common<span class="th-help" id="common-help" role="tooltip">Only questions answered by every active method in the fixed Season 0 cohort, including models and baselines, across all history. Later methods enter All only and do not change this intersection. The Pairwise curve uses the same question set.</span></button></div>
             </div>
             <div class="legend-strip" id="legend-strip" style="display:none;"></div>
           </div>
@@ -754,8 +768,20 @@ table.ent td a.row{color:inherit;text-decoration:none;}
         <h2 class="has-help" id="lb-how"><b>Leaderboard</b> <span id="lb-title">Overall</span><span class="th-help" id="lb-note" role="tooltip"></span></h2>
         <div class="task-live"><time id="data-updated" title="Data refreshed every 6 hours"></time></div>
       </div>
+      <div class="lbcontrols" id="pairwise-controls">
+        <div class="seg mini" role="group" aria-label="Leaderboard scoring">
+          <button type="button" data-ranking="pairwise" class="on" aria-label="Pairwise win rate" aria-describedby="pairwise-help" aria-pressed="true">Pairwise win rate<span class="th-help" id="pairwise-help" role="tooltip">For each question: wins + half of ties, divided by submitted opponents. Average equally across questions, on a 0–100 scale. Missing answers score zero; questions with fewer than two methods are excluded. Higher is better.</span></button>
+          <button type="button" data-ranking="skill" aria-pressed="false">Original skill</button>
+        </div>
+      </div>
+      <p id="pairwise-summary" aria-live="polite"></p>
       <div class="scroll">
-        <table class="lb">
+        <table class="lb" id="pairwise-table" aria-label="Pairwise win-rate leaderboard">
+          <colgroup><col class="rank-col"><col><col class="pairwise-col"><col class="coverage-col"></colgroup>
+          <thead><tr><th scope="col">#</th><th scope="col">Method</th><th scope="col" class="num has-help" tabindex="0" aria-describedby="pairwise-column-help">Pairwise<span class="th-help" id="pairwise-column-help" role="tooltip">For each question: wins + half of ties, divided by submitted opponents. Average equally across questions, on a 0–100 scale. Missing answers score zero; questions with fewer than two methods are excluded. Higher is better.</span></th><th scope="col" class="num" title="Answered questions / all comparable questions in this window.">Answered</th></tr></thead>
+          <tbody id="pairwise-body"><tr><td colspan="4">loading…</td></tr></tbody>
+        </table>
+        <table class="lb" id="legacy-leaderboard" hidden>
           <colgroup><col class="rank-col"><col><col class="score-col"><col class="loss-col"><col class="rounds-col"></colgroup>
           <thead><tr><th></th><th>Entrant</th><th class="num" id="lb-score-head">Score</th><th class="num" id="lb-loss-head">CRPS</th><th class="num" id="lb-rounds-head">Questions</th></tr></thead>
           <tbody id="lb-body"><tr><td colspan="5" style="color:var(--mut);">loading…</td></tr></tbody>
@@ -839,6 +865,7 @@ table.ent td a.row{color:inherit;text-decoration:none;}
 
 </main>
 
+<script src="pairwise.js"></script>
 <script>
 const RAW  = 'https://raw.githubusercontent.com/Social-Atoms/social-sim-arena/main/site/data.json';
 const ENTITY = { crowd:'#15803d', ewma:'#4b4a46', trend:'#8b897f', climatology:'#c6c4bc', persistence:'#b3b1aa' };
@@ -1372,55 +1399,53 @@ function tipShow(tip, ev, html){
   tip.style.left = tx+'px'; tip.style.top = '14px';
 }
 
-// Start with a small comparison, chosen from the published standings.
-const DEFAULT_VISIBLE_MODELS = 5;   // five models, EWMA and the crowd: seven lines
-const MODEL_SELECTION_KEY = 'ssa.chart-models.v1';
+// Start with every scored external team, representative models, and two references.
+const DEFAULT_VISIBLE_MODELS = 5;
+// New default policy: do not reuse old selections that hid teams and enabled every baseline.
+const MODEL_SELECTION_KEY = 'ssa.chart-models.v2';
 // Scored and listed as usual, but off the chart until a reader ticks them: their
 // range flattens every other line on the default view.
 const DEFAULT_HIDDEN_ENTRANTS = new Set(['zhengzheng-agent']);
 function defaultKeep(data){
-  // The default comparison, drawn from the board the page opens on. Pure.
-  // Once the Season 0 main board exists (every shape since the common start, see refresh.build_main_board),
-  // from the full-season board the page opens on:
-  //   every external team, one entrant each and with no coverage floor, so the chart shows how the real
-  //   entrants are doing, except DEFAULT_HIDDEN_ENTRANTS;
-  //   every model vendor's best arm, except the vendor whose best arm is the worst of them, so the chart
-  //   keeps the field in view without the one line that drags its floor down;
-  //   the crowd. Persistence is the zero line; no statistical reference, EWMA's dive is not worth the room.
-  // A model qualifies once it answered at least half of the main board's scored questions, so one lucky
-  // answer does not open the chart. Before the main board: the season's overall board, top five models with
-  // at least half the most-answered entrant's questions, EWMA and the crowd; the backtest's until then.
-  const main = (data||{}).season0_main, byId = {};
-  ((data||{}).entrants||[]).forEach(e=>byId[e.entrant_id]=e);
-  const keep = new Set(['persistence','crowd']);
-  const scored = (main && (main.entries||[]).length && data.rounds)
-    ? activeRows(liveBoard(data,'agg','all'),data).filter(r=>!r.baseline && r.entrant!=='crowd')
-    : [];
-  const rows = scored.filter(r=>r.rounds>=Math.ceil((main.scored_rounds||0)/2));
-  if(rows.length){   // no scored rows (a season before its first resolution) falls through to the old rule
-    const reg = id => byId[stemOf(id)] || byId[id] || {};
-    const vendor = id => vendorOf(stemOf(id));
-    const isModel = id => { const v = vendor(id); return !!v && VCOLOR_MODEL_VENDORS.has(v); };
-    const teamOf = id => { const v = vendor(id); return (v && !VCOLOR_MODEL_VENDORS.has(v)) ? v : (reg(id).organization || id); };
-    const isTeam = id => reg(id).type === 'participant';
-    const teams = new Set();
-    for(const r of scored){ if(!isTeam(r.entrant) || DEFAULT_HIDDEN_ENTRANTS.has(r.entrant) || teams.has(teamOf(r.entrant))) continue; teams.add(teamOf(r.entrant)); keep.add(r.entrant); }
-    const best = [], seen = new Set();   // in board order, so the last is the worst vendor's best
-    for(const r of rows){ const v = vendor(r.entrant); if(!isModel(r.entrant) || seen.has(v)) continue; seen.add(v); best.push(r.entrant); }
-    if(best.length >= 3) best.pop();
-    best.forEach(id=>keep.add(id));
-    return keep;
+  const keep=defaultKeepAll(data);
+  DEFAULT_HIDDEN_ENTRANTS.forEach(id=>keep.delete(id));
+  return keep;
+}
+function defaultKeepAll(data){
+  data=data||{};
+  const keep=new Set(['persistence','crowd']);
+  if(data.rounds&&window.SSAPairwise){
+    const all=window.SSAPairwise.build(data,{field:'mixed',scope:'all'});
+    if(all.entries.length){
+      const registered=new Map((data.entrants||[]).map(e=>[e.entrant_id,e]));
+      // Use the same official team slots as the standings, without a top-N or coverage gate.
+      all.entries.forEach(e=>{
+        if(e.members.some(id=>(registered.get(id)||{}).type==='participant'))keep.add(e.entrant);
+      });
+      const s0=window.SSAPairwise.build(data,{field:'mixed',scope:'s0'});
+      const rows=s0.entries.length?s0.entries:all.entries;
+      const best=[],seen=new Set();
+      for(const r of rows){
+        const v=vendorOf(stemOf(r.entrant));
+        if(!v||!VCOLOR_MODEL_VENDORS.has(v)||seen.has(v))continue;
+        seen.add(v);best.push(r.entrant);
+      }
+      if(best.length>=3)best.pop();
+      best.forEach(id=>keep.add(id));
+      return keep;
+    }
   }
+  // Before live scores exist, keep the historical backtest comparison.
   keep.add('ewma');
-  const live = (data && data.rounds) ? liveBoard(data,'agg','all') : [];
-  const models = live.length ? activeRows(live,data) : [];
-  const floor = models.length ? Math.ceil(Math.max(...models.map(r=>r.rounds))/2) : 0;
-  const board = live.length ? models.filter(r=>r.rounds>=floor).concat(live.filter(r=>isBaseline(r.entrant))) : (((data||{}).backtest||{}).overall || []);
-  let n = 0;
+  const live=data.rounds?liveBoard(data,'agg','all'):[];
+  const models=live.length?activeRows(live,data):[];
+  const floor=models.length?Math.ceil(Math.max(...models.map(r=>r.rounds))/2):0;
+  const board=live.length?models.filter(r=>r.rounds>=floor).concat(live.filter(r=>isBaseline(r.entrant))):((data.backtest||{}).overall||[]);
+  let n=0;
   for(const row of board){
-    if(row.baseline || isBaseline(row.entrant) || row.entrant==='crowd' || keep.has(row.entrant)) continue;
+    if(row.baseline||isBaseline(row.entrant)||row.entrant==='crowd'||keep.has(row.entrant))continue;
     keep.add(row.entrant);
-    if(++n >= DEFAULT_VISIBLE_MODELS) break;
+    if(++n>=DEFAULT_VISIBLE_MODELS)break;
   }
   return keep;
 }
@@ -1576,7 +1601,7 @@ function ensureModelPicker(){
   const strip = document.getElementById('legend-strip');
   const toolbar = document.getElementById('model-toolbar'), controls = document.getElementById('chart-filters');
   strip.innerHTML = '<div class="model-chips" id="model-chips" role="group" aria-label="Selected chart entrants"></div>';
-  toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop" title="Which entrants the chart draws, one line each; the count is out of the active entrants unless the status filter says otherwise. The board beside it lists the same active entrants, one row each.">Chart: <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
+  toolbar.innerHTML = '<button type="button" class="model-trigger" id="model-trigger" aria-expanded="false" aria-controls="model-pop" title="Which entrants the chart draws, one line each; the count is out of the active entrants unless the status filter says otherwise. Pairwise standings use their own active comparison field; chart selections do not change the ranking.">Chart: <span class="model-count" id="model-selected-count"></span>'+modelChevron+'</button>'
     + '<button type="button" class="model-action" id="model-reset" title="Show the top 5 entrants, EWMA and the crowd">Reset</button>'
     + '<section class="model-pop" id="model-pop" aria-label="Choose chart entrants" hidden>'
     + '<div class="model-search-row"><input type="search" id="model-search" placeholder="Search entrants or labs" aria-label="Search entrants or labs" autocomplete="off">'
@@ -1678,7 +1703,7 @@ function renderLegend(ids, nameOf){
 }
 function aggChart(traj, nameOf, unit){
   const svg = clearChart(), tip = pane().querySelector('.tooltip');
-  if(!traj || traj.length<2){ svg.style.display='none'; return; }
+  if(!traj || !traj.length){ svg.style.display='none'; return; }
   const pw = svg.clientWidth, ph = svg.clientHeight;
   if(pw < 80 || ph < 80){ svg.style.display='none'; return; }
   const bt0 = (window.__data && window.__data.backtest) || {};
@@ -1693,7 +1718,7 @@ function aggChart(traj, nameOf, unit){
   const arenaAt = (t,s) => t.live ? (t.skills && t.skills[s]!=null ? 100*t.skills[s] : null)
       : (t.crps && t.crps[s]!=null && t.crps.persistence!=null) ? arenaOf(t.crps[s], t.crps.persistence) : null;
   const val0 = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null)
-      : unit==='arena' ? arenaAt(t,s) : t.skills[s];
+      : unit==='arena' ? arenaAt(t,s) : unit==='pairwise' ? t.pairwise[s] : t.skills[s];
   // Only entrants the data actually scores. Falling back to 0 for a missing
   // value drew two lies: `crowd` is not computed in the model backtest at all
   // and got a full line at exactly 0% skill, and every model was drawn flat at
@@ -1709,7 +1734,7 @@ function aggChart(traj, nameOf, unit){
   }
   if((unit==='crps' || unit==='arena') && !traj[traj.length-1].crps){ unit='skill'; }
   const val = (t,s) => unit==='crps' ? (t.crps ? t.crps[s] : null)
-      : unit==='arena' ? arenaAt(t,s) : t.skills[s];
+      : unit==='arena' ? arenaAt(t,s) : unit==='pairwise' ? t.pairwise[s] : t.skills[s];
   const monthsA = window.__range || 0;
   if(monthsA > 0){
     const cutoff = dnum(traj[traj.length-1].date) - monthsA*30.44*86400000;
@@ -1725,10 +1750,11 @@ function aggChart(traj, nameOf, unit){
   if(unit==='skill'){ lo=Math.min(lo,0); hi=Math.max(hi,0); }
   if(unit==='arena'){ lo=Math.min(lo,0); hi=Math.max(hi,100); }
   const pad=(hi-lo)*0.08||0.05; lo-=pad; hi+=pad;
-  const X = i => P.l + i/(traj.length-1)*(W-P.l-P.r);
+  if(unit==='pairwise'){ lo=0; hi=100; }
+  const X = i => P.l + i/Math.max(1,traj.length-1)*(W-P.l-P.r);
   const Y = v => P.t + (hi-v)/(hi-lo)*(H-P.t-P.b);
-  const fmtV = v => unit==='crps' ? v.toFixed(2) : unit==='arena' ? v.toFixed(0) : (v>0?'+':'')+(v*100).toFixed(1)+'%';
-  const fmtT = v => unit==='crps' ? v.toFixed(1) : unit==='arena' ? v.toFixed(0) : (v>0?'+':'')+(v*100).toFixed(0)+'%';
+  const fmtV = v => unit==='crps' ? v.toFixed(2) : unit==='pairwise' ? v.toFixed(2) : unit==='arena' ? v.toFixed(0) : (v>0?'+':'')+(v*100).toFixed(1)+'%';
+  const fmtT = v => unit==='crps' ? v.toFixed(1) : (unit==='arena'||unit==='pairwise') ? v.toFixed(0) : (v>0?'+':'')+(v*100).toFixed(0)+'%';
   let g = `<defs><linearGradient id="lead" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0" stop-color="#15803d" stop-opacity=".10"/>
     <stop offset="1" stop-color="#15803d" stop-opacity="0"/></linearGradient>
@@ -1805,7 +1831,7 @@ function aggChart(traj, nameOf, unit){
     } else {
       g += `<text x="${X(traj.length-1)+17.5}" y="${ly+3.5}" font-size="8" font-weight="700" fill="#fff" text-anchor="middle">${initOf(s)}</text>`;
     }
-    g += `<a href="#entrant/${esc(s)}"><text x="${X(traj.length-1)+31}" y="${ly+4}" font-size="12.5" font-weight="600" fill="#4f4e49">${esc(nm)} ${fmtV(last)}</text></a>`;
+    g += `${['vac-combined','anonymous-combined'].includes(s)?'':'<a href="#entrant/'+esc(s)+'">'}<text x="${X(traj.length-1)+31}" y="${ly+4}" font-size="12.5" font-weight="600" fill="#4f4e49">${esc(nm)} ${fmtV(last)}</text>${['vac-combined','anonymous-combined'].includes(s)?'':'</a>'}`;
   });
   g += `<line class="xh" x1="0" x2="0" y1="${P.t}" y2="${H-P.b}" stroke="#96948d" stroke-dasharray="3 3" style="display:none"/>`;
   svg.innerHTML = g;
@@ -2164,11 +2190,12 @@ function rankingChart(d,data){
 }
 
 // ---- the season, question by question ----
-// The ids a score trajectory carries: baselines first (never persistence, which is the zero line), then entrants, then the crowd.
+// Pairwise scores persistence as a competitor; older skill curves use its zero reference line.
 function trajIds(traj){
-  const ids=new Set(); (traj||[]).forEach(t=>{ Object.keys(t.skills||{}).forEach(id=>ids.add(id)); Object.keys(t.crps||{}).forEach(id=>ids.add(id)); });
-  ids.delete('persistence');
-  const base=['climatology','trend','ewma'].filter(id=>ids.has(id)), rest=[...ids].filter(id=>!isBaseline(id)&&id!=='crowd').sort();
+  const ids=new Set(); (traj||[]).forEach(t=>{ Object.keys(t.pairwise||{}).forEach(id=>ids.add(id)); Object.keys(t.skills||{}).forEach(id=>ids.add(id)); Object.keys(t.crps||{}).forEach(id=>ids.add(id)); });
+  const pairwise=(traj||[]).some(t=>t.pairwise);
+  if(!pairwise) ids.delete('persistence');
+  const base=['persistence','climatology','trend','ewma'].filter(id=>ids.has(id)), rest=[...ids].filter(id=>!isBaseline(id)&&id!=='crowd').sort();
   return base.concat(rest).concat(ids.has('crowd')?['crowd']:[]);
 }
 function resolvedAt(r){ return String((r.resolution||{}).resolved_at||r.release_at||''); }
@@ -2237,7 +2264,7 @@ function ensurePick(traj){
   coerceUnknown(ids);   // establishes the saved or default selection before it is inspected
   const keep=window.__keep||new Set();
   if(ids.some(id=>keep.has(id))) return;
-  const last=traj[traj.length-1], data=window.__data||{}, rank=id=>((last.skills||{})[id]??-9);
+  const last=traj[traj.length-1], data=window.__data||{}, rank=id=>((last.pairwise||last.skills||{})[id]??-9);
   const models=ids.filter(id=>!isBaseline(id)&&id!=='crowd'), active=models.filter(id=>!entrantState(id,data));
   const top=(active.length?active:models).sort((a,b)=>rank(b)-rank(a)).slice(0,DEFAULT_VISIBLE_MODELS);
   selectModels(top.concat(ids.filter(id=>id==='ewma'||id==='crowd')), true);
@@ -2297,7 +2324,7 @@ function renderTaskChart(key){
   window.__matched='';  // read by the board note
   (data.entrants||[]).forEach(e=>nameOf[e.entrant_id]=e.name);
   const unitSeg=document.getElementById('unit-seg'),rangeSeg=document.getElementById('range-seg');
-  const showUnits=(level,arena,crps)=>{ unitSeg.style.display=''; unitSeg.querySelector('[data-unit="level"]').style.display=level?'':'none'; unitSeg.querySelector('[data-unit="arena"]').style.display=arena?'':'none'; unitSeg.querySelector('[data-unit="crps"]').style.display=crps?'':'none'; };
+  const showUnits=(level,arena,crps)=>{ unitSeg.style.display=''; unitSeg.querySelector('[data-unit="pairwise"]').style.display=key==='agg'?'':'none'; unitSeg.querySelector('[data-unit="level"]').style.display=level?'':'none'; unitSeg.querySelector('[data-unit="arena"]').style.display=arena?'':'none'; unitSeg.querySelector('[data-unit="crps"]').style.display=crps?'':'none'; };
   const mark=unit=>unitSeg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.unit===unit));
   const src=d.srcUrl?' · source: <a href="'+d.srcUrl+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>':'';
   const live=liveTrajectory(data,key), hasLive=live.length>=2;
@@ -2312,9 +2339,18 @@ function renderTaskChart(key){
   document.getElementById('chart-filters').style.visibility='';
   if(key==='agg'){
     showUnits(false,true,true); rangeSeg.style.display='';
-    const unit=window.__unitAgg||'arena'; mark(unit);
-    const traj=hasLive?live:(bt.trajectory||[]);
-    if(traj.length>=2) scoreView(traj,hasLive,unit); else chartMessage('No scored questions yet','The first questions of the season resolve within days of their release.');
+    const unit=window.__unitAgg||(window.__ranking==='skill'?'arena':'pairwise'); mark(unit);
+    const scope=window.__pairwiseScope||(window.__board==='s0'?'s0':'all');
+    const board=window.SSAPairwise.build(data,{field:'mixed',scope}),traj=board.trajectory;
+    if(traj.length){
+      ensurePick(traj);
+      const names={}; board.entries.forEach(e=>names[e.entrant]=e.name===e.entrant?forecasterName(e.entrant,data):e.name);
+      window.__matched=board.scored_rounds+' questions resolved';
+      window.__caption='<span class="replay-tag">'+({all:'ALL',s0:'S0',matched:'COMMON'}[scope])+'</span> · '+(unit==='pairwise'?'Pairwise win rate · running mean across all selected questions; missing answers score zero':unit==='arena'?'Original skill · running mean across answered questions':'CRPS · running mean across answered number questions')+' · '+board.scored_rounds+' resolved questions';
+      aggChart(traj,names,unit); renderLegend(trajIds(traj),names);
+    } else if(scope==='all'&&unit!=='pairwise'&&!hasLive&&(bt.trajectory||[]).length>=2){
+      scoreView(bt.trajectory,false,unit);
+    } else chartMessage('No scored questions in this set','Select All or S0 to compare available answers.');
     return;
   }
   if(d.kind==='profile'||d.kind==='ranking'){
@@ -2339,6 +2375,27 @@ function renderTaskChart(key){
 }
 
 const SPANLABEL = {all:'the releases every entrant answered', m6:'the releases every entrant answered', d30:'the releases every entrant answered', last:'the releases every entrant answered', s0:'the releases every entrant answered'};
+function applyAgentProbes(data,payload){
+  const probes=(payload&&payload.schema_version==='ssa-agent-probes-v1'&&Array.isArray(payload.probes))?payload.probes:[];
+  window.__agentProbes={};
+  data.entrants=Array.isArray(data.entrants)?data.entrants.slice():[];
+  const known=new Set(data.entrants.map(e=>e.entrant_id));
+  probes.forEach(p=>{
+    const f=p&&p.response&&p.response.forecast;
+    if(!p||p.status!=='passed'||!p.entrant_id||!f||typeof f.mean!=='number'||typeof f.sd!=='number'||!(f.sd>0))return;
+    window.__agentProbes[p.entrant_id]=p;
+    if(!known.has(p.entrant_id)){
+      data.entrants.push({entrant_id:p.entrant_id,name:p.name||p.entrant_id,type:p.type||'participant'});
+      known.add(p.entrant_id);
+    }
+  });
+  return data;
+}
+function probeActionUrl(p){
+  const u=(p&&p.action_url)||'';
+  return /^https:\/\/github\.com\/Social-Atoms\/social-sim-arena\/actions\/runs\/\d+$/.test(u)?u:'';
+}
+function probeNumber(x){return Number.isInteger(x)?String(x):String(+x.toFixed(3));}
 function renderBoard(mode){
   const data = window.__data; if(!data) return;
   window.__board = mode; if(typeof syncHash==='function') syncHash();
@@ -2347,13 +2404,13 @@ function renderBoard(mode){
   (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; });
   const btMap = {}; ((data.backtest&&data.backtest.overall)||[]).forEach(e=>btMap[e.entrant]=e);
   let entries=[],metricKey='mean_crps',metricLabel='CRPS',title=d.label,tag='',note='',appendPending=false,replay=false;
-  const liveRows=liveBoard(data,key,mode);
+  const liveRows=liveBoard(data,key,mode).filter(e=>mode!=='s0'||!/^anon-a[1-6]$/.test(e.entrant));
   // Season 0 main (the S0 range): every shape since the common start, so every team
   // is ranked on the same questions (refresh.build_main_board). All keeps the
   // full-season board.
   const main=data.season0_main;
   if(key==='agg' && mode==='s0' && main && (main.entries||[]).length){
-    entries=activeRows(main.entries.map(e=>({entrant:e.entrant,rounds:e.rounds,mean_skill:e.mean_skill,mean_crps:(typeof e.mean_crps==='number'?e.mean_crps:null),baseline:isBaseline(e.entrant)})),data);
+    entries=activeRows(main.entries.filter(e=>!/^anon-a[1-6]$/.test(e.entrant)).map(e=>({entrant:e.entrant,rounds:e.rounds,mean_skill:e.mean_skill,mean_crps:(typeof e.mean_crps==='number'?e.mean_crps:null),baseline:isBaseline(e.entrant)})),data);
     title='Season 0 main'; tag='live';
     note='Season 0 main board: every question (number, profile and ranking) that closed on or after '+String(main.since||'').slice(0,10)+', when every current team could answer it; '+(main.scored_rounds||0)+' scored so far. Ranked by mean skill against each question\u2019s persistence reference; the Questions column says how many of them each row answered, so a skipped question shows. CRPS is averaged over the number questions only (profile and ranking questions use other scores).';
   }else if(key==='agg' && liveRows.length){
@@ -2419,8 +2476,13 @@ function renderBoard(mode){
   const roundsHead=document.getElementById('lb-rounds-head');
   headWithHelp(roundsHead, 'Questions', 'How many resolved questions this row is averaged over. Fewer questions, noisier score.');
   function row(id, s, rank, ref){
-    const arena = s ? 100*s.mean_skill : null;
-    const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0)) : '<span class="pend">···</span>';
+    const probe=!s&&((window.__agentProbes||{})[id]);
+    const forecast=probe&&probe.response&&probe.response.forecast;
+    const demo=probe&&probe.kind==='historical_demo'&&probe.evaluation;
+    const arena = s ? 100*s.mean_skill : demo&&typeof demo.arena_score==='number' ? demo.arena_score : null;
+    const skillTxt = arena!=null ? ((arena>0?'+':'')+arena.toFixed(0))
+      : probe ? '<span class="probe-pass" title="Passed a non-scored endpoint contract test">TEST ✓</span>'
+      : '<span class="pend">···</span>';
     const subSkill = '';
     const pos = arena!=null && arena>0;
     const setup = condTag(nameOf[id]), variant = variantOf(id);
@@ -2431,24 +2493,32 @@ function renderBoard(mode){
       typeWord(entryType),
       id==='persistence' ? 'Reference' : '',
       retiredWords(id,data),
-      s && s.mock ? 'Placeholder' : ''
+      s && s.mock ? 'Placeholder' : '',
+      demo ? 'Historical demo' : probe ? 'API test passed' : '',
+      demo ? '1 resolved question' : '',
+      forecast ? 'μ '+probeNumber(forecast.mean) : '',
+      forecast ? 'σ '+probeNumber(forecast.sd) : ''
     ].filter(Boolean);
+    const action=probeActionUrl(probe);
+    const actionLink=action?' <span aria-hidden="true">·</span> <a class="probe-run" href="'+action+'" target="_blank" rel="noopener">Action ↗</a>':'';
     const refLine = ref && btMap[id] ? '<br><span class="type">last season '+((btMap[id].mean_skill>0?'+':'')+(btMap[id].mean_skill*100).toFixed(1))+'%</span>' : '';
-    return '<tr'+(state?' class="off"':'')+'><td class="rank">'+(rank||'·')+'</td>'
+    const probeTitle=demo&&probe.round&&probe.round.question?' title="Historical demo: '+esc(probe.round.question)+'"':'';
+    const loss=s&&typeof s[metricKey]==='number'?s[metricKey]:demo&&metricLabel==='CRPS'?demo.loss:null;
+    const rounds=s?s.rounds:demo?1:0;
+    const rowClass=[probe?'probe-row':'',state?'off':''].filter(Boolean).join(' ');
+    return '<tr'+(rowClass?' class="'+rowClass+'"':'')+probeTitle+'><td class="rank">'+(rank||'·')+'</td>'
       + '<td><span class="who">'+avatar(id)
       + '<span class="who-text"><b class="model-name"><a href="#entrant/'+esc(id)+'">'+esc((nameOf[id]||forecasterName(id,data)).split(' (')[0].split(' · ')[0])+'</a></b>'
-      + '<span class="model-meta">'+details.map(detail=>'<span>'+esc(detail)+'</span>').join(' <span aria-hidden="true">·</span> ')+'</span></span></span></td>'
+      + '<span class="model-meta">'+details.map(detail=>'<span>'+esc(detail)+'</span>').join(' <span aria-hidden="true">·</span> ')+actionLink+'</span></span></span></td>'
       + '<td class="num skill'+(pos?' pos':'')+'">'+skillTxt+subSkill+refLine+'</td>'
-      + '<td class="num">'+(s && typeof s[metricKey]==='number' ? s[metricKey].toFixed(metricLabel==='Loss'||metricLabel==='Rank loss'?3:2) : '·')+'</td>'
-      + '<td class="num">'+(s ? s.rounds : 0)+'</td>'
+      + '<td class="num">'+(loss!=null ? loss.toFixed(metricLabel==='Loss'||metricLabel==='Rank loss'?3:2) : '·')+'</td>'
+      + '<td class="num">'+rounds+'</td>'
       + '</tr>';
   }
   const body = document.getElementById('lb-body');
   window.__perRow = entries.find(e=>e.entrant==='persistence') || null;
-  const seen = new Set(entries.map(e=>e.entrant));
-  const orderT = {llm:0, baseline:1};
   // An entrant with nothing scored yet has no row: the board ranks results, the Questions page lists who is in.
-  entries = entries.filter(e=>(e.rounds||0)>0);
+  entries = entries.filter(e=>(e.rounds||0)>0&&!['just4test','test-jay','ssa-testing-team'].includes(e.entrant));
   if(mode==='s0'){
     // The reference sits on top, unranked, so 'better than copying the last release' reads at a glance.
     const ref=entries.find(e=>e.entrant==='persistence');
@@ -2461,6 +2531,74 @@ function renderBoard(mode){
     body.innerHTML='<tr><td colspan="6" style="padding:18px;color:var(--mut);">No defensible historical replay is available for this task.'+(nx?' The first live result is '+esc(nx.round_id)+' on '+esc(fmtDate(nx.release_at))+'.':'')+'</td></tr>';
   }
   document.getElementById('lb-note').textContent=note;
+  renderPairwiseBoard();
+}
+
+// Both Overall metrics share eligibility, grouping, question windows and labels.
+function standingIdentity(entry,data){
+  const id=entry.entrant, members=entry.members||[id];
+  const grouped=members.length>1||members[0]!==id;
+  const record=(data.entrants||[]).find(e=>e.entrant_id===id)
+    ||(grouped?(data.entrants||[]).find(e=>members.includes(e.entrant_id)):null);
+  const label=entry.name===id?forecasterName(id,data):(entry.name||forecasterName(id,data));
+  const name=grouped?esc(label):'<a href="#entrant/'+attr(id)+'">'+esc(label.split(' (')[0].split(' · ')[0])+'</a>';
+  const setup=condTag(record&&record.name);
+  const overallOnly=(window.SSAPairwise.external.find(m=>m.id===id)||{}).scope==='all';
+  const details=[setup==='zs'?'Zero-shot':setup==='r10'?'Recent-10':variantOf(id),
+    overallOnly?'Participant':typeWord(record&&record.type||(grouped?'participant':'llm')),retiredWords(id,data),
+    entry.mock?'Placeholder':''].filter(Boolean);
+  const title=grouped?' title="'+(id==='anonymous-combined'
+    ?'A1–A6 count as one team; same-question priority A1, then A2 through A6. Overall only.'
+    :'Four specialist accounts combined; worldVac is separate')+'"':'';
+  return '<span class="who">'+avatar(id)+'<span class="who-text"><b class="model-name"'+title+'>'+name
+    +'</b><span class="model-meta">'+details.map(detail=>'<span>'+esc(detail)+'</span>').join(' <span aria-hidden="true">·</span> ')
+    +'</span></span></span>';
+}
+function renderPairwiseBoard(){
+  const data=window.__data;if(!data)return;
+  const overall=(window.__tab||'agg')==='agg';
+  const ranking=window.__ranking||'pairwise';
+  const scope=window.__pairwiseScope||(window.__board==='s0'?'s0':'all');
+  const pairwise=ranking==='pairwise';
+  document.getElementById('pairwise-controls').hidden=!overall;
+  document.getElementById('pairwise-table').hidden=!overall||!pairwise;
+  document.getElementById('legacy-leaderboard').hidden=overall&&pairwise;
+  document.getElementById('pairwise-summary').hidden=!overall;
+  const common=document.getElementById('common-questions');common.hidden=!overall;
+  common.classList.toggle('on',overall&&scope==='matched');
+  common.setAttribute('aria-pressed',String(overall&&scope==='matched'));
+  document.querySelectorAll('#range-seg [data-range]').forEach(b=>b.classList.toggle('on',!(overall&&scope==='matched')&&Number(b.dataset.range)===(window.__range||0)));
+  document.querySelectorAll('[data-ranking]').forEach(b=>{const on=b.dataset.ranking===ranking;b.classList.toggle('on',on);b.setAttribute('aria-pressed',String(on));});
+  if(!overall)return;
+  const body=document.getElementById(pairwise?'pairwise-body':'lb-body');
+  const summary=document.getElementById('pairwise-summary');
+  try{
+    const board=window.SSAPairwise.build(data,{field:'mixed',scope});
+    window.__pairwiseBoard=board;
+    const labels={all:'All history',s0:'S0 · locks from '+board.since.slice(0,10),matched:'Common submissions'};
+    summary.textContent=labels[board.scope]+' · '+board.scored_rounds+' questions · '+board.methods+' methods';
+    document.getElementById('lb-title').textContent=pairwise?'Pairwise win rate':'Original skill';
+    document.getElementById('lb-note').textContent=pairwise
+      ?'Pairwise win rate: the percentage of submitted opponents beaten per question, with ties worth half a win. Questions have equal weight; missing answers score zero; questions with fewer than two methods are excluded. Both metrics use the same methods and question window. All includes pre-registration gaps. S0 and Common use the fixed 24-method Season 0 cohort; later methods enter All only. Common uses only questions every active cohort method answered. Anonymous A1–A6 form one All-only team, using A1 first then A2 through A6. The chart retains its Skill/CRPS history.'
+      :'Original skill: the mean published persistence-relative skill over answered questions in this window. Methods, grouping and questions are identical to Pairwise win rate. CRPS averages numeric questions only. Missing answers are excluded from mean skill; Pairwise win rate counts them as zero.';
+    const entries=board.entries.slice();
+    if(!pairwise)entries.sort((a,b)=>(b.mean_skill??-Infinity)-(a.mean_skill??-Infinity)||a.entrant.localeCompare(b.entrant));
+    window.__standingEntries=entries;
+    let rank=1,previous=null;
+    body.innerHTML=entries.map((entry,i)=>{
+      const value=pairwise?entry.pairwise:entry.mean_skill;
+      if(i&&value!==previous)rank=i+1;previous=value;
+      const identity=standingIdentity(entry,data);
+      const start='<tr data-entrant="'+attr(entry.entrant)+'"><td class="rank">'+(value===null?'·':pairwise?entry.rank:rank)+'</td><td>'+identity+'</td>';
+      if(pairwise)return start+'<td class="num">'+entry.pairwise.toFixed(2)+'</td><td class="num">'+entry.answered+'</td></tr>';
+      const score=value===null?'·':(value>0?'+':'')+(100*value).toFixed(0);
+      return start+'<td class="num skill'+(value>0?' pos':'')+'">'+score+'</td><td class="num">'+(entry.mean_crps===null?'·':entry.mean_crps.toFixed(2))+'</td><td class="num">'+entry.rounds+'</td></tr>';
+    }).join('')||'<tr><td colspan="'+(pairwise?4:5)+'" style="padding:18px;color:var(--mut);">'+(board.scope==='matched'?'No resolved question has answers from every selected method yet.':'No resolved question has at least two selected methods yet.')+'</td></tr>';
+  }catch(error){
+    window.__pairwiseBoard=null;window.__standingEntries=[];
+    summary.textContent='Standings unavailable';
+    body.innerHTML='<tr><td colspan="'+(pairwise?4:5)+'" style="padding:18px;color:var(--mut);">'+esc(error.message)+'</td></tr>';
+  }
 }
 
 // What a round asks for, in three words. Without it the front page presents a
@@ -2991,8 +3129,14 @@ function chartUrlState(){
   // What the chart shows beyond scope and window: the metric when it is not Score, and the
   // entrant selection when it differs from the default, so a shared link shows the same lines.
   const tab = window.__tab || 'agg', p = new URLSearchParams();
-  const unit = tab === 'agg' ? (window.__unitAgg || 'arena') : (window.__unitSer || 'arena');
-  if(unit !== 'arena') p.set('unit', unit);
+  const defaultUnit=tab==='agg'&&window.__ranking!=='skill'?'pairwise':'arena';
+  const unit = tab === 'agg' ? (window.__unitAgg || defaultUnit) : (window.__unitSer || 'arena');
+  if(unit !== defaultUnit) p.set('unit', unit);
+  if(tab==='agg'){
+    if(window.__ranking==='skill') p.set('ranking','skill');
+    const defaultScope=window.__board==='s0'?'s0':'all';
+    if(window.__pairwiseScope&&window.__pairwiseScope!==defaultScope) p.set('pw',window.__pairwiseScope);
+  }
   if(window.__data && modelPicker.ids && modelPicker.ids.length){
     const hidden = window.__hidden || new Set(), keep = defaultKeep(window.__data);
     const now = modelPicker.ids.filter(id => !hidden.has(id)), dflt = modelPicker.ids.filter(id => keep.has(id));
@@ -3005,7 +3149,7 @@ function syncHash(){
   let h = pg;
   if(pg === 'leaderboard'){
     const q = chartUrlState();
-    if(tab !== 'agg' || span !== 'all' || q) h = 'leaderboard/' + tab + '/' + span + q;
+    if(tab !== 'agg' || span !== 's0' || q) h = 'leaderboard/' + tab + '/' + span + q;
   }
   if(pg === 'questions' && typeof qf !== 'undefined' && qf.sel.size === 1) h = 'questions/task/' + [...qf.sel][0];
   if(pg === 'entrant') h = 'entrant/' + (window.__entrant || '');
@@ -3022,15 +3166,18 @@ function applyHash(){
   const raw = (location.hash || '').slice(1), qi = raw.indexOf('?');
   const parts = (qi < 0 ? raw : raw.slice(0, qi)).split('/'), q = new URLSearchParams(qi < 0 ? '' : raw.slice(qi + 1));
   parts[0] = HASH_ALIASES[parts[0]] || parts[0];
-  const pg = PAGES.includes(parts[0]) ? parts[0] : null;
+  const pg = PAGES.includes(parts[0]) ? parts[0] : (!raw ? 'leaderboard' : null);
   if(!pg) return;
   if(pg === 'leaderboard'){
-    // The URL is the whole state: a bare #leaderboard is Overall over all rounds, whatever was open before.
+    // A bare entry opens S0 Pairwise; explicit task, window and metric links retain their choices.
     window.__tab = CHART_KEYS.includes(parts[1]) ? parts[1] : 'agg';
-    const span = SPAN_KEYS.includes(parts[2]) ? parts[2] : 'all';
+    const span = SPAN_KEYS.includes(parts[2]) ? parts[2] : (window.__tab==='agg'?'s0':'all');
     window.__board = span; if(typeof setRange==='function') setRange(SPAN_TO_RANGE[span]||0);
+    window.__ranking=q.get('ranking')==='skill'?'skill':'pairwise';
+    window.__pairwiseScope=['all','s0','matched'].includes(q.get('pw'))?q.get('pw'):(span==='s0'?'s0':'all');
     const unit = q.get('unit');
-    if(['arena','crps','level'].includes(unit)){ window.__unitAgg = unit === 'level' ? 'arena' : unit; window.__unitSer = unit; }
+    window.__unitAgg=['pairwise','arena','crps'].includes(unit)?unit:(window.__ranking==='skill'?'arena':'pairwise');
+    window.__unitSer=['arena','crps','level'].includes(unit)?unit:'arena';
     window.__urlEntrants = q.get('entrants') ? q.get('entrants').split(',').filter(Boolean) : null;
   }
   if(pg === 'entrant') window.__entrant = parts[1] || '';
@@ -3121,17 +3268,25 @@ document.querySelectorAll('#round-status-seg button').forEach(b=>b.onclick=()=>{
 const RANGE_TO_SPAN = {0:'all', 6:'m6', 1:'d30', '-1':'s0'}, SPAN_TO_RANGE = {all:0, m6:6, d30:1, last:0, s0:-1};
 function setRange(months){
   window.__range = months;
-  document.querySelectorAll('#range-seg button').forEach(x=>x.classList.toggle('on', Number(x.dataset.range)===months));
+  document.querySelectorAll('#range-seg [data-range]').forEach(x=>x.classList.toggle('on', Number(x.dataset.range)===months));
 }
-document.querySelectorAll('#range-seg button').forEach(b=> b.onclick = ()=>{
+document.querySelectorAll('#range-seg [data-range]').forEach(b=> b.onclick = ()=>{
   setRange(Number(b.dataset.range));
+  window.__pairwiseScope=window.__range===-1?'s0':'all';
   if(window.__data){ setTab(window.__tab||'agg'); renderBoard(RANGE_TO_SPAN[window.__range]||'all'); }
 });
-document.querySelectorAll('#unit-seg button').forEach(b=> b.onclick = ()=>{
+function setRanking(ranking){
+  window.__ranking=ranking; window.__unitAgg=ranking==='skill'?'arena':'pairwise';
+  if(window.__data){ setTab(window.__tab||'agg'); renderBoard(window.__board||'all'); }
+}
+document.querySelectorAll('[data-ranking]').forEach(b=>b.onclick=()=>setRanking(b.dataset.ranking));
+document.getElementById('common-questions').onclick=()=>{window.__pairwiseScope='matched';if(window.__data){setTab(window.__tab||'agg');renderBoard(window.__board||'all');}};
+function setChartUnit(unit){
   const tab = window.__tab || 'agg';
-  if(tab==='agg') window.__unitAgg = b.dataset.unit; else window.__unitSer = b.dataset.unit;
+  if(tab==='agg') window.__unitAgg = unit; else window.__unitSer = unit;
   if(window.__data) setTab(tab);
-});
+}
+document.querySelectorAll('#unit-seg button').forEach(b=> b.onclick = ()=>setChartUnit(b.dataset.unit));
 document.querySelectorAll('#span-seg button').forEach(b=> b.onclick = ()=>{
   renderBoard(b.dataset.span);
 });
@@ -3145,14 +3300,19 @@ addEventListener('resize', scheduleRedraw);
 new ResizeObserver(scheduleRedraw).observe(document.querySelector('#chartpane svg'));
 if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>setTimeout(redraw, 50));
 
-Promise.allSettled([
+const previewHost=(()=>{const h=(location.hostname||'').toLowerCase();return h==='localhost'||h==='127.0.0.1'||h==='social-sim-arena-dev.vercel.app'||h.endsWith('.vercel.app');})();
+const loads=[
   fetch('data.json', {cache:'no-store'}).then(r => { if(!r.ok) throw 0; return r.json(); }),
   fetch(RAW, {cache:'no-store'}).then(r => { if(!r.ok) throw 0; return r.json(); }),
-]).then(results => {
-  const ok = results.filter(x => x.status==='fulfilled').map(x => x.value);
+];
+if(previewHost)loads.push(fetch('agent-probes.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json();}));
+Promise.allSettled(loads).then(results => {
+  const ok = results.slice(0,2).filter(x => x.status==='fulfilled').map(x => x.value);
   if(!ok.length) throw new Error('no data source reachable');
   ok.sort((a,b) => (b.generated_at||'').localeCompare(a.generated_at||''));
-  render(ok[0]);
+  const data=ok[0];
+  applyAgentProbes(data,results[2]&&results[2].status==='fulfilled'?results[2].value:null);
+  render(data);
 }).catch(err => {
   document.getElementById('task-meta').textContent = 'could not load data ('+err+')';
 });

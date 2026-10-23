@@ -156,9 +156,32 @@ def test_a_missing_jsonschema_never_prints_a_bare_ok():
     print("ok test_a_missing_jsonschema_never_prints_a_bare_ok")
 
 
+def test_an_entrant_cannot_submit_quantiles_but_the_crowd_file_keeps_them():
+    """Entrant-chosen quantile levels let a few extreme levels score a belief
+    better than its own mean and sd, so entrants answer with mean and sd. The
+    crowd file is the arena's pooled mixture, written by refresh, and still
+    carries its 39 levels."""
+    q = {"0.01": 36.5, "0.5": 40.0, "0.99": 43.5}
+    with FakeRepo() as repo:
+        ok, msg = repo.check("_example", "demo.json",
+                             dict(GOOD, topline={"quantiles": q}))
+        assert not ok and "not accepted" in msg, msg
+        prof = {"round_id": PROFILE["round_id"], "entrant": "demo",
+                "profile": {"cell_one": {"quantiles": q},
+                            "cell_two": {"mean": 1.0, "sd": 1.0}}}
+        ok, msg = repo.check("_example", "demo.json", prof)
+        assert not ok and "not accepted" in msg, msg
+        crowd = {"round_id": SCALAR["round_id"], "entrant": "crowd",
+                 "topline": {"mean": 40.0, "sd": 1.5, "quantiles": q}}
+        ok, msg = repo.check(SCALAR["round_id"], "crowd.json", crowd)
+        assert ok, msg
+    print("ok test_an_entrant_cannot_submit_quantiles_but_the_crowd_file_keeps_them")
+
+
 if __name__ == "__main__":
     test_an_example_passes_the_checks_it_can_pass()
     test_an_example_directory_no_longer_skips_the_checks_it_can_fail()
     test_an_example_is_not_held_to_a_deadline()
     test_a_missing_jsonschema_never_prints_a_bare_ok()
-    print("4 passed")
+    test_an_entrant_cannot_submit_quantiles_but_the_crowd_file_keeps_them()
+    print("5 passed")

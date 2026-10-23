@@ -65,7 +65,7 @@ function makeDom() {
     querySelector: () => node(),
     querySelectorAll: () => [],
     addEventListener() {}, removeEventListener() {},
-    body: node('body'),
+    body: node('body'), documentElement: node('html'),
   };
   return {els, document};
 }
@@ -77,6 +77,7 @@ function installGlobals(extra) {
     return {observe: noop, unobserve: noop, disconnect: noop};
   };
   const win = {
+    SSAPairwise: require('../../site/pairwise.js'),
     __data: null, __tab: 'agg', __board: 'all',
     innerWidth: 1200, innerHeight: 900, devicePixelRatio: 1,
     location: {hash: '', href: 'https://example.test/', search: ''},
