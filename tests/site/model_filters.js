@@ -35,7 +35,7 @@ function fixture(storage = new Map(), payload = backtestOnly) {
     }
     return inputs;
   };
-  const api = new Function(script+'\nreturn {render, renderTaskChart, renderLegend, matchingModels, coerceUnknown, modelInfo, selectModels, resetModels, setPickerFilter, modelPicker, TASKS, defaultKeep, vendorOf, stemOf, VCOLOR_MODEL_VENDORS};')();
+  const api = new Function(script+'\nreturn {render, renderTaskChart, renderLegend, matchingModels, coerceUnknown, modelInfo, selectModels, resetModels, setPickerFilter, modelPicker, TASKS, defaultKeep, vendorOf, stemOf, VCOLOR_MODEL_VENDORS, DEFAULT_HIDDEN_ENTRANTS};')();
   api.render(payload);
   api.renderTaskChart('agg');
   return {api, els, win, doc, svg, events, stripEvents, storage, options};
@@ -146,7 +146,7 @@ f.api.selectModels(['ewma'],false);
 assert.ok(f.win.__hidden.has('ewma'));
 f.api.resetModels();
 assert.ok(!f.win.__hidden.has('ewma'));
-// With the season's scores present, the default comparison is the board's top teams (one entrant each),
+// With the season's scores present, the default comparison is every external team (one entrant each, minus the named off-chart ones),
 // every model vendor's best arm but the worst, and the crowd; no statistical reference (decided 2026-10-05).
 { const live = fixture(new Map(), data); const sel = live.api.modelPicker.ids.filter(id=>!live.win.__hidden.has(id));
   const keep = live.api.defaultKeep(live.win.__data);
@@ -154,7 +154,9 @@ assert.ok(!f.win.__hidden.has('ewma'));
   assert.deepEqual(new Set(sel), new Set([...keep].filter(id=>live.api.modelPicker.ids.includes(id))), 'the chart draws exactly the default');
   const byId = {}; live.win.__data.entrants.forEach(e=>byId[e.entrant_id]=e);
   const teams = sel.filter(id=>(byId[live.api.stemOf(id)]||byId[id]||{}).type==='participant');
-  assert.ok(teams.length>=1 && teams.length<=4, 'one to four teams: '+teams.join(','));
+  assert.ok(teams.length>=1, 'at least one team');
+  if(live.api.modelPicker.ids.includes('yulan-onesim')) assert.ok(sel.includes('yulan-onesim'), 'every team is drawn, however few questions it answered');
+  assert.ok([...live.api.DEFAULT_HIDDEN_ENTRANTS].every(id=>!sel.includes(id)), 'named entrants start off the chart');
   assert.equal(new Set(teams.map(id=>(byId[id]||{}).organization||id)).size, teams.length, 'one entrant per team');
   const vendors = sel.map(id=>live.api.vendorOf(live.api.stemOf(id))).filter(v=>v && live.api.VCOLOR_MODEL_VENDORS.has(v));
   assert.equal(new Set(vendors).size, vendors.length, 'one arm per vendor');
