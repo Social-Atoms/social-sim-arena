@@ -28,7 +28,7 @@ import os
 import shutil
 import sys
 import tempfile
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -585,7 +585,10 @@ def test_the_season_carries_the_family_weekly_and_the_generator_rolls_it_forward
 
     # Rolled forward from the newest reviewed round, in its shape.
     now = datetime(2026, 9, 4, 12, tzinfo=timezone.utc)
-    nxt = gen.xtab_candidates(season_rounds(), 3, now, through=date(2026, 11, 10))
+    # Three weeks past the newest reviewed release, so promoting a batch never
+    # leaves the roller with an empty horizon.
+    horizon = datetime.strptime(rounds[-1]["release_at"], "%Y-%m-%dT%H:%M:%SZ").date() + timedelta(days=21)
+    nxt = gen.xtab_candidates(season_rounds(), 3, now, through=horizon)
     # The weeks after the newest reviewed one, contiguous, and never a week the
     # season already has. Computed rather than listed: the reviewed set grows
     # every time somebody promotes a batch, and a hard-coded trio pins the test
