@@ -292,8 +292,10 @@ def test_civiqs_candidate_matches_the_reviewed_family_calendar():
 
     meta = SERIES["civiqs_net_approval"]
     history = gen.load_history()["civiqs_net_approval"]
-    out = gen.candidates("civiqs_net_approval", meta, history, 1,
-                         datetime(2026, 9, 1, tzinfo=timezone.utc))
+    # The clock is the archive's newest day, not a fixed date: a fixed one falls
+    # out of the generator's look-ahead window as soon as the archive grows past it.
+    now = datetime.strptime(history[-1]["date"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    out = gen.candidates("civiqs_net_approval", meta, history, 1, now)
     release = datetime.fromisoformat(out[0]["release_at"].replace("Z", "+00:00"))
     assert (release.weekday(), release.hour) == (expected.weekday(), expected.hour)
     assert (release.weekday(), release.hour) == (4, 14)
