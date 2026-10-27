@@ -95,6 +95,7 @@ Social Simulation Arena is a project initiated by [Social Atoms](https://github.
 <a href="https://github.com/ZhenzeMo" title="ZhenzeMo"><img src="brand/contributors/ZhenzeMo.svg" width="64" height="64" alt="ZhenzeMo"></a>
 <a href="https://github.com/XuanL17" title="XuanL17"><img src="brand/contributors/XuanL17.svg" width="64" height="64" alt="XuanL17"></a>
 <a href="https://github.com/evie-mo" title="evie-mo"><img src="brand/contributors/evie-mo.svg" width="64" height="64" alt="evie-mo"></a>
+<a href="https://github.com/a3030765513-oss" title="a3030765513-oss"><img src="brand/contributors/a3030765513-oss.svg" width="64" height="64" alt="a3030765513-oss"></a>
 <a href="https://github.com/mmalohlava" title="mmalohlava"><img src="brand/contributors/mmalohlava.svg" width="64" height="64" alt="mmalohlava"></a>
 <a href="https://github.com/testing-shang" title="testing-shang"><img src="brand/contributors/testing-shang.svg" width="64" height="64" alt="testing-shang"></a>
 <a href="https://github.com/rain21232" title="rain21232"><img src="brand/contributors/rain21232.svg" width="64" height="64" alt="rain21232"></a>
@@ -102,7 +103,7 @@ Social Simulation Arena is a project initiated by [Social Atoms](https://github.
 <a href="https://github.com/maxwell-gao" title="maxwell-gao"><img src="brand/contributors/maxwell-gao.svg" width="64" height="64" alt="maxwell-gao"></a>
 <a href="https://github.com/jayzou-test" title="jayzou-test"><img src="brand/contributors/jayzou-test.svg" width="64" height="64" alt="jayzou-test"></a>
 <a href="https://github.com/hiddensev" title="hiddensev"><img src="brand/contributors/hiddensev.svg" width="64" height="64" alt="hiddensev"></a>
-<a href="https://github.com/a3030765513-oss" title="a3030765513-oss"><img src="brand/contributors/a3030765513-oss.svg" width="64" height="64" alt="a3030765513-oss"></a>
+<a href="https://github.com/SudalaiRajkumar" title="SudalaiRajkumar"><img src="brand/contributors/SudalaiRajkumar.svg" width="64" height="64" alt="SudalaiRajkumar"></a>
 <a href="https://github.com/SocialAI-X" title="SocialAI-X"><img src="brand/contributors/SocialAI-X.svg" width="64" height="64" alt="SocialAI-X"></a>
 <a href="https://github.com/Scarlett51951" title="Scarlett51951"><img src="brand/contributors/Scarlett51951.svg" width="64" height="64" alt="Scarlett51951"></a>
 <a href="https://github.com/Paitesanshi" title="Paitesanshi"><img src="brand/contributors/Paitesanshi.svg" width="64" height="64" alt="Paitesanshi"></a>
