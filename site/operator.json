@@ -3,9 +3,9 @@
     {
       "id": "civiqs",
       "kind": "source",
-      "last_error": null,
-      "required_action": "inspect upstream freshness; do not resolve a new round until the source moves",
-      "state": "stale"
+      "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Democrat; approve_president_trump_2025.party-Independent: HTTPError: 403 Client Error",
+      "required_action": "restore live access now or hold affected rounds before the deadline; the same-source archive is not a new release",
+      "state": "deadline_risk"
     }
   ],
   "counts": {
@@ -18,10 +18,10 @@
       "terminal_failure": 0
     },
     "sources": {
-      "deadline_risk": 0,
+      "deadline_risk": 1,
       "healthy": 12,
       "retryable_failure": 0,
-      "stale": 1,
+      "stale": 0,
       "unresolvable": 0
     }
   },
@@ -1812,7 +1812,7 @@
       "state": "succeeded"
     }
   ],
-  "generated_at": "2026-10-28T05:39:50Z",
+  "generated_at": "2026-10-28T12:52:31Z",
   "source_states": [
     {
       "alert": false,
@@ -1820,7 +1820,7 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=12",
-        "sources/aaii/2026-10-28.html sha256=038ea04e655349eef18a89f44adf0154ae06bb0866fdc51e459bf8a5a33ff311"
+        "sources/aaii/2026-10-28.html sha256=8358dae8df85f24a5d172a42765dd41147db1f098996fc4f15ee005350efaa1a"
       ],
       "last_error": null,
       "next_deadline": "2026-10-28T14:00:00Z",
@@ -1836,17 +1836,18 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "22 validated non-empty series",
-        "fetched_days=0.2; changed_days=6.2; fetch_budget=2; change_budget=4; stale_keys=economy_family_retro,economy_us_direction,economy_us_now"
+        "civiqs/approve_president_trump_2025 (63 snapshots; newest 2026-10-28); civiqs/approve_president_trump_2025.age-18-34 (60 snapshots; newest 2026-10-28); civiqs/approve_president_trump_2025.age-35-49 (61 snapshots; newest 2026-10-28); civiqs/approve_president_trump_2025.age-50-64 (62 snapshots; newest 2026-10-28); civiqs/approve_president_trump_2025.age-65_ (61 snapshots; newest 2026-10-28); civiqs/approve_president_trump_2025.education-College_Graduate (63 snapshots; newest 2026-10-28); civiqs/approve_president_trump_2025.education-Non-College_Graduate (63 snapshots; newest 2026-10-28); civiqs/approve_president_trump_2025.education-Postgraduate (63 snapshots; newest 2026-10-28); civiqs/approve_president_trump_2025.gender-Female (63 snapshots; newest 2026-10-28); civiqs/approve_president_trump_2025.gender-Male (63 snapshots; newest 2026-10-28); civiqs/approve_president_trump_2025.party-Democrat (62 snapshots; newest 2026-10-28); civiqs/approve_president_trump_2025.party-Independent (62 snapshots; newest 2026-10-28); civiqs/approve_president_trump_2025.party-Republican (64 snapshots; newest 2026-10-28); civiqs/approve_president_trump_2025.race-Black_or_African-American (63 snapshots; newest 2026-10-28); civiqs/approve_president_trump_2025.race-Hispanic_Latino (64 snapshots; newest 2026-10-28); civiqs/approve_president_trump_2025.race-Other (64 snapshots; newest 2026-10-28); civiqs/approve_president_trump_2025.race-White (62 snapshots; newest 2026-10-28); civiqs/economy_family_retro (63 snapshots; newest 2026-10-28); civiqs/economy_us_direction (63 snapshots; newest 2026-10-28); civiqs/economy_us_now (63 snapshots; newest 2026-10-28); civiqs/inflation_impact (62 snapshots; newest 2026-10-28)",
+        "fetched_days=0.5; changed_days=6.5; fetch_budget=2; change_budget=4; stale_keys=economy_family_retro,economy_us_direction,economy_us_now",
+        "live attempt failed; same-source archive used"
       ],
-      "last_error": null,
+      "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Democrat; approve_president_trump_2025.party-Independent: HTTPError: 403 Client Error",
       "next_deadline": "2026-10-28T14:00:00Z",
       "next_lock": "2026-10-28T14:00:00Z",
-      "next_retry": null,
-      "required_action": "inspect upstream freshness; do not resolve a new round until the source moves",
+      "next_retry": "2026-10-28T18:52:31Z",
+      "required_action": "restore live access now or hold affected rounds before the deadline; the same-source archive is not a new release",
       "route": "ssa.series:civiqs",
       "source": "civiqs",
-      "state": "stale"
+      "state": "deadline_risk"
     },
     {
       "alert": false,
@@ -1886,7 +1887,7 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
-        "sources/sb_approval/2026-10-28.csv sha256=d4372793fd566a001daff41235957a631fbfa63701fdaab16e14d223612884ba"
+        "sources/sb_approval/2026-10-28.csv sha256=fae9fa7448c32f0ef888eca29419ca1b159ab70072dec59d3136f8ab71e32606"
       ],
       "last_error": null,
       "next_deadline": "2026-10-28T14:00:00Z",
@@ -1903,7 +1904,7 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=10",
-        "sources/sb_generic/2026-10-28.csv sha256=40a585ca90d645f8b12e14c39735658bfb239934a4794dc36811edd90619bf04"
+        "sources/sb_generic/2026-10-28.csv sha256=0915a65fe43d70beef448f865d7ed2c47634415436ca5ddf29dad0d57713e868"
       ],
       "last_error": null,
       "next_deadline": "2026-10-28T14:00:00Z",
@@ -1967,7 +1968,7 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=4.5; fetch_budget=3; change_budget=40",
+        "fetched_days=-0.0; changed_days=4.8; fetch_budget=3; change_budget=40",
         "sources/umich/2026-10-28.json sha256=ca0d0f8dcdff3adc786b9469e5a4325363ff7a8a1cfe12d751eeae3f4e05c22f"
       ],
       "last_error": null,
