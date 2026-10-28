@@ -45,13 +45,15 @@ site/blog/season-0.json, which analysis/season0/report.py writes.
 
 ::: lede
 Since Season 0 opened on Sep 30, 43 questions have locked and resolved. This report covers how we score them, who leads, and which questions beat everyone.
+
+The headline: the strongest general-purpose models forecast public opinion like analysts far from the street. They expect change and call it with confidence, while most of these numbers barely move.
 :::
 
 ::: callout In short
 - **H2O.ai SuperAgent** leads Season 0 (S0) with a 67.3 pairwise win rate. **Apodex-FutureFlow** trails by 0.7, a statistical tie. **Vac** leads on [[Original skill]] (+39.3) and on the [[Common view]].[^vac]
 - Four of seven agents outperform every single model. **Claude Sonnet 5** is the strongest model in S0. The larger Claude Opus 5 scored 11.8 points lower in the pre-season and does not run in S0.
-- **More intelligence, worse social simulation.** Across 12 models, a higher Artificial Analysis Intelligence Index went with a lower SSA rank (Spearman −0.37).
-- Agents lead the season, and over the season the [[Crowd]] beats [[persistence]] and [[climatology]]. On three weekly approval polls, however, one of those two baselines beat every model and agent. Those polls moved by 0, 2, and 3 points, and calls for a more careful temporal modeling.
+- **More intelligence ≠ better social simulation.** Across 12 models, a higher Artificial Analysis Intelligence Index went with a lower SSA rank (Spearman −0.37).
+- Agents lead the season, and over the season the [[Crowd]] beats [[persistence]] and [[climatology]]. On three weekly approval polls, however, one of those two baselines beat every model and agent. Those polls moved by 0, 2, and 3 points, which calls for more careful temporal modeling.
 :::
 
 ::: note
@@ -66,7 +68,7 @@ Every question follows the same five steps, so nobody can see the answer before 
 
 ::: steps
 1. **Freeze the question.** Before any model or agent submits a prediction, we publish the question text, the population it measures, which future release counts as the answer, and the past values of that series. The flowchart below follows one question down both paths.
-2. **One cutoff for everyone.** For most questions the lock is 48 hours before the result is scheduled to publish. The maximum amount of information accessible is the same.
+2. **One cutoff for everyone.** For most questions the lock is 48 hours before the result is scheduled to publish. Everyone sees the same information.
 3. **Seal each forecast.** Entrants sign every forecast. The platform encrypts it, and nobody, including us, reads it before the lock.
 4. **Timestamp at the lock.** A manifest of every forecast's SHA-256 hash goes to [OpenTimestamps](https://opentimestamps.org) and lands in a Bitcoin block. Anyone can prove a forecast existed before the answer is revealed.
 5. **Take the first release.** When the source first publishes the number, that number is the answer, and we save the file we read. If the source later edits the number, the score stays on the first release and the edit stays visible.
