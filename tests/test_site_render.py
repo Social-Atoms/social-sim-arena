@@ -441,6 +441,46 @@ def test_the_faq_is_on_every_nav_and_answers_the_two_comparisons():
     print("ok test_the_faq_is_on_every_nav_and_answers_the_two_comparisons")
 
 
+def test_the_blog_is_on_every_nav_and_its_report_data_ships():
+    """The Season 0 report reads one frozen file, site/blog/season-0.json,
+    written by analysis/season0/report.py. Every page with the main nav
+    links the blog, and the file carries each board the page switches to."""
+    import re
+    site = os.path.join(ROOT, "site")
+    missing = []
+    for name in sorted(os.listdir(site)):
+        if not name.endswith(".html"):
+            continue
+        with open(os.path.join(site, name), encoding="utf-8") as fh:
+            body = fh.read()
+        if 'class="page-tabs"' in body and not re.search(r'href="/?blog\.html"', body):
+            missing.append(name)
+    assert not missing, "these pages have the main nav but no Blog link:\n  " + "\n  ".join(missing)
+
+    with open(os.path.join(site, "blog.html"), encoding="utf-8") as fh:
+        page = fh.read()
+    assert "blog/season-0.json" in page, "blog.html must load its frozen report data"
+    with open(os.path.join(site, "blog", "season-0.json"), encoding="utf-8") as fh:
+        report = json.load(fh)
+    for scope in ("s0", "all", "matched"):
+        board = report["boards"][scope]
+        assert board["rows"] and board["questions"] > 0, f"report board {scope} is empty"
+        for metric in ("pairwise", "skill"):
+            assert board["trajectory"][metric], f"report trajectory {scope}/{metric} is empty"
+    for key in ("models", "agents", "dataset", "early"):
+        assert report.get(key), f"report is missing {key}"
+
+    # The article is written in site/blog/season-0.md; blog.html must match it.
+    sys.path.insert(0, os.path.join(ROOT, "analysis", "season0"))
+    import build_blog
+    _, built = build_blog.render(open(build_blog.SRC, encoding="utf-8").read())
+    shipped = page[page.index(build_blog.START) + len(build_blog.START):page.index(build_blog.END)]
+    squash = lambda s: re.sub(r"\s+", "", s)
+    assert squash(built) == squash(shipped), \
+        "site/blog.html is out of date; run python analysis/season0/build_blog.py"
+    print("ok test_the_blog_is_on_every_nav_and_its_report_data_ships")
+
+
 def test_the_404_page_is_the_same_file_at_the_root():
     # Vercel serves a custom 404 from the output root; the page is authored in
     # site/ like every other page and copied to the root. The copy must not drift.
@@ -469,6 +509,7 @@ if __name__ == "__main__":
     test_every_link_the_docs_send_a_participant_to_exists()
     test_the_publish_gate_covers_every_field_a_page_reads_unguarded()
     test_the_faq_is_on_every_nav_and_answers_the_two_comparisons()
+    test_the_blog_is_on_every_nav_and_its_report_data_ships()
     test_the_404_page_is_the_same_file_at_the_root()
     test_the_site_logo_is_the_brand_folder_s_64_cut()
-    print("13 passed")
+    print("14 passed")

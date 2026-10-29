@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" type="image/svg+xml" href="logo.svg">
+<title>LLMs Are Ivory-Tower Analysts: Four-Week Lookback at Season 0 · Blog · Social Simulation Arena</title><meta name="description" content="Season 0 report: how SSA scores forecasts, which models and agents lead, and which questions beat everyone.">
+<style>
+:root{--bg:#fff;--ink:#111110;--ink2:#4f4e49;--mut:#96948d;--line:#e0e0e0;--soft:#f6f6f3;--accent:#15803d;--accent-ink:#0a6a30;--link:var(--accent);--agent:#15803d;--model:#3b6ea5;--base:#a8a6a0}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink2);font:15.5px/1.6 var(--sans);-webkit-font-smoothing:antialiased}a{color:var(--link)}
+.layout{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:200px minmax(0,780px) 180px;gap:38px;padding:34px 24px 120px;align-items:start}.left,.right{position:sticky;top:34px}.left .back{display:block;margin-bottom:20px;color:var(--ink2);text-decoration:none;font-size:12px}.navlabel{font-size:10.5px;letter-spacing:.12em;color:var(--mut);text-transform:uppercase;margin:18px 0 5px}.left a,.right a{display:block;color:var(--ink2);text-decoration:none;padding:5px 8px;border-radius:4px;font-size:12.5px}.left a.on{background:#f0f0ed;color:var(--ink);font-weight:800}.left a:hover,.right a:hover{color:var(--link)}.right{border-left:1px solid var(--line);padding-left:14px}.right .navlabel{margin-top:0}
+article{min-width:0}.eyebrow{font-size:11.5px;letter-spacing:.12em;color:var(--mut);text-transform:uppercase}h1{font-size:28px;line-height:1.25;color:var(--ink);margin:4px 0 6px}.byline{font-size:13.5px;color:var(--mut);margin:0 0 12px}h2{font-size:22px;line-height:1.25;color:var(--ink);margin:46px 0 8px;scroll-margin-top:74px}h3{font-size:16px;color:var(--ink);margin:26px 0 6px;scroll-margin-top:74px}p{margin:8px 0}.lede{font-size:17px;max-width:680px}.rule{border:0;border-top:1px solid var(--line);margin:20px 0}
+.callout{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:5px;padding:12px 16px;background:#fff;margin:16px 0}.callout b{color:var(--ink)}.callout ul{margin:6px 0 0;padding-left:18px}.callout li{margin:4px 0}
+.cheer{border:1px solid #cfe6d6;background:#f3faf5;border-radius:6px;padding:14px 16px;margin:18px 0;color:var(--ink)}.cheer .tag{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink);font-weight:800}.cheer p{margin:4px 0 0}
+.steps{border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:14px 0}.step{display:grid;grid-template-columns:28px 1fr;gap:12px;padding:11px 15px;border-bottom:1px solid var(--line)}.step:last-child{border:0}.num{width:22px;height:22px;border-radius:50%;background:#eef5f0;color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}.step b{color:var(--ink)}.step p{margin:1px 0;font-size:14px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}.cards.five{grid-template-columns:repeat(5,1fr)}.card{border:1px solid var(--line);border-radius:5px;padding:12px 13px}.card .tag{font-size:10px;letter-spacing:.08em;color:var(--mut);text-transform:uppercase}.card h4{margin:3px 0 4px;font-size:14.5px;color:var(--ink)}.card p{font-size:12.5px;margin:0;line-height:1.5}
+.panel{border:1px solid var(--line);border-radius:7px;padding:14px 16px 10px;margin:16px 0 8px;background:#fff}.panel-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}.panel-title{font-weight:800;color:var(--ink);font-size:14px}.panel-sub{font-size:12px;color:var(--mut)}.panel svg{display:block;width:100%;height:auto;margin-top:8px;font-family:var(--sans)}.note{color:var(--mut);font-size:12.5px;margin:4px 0 0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;margin:6px 0 2px}.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:2px;background:#fff}.seg button{border:0;background:none;font:600 12px var(--sans);color:var(--ink2);padding:5px 11px;border-radius:999px;cursor:pointer}.seg button.on{background:var(--ink);color:#fff}
+table.t{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}table.t th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:6px 8px;border-bottom:1px solid var(--line)}table.t td{padding:7px 8px;border-bottom:1px solid #eeede9}table.t td.n,table.t th.n{text-align:right;font-variant-numeric:tabular-nums}table.t td b{color:var(--ink)}.pos{color:var(--accent-ink)}.neg{color:#b42318}
+.toy{display:grid;grid-template-columns:1fr;gap:6px}.toy input[type=range]{width:100%;accent-color:var(--accent)}.toy .truth{font-size:13px;color:var(--ink)}
+.dock{position:fixed;left:0;right:0;margin:0 auto;width:max-content;bottom:16px;z-index:50;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:999px;padding:7px 10px 7px 16px;box-shadow:0 6px 24px rgba(17,17,16,.12);font-size:12px;max-width:calc(100vw - 20px)}.dock .lbl{color:var(--mut);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}.dock .meta{color:var(--ink2);font-variant-numeric:tabular-nums}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;line-height:1.45;padding:7px 9px;border-radius:5px;max-width:320px;z-index:60;display:none}
+.term{position:relative;border-bottom:1px dotted var(--ink2);cursor:help;color:var(--ink)}
+.term .def{display:none;position:absolute;z-index:40;left:0;top:calc(100% + 6px);width:max-content;max-width:280px;background:var(--ink);color:#fff;font:13px/1.45 var(--sans);font-weight:400;padding:8px 10px;border-radius:5px;box-shadow:0 6px 20px rgba(17,17,16,.18)}
+.term:hover .def,.term:focus .def,.term:focus-within .def,.term.on .def{display:block}
+a.fn{font-size:.72em;font-weight:800;vertical-align:super;text-decoration:none;margin-left:1px}
+.footnotes{margin:34px 0 0;padding:8px 0 0 18px;border-top:1px solid var(--line);font-size:13px;color:var(--ink2)}
+.footnotes li{margin:6px 0}.fnback{font-size:.85em;text-decoration:none;margin-left:4px}
+.flow{margin:16px 0;border:1px solid var(--line);border-radius:8px;padding:16px 16px 14px;background:linear-gradient(180deg,#fff,#fbfbf9)}
+.flow-k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--mut);margin-bottom:6px}
+.flow-q p,.flow-end{margin:3px 0;font-size:14px;color:var(--ink2)}.flow-q b,.flow-end{color:var(--ink)}
+.flow-fork{height:18px;display:flex;justify-content:center}.flow-fork span{width:46%;border:1.5px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0}
+.flow-fork.join{transform:scaleY(-1)}
+.flow-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.flow-col{border-radius:6px;padding:12px 14px;min-width:0}
+.flow-col.model{background:#f3f7fb;box-shadow:inset 3px 0 0 var(--model)}
+.flow-col.agent{background:#f3faf5;box-shadow:inset 3px 0 0 var(--agent)}
+.flow-col .flow-k{color:var(--ink)}
+.flow-col.model .flow-k{color:var(--model)}.flow-col.agent .flow-k{color:var(--accent-ink)}
+.flow-col ol{margin:0;padding-left:18px}.flow-col li{margin:5px 0;font-size:13.5px;color:var(--ink2)}
+.flow-end{margin-top:0;background:#f6f6f3;border-radius:6px;padding:10px 12px;font-size:14px}
+@media(max-width:720px){.flow-cols{grid-template-columns:1fr}.flow-fork span{width:0;border-left-width:1.5px;border-right:0;border-radius:0;height:16px}}
+@media(max-width:1000px){.layout{grid-template-columns:180px minmax(0,1fr)}.right{display:none}.cards.five{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:720px){.panel>div[id]{overflow-x:auto}.panel>div[id]>svg{min-width:600px}#weekly{overflow-x:auto}.layout{display:block;padding:18px 12px 140px}.left{display:none}.cards,.cards.five{grid-template-columns:1fr 1fr}h1{font-size:25px}.dock{border-radius:12px;bottom:8px}}
+</style><link rel="preload" href="fonts/inconsolata-latin.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="typography.css?v=21">
+</head><body class="site-docs">
+<nav class="top site-nav" aria-label="Main navigation">
+  <div class="in">
+    <a class="brand" href="index.html#leaderboard"><img src="logo.svg" alt=""><span class="brand-name">Social Simulation Arena</span><span class="by">by MIT</span></a>
+    <div class="page-tabs">
+      <a class="ptab" href="index.html#leaderboard">Leaderboard</a>
+      <a class="ptab" href="index.html#questions">Questions</a>
+      <a class="ptab" href="index.html#calendar">Calendar</a>
+      <a class="nav-live" href="index.html#leaderboard" title="The arena is running: questions are being called, locked and scored"><span class="livedot" aria-hidden="true"></span>Live</a>
+      <a class="item" href="background.html">Background</a>
+      <a class="item" href="docs.html">Docs</a>
+      <a class="item on" aria-current="page" href="blog.html">Blog</a>
+      <a class="item" href="https://github.com/Social-Atoms/social-sim-arena" target="_blank" rel="noopener">GitHub</a>
+    </div>
+    <div class="right">
+      <a class="cta" href="index.html#submit">Enter the arena</a>
+    </div>
+  </div>
+</nav>
+<div class="page-scroll">
+<!-- blog:start -->
+<div class="layout"><aside class="left" aria-label="Blog"><a class="back" href="index.html">← Back to arena</a><div class="navlabel">Posts</div><a class="on" href="blog.html">Four-Week Lookback at Season 0</a><div class="navlabel">Sections</div><a href="#scoring">How we score</a><a href="#models">Models</a><a href="#agents">Agents</a><a href="#questions">Questions</a><a href="#lessons">Lessons</a></aside>
+<article>
+<div class="eyebrow">Blog · Season 0 report · Oct 25, 2026</div>
+<h1>LLMs Are Ivory-Tower Analysts: Four-Week Lookback at Season 0</h1>
+<div class="byline">Chenghao Yang (SSA open-source research contributor)</div>
+<p class="lede">Since Season 0 opened on Sep 30, 43 questions have locked and resolved. This report covers how we score them, who leads, and which questions beat everyone.</p>
+<p class="lede">The headline: the strongest general-purpose models forecast public opinion like analysts far from the street. They expect change and call it with confidence, while most of these numbers barely move.</p>
+
+<div class="callout"><b>In short</b><ul>
+<li><b>H2O.ai SuperAgent</b> leads Season 0 (S0) with a 67.3 pairwise win rate. <b>Apodex-FutureFlow</b> trails by 0.7, a statistical tie. <b>Vac</b> leads on <span class="term" tabindex="0">Original skill<span class="def" role="tooltip">1 − your loss ÷ the persistence loss, shown ×100. Copying the last value scores 0. A perfect forecast scores 100. Below 0 means copying the last value would have done better.</span></span> (+39.3) and on the <span class="term" tabindex="0">Common view<span class="def" role="tooltip">The board restricted to questions every Season 0 method answered. Here that is 18 questions, so a skipped question cannot change the order.</span></span>.<a class="fn" href="#fn-vac" id="fnref-vac">1</a></li>
+<li>Four of seven agents outperform every single model. <b>Claude Sonnet 5</b> is the strongest model in S0. The larger Claude Opus 5 scored 11.8 points lower in the pre-season and does not run in S0.</li>
+<li><b>More intelligence ≠ better social simulation.</b> Across 12 models, a higher Artificial Analysis Intelligence Index went with a lower SSA rank (Spearman −0.37).</li>
+<li>Agents lead the season, and over the season the <span class="term" tabindex="0">Crowd<span class="def" role="tooltip">Every submitted forecast pooled with equal weight, then scored like any other method.</span></span> beats <span class="term" tabindex="0">persistence<span class="def" role="tooltip">The baseline that copies the last published value of the series.</span></span> and <span class="term" tabindex="0">climatology<span class="def" role="tooltip">The baseline that predicts the average of the last 24 published values.</span></span>. On three weekly approval polls, however, one of those two baselines beat every model and agent. Those polls moved by 0, 2, and 3 points, which calls for more careful temporal modeling.</li>
+</ul></div>
+
+<p class="note">Numbers freeze the board at Oct 25, 2026, 20:52 UTC. Season 0 continues, so standings can change. The <a href="index.html#leaderboard">live leaderboard</a> updates daily. Use the bar at the bottom of the page to switch every chart between the two metrics and three question sets.</p>
+
+
+<h2 id="scoring">How we score</h2>
+
+<h3>Lock first, so the answer cannot leak</h3>
+<p>Every question follows the same five steps, so nobody can see the answer before forecasting it.</p>
+<div class="steps">
+<div class="step"><span class="num">1</span><div><b>Freeze the question.</b><p>Before any model or agent submits a prediction, we publish the question text, the population it measures, which future release counts as the answer, and the past values of that series. The flowchart below follows one question down both paths.</p></div></div>
+<div class="step"><span class="num">2</span><div><b>One cutoff for everyone.</b><p>For most questions the lock is 48 hours before the result is scheduled to publish. Everyone sees the same information.</p></div></div>
+<div class="step"><span class="num">3</span><div><b>Seal each forecast.</b><p>Entrants sign every forecast. The platform encrypts it, and nobody, including us, reads it before the lock.</p></div></div>
+<div class="step"><span class="num">4</span><div><b>Timestamp at the lock.</b><p>A manifest of every forecast's SHA-256 hash goes to <a href="https://opentimestamps.org" target="_blank" rel="noopener">OpenTimestamps</a> and lands in a Bitcoin block. Anyone can prove a forecast existed before the answer is revealed.</p></div></div>
+<div class="step"><span class="num">5</span><div><b>Take the first release.</b><p>When the source first publishes the number, that number is the answer, and we save the file we read. If the source later edits the number, the score stays on the first release and the edit stays visible.</p></div></div>
+</div>
+
+<figure class="flow"><div class="flow-q"><div class="flow-k">One question, shared</div><p><b><span class="term" tabindex="0">Source<span class="def" role="tooltip">The outside publisher that releases the measured number, such as Economist/YouGov, Civiqs, or the NY Fed.</span></span>.</b> Economist/YouGov, the weekly poll that publishes the number.</p><p><b>Question.</b> What percent of US registered voters approve of Donald Trump in the next wave?</p><p><b><span class="term" tabindex="0">Population<span class="def" role="tooltip">The people the question measures. In the sample, US registered voters.</span></span>.</b> US registered voters, the people that percent describes.</p><p><b>History.</b> The past readings come along: 39, 40, 38.</p></div><div class="flow-fork" aria-hidden="true"><span></span></div><div class="flow-cols"><div class="flow-col model"><div class="flow-k">Models</div><ol><li>We attach the last ten readings.</li><li>Web-search setups may look things up.</li><li>Return one distribution, such as 38.5 ± 1.5. A <span class="term" tabindex="0">profile question<span class="def" role="tooltip">Forecast every subgroup at once, not only the national number. Season 0 scores these with the energy score.</span></span> returns every subgroup. A <span class="term" tabindex="0">ranking question<span class="def" role="tooltip">Put items in order, such as the week's most-read Wikipedia pages. Rank-biased overlap compares the lists and weighs the top ranks more.</span></span> returns an ordered list.</li></ol></div><div class="flow-col agent"><div class="flow-k">Agents</div><ol><li>The same question arrives as JSON.</li><li>The agent may search and call tools until the lock.</li><li>The answer has the same shape as a model's.</li></ol></div></div><div class="flow-fork join" aria-hidden="true"><span></span></div><div class="flow-end">Both paths stop 48 hours before the result is published. Then we seal the forecasts, timestamp them, and score the first release.</div></figure>
+
+<h3>How we compute the scores</h3>
+
+<div class="cards">
+<div class="card"><span class="tag">One number</span><h4>CRPS</h4><p>Scores the whole forecast distribution against the true value. Sharp and right wins. Sharp and wrong loses hard.</p></div>
+<div class="card"><span class="tag">Subgroup profile</span><h4>Energy score</h4><p>Scores all 16 cells of a demographic breakdown at once, so the pattern across groups counts.</p></div>
+<div class="card"><span class="tag">Ranked list</span><h4>RBO</h4><p>Compares top-ten lists and weights the top ranks most. A right #1 counts more than a right #9.</p></div>
+</div>
+<p>Lower loss is better for all three. Losses from different answer types never mix directly. Two leaderboards turn them into comparable scores:</p>
+<ul>
+<li><b>Original skill</b> = 1 − your loss ÷ persistence loss, shown ×100. Copying the last value scores 0. A perfect forecast scores 100. Below 0 means copying would have done better.</li>
+<li><b>Pairwise win rate</b>: on each question, the share of other methods you beat, with ties worth half. We average this over questions. A missing answer scores 0.</li>
+</ul>
+<div class="panel" id="toy-panel"><div class="panel-head"><span class="panel-title">Try it: one question, four forecasts</span><span class="panel-sub">The last poll read 42.0</span></div>
+<div class="toy"><label class="truth" for="truth">True result: <b id="truth-val">44.0</b></label><input id="truth" type="range" min="37" max="49" step="0.1" value="44"></div>
+<table class="t" id="toy-table"></table>
+<p class="note">Forecasts are normal distributions written as mean ± spread. Drag the slider and watch Model B: one confident miss sinks its skill far below zero, while its pairwise score stops at 0.</p></div>
+<p>That gap between the two metrics matters in practice. Claude Sonnet 5 with web search scored −2,880 on <span class="term" tabindex="0">Original skill<span class="def" role="tooltip">1 − your loss ÷ the persistence loss, shown ×100. Copying the last value scores 0. A perfect forecast scores 100. Below 0 means copying the last value would have done better.</span></span> on one <span class="term" tabindex="0">16-cell<span class="def" role="tooltip">One approval question broken into sixteen demographic subgroups and scored together. Civiqs uses party, age, race, education and gender. YouGov uses the survey's own sixteen crosstabs.</span></span> profile question. That single answer drags its Season 0 mean skill to −69; without it, the mean would be −2. The same answer cost it at most 2.3 points of pairwise win rate. We lead with pairwise win rate because one blowup cannot decide a season. We keep skill because it measures distance from the truth.</p>
+<p>Ranked lists work the same way. Suppose the true top three is A, B, C and you forecast A, C, B. RBO agrees fully at depth 1, half at depth 2, and fully at depth 3. With weights 0.1, 0.09 and 0.081 that gives a similarity of 0.834 and a loss of 0.166.</p>
+<h3>How the baselines work</h3>
+
+<div class="cards five">
+<div class="card"><span class="tag">Anchor</span><h4>Persistence</h4><p>Copy the last published value. Skill 0 by definition.</p></div>
+<div class="card"><span class="tag">Line</span><h4>Trend</h4><p>Fit a straight line through the last 8 points and extend it.</p></div>
+<div class="card"><span class="tag">Smooth</span><h4>EWMA</h4><p>A weighted average that favors recent values.</p></div>
+<div class="card"><span class="tag">Long run</span><h4>Climatology</h4><p>The average of the last 24 values.</p></div>
+<div class="card"><span class="tag">Pool</span><h4>Crowd</h4><p>An equal-weight pool of every submitted forecast.</p></div>
+</div>
+
+<h3>Fair play</h3>
+<ul>
+<li>Self-submitted forecasts carry an Ed25519 signature that we verify. Forecasts after the lock never count.</li>
+<li>Test accounts stay off the board.</li>
+<li>Accounts from one team count as one entrant. Vac's four specialist accounts form one team. Anonymous A1–A6 form one team with a fixed priority order, so extra accounts buy no extra chances.</li>
+<li>Season 0 fixes its roster at 24 methods: 7 agents, 12 model setups, 5 baselines. Later entrants appear under All history only.</li>
+<li>An entrant silent for 14 days retires from the board.</li>
+</ul>
+
+<h2 id="models">Models</h2>
+<p>Six model families run in Season 0. Each runs twice with web search: once with a plain prompt and once with a superforecaster prompt (marked SF).</p>
+<div class="panel"><div class="panel-head"><span class="panel-title" data-title="Model standings">Model standings</span><span class="panel-sub" data-caption></span></div>
+<div class="legend"><span><i style="background:var(--model)"></i>Model</span><span><i style="background:var(--base)"></i>Persistence and Crowd, for reference</span><span><i style="background:var(--model);opacity:.6"></i>Lighter: skipped some questions</span></div>
+<div id="model-board"></div></div>
+
+<div class="cheer"><span class="tag">Congratulations</span><p><b>Claude Sonnet 5</b> is the strongest single model of Season 0. With the SF prompt, it posts a 56.9 pairwise win rate and +4.6 skill. It is the only model to outrank the Crowd baseline on pairwise win rate. <b>Gemini 3.1 Pro</b> leads the models across all history.</p></div>
+
+<h3>General benchmarks miss social simulation</h3>
+<p>Do models that ace general benchmarks, or that developers use most, forecast people better? We compared SSA scores with two public signals: the <a href="https://artificialanalysis.ai" target="_blank" rel="noopener">Artificial Analysis</a> Intelligence Index, as a measure of general intelligence, and 7-day token volume on <a href="https://openrouter.ai" target="_blank" rel="noopener">OpenRouter</a>, as a measure of popularity. The pre-season window (Aug 28 – Sep 29) puts 12 models on the same 59 questions.</p>
+<div class="panel"><div class="panel-head"><span class="panel-title">SSA pairwise win rate against public signals</span><span class="panel-sub" id="scatter-rho"></span></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><div class="seg" id="scatter-x"><button data-x="aa_intelligence" class="on">AA Intelligence</button><button data-x="or_tokens_7d">OpenRouter tokens</button><button data-x="cutoff">Training cutoff</button></div><div class="seg" id="scatter-w"><button data-w="preseason" class="on">Pre-season · 12 models</button><button data-w="s0">Season 0 · 6 models</button></div></div>
+<div id="scatter"></div>
+<p class="note">Each dot is one model family; its score averages the plain and SF setups. ρ is Spearman rank correlation. Six or twelve points make every ρ noisy.</p></div>
+<p>The four models with the highest Artificial Analysis scores here, Claude Opus 5, Qwen3.8 Max, Kimi K3 and GPT-5.6 Terra, all finished in the bottom half on SSA. Across all 12, Spearman ρ = −0.37. OpenRouter popularity also leans negative (ρ = −0.17). Neither signal picks the SSA winner.</p>
+<p>Apodex-FutureFlow is an agent. We rank it with the agents and leave it out of the model comparisons.</p>
+<h3>Does fresher knowledge help?</h3>
+<p>We took each model's training cutoff from its SSA method card, which records whether the developer declared the date or a third party reported it. Later cutoffs went with <i>lower</i> scores (ρ = −0.69 across 10 models). Claude Opus 5's cutoff is four months later than Claude Sonnet 5's, yet Opus scored 11.8 points lower.</p>
+<p><b>Confounder caution.</b> Fresher models also differ in size and tuning, and web search hands every model the latest news anyway. We dropped two cutoffs that fall on or after the model's release date. The clean test needs one model in two versions with different cutoffs. Season 0 has none yet, so our analysis code pairs same-vendor models automatically and will rerun as new versions arrive.</p>
+<h3>The prompt matters as much as the model</h3>
+
+<table class="t" id="harness-table"></table>
+<p>The SF prompt lifted Claude Sonnet 5 and GPT-5.6 Luna by about 6 points and rescued Sonnet's skill. It cost Grok 4.5 nearly 12 points. Test the prompt on SSA before you trust it.</p>
+
+<h2 id="agents">Agents</h2>
+<p>Seven agent teams compete in Season 0. The chart shows every method on one board.</p>
+<div class="panel"><div class="panel-head"><span class="panel-title" data-title="Season 0 standings">Season 0 standings</span><span class="panel-sub" data-caption></span></div>
+<div class="legend"><span><i style="background:var(--agent)"></i>Agent</span><span><i style="background:var(--model)"></i>Model</span><span><i style="background:var(--base)"></i>Baseline</span><span><i style="background:var(--agent);opacity:.6"></i>Lighter: skipped some questions</span></div>
+<div id="full-board"></div></div>
+
+<div class="cheer"><span class="tag">Congratulations</span><p><b>H2O.ai SuperAgent</b> leads Season 0 at four weeks: a 67.3 pairwise win rate and +20.4 skill across all 43 questions. <b>Apodex-FutureFlow</b> sits 0.7 behind; the 95% interval on that gap runs from −8 to +9, so the race is open. <b>H2O.ai Marina</b> holds third. <b>Vac</b> posts the best skill (+39.3) and tops the Common view, where every method answered the same 18 questions.</p></div>
+
+<h3>Who stayed on top</h3>
+
+<div class="panel"><div class="panel-head"><span class="panel-title" data-title="Standing over time">Standing over time</span><span class="panel-sub" data-caption></span></div>
+<div class="legend" id="traj-legend"></div><div id="trajectory"></div>
+<p class="note">Each point is the cumulative score through that day.</p></div>
+<p>Apodex-FutureFlow and H2O.ai Marina sat in the top three on all 12 scoring days. Vac led the first week, then skipped questions and slipped. SuperAgent started slowly, won the next two weeks, and has led since Oct 16.</p>
+<div class="panel"><div class="panel-head"><span class="panel-title">Week by week</span><span class="panel-sub">S0 · pairwise win rate on that week's questions</span></div>
+<div id="weekly"></div>
+<p class="note">Weeks start on Monday and group questions by resolution date. A skipped question scores 0, which explains most of the dips.</p></div>
+
+<h3>Do agents beat models?</h3>
+<p>Mostly. Four of seven agents outperform the best model. Below, each agent faces every model on every question both answered.</p>
+<div class="panel"><div class="panel-head"><span class="panel-title">Agent against model, head to head</span><span class="panel-sub">S0 · share of matchups won</span></div>
+<div id="h2h"></div></div>
+<p>Vac wins 78% of its matchups with models; ZhengZheng Forecaster wins 39%. An agent wrapper alone guarantees nothing. The method inside decides.</p>
+
+<h2 id="questions">Questions</h2>
+<p>Season 0's 43 questions come from six sources. Civiqs daily trackers supply 28 of them.</p>
+<table class="t" id="group-table"></table>
+
+<div class="panel"><div class="panel-head"><span class="panel-title">Where models led and where agents led</span><span class="panel-sub">S0 · one dot per question · hover for the question</span></div>
+<div id="strip"></div>
+<p class="note">Height = models' mean pairwise points − agents' mean pairwise points on that question.</p></div>
+
+<h3>Models led on national numbers and subgroup grids</h3>
+<p>Models beat agents on NY Fed inflation expectations (DeepSeek V4 Pro won both), the YouGov 16-cell approval crosstabs, the Google Trends search-share basket, and Civiqs Trump approval in mid-October. GLM-5.2 and Grok 4.5 won three of these outright.</p>
+<h3>Agents led on the economy</h3>
+<p>Agents dominated Civiqs economy questions: economic direction, family finances and inflation concern. On the Oct 16 family-finances question, agents beat models by 50 points.</p>
+<h3>The week nothing moved</h3>
+<p>Three Civiqs economy questions resolving Oct 9 ended within 0.5 points of their last reading. Most methods predicted a change and lost to persistence; the median skill fell to −58, −60 and −84. On the Oct 13 Economist/YouGov registered-voter approval question, the value held at exactly 38.0, and no model or agent beat persistence. On two more YouGov approval questions, climatology won. Weekly approval polls wobble by a point or two, and a confident call for change costs more than it earns.</p>
+<h3>Can the first days pick the winner?</h3>
+
+<table class="t" id="early-table"></table>
+<p>The first week found the contenders: two of the final top three, and a rank correlation of 0.78. Two weeks fixed the whole top three. The lead itself changed hands four times and is still a tie. Early standings forecast the field well and the champion poorly. <b>The board has to stay live.</b> A static benchmark would have frozen an early ranking and missed those lead changes.</p>
+
+<h2 id="lessons">Lessons</h2>
+
+<h3>For builders</h3>
+<ol>
+<li><b>Answer every question.</b> A skipped question scores 0 in pairwise. Vac posts the best record on the questions it answers, yet skipped 12 and ranks fourth.</li>
+<li><b>Avoid confident misses.</b> Match your spread to the series' real weekly movement. When a poll barely moves, stay close to its last value.</li>
+<li><b>Model subgroups together.</b> Profiles and crosstabs are where most agents trail plain models.</li>
+<li><b>Choose models by SSA results.</b> Benchmark rank and popularity pointed the wrong way here. Test your prompt as well: one prompt change moved Grok 4.5 by 12 points.</li>
+</ol>
+<h3>For the platform</h3>
+<ol>
+<li><b>Widen the question mix.</b> One source supplies 28 of 43 questions. We are adding sources and our own measurements so no single tracker decides a season.</li>
+<li><b>Publish uncertainty.</b> We will add intervals to win rates so near-ties read as ties.</li>
+<li><b>Keep both metrics and the Common view.</b> Pairwise resists blowups, skill measures accuracy, and Common compares everyone on identical questions.</li>
+<li><b>Raise the bar.</b> Next come questions with no history, policy what-ifs, and finer subgroups. These test whether a simulator understands a population.</li>
+<li><b>Keep the rules fixed.</b> A frozen roster, sealed forecasts and public timestamps keep a harder arena fair.</li>
+</ol>
+<p>Want your method on the board? <a href="docs.html#quickstart">Start here</a>. Questions or corrections: <a href="https://github.com/Social-Atoms/social-sim-arena/issues" target="_blank" rel="noopener">open an issue</a> or write to <a href="mailto:hi@social-atoms.org">hi@social-atoms.org</a>.</p>
+<ol class="footnotes">
+<li id="fn-vac">Vac skipped 12 questions. Pairwise counts a skip as zero, so on that board Vac ranks fourth of the full field. <a class="fnback" href="#fnref-vac">1</a></li>
+</ol>
+</article>
+<aside class="right" aria-label="On this page"><div class="navlabel">On this page</div><a href="#scoring">How we score</a><a href="#models">Models</a><a href="#agents">Agents</a><a href="#questions">Questions</a><a href="#lessons">Lessons</a></aside>
+<!-- blog:end -->
+</div>
+</div>
+<div class="dock" role="toolbar" aria-label="Chart settings"><span class="lbl">Metric</span><div class="seg" id="dock-metric"><button data-metric="pairwise" class="on">Pairwise win rate</button><button data-metric="skill">Original skill</button></div><span class="lbl">Questions</span><div class="seg" id="dock-scope"><button data-scope="s0" class="on" title="Questions locked since Sep 30; fixed 24-method roster">S0</button><button data-scope="all" title="Every resolved question since Aug 16; late joiners score 0 on earlier questions">All</button><button data-scope="matched" title="Only questions every method answered">Common</button></div><span class="meta" id="dock-meta"></span></div>
+<div class="tip" id="tip"></div>
+<script>
+(function(){
+const S={metric:'pairwise',scope:'s0',x:'aa_intelligence',w:'preseason'};
+const SCOPE_NAME={s0:'S0',all:'All history',matched:'Common'};
+const METRIC_NAME={pairwise:'Pairwise win rate',skill:'Original skill'};
+const KIND={agent:'#15803d',model:'#3b6ea5',baseline:'#a8a6a0'};
+const LINE={'h2oai-superagent':'#15803d','apodex-futureflow':'#7c3aed','h2oai-marina':'#0284c7','vac-combined':'#d97706','worldvac-base':'#be185d','yulan-onesim':'#64748b','zhengzheng-agent':'#a16207','claude-sonnet-web-superfc':'#3b6ea5','crowd':'#6b7280','persistence':'#a8a6a0'};
+const TRACKER={civiqs:'Civiqs',economist_yougov:'Economist/YouGov',yougov_xtab:'YouGov crosstab',google_trends:'Google Trends',wikipedia:'Wikipedia',ny_fed_sce:'NY Fed SCE'};
+const TRACKER_COLOR={civiqs:'#64748b',economist_yougov:'#b42318',yougov_xtab:'#d97706',google_trends:'#db2777',wikipedia:'#7c3aed',ny_fed_sce:'#0284c7'};
+const TYPE={continuous_normal:'one number',profile_energy:'profile',ranking_list:'ranked list'};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=(v,m)=>v==null?'·':m==='skill'?(v>0?'+':'')+v.toFixed(1):v.toFixed(1);
+const tip=document.getElementById('tip');
+function bindTips(root){root.querySelectorAll('[data-tip]').forEach(el=>{el.addEventListener('mousemove',e=>{tip.innerHTML=el.getAttribute('data-tip');tip.style.display='block';const x=Math.min(e.clientX+14,innerWidth-340);tip.style.left=x+'px';tip.style.top=(e.clientY+14)+'px';});el.addEventListener('mouseleave',()=>tip.style.display='none');});}
+let D=null;
+
+function bars(rows,{color,refs=[]}){
+  const m=S.metric,W=760,L=210,R=56,H=22;
+  const vals=rows.map(r=>r[m]).filter(v=>v!=null);
+  let lo=m==='pairwise'?0:Math.max(-100,Math.min(0,...vals)),hi=m==='pairwise'?100:Math.max(10,...vals);
+  lo=Math.floor(lo/10)*10;hi=Math.ceil(hi/10)*10;
+  const x=v=>L+(Math.max(lo,Math.min(hi,v))-lo)/(hi-lo)*(W-L-R);
+  const top=18,h=top+rows.length*H+6;
+  let s=`<svg viewBox="0 0 ${W} ${h}" role="img" aria-label="${esc(METRIC_NAME[m])} standings">`;
+  for(let t=lo;t<=hi;t+=(hi-lo>100?50:hi-lo>60?20:10)){s+=`<line x1="${x(t)}" x2="${x(t)}" y1="${top-4}" y2="${h-4}" stroke="${t===0?'#c9c8c2':'#f0efeb'}"/><text x="${x(t)}" y="${top-7}" font-size="10" fill="#96948d" text-anchor="middle">${t}</text>`;}
+  refs.forEach(rf=>{if(rf.v==null)return;s+=`<line x1="${x(rf.v)}" x2="${x(rf.v)}" y1="${top-4}" y2="${h-4}" stroke="${KIND.baseline}" stroke-dasharray="3 3"/>`;});
+  rows.forEach((r,i)=>{
+    const y=top+i*H,v=r[m],c=color(r),z=x(Math.max(lo,Math.min(0,hi))),vx=v==null?z:x(v);
+    const clipped=v!=null&&(v<lo||v>hi);
+    const tipText=`<b>${esc(r.name)}</b><br>${METRIC_NAME[m]}: ${fmt(v,m)}<br>Answered ${r.answered} of ${r.total} questions`;
+    s+=`<g data-tip="${esc(tipText)}"><rect x="0" y="${y}" width="${W}" height="${H}" fill="transparent"/>`;
+    s+=`<text x="${L-8}" y="${y+15}" font-size="12" text-anchor="end" fill="#111110" font-weight="${r.kind==='agent'?700:400}">${esc(r.name)}</text>`;
+    s+=`<rect x="${Math.min(z,vx)}" y="${y+4}" width="${Math.max(1.5,Math.abs(vx-z))}" height="${H-8}" rx="2" fill="${c}" opacity="${r.answered<r.total?.65:1}"/>`;
+    s+=`<text x="${Math.max(z,vx)+5}" y="${y+15}" font-size="11.5" fill="#4f4e49">${fmt(v,m)}${clipped?' ◂':''}</text></g>`;
+  });
+  return s+'</svg>';
+}
+function caption(){const b=D.boards[S.scope];return `${SCOPE_NAME[S.scope]} · ${b.questions} questions · ${METRIC_NAME[S.metric]}`;}
+function sorted(rows){const m=S.metric;return rows.slice().sort((a,b)=>(b[m]??-1e9)-(a[m]??-1e9));}
+
+function renderBoards(){
+  const rows=D.boards[S.scope].rows;
+  const ref=id=>rows.find(r=>r.id===id);
+  const models=sorted(rows.filter(r=>r.kind==='model'||r.id==='persistence'||r.id==='crowd'));
+  document.getElementById('model-board').innerHTML=bars(models,{color:r=>r.kind==='model'?KIND.model:KIND.baseline});
+  document.getElementById('full-board').innerHTML=bars(sorted(rows),{color:r=>KIND[r.kind]});
+  document.querySelectorAll('[data-caption]').forEach(el=>el.textContent=caption());
+  bindTips(document.getElementById('model-board'));bindTips(document.getElementById('full-board'));
+}
+
+function renderTrajectory(){
+  const t=D.boards[S.scope].trajectory,m=S.metric,W=760,H=300,L=40,R=16,T=12,B=28;
+  const ids=['h2oai-superagent','apodex-futureflow','h2oai-marina','vac-combined','worldvac-base','yulan-onesim','zhengzheng-agent','claude-sonnet-web-superfc','crowd','persistence'];
+  const name=id=>(D.boards[S.scope].rows.find(r=>r.id===id)||{name:id}).name;
+  const FLOOR=-60;
+  const cand=ids.filter(id=>t[m][id]).map(id=>({id,v:t[m][id]}));
+  const off=m==='skill'?cand.filter(se=>se.v.filter(v=>v!=null).every(v=>v<FLOOR)):[];
+  const series=cand.filter(se=>!off.includes(se));
+  const all=series.flatMap(s=>s.v).filter(v=>v!=null);
+  let lo=m==='pairwise'?Math.max(0,Math.floor(Math.min(...all)/10)*10):Math.max(FLOOR,Math.floor(Math.min(...all)/10)*10);
+  let hi=m==='pairwise'?Math.min(100,Math.ceil(Math.max(...all)/10)*10):Math.min(80,Math.ceil(Math.max(...all)/10)*10);
+  const d0=Date.parse(t.dates[0]),d1=Date.parse(t.dates[t.dates.length-1]);
+  const x=d=>L+(d1===d0?0:(Date.parse(d)-d0)/(d1-d0))*(W-L-R),y=v=>T+(hi-Math.max(lo,Math.min(hi,v)))/(hi-lo)*(H-T-B);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative standing over time">`;
+  const step=(hi-lo)>80?20:10;
+  for(let v=lo;v<=hi;v+=step)s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${v===0&&m==='skill'?'#c9c8c2':'#f0efeb'}"/><text x="${L-6}" y="${y(v)+4}" font-size="10" fill="#96948d" text-anchor="end">${v}</text>`;
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const ticks=[];t.dates.forEach((d,i)=>{const last=i===t.dates.length-1;if(ticks.length&&x(d)-x(ticks[ticks.length-1])<70){if(last)ticks[ticks.length-1]=d;return;}ticks.push(d);});
+  ticks.forEach(d=>{const dt=new Date(d+'T00:00:00Z');s+=`<text x="${x(d)}" y="${H-8}" font-size="10" fill="#96948d" text-anchor="middle">${months[dt.getUTCMonth()]} ${dt.getUTCDate()}</text>`;});
+  series.slice().reverse().forEach(se=>{
+    let p='',pen=false;se.v.forEach((v,i)=>{if(v==null){pen=false;return;}p+=(pen?'L':'M')+x(t.dates[i]).toFixed(1)+','+y(v).toFixed(1);pen=true;});
+    const strong=['h2oai-superagent','apodex-futureflow','h2oai-marina','vac-combined'].includes(se.id);
+    s+=`<path d="${p}" fill="none" stroke="${LINE[se.id]}" stroke-width="${strong?2.4:1.4}" ${se.id==='persistence'||se.id==='crowd'?'stroke-dasharray="4 3"':''} data-tip="${esc('<b>'+name(se.id)+'</b>')}"/>`;
+    const li=se.v.length-1;if(se.v[li]!=null)s+=`<circle cx="${x(t.dates[li])}" cy="${y(se.v[li])}" r="2.6" fill="${LINE[se.id]}"/>`;
+  });
+  s+='</svg>';
+  document.getElementById('trajectory').innerHTML=s;
+  document.getElementById('traj-legend').innerHTML=series.map(se=>`<span><i style="background:${LINE[se.id]}"></i>${esc(name(se.id))}</span>`).join('')
+    +off.map(se=>`<span style="color:var(--mut)"><i style="background:${LINE[se.id]};opacity:.4"></i>${esc(name(se.id))}: below ${FLOOR}, off chart</span>`).join('');
+  bindTips(document.getElementById('trajectory'));
+}
+
+function renderWeekly(){
+  const w=D.agents.weekly,ids=[...D.agents.agents,'claude-sonnet-web-superfc','crowd','persistence'];
+  const name=id=>(D.boards.s0.rows.find(r=>r.id===id)||{name:id}).name;
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const lab=d=>{const dt=new Date(d+'T00:00:00Z');return 'Week of '+months[dt.getUTCMonth()]+' '+dt.getUTCDate();};
+  let h='<table class="t"><tr><th>Method</th>'+w.weeks.map((d,i)=>`<th class="n">${lab(d)}<br><span style="text-transform:none;letter-spacing:0">${w.n[i]} questions</span></th>`).join('')+'</tr>';
+  ids.forEach(id=>{h+=`<tr><td>${id===ids[D.agents.agents.length]?'':''}<b style="font-weight:${D.agents.agents.includes(id)?800:400}">${esc(name(id))}</b></td>`+w.pairwise[id].map(v=>{const a=Math.max(0,Math.min(1,(v-30)/60));return `<td class="n" style="background:rgba(21,128,61,${(a*.45).toFixed(2)});color:#111110;font-weight:${v>=70?800:400}">${v.toFixed(0)}</td>`;}).join('')+'</tr>';});
+  document.getElementById('weekly').innerHTML=h+'</table>';
+}
+
+function renderH2H(){
+  const rows=D.agents.agents.map(id=>({id,name:(D.boards.s0.rows.find(r=>r.id===id)||{}).name,v:D.agents.h2h[id].vs_models,q:D.agents.h2h[id].questions})).sort((a,b)=>b.v-a.v);
+  const W=760,L=210,R=56,H=24,top=6,h=top+rows.length*H+18,x=v=>L+v/100*(W-L-R);
+  let s=`<svg viewBox="0 0 ${W} ${h}">`;
+  s+=`<line x1="${x(50)}" x2="${x(50)}" y1="0" y2="${h-14}" stroke="#c9c8c2" stroke-dasharray="3 3"/><text x="${x(50)}" y="${h-3}" font-size="10" fill="#96948d" text-anchor="middle">50% = even with models</text>`;
+  rows.forEach((r,i)=>{const y=top+i*H;s+=`<g data-tip="${esc('<b>'+r.name+'</b><br>Wins '+r.v.toFixed(1)+'% of matchups with models<br>'+r.q+' questions answered')}"><text x="${L-8}" y="${y+16}" font-size="12" text-anchor="end" fill="#111110" font-weight="700">${esc(r.name)}</text><rect x="${L}" y="${y+5}" width="${x(r.v)-L}" height="${H-10}" rx="2" fill="${r.v>=50?KIND.agent:'#b42318'}"/><text x="${x(r.v)+5}" y="${y+16}" font-size="11.5" fill="#4f4e49">${r.v.toFixed(0)}%</text></g>`;});
+  document.getElementById('h2h').innerHTML=s+'</svg>';bindTips(document.getElementById('h2h'));
+}
+
+function renderScatter(){
+  const tab=D.models.table.filter(r=>(S.w==='s0'?r.s0_pairwise:r.pre_pairwise)!=null);
+  const yk=S.w==='s0'?'s0_pairwise':'pre_pairwise';
+  const xv=r=>{if(S.x==='cutoff')return r.cutoff_valid?Date.parse(r.cutoff):null;if(S.x==='or_tokens_7d')return r.or_tokens_7d?Math.log10(r.or_tokens_7d):null;return r[S.x];};
+  const pts=tab.map(r=>({r,x:xv(r),y:r[yk]})).filter(p=>p.x!=null);
+  const W=760,H=330,L=46,R=24,T=26,B=36;
+  const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);
+  const pad=(a,b)=>{const d=(b-a)||1;return [a-d*.08,b+d*.08];};
+  const [x0,x1]=pad(Math.min(...xs),Math.max(...xs)),[y0,y1]=pad(Math.min(...ys),Math.max(...ys));
+  const X=v=>L+(v-x0)/(x1-x0)*(W-L-R),Y=v=>T+(y1-v)/(y1-y0)*(H-T-B);
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const xl=v=>S.x==='cutoff'?(d=>months[d.getUTCMonth()]+' '+String(d.getUTCFullYear()).slice(2))(new Date(v)):S.x==='or_tokens_7d'?(Math.pow(10,v)/1e9>=1000?(Math.pow(10,v)/1e12).toFixed(1)+'T':(Math.pow(10,v)/1e9).toFixed(0)+'B'):v.toFixed(0);
+  const xname={aa_intelligence:'Artificial Analysis Intelligence Index',or_tokens_7d:'OpenRouter tokens, last 7 days (log scale)',cutoff:'Training cutoff'}[S.x];
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="SSA score against ${esc(xname)}">`;
+  for(let i=0;i<=4;i++){const v=y0+(y1-y0)*i/4;s+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#f0efeb"/><text x="${L-6}" y="${Y(v)+4}" font-size="10" fill="#96948d" text-anchor="end">${v.toFixed(0)}</text>`;}
+  for(let i=0;i<=4;i++){const v=x0+(x1-x0)*i/4;s+=`<text x="${X(v)}" y="${H-18}" font-size="10" fill="#96948d" text-anchor="middle">${xl(v)}</text>`;}
+  s+=`<text x="${(L+W-R)/2}" y="${H-3}" font-size="11" fill="#4f4e49" text-anchor="middle">${esc(xname)} →</text><text x="${L+6}" y="${T-4}" font-size="11" fill="#4f4e49">↑ SSA pairwise win rate</text>`;
+  const n=pts.length;if(n>2){const mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;let sxy=0,sxx=0;pts.forEach(p=>{sxy+=(p.x-mx)*(p.y-my);sxx+=(p.x-mx)**2;});const b=sxy/sxx,a=my-b*mx;s+=`<line x1="${X(x0)}" y1="${Y(a+b*x0)}" x2="${X(x1)}" y2="${Y(a+b*x1)}" stroke="#b42318" stroke-width="1.2" stroke-dasharray="5 4" opacity=".7"/>`;}
+  const placed=[];
+  pts.slice().sort((a,b)=>b.y-a.y).forEach(p=>{const right=X(p.x)>W-R-140;p.anchor=right?'end':'start';p.lx=X(p.x)+(right?-9:9);p.ly=Y(p.y)+4;
+    const box=q=>q.anchor==='end'?[q.lx-110,q.lx]:[q.lx,q.lx+110];
+    for(let k=0;k<4;k++){const hit=placed.find(q=>Math.abs(q.ly-p.ly)<12&&box(q)[0]<box(p)[1]&&box(p)[0]<box(q)[1]);if(!hit)break;p.ly=hit.ly+13;}
+    placed.push(p);});
+  pts.forEach(p=>{const r=p.r;const t=`<b>${esc(r.name)}</b><br>SSA pairwise: ${p.y.toFixed(1)}<br>AA Intelligence: ${r.aa_intelligence??'·'}<br>OpenRouter 7-day tokens: ${r.or_tokens_7d?(r.or_tokens_7d/1e9).toFixed(0)+'B':'·'}<br>Training cutoff: ${r.cutoff||'·'} (${r.cutoff_source||'·'}${r.cutoff_valid?'':', dropped'})${r.active?'':'<br>Retired before Season 0'}`;
+    s+=`<g data-tip="${esc(t)}"><circle cx="${X(p.x)}" cy="${Y(p.y)}" r="6" fill="${r.active?KIND.model:'#fff'}" stroke="${KIND.model}" stroke-width="2"/><text x="${p.lx}" y="${p.ly}" font-size="11" fill="#111110" text-anchor="${p.anchor}">${esc(r.name)}</text></g>`;});
+  s+='</svg>';
+  document.getElementById('scatter').innerHTML=s+`<div class="legend"><span><i style="background:${KIND.model};border-radius:50%"></i>Runs in Season 0</span><span><i style="background:#fff;border:2px solid ${KIND.model};border-radius:50%"></i>Retired before Season 0</span><span><i style="background:#b42318;height:2px"></i>Linear fit</span></div>`;
+  const c=D.models.corr[S.w][S.x];document.getElementById('scatter-rho').textContent=`Spearman ρ = ${c.rho>0?'+':''}${c.rho.toFixed(2)} · n = ${c.n}`;
+  bindTips(document.getElementById('scatter'));
+}
+
+function renderTables(){
+  const name=f=>(D.models.table.find(r=>r.family===f)||{name:f}).name;
+  const hs=D.models.harness.slice().sort((a,b)=>(b.sfc-b.web)-(a.sfc-a.web));
+  const sg=v=>`<span class="${v>0?'pos':v<0?'neg':''}">${v>0?'+':''}${v.toFixed(1)}</span>`;
+  document.getElementById('harness-table').innerHTML='<tr><th>Model</th><th class="n">Plain</th><th class="n">SF prompt</th><th class="n">Change</th><th class="n">Skill, plain → SF</th></tr>'+hs.map(r=>`<tr><td><b>${esc(name(r.family))}</b></td><td class="n">${r.web.toFixed(1)}</td><td class="n">${r.sfc.toFixed(1)}</td><td class="n">${sg(r.sfc-r.web)}</td><td class="n">${fmt(r.web_skill,'skill')} → ${fmt(r.sfc_skill,'skill')}</td></tr>`).join('')+'<tr><td colspan="5" style="color:var(--mut);font-size:12px;border:0">S0 pairwise win rate, 43 questions.</td></tr>';
+  document.getElementById('group-table').innerHTML='<tr><th>Source</th><th>Answer</th><th class="n">Questions</th><th class="n">Agents avg</th><th class="n">Models avg</th><th class="n">Baseline won</th></tr>'+D.dataset.by_group.map(g=>`<tr><td><b>${esc(TRACKER[g.tracker]||g.tracker)}</b></td><td>${TYPE[g.type]||g.type}</td><td class="n">${g.n}</td><td class="n"${g.agent_pts>g.model_pts?' style="font-weight:800;color:var(--agent)"':''}>${g.agent_pts.toFixed(1)}</td><td class="n"${g.model_pts>g.agent_pts?' style="font-weight:800;color:var(--model)"':''}>${g.model_pts.toFixed(1)}</td><td class="n">${g.baseline_wins||'·'}</td></tr>`).join('')+'<tr><td colspan="6" style="color:var(--mut);font-size:12px;border:0">Mean pairwise points per question in S0. Baseline won: a baseline beat every model and agent.</td></tr>';
+  const nm=id=>(D.boards.s0.rows.find(r=>r.id===id)||{name:id}).name;
+  document.getElementById('early-table').innerHTML='<tr><th>After</th><th class="n">Questions</th><th>Leader then</th><th class="n">Final top 3 found</th><th class="n">Rank correlation</th></tr>'+D.early.map(e=>`<tr><td><b>${e.days} day${e.days>1?'s':''}</b></td><td class="n">${e.questions}</td><td>${esc(nm(e.leader))}</td><td class="n">${e.top3_overlap} of 3</td><td class="n">${e.rho_all.toFixed(2)}</td></tr>`).join('')+'<tr><td colspan="5" style="color:var(--mut);font-size:12px;border:0">Days count from the first S0 resolution on Oct 2. No question resolved on day 2. Rank correlation compares early and current pairwise standings across all 24 methods.</td></tr>';
+}
+
+function renderStrip(){
+  const qs=D.dataset.questions,W=760,H=260,L=44,R=16,T=14,B=30;
+  const d0=Date.parse(qs.reduce((a,q)=>q.resolved<a?q.resolved:a,'9999')),d1=Date.parse(qs.reduce((a,q)=>q.resolved>a?q.resolved:a,''));
+  const lim=Math.ceil(Math.max(...qs.map(q=>Math.abs(q.gap)))/10)*10;
+  const X=d=>L+(Date.parse(d)-d0)/(d1-d0)*(W-L-R),Y=v=>T+(lim-v)/(2*lim)*(H-T-B);
+  let s=`<svg viewBox="0 0 ${W} ${H}">`;
+  for(let v=-Math.floor(lim/20)*20;v<=lim;v+=20)s+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v===0?'#c9c8c2':'#f0efeb'}"/><text x="${L-6}" y="${Y(v)+4}" font-size="10" fill="#96948d" text-anchor="end">${v>0?'+':''}${v}</text>`;
+  s+=`<text x="${L+6}" y="${T+10}" font-size="11" fill="${KIND.model}" font-weight="700">Models ahead ↑</text><text x="${L+6}" y="${H-B-6}" font-size="11" fill="${KIND.agent}" font-weight="700">Agents ahead ↓</text>`;
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  for(let t=d0;t<=d1;t+=7*864e5){const dt=new Date(t);s+=`<text x="${L+(t-d0)/(d1-d0)*(W-L-R)}" y="${H-10}" font-size="10" fill="#96948d" text-anchor="middle">${months[dt.getUTCMonth()]} ${dt.getUTCDate()}</text>`;}
+  const seen={};qs.forEach(q=>{const k=q.resolved;seen[k]=(seen[k]||0)+1;const jit=((seen[k]%5)-2)*4;
+    const t=`<b>${esc(TRACKER[q.tracker]||q.tracker)}</b> · ${q.resolved}<br>${esc(q.question)}<br>Models ${q.model_pts.toFixed(0)} vs agents ${q.agent_pts.toFixed(0)}<br>Won by ${esc(nm(q.winner))}${q.baseline_wins?'<br><b>A baseline beat every model and agent</b>':''}`;
+    s+=`<circle data-tip="${esc(t)}" cx="${X(q.resolved)+jit}" cy="${Y(q.gap)}" r="${q.baseline_wins?7:5.5}" fill="${TRACKER_COLOR[q.tracker]||'#888'}" fill-opacity=".8" stroke="${q.baseline_wins?'#111110':'#fff'}" stroke-width="${q.baseline_wins?2:1}"/>`;});
+  function nm(id){return (D.boards.s0.rows.find(r=>r.id===id)||{name:id}).name;}
+  s+='</svg>';
+  const used=[...new Set(qs.map(q=>q.tracker))];
+  document.getElementById('strip').innerHTML=s+'<div class="legend">'+used.map(k=>`<span><i style="background:${TRACKER_COLOR[k]};border-radius:50%"></i>${TRACKER[k]||k}</span>`).join('')+'<span><i style="background:#fff;border:2px solid #111110;border-radius:50%"></i>A baseline won</span></div>';
+  bindTips(document.getElementById('strip'));
+}
+
+function erf(x){const s=Math.sign(x);x=Math.abs(x);const t=1/(1+.3275911*x);return s*(1-((((1.061405429*t-1.453152027)*t+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-x*x));}
+function crps(mu,sd,y){const z=(y-mu)/sd;const P=.5*(1+erf(z/Math.SQRT2)),p=Math.exp(-z*z/2)/Math.sqrt(2*Math.PI);return sd*(z*(2*P-1)+2*p-1/Math.sqrt(Math.PI));}
+function renderToy(){
+  const y=+document.getElementById('truth').value;document.getElementById('truth-val').textContent=y.toFixed(1);
+  const F=[['Persistence',42,1.5,'baseline'],['Model A',43.5,1.5,'model'],['Model B',40,.8,'model'],['Agent C',44.5,3,'agent']];
+  const rows=F.map(([n,m,s,k])=>({n,m,s,k,l:crps(m,s,y)}));const p=rows[0].l;rows.forEach(r=>r.sk=100*(1-r.l/p));
+  const o=rows.slice().sort((a,b)=>a.l-b.l);o.forEach((r,i)=>r.pts=100*(o.length-1-i)/(o.length-1));
+  document.getElementById('toy-table').innerHTML='<tr><th>Method</th><th>Forecast</th><th class="n">CRPS</th><th class="n">Skill</th><th class="n">Pairwise points</th></tr>'+o.map(r=>`<tr><td><b style="color:${KIND[r.k]}">${r.n}</b></td><td>${r.m.toFixed(1)} ± ${r.s}</td><td class="n">${r.l.toFixed(2)}</td><td class="n ${r.sk>0.05?'pos':r.sk<-0.05?'neg':''}">${r.sk>0.05?'+':''}${r.sk.toFixed(0)}</td><td class="n">${r.pts.toFixed(0)}</td></tr>`).join('');
+}
+
+function renderDynamic(){
+  renderBoards();renderTrajectory();
+  const b=D.boards[S.scope];document.getElementById('dock-meta').textContent=`${b.questions} questions · ${b.methods} methods`;
+}
+function wireSeg(id,key,attr,after){document.getElementById(id).addEventListener('click',e=>{const btn=e.target.closest('button');if(!btn)return;S[key]=btn.dataset[attr];document.querySelectorAll('#'+id+' button').forEach(x=>x.classList.toggle('on',x===btn));after();});}
+document.getElementById('truth').addEventListener('input',renderToy);renderToy();
+document.addEventListener('click',e=>{const t=e.target.closest('.term');document.querySelectorAll('.term.on').forEach(x=>{if(x!==t)x.classList.remove('on');});if(t){t.classList.toggle('on');e.preventDefault();}});
+fetch('blog/season-0.json').then(r=>r.json()).then(data=>{D=data;
+  wireSeg('dock-metric','metric','metric',renderDynamic);wireSeg('dock-scope','scope','scope',renderDynamic);
+  wireSeg('scatter-x','x','x',renderScatter);wireSeg('scatter-w','w','w',renderScatter);
+  renderDynamic();renderScatter();renderWeekly();renderH2H();renderTables();renderStrip();
+}).catch(err=>{document.querySelectorAll('.panel [id]').forEach(el=>{if(!el.innerHTML)el.innerHTML='<p class="note">Report data failed to load: '+esc(err.message)+'</p>';});});
+})();
+</script>
+</body></html>
