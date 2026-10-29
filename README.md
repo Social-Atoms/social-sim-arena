@@ -95,8 +95,8 @@ Social Simulation Arena is a project initiated by [Social Atoms](https://github.
 <a href="https://github.com/ZhenzeMo" title="ZhenzeMo"><img src="brand/contributors/ZhenzeMo.svg" width="64" height="64" alt="ZhenzeMo"></a>
 <a href="https://github.com/XuanL17" title="XuanL17"><img src="brand/contributors/XuanL17.svg" width="64" height="64" alt="XuanL17"></a>
 <a href="https://github.com/evie-mo" title="evie-mo"><img src="brand/contributors/evie-mo.svg" width="64" height="64" alt="evie-mo"></a>
-<a href="https://github.com/a3030765513-oss" title="a3030765513-oss"><img src="brand/contributors/a3030765513-oss.svg" width="64" height="64" alt="a3030765513-oss"></a>
 <a href="https://github.com/mmalohlava" title="mmalohlava"><img src="brand/contributors/mmalohlava.svg" width="64" height="64" alt="mmalohlava"></a>
+<a href="https://github.com/a3030765513-oss" title="a3030765513-oss"><img src="brand/contributors/a3030765513-oss.svg" width="64" height="64" alt="a3030765513-oss"></a>
 <a href="https://github.com/testing-shang" title="testing-shang"><img src="brand/contributors/testing-shang.svg" width="64" height="64" alt="testing-shang"></a>
 <a href="https://github.com/rain21232" title="rain21232"><img src="brand/contributors/rain21232.svg" width="64" height="64" alt="rain21232"></a>
 <a href="https://github.com/miracle121388-a11y" title="miracle121388-a11y"><img src="brand/contributors/miracle121388-a11y.svg" width="64" height="64" alt="miracle121388-a11y"></a>
@@ -109,6 +109,7 @@ Social Simulation Arena is a project initiated by [Social Atoms](https://github.
 <a href="https://github.com/Paitesanshi" title="Paitesanshi"><img src="brand/contributors/Paitesanshi.svg" width="64" height="64" alt="Paitesanshi"></a>
 <a href="https://github.com/chenchenplus" title="chenchenplus"><img src="brand/contributors/chenchenplus.svg" width="64" height="64" alt="chenchenplus"></a>
 <a href="https://github.com/zhangchong25" title="zhangchong25"><img src="brand/contributors/zhangchong25.svg" width="64" height="64" alt="zhangchong25"></a>
+<a href="https://github.com/Confuciusbear" title="Confuciusbear"><img src="brand/contributors/Confuciusbear.svg" width="64" height="64" alt="Confuciusbear"></a>
 </p>
 <!-- contributors:end -->
 
