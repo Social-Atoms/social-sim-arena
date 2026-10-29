@@ -21,6 +21,7 @@ Adding a tracker means adding a row here, and nothing else.
 from . import crosstab
 from .adapters import aaii as aaii_adapter
 from .adapters import civiqs as civiqs_adapter
+from .adapters import ecbcs as ecbcs_adapter
 from .adapters import hhpoll as hhpoll_adapter
 from .adapters import sce as sce_adapter
 from .adapters import silverbulletin as sb
@@ -1192,6 +1193,113 @@ SERIES["sce_inflation_3y"] = {
     "methodology": _SCE_METHODOLOGY,
 }
 
+# European Commission consumer survey (DG ECFIN). One release zip per month
+# carries every country, so the twelve series below share a single request
+# per release, and none at all once the month's release is archived. The EU
+# and euro-area rows are the natural scalar targets; the ten country rows are
+# a cross-national profile, registered in the fixed order of EC_CCI_CELLS.
+#
+# No `survey` instrument, deliberately, on any of them. The persona panel
+# approximates US adults; putting a European consumer question to it would
+# score "what simulated Americans think" against what Europeans said. A
+# questionnaire is also not one question: the indicator averages four
+# balances, and each country fields its own translation of them.
+_EC_CCI_PUBLISHER = (
+    "The European Commission (DG ECFIN): the Joint Harmonised EU Programme of "
+    "Business and Consumer Surveys, a monthly consumer survey run by national "
+    "partner institutes in every member state on a common questionnaire, "
+    "published by the Commission on a calendar fixed a year ahead.")
+
+_EC_CCI_CADENCE = (
+    "monthly; a flash estimate for the EU and euro area at 16:00 Brussels "
+    "time about a week before month end, and the full release with every "
+    "country at 11:00 Brussels time at month end (December's in early "
+    "January), on the Commission's published calendar. The series scored "
+    "here is the full release")
+
+_EC_CCI_METHODOLOGY = (
+    "Joint Harmonised EU Programme of Business and Consumer Surveys, DG "
+    "ECFIN, European Commission. The consumer confidence indicator is the "
+    "simple average of four seasonally adjusted balances (percent answering "
+    "positively minus percent answering negatively, in percentage points): "
+    "the household's financial situation over the last 12 months and over "
+    "the next 12 months, the general economic situation in the country over "
+    "the next 12 months, and intentions to make major purchases over the next "
+    "12 months. Interviews run over roughly the first three weeks of the "
+    "reference month; national samples are set by each partner institute and "
+    "about 32,000 consumers are surveyed every month across the EU. The EU "
+    "and euro-area figures are "
+    "weighted aggregates of the national results. Rows are dated by the "
+    "reference month. A month is resolved on the value first published for "
+    "it, in that month's full release (the time-series file for that "
+    "release). Later releases can revise earlier months (seasonal "
+    "adjustment, changes in which countries enter an aggregate, national "
+    "methodology breaks), and those revisions are not rescored. The data are "
+    "published under the "
+    "Commission's reuse policy (Commission Decision 2011/833/EU), CC BY 4.0, "
+    "source: European Commission, DG ECFIN.")
+
+# (geography code in the workbook, series suffix, name, note for the entrant)
+_EC_CCI_GEOS = (
+    ("EU", "eu", "the European Union (27 member states)",
+     "The EU aggregate. Its flash estimate is published about a week before "
+     "the full release and has matched the full release's first print in 12 "
+     "of the 13 months to October 2026; the exception, December 2025, was the "
+     "month Spain's results returned to the aggregate."),
+    ("EA", "ea", "the euro area (21 member states since January 2026)",
+     "The euro-area aggregate, with the same flash-then-full schedule as the "
+     "EU figure. Bulgaria joined it in January 2026 and its history was "
+     "recomputed on the new composition."),
+    ("DE", "de", "Germany", ""),
+    ("FR", "fr", "France", ""),
+    ("IT", "it", "Italy",
+     "Italy's survey has a methodological break between August and "
+     "September 2026; its September 2026 value was missing from the "
+     "September release and first published in October's."),
+    ("ES", "es", "Spain",
+     "Spain's consumer results were suspended from October 2024 and "
+     "resumed in the December 2025 release, with the gap backfilled and "
+     "earlier history level-shifted."),
+    ("NL", "nl", "the Netherlands", ""),
+    ("PL", "pl", "Poland",
+     "Poland changed survey provider in May 2026; its history back to 2018 "
+     "was replaced and earlier years level-shifted, which moved its April "
+     "2026 value from -4.9 to -16.5."),
+    ("AT", "at", "Austria", ""),
+    ("BE", "be", "Belgium", ""),
+    ("SE", "se", "Sweden", ""),
+    ("IE", "ie", "Ireland",
+     "Ireland's surveys were suspended from February 2023 and resumed in "
+     "March 2025, with the gap backfilled."),
+)
+
+
+def _ec_cci(geo, sfx, name, note):
+    sid = f"ec_cci_{sfx}"
+    SERIES[sid] = {
+        "label": f"EC consumer confidence, {geo}",
+        "tracker": "ec_consumer_survey",
+        "publisher": _EC_CCI_PUBLISHER,
+        "source": "ecbcs",
+        "ecbcs": {"geo": geo},
+        "unit": "balance, percentage points",
+        "cadence": _EC_CCI_CADENCE,
+        "question": (
+            "European Commission consumer survey: the consumer confidence "
+            f"indicator for {name}, seasonally adjusted, in percentage "
+            "points"),
+        "methodology": _EC_CCI_METHODOLOGY + (f" {note}" if note else ""),
+    }
+    return sid
+
+
+EC_CCI_SERIES = tuple(_ec_cci(*row) for row in _EC_CCI_GEOS)
+# The ten-country cross-national profile, in its scored order.
+EC_CCI_CELLS = EC_CCI_SERIES[2:]
+assert [SERIES[c]["ecbcs"]["geo"] for c in EC_CCI_SERIES] == \
+    list(ecbcs_adapter.REQUIRED), \
+    "the registered EC consumer series no longer match ecbcs.REQUIRED"
+
 SERIES["hh_trump_approval"] = {
     "label": "Harvard-Harris Trump approval",
     "tracker": "harvard_harris",
@@ -1733,6 +1841,10 @@ def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
     # capture on success, newest archived vintage (with a loud warning) on
     # fetch failure: fetch what is there, never go dark when it is not.
     load("sce", lambda: sce_adapter.history(diagnostics=diagnostic_rows))
+    # One release zip carries all twelve EC consumer series. Write-once per
+    # release under `sources/ecbcs/`, and a month whose release is already
+    # archived costs no request at all.
+    load("ecbcs", lambda: ecbcs_adapter.history(diagnostics=diagnostic_rows))
     # Harvard-Harris publishes no calendar and no derivable URL, so the
     # archive is the source of truth and nothing here fetches on its own; a
     # new wave is a maintainer passing hhpoll.fetch a URL.
@@ -1801,6 +1913,9 @@ def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
             elif source == "sce":
                 out[sid] = sce_adapter.to_series(src["sce"],
                                                  spec["sce"]["horizon"])
+            elif source == "ecbcs":
+                out[sid] = ecbcs_adapter.to_series(src["ecbcs"],
+                                                   spec["ecbcs"]["geo"])
             elif source == "hhpoll":
                 out[sid] = hhpoll_adapter.to_series(src["hhpoll"])
             elif source == "yougov_xtab":
