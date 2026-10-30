@@ -79,6 +79,9 @@ _assign("consumer",
         "umich_sentiment", "umich_party_dem", "umich_party_ind",
         "umich_party_rep",
         "sce_inflation_1y", "sce_inflation_3y",
+        "ec_cci_eu", "ec_cci_ea",
+        "ec_cci_de", "ec_cci_fr", "ec_cci_it", "ec_cci_es", "ec_cci_nl",
+        "ec_cci_pl", "ec_cci_at", "ec_cci_be", "ec_cci_se", "ec_cci_ie",
         "civiqs_net_econ_now", "civiqs_net_econ_direction",
         "civiqs_net_family_finances", "civiqs_net_inflation_concern")
 
