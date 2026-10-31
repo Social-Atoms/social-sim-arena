@@ -1,1028 +1,32 @@
 {
   "alerts": [
     {
-      "id": "wiki-top10-2026-11-08/glm-web",
-      "kind": "entrant_round",
-      "last_error": "provider call failed",
-      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
-      "state": "retryable_failure"
-    },
-    {
       "id": "civiqs",
       "kind": "source",
       "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/app",
-      "required_action": "restore live access now or hold affected rounds before the deadline; the same-source archive is not a new release",
-      "state": "deadline_risk"
+      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
+      "state": "stale"
     }
   ],
   "counts": {
     "entrant_rounds": {
       "missed_lock": 0,
-      "queued": 15,
-      "retryable_failure": 1,
+      "queued": 0,
+      "retryable_failure": 0,
       "running": 0,
-      "succeeded": 44,
+      "succeeded": 0,
       "terminal_failure": 0
     },
     "sources": {
-      "deadline_risk": 1,
+      "deadline_risk": 0,
       "healthy": 12,
       "retryable_failure": 0,
-      "stale": 0,
+      "stale": 1,
       "unresolvable": 0
     }
   },
-  "entrant_round_states": [
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "claude-sonnet-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/midterm-2026-house-margin/claude-sonnet-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "midterm-2026-house-margin",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "claude-sonnet-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/midterm-2026-house-margin/claude-sonnet-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "midterm-2026-house-margin",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "deepseek-pro-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/midterm-2026-house-margin/deepseek-pro-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "midterm-2026-house-margin",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "deepseek-pro-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/midterm-2026-house-margin/deepseek-pro-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "midterm-2026-house-margin",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gemini-pro-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/midterm-2026-house-margin/gemini-pro-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "midterm-2026-house-margin",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gemini-pro-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/midterm-2026-house-margin/gemini-pro-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "midterm-2026-house-margin",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 1,
-      "entrant": "glm-web",
-      "estimated_spend": 0.01041,
-      "evidence": [
-        "forecast=sealed/midterm-2026-house-margin/glm-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "midterm-2026-house-margin",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "glm-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/midterm-2026-house-margin/glm-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "midterm-2026-house-margin",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gpt-5.6-luna-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/midterm-2026-house-margin/gpt-5.6-luna-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "midterm-2026-house-margin",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gpt-5.6-luna-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/midterm-2026-house-margin/gpt-5.6-luna-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "midterm-2026-house-margin",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "grok-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/midterm-2026-house-margin/grok-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "midterm-2026-house-margin",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "grok-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/midterm-2026-house-margin/grok-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "midterm-2026-house-margin",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "test-jay",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/midterm-2026-house-margin/test-jay.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "midterm-2026-house-margin",
-      "route": "participant:social-simulation-arena.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "worldvac-base",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/midterm-2026-house-margin/worldvac-base.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "midterm-2026-house-margin",
-      "route": "participant:worldvac-ssa-agent.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "zhengzheng-agent",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/midterm-2026-house-margin/zhengzheng-agent.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "midterm-2026-house-margin",
-      "route": "participant:zhengzhengqimen.top",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "claude-sonnet-web",
-      "estimated_spend": 0.0,
-      "evidence": [],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": "2026-10-30T18:49:35Z",
-      "required_action": "hold until this round has a validated source and persistence baseline; no provider call made",
-      "round_id": "midterm-2026-house-seats",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "queued"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "claude-sonnet-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": "2026-10-30T18:49:35Z",
-      "required_action": "hold until this round has a validated source and persistence baseline; no provider call made",
-      "round_id": "midterm-2026-house-seats",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "queued"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "deepseek-pro-web",
-      "estimated_spend": 0.0,
-      "evidence": [],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": "2026-10-30T18:49:35Z",
-      "required_action": "hold until this round has a validated source and persistence baseline; no provider call made",
-      "round_id": "midterm-2026-house-seats",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "queued"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "deepseek-pro-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": "2026-10-30T18:49:35Z",
-      "required_action": "hold until this round has a validated source and persistence baseline; no provider call made",
-      "round_id": "midterm-2026-house-seats",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "queued"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gemini-pro-web",
-      "estimated_spend": 0.0,
-      "evidence": [],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": "2026-10-30T18:49:35Z",
-      "required_action": "hold until this round has a validated source and persistence baseline; no provider call made",
-      "round_id": "midterm-2026-house-seats",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "queued"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gemini-pro-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": "2026-10-30T18:49:35Z",
-      "required_action": "hold until this round has a validated source and persistence baseline; no provider call made",
-      "round_id": "midterm-2026-house-seats",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "queued"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "glm-web",
-      "estimated_spend": 0.0,
-      "evidence": [],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": "2026-10-30T18:49:35Z",
-      "required_action": "hold until this round has a validated source and persistence baseline; no provider call made",
-      "round_id": "midterm-2026-house-seats",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "queued"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "glm-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": "2026-10-30T18:49:35Z",
-      "required_action": "hold until this round has a validated source and persistence baseline; no provider call made",
-      "round_id": "midterm-2026-house-seats",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "queued"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gpt-5.6-luna-web",
-      "estimated_spend": 0.0,
-      "evidence": [],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": "2026-10-30T18:49:35Z",
-      "required_action": "hold until this round has a validated source and persistence baseline; no provider call made",
-      "round_id": "midterm-2026-house-seats",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "queued"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gpt-5.6-luna-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": "2026-10-30T18:49:35Z",
-      "required_action": "hold until this round has a validated source and persistence baseline; no provider call made",
-      "round_id": "midterm-2026-house-seats",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "queued"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "grok-web",
-      "estimated_spend": 0.0,
-      "evidence": [],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": "2026-10-30T18:49:35Z",
-      "required_action": "hold until this round has a validated source and persistence baseline; no provider call made",
-      "round_id": "midterm-2026-house-seats",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "queued"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "grok-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": "2026-10-30T18:49:35Z",
-      "required_action": "hold until this round has a validated source and persistence baseline; no provider call made",
-      "round_id": "midterm-2026-house-seats",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "queued"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "test-jay",
-      "estimated_spend": 0.0,
-      "evidence": [],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": "2026-10-30T18:49:35Z",
-      "required_action": "hold until this round has a validated source and persistence baseline; no provider call made",
-      "round_id": "midterm-2026-house-seats",
-      "route": "participant:social-simulation-arena.com",
-      "state": "queued"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "worldvac-base",
-      "estimated_spend": 0.0,
-      "evidence": [],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": "2026-10-30T18:49:35Z",
-      "required_action": "hold until this round has a validated source and persistence baseline; no provider call made",
-      "round_id": "midterm-2026-house-seats",
-      "route": "participant:worldvac-ssa-agent.com",
-      "state": "queued"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "zhengzheng-agent",
-      "estimated_spend": 0.0,
-      "evidence": [],
-      "last_error": null,
-      "next_deadline": "2026-10-30T22:00:00Z",
-      "next_lock": "2026-10-30T22:00:00Z",
-      "next_retry": "2026-10-30T18:49:35Z",
-      "required_action": "hold until this round has a validated source and persistence baseline; no provider call made",
-      "round_id": "midterm-2026-house-seats",
-      "route": "participant:zhengzhengqimen.top",
-      "state": "queued"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "claude-sonnet-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/trends-basket-2026-11-07/claude-sonnet-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "trends-basket-2026-11-07",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "claude-sonnet-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/trends-basket-2026-11-07/claude-sonnet-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "trends-basket-2026-11-07",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "deepseek-pro-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/trends-basket-2026-11-07/deepseek-pro-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "trends-basket-2026-11-07",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "deepseek-pro-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/trends-basket-2026-11-07/deepseek-pro-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "trends-basket-2026-11-07",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gemini-pro-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/trends-basket-2026-11-07/gemini-pro-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "trends-basket-2026-11-07",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gemini-pro-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/trends-basket-2026-11-07/gemini-pro-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "trends-basket-2026-11-07",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "glm-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/trends-basket-2026-11-07/glm-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "trends-basket-2026-11-07",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "glm-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/trends-basket-2026-11-07/glm-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "trends-basket-2026-11-07",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gpt-5.6-luna-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/trends-basket-2026-11-07/gpt-5.6-luna-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "trends-basket-2026-11-07",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gpt-5.6-luna-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/trends-basket-2026-11-07/gpt-5.6-luna-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "trends-basket-2026-11-07",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "grok-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/trends-basket-2026-11-07/grok-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "trends-basket-2026-11-07",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "grok-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/trends-basket-2026-11-07/grok-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "trends-basket-2026-11-07",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "test-jay",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/trends-basket-2026-11-07/test-jay.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "trends-basket-2026-11-07",
-      "route": "participant:social-simulation-arena.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "worldvac-base",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/trends-basket-2026-11-07/worldvac-base.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "trends-basket-2026-11-07",
-      "route": "participant:worldvac-ssa-agent.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "zhengzheng-agent",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/trends-basket-2026-11-07/zhengzheng-agent.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "trends-basket-2026-11-07",
-      "route": "participant:zhengzhengqimen.top",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "claude-sonnet-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/wiki-top10-2026-11-08/claude-sonnet-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "wiki-top10-2026-11-08",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "claude-sonnet-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/wiki-top10-2026-11-08/claude-sonnet-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "wiki-top10-2026-11-08",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "deepseek-pro-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/wiki-top10-2026-11-08/deepseek-pro-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "wiki-top10-2026-11-08",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "deepseek-pro-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/wiki-top10-2026-11-08/deepseek-pro-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "wiki-top10-2026-11-08",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gemini-pro-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/wiki-top10-2026-11-08/gemini-pro-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "wiki-top10-2026-11-08",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gemini-pro-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/wiki-top10-2026-11-08/gemini-pro-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "wiki-top10-2026-11-08",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": true,
-      "attempts": 1,
-      "entrant": "glm-web",
-      "estimated_spend": 0.01041,
-      "evidence": [],
-      "last_error": "provider call failed",
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": "2026-10-30T18:49:35Z",
-      "required_action": "retry immediately before the deadline; the scheduled retry is too late",
-      "round_id": "wiki-top10-2026-11-08",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "retryable_failure"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "glm-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/wiki-top10-2026-11-08/glm-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "wiki-top10-2026-11-08",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gpt-5.6-luna-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/wiki-top10-2026-11-08/gpt-5.6-luna-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "wiki-top10-2026-11-08",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "gpt-5.6-luna-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/wiki-top10-2026-11-08/gpt-5.6-luna-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "wiki-top10-2026-11-08",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "grok-web",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/wiki-top10-2026-11-08/grok-web.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "wiki-top10-2026-11-08",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "grok-web-superfc",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/wiki-top10-2026-11-08/grok-web-superfc.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "wiki-top10-2026-11-08",
-      "route": "ppapi:app-us.ppapi.ai",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "test-jay",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/wiki-top10-2026-11-08/test-jay.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "wiki-top10-2026-11-08",
-      "route": "participant:social-simulation-arena.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "worldvac-base",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/wiki-top10-2026-11-08/worldvac-base.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "wiki-top10-2026-11-08",
-      "route": "participant:worldvac-ssa-agent.com",
-      "state": "succeeded"
-    },
-    {
-      "alert": false,
-      "attempts": 0,
-      "entrant": "zhengzheng-agent",
-      "estimated_spend": 0.0,
-      "evidence": [
-        "forecast=forecasts/wiki-top10-2026-11-08/zhengzheng-agent.json"
-      ],
-      "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
-      "round_id": "wiki-top10-2026-11-08",
-      "route": "participant:zhengzhengqimen.top",
-      "state": "succeeded"
-    }
-  ],
-  "generated_at": "2026-10-30T13:02:22Z",
+  "entrant_round_states": [],
+  "generated_at": "2026-10-31T05:40:09Z",
   "source_states": [
     {
       "alert": false,
@@ -1030,11 +34,11 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=12",
-        "sources/aaii/2026-10-30.html sha256=77a02a0b1b96381ac2c7ae1a4ea5427e80ebcbf5a689f71f2e9d91b3c5d12a5f"
+        "sources/aaii/2026-10-31.html sha256=77a02a0b1b96381ac2c7ae1a4ea5427e80ebcbf5a689f71f2e9d91b3c5d12a5f"
       ],
       "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
+      "next_deadline": "2026-11-01T14:00:00Z",
+      "next_lock": "2026-11-01T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "https://www.aaii.com/sentimentsurvey/sent_results",
@@ -1046,18 +50,18 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "civiqs/approve_president_trump_2025 (64 snapshots; newest 2026-10-29); civiqs/approve_president_trump_2025.age-18-34 (61 snapshots; newest 2026-10-29); civiqs/approve_president_trump_2025.age-35-49 (62 snapshots; newest 2026-10-29); civiqs/approve_president_trump_2025.age-50-64 (63 snapshots; newest 2026-10-29); civiqs/approve_president_trump_2025.age-65_ (62 snapshots; newest 2026-10-29); civiqs/approve_president_trump_2025.education-College_Graduate (64 snapshots; newest 2026-10-29); civiqs/approve_president_trump_2025.education-Non-College_Graduate (64 snapshots; newest 2026-10-29); civiqs/approve_president_trump_2025.education-Postgraduate (64 snapshots; newest 2026-10-29); civiqs/approve_president_trump_2025.gender-Female (64 snapshots; newest 2026-10-29); civiqs/approve_president_trump_2025.gender-Male (64 snapshots; newest 2026-10-29); civiqs/approve_president_trump_2025.party-Democrat (63 snapshots; newest 2026-10-29); civiqs/approve_president_trump_2025.party-Independent (63 snapshots; newest 2026-10-29); civiqs/approve_president_trump_2025.party-Republican (65 snapshots; newest 2026-10-29); civiqs/approve_president_trump_2025.race-Black_or_African-American (64 snapshots; newest 2026-10-29); civiqs/approve_president_trump_2025.race-Hispanic_Latino (65 snapshots; newest 2026-10-29); civiqs/approve_president_trump_2025.race-Other (65 snapshots; newest 2026-10-29); civiqs/approve_president_trump_2025.race-White (63 snapshots; newest 2026-10-29); civiqs/describe_feeling_us (63 snapshots; newest 2026-10-29); civiqs/economy_family_retro (64 snapshots; newest 2026-10-29); civiqs/economy_us_direction (64 snapshots; newest 2026-10-29); civiqs/economy_us_now (64 snapshots; newest 2026-10-29); civiqs/inflation_impact (63 snapshots; newest 2026-10-29)",
-        "fetched_days=1.5; changed_days=8.5; fetch_budget=2; change_budget=4; stale_keys=approve_president_trump_2025,approve_president_trump_2025.age-18-34,approve_president_trump_2025.age-35-49,approve_president_trump_2025.age-50-64,approve_president_trump_2025.age-65_,approve_president_trump_2025.education-College_Graduate,approve_president_trump_2025.education-Non-College_Graduate,approve_president_trump_2025.education-Postgraduate,approve_president_trump_2025.gender-Female,approve_president_trump_2025.gender-Male,approve_president_trump_2025.party-Democrat,approve_president_trump_2025.party-Independent,approve_president_trump_2025.party-Republican,approve_president_trump_2025.race-Black_or_African-American,approve_president_trump_2025.race-Hispanic_Latino,approve_president_trump_2025.race-Other,approve_president_trump_2025.race-White,economy_us_direction,economy_us_now,inflation_impact",
+        "civiqs/approve_president_trump_2025 (65 snapshots; newest 2026-10-30); civiqs/approve_president_trump_2025.age-18-34 (62 snapshots; newest 2026-10-30); civiqs/approve_president_trump_2025.age-35-49 (63 snapshots; newest 2026-10-30); civiqs/approve_president_trump_2025.age-50-64 (64 snapshots; newest 2026-10-30); civiqs/approve_president_trump_2025.age-65_ (63 snapshots; newest 2026-10-30); civiqs/approve_president_trump_2025.education-College_Graduate (65 snapshots; newest 2026-10-30); civiqs/approve_president_trump_2025.education-Non-College_Graduate (65 snapshots; newest 2026-10-30); civiqs/approve_president_trump_2025.education-Postgraduate (65 snapshots; newest 2026-10-30); civiqs/approve_president_trump_2025.gender-Female (65 snapshots; newest 2026-10-30); civiqs/approve_president_trump_2025.gender-Male (65 snapshots; newest 2026-10-30); civiqs/approve_president_trump_2025.party-Democrat (64 snapshots; newest 2026-10-30); civiqs/approve_president_trump_2025.party-Independent (64 snapshots; newest 2026-10-30); civiqs/approve_president_trump_2025.party-Republican (66 snapshots; newest 2026-10-30); civiqs/approve_president_trump_2025.race-Black_or_African-American (65 snapshots; newest 2026-10-30); civiqs/approve_president_trump_2025.race-Hispanic_Latino (66 snapshots; newest 2026-10-30); civiqs/approve_president_trump_2025.race-Other (66 snapshots; newest 2026-10-30); civiqs/approve_president_trump_2025.race-White (64 snapshots; newest 2026-10-30); civiqs/describe_feeling_us (64 snapshots; newest 2026-10-30); civiqs/economy_family_retro (65 snapshots; newest 2026-10-30); civiqs/economy_us_direction (65 snapshots; newest 2026-10-30); civiqs/economy_us_now (65 snapshots; newest 2026-10-30); civiqs/inflation_impact (64 snapshots; newest 2026-10-30)",
+        "fetched_days=1.2; changed_days=9.2; fetch_budget=2; change_budget=4; stale_keys=economy_us_now",
         "live attempt failed; same-source archive used"
       ],
       "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/app",
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
-      "next_retry": "2026-10-30T19:02:22Z",
-      "required_action": "restore live access now or hold affected rounds before the deadline; the same-source archive is not a new release",
+      "next_deadline": "2026-11-01T14:00:00Z",
+      "next_lock": "2026-11-01T14:00:00Z",
+      "next_retry": "2026-10-31T11:40:09Z",
+      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
       "route": "ssa.series:civiqs",
       "source": "civiqs",
-      "state": "deadline_risk"
+      "state": "stale"
     },
     {
       "alert": false,
@@ -1067,8 +71,8 @@
         "1 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
+      "next_deadline": "2026-11-01T14:00:00Z",
+      "next_lock": "2026-11-01T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:hhpoll",
@@ -1083,8 +87,8 @@
         "71 complete weekly observations across 11 round(s)"
       ],
       "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
+      "next_deadline": "2026-11-01T14:00:00Z",
+      "next_lock": "2026-11-01T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.ranking:ranking_wikitop",
@@ -1096,12 +100,12 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
-        "sources/sb_approval/2026-10-30.csv sha256=1db0ea4576036c98f80b409bc62e38a2e3def74375d2d8e718844492a27b3dc2"
+        "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
+        "sources/sb_approval/2026-10-31.csv sha256=63a8d1a30549e349d03ddd761d2e21737606c954aee3a1e6ac1951e08c5744df"
       ],
       "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
+      "next_deadline": "2026-11-01T14:00:00Z",
+      "next_lock": "2026-11-01T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
@@ -1114,11 +118,11 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=10",
-        "sources/sb_generic/2026-10-30.csv sha256=f4874b2fef8f5a73ae06ad732515fce10b94774dd851835b161fbf9d3b848edd"
+        "sources/sb_generic/2026-10-31.csv sha256=a8ec7c82980edf34c6f05547233e8d84dda6b46af8314abbf1a9e60eb0f04b17"
       ],
       "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
+      "next_deadline": "2026-11-01T14:00:00Z",
+      "next_lock": "2026-11-01T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
@@ -1133,8 +137,8 @@
         "2 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
+      "next_deadline": "2026-11-01T14:00:00Z",
+      "next_lock": "2026-11-01T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:sce",
@@ -1149,8 +153,8 @@
         "2 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
+      "next_deadline": "2026-11-01T14:00:00Z",
+      "next_lock": "2026-11-01T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:trends",
@@ -1165,8 +169,8 @@
         "5 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
+      "next_deadline": "2026-11-01T14:00:00Z",
+      "next_lock": "2026-11-01T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:trends_basket",
@@ -1178,12 +182,12 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=6.8; fetch_budget=3; change_budget=40",
-        "sources/umich/2026-10-30.json sha256=ca0d0f8dcdff3adc786b9469e5a4325363ff7a8a1cfe12d751eeae3f4e05c22f"
+        "fetched_days=-0.0; changed_days=7.5; fetch_budget=3; change_budget=40",
+        "sources/umich/2026-10-31.json sha256=ca0d0f8dcdff3adc786b9469e5a4325363ff7a8a1cfe12d751eeae3f4e05c22f"
       ],
       "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
+      "next_deadline": "2026-11-01T14:00:00Z",
+      "next_lock": "2026-11-01T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "http://www.sca.isr.umich.edu/files/tbmics.csv",
@@ -1198,8 +202,8 @@
         "3 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
+      "next_deadline": "2026-11-01T14:00:00Z",
+      "next_lock": "2026-11-01T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:umichparty",
@@ -1214,8 +218,8 @@
         "2 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
+      "next_deadline": "2026-11-01T14:00:00Z",
+      "next_lock": "2026-11-01T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:wikipedia",
@@ -1230,8 +234,8 @@
         "16 validated non-empty series"
       ],
       "last_error": null,
-      "next_deadline": "2026-10-30T14:00:00Z",
-      "next_lock": "2026-10-30T14:00:00Z",
+      "next_deadline": "2026-11-01T14:00:00Z",
+      "next_lock": "2026-11-01T14:00:00Z",
       "next_retry": null,
       "required_action": "none",
       "route": "ssa.series:yougov_xtab",
