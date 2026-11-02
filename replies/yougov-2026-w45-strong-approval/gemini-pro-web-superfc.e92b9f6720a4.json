@@ -1,0 +1,15 @@
+{
+  "entrant": "gemini-pro-web-superfc",
+  "input_hash": "e92b9f6720a4",
+  "logged_at": "2026-10-31T21:32:23Z",
+  "model": "gemini-3.1-pro-preview",
+  "prompt_sha256": "20892b0801578aa3cea129521a671e036a556d60bbcd13befcfb2603d986d8c3",
+  "reply": "1. Outside view. What is the base rate here? What has this series done historically, how much does it move between releases, and what would a naive extrapolation predict?\nThe historical values over the last eight weeks show a mean of 20.1%, with a low of 17.0% and a high of 22.0%. The most recent two releases were both exactly 22.0%. The series tends to move by 1 to 3 percentage points between weekly releases. A naive extrapolation based on a random walk would predict the next value to be 22.0%, while mean reversion might suggest a slightly lower number like 21.0%.\n\n2. Inside view. What is specific to this release -- events, timing, anything that would move this particular number away from the base rate? Say how much each is worth, in the unit of the series.\nThe provided text from October 29 notes that \"39% of registered voters strongly or somewhat approve of Trump\u2019s job performance, and 58% disapprove.\" In the preceding weeks, total approval hovered around 34% to 38%. With total approval at 39%, \"strongly approve\" is likely to remain stable or tick up very slightly. Historically for Trump, the \"strongly approve\" base is quite sticky and usually constitutes a bit more than half of his total approval rating (e.g., 22% strongly, 17% somewhat). Given total approval sits at 39%, a \"strongly approve\" number of 21% to 23% is highly probable, anchoring closely to the recent 22.0%. \n\n3. Pre-mortem. Assume your answer turns out badly wrong. Write the most likely reason, then correct for it.\nThe most likely reason for being badly wrong is that the composition of Trump's approval shifted rapidly in the final week before the midterms (e.g., wavering supporters consolidating their views into \"strongly approve,\" pushing it to 25%, or vice-versa, with softer support moving to \"somewhat approve,\" pulling it down to 18%). To correct for this, I will expand my standard deviation slightly to cover the possibility of late-cycle volatility.\n\n4. Calibrate. Your sd should be wide enough that the true value falls inside one sd about two thirds of the time. Check it against how much this series actually moves between releases.\nBetween the last 8 releases, the week-to-week changes were -3, -2, +1, +3, -1, +2, and 0 points. The standard deviation of these changes is approximately 1.9 points. Setting my mean near 22.0 with a standard deviation of 1.8 should adequately cover the 68% probability interval, ranging roughly from 20.2 to 23.8.\n\n{\"mean\": 22.0, \"sd\": 1.8}",
+  "round_id": "yougov-2026-w45-strong-approval",
+  "usage": {
+    "input_tokens": 2810,
+    "output_tokens": 624,
+    "thinking_tokens": 1532
+  },
+  "via": "ppapi"
+}
