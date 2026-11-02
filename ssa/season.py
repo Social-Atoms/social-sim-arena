@@ -14,7 +14,7 @@ turns a candidate into an approved round.
 import re
 from datetime import datetime, timedelta, timezone
 
-from . import inventory, profile_round, ranking_round
+from . import consumer_round, inventory, profile_round, ranking_round
 from .series import SERIES
 
 TARGET_TYPES = {"continuous_normal", "profile_energy", "ranking_list"}
@@ -31,10 +31,14 @@ SPECIAL_SERIES_SOURCE = {
     "generic_ballot_margin": "certified_election_results",
     "house_seats": "certified_election_results",
     "wiki_top10_en": "wikipedia",
+    **{sid: consumer_round.SOURCE_KEYS[source]
+       for sid, source in consumer_round.SERIES_SOURCE.items()},
 }
 RANKING_KIND_SOURCE = {
     "wiki_top10": "wikipedia",
     "trends_basket": "trends_basket",
+    "nyt_bestsellers": "consumer_nyt",
+    "steam_weekly": "consumer_steam",
 }
 
 # Rounds hand-reviewed and frozen before the source inventory acquired a rights
@@ -94,6 +98,10 @@ def source_for(round_data):
     """The audited source key for one round, raising when it is unknowable."""
     target = round_data.get("target_type")
     rid = round_data.get("round_id", "?")
+    if "consumer" in round_data:
+        return consumer_round.source_for(round_data)
+    if round_data.get("series") in consumer_round.SERIES_SOURCE:
+        raise ValueError(f"{rid}: consumer target requires its period and vintage contract")
     if target == "ranking_list":
         kind = (round_data.get("ranking") or {}).get("kind")
         source = RANKING_KIND_SOURCE.get(kind)
@@ -127,6 +135,10 @@ def source_for(round_data):
 def target_key(round_data):
     """Identity of the scored observation, independent of ``round_id``."""
     target = round_data["target_type"]
+    if "consumer" in round_data:
+        spec = consumer_round.spec_for(round_data)
+        return (target, round_data["series"], spec["reference_date"],
+                spec.get("product_id"), spec.get("list_name"), spec.get("country"))
     if target == "profile_energy":
         identity = tuple(sorted(round_data.get("cells") or ()))
         release = round_data.get("release_at", "")[:10]
@@ -209,6 +221,12 @@ def _schedule_problem(round_data, source):
         return f"{rid}: invalid schedule: {err}"
     if lock >= release:
         return f"{rid}: invalid schedule: lock_at must be before release_at"
+    if "consumer" in round_data:
+        try:
+            consumer_round.spec_for(round_data)
+        except (KeyError, TypeError, ValueError) as err:
+            return f"{rid}: invalid consumer contract: {err}"
+        return None
 
     try:
         measured = _behavior_week(round_data, source)

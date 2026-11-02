@@ -17,12 +17,14 @@ from . import baselines, scoring
 from .adapters import consumer as adapters
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_ARCHIVE = ROOT / ".local" / "consumer"
+DEFAULT_ARCHIVE = Path(os.environ.get("SSA_CONSUMER_ARCHIVE", ROOT / ".local" / "consumer"))
 HOSTS = {
     "michigan_finals": {"www.sca.isr.umich.edu", "sca.isr.umich.edu"},
     "michigan_current": {"www.sca.isr.umich.edu", "sca.isr.umich.edu"},
     "mint": {"www.usmint.gov", "usmint.gov"},
     "sce": {"www.newyorkfed.org", "newyorkfed.org"},
+    "nyt": {"api.nytimes.com"},
+    "steam": {"api.steampowered.com"},
 }
 
 
@@ -61,11 +63,22 @@ def immutable(path, body):
             raise ValueError(f"Immutable archive conflict: {path}")
 
 
+def private_archive(root):
+    path = Path(root).resolve()
+    if path.is_relative_to(ROOT) and not path.is_relative_to(ROOT / ".local"):
+        raise ValueError("Consumer archive inside the repository must remain under ignored .local")
+    return path
+
+
 def official_url(source, url):
     parts = urlsplit(url)
     if (parts.scheme != "https" or parts.hostname not in HOSTS[source]
             or parts.username or parts.password or parts.query or parts.fragment):
         raise ValueError("Provenance requires a credential-free HTTPS publisher URL without query parameters")
+    if source == "steam" and parts.path != "/IStoreTopSellersService/GetWeeklyTopSellers/v1/":
+        raise ValueError("Steam collection uses only the official weekly-chart API")
+    if source == "nyt" and not parts.path.startswith("/svc/books/v3/lists/"):
+        raise ValueError("NYT collection uses only the official Books lists API")
     return url
 
 
@@ -83,7 +96,7 @@ def index(root=DEFAULT_ARCHIVE):
 
 
 def update_index(root, source, attempt, vintage=None):
-    root = Path(root)
+    root = private_archive(root)
     root.mkdir(parents=True, exist_ok=True)
     attempt_file = f"attempts/{source}/{sha256(encoded(attempt))}.json"
     immutable(root / attempt_file, encoded(attempt))
@@ -107,16 +120,27 @@ def record_attempt(root, source, status, detail, **evidence):
 
 
 def ingest(source, body, url, root=DEFAULT_ARCHIVE, captured_at=None,
-           evidence_body=None, evidence_suffix=".html", published_at=None):
+           evidence_body=None, evidence_suffix=".html", published_at=None, request_context=None):
     """Validate before archiving. A failed parse cannot replace a good vintage."""
+    root = private_archive(root)
     url = official_url(source, url)
-    parsed = adapters.PARSERS[source](body)
+    if source == "steam":
+        if set(request_context or {}) != {"country_code", "start_date"}:
+            raise ValueError("Steam archive context contains only country_code and start_date")
+        parsed = adapters.PARSERS[source](body, request_context=request_context)
+    else:
+        if request_context:
+            raise ValueError("This source does not use an archive request context")
+        parsed = adapters.PARSERS[source](body)
     if source == "mint" and not evidence_body:
         raise ValueError("A manual transcription needs the original publisher artifact as evidence")
     if published_at is not None:
         dt = datetime.fromisoformat(published_at.replace("Z", "+00:00"))
         if dt.tzinfo is None:
             raise ValueError("published_at requires a timezone")
+    capture = datetime.fromisoformat((captured_at or now()).replace("Z", "+00:00"))
+    if capture.tzinfo is None:
+        raise ValueError("captured_at requires a timezone")
     root = Path(root)
     raw_hash, parsed_body = sha256(body), encoded(parsed)
     raw_file = f"raw/{source}/{raw_hash}.bin"
@@ -131,12 +155,13 @@ def ingest(source, body, url, root=DEFAULT_ARCHIVE, captured_at=None,
         immutable(root / evidence_file, evidence_body)
     manifest = {
         "format": "ssa.consumer.vintage.v1", "source": source,
-        "url": url, "captured_at": captured_at or now(), "published_at": published_at,
+        "url": url, "captured_at": capture.astimezone(timezone.utc).isoformat(), "published_at": published_at,
         "raw_file": raw_file, "raw_sha256": raw_hash, "raw_bytes": len(body),
         "parsed_file": parsed_file, "parsed_sha256": sha256(parsed_body),
         "evidence_file": evidence_file,
         "historical_first_print": False, "rights": "review-required",
         "public_redistribution": False, "parser_version": 1,
+        "request_context": request_context,
     }
     manifest_file = f"vintages/{source}/{sha256(encoded(manifest))}.json"
     immutable(root / manifest_file, encoded(manifest))
@@ -158,7 +183,8 @@ def read_vintage(root, relative):
     parsed = archive_path(root, manifest["parsed_file"]).read_bytes()
     if sha256(parsed) != manifest["parsed_sha256"]:
         raise ValueError("Parsed archive hash mismatch")
-    rebuilt = adapters.PARSERS[source](raw)
+    rebuilt = (adapters.PARSERS[source](raw, request_context=manifest.get("request_context"))
+               if source == "steam" else adapters.PARSERS[source](raw))
     if encoded(rebuilt) != parsed:
         raise ValueError("Parser replay differs from archived normalized data")
     if manifest["evidence_file"]:

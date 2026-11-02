@@ -1,17 +1,18 @@
 """Offline consumer-source parsers; network retrieval lives in the collection tool.
 
-Only Michigan inflation, the NY Fed SCE extensions and US Mint (manual import)
-are parsed here; parsers for NYT, Netflix, Steam and ACSI were removed while
-their terms are unresolved. Output uses the arena's ``{date, value}`` records.
-Metadata and vintage evidence never masquerade as values.
+Michigan inflation, NY Fed SCE extensions and manual Mint reports produce
+``{date, value}`` records. The official NYT/Steam APIs produce ordered lists.
+Netflix and ACSI remain excluded pending written permission. Metadata and
+vintage evidence never masquerade as values.
 """
 import csv
 import io
+import json
 import math
 import re
 import zipfile
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from xml.etree import ElementTree as ET
 
 from . import sce, umich
@@ -239,9 +240,71 @@ def mint(body):
     if len(periods) != 1:
         raise ValueError("Official Mint CSV must contain exactly one report date")
     parsed = mint_transcription(buffer.getvalue())
-    parsed["metadata"].update(import_type="Official CSV supplied by the user; original bytes retained",
+    parsed["metadata"].update(import_type="Manually downloaded official CSV; original bytes retained",
                               report_date=next(iter(periods)), products=products)
     return parsed
+
+
+def nyt_books(body):
+    """One dated Books API list; ISBNs are the frozen edition identity."""
+    doc = json.loads(text_body(body))
+    if doc.get("status") != "OK":
+        raise ValueError("NYT Books API did not return OK")
+    data = doc["results"]
+    published = iso_day(data["published_date"])
+    measured = iso_day(data["bestsellers_date"])
+    name = data["list_name_encoded"]
+    if not re.fullmatch(r"[a-z0-9-]+", name) or measured.weekday() != 5:
+        raise ValueError("Invalid NYT list identity or sales week end")
+    books = sorted(data["books"], key=lambda row: int(row["rank"]))
+    if [int(row["rank"]) for row in books] != list(range(1, len(books) + 1)):
+        raise ValueError("NYT list ranks must be consecutive from one")
+    items = ["isbn:" + row["primary_isbn13"] for row in books]
+    if len(items) < 2 or len(set(items)) != len(items) or any(
+            not re.fullmatch(r"isbn:\d{13}", item) for item in items):
+        raise ValueError("NYT list needs unique primary ISBN-13 identifiers")
+    end = measured.isoformat()
+    return result(lists={"nyt_" + name: [{
+        "date": end, "week_end": end,
+        "week_start": (measured - timedelta(days=6)).isoformat(),
+        "items": items, "published_date": published.isoformat(),
+    }]}, metadata={"list_name": name, "edition_policy": "primary ISBN-13; no edition merging"})
+
+
+def steam_weekly(body, request_context=None):
+    """Official GetWeeklyTopSellers JSON, bound to its archived request context."""
+    context = request_context or {}
+    country = context.get("country_code", "")
+    if not re.fullmatch(r"[A-Z]{2}", country):
+        raise ValueError("Steam API provenance requires the requested country")
+    data = json.loads(text_body(body))["response"]
+    start = data.get("start_date")
+    if not isinstance(start, int) or isinstance(start, bool) or start != context.get("start_date"):
+        raise ValueError("Steam API did not return the exact requested week")
+    day = datetime.fromtimestamp(start, timezone.utc).date()
+    if day.weekday() != 1:
+        raise ValueError("Steam weekly chart must start on Tuesday")
+    ranks = sorted(data["ranks"], key=lambda row: row["rank"])
+    if [row["rank"] for row in ranks] != list(range(1, len(ranks) + 1)):
+        raise ValueError("Steam API ranks must be consecutive from one")
+    items = []
+    for row in ranks:
+        item = row.get("item")
+        if item:
+            kind = {0: "app", 1: "package", 2: "bundle"}.get(item.get("item_type", 0))
+            value = item.get("id")
+        else:
+            kind, value = "app", row.get("appid")
+        if kind is None or not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+            raise ValueError("Steam item requires a typed positive store identifier")
+        items.append(f"{kind}:{value}")
+    if len(items) < 2 or len(set(items)) != len(items):
+        raise ValueError("Steam API returned an empty, short or duplicate chart")
+    end = (day + timedelta(days=6)).isoformat()
+    return result(lists={"steam_" + country: [{
+        "date": end, "week_end": end, "week_start": day.isoformat(), "items": items,
+    }]}, metadata={"country": country, "publisher_start_timestamp": start,
+                  "entity_policy": "retain apps, packages and bundles; no hardware or DLC filtering"})
 
 
 PARSERS = {
@@ -249,4 +312,6 @@ PARSERS = {
     "michigan_current": michigan_current,
     "sce": sce_extensions,
     "mint": mint,
+    "nyt": nyt_books,
+    "steam": steam_weekly,
 }

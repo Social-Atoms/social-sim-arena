@@ -27,14 +27,13 @@ CURRENT = (b",,,EXPECTED CHANGE IN PRICES,,,,,,,,,,,\r\n" + PAD + PAD +
 
 
 class ConsumerTests(unittest.TestCase):
-    def test_cli_accepts_only_the_four_candidate_sources(self):
-        self.assertEqual(sorted(adapter.PARSERS), ["michigan_current", "michigan_finals", "mint", "sce"])
+    def test_cli_accepts_only_the_supported_sources(self):
+        self.assertEqual(sorted(adapter.PARSERS), sorted(tool.URLS))
         self.assertEqual(sorted(tool.URLS), sorted(adapter.PARSERS))
         with tempfile.TemporaryDirectory() as directory:
             sample = Path(directory) / "sample.csv"
             sample.write_bytes(FINALS)
-            for command in (["collect", "--sources", "netflix"], ["collect", "--sources", "nyt"],
-                            ["fetch", "steam", "https://store.steampowered.com/charts/topsellers/US"],
+            for command in (["collect", "--sources", "netflix"],
                             ["import", "acsi", str(sample), "--url", "https://theacsi.com/"],
                             ["history", "nyt"]):
                 with self.subTest(command=command), mock.patch.object(tool.requests, "get",
@@ -175,7 +174,7 @@ class ConsumerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             consumer.official_url("michigan_finals", tool.URLS["michigan_finals"] + "?api-key=secret")
         with self.assertRaises(KeyError):
-            consumer.official_url("nyt", "https://api.nytimes.com/svc/books/v3/lists/current/hardcover-fiction.json")
+            consumer.official_url("netflix", "https://www.netflix.com/tudum/top10")
         with self.assertRaises(ValueError):
             consumer.archive_path(Path("/tmp/example"), "../../private")
 

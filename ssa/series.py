@@ -1782,7 +1782,7 @@ def survey(series_id):
     way to ask a person for a number that is only ever computed from other
     people's answers. Callers check for None rather than inventing a question.
     """
-    return SERIES[series_id].get("survey")
+    return SERIES.get(series_id, {}).get("survey")
 
 
 def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,

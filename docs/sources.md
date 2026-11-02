@@ -107,34 +107,39 @@ at 0.31 points a week; five of the other nine emotions in the same tracker moved
 
 ---
 
-### 1.5 Consumer and market extensions (proposal, pending maintainer decision)
+### 1.5 Consumer and market extensions
 
-None of this section is adopted policy yet: it records rules proposed by the
-consumer/market review (`docs/consumer-review/`) for the maintainer to accept,
-change or reject.
+The consumer/market working agreement uses the rules below. Each live source
+still needs the maintainer-controlled rights verdict in `ssa/inventory.py` and a
+reviewed season entry. Merging a parser does not grant publisher permission.
 
-Proposed: supply-side figures are inputs by default, not targets of the
-social-simulation ranking. Proposed: a fixed-supply product may be a target only
-when a third party publishes on a schedule, buyers are general-public demand, the
-product does not instantly sell out, and batch releases are known. Proposed:
-firm-supply targets go on a separate board. Proposed: running totals are
-converted to the change in the named period, with the cumulative total kept as a
-diagnostic.
+Supply-side figures such as inventories and production are reference inputs.
+A fixed-supply product can be a demand target when its supply limit is evidenced,
+buyers are the general public, batch releases are known, and it has not already
+sold out. Cumulative totals are retained for diagnostics; score the net change
+between the two named adjacent reports, including negative corrections.
 
-Proposed: for weekly rankings with a live or daily companion list, lock before the
-measured week starts, and fix candidate lists, new-item treatment and
-missing-answer rules before the lock. Proposed: a "biggest movers" list uses a
-prospective 20-30 item candidate universe and asks for entry probabilities rather
-than relying on a persistence baseline. Proposed: a non-US population uses a
-separate domain and is not weighted with US personas unless the instrument
-supports that population.
+Weekly chart questions lock before the measurement period starts. Forecast the
+next list's members **and their order**, including new entries; do not ask which
+previous entries disappear. A high-churn list is almost always all-new, so an
+"everyone drops out" answer does not measure useful forecasting. The current
+implementation uses open-list RBO, with identity, list length, edition policy,
+week boundaries and capture deadline fixed in the question.
 
-Proposed: Class B streams get a written protocol for observation window, lock,
-sampling, missing values, delays, revisions and settlement before an adapter or
-round is added. Proposed: a market-price baseline would be a separate diagnostic
-rather than part of the main Pairwise score; Kalshi's current data terms do not
-authorize the archived public-price use this benchmark would require, so the
-proposal is not to implement it without explicit written permission.
+Non-US data uses the existing subject domains and standings. Every question
+states its country/region and population. US persona weights are used only when
+they fit that population; no separate geography leaderboard is created.
+
+An annual release containing many items counts as one profile or ranking round,
+not one round per item. Continuous streams require a prospective observation,
+sampling, missing-data, delay, revision and settlement protocol before admission.
+Kalshi's proposed archived-price baseline remains excluded under its data terms.
+New YouGov products use manual retrieval only, within their applicable public-data
+license; a public-data license does not authorize automated retrieval.
+
+The [consumer pipeline](consumer-review/PIPELINE.md) documents implementation,
+private storage, release contracts and validation. Netflix and ACSI remain
+disabled until written permission is recorded.
 
 ## 2. What the adapter must do
 

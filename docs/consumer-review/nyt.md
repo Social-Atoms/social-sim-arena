@@ -1,5 +1,11 @@
 # NYT Best Sellers
 
+**Current implementation.** The [pipeline](PIPELINE.md) uses the official Books
+API and private raw storage. It predicts the future ordered list with RBO,
+allows new entries, preserves primary ISBN-13 edition identity, and binds both
+the Saturday sales-week end and the publication label. Historical evaluation
+notes below describe the earlier prototype; they do not change this contract.
+
 **What the number is.** Proposed target: the official top ten of a named NYT
 Books list. Population is purchases counted under NYT's editorial methodology,
 not a survey population or raw unit sales. Preserve ISBN13 edition identity,

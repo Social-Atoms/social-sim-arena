@@ -75,6 +75,9 @@ _assign("elections",
         "yougov_generic_margin", "mc_generic_margin", "ipsos_generic_margin")
 
 _assign("consumer",
+        "sce_spending_growth", "sce_stock_prices_rise", "sce_unemployment_rise",
+        "umich_inflation_1y_preliminary", "umich_inflation_1y_final",
+        "mint_weekly_net_sales", "nyt_bestsellers", "steam_weekly_top_sellers",
         "aaii_bull_bear_spread",
         "umich_sentiment", "umich_party_dem", "umich_party_ind",
         "umich_party_rep",

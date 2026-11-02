@@ -1240,6 +1240,7 @@ function renderQuestion(roundId){
   let h='<div class="eyebrow page-eyebrow">Question'+(o?' '+o.n+' of '+o.of+' on this task':'')+'</div><h2 class="page-title"><a href="#leaderboard/'+esc(key)+'/all">'+esc(t.label)+'</a></h2>'
     +'<p class="lede page-description">'+esc(r.question)+'</p>'
     +'<p class="ent-meta">'+state+(key!=='agg'?'<span><a href="#questions/task/'+esc(key)+'">all questions on this task</a></span>':'')+(r.batch_id?'<span><a href="#questions/'+esc(r.batch_id)+'">week of '+esc(fmtDate(r.batch_id.replace('batch-','')))+'</a></span>':'')+'<span>source '+(t.srcUrl?'<a href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span class="dim">'+esc(r.round_id)+'</span></p>';
+  if(r.attribution) h+='<p class="sub">'+esc(r.attribution)+'</p>';
   h+='<div class="tiles">'
     +tile('Released', resolved?(kind==='number'?fmtNum(rel,u):kind==='profile'?Object.keys(outcome).length+' cells':'top '+outcome.length):'·', resolved?esc(fmtDay(r.release_at))+(kind==='number'?'':' · the released '+(kind==='profile'?'profile':'list')+' is below'):(active?'after the lock at '+esc(fmtLocal(deadlineOf(r))):'expected '+esc(fmtLocal(r.release_at))))
     +(kind==='number'?tile('What the models say', cons!==null?fmtNum(cons,u):'·', cons!==null?'median of '+mm.length+' number forecast'+(mm.length===1?'':'s'):'no number forecasts')
@@ -1301,6 +1302,7 @@ function renderForecast(roundId, entrantId){
   const tile=(k,v,sub)=>'<div class="tile"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="s">'+sub+'</div></div>';
   let h='<div class="eyebrow page-eyebrow">Forecast</div><h2 class="page-title"><a href="#entrant/'+esc(entrantId)+'">'+esc(name)+'</a> on <a href="#leaderboard/'+esc(taskKeyForRound(r))+'/all">'+esc(t.label)+'</a></h2>'
     +'<p class="lede page-description">'+esc(r.question)+'</p><p class="ent-meta">'+state+'<span>question <b>'+esc(r.round_id)+'</b></span><span>entrant <b>'+esc(entrantId)+'</b></span></p>';
+  if(r.attribution) h+='<p class="sub">'+esc(r.attribution)+'</p>';
   if(!f){
     h+='<div class="ent-sec"><p class="sub">No forecast from this entrant on this question.</p></div>';
   } else {

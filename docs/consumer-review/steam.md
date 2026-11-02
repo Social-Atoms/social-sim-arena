@@ -1,5 +1,12 @@
 # Steam Weekly Top Sellers
 
+**Current implementation.** The [pipeline](PIPELINE.md) uses only the official
+weekly Web API with a configured operator key, fixed country/week and private
+raw storage. Forecasts name future members in rank order, including new entries,
+and use RBO. Public results carry Steam attribution. This design does not
+require a Valve permission email; public redistribution of raw responses is
+excluded. The earlier HTML prototype described below is not used.
+
 **What the number is.** Proposed target: the US top ten products by revenue in
 Steam's official weekly chart. The population is Steam US purchasing activity;
 this is neither copies sold nor concurrent players. Hardware and DLC are not

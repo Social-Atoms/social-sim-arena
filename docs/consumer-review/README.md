@@ -1,20 +1,21 @@
 # Consumer Source Review
 
-This is a proposal to `dev` for two market-track organizers. Reviewer feedback,
-source admission and formal task activation remain pending.
+The [pipeline](PIPELINE.md) connects SCE, Michigan inflation, manual Mint imports,
+NYT Books API and Steam Web API to production input freezes, exact-period
+settlement and CRPS/RBO scoring. Raw data and input snapshots remain private.
+The working agreement forecasts the next chart's members and order; non-US
+questions share the existing standings. Netflix and ACSI remain disabled.
+The maintainer-controlled inventory gate and reviewed season entry still decide
+whether a source can generate live questions; this PR does not grant permissions.
 
-Code state on `dev`: offline parsers and a local review collector exist for
-the three candidate sources only, Michigan inflation, NY Fed SCE extensions and
-US Mint (manual import): `ssa/adapters/consumer.py`, `ssa/consumer.py`,
-`tools/consumer_data.py` and `tests/test_consumer_*.py`. None of it schedules a
-round, and their inventory rights stay `unresolved` until maintainer sign-off.
-Prototype code for NYT, Netflix, Steam and ACSI was merged and then removed
-pending source terms; their cards below are evaluation records only.
+[Permission email drafts](PERMISSION_EMAIL_DRAFTS.md) cover Michigan, ACSI and
+Netflix. No email has been sent. The collection tables below are the historical
+October 2026 evidence record, not claims of live activation.
 
 See the [evidence summary](EVIDENCE.md) for coverage, observed checks and limits.
 See the [terms audit](TERMS.md) and [final response matrix](FINAL_MATRIX.md)
 for source permissions and handoff decisions.
-Follow-up implementation will be split by source.
+See [the implementation contract and tests](PIPELINE.md) for current code behavior.
 
 Prepared on 2026-10-21 and extended on 2026-10-22 for local review. This implements the evidence-collection
 stage of the 2026-10-17 handoff. Facts, proposals, and open decisions are separated
@@ -24,11 +25,11 @@ below. No organizer feedback or source approval is implied.
 
 | Source | Recommendation | Main obstacles |
 | --- | --- | --- |
-| [NYT](nyt.md) | More evidence | API terms and attribution; edition/new-entry policy; publication versus sales window |
+| [NYT](nyt.md) | Continue via API | Private raw responses; exact sales/publication dates; operator API key |
 | [Michigan inflation](michigan-inflation.md) | Continue | Preliminary/final vintage separation; release-day archive; exact product rights |
 | [US Mint](us-mint.md) | More evidence | Only two weekly reports; buyer/dealer and fixed-batch eligibility; manual collection ownership |
-| [Steam](steam.md) | More evidence | Retrieval terms; Pacific week boundary; open-list/new-game contract |
-| [Netflix](netflix.md) | More evidence | TSV rights; season/title identity; premeasurement lock and new releases |
+| [Steam](steam.md) | Continue via API | Private raw responses; evidenced Pacific measurement window; operator API key |
+| [Netflix](netflix.md) | Defer | Written permission for retrieval and research benchmark use |
 | [SCE](sce.md) | Continue | Select stable indicators; release-day vintages; complete monthly wave checks |
 | [ACSI](acsi.md) | Defer | Forward release calendar; incomplete first prints; use and redistribution terms |
 

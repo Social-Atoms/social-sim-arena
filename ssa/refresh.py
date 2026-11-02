@@ -322,6 +322,9 @@ def round_status(r, resolved, now):
 
 
 def lock_snapshot_path(round_id):
+    if round_id.startswith("consumer-"):
+        from . import consumer
+        return str(consumer.DEFAULT_ARCHIVE / "locks" / (round_id + ".json"))
     return os.path.join(LOCKS, round_id + ".json")
 
 
@@ -421,8 +424,9 @@ def _merge_snapshot(round_id, updates):
     """
     body = read_lock_snapshot(round_id) or {}
     body.update(updates)
-    os.makedirs(LOCKS, exist_ok=True)
-    with open(lock_snapshot_path(round_id), "w") as f:
+    path = lock_snapshot_path(round_id)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
         json.dump(body, f, indent=2, sort_keys=True)
         f.write("\n")
     return True
@@ -556,6 +560,10 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
         # than stopping the run. `tests/test_domains.py` is the gate that
         # keeps one from ever getting this far.
         row["domain"] = domains.domain_of(r["series"], strict=False)
+        if "consumer" in r:
+            from . import consumer_round
+            row["consumer"] = dict(consumer_round.spec_for(r))
+            row["attribution"] = consumer_round.ATTRIBUTION[r["consumer"]["source"]]
         for k in ("cells", "options"):
             if k in r:
                 row[k] = list(r[k])
@@ -594,7 +602,10 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
         close = batches.freeze_at(r["lock_at"])
         opens = batches.window_opens_at(r["lock_at"])
         lock_date = close.strftime("%Y-%m-%d")
-        live = [p for p in (series.get(r["series"]) or []) if p["date"] < lock_date]
+        if "consumer" in r:
+            live = consumer_round.history(r, before=min(now, opens))
+        else:
+            live = [p for p in (series.get(r["series"]) or []) if p["date"] < lock_date]
         # Runs until the close, so `history` -- what `resolve` needs -- stays
         # current after the window has shut.
         update_lock_snapshot(r, live, now)

@@ -1,16 +1,17 @@
-"""Collect, validate, replay, and append consumer data for local review only.
+"""Collect, validate and replay the private publisher archive for consumer rounds.
 
   python tools/consumer_data.py collect
   python tools/consumer_data.py build --base site/data.json
   python tools/consumer_data.py verify
   python tools/consumer_data.py import mint /path/report.csv --url URL --evidence-file /path/report.csv
 
-Sources: michigan_finals, michigan_current, sce, mint. Collectors for NYT,
-Netflix, Steam and ACSI were removed while their terms are unresolved.
+Sources: michigan_finals, michigan_current, sce, mint, nyt, steam.
+NYT and Steam use official APIs and private storage. Netflix and ACSI stay disabled.
 No refresh, paid provider call, publication, or git command is run here.
 """
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -28,14 +29,37 @@ URLS = {
     "michigan_current": "https://www.sca.isr.umich.edu/files/tbcpx1px5.csv",
     "mint": "https://www.usmint.gov/about/production-sales-figures/cumulative-sales",
     "sce": "https://www.newyorkfed.org/medialibrary/interactives/sce/sce/downloads/data/frbny-sce-data.xlsx",
+    "nyt": "https://api.nytimes.com/svc/books/v3/lists/current/hardcover-fiction.json",
+    "steam": "https://api.steampowered.com/IStoreTopSellersService/GetWeeklyTopSellers/v1/",
 }
 # Mint answers automated requests with 403, so it is imported by hand.
-AUTOMATED = {"michigan_finals", "michigan_current", "sce"}
+AUTOMATED = {"michigan_finals", "michigan_current", "sce", "nyt", "steam"}
 
 
-def collect_source(source, root, timeout, fetch_sce=False, url=None):
+def collect_source(source, root, timeout, fetch_sce=False, url=None, request_context=None):
     url = url or URLS[source]
     consumer.official_url(source, url)
+    if source == "mint":
+        consumer.record_attempt(root, source, "manual_import_required",
+                                "Import a manually downloaded official CSV; no scripted Mint request")
+        return
+    params = None
+    if source == "nyt":
+        key = os.environ.get("NYT_API_KEY")
+        if not key:
+            consumer.record_attempt(root, source, "missing_archive", "NYT_API_KEY is not configured")
+            return
+        params = {"api-key": key}
+    if source == "steam":
+        key = os.environ.get("STEAM_API_KEY")
+        if not key or not request_context:
+            consumer.record_attempt(root, source, "missing_archive",
+                                    "STEAM_API_KEY and an exact country/week request are required")
+            return
+        payload = {**request_context, "context": {"language": "english",
+                   "country_code": request_context["country_code"]},
+                   "data_request": {"include_basic_info": True}, "page_start": 0, "page_count": 100}
+        params = {"key": key, "input_json": json.dumps(payload)}
     if source == "sce" and not fetch_sce:
         files = sorted((ROOT / "sources/sce").glob("????-??-??.xlsx"))
         if not files:
@@ -47,7 +71,8 @@ def collect_source(source, root, timeout, fetch_sce=False, url=None):
                                 repository_file=str(path.relative_to(ROOT)), repository_capture_day=path.stem)
         return
     try:
-        response = requests.get(url, timeout=(min(timeout, 10), timeout),
+        response = requests.get(url, params=params, timeout=(min(timeout, 10), timeout),
+                                allow_redirects=source not in {"nyt", "steam"},
                                 headers={"User-Agent": "SSA-Consumer-Review/1.0"})
     except requests.RequestException as error:
         consumer.record_attempt(root, source, "transport_failure", type(error).__name__, url=url)
@@ -67,7 +92,9 @@ def collect_source(source, root, timeout, fetch_sce=False, url=None):
                                 "Publisher verification page" if challenge else "Official page needs an audited extraction or manual transcription", **evidence)
         return
     try:
-        consumer.ingest(source, response.content, url, root)
+        if source == "steam" and response.headers.get("x-eresult", "1") != "1":
+            raise ValueError("Steam Web API rejected the request")
+        consumer.ingest(source, response.content, url, root, request_context=request_context)
     except (ValueError, KeyError, RuntimeError) as error:
         consumer.record_attempt(root, source, "parse_failure", str(error)[:300], **evidence)
 
@@ -113,33 +140,39 @@ def main(argv=None):
     fetch.add_argument("--sources", nargs="+", choices=sorted(PARSERS), default=sorted(URLS))
     fetch.add_argument("--timeout", type=int, default=20)
     fetch.add_argument("--fetch-sce", action="store_true")
+    fetch.add_argument("--steam-context", type=Path)
     one = subs.add_parser("fetch")
     one.add_argument("source", choices=sorted(PARSERS))
     one.add_argument("url")
     one.add_argument("--timeout", type=int, default=20)
+    one.add_argument("--steam-context", type=Path)
     imp = subs.add_parser("import")
     imp.add_argument("source", choices=sorted(PARSERS))
     imp.add_argument("file", type=Path)
     imp.add_argument("--url", required=True)
     imp.add_argument("--evidence-file", type=Path)
     imp.add_argument("--published-at")
+    imp.add_argument("--steam-context", type=Path)
     build = subs.add_parser("build")
     build.add_argument("--base", type=Path)
     build.add_argument("--output", type=Path)
     subs.add_parser("verify")
     args = parser.parse_args(argv)
+    context_file = getattr(args, "steam_context", None)
+    context = json.loads(context_file.read_text()) if context_file else None
     if args.command == "collect":
         for source in args.sources:
             print(f"Collecting {source}", flush=True)
-            collect_source(source, args.archive, args.timeout, args.fetch_sce)
+            collect_source(source, args.archive, args.timeout, args.fetch_sce,
+                           request_context=context if source == "steam" else None)
     elif args.command == "fetch":
-        collect_source(args.source, args.archive, args.timeout, url=args.url)
+        collect_source(args.source, args.archive, args.timeout, url=args.url, request_context=context)
     elif args.command == "import":
         evidence = args.evidence_file
         consumer.ingest(args.source, args.file.read_bytes(), args.url, args.archive,
                         evidence_body=evidence.read_bytes() if evidence else None,
                         evidence_suffix=evidence.suffix if evidence else ".html",
-                        published_at=args.published_at)
+                        published_at=args.published_at, request_context=context)
     bundle = consumer.build_all(args.archive)
     validate(bundle)
     if args.command == "build":

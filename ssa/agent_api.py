@@ -118,6 +118,9 @@ def _context(r, history, profile_history=None, ranking_history=None):
     was asked.
     """
     ctx = {}
+    if "consumer" in r:
+        ctx["consumer"] = dict(r["consumer"])
+        ctx["attribution"] = r.get("attribution", "")
     nulls = r.get("baselines") or {}
     if nulls.get("persistence"):
         ctx["persistence"] = nulls["persistence"].get("mean")
@@ -181,6 +184,8 @@ def build_envelope(entrant, r, history=None, profile_history=None,
         if spec.get("access"):
             block["ranking"]["access"] = spec["access"]
         block["ranking"]["item_format"] = (
+            ranking_round.question_universe(spec)
+            if spec.get("kind") in {"nyt_bestsellers", "steam_weekly"} else
             "Wikipedia article titles as the API writes them: underscores for "
             "spaces, case as on the page (e.g. Elon_Musk). Spaces are accepted "
             "and normalised; each item appears once."

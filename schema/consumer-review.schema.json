@@ -26,8 +26,11 @@
           "type": "object", "additionalProperties": false,
           "required": ["week_end", "items"],
           "properties": {
+            "date": {"type": "string", "format": "date"},
+            "week_start": {"type": "string", "format": "date"},
             "week_end": {"type": "string", "format": "date"},
-            "items": {"type": "array", "minItems": 10, "maxItems": 10, "uniqueItems": true,
+            "published_date": {"type": "string", "format": "date"},
+            "items": {"type": "array", "minItems": 2, "maxItems": 100, "uniqueItems": true,
               "items": {"type": "string", "minLength": 1}}
           }
         }
@@ -36,7 +39,7 @@
     "provenance": {"type": "object"},
     "sources": {
       "type": "object",
-      "propertyNames": {"enum": ["michigan_finals", "michigan_current", "mint", "sce"]},
+      "propertyNames": {"enum": ["michigan_finals", "michigan_current", "mint", "sce", "nyt", "steam"]},
       "additionalProperties": {
         "type": "object",
         "required": ["at", "status", "detail"],
