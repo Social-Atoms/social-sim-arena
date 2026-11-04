@@ -11,8 +11,17 @@
       "question_type": "number", "unit": "%",
       "source": {"name": "New York Fed SCE", "url": "https://www.newyorkfed.org/microeconomics/sce"},
       "match": {"series": ["sce_spending_growth", "sce_stock_prices_rise", "sce_unemployment_rise"]},
-      "status": "preparing",
+      "status": "active",
       "note": "Three measures: expected spending growth, higher-stock-price probability and higher-unemployment probability."
+    },
+    {
+      "id": "ec_consumer", "label": "EU consumer confidence",
+      "group": "sentiment", "domain": "consumer", "population": "EU and euro-area consumers",
+      "cadence": "monthly; flash a week before month end",
+      "question_type": "number", "unit": " pts",
+      "source": {"name": "European Commission, DG ECFIN", "url": "https://economy-finance.ec.europa.eu/economic-forecast-and-surveys/business-and-consumer-surveys_en"},
+      "match": {"series": ["ec_cci_eu", "ec_cci_ea"]},
+      "status": "active", "note": "Consumer confidence indicator, seasonally adjusted balance. Rounds lock before the flash and score the first print in the full release. Credit: European Commission, DG ECFIN, Business and Consumer Surveys."
     },
     {
       "id": "consumer_michigan", "label": "Michigan inflation expectations",

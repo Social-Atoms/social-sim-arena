@@ -3046,10 +3046,12 @@ def main():
     # entrants arrived. The RV series is one base throughout -- 85 waves -- so
     # it charts without a splice.
     for name in ("umich_sentiment", "yougov_approval", "yougov_rv_approval",
-                 "mc_approval"):
+                 "mc_approval", "ec_cci_eu", "ec_cci_ea"):
         if name in series:
+            # Monthly sources carry decades of history; the chart shows four years.
             charts[name] = (series[name][-48:]
-                            if name == "umich_sentiment" else series[name])
+                            if name in ("umich_sentiment", "ec_cci_eu", "ec_cci_ea")
+                            else series[name])
     for sid, points in series.items():
         if sid in consumer_round.SERIES_SOURCE:
             charts[sid] = [{"date": p['date'], 'value': p['value']} for p in points[-24:]]
