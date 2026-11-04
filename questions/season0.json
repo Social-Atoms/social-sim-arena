@@ -2319,6 +2319,96 @@
       "target_type": "profile_energy",
       "tracker": "yougov_xtab",
       "unit": "percent approving"
+    },
+    {
+      "round_id": "consumer-sce-2026-10-spending",
+      "tracker": "ny_fed_sce",
+      "series": "sce_spending_growth",
+      "question": "What median expected one-year household spending growth will the New York Fed Survey of Consumer Expectations publish for October 2026 on November 9? Forecast the published household expectation, not realized spending growth.",
+      "unit": "percent expected spending growth",
+      "target_type": "continuous_normal",
+      "publisher": "Federal Reserve Bank of New York, Survey of Consumer Expectations",
+      "methodology": "National rotating panel of approximately 1,300 US household heads. HH Spending Change worksheet, Median point prediction column. The reference month labels responses, not the publication date.",
+      "cadence": "monthly, official New York Fed economic-indicators calendar",
+      "lock_at": "2026-11-07T16:00:00Z",
+      "release_at": "2026-11-09T16:00:00Z",
+      "release_estimated": false,
+      "resolve": "First archived official SCE workbook captured from November 9 at 16:00 UTC through November 10 at 16:00 UTC containing the October 2026 median household spending growth. Match the exact worksheet, header and reference month; preserve that captured artifact and ignore subsequent revisions.",
+      "consumer": {
+        "source": "sce",
+        "reference_date": "2026-10-01",
+        "capture_until": "2026-11-10T16:00:00Z",
+        "population": "US household heads",
+        "calendar_url": "https://www.newyorkfed.org/research/calendars/nationalecon_cal"
+      }
+    },
+    {
+      "round_id": "consumer-sce-2026-10-stocks",
+      "tracker": "ny_fed_sce",
+      "series": "sce_stock_prices_rise",
+      "question": "What mean probability that US stock prices will be higher one year ahead will the New York Fed Survey of Consumer Expectations publish for October 2026 on November 9? Forecast the survey's mean probability on a 0-100 scale, not the actual stock-market outcome.",
+      "unit": "percent probability",
+      "target_type": "continuous_normal",
+      "publisher": "Federal Reserve Bank of New York, Survey of Consumer Expectations",
+      "methodology": "National rotating panel of US household heads. Stock Prices worksheet; exact mean-probability column for higher US stock prices one year ahead. The mean subjective probability is a continuous survey aggregate.",
+      "cadence": "monthly, official New York Fed economic-indicators calendar",
+      "lock_at": "2026-11-07T16:00:00Z",
+      "release_at": "2026-11-09T16:00:00Z",
+      "release_estimated": false,
+      "resolve": "First archived official SCE workbook captured from November 9 at 16:00 UTC through November 10 at 16:00 UTC containing October 2026 stock-price expectations. Read the exact mean probability of higher prices one year ahead; subsequent revisions do not replace the captured result.",
+      "consumer": {
+        "source": "sce",
+        "reference_date": "2026-10-01",
+        "capture_until": "2026-11-10T16:00:00Z",
+        "population": "US household heads",
+        "calendar_url": "https://www.newyorkfed.org/research/calendars/nationalecon_cal"
+      }
+    },
+    {
+      "round_id": "consumer-sce-2026-10-unemployment",
+      "tracker": "ny_fed_sce",
+      "series": "sce_unemployment_rise",
+      "question": "What mean probability that the US unemployment rate will be higher one year ahead will the New York Fed Survey of Consumer Expectations publish for October 2026 on November 9? Forecast the survey's mean probability on a 0-100 scale, not the actual unemployment outcome.",
+      "unit": "percent probability",
+      "target_type": "continuous_normal",
+      "publisher": "Federal Reserve Bank of New York, Survey of Consumer Expectations",
+      "methodology": "National rotating panel of US household heads. Unemployment Expectations worksheet; exact mean-probability column for a higher US unemployment rate one year ahead. This is the population's expectation rather than realized unemployment.",
+      "cadence": "monthly, official New York Fed economic-indicators calendar",
+      "lock_at": "2026-11-07T16:00:00Z",
+      "release_at": "2026-11-09T16:00:00Z",
+      "release_estimated": false,
+      "resolve": "First archived official SCE workbook captured from November 9 at 16:00 UTC through November 10 at 16:00 UTC containing October 2026 unemployment expectations. Match the exact mean probability and reference month; preserve the captured artifact against later revisions.",
+      "consumer": {
+        "source": "sce",
+        "reference_date": "2026-10-01",
+        "capture_until": "2026-11-10T16:00:00Z",
+        "population": "US household heads",
+        "calendar_url": "https://www.newyorkfed.org/research/calendars/nationalecon_cal"
+      }
+    },
+    {
+      "round_id": "ec-2026-11-cci-eu",
+      "tracker": "ec_consumer_survey",
+      "series": "ec_cci_eu",
+      "question": "European Commission consumer survey (DG ECFIN): the consumer confidence indicator for the European Union, seasonally adjusted, for the November 2026 survey month, in percentage points. The flash estimate is published on 20 November 2026 at 16:00 Brussels time; the round scores the November value as first printed in the full release of 27 November.",
+      "unit": "balance, percentage points",
+      "target_type": "continuous_normal",
+      "lock_at": "2026-11-18T15:00:00Z",
+      "release_at": "2026-11-20T15:00:00Z",
+      "release_estimated": false,
+      "resolve": "First print of the November 2026 EU.CONS value in the European Commission's full Business and Consumer Survey release of 27 November 2026, archived write-once as sources/ecbcs/2611.zip. The lock is set 48 hours before the 20 November flash press release, which publishes the same number a week earlier; later releases never replace the first print. Dates from the Commission's Publication dates 2026 calendar."
+    },
+    {
+      "round_id": "ec-2026-11-cci-ea",
+      "tracker": "ec_consumer_survey",
+      "series": "ec_cci_ea",
+      "question": "European Commission consumer survey (DG ECFIN): the consumer confidence indicator for the euro area, seasonally adjusted, for the November 2026 survey month, in percentage points. The flash estimate is published on 20 November 2026 at 16:00 Brussels time; the round scores the November value as first printed in the full release of 27 November.",
+      "unit": "balance, percentage points",
+      "target_type": "continuous_normal",
+      "lock_at": "2026-11-18T15:00:00Z",
+      "release_at": "2026-11-20T15:00:00Z",
+      "release_estimated": false,
+      "resolve": "First print of the November 2026 EA.CONS value in the European Commission's full Business and Consumer Survey release of 27 November 2026, archived write-once as sources/ecbcs/2611.zip. The lock is set 48 hours before the 20 November flash press release, which publishes the same number a week earlier; later releases never replace the first print. Dates from the Commission's Publication dates 2026 calendar."
     }
   ]
 }

@@ -979,6 +979,7 @@ const YOUGOV_PROFILE_CELLS = [
 const TREND_CELLS = ['trends_share_tesla','trends_share_iphone','trends_share_samsung','trends_share_netflix','trends_share_disney'];
 const TASKS = {
   consumer_sce:{chart:'sce_spending_growth',unit:'%',match:r=>['sce_spending_growth','sce_stock_prices_rise','sce_unemployment_rise'].includes(r.series)},
+  ec_consumer:{chart:'ec_cci_eu',unit:' pts',match:r=>['ec_cci_eu','ec_cci_ea'].includes(r.series)},
   consumer_michigan:{chart:'umich_inflation_1y_final',unit:'%',match:r=>/^umich_inflation_1y_/.test(r.series)},
   consumer_mint:{chart:'mint_weekly_net_sales',unit:' units',match:r=>r.series==='mint_weekly_net_sales'},
   consumer_nyt:{kind:'ranking',chart:'nyt_bestsellers',match:r=>r.series==='nyt_bestsellers'},
@@ -1990,7 +1991,7 @@ function renderTaskNav(data,key){
 // how the arena reads it and how a question on it resolves. The Source name in the task header opens it.
 const SOURCE_DOC={yougov_approval:'yougov',yougov_profile:'yougov',mc_approval:'morning-consult',generic_margin:'silver-bulletin',
   civiqs_approval:'civiqs',civiqs_angry:'civiqs',civiqs_econ_direction:'civiqs',civiqs_econ_now:'civiqs',civiqs_family_finances:'civiqs',civiqs_inflation_concern:'civiqs',civiqs_profile:'civiqs',civiqs_subgroups:'civiqs',
-  hh_approval:'harvard-harris',umich_sentiment:'michigan',umich_party:'michigan',sce_inflation:'ny-fed-sce',aaii_sentiment:'aaii',
+  hh_approval:'harvard-harris',umich_sentiment:'michigan',umich_party:'michigan',sce_inflation:'ny-fed-sce',ec_consumer:'ec-consumer-survey',aaii_sentiment:'aaii',
   trends_basket:'google-trends',search_interest:'google-trends',wiki_top10:'wikimedia',wiki_views:'wikimedia'};
 const sourceDocUrl=key=>SOURCE_DOC[key]?'https://github.com/Social-Atoms/social-sim-arena/blob/main/docs/sources/'+SOURCE_DOC[key]+'.md':null;
 function renderTaskHeader(data,key){
