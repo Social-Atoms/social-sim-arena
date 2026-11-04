@@ -59,7 +59,7 @@ blocks the public commit, so a disposable runner cannot discard the evidence.
    `collect_consumer_rounds.py` only for admitted sources in their publication
    windows, freezes inputs, runs normal forecasting/resolution/scoring, then
    persists encrypted evidence. It does not retrieve Netflix or ACSI. A manual
-   `consumer-preview` workflow verifies this storage/collection/publication path
+   `source-probe` workflow with `consumer_only=true` verifies this storage/collection/publication path
    on a feature branch without calling models or participant endpoints.
    Run the normal `ssa.refresh` on the machine with this archive, or run
    `python tools/run_consumer_cycle.py --season questions/season0.json` to
