@@ -154,3 +154,16 @@ by the synthetic integration tests.
 
 Permission drafts for Michigan, ACSI and Netflix are in
 [Permission Email Drafts](PERMISSION_EMAIL_DRAFTS.md). They have not been sent.
+
+## Verified Runner and Website
+
+The [November 4 consumer-only runner](https://github.com/Social-Atoms/social-sim-arena/actions/runs/41766455687)
+successfully collected the official SCE workbook, wrote encrypted evidence to
+the sealed branch, published all seven registrations and four question
+definitions on the PR branch, and deployed the website preview. It skipped both
+the participant-endpoint and Civiqs-probe jobs. No paid model or participant call
+was made. Automated settlement will occur only after the named releases; the
+current preview contains no fabricated outcome or entrant score.
+The [second fresh-runner execution](https://github.com/Social-Atoms/social-sim-arena/actions/runs/41766733411)
+also passed, verifying decryption and restoration of the previously persisted
+evidence before another collection/publication cycle.

@@ -2242,8 +2242,8 @@ function liveBoard(data,key,mode){
   // S0: the Season 0 main window, by lock time (refresh.SEASON0_MAIN_START).
   if(mode==='s0'){ const since=(data.season0_main||{}).since||'2026-09-30T00:00:00Z'; rs=rs.filter(r=>(r.lock_at||'')>=since); }
   const acc={};
-  rs.forEach(r=>Object.entries(r.scores).forEach(([id,sc])=>{ if(typeof sc.skill!=='number') return; const a=acc[id]||(acc[id]={n:0,s:0,c:0,cn:0}); a.n++; a.s+=sc.skill; if(typeof sc.crps==='number'){ a.c+=sc.crps; a.cn++; } }));
-  return Object.entries(acc).map(([id,a])=>({entrant:id,rounds:a.n,mean_skill:a.s/a.n,mean_crps:a.cn?a.c/a.cn:null,baseline:isBaseline(id)})).sort((x,y)=>y.mean_skill-x.mean_skill);
+  rs.forEach(r=>Object.entries(r.scores).forEach(([id,sc])=>{ if(typeof sc.skill!=='number') return; const a=acc[id]||(acc[id]={n:0,s:0,c:0,cn:0,l:0,ln:0}); a.n++; a.s+=sc.skill; if(typeof sc.crps==='number'){ a.c+=sc.crps; a.cn++; } const loss=sc.loss??sc.energy; if(typeof loss==='number'){a.l+=loss;a.ln++;} }));
+  return Object.entries(acc).map(([id,a])=>({entrant:id,rounds:a.n,mean_skill:a.s/a.n,mean_crps:a.cn?a.c/a.cn:null,mean_loss:a.ln?a.l/a.ln:null,baseline:isBaseline(id)})).sort((x,y)=>y.mean_skill-x.mean_skill);
 }
 // ---- who is still in the arena ----
 const DORMANT_DAYS=14;
@@ -2445,11 +2445,6 @@ function renderBoard(mode){
     metricLabel=d.kind==='ranking'?'Loss':d.kind==='profile'?'Energy':'CRPS';
     if(d.kind==='ranking'||d.kind==='profile'){
       metricKey='mean_loss';
-      entries=entries.map(entry=>{
-        const losses=scoredRounds(data,key).map(r=>(r.scores||{})[entry.entrant])
-          .filter(Boolean).map(s=>s.loss??s.energy).filter(v=>typeof v==='number');
-        return {...entry,mean_loss:losses.length?losses.reduce((a,b)=>a+b,0)/losses.length:null};
-      });
     }
     note=entries.length?'Scores for this consumer task only.':d.note||'Scores appear after this task’s first question resolves.';
   }else if(d.kind==='profile'){
