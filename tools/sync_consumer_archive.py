@@ -83,14 +83,27 @@ def remote_object(root, remote, branch):
     return ref, json.loads(git(root, 'show', f'{ref}:{OBJECT}').stdout)
 
 
+BASE = '.restored-sha256'   # outside PREFIXES/TOP_FILES, so never packed
+PUSH_ATTEMPTS = 3
+
+
+def _base_marker(archive):
+    return Path(archive) / BASE
+
+
 def sync(action, archive, root=ROOT, remote='origin', branch='sealed'):
     ref, previous = remote_object(root, remote, branch)
     if action == 'pull':
+        marker = _base_marker(archive)
+        marker.parent.mkdir(parents=True, exist_ok=True)
         if previous is None:
             # The branch was successfully fetched and the fixed path is absent:
             # a first-run initialization, not a failed network read.
+            marker.write_text('none')
             return 0
-        return restore(archive, previous)
+        count = restore(archive, previous)
+        marker.write_text(previous['sha256'])
+        return count
     plain = pack(archive)
     digest = consumer.sha256(plain)
     if previous and previous.get('sha256') == digest:
@@ -102,18 +115,35 @@ def sync(action, archive, root=ROOT, remote='origin', branch='sealed'):
     encrypted = {'format': DOMAIN, 'sha256': digest, 'ciphertext': seal._encrypt(plain)}
     if seal._decrypt(encrypted['ciphertext']) != plain:
         raise ValueError('Archive encryption keys do not match')
-    with tempfile.TemporaryDirectory(prefix='ssa-consumer-store-') as directory:
-        git(root, 'worktree', 'add', '--detach', directory, ref)
-        try:
-            consumer.write_json(Path(directory) / OBJECT, encrypted)
-            git(directory, 'add', '--', OBJECT)
-            git(directory, '-c', 'user.name=SSA consumer archive', '-c',
-                'user.email=actions@github.com', 'commit', '-m', 'Persist encrypted consumer evidence')
-            # A non-fast-forward push fails; never overwrite someone else's receipts.
-            git(directory, 'push', remote, f'HEAD:refs/heads/{branch}')
-        finally:
-            git(root, 'worktree', 'remove', '--force', directory, check=False)
-    return 1
+    marker = _base_marker(archive)
+    base = marker.read_text().strip() if marker.exists() else None
+    for attempt in range(PUSH_ATTEMPTS):
+        if attempt:
+            ref, previous = remote_object(root, remote, branch)
+        current = previous['sha256'] if previous else 'none'
+        if base is not None and current != base:
+            # The consumer object changed since this run restored it: someone
+            # else's evidence. Never overwrite it.
+            raise ValueError('Consumer archive changed on the remote since restore')
+        if previous and previous.get('sha256') == digest:
+            return 0
+        with tempfile.TemporaryDirectory(prefix='ssa-consumer-store-') as directory:
+            git(root, 'worktree', 'add', '--detach', directory, ref)
+            try:
+                consumer.write_json(Path(directory) / OBJECT, encrypted)
+                git(directory, 'add', '--', OBJECT)
+                git(directory, '-c', 'user.name=SSA consumer archive', '-c',
+                    'user.email=actions@github.com', 'commit', '-m', 'Persist encrypted consumer evidence')
+                # Non-fast-forward is rejected, never forced. The sealed branch
+                # is shared with platform seals, so a rejection usually means
+                # an unrelated seal landed: refetch and retry on top of it.
+                pushed = git(directory, 'push', remote, f'HEAD:refs/heads/{branch}',
+                             check=False).returncode == 0
+            finally:
+                git(root, 'worktree', 'remove', '--force', directory, check=False)
+        if pushed:
+            return 1
+    raise RuntimeError('Consumer archive push rejected after retries')
 
 
 def main():

@@ -194,8 +194,11 @@ jobs:
               python tools/sync_platform_seals.py pull
               ;;
           esac
+      # Consumer evidence is optional for the run: a failed restore skips only
+      # consumer collection and archiving, never the refresh of every other round.
       - name: restore private consumer evidence
         id: consumer_restore
+        continue-on-error: true
         run: python tools/sync_consumer_archive.py pull
       - name: collect admitted consumer releases
         if: steps.consumer_restore.outcome == 'success'
@@ -260,8 +263,11 @@ jobs:
         id: consumer_archive_push
         if: always() && steps.consumer_restore.outcome == 'success'
         run: python tools/sync_consumer_archive.py push
+      # A skipped consumer push (restore failed, so nothing new was collected)
+      # does not block the public commit; a failed push does, because public
+      # consumer results would then have no persisted evidence behind them.
       - name: commit if changed
-        if: always() && steps.platform_seal_push.outcome == 'success' && steps.consumer_archive_push.outcome == 'success'
+        if: always() && steps.platform_seal_push.outcome == 'success' && steps.consumer_archive_push.outcome != 'failure'
         run: |
           git config user.name "ssa-bot"
           git config user.email "actions@github.com"

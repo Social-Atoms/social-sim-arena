@@ -21,10 +21,11 @@ class ActivationTests(unittest.TestCase):
         tasks = {row['id']: row for row in task_registry.load()}
         rows = json.loads((consumer.ROOT / 'questions/season0.json').read_text())['rounds']
         definitions = [r for r in rows if 'consumer' in r]
-        self.assertEqual(len(definitions), 4)
+        self.assertEqual(len(definitions), 3)
         self.assertEqual(len([key for key in tasks if key.startswith('consumer_')]), 7)
         self.assertEqual(tasks['consumer_netflix']['status'], 'permission-needed')
         self.assertEqual(tasks['consumer_acsi']['status'], 'permission-needed')
+        self.assertEqual(tasks['consumer_michigan']['status'], 'permission-needed')
         self.assertTrue(all(consumer_round.source_for(r) in
                             {'consumer_sce_extensions', 'consumer_michigan_inflation'} for r in definitions))
         self.assertEqual(season.validate_document({'rounds': definitions}), [])
@@ -59,7 +60,7 @@ class ActivationTests(unittest.TestCase):
             self.assertIn(old['rounds'][0], new['rounds'])
             self.assertEqual(old['leaderboard'], new['leaderboard'])
             self.assertEqual(old['sources'], new['sources'])
-            self.assertEqual(len(new['rounds']), 5)
+            self.assertEqual(len(new['rounds']), 4)
 
     def test_private_evidence_survives_a_fresh_runner_and_is_ciphertext_only_in_git(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -91,6 +92,34 @@ class ActivationTests(unittest.TestCase):
                 self.assertGreater(sync_consumer_archive.sync('pull', fresh, root=repo), 1)
                 self.assertEqual(sync_consumer_archive.pack(fresh), sync_consumer_archive.pack(archive))
                 self.assertEqual(sync_consumer_archive.sync('push', fresh, root=repo), 0)
+                # A platform seal landing between fetch and push is retried on
+                # top of it rather than failing the whole refresh.
+                other = base / 'other'
+                git(base, 'clone', '-q', '-b', 'sealed', str(remote), str(other))
+                real_remote_object = sync_consumer_archive.remote_object
+                calls = []
+                def seal_lands_after_fetch(*args, **kwargs):
+                    result = real_remote_object(*args, **kwargs)
+                    if not calls:
+                        (other / 'seal.txt').write_text('unrelated seal')
+                        git(other, 'add', 'seal.txt')
+                        git(other, '-c', 'user.name=test', '-c', 'user.email=test@invalid',
+                            'commit', '-m', 'seal')
+                        git(other, 'push', '-q', 'origin', 'sealed')
+                    calls.append(1)
+                    return result
+                consumer.write_json(fresh / 'locks/consumer-second.json', {'history': [{'value': 4.8}]})
+                stale = base / 'private-stale-run'
+                sync_consumer_archive.sync('pull', stale, root=repo)
+                with mock.patch.object(sync_consumer_archive, 'remote_object', seal_lands_after_fetch):
+                    self.assertEqual(sync_consumer_archive.sync('push', fresh, root=repo), 1)
+                self.assertEqual(len(calls), 2)
+                git(repo, 'fetch', '-q', 'origin', 'sealed:refs/remotes/origin/sealed')
+                self.assertIn(b'seal.txt', git(repo, 'ls-tree', '--name-only', 'origin/sealed').stdout)
+                # A run that restored an older consumer object never overwrites a newer one.
+                consumer.write_json(stale / 'locks/consumer-third.json', {'history': [{'value': 4.9}]})
+                with self.assertRaisesRegex(ValueError, 'changed on the remote'):
+                    sync_consumer_archive.sync('push', stale, root=repo)
                 public = git(repo, 'show', 'origin/sealed:consumer/archive.json').stdout
                 self.assertNotIn(b'EXPECTED CHANGE IN PRICES', public)
                 self.assertNotIn(b'raw_file', public)
