@@ -30,4 +30,4 @@ for (const round of data.rounds.filter(r => r.consumer)) {
   if (!body.includes(round.question) || !body.includes(round.attribution.replace(/&/g,'&amp;')))
     throw Error(`${round.round_id}: question or required source attribution missing`);
 }
-console.log('Seven consumer task registrations and three live question pages rendered');
+console.log(`Seven consumer task registrations and ${data.rounds.filter(r => r.consumer).length} live question pages rendered`);

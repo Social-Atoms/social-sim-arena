@@ -16,22 +16,33 @@ from tools import collect_consumer_rounds, publish_consumer, sync_consumer_archi
 from tests.test_consumer_pipeline import current, moment
 
 
+def season_with_examples():
+    """The season plus the SCE example rounds, without duplicating scheduled ones."""
+    doc = json.loads((consumer.ROOT / 'questions/season0.json').read_text())
+    examples = json.loads((consumer.ROOT / 'tests/fixtures/consumer_sce_rounds.json').read_text())['rounds']
+    have = {r['round_id'] for r in doc['rounds']}
+    doc['rounds'] += [r for r in examples if r['round_id'] not in have]
+    return doc
+
+
 class ActivationTests(unittest.TestCase):
     def test_every_source_is_registered_and_permission_sources_have_no_live_question(self):
         tasks = {row['id']: row for row in task_registry.load()}
         rows = json.loads((consumer.ROOT / 'questions/season0.json').read_text())['rounds']
         definitions = [r for r in rows if 'consumer' in r]
-        self.assertEqual(len(definitions), 3)
         self.assertEqual(len([key for key in tasks if key.startswith('consumer_')]), 7)
         self.assertEqual(tasks['consumer_netflix']['status'], 'permission-needed')
         self.assertEqual(tasks['consumer_acsi']['status'], 'permission-needed')
         self.assertEqual(tasks['consumer_michigan']['status'], 'permission-needed')
-        self.assertTrue(all(consumer_round.source_for(r) in
-                            {'consumer_sce_extensions', 'consumer_michigan_inflation'} for r in definitions))
-        self.assertEqual(season.validate_document({'rounds': definitions}), [])
+        # Only SCE may have live questions: Michigan waits for its permission reply.
+        self.assertTrue(all(consumer_round.source_for(r) == 'consumer_sce_extensions'
+                            for r in definitions))
+        examples = [r for r in season_with_examples()['rounds'] if 'consumer' in r]
+        self.assertEqual(len(examples), 3)
+        self.assertEqual(season.validate_document({'rounds': examples}), [])
 
     def test_automated_collection_deduplicates_workbook_and_does_not_fetch_permission_sources(self):
-        doc = json.loads((consumer.ROOT / 'questions/season0.json').read_text())
+        doc = season_with_examples()
         fake_index = {'sources': {'sce': {'last_attempt': {'status': 'collected'}}}}
         with mock.patch.object(collect_consumer_rounds.consumer_data, 'collect_source') as request, \
                 mock.patch.object(consumer, 'index', return_value=fake_index):
@@ -41,14 +52,14 @@ class ActivationTests(unittest.TestCase):
         self.assertEqual(request.call_args.args[0], 'sce')
 
     def test_missing_or_bad_collection_is_reported_per_source(self):
-        doc = json.loads((consumer.ROOT / 'questions/season0.json').read_text())
+        doc = season_with_examples()
         with mock.patch.object(collect_consumer_rounds.consumer_data, 'collect_source'), \
                 mock.patch.object(consumer, 'index', return_value={'sources': {}}):
             failures = collect_consumer_rounds.collect(doc, now=moment('2026-11-04T00:00:00Z'))
         self.assertEqual(failures, [('sce', 'missing')])
 
     def test_publish_preserves_unrelated_live_results(self):
-        doc = json.loads((consumer.ROOT / 'questions/season0.json').read_text())
+        doc = season_with_examples()
         old = {'rounds': [{'round_id': 'existing-round', 'scores': {'old-entrant': {'skill': 0.3}}}],
                'sources': {'old-source': {'sha256': 'keep'}}, 'leaderboard': {'entries': ['keep']}}
         with tempfile.TemporaryDirectory() as directory:
@@ -60,7 +71,7 @@ class ActivationTests(unittest.TestCase):
             self.assertIn(old['rounds'][0], new['rounds'])
             self.assertEqual(old['leaderboard'], new['leaderboard'])
             self.assertEqual(old['sources'], new['sources'])
-            self.assertEqual(len(new['rounds']), 4)
+            self.assertEqual(len(new['rounds']), 4)  # the old round plus three SCE
 
     def test_private_evidence_survives_a_fresh_runner_and_is_ciphertext_only_in_git(self):
         with tempfile.TemporaryDirectory() as directory:
