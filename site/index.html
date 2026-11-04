@@ -978,6 +978,13 @@ const YOUGOV_PROFILE_CELLS = [
 ];
 const TREND_CELLS = ['trends_share_tesla','trends_share_iphone','trends_share_samsung','trends_share_netflix','trends_share_disney'];
 const TASKS = {
+  consumer_sce:{chart:'sce_spending_growth',unit:'%',match:r=>['sce_spending_growth','sce_stock_prices_rise','sce_unemployment_rise'].includes(r.series)},
+  consumer_michigan:{chart:'umich_inflation_1y_final',unit:'%',match:r=>/^umich_inflation_1y_/.test(r.series)},
+  consumer_mint:{chart:'mint_weekly_net_sales',unit:' units',match:r=>r.series==='mint_weekly_net_sales'},
+  consumer_nyt:{kind:'ranking',chart:'nyt_bestsellers',match:r=>r.series==='nyt_bestsellers'},
+  consumer_steam:{kind:'ranking',chart:'steam_weekly_top_sellers',match:r=>r.series==='steam_weekly_top_sellers'},
+  consumer_netflix:{kind:'ranking',chart:'netflix_us_top10',match:r=>r.series==='netflix_us_top10'},
+  consumer_acsi:{kind:'profile',chart:'acsi_company_scores',unit:' points',match:r=>r.series==='acsi_company_scores'},
   agg:{label:'Overall standings', group:null, population:'All measured populations', cadence:'weekly + release calendar', shape:'three answer types'},
   yougov_approval:{label:'Economist / YouGov approval',group:'opinion',population:'US registered voters (adult citizens for rounds before September 2026)',cadence:'weekly',shape:'topline distribution',chart:'yougov_rv_approval',unit:'%',tracker:'yougov_rv_approval',per:'yougov_approval',srcName:'YouGov',srcUrl:'https://yougov.com/en-us/topics/topic/The_Economist_YouGov_polls',match:r=>r.series==='yougov_approval' || r.series==='yougov_rv_approval'},
   mc_approval:{label:'Morning Consult approval',group:'opinion',population:'US registered voters',cadence:'weekly',shape:'topline distribution',chart:'mc_approval',unit:'%',tracker:'mc_approval',per:'mc_approval',srcName:'Morning Consult',srcUrl:'https://pro.morningconsult.com/trackers/donald-trump-congress-policy-republicans-polling',match:r=>r.series==='mc_approval'},
@@ -1012,7 +1019,8 @@ function applyTaskRegistry(data){
     d.label = t.label; d.group = t.group; d.population = t.population; d.cadence = t.cadence;
     if(t.source){ d.srcName = t.source.name || d.srcName; d.srcUrl = t.source.url || d.srcUrl; }
     d.kind = t.question_type === 'number' ? undefined : t.question_type;
-    d.retired = t.status !== 'active';
+    d.status = t.status; d.note = t.note || '';
+    d.retired = ['retired','declined'].includes(t.status);
   });
 }
 // ---- the entrant page: one entrant, what it was asked, what it answered, how it scored, and
@@ -1594,7 +1602,7 @@ function renderTaskOptions(){
     const keys=Object.keys(TASKS).filter(k=>TASKS[k].group===g.id && !TASKS[k].retired && hit(TASKS[k].label,TASKS[k].population||'',g.label));
     if(!keys.length) return;
     const count=keys.reduce((n,k)=>n+taskRounds(TASKS[k],data).length,0);
-    groups.push('<fieldset class="model-group"><legend>'+esc(g.label)+'<span>'+count+'</span></legend>'+keys.map(k=>option(k,TASKS[k].label,TASKS[k].population||'',taskRounds(TASKS[k],data).length)).join('')+'</fieldset>');
+    groups.push('<fieldset class="model-group"><legend>'+esc(g.label)+'<span>'+count+'</span></legend>'+keys.map(k=>option(k,TASKS[k].label,(TASKS[k].status==='permission-needed'?'Awaiting permission · ':TASKS[k].status==='preparing'?'Registered · preparing · ':'')+(TASKS[k].population||''),taskRounds(TASKS[k],data).length)).join('')+'</fieldset>');
   });
   list.innerHTML=groups.join('')||'<p class="model-empty">No task matches.</p>';
 }
@@ -2009,6 +2017,7 @@ function renderTaskHeader(data,key){
     +(key==='agg' ? '' : '<span class="mi">'+lab('cadence','Cadence')+val(cadence,'w-cad')+'</span>')
     +(key==='agg' || !d.srcName ? '' : '<span class="mi">'+lab('source','Source')+'<span class="val w-src" title="'+attr(d.srcName)+'">'+(sourceDocUrl(key)?'<a href="'+sourceDocUrl(key)+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>':(d.srcUrl?'<a href="'+esc(d.srcUrl)+'" target="_blank" rel="noopener">'+esc(d.srcName)+'</a>':esc(d.srcName)))+'</span></span>')
     +'<span class="mi mq">'+lab('questions','Questions')+'<span class="numeric">'+rs.length+'</span><a class="go" href="'+(key==='agg'?'#questions':'#questions/task/'+esc(key))+'">all questions →</a></span>';
+  if(d.status && d.status!=='active') document.getElementById('task-meta').innerHTML += '<span class="mi"><b>Status</b>'+val(d.status==='permission-needed'?'Awaiting permission':'Registered · preparing','w-pop')+'</span>';
   const card = document.getElementById('task-question-card');
   card.style.display='';
   const r = active[0] || rs.slice(-1)[0];
@@ -2019,8 +2028,8 @@ function renderTaskHeader(data,key){
       document.getElementById('task-question-summary').innerHTML='<span class="replay-tag">SCHEDULED</span><span class="qtext" title="'+esc(sched.round_id)+'">'+esc(questionText(sched))+'</span><time datetime="'+esc(sched.published_at)+'">lists '+esc(fmtLocal(sched.published_at))+'</time>';
       document.getElementById('task-question-body').innerHTML='<p>'+esc(sched.question)+'</p><div class="qfoot"><span>lists '+esc(fmtLocal(sched.published_at))+'</span><span>locks '+esc(fmtLocal(sched.lock_at))+'</span><span>releases '+esc(fmtLocal(sched.release_at))+'</span></div>';
     } else {
-      document.getElementById('task-question-summary').textContent='No scheduled question yet';
-      document.getElementById('task-question-body').innerHTML='<p>This registered task has historical data but no Season 0 question scheduled.</p>';
+      document.getElementById('task-question-summary').textContent=d.status==='permission-needed'?'Registered · awaiting permission':d.status==='preparing'?'Registered · preparing questions':'No scheduled question yet';
+      document.getElementById('task-question-body').innerHTML='<p>'+esc(d.note || 'No question is scheduled on this task yet.')+'</p>';
     }
     return;
   }
@@ -2340,6 +2349,11 @@ function renderTaskChart(key){
     aggChart(traj,names,unit); renderLegend(trajIds(traj),names);
   };
   document.getElementById('chart-filters').style.visibility='';
+  if(key.startsWith('consumer_') && d.status!=='active'){
+    showUnits(false,false,false); rangeSeg.style.display='none';
+    chartMessage(d.status==='permission-needed'?'Awaiting permission':'Registered · preparing questions',d.note||'No question is open on this source.');
+    return;
+  }
   if(key==='agg'){
     showUnits(false,true,true); rangeSeg.style.display='';
     const unit=window.__unitAgg||(window.__ranking==='skill'?'arena':'pairwise'); mark(unit);
@@ -2426,6 +2440,18 @@ function renderBoard(mode){
     note=(window.__matched?'Scored over '+window.__matched+'. ':'')+'Walk-forward model replay: every forecast was made from data available before its release. Arena score 0 is persistence and 100 is a perfect oracle.';
     const same=JSON.stringify(entries)===JSON.stringify((data.backtest&&data.backtest.overall)||[]);
     if(mode!=='all' && same) note+=' The backtest window is four weeks, so every range shows the same questions until the season adds more.';
+  }else if(key.startsWith('consumer_')){
+    entries=activeRows(liveRows,data); tag=entries.length?'live':'';
+    metricLabel=d.kind==='ranking'?'Loss':d.kind==='profile'?'Energy':'CRPS';
+    if(d.kind==='ranking'||d.kind==='profile'){
+      metricKey='mean_loss';
+      entries=entries.map(entry=>{
+        const losses=scoredRounds(data,key).map(r=>(r.scores||{})[entry.entrant])
+          .filter(Boolean).map(s=>s.loss??s.energy).filter(v=>typeof v==='number');
+        return {...entry,mean_loss:losses.length?losses.reduce((a,b)=>a+b,0)/losses.length:null};
+      });
+    }
+    note=entries.length?'Scores for this consumer task only.':d.note||'Scores appear after this task’s first question resolves.';
   }else if(d.kind==='profile'){
     const live=((data.profile||{}).matched||[]).length?(data.profile||{}).matched:(data.profile||{}).board||[];
     if(live.length){entries=live;metricKey='mean_energy';metricLabel='Energy';tag='live';note=(data.profile||{}).note||'';}
@@ -3306,7 +3332,7 @@ if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>setTime
 const previewHost=(()=>{const h=(location.hostname||'').toLowerCase();return h==='localhost'||h==='127.0.0.1'||h==='social-sim-arena-dev.vercel.app'||h.endsWith('.vercel.app');})();
 const loads=[
   fetch('data.json', {cache:'no-store'}).then(r => { if(!r.ok) throw 0; return r.json(); }),
-  fetch(RAW, {cache:'no-store'}).then(r => { if(!r.ok) throw 0; return r.json(); }),
+  previewHost ? Promise.reject('preview uses its own branch data') : fetch(RAW, {cache:'no-store'}).then(r => { if(!r.ok) throw 0; return r.json(); }),
 ];
 if(previewHost)loads.push(fetch('agent-probes.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json();}));
 Promise.allSettled(loads).then(results => {

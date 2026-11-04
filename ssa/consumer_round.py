@@ -157,6 +157,15 @@ def history(r, root=None, before=None):
                 continue
             by_date.setdefault(point["date"], dict(point, observed_at=manifest["captured_at"]))
     points = [by_date[day] for day in sorted(by_date)]
+    # Use earlier final releases as prior-month context when a new preliminary
+    # series has few retained prints. The current target's final is excluded.
+    if spec['source'] == 'michigan_current':
+        final_spec = dict(r, series='umich_inflation_1y_final',
+                          consumer=dict(spec, source='michigan_finals'))
+        finals = history(final_spec, root=root, before=before)
+        combined = {p['date']: p for p in finals}
+        combined.update({p['date']: p for p in points})
+        points = [combined[day] for day in sorted(combined)]
     if spec["source"] == "mint":
         points = adapters.mint_series({spec["product_id"]: points})["series"].get(
             f"mint_{spec['product_id']}_weekly_net_sales", []) if points else []

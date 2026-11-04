@@ -1,5 +1,11 @@
 # Consumer Source Review
 
+Website rollout: seven source tasks are registered, including explicit
+permission/preparation states, and four SCE/Michigan questions are in the reviewed
+season manifest. The normal refresh collects eligible releases and persists
+private evidence as age ciphertext before publishing results. See
+[Pipeline](PIPELINE.md) for dates, operating steps and remaining source setup.
+
 The [pipeline](PIPELINE.md) connects SCE, Michigan inflation, manual Mint imports,
 NYT Books API and Steam Web API to production input freezes, exact-period
 settlement and CRPS/RBO scoring. Raw data and input snapshots remain private.

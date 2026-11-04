@@ -31,6 +31,8 @@ SPECIAL_SERIES_SOURCE = {
     "generic_ballot_margin": "certified_election_results",
     "house_seats": "certified_election_results",
     "wiki_top10_en": "wikipedia",
+    "netflix_us_top10": "consumer_netflix",
+    "acsi_company_scores": "acsi",
     **{sid: consumer_round.SOURCE_KEYS[source]
        for sid, source in consumer_round.SERIES_SOURCE.items()},
 }

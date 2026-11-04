@@ -564,6 +564,9 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
             from . import consumer_round
             row["consumer"] = dict(consumer_round.spec_for(r))
             row["attribution"] = consumer_round.ATTRIBUTION[r["consumer"]["source"]]
+            for key in ('publisher', 'methodology', 'cadence'):
+                if r.get(key):
+                    row[key] = r[key]
         for k in ("cells", "options"):
             if k in r:
                 row[k] = list(r[k])
@@ -2895,6 +2898,10 @@ def main():
         next_lock=next_lock)
     source_failures.extend(ranking_source_failures)
 
+    from . import consumer_round
+    for definition in season['rounds']:
+        if 'consumer' in definition and not ranking_round.is_ranking(definition):
+            series[definition['series']] = consumer_round.history(definition, before=now)
     rounds, hist_by_round = build_rounds(season, series, resolved, now,
                                          ranking_obs)
     # The workflow runs this module twice: once to fetch and file, then again
@@ -3043,6 +3050,9 @@ def main():
         if name in series:
             charts[name] = (series[name][-48:]
                             if name == "umich_sentiment" else series[name])
+    for sid, points in series.items():
+        if sid in consumer_round.SERIES_SOURCE:
+            charts[sid] = [{"date": p['date'], 'value': p['value']} for p in points[-24:]]
 
     # The task registry is checked before anything is written: a task that names a
     # series the pipeline does not know is a registry bug, not a data hole.

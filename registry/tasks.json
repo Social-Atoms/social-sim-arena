@@ -3,6 +3,68 @@
   "note": "The one place a task is described: what the site shows in a task header and on a question card, and which series ids belong to it. Edit here; refresh.py publishes it as data.tasks and the site reads that. Order is display order; the site matches a round against tasks in this order, first match wins.",
   "tasks": [
     {
+      "id": "consumer_sce",
+      "label": "Household spending and market expectations",
+      "group": "sentiment", "domain": "consumer",
+      "population": "US household heads",
+      "cadence": "monthly, on the New York Fed calendar",
+      "question_type": "number", "unit": "%",
+      "source": {"name": "New York Fed SCE", "url": "https://www.newyorkfed.org/microeconomics/sce"},
+      "match": {"series": ["sce_spending_growth", "sce_stock_prices_rise", "sce_unemployment_rise"]},
+      "status": "active",
+      "note": "Three measures: expected spending growth, higher-stock-price probability and higher-unemployment probability."
+    },
+    {
+      "id": "consumer_michigan", "label": "Michigan inflation expectations",
+      "group": "sentiment", "domain": "consumer", "population": "US survey households",
+      "cadence": "monthly preliminary and final releases",
+      "question_type": "number", "unit": "%",
+      "source": {"name": "University of Michigan", "url": "https://www.sca.isr.umich.edu/"},
+      "match": {"series": ["umich_inflation_1y_preliminary", "umich_inflation_1y_final"]},
+      "status": "active", "note": "One-year median inflation expectation. Preliminary and final results settle separately; original CSVs stay private."
+    },
+    {
+      "id": "consumer_mint", "label": "US Mint weekly net sales",
+      "group": "sentiment", "domain": "consumer", "population": "Buyers of an eligible fixed-supply product",
+      "cadence": "weekly, through Sunday", "question_type": "number", "unit": "units",
+      "source": {"name": "United States Mint", "url": "https://www.usmint.gov/about/production-sales-figures/cumulative-sales"},
+      "match": {"series": ["mint_weekly_net_sales"]},
+      "status": "preparing", "note": "Registered. Manual official reports and an eligible product with sufficient weekly history are required before questions open."
+    },
+    {
+      "id": "consumer_nyt", "label": "NYT Best Sellers",
+      "group": "attention", "domain": "consumer", "population": "Purchases represented in the Hardcover Fiction list",
+      "cadence": "weekly", "question_type": "ranking", "unit": "ordered ISBN editions",
+      "source": {"name": "The New York Times", "url": "https://developer.nytimes.com/docs/books-product/1/overview"},
+      "match": {"series": ["nyt_bestsellers"]},
+      "status": "preparing", "note": "Registered. Official API access and an evidenced sales/publication window are required before questions open. Data provided by The New York Times."
+    },
+    {
+      "id": "consumer_steam", "label": "Steam Weekly Top Sellers",
+      "group": "attention", "domain": "consumer", "population": "US Steam purchasing activity",
+      "cadence": "weekly, Tuesday 1 a.m. Pacific", "question_type": "ranking", "unit": "ordered store IDs",
+      "source": {"name": "Steam", "url": "https://store.steampowered.com/charts/topsellers/US"},
+      "match": {"series": ["steam_weekly_top_sellers"]},
+      "status": "preparing", "note": "Registered. Authenticated official API access and the measurement window must be configured before questions open. Data from Steam."
+    },
+    {
+      "id": "consumer_netflix", "label": "Netflix Top 10",
+      "group": "attention", "domain": "consumer", "population": "Netflix viewers in the United States",
+      "cadence": "weekly", "question_type": "ranking", "unit": "ordered titles or seasons",
+      "source": {"name": "Netflix", "url": "https://www.netflix.com/tudum/top10/"},
+      "match": {"series": ["netflix_us_top10"]},
+      "status": "permission-needed", "note": "Registered; awaiting written permission for research benchmark use. No forecasts are accepted or scored for this source."
+    },
+    {
+      "id": "consumer_acsi", "label": "ACSI customer satisfaction",
+      "group": "sentiment", "domain": "consumer", "population": "Customers of the named companies and industry",
+      "cadence": "usually annual per company, industries released throughout the year",
+      "question_type": "profile", "unit": "ACSI points",
+      "source": {"name": "American Customer Satisfaction Index", "url": "https://theacsi.com/news-and-resources/press-releases/"},
+      "match": {"series": ["acsi_company_scores"]},
+      "status": "permission-needed", "note": "Registered; awaiting written permission for archival and public research display. No forecasts are accepted or scored for this source. One industry release will form one joint question."
+    },
+    {
       "id": "yougov_approval",
       "label": "Economist / YouGov approval",
       "group": "opinion",

@@ -301,7 +301,8 @@ class PipelineTests(unittest.TestCase):
 
     def test_rights_are_still_required_and_non_us_uses_the_same_domain(self):
         r = survey_round()
-        self.assertTrue(any("rights" in reason for reason in season.validate_document({"rounds": [r]})))
+        with mock.patch.dict(inventory.INVENTORY['consumer_michigan_inflation'], {'rights': inventory.UNRESOLVED}):
+            self.assertTrue(any("rights" in reason for reason in season.validate_document({"rounds": [r]})))
         r["consumer"]["population"] = "Households outside the United States"
         self.assertEqual(refresh.domains.domain_of(r["series"]), "consumer")
         bad = copy.deepcopy(r)

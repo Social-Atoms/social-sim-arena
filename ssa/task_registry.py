@@ -34,7 +34,7 @@ def validate(doc):
     if dup:
         raise ValueError(f"duplicate task ids: {dup}")
     for t in doc["tasks"]:
-        if t["question_type"] == "profile" and not t.get("cells"):
+        if t["question_type"] == "profile" and t['status'] == 'active' and not t.get("cells"):
             raise ValueError(f"{t['id']}: a profile task lists its cells")
 
 
@@ -76,6 +76,8 @@ def published(tasks=None):
         row["match"] = dict(t["match"])
         if t.get("cells"):
             row["cells"] = list(t["cells"])
+        if t.get("note"):
+            row["note"] = t["note"]
         rows.append(row)
     return rows
 

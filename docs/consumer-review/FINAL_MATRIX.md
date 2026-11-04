@@ -1,5 +1,12 @@
 # Consumer and Market Handoff
 
+Rollout update: the website registers all seven sources. Three SCE questions for
+November 9 and Michigan's November 20 final inflation question are added. Mint,
+NYT and Steam show preparation status; Netflix and ACSI show permission status.
+The normal refresh now restores/persists private evidence as age ciphertext and
+runs collection through public scoring. Earlier "no live question" entries below
+describe the evaluation stage; [Pipeline](PIPELINE.md) is the current contract.
+
 This table follows the source survey's order. The [pipeline](PIPELINE.md)
 implements ingestion through production scoring; all tests use synthetic data.
 Source rights and live season entries still require maintainer review.

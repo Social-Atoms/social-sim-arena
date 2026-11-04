@@ -2319,6 +2319,94 @@
       "target_type": "profile_energy",
       "tracker": "yougov_xtab",
       "unit": "percent approving"
+    },
+    {
+      "round_id": "consumer-sce-2026-10-spending",
+      "tracker": "ny_fed_sce",
+      "series": "sce_spending_growth",
+      "question": "What median expected one-year household spending growth will the New York Fed Survey of Consumer Expectations publish for October 2026 on November 9? Forecast the published household expectation, not realized spending growth.",
+      "unit": "percent expected spending growth",
+      "target_type": "continuous_normal",
+      "publisher": "Federal Reserve Bank of New York, Survey of Consumer Expectations",
+      "methodology": "National rotating panel of approximately 1,300 US household heads. HH Spending Change worksheet, Median point prediction column. The reference month labels responses, not the publication date.",
+      "cadence": "monthly, official New York Fed economic-indicators calendar",
+      "lock_at": "2026-11-07T16:00:00Z",
+      "release_at": "2026-11-09T16:00:00Z",
+      "release_estimated": false,
+      "resolve": "First archived official SCE workbook captured from November 9 at 16:00 UTC through November 10 at 16:00 UTC containing the October 2026 median household spending growth. Match the exact worksheet, header and reference month; preserve that captured artifact and ignore subsequent revisions.",
+      "consumer": {
+        "source": "sce",
+        "reference_date": "2026-10-01",
+        "capture_until": "2026-11-10T16:00:00Z",
+        "population": "US household heads",
+        "calendar_url": "https://www.newyorkfed.org/research/calendars/nationalecon_cal"
+      }
+    },
+    {
+      "round_id": "consumer-sce-2026-10-stocks",
+      "tracker": "ny_fed_sce",
+      "series": "sce_stock_prices_rise",
+      "question": "What mean probability that US stock prices will be higher one year ahead will the New York Fed Survey of Consumer Expectations publish for October 2026 on November 9? Forecast the survey's mean probability on a 0-100 scale, not the actual stock-market outcome.",
+      "unit": "percent probability",
+      "target_type": "continuous_normal",
+      "publisher": "Federal Reserve Bank of New York, Survey of Consumer Expectations",
+      "methodology": "National rotating panel of US household heads. Stock Prices worksheet; exact mean-probability column for higher US stock prices one year ahead. The mean subjective probability is a continuous survey aggregate.",
+      "cadence": "monthly, official New York Fed economic-indicators calendar",
+      "lock_at": "2026-11-07T16:00:00Z",
+      "release_at": "2026-11-09T16:00:00Z",
+      "release_estimated": false,
+      "resolve": "First archived official SCE workbook captured from November 9 at 16:00 UTC through November 10 at 16:00 UTC containing October 2026 stock-price expectations. Read the exact mean probability of higher prices one year ahead; subsequent revisions do not replace the captured result.",
+      "consumer": {
+        "source": "sce",
+        "reference_date": "2026-10-01",
+        "capture_until": "2026-11-10T16:00:00Z",
+        "population": "US household heads",
+        "calendar_url": "https://www.newyorkfed.org/research/calendars/nationalecon_cal"
+      }
+    },
+    {
+      "round_id": "consumer-sce-2026-10-unemployment",
+      "tracker": "ny_fed_sce",
+      "series": "sce_unemployment_rise",
+      "question": "What mean probability that the US unemployment rate will be higher one year ahead will the New York Fed Survey of Consumer Expectations publish for October 2026 on November 9? Forecast the survey's mean probability on a 0-100 scale, not the actual unemployment outcome.",
+      "unit": "percent probability",
+      "target_type": "continuous_normal",
+      "publisher": "Federal Reserve Bank of New York, Survey of Consumer Expectations",
+      "methodology": "National rotating panel of US household heads. Unemployment Expectations worksheet; exact mean-probability column for a higher US unemployment rate one year ahead. This is the population's expectation rather than realized unemployment.",
+      "cadence": "monthly, official New York Fed economic-indicators calendar",
+      "lock_at": "2026-11-07T16:00:00Z",
+      "release_at": "2026-11-09T16:00:00Z",
+      "release_estimated": false,
+      "resolve": "First archived official SCE workbook captured from November 9 at 16:00 UTC through November 10 at 16:00 UTC containing October 2026 unemployment expectations. Match the exact mean probability and reference month; preserve the captured artifact against later revisions.",
+      "consumer": {
+        "source": "sce",
+        "reference_date": "2026-10-01",
+        "capture_until": "2026-11-10T16:00:00Z",
+        "population": "US household heads",
+        "calendar_url": "https://www.newyorkfed.org/research/calendars/nationalecon_cal"
+      }
+    },
+    {
+      "round_id": "consumer-michigan-2026-11-final",
+      "tracker": "michigan_inflation",
+      "series": "umich_inflation_1y_final",
+      "question": "What median expected price change over the next year will the University of Michigan Surveys of Consumers report in its final November 2026 release on November 20? Forecast the final one-year inflation expectation in percent.",
+      "unit": "percent expected inflation",
+      "target_type": "continuous_normal",
+      "publisher": "University of Michigan Surveys of Consumers",
+      "methodology": "US household survey, median expected price change over the next year. Official tbmpx1px5.csv, PX_MD field for November 2026. A preliminary value cannot substitute for the final result.",
+      "cadence": "monthly preliminary and final releases",
+      "lock_at": "2026-11-18T15:00:00Z",
+      "release_at": "2026-11-20T15:00:00Z",
+      "release_estimated": false,
+      "resolve": "First archived official Michigan final inflation CSV captured from November 20 at 15:00 UTC through November 21 at 15:00 UTC with the November 2026 PX_MD value. Original CSVs remain private; preliminary and final publication stages are distinct even if values are unchanged.",
+      "consumer": {
+        "source": "michigan_finals",
+        "reference_date": "2026-11-01",
+        "capture_until": "2026-11-21T15:00:00Z",
+        "population": "US survey households",
+        "calendar_url": "https://www.newyorkfed.org/research/calendars/nationalecon_cal"
+      }
     }
   ]
 }

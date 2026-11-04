@@ -1,9 +1,20 @@
 # Consumer and Market Pipeline
 
 This implementation connects five sources to the arena's existing forecast
-types and scorers. It does not add live questions or change the maintainer's
-rights decisions. The season validator still refuses nonapproved sources.
-Netflix and ACSI have no collector or scoring target while permission is absent.
+types and scorers. Following the confirmed rollout, seven source tasks are
+registered on the website and four reviewed questions are added to the season:
+SCE's three October measures (release November 9, 2026, 11 a.m. Eastern), and
+Michigan's November final one-year inflation expectation (release November 20,
+2026, 10 a.m. Eastern). Dates are from the official New York Fed calendar.
+
+SCE and Mint have attribution-based approval. Michigan, NYT and Steam are
+approved for the documented private-original-data route. Netflix and ACSI keep
+their permission blocks and have no live question, collector or scoring target.
+Their website task registration explicitly says that forecasts are not accepted.
+Mint awaits an eligible product and sufficient adjacent manual reports; NYT
+awaits an evidenced sales/publication contract; Steam awaits its production key
+and reviewed measurement boundary. These appear as registered/preparing tasks,
+not open questions. The NYT key is configured as a repository secret.
 
 | Source | Ingestion | Forecast and score | Public evidence |
 | --- | --- | --- | --- |
@@ -21,8 +32,12 @@ Its raw files, normalized files, credentials, historical ranking lists and lock
 snapshots must not be committed, attached to a PR, uploaded to a public Release,
 or bundled into a deployment. In-repository archive writes outside the ignored
 directory are refused. The environment variable can point at a private volume.
-Back up that volume through an authorized private storage service; public GitHub
-Actions artifacts are not the storage mechanism.
+The production refresh restores this directory from an age-encrypted object at
+`consumer/archive.json` on the existing `sealed` branch and persists it before
+committing public results. It uses the arena's existing `SSA_AGE_RECIPIENT` and
+`SSA_AGE_IDENTITIES`. The branch contains ciphertext only; plaintext is never an
+Actions artifact or a tracked file. Restore, decryption or persistence failure
+blocks the public commit, so a disposable runner cannot discard the evidence.
 
 1. Configure API keys locally or as private runner secrets. Register NYT access
    at [NYT Developers](https://developer.nytimes.com/) and Steam access at the
@@ -37,10 +52,16 @@ Actions artifacts are not the storage mechanism.
 3. For Mint, download through the official website and run `consumer_data.py
    import mint` with `--url` and `--evidence-file`. The collector makes no
    scripted Mint request and does not bypass its 403 protection.
-4. Put reviewed consumer rounds in the season manifest with the contract below.
+4. Reviewed consumer rounds live in the season manifest with the contract below.
    Use the `consumer-` round-ID prefix, which routes input snapshots to private
    storage. The usual inventory rights gate applies to publication and scoring.
-5. Run the normal `ssa.refresh` on the machine with this archive, or run
+5. The existing six-hour `refresh-data` workflow restores evidence, calls
+   `collect_consumer_rounds.py` only for admitted sources in their publication
+   windows, freezes inputs, runs normal forecasting/resolution/scoring, then
+   persists encrypted evidence. It does not retrieve Netflix or ACSI. A manual
+   `consumer-preview` workflow verifies this storage/collection/publication path
+   on a feature branch without calling models or participant endpoints.
+   Run the normal `ssa.refresh` on the machine with this archive, or run
    `python tools/run_consumer_cycle.py --season questions/season0.json` to
    process admitted consumer rounds without calling models or touching upstream.
    Run before the call window opens to freeze actual inputs; retain this private
@@ -64,11 +85,13 @@ Every round carries the usual arena fields and a `consumer` object:
 }
 ```
 
-This is the SCE contract shape, not an added live question. A complete question
+This is the contract used by the added SCE questions. Each complete question
 also fixes its release and lock timestamps from the official calendar. Monthly
 survey locks precede release by at least 48 hours. The three target IDs are
 `sce_spending_growth`, `sce_stock_prices_rise`, and `sce_unemployment_rise`.
-Their source key for admission is `consumer_sce_extensions`.
+Their source key for admission is `consumer_sce_extensions`. The website shows
+the three distinct questions under one source task; each asks for the published
+survey measure rather than realized stock returns or unemployment.
 
 Michigan uses `umich_inflation_1y_preliminary` / `michigan_current` and
 `umich_inflation_1y_final` / `michigan_finals`. A preliminary result can never
