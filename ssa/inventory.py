@@ -155,6 +155,36 @@ INVENTORY = {
             "dates are preannounced on the NY Fed economic-indicators "
             "calendar, which is what §1.1 asks for."),
     },
+    "ecbcs": {
+        "publisher": "European Commission, DG ECFIN",
+        "adapter": "ssa/adapters/ecbcs.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        "rights": APPROVED,
+        "evidence": (
+            "Read 2026-10-29. The Commission legal notice "
+            "(https://commission.europa.eu/legal-notice_en), linked from the "
+            "footer of the survey's own download pages: \"The "
+            "Commission's reuse policy is implemented by the Commission "
+            "Decision of 12 December 2011 on the reuse of Commission documents. "
+            "Unless otherwise indicated (e.g. in individual copyright notices), "
+            "content owned by the EU on this website is licensed under the "
+            "Creative Commons Attribution 4.0 International (CC BY 4.0) "
+            "licence. This means that reuse is allowed, provided appropriate "
+            "credit is given and changes are indicated.\" The decision it "
+            "links is 2011/833/EU (https://eur-lex.europa.eu/legal-content/EN/"
+            "TXT/?uri=CELEX:32011D0833). The survey's own "
+            "press releases repeat it: \"\u00a9 European Union, 2026. "
+            "Reproduction is authorised provided the source is "
+            "acknowledged.\" Retrieval, use and redistribution are all open, "
+            "so the committed release zips under `sources/ecbcs` need no "
+            "blocklist entry; attribution is carried in the series "
+            "methodology. No key, and robots.txt on ec.europa.eu disallows "
+            "nothing under /economy_finance/. The schedule is a published "
+            "calendar (ec.europa.eu/economy_finance/db_indicators/surveys/"
+            "documents/calendar/Publication%20dates%202026.pdf), which is "
+            "what docs/sources.md section 1.1 asks for."),
+    },
     "wikipedia": {
         "publisher": "Wikimedia Foundation",
         "adapter": "ssa/adapters/wikipedia.py",

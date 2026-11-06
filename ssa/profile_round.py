@@ -207,6 +207,8 @@ def cell_outcome(points, release_date, freeze_date, cell):
 # by the cells' registered `source`, because that is what produced the number.
 ARCHIVE_PHRASE = {
     "civiqs": "the archived Civiqs dashboard",
+    "ecbcs": ("the European Commission consumer survey release for the "
+              "reference month, archived under sources/ecbcs/"),
     "trends_basket": "the archived Google Trends comparison snapshots",
     "yougov_xtab": ("the Economist/YouGov tracker workbook, the wave dated "
                     "inside the seven days ending on the release date"),
