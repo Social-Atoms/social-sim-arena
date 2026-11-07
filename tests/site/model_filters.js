@@ -149,7 +149,10 @@ assert.ok(f.win.__hidden.has('ewma'));
 f.api.resetModels();
 assert.ok(!f.win.__hidden.has('ewma'));
 // Default live curves show every official team slot, representative models, Persistence and Crowd.
-const winlessRoster=f=>new Set(f.win.SSAPairwise.build(f.win.__data,{scope:'all'}).entries.map(e=>e.entrant));
+// Compare against the scope the chart is drawn in: the default board is S0, whose cohort is frozen,
+// so entrants who joined later are on the All board but not on this chart.
+const viewScope=f=>f.win.__pairwiseScope||(f.win.__board==='s0'?'s0':'all');
+const winlessRoster=f=>new Set(f.win.SSAPairwise.build(f.win.__data,{scope:viewScope(f)}).entries.map(e=>e.entrant));
 { const live = fixture(new Map(), data); const sel = live.api.modelPicker.ids.filter(id=>!live.win.__hidden.has(id));
   const keep = live.api.defaultKeep(live.win.__data);
   assert.ok(sel.includes('crowd'));
@@ -159,7 +162,7 @@ const winlessRoster=f=>new Set(f.win.SSAPairwise.build(f.win.__data,{scope:'all'
   assert.deepEqual(new Set(live.api.modelPicker.ids),roster,'chart picker and leaderboard use the same methods');
   assert.deepEqual(new Set(sel), new Set([...keep].filter(id=>live.api.modelPicker.ids.includes(id))), 'the chart draws exactly the default');
   const byId = {}; live.win.__data.entrants.forEach(e=>byId[e.entrant_id]=e);
-  const methods=live.win.SSAPairwise.build(live.win.__data,{scope:'all'}).entries;
+  const methods=live.win.SSAPairwise.build(live.win.__data,{scope:viewScope(live)}).entries;
   const teams=methods.filter(e=>e.members.some(id=>(byId[id]||{}).type==='participant'));
   assert(teams.length>=7);
   const offChart=live.api.DEFAULT_HIDDEN_ENTRANTS;
