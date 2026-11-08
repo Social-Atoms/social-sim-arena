@@ -188,6 +188,45 @@ INVENTORY = {
             "documents/calendar/Publication%20dates%202026.pdf), which is "
             "what docs/sources.md section 1.1 asks for."),
     },
+    "seattle_cad": {
+        "publisher": "Seattle Police Department, City of Seattle Open Data",
+        "adapter": "ssa/adapters/seattle_cad.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        # Proposed by the track's Data Card (seattle-community-calls@v2);
+        # maintainers confirm or change it at review. The card's owner
+        # approval covers the question rules, not this verdict.
+        "rights": APPROVED,
+        "evidence": (
+            "Read 2026-11-08. Dataset metadata "
+            "(https://cos-data.seattle.gov/api/views/33kz-ixgy.json, fetched "
+            "2026-11-08T22:03:57Z): licenseId PUBLIC_DOMAIN, license name "
+            "\"Public Domain\", attribution \"City of Seattle\". City of "
+            "Seattle Open Data Policy OD-1 v1.0, 2016-02-01 "
+            "(https://www.seattle.gov/documents/Departments/Tech/OpenData/"
+            "COS_OpenDataPolicy.pdf), section D: datasets on the portal "
+            "\"shall be made available without registration requirement, "
+            "license requirement or restrictions on their use provided that "
+            "the department may require a third party providing to the public "
+            "any public data set ... to explicitly identify the source and "
+            "version of the public data set, and a description of any "
+            "modifications made\"; section E: \"An open license on a dataset "
+            "signifies there are no restrictions on copying, publishing, "
+            "further distributing, modifying or using the data for a "
+            "noncommercial or commercial purpose.\" Retrieval: the policy "
+            "publishes in machine-readable form for automated discovery and "
+            "names no bot or scraping restriction; reading that as permission "
+            "for keyless SODA queries is an inference, and the portal "
+            "operator's (Tyler/Socrata) platform terms were not read. "
+            "Redistribution is open, so the bodies under `sources/seattle_cad` "
+            "need no blocklist entry; attribution and the snapshot date are "
+            "carried in the source page. No publisher calendar: the series is "
+            "posted daily, so SSA sets and resolves the metric "
+            "(docs/sources.md section 1.1), as stated on "
+            "docs/sources/seattle-police-calls.md. Not yet registered in "
+            "ssa/series.py: the archive runs, the series and rounds wait on "
+            "the maintainer decisions listed in the PR."),
+    },
     "wikipedia": {
         "publisher": "Wikimedia Foundation",
         "adapter": "ssa/adapters/wikipedia.py",
