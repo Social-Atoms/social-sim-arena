@@ -10,7 +10,7 @@ One grouped request a day returns the daily count of distinct CAD events by
 how the call reached SPD, for the trailing 420 days. That one body serves
 everything this family needs: the lock-time reference, the outage checks, the
 pilot comparison and the resolution. The rules are the approved Data Card
-`seattle-community-calls@v3` (docs/data-cards/seattle-community-calls.json);
+`seattle-community-calls@v4` (docs/data-cards/seattle-community-calls.json);
 this module implements them and nothing else.
 
 **What is counted.** Community-initiated calls: call_type in COMMUNITY_TYPES
@@ -84,9 +84,9 @@ EXCLUDED_TYPES = ("ONVIEW", "PROACTIVE (OFFICER INITIATED)",
 # W <= D-14, searching back at most SPREAD_SEARCH_WEEKS, so the oldest is
 # D-14-7*25 = D-189; that week's own reference, with a step-back, reaches its
 # year-earlier weeks at -42-364, and their outage check needs 28 days more:
-# D-623, plus the day between capture and lock. Card v3 says 540, which covers
-# thirteen weeks with no skip (D-532) but not the 26-week search it also
-# states; 630 computes the card's rule exactly (named in the PR).
+# D-623, plus the day between capture and lock: 630, as card v4 states. (v3
+# said 540, which covered thirteen weeks with no skip, D-532, but not the
+# 26-week search the same revision allows.)
 WINDOW_DAYS = 630
 # Socrata's $limit. 420 days x ~7 call types is ~3,000 rows; a body that comes
 # back with exactly this many rows was truncated, and is refused.

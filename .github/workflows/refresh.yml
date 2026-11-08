@@ -207,7 +207,7 @@ jobs:
         if: steps.consumer_restore.outcome == 'success'
         run: python tools/publish_consumer.py
       # Seattle police calls, the Urban Track pilot (card
-      # seattle-community-calls@v3): one capture per UTC day, write-once, under
+      # seattle-community-calls@v4): one capture per UTC day, write-once, under
       # sources/seattle_cad/, committed by the data commit below (it stages
       # sources/). It feeds no series or round yet, so it must never stop the
       # refresh: a 403 or 429 from this runner is logged here and means the

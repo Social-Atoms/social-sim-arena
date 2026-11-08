@@ -87,7 +87,7 @@ ALL = DEFAULT
 # Every round scored so far is `persistence`, and a round without the key keeps
 # it, so the season's existing scores cannot move (tests/test_zero_point.py).
 # `yoy4` is the Seattle calls family's 4-week year-over-year reference, with its
-# own spread (ssa/adapters/seattle_cad.py, card seattle-community-calls@v3): a
+# own spread (ssa/adapters/seattle_cad.py, card seattle-community-calls@v4): a
 # fixed persistence sd of 1.5 on a count of ~4,750 would have been a point
 # forecast, and submitting the reference itself with an honest spread would
 # have scored +27% skill. The reference a round names must be present in its
