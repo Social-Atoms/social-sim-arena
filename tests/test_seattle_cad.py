@@ -509,6 +509,18 @@ def test_weekly_series_drops_the_week_that_is_still_posting():
     ok(test_weekly_series_drops_the_week_that_is_still_posting)
 
 
+def test_the_refresh_captures_daily_and_never_blocks_on_it():
+    import yaml
+    with open(os.path.join(ROOT, ".github", "workflows", "refresh.yml")) as f:
+        wf = yaml.safe_load(f)
+    steps = [st for job in wf["jobs"].values() for st in job.get("steps", [])]
+    runs = [st.get("run", "") for st in steps]
+    i = runs.index("python -m ssa.adapters.seattle_cad capture")
+    assert steps[i].get("continue-on-error") is True
+    assert i < runs.index("python -m ssa.refresh"), "capture after the refresh"
+    ok(test_the_refresh_captures_daily_and_never_blocks_on_it)
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_") and callable(fn):

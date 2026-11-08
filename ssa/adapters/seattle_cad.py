@@ -617,7 +617,12 @@ def pilot_growth(week_start, early_day, late_day, fetches=None, reader=read_capt
 if __name__ == "__main__":                                   # pragma: no cover
     import sys
     if sys.argv[1:2] == ["capture"]:
-        print(json.dumps(capture(), indent=2))
+        try:
+            print(json.dumps(capture(), indent=2))
+        except Exception as e:                               # noqa: BLE001
+            # One line the run log can be read for; the workflow step is
+            # continue-on-error, so this never stops the refresh.
+            sys.exit(f"seattle_cad capture failed: {type(e).__name__}: {e}")
     elif sys.argv[1:2] == ["reference"] and len(sys.argv) == 3:
         print(json.dumps(lock_reference(sys.argv[2]), indent=2))
     else:
