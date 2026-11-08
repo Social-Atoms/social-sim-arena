@@ -10,7 +10,7 @@ One grouped request a day returns the daily count of distinct CAD events by
 how the call reached SPD, for the trailing 420 days. That one body serves
 everything this family needs: the lock-time reference, the outage checks, the
 pilot comparison and the resolution. The rules are the approved Data Card
-`seattle-community-calls@v2` (docs/data-cards/seattle-community-calls.json);
+`seattle-community-calls@v3` (docs/data-cards/seattle-community-calls.json);
 this module implements them and nothing else.
 
 **What is counted.** Community-initiated calls: call_type in COMMUNITY_TYPES
@@ -79,13 +79,15 @@ EXCLUDED_TYPES = ("ONVIEW", "PROACTIVE (OFFICER INITIATED)",
                   "ALARM CALL (NOT POLICE ALARM)",
                   "SCHEDULED EVENT (RECURRING)", "HISTORY CALL (RETRO)")
 
-# The baseline reaches back to the four year-earlier weeks of a one-week
-# step-back, D-42-364 = 406 days before the target Monday, and the outage check
-# on the oldest of them needs the 28 days before it: 434 days, plus the day
-# or so between the capture and the lock. Card v2 says 420 ("399 days plus
-# margin"), which forgot the outage lookback and would compute the oldest
-# medians on fewer than 28 days; 440 computes the card's rule exactly.
-WINDOW_DAYS = 440
+# How far back one capture must reach for the card's rules to be computed
+# from it alone. The spread (card v3) looks for SPREAD_WEEKS past target weeks
+# W <= D-14, searching back at most SPREAD_SEARCH_WEEKS, so the oldest is
+# D-14-7*25 = D-189; that week's own reference, with a step-back, reaches its
+# year-earlier weeks at -42-364, and their outage check needs 28 days more:
+# D-623, plus the day between capture and lock. Card v3 says 540, which covers
+# thirteen weeks with no skip (D-532) but not the 26-week search it also
+# states; 630 computes the card's rule exactly (named in the PR).
+WINDOW_DAYS = 630
 # Socrata's $limit. 420 days x ~7 call types is ~3,000 rows; a body that comes
 # back with exactly this many rows was truncated, and is refused.
 ROW_LIMIT = 50000
@@ -98,6 +100,12 @@ OUTAGE_LOOKBACK_DAYS = 28
 # Card v2, resolution pilot gate: growth after the +7-day snapshot below this
 # share of the week's count is "settled".
 PILOT_MAX_GROWTH = 0.005
+# Card v3, the reference's spread: root-mean-square error of the same rule over
+# the 13 most recent target weeks complete in the lock capture (W <= D-14),
+# skipping a week that is not postable or fails its outage check, looking back
+# at most 26 weeks; fewer than 13 and the round is not posted.
+SPREAD_WEEKS = 13
+SPREAD_SEARCH_WEEKS = 26
 # "The snapshot archived at lock" (card v2, baseline): the newest capture at or
 # before the lock, and no older than this. With daily captures it is the same
 # day's; a stale one -- the refresh failed for days -- would hand the reference
@@ -325,9 +333,7 @@ def yoy4_reference(cd, target_week):
     year-earlier counterpart or the aligned week fails the outage check, the
     block steps back one week; if it still fails, NotPostable.
 
-    Returns the point and its parts. The spread is not set here: how a
-    reference gets an sd for CRPS is an open implementation decision (PR
-    description, material choice 1).
+    Returns the point and its parts. The spread is added by `yoy4` (card v3).
     """
     d = monday(target_week)
     aligned = d - timedelta(days=364)
@@ -366,6 +372,60 @@ def persistence_settled(cd, target_week):
                     "mean": float(week_total(cd, w)),
                     "week": w.isoformat(), "step_back": step}
     raise NotPostable(f"no settled persistence week for {d}")
+
+
+def past_errors(cd, target_week, reference):
+    """(actual - reference mean) for the card v3 spread window, newest first.
+
+    Every number is recomputed from `cd`, the one lock capture: a past week's
+    reference by the same rule, its actual from the same body.
+    """
+    d = monday(target_week)
+    errors, weeks = [], []
+    for k in range(2, 2 + SPREAD_SEARCH_WEEKS):
+        w = d - timedelta(days=7 * k)
+        actual = week_total(cd, w)
+        if actual is None or outage_days(cd, w):
+            continue
+        try:
+            ref = reference(cd, w)
+        except NotPostable:
+            continue
+        errors.append(actual - ref["mean"])
+        weeks.append(w.isoformat())
+        if len(errors) == SPREAD_WEEKS:
+            return errors, weeks
+    raise NotPostable(f"only {len(errors)} of {SPREAD_WEEKS} past target weeks "
+                      f"qualify for the spread of {d} within "
+                      f"{SPREAD_SEARCH_WEEKS} weeks; the round is not posted")
+
+
+def rms(errors):
+    return (sum(e * e for e in errors) / len(errors)) ** 0.5
+
+
+def with_spread(cd, target_week, reference):
+    """A reference plus its card v3 spread: {mean, sd, spread_weeks, ...}."""
+    out = dict(reference(cd, target_week))
+    errors, weeks = past_errors(cd, target_week, reference)
+    # Floor after rounding: CRPS needs sd > 0, and a perfectly flat history
+    # (only ever a fixture) must not round its floor away.
+    out["sd"] = max(round(rms(errors), 2), 0.01)
+    out["spread"] = "rms_13_settled_weeks"
+    out["spread_weeks"] = weeks
+    return out
+
+
+def yoy4(cd, target_week):
+    """The ranked zero point `yoy4` as the leaderboard reads it."""
+    out = with_spread(cd, target_week, yoy4_reference)
+    out["method"] = "yoy4"
+    return out
+
+
+def persistence_shown(cd, target_week):
+    """Unranked persistence on D-14, spread the same way from its own errors."""
+    return with_spread(cd, target_week, persistence_settled)
 
 
 def weekly_series(cd):
@@ -485,8 +545,9 @@ def lock_reference(target_week, fetches=None, reader=read_capture):
     cd = community_daily(daily)
     return {"snapshot": row["file"], "sha256": row["sha256"],
             "fetched_at": row["fetched_at"],
-            "ranked": yoy4_reference(cd, target_week),
-            "shown": persistence_settled(cd, target_week)}
+            "zero_point": "yoy4",
+            "ranked": yoy4(cd, target_week),
+            "shown": persistence_shown(cd, target_week)}
 
 
 def resolve(target_week, now, fetches=None, reader=read_capture):

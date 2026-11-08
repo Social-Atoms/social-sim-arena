@@ -83,6 +83,37 @@ DEFAULT = ("persistence", "trend", "ewma", "climatology")
 ALL = DEFAULT
 
 
+# The ranked zero point: which reference is a round's skill denominator.
+# Every round scored so far is `persistence`, and a round without the key keeps
+# it, so the season's existing scores cannot move (tests/test_zero_point.py).
+# `yoy4` is the Seattle calls family's 4-week year-over-year reference, with its
+# own spread (ssa/adapters/seattle_cad.py, card seattle-community-calls@v3): a
+# fixed persistence sd of 1.5 on a count of ~4,750 would have been a point
+# forecast, and submitting the reference itself with an honest spread would
+# have scored +27% skill. The reference a round names must be present in its
+# `baselines`; a missing one raises rather than falling back to persistence.
+DEFAULT_ZERO_POINT = "persistence"
+ZERO_POINTS = ("persistence", "yoy4")
+
+
+def zero_point_name(r):
+    name = r.get("zero_point", DEFAULT_ZERO_POINT)
+    if name not in ZERO_POINTS:
+        raise ValueError(f"{r.get('round_id')}: unknown zero_point {name!r}; "
+                         f"known: {', '.join(ZERO_POINTS)}")
+    return name
+
+
+def zero_point(r):
+    """The round's ranked reference forecast, {mean, sd, ...}."""
+    name = zero_point_name(r)
+    ref = (r.get("baselines") or {}).get(name)
+    if not ref:
+        raise KeyError(f"{r.get('round_id')}: zero_point {name!r} is not among "
+                       "its baselines; refusing to score against another null")
+    return ref
+
+
 def all_baselines(history, target_date, names=DEFAULT):
     fns = {
         "persistence": lambda: persistence(history),

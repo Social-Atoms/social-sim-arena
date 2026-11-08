@@ -539,6 +539,10 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
         # infer a contract from the unit/question wording. Older definitions
         # predate target_type and are numeric distributions.
         row["target_type"] = r.get("target_type", "continuous_normal")
+        # Which reference ranks the round (ssa/baselines.zero_point). Copied
+        # only when set, so every existing round's payload is unchanged.
+        if "zero_point" in r:
+            row["zero_point"] = baselines.zero_point_name(r)
         row["deadline"] = iso(batches.effective_deadline(r["lock_at"]))
         # When this round is listed, and which week it displays under. The
         # deadline is its own lock; the week is only how the site groups it,
@@ -2177,8 +2181,12 @@ def build_leaderboard(rounds, resolved):
         if not res or not r.get("baselines"):
             continue
         outcome = res["value"]
-        per_crps = scoring.crps_normal(r["baselines"]["persistence"]["mean"],
-                                       r["baselines"]["persistence"]["sd"], outcome)
+        # The skill denominator is the round's zero point -- persistence for
+        # every round without a `zero_point` key, which is every round scored
+        # before the Seattle family. `persistence_crps` keeps meaning what it
+        # says; a round ranked on another reference also publishes that one.
+        zp = baselines.zero_point(r)
+        per_crps = scoring.crps_normal(zp["mean"], zp["sd"], outcome)
         rdir = os.path.join(FORECASTS, r["round_id"])
         if not os.path.isdir(rdir):
             continue
@@ -2201,7 +2209,16 @@ def build_leaderboard(rounds, resolved):
             scores[fc["entrant"]] = {"crps": round(c, 4),
                                      "skill": round(scoring.skill(c, per_crps), 4)}
         r["scores"] = scores
-        r["persistence_crps"] = round(per_crps, 4)
+        name = baselines.zero_point_name(r)
+        if name == baselines.DEFAULT_ZERO_POINT:
+            r["persistence_crps"] = round(per_crps, 4)
+        else:
+            r["zero_point"] = name
+            r["zero_point_crps"] = round(per_crps, 4)
+            shown = r["baselines"].get("persistence")
+            if shown:
+                r["persistence_crps"] = round(scoring.crps_normal(
+                    shown["mean"], shown["sd"], outcome), 4)
     board = []
     for name, e in entries.items():
         board.append({

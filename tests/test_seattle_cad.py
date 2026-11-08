@@ -408,14 +408,15 @@ def test_unlisted_types_over_one_percent_send_the_round_to_review():
 
 
 def test_the_lock_reference_reads_a_fresh_capture_only():
-    daily = flat_daily(D - timedelta(days=440), D - timedelta(days=4))
+    daily = flat_daily(D - timedelta(days=sc.WINDOW_DAYS), D - timedelta(days=4))
     rd = lambda day, f: (daily, f[day])                   # noqa: E731
     fresh = fake_fetches({"2026-12-13": "2026-12-13T00:17:00Z",
                           "2026-12-14": "2026-12-14T06:17:00Z",   # before 07:59Z
                           "2026-12-15": "2026-12-15T00:17:00Z"})  # after the lock
     ref = sc.lock_reference(D, fresh, rd)
     assert ref["fetched_at"] == "2026-12-14T06:17:00Z"
-    assert ref["ranked"]["method"] == "yoy4_ratio_of_sums"
+    assert ref["zero_point"] == "yoy4" and ref["ranked"]["method"] == "yoy4"
+    assert ref["ranked"]["sd"] > 0 and ref["shown"]["sd"] > 0
     assert ref["shown"]["method"] == "persistence_settled_week"
     stale = fake_fetches({"2026-12-12": "2026-12-12T06:17:00Z"})
     try:
@@ -424,6 +425,64 @@ def test_the_lock_reference_reads_a_fresh_capture_only():
     except sc.NotPostable:
         pass
     ok(test_the_lock_reference_reads_a_fresh_capture_only)
+
+
+def test_the_spread_is_the_rms_of_the_same_rule_over_13_settled_weeks():
+    daily = flat_daily(D - timedelta(days=sc.WINDOW_DAYS), D - timedelta(days=4))
+    # Perturb the actuals of past target weeks D-14 .. D-98 by known amounts;
+    # the year-earlier block stays flat, so each week's own reference moves
+    # only through the perturbed weeks inside its reference block.
+    for k in range(2, 15):
+        set_week(daily, D - timedelta(days=7 * k), 700 + (k % 3) * 10)
+    cd = sc.community_daily(daily)
+    errs, weeks = sc.past_errors(cd, D, sc.yoy4_reference)
+    assert len(errs) == 13 and weeks[0] == (D - timedelta(days=14)).isoformat()
+    assert weeks[-1] == (D - timedelta(days=98)).isoformat()
+    expect = []
+    for k in range(2, 15):
+        w = D - timedelta(days=7 * k)
+        expect.append(sc.week_total(cd, w) - sc.yoy4_reference(cd, w)["mean"])
+    assert errs == expect
+    z = sc.yoy4(cd, D)
+    assert z["sd"] == round(sc.rms(expect), 2) and z["spread"] == "rms_13_settled_weeks"
+    # The lock week D-7 is not one of the thirteen.
+    assert (D - timedelta(days=7)).isoformat() not in z["spread_weeks"]
+    ok(test_the_spread_is_the_rms_of_the_same_rule_over_13_settled_weeks)
+
+
+def test_the_spread_skips_a_broken_week_and_refuses_below_thirteen():
+    daily = flat_daily(D - timedelta(days=sc.WINDOW_DAYS), D - timedelta(days=4))
+    gap = D - timedelta(days=35)
+    for d in sc.week_days(gap):
+        daily[d.isoformat()]["911"] = 0
+        daily[d.isoformat()]["TELEPHONE OTHER, NOT 911"] = 0
+    errs, weeks = sc.past_errors(sc.community_daily(daily), D, sc.yoy4_reference)
+    assert len(errs) == 13 and gap.isoformat() not in weeks
+    # D-14 is skipped too: the broken week sits in both its reference block
+    # and the stepped-back one, so its own reference is not postable.
+    assert (D - timedelta(days=14)).isoformat() not in weeks
+    assert weeks[-1] == (D - timedelta(days=112)).isoformat()
+    short = flat_daily(D - timedelta(days=300), D - timedelta(days=4))
+    try:
+        sc.yoy4(sc.community_daily(short), D)
+        raise AssertionError("posted a spread on fewer than 13 weeks")
+    except sc.NotPostable:
+        pass
+    ok(test_the_spread_skips_a_broken_week_and_refuses_below_thirteen)
+
+
+def test_the_window_covers_the_whole_spread_search():
+    # past_errors searches k = 2 .. 1 + SPREAD_SEARCH_WEEKS; the oldest week
+    # searched is D-189, and its own reference with a step-back plus the
+    # outage lookback reaches D-623. A capture is taken at most a day after
+    # the lock, so its window must start no later than that.
+    last_searched = D - timedelta(days=7 * (1 + sc.SPREAD_SEARCH_WEEKS))
+    assert last_searched == D - timedelta(days=189)
+    need = sc.reference_weeks(last_searched, 1)[0] - timedelta(
+        days=364 + sc.OUTAGE_LOOKBACK_DAYS)
+    assert need == D - timedelta(days=623)
+    assert D - timedelta(days=sc.WINDOW_DAYS) <= need
+    ok(test_the_window_covers_the_whole_spread_search)
 
 
 def test_pilot_growth_gate():
