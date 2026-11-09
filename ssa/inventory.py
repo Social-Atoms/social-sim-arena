@@ -305,6 +305,35 @@ INVENTORY = {
             "on publishing the archive. A yes to both makes route B `approved` "
             "and route A a card revision."),
     },
+    "tsa_volumes": {
+        "publisher": "Transportation Security Administration (DHS), www.tsa.gov",
+        "adapter": "ssa/adapters/tsa_volumes.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        # Not granted. Card tsa-checkpoint-weekly@v2 proposes `approved`;
+        # maintainers decide at review. Until then the gate reads
+        # `unresolved` and no round can be generated.
+        "rights": UNRESOLVED,
+        "proposed_rights": APPROVED,
+        "evidence": (
+            "Card tsa-checkpoint-weekly@v2, archive_policy, read 2026-11-09. "
+            "TSA site notice (https://www.tsa.gov/privacy-policy, fetched "
+            "2026-11-09T01:06:24Z): 'Information presented on the website is "
+            "considered public information and may be distributed or copied.' "
+            "Its only access restriction is against 'attempts ... to defeat or "
+            "circumvent security features', which an honest single fetch does "
+            "not do; no clause against automated access was found. robots.txt "
+            "(User-agent: *) disallows only Drupal system paths, not /travel/ "
+            "(fetched 01:06:01Z). The numbers are a work of the US government "
+            "(17 U.S.C. 105; inferred, the page is not labelled). Daily capture "
+            "of three pages with the arena's User-Agent, never a browser "
+            "User-Agent or a headless browser; a 403 means a local courier "
+            "(docs/sources/tsa.md). The TSA logo is not reused. Not yet "
+            "registered in ssa/series.py."),
+        "revisit": (
+            "A 403 or challenge page from the refresh runners moves the capture "
+            "to a maintainer's Mac (card fallback), which changes no rights."),
+    },
     "wikipedia": {
         "publisher": "Wikimedia Foundation",
         "adapter": "ssa/adapters/wikipedia.py",

@@ -224,6 +224,14 @@ jobs:
         continue-on-error: true
         timeout-minutes: 8
         run: python -m ssa.adapters.nyc311 capture
+      # TSA checkpoint numbers (card tsa-checkpoint-weekly@v2): three pages,
+      # 10 s apart, once per UTC day, write-once under sources/tsa_volumes/,
+      # committed by the data commit below. Never blocks the refresh: a 403 or
+      # a challenge page is logged in sources/tsa_volumes/failures.json and
+      # means the capture moves to a local courier (docs/sources/tsa.md).
+      - name: capture TSA checkpoint numbers (pilot, non-blocking)
+        continue-on-error: true
+        run: python -m ssa.adapters.tsa_volumes capture
       # MTA daily ridership (card mta-subway-weekly@v2) is downloaded by a
       # person each weekend (tools/ingest_mta_daily.py): automated retrieval
       # is not cleared. Once a card revision clears route A and sets
