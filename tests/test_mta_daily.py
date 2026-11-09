@@ -95,6 +95,22 @@ def test_parse_reads_the_real_export():
     ok(test_parse_reads_the_real_export)
 
 
+
+def test_parse_reads_the_v3_export_like_the_legacy_one():
+    # The legacy rows.csv export sunsets 2026-12-22; the v3 export quotes fields,
+    # writes comma thousands and lists newest rows first. Same values either way.
+    v3 = open(os.path.join(ROOT, "tests", "fixtures", "mta_daily", "v3-export-head.csv"), "rb").read()
+    new, old = m.parse(v3.decode("utf-8")), m.parse(BODY.decode("utf-8"))
+    shared = 0
+    for mode, days in new.items():
+        for d, v in days.items():
+            if d in old.get(mode, {}):
+                assert old[mode][d] == v, (mode, d, old[mode][d], v)
+                shared += 1
+    assert shared > 50, shared
+    assert m.URL.endswith("/api/v3/views/sayj-mze2/export.csv")
+    ok(test_parse_reads_the_v3_export_like_the_legacy_one)
+
 def test_parse_fails_loud():
     good = csv_body({date(2026, 11, 2): 4_000_000})
     m.parse(good)

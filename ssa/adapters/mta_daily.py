@@ -59,7 +59,12 @@ EXT = "csv"
 CARD = "mta-subway-weekly@v2"
 CARD_SHA256 = "20269fe1b4524a3133e614048a0baabf3b16b91becc3a89c7b79c4b61843f575"
 DATASET = "sayj-mze2"
-URL = f"https://data.ny.gov/api/views/{DATASET}/rows.csv?accessType=DOWNLOAD"
+# The v2 export (rows.csv?accessType=DOWNLOAD) answers with `Sunset: Tue, 22 Dec
+# 2026` (Socrata deprecation notice). Its successor, checked 2026-11-09, serves the
+# same Date,Mode,Count header with quoted fields, comma thousands and newest rows
+# first; parse() reads both identically. Use the successor from now on.
+URL = f"https://data.ny.gov/api/v3/views/{DATASET}/export.csv"
+LEGACY_URL = f"https://data.ny.gov/api/views/{DATASET}/rows.csv?accessType=DOWNLOAD"
 TZ = ZoneInfo("America/New_York")
 
 HEADER = ["Date", "Mode", "Count"]

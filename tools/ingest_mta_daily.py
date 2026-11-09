@@ -2,7 +2,7 @@
 
 Once a week, between Saturday 00:00 and Sunday 20:00 New York time, a person
 opens https://data.ny.gov/d/sayj-mze2, clicks Export > CSV (or opens
-https://data.ny.gov/api/views/sayj-mze2/rows.csv?accessType=DOWNLOAD in a
+https://data.ny.gov/api/v3/views/sayj-mze2/export.csv in a
 browser), notes the time, and runs:
 
   PYTHONPATH=. python tools/ingest_mta_daily.py ~/Downloads/MTA_Daily_Ridership_and_Traffic__Beginning_2020.csv \\
