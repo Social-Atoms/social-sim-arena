@@ -456,6 +456,37 @@ INVENTORY = {
             "pinned under `sources/sg-ref`; no blocklist entry. Mall carparks "
             "(DataMall, key required) are out of scope."),
     },
+    "sg_lta_pv": {
+        "publisher": "Land Transport Authority, LTA DataMall",
+        "adapter": "ssa/adapters/sg_lta_pv.py",
+        "role": TARGET,
+        "state": PERMISSION_NEEDED,
+        "rights": APPROVED,
+        "evidence": (
+            "Proposed by cards sg-lta-pv-train-jurong-east@v2 and "
+            "sg-lta-pv-bus-boon-lay-int@v2 (one row and one key for both). "
+            "Blocked on an account, not on the terms: DataMall needs an "
+            "AccountKey, which SSA has not registered (without one, "
+            "datamall2.mytransport.sg/ltaodataservice/PV/Train answered HTTP "
+            "404 on 2026-11-09). API Terms of Service (datamall.lta.gov.sg/"
+            "content/datamall/en/api-terms-of-service.html, read 2026-11-09): "
+            "\"Use of the datasets is governed by the Singapore Open Data "
+            "Licence\"; \"you can use, access, call, command, query or request "
+            "the API, whether commercially or non-commercially\"; cl. 10(b) "
+            "keep credentials confidential. Unclear scope (lesson 10): the "
+            "DataMall website Terms of Use cl. 5, 21 and 23 restrict "
+            "reproduction of the website's Contents; the cards read them as "
+            "covering the site's own pages, not licensed datasets, which is "
+            "an inference a maintainer may confirm with LTA (question drafted "
+            "in the cards, not sent). The adapter is not wired into any "
+            "workflow."),
+        "revisit": (
+            "The day a maintainer registers for a DataMall AccountKey and "
+            "stores it as the secret LTA_API_KEY: start archiving at once "
+            "(DataMall serves only the last three months), then wire "
+            "`python -m ssa.adapters.sg_lta_pv capture train|bus` "
+            "(docs/sources/singapore-passenger-volume.md)."),
+    },
     "wikipedia": {
         "publisher": "Wikimedia Foundation",
         "adapter": "ssa/adapters/wikipedia.py",

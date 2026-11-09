@@ -1,0 +1,101 @@
+{
+  "card": "sg-lta-pv-bus-boon-lay-int@v2",
+  "card_sha256": "67073fb81a518a661b19fd9c0ac17e6f937332f6c664f3b9190632abaa84ba9f",
+  "status": "proposed: not in questions/season0.json; for a later question batch reviewed by maintainers",
+  "note": "Blocked until a maintainer registers for a DataMall AccountKey. The lock (23:59 SGT the day before the month) is ~41 days before release, by the card's owner decision; the season validator's 48 h source contract needs a rule for sg_lta_pv. The zero point shown is the interim spread; once 12 resolved months are archived it becomes rms_relative over 12 (sg_lta_pv.zero_point).",
+  "rounds": [
+    {
+      "round_id": "sg-pv-bus-bl-2027-01",
+      "tracker": "sg_lta_pv",
+      "series": "sg_pv_bus_22009_weekday_tapin",
+      "question": "What will the average daily number of bus boardings (tap-ins) at Boon Lay Interchange (bus stop code 22009) be on weekdays that are not public holidays in 2027-01, as given by LTA DataMall's Passenger Volume by Bus Stops file for that month? Weekdays counted: 20 (Monday to Friday, excluding the public holidays listed in this round).",
+      "unit": "boardings per weekday (average)",
+      "release_at": "2027-02-09T16:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-12-31T15:59:00Z",
+      "resolve": "the first DataMall PV/Bus zip for YEAR_MONTH 2027-01 archived under sources/lta-pv/bus/ at or after 00:00 SGT on the 10th of the next month: sum of TOTAL_TAP_IN_VOLUME over WEEKDAY rows of PT_CODE 22009 divided by the weekdays counted; none archived by 23:59 SGT on the 17th: cancelled. Needs a DataMall AccountKey (not registered yet). Contains information accessed from LTA DataMall under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_lag1_interim",
+        "family": "mean_k",
+        "period": "month",
+        "k": 1,
+        "lag": 1,
+        "search": 1,
+        "digits": 0,
+        "spread": {
+          "rule": "relative_fixed",
+          "cv": 0.0666
+        }
+      },
+      "public_holidays": [
+        "2027-01-01"
+      ],
+      "scored": false,
+      "pilot": "pilot"
+    },
+    {
+      "round_id": "sg-pv-bus-bl-2027-02",
+      "tracker": "sg_lta_pv",
+      "series": "sg_pv_bus_22009_weekday_tapin",
+      "question": "What will the average daily number of bus boardings (tap-ins) at Boon Lay Interchange (bus stop code 22009) be on weekdays that are not public holidays in 2027-02, as given by LTA DataMall's Passenger Volume by Bus Stops file for that month? Weekdays counted: 19 (Monday to Friday, excluding the public holidays listed in this round).",
+      "unit": "boardings per weekday (average)",
+      "release_at": "2027-03-09T16:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2027-01-31T15:59:00Z",
+      "resolve": "the first DataMall PV/Bus zip for YEAR_MONTH 2027-02 archived under sources/lta-pv/bus/ at or after 00:00 SGT on the 10th of the next month: sum of TOTAL_TAP_IN_VOLUME over WEEKDAY rows of PT_CODE 22009 divided by the weekdays counted; none archived by 23:59 SGT on the 17th: cancelled. Needs a DataMall AccountKey (not registered yet). Contains information accessed from LTA DataMall under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_lag1_interim",
+        "family": "mean_k",
+        "period": "month",
+        "k": 1,
+        "lag": 1,
+        "search": 1,
+        "digits": 0,
+        "spread": {
+          "rule": "relative_fixed",
+          "cv": 0.0666
+        }
+      },
+      "public_holidays": [
+        "2027-02-06",
+        "2027-02-07",
+        "2027-02-08"
+      ],
+      "scored": false,
+      "pilot": "pilot"
+    },
+    {
+      "round_id": "sg-pv-bus-bl-2027-03",
+      "tracker": "sg_lta_pv",
+      "series": "sg_pv_bus_22009_weekday_tapin",
+      "question": "What will the average daily number of bus boardings (tap-ins) at Boon Lay Interchange (bus stop code 22009) be on weekdays that are not public holidays in 2027-03, as given by LTA DataMall's Passenger Volume by Bus Stops file for that month? Weekdays counted: 21 (Monday to Friday, excluding the public holidays listed in this round).",
+      "unit": "boardings per weekday (average)",
+      "release_at": "2027-04-09T16:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2027-02-28T15:59:00Z",
+      "resolve": "the first DataMall PV/Bus zip for YEAR_MONTH 2027-03 archived under sources/lta-pv/bus/ at or after 00:00 SGT on the 10th of the next month: sum of TOTAL_TAP_IN_VOLUME over WEEKDAY rows of PT_CODE 22009 divided by the weekdays counted; none archived by 23:59 SGT on the 17th: cancelled. Needs a DataMall AccountKey (not registered yet). Contains information accessed from LTA DataMall under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_lag1_interim",
+        "family": "mean_k",
+        "period": "month",
+        "k": 1,
+        "lag": 1,
+        "search": 1,
+        "digits": 0,
+        "spread": {
+          "rule": "relative_fixed",
+          "cv": 0.0666
+        }
+      },
+      "public_holidays": [
+        "2027-03-10",
+        "2027-03-26"
+      ],
+      "scored": true,
+      "pilot": "first scored"
+    }
+  ]
+}

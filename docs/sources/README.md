@@ -21,6 +21,7 @@ One page per source the arena scores against. Each says the same five things, in
 | Land Transport Authority (via data.gov.sg) | [singapore-coe.md](singapore-coe.md) | None yet: COE Category A premium, captured around each lock and result; proposed rounds only | `ssa/adapters/sg_coe.py` |
 | Land Transport Authority (via data.gov.sg) | [singapore-taxis.md](singapore-taxis.md) | None yet: free taxis in Downtown Core, Friday 23:00, captured weekly; proposed rounds only | `ssa/adapters/sg_taxi.py` |
 | Housing & Development Board (via data.gov.sg) | [singapore-carparks.md](singapore-carparks.md) | None yet: Clementi HDB carpark occupancy, Saturday 20:00, captured weekly; proposed rounds only | `ssa/adapters/sg_carpark.py` |
+| Land Transport Authority (DataMall) | [singapore-passenger-volume.md](singapore-passenger-volume.md) | None: blocked until a maintainer registers for a DataMall key; adapter written, not wired | `ssa/adapters/sg_lta_pv.py` |
 | AAII | [aaii.md](aaii.md) | Investor sentiment | `ssa/adapters/aaii.py` |
 | Google Trends | [google-trends.md](google-trends.md) | Brand search-interest mix | `ssa/adapters/trends.py` |
 | Wikimedia | [wikimedia.md](wikimedia.md) | Wikipedia weekly top 10 | `ssa/adapters/wikipedia.py` |
