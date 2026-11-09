@@ -231,6 +231,20 @@ def test_the_round_must_name_the_zero_point_the_card_computes():
     ok(test_the_round_must_name_the_zero_point_the_card_computes)
 
 
+def test_every_rounds_file_passes_the_real_validator_but_for_two_rights():
+    """With the series registered and the source schedules in place, every
+    proposed round is publishable against the reviewed season except MTA's
+    and TSA's, whose rights verdicts wait on a maintainer."""
+    with open(os.path.join(ROOT, "questions", "season0.json")) as f:
+        reviewed = season.rounds_from(json.load(f))
+    problems = season.validate_document({"rounds": reviewed + proposed()})
+    left = {p.split(":")[0] for p in problems}
+    assert all("rights are 'unresolved'" in p for p in problems), problems
+    assert {rid.rsplit("-", 3)[0] for rid in left} == {"mta-subway", "tsa-weekly"}, left
+    assert len(left) == 12
+    ok(test_every_rounds_file_passes_the_real_validator_but_for_two_rights)
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_") and callable(fn):

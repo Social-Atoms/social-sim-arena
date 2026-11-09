@@ -338,6 +338,17 @@ def _sce_month(r):
 
 SOURCES = {}
 
+# Per-source keyword arguments passed to the adapter's lock_reference and
+# resolve, by source key: `fetches=`/`reader=` (Seattle, NYC 311, MTA, TSA),
+# `rows=`/`reader=` (COE), `root=` (taxi, carpark), `rows=`/`holidays=` (LTA).
+# Empty in production, where every adapter reads its own archive; a replay
+# test points them at fixtures without touching the repository's archive.
+IO = {}
+
+
+def _io(key):
+    return IO.get(key, {})
+
 
 def _register(src):
     SOURCES[src.key] = src
@@ -349,8 +360,8 @@ _register(Source(
     target=_week_monday,
     lock=lambda m: _adapter("seattle_cad").lock_instant(m),
     release=lambda m: _adapter("seattle_cad").resolution_instant(m),
-    reference=lambda r, m: _adapter("seattle_cad").lock_reference(m),
-    resolver=lambda r, m, now: _adapter("seattle_cad").resolve(m, now),
+    reference=lambda r, m: _adapter("seattle_cad").lock_reference(m, **_io("seattle_cad")),
+    resolver=lambda r, m, now: _adapter("seattle_cad").resolve(m, now, **_io("seattle_cad")),
     history=_seattle_history, observed=lambda m: m.isoformat(),
     schedule_rule="locks Sunday 23:59 PT before the week, resolves Tuesday "
                   "12:00 PT eight days after it"))
@@ -360,10 +371,11 @@ _register(Source(
     target=_week_monday,
     lock=lambda m: _adapter("nyc311").lock_instant(m),
     release=lambda m: _adapter("nyc311").resolution_instant(m),
-    reference=lambda r, m: _adapter("nyc311").lock_reference(m),
+    reference=lambda r, m: _adapter("nyc311").lock_reference(m, **_io("nyc311")),
     # Route A (automated capture) is the card's; a round moved to the manual
     # fallback before it is posted would name its mode here (card v2).
-    resolver=lambda r, m, now: _adapter("nyc311").resolve(m, now, mode="auto"),
+    resolver=lambda r, m, now: _adapter("nyc311").resolve(m, now, mode="auto",
+                                                         **_io("nyc311")),
     history=_nyc_history, observed=lambda m: m.isoformat(),
     schedule_rule="locks Sunday 23:59 ET before the week, resolves Tuesday "
                   "12:00 ET eight days after it"))
@@ -373,8 +385,8 @@ _register(Source(
     target=_week_monday,
     lock=lambda m: _adapter("mta_daily").lock_instant(m),
     release=_mta_release,
-    reference=lambda r, m: _adapter("mta_daily").lock_reference(m),
-    resolver=lambda r, m, now: _adapter("mta_daily").resolve(m, now),
+    reference=lambda r, m: _adapter("mta_daily").lock_reference(m, **_io("mta_daily")),
+    resolver=lambda r, m, now: _adapter("mta_daily").resolve(m, now, **_io("mta_daily")),
     history=_mta_history, observed=lambda m: m.isoformat(),
     schedule_rule="locks Sunday 23:59 ET before the week, resolves from the "
                   "Saturday 00:00 ET download twelve days after it starts"))
@@ -384,8 +396,8 @@ _register(Source(
     target=_week_monday,
     lock=lambda m: _adapter("tsa_volumes").lock_instant(m),
     release=lambda m: _adapter("tsa_volumes").resolution_instant(m),
-    reference=lambda r, m: _adapter("tsa_volumes").lock_reference(m),
-    resolver=lambda r, m, now: _adapter("tsa_volumes").resolve(m, now),
+    reference=lambda r, m: _adapter("tsa_volumes").lock_reference(m, **_io("tsa_volumes")),
+    resolver=lambda r, m, now: _adapter("tsa_volumes").resolve(m, now, **_io("tsa_volumes")),
     history=_tsa_history, observed=lambda m: m.isoformat(),
     schedule_rule="locks Sunday 23:59 ET before the week, resolves Tuesday "
                   "12:00 ET after it"))
@@ -395,8 +407,8 @@ _register(Source(
     target=_coe_target,
     lock=lambda t: _adapter("sg_coe").lock_instant(*t).astimezone(timezone.utc),
     release=_coe_close,
-    reference=lambda r, t: _adapter("sg_coe").lock_reference(*t),
-    resolver=lambda r, t, now: _adapter("sg_coe").resolve(*t, now),
+    reference=lambda r, t: _adapter("sg_coe").lock_reference(*t, **_io("sg_coe")),
+    resolver=lambda r, t, now: _adapter("sg_coe").resolve(*t, now, **_io("sg_coe")),
     history=_coe_history, observed=lambda t: f"{t[0]} ({t[1]})",
     schedule_rule="locks one hour before bidding opens, because the running "
                   "price is public once it does; release is the exercise "
@@ -407,8 +419,8 @@ _register(Source(
     target=lambda r: _id_day(r, 4, "target Friday"),
     lock=lambda d: _adapter("sg_taxi").lock_instant(d).astimezone(timezone.utc),
     release=_minute_release("sg_taxi"),
-    reference=lambda r, d: _adapter("sg_taxi").lock_reference(d),
-    resolver=lambda r, d, now: _adapter("sg_taxi").resolve(d, now),
+    reference=lambda r, d: _adapter("sg_taxi").lock_reference(d, **_io("sg_taxi")),
+    resolver=lambda r, d, now: _adapter("sg_taxi").resolve(d, now, **_io("sg_taxi")),
     history=_minute_history("sg_taxi"), observed=lambda d: d.isoformat(),
     schedule_rule="locks 48 h before the target minute, Friday 23:00 SGT, "
                   "which is the release"))
@@ -419,8 +431,8 @@ _register(Source(
     target=lambda r: _id_day(r, 5, "target Saturday"),
     lock=lambda d: _adapter("sg_carpark").lock_instant(d).astimezone(timezone.utc),
     release=_minute_release("sg_carpark"),
-    reference=lambda r, d: _adapter("sg_carpark").lock_reference(d),
-    resolver=lambda r, d, now: _adapter("sg_carpark").resolve(d, now),
+    reference=lambda r, d: _adapter("sg_carpark").lock_reference(d, **_io("sg_carpark_hdb")),
+    resolver=lambda r, d, now: _adapter("sg_carpark").resolve(d, now, **_io("sg_carpark_hdb")),
     history=_minute_history("sg_carpark"), observed=lambda d: d.isoformat(),
     schedule_rule="locks 48 h before the target minute, Saturday 20:00 SGT, "
                   "which is the release"))
@@ -431,8 +443,8 @@ _register(Source(
     target=_lta_target,
     lock=lambda t: _adapter("sg_lta_pv").lock_instant(t[1]).astimezone(timezone.utc),
     release=lambda t: _adapter("sg_lta_pv").release_instant(t[1]).astimezone(timezone.utc),
-    reference=lambda r, t: _adapter("sg_lta_pv").lock_reference(*t),
-    resolver=lambda r, t, now: _adapter("sg_lta_pv").resolve(*t, now),
+    reference=lambda r, t: _adapter("sg_lta_pv").lock_reference(*t, **_io("sg_lta_pv")),
+    resolver=lambda r, t, now: _adapter("sg_lta_pv").resolve(*t, now, **_io("sg_lta_pv")),
     history=_lta_history, observed=lambda t: t[1] + "-01",
     schedule_rule="locks the day before the month starts; DataMall posts the "
                   "month's file from the 10th of the next"))
