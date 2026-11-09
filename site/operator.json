@@ -3,7 +3,14 @@
     {
       "id": "civiqs",
       "kind": "source",
-      "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Democrat; approve_president_trump_2025.party-Independent: HTTPError: 403 Cl",
+      "last_error": null,
+      "required_action": "inspect upstream freshness; do not resolve a new round until the source moves",
+      "state": "stale"
+    },
+    {
+      "id": "ranking_wikitop",
+      "kind": "source",
+      "last_error": "wiki-top10-2026-11-08/2026-11-08: HTTPError: 404 Client Error: Not Found for url: https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/2026/11/07; wiki-top10-2026-11-15/2026-11-08: HTTPError: 404 Client Error: Not Found for url: https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/2026/11/07; wiki-top10-2026-11-22/2026-11-08: HTTPError: 404 Client Error: Not Found for url: https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/2026/11/07; wiki-top10-2026-11-29/2026-11-08: HTTPError: 404 Client Error: Not Found for url: https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/2026/11/07; wiki-top10-2026-12-06/2026-11-08: HTTPError: 404 Client Error: Not Found for url: https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/2026/11/07",
       "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
       "state": "stale"
     }
@@ -19,14 +26,14 @@
     },
     "sources": {
       "deadline_risk": 0,
-      "healthy": 12,
+      "healthy": 11,
       "retryable_failure": 0,
-      "stale": 1,
+      "stale": 2,
       "unresolvable": 0
     }
   },
   "entrant_round_states": [],
-  "generated_at": "2026-11-08T22:03:13Z",
+  "generated_at": "2026-11-09T06:23:45Z",
   "source_states": [
     {
       "alert": false,
@@ -34,7 +41,7 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=12",
-        "sources/aaii/2026-11-08.html sha256=8b02ea26d1abccaccca6560e18f9aae52375a184db2c85b582874dab6c63e93c"
+        "sources/aaii/2026-11-09.html sha256=8b02ea26d1abccaccca6560e18f9aae52375a184db2c85b582874dab6c63e93c"
       ],
       "last_error": null,
       "next_deadline": "2026-11-11T14:00:00Z",
@@ -50,15 +57,14 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "civiqs/approve_president_trump_2025 (73 snapshots; newest 2026-11-08); civiqs/approve_president_trump_2025.age-18-34 (70 snapshots; newest 2026-11-08); civiqs/approve_president_trump_2025.age-35-49 (71 snapshots; newest 2026-11-08); civiqs/approve_president_trump_2025.age-50-64 (72 snapshots; newest 2026-11-08); civiqs/approve_president_trump_2025.age-65_ (71 snapshots; newest 2026-11-08); civiqs/approve_president_trump_2025.education-College_Graduate (73 snapshots; newest 2026-11-08); civiqs/approve_president_trump_2025.education-Non-College_Graduate (73 snapshots; newest 2026-11-08); civiqs/approve_president_trump_2025.education-Postgraduate (73 snapshots; newest 2026-11-08); civiqs/approve_president_trump_2025.gender-Female (73 snapshots; newest 2026-11-08); civiqs/approve_president_trump_2025.gender-Male (73 snapshots; newest 2026-11-08); civiqs/approve_president_trump_2025.party-Democrat (72 snapshots; newest 2026-11-08); civiqs/approve_president_trump_2025.party-Independent (72 snapshots; newest 2026-11-08); civiqs/approve_president_trump_2025.party-Republican (74 snapshots; newest 2026-11-08); civiqs/approve_president_trump_2025.race-Black_or_African-American (73 snapshots; newest 2026-11-08); civiqs/approve_president_trump_2025.race-Hispanic_Latino (74 snapshots; newest 2026-11-08); civiqs/approve_president_trump_2025.race-Other (74 snapshots; newest 2026-11-08); civiqs/approve_president_trump_2025.race-White (72 snapshots; newest 2026-11-08); civiqs/describe_feeling_us (72 snapshots; newest 2026-11-08); civiqs/economy_family_retro (73 snapshots; newest 2026-11-08); civiqs/economy_us_direction (73 snapshots; newest 2026-11-08); civiqs/inflation_impact (72 snapshots; newest 2026-11-08)",
-        "fetched_days=0.9; changed_days=4.9; fetch_budget=2; change_budget=4; stale_keys=economy_family_retro",
-        "live attempt failed; same-source archive used"
+        "22 validated non-empty series",
+        "fetched_days=0.3; changed_days=5.3; fetch_budget=2; change_budget=4; stale_keys=economy_family_retro,economy_us_direction,inflation_impact"
       ],
-      "last_error": "approve_president_trump_2025: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025; approve_president_trump_2025.party-Republican: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Republican; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us; approve_president_trump_2025.party-Democrat: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/approve_president_trump_2025?party=Democrat; approve_president_trump_2025.party-Independent: HTTPError: 403 Cl",
+      "last_error": null,
       "next_deadline": "2026-11-11T14:00:00Z",
       "next_lock": "2026-11-11T14:00:00Z",
-      "next_retry": "2026-11-09T04:03:13Z",
-      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
+      "next_retry": null,
+      "required_action": "inspect upstream freshness; do not resolve a new round until the source moves",
       "route": "ssa.series:civiqs",
       "source": "civiqs",
       "state": "stale"
@@ -80,20 +86,21 @@
       "state": "healthy"
     },
     {
-      "alert": false,
+      "alert": true,
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "83 complete weekly observations across 14 round(s)"
+        "live attempt failed; same-source archive used",
+        "same-source Wikimedia daily-top archive retained other complete weeks"
       ],
-      "last_error": null,
+      "last_error": "wiki-top10-2026-11-08/2026-11-08: HTTPError: 404 Client Error: Not Found for url: https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/2026/11/07; wiki-top10-2026-11-15/2026-11-08: HTTPError: 404 Client Error: Not Found for url: https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/2026/11/07; wiki-top10-2026-11-22/2026-11-08: HTTPError: 404 Client Error: Not Found for url: https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/2026/11/07; wiki-top10-2026-11-29/2026-11-08: HTTPError: 404 Client Error: Not Found for url: https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/2026/11/07; wiki-top10-2026-12-06/2026-11-08: HTTPError: 404 Client Error: Not Found for url: https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/2026/11/07",
       "next_deadline": "2026-11-11T14:00:00Z",
       "next_lock": "2026-11-11T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
+      "next_retry": "2026-11-09T12:23:45Z",
+      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
       "route": "ssa.ranking:ranking_wikitop",
       "source": "ranking_wikitop",
-      "state": "healthy"
+      "state": "stale"
     },
     {
       "alert": false,
@@ -101,7 +108,7 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
-        "sources/sb_approval/2026-11-08.csv sha256=3a9fbb3093ceaac5de28c038e216abced368899ad5bae1a16e6252c606689dc4"
+        "sources/sb_approval/2026-11-09.csv sha256=1f4138ba8da4baa4dc1a1471e67f8ed8085e17ba1cd1bb26fddabd2ebfa83fd1"
       ],
       "last_error": null,
       "next_deadline": "2026-11-11T14:00:00Z",
@@ -117,8 +124,8 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=4.9; fetch_budget=2; change_budget=10",
-        "sources/sb_generic/2026-11-08.csv sha256=5a0ff534563f708376cf8ad6f79d6ef199cf5d965427d25b30c9e2d8387dca9d"
+        "fetched_days=-0.0; changed_days=5.3; fetch_budget=2; change_budget=10",
+        "sources/sb_generic/2026-11-09.csv sha256=5a0ff534563f708376cf8ad6f79d6ef199cf5d965427d25b30c9e2d8387dca9d"
       ],
       "last_error": null,
       "next_deadline": "2026-11-11T14:00:00Z",
@@ -182,8 +189,8 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=2.1; fetch_budget=3; change_budget=40",
-        "sources/umich/2026-11-08.json sha256=553ca7c1f04bd9d8166c3a9d8af11a2d5d902adb276c27b1ae7a98c5ff43e122"
+        "fetched_days=-0.0; changed_days=2.5; fetch_budget=3; change_budget=40",
+        "sources/umich/2026-11-09.json sha256=553ca7c1f04bd9d8166c3a9d8af11a2d5d902adb276c27b1ae7a98c5ff43e122"
       ],
       "last_error": null,
       "next_deadline": "2026-11-11T14:00:00Z",
