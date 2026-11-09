@@ -543,6 +543,10 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
         # only when set, so every existing round's payload is unchanged.
         if "zero_point" in r:
             row["zero_point"] = baselines.zero_point_name(r)
+            # A spec object travels with the row, so the leaderboard and
+            # every reader of the payload score on the rule the round named.
+            if isinstance(r["zero_point"], dict):
+                row["zero_point_spec"] = baselines.zero_point_spec(r)
         row["deadline"] = iso(batches.effective_deadline(r["lock_at"]))
         # When this round is listed, and which week it displays under. The
         # deadline is its own lock; the week is only how the site groups it,
@@ -637,6 +641,7 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
             target = r["release_at"][:10]
             row["baselines"] = baselines.all_baselines(hist, target)
             row["scoreable"] = True
+            attach_zero_point(row, r, hist)
         else:
             row["baselines"] = None
             # Named rather than merely empty. Skill is defined as a ratio
@@ -2171,6 +2176,30 @@ def published_lists(weeks=12):
     except Exception as e:
         print("lists skipped:", e)
         return {}
+
+
+def attach_zero_point(row, r, hist):
+    """A round whose zero point is a spec with a `target` gets that reference
+    computed from `hist`, the same frozen history every other null reads.
+
+    A preset or a spec without a target is supplied by its adapter's lock
+    capture instead, and `build_leaderboard` refuses to score the round until
+    it is. A rule the frozen history cannot support (fewer settled values or
+    past targets than the rule needs) leaves the round unscoreable and says
+    why -- never ranked on another null.
+    """
+    if "zero_point" not in r:
+        return
+    spec = baselines.zero_point_spec(r)
+    if spec["family"] == "persistence" or "target" not in spec:
+        return
+    try:
+        row["baselines"][spec["name"]] = baselines.reference_from_history(spec, hist)
+    except baselines.NotPostable as e:
+        row["baselines"] = None
+        row["scoreable"] = False
+        row["baseline_note"] = (f"zero point {spec['name']} cannot be computed "
+                                f"from the history frozen at lock: {e}")
 
 
 def build_leaderboard(rounds, resolved):

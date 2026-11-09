@@ -58,7 +58,7 @@ from zoneinfo import ZoneInfo
 
 import requests
 
-from .. import provenance
+from .. import baselines, provenance
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 NAME = "seattle_cad"
@@ -123,8 +123,9 @@ class Truncated(ValueError):
     """The body holds exactly ROW_LIMIT rows, so rows may be missing."""
 
 
-class NotPostable(ValueError):
-    """The lock snapshot cannot support a reference (card v2 policy (3))."""
+# The lock snapshot cannot support a reference (card v2 policy (3)). The
+# shared family's error, so a caller catches one class for every reference.
+NotPostable = baselines.NotPostable
 
 
 # ---------------------------------------------------------------- the clock
@@ -319,9 +320,52 @@ def reference_weeks(target_week, step_back=0):
     return [d - timedelta(days=7 * k + 7 * step_back) for k in (5, 4, 3, 2)]
 
 
-def _weeks_ok(cd, weeks):
-    return all(week_total(cd, w) is not None and not outage_days(cd, w)
-               for w in weeks)
+# The two references are settings of the shared family in ssa/baselines.py
+# (owner rule G1 of the urban cards), byte-identical to the rules as they
+# shipped under card v4 (tests/test_zero_point.py holds the old code).
+YOY4 = baselines.PRESETS["yoy4"]
+PERSISTENCE_SETTLED = {
+    "name": "persistence_settled", "family": "mean_k", "period": "week",
+    "k": 1, "lag": 1, "search": 2,
+    "spread": {"rule": "rms", "n": SPREAD_WEEKS, "search": SPREAD_SEARCH_WEEKS}}
+
+
+def weekly(cd):
+    """({Monday: week total} for every complete week in the body, valid):
+    `valid(week)` is the card's outage check, memoised per call."""
+    if not cd:
+        return {}, lambda w: False
+    m = min(cd)
+    m = m + timedelta(days=(7 - m.weekday()) % 7)
+    out = {}
+    while m <= max(cd):
+        t = week_total(cd, m)
+        if t is not None:
+            out[m] = t
+        m += timedelta(days=7)
+    seen = {}
+
+    def valid(w):
+        if w not in seen:
+            seen[w] = not outage_days(cd, w)
+        return seen[w]
+    return out, valid
+
+
+def _legacy_yoy(point):
+    return {"method": "yoy4_ratio_of_sums",
+            "mean": point["mean"],
+            "ratio": point["ratio"],
+            "numerator": point["numerator"], "denominator": point["denominator"],
+            "last_year_week": point["year_ago"][0],
+            "last_year_count": point["year_ago_value"],
+            "reference_weeks": point["window"],
+            "step_back": point["step_back"]}
+
+
+def _series(cd):
+    weeks, valid = weekly(cd)
+    return baselines._Series(weeks, "week", valid)
 
 
 def yoy4_reference(cd, target_week):
@@ -332,46 +376,23 @@ def yoy4_reference(cd, target_week):
     Never a mean of weekly ratios. Policy (3): if any reference week, any
     year-earlier counterpart or the aligned week fails the outage check, the
     block steps back one week; if it still fails, NotPostable.
+    `baselines.yoy_k` with the `yoy4` preset's parameters.
 
     Returns the point and its parts. The spread is added by `yoy4` (card v3).
     """
-    d = monday(target_week)
-    aligned = d - timedelta(days=364)
-    if week_total(cd, aligned) is None or outage_days(cd, aligned):
-        raise NotPostable(f"last year's aligned week {aligned} fails the outage "
-                          "check; the round is not posted")
-    for step in (0, 1):
-        weeks = reference_weeks(d, step)
-        earlier = [w - timedelta(days=364) for w in weeks]
-        if _weeks_ok(cd, weeks) and _weeks_ok(cd, earlier):
-            num = sum(week_total(cd, w) for w in weeks)
-            den = sum(week_total(cd, w) for w in earlier)
-            if den <= 0:
-                raise NotPostable("year-earlier reference weeks sum to zero")
-            ratio = num / den
-            ly = week_total(cd, aligned)
-            return {"method": "yoy4_ratio_of_sums",
-                    "mean": round(ratio * ly, 2),
-                    "ratio": round(ratio, 6),
-                    "numerator": num, "denominator": den,
-                    "last_year_week": aligned.isoformat(),
-                    "last_year_count": ly,
-                    "reference_weeks": [w.isoformat() for w in weeks],
-                    "step_back": step}
-    raise NotPostable(f"reference weeks for {d} fail the outage check even "
-                      "after one step back; the round is not posted")
+    s = YOY4
+    return _legacy_yoy(baselines.yoy_k(
+        _series(cd), monday(target_week), s["k"], s["lag"], s["step_back"]))
 
 
 def persistence_settled(cd, target_week):
-    """Shown, not ranked: the count of the settled week D-14..D-8."""
-    d = monday(target_week)
-    for step in (0, 1):
-        w = d - timedelta(days=14 + 7 * step)
-        if week_total(cd, w) is not None and not outage_days(cd, w):
-            return {"method": "persistence_settled_week",
-                    "mean": float(week_total(cd, w)),
-                    "week": w.isoformat(), "step_back": step}
-    raise NotPostable(f"no settled persistence week for {d}")
+    """Shown, not ranked: the count of the settled week D-14..D-8 (one step
+    back if it fails the outage check): `baselines.mean_k`, k=1, lag=1."""
+    s = PERSISTENCE_SETTLED
+    p = baselines.mean_k(_series(cd), monday(target_week), s["k"], s["lag"],
+                         s["search"])
+    return {"method": "persistence_settled_week", "mean": p["mean"],
+            "week": p["window"][0], "step_back": p["step_back"]}
 
 
 def past_errors(cd, target_week, reference):
@@ -381,51 +402,48 @@ def past_errors(cd, target_week, reference):
     reference by the same rule, its actual from the same body.
     """
     d = monday(target_week)
-    errors, weeks = [], []
-    for k in range(2, 2 + SPREAD_SEARCH_WEEKS):
-        w = d - timedelta(days=7 * k)
-        actual = week_total(cd, w)
-        if actual is None or outage_days(cd, w):
-            continue
-        try:
-            ref = reference(cd, w)
-        except NotPostable:
-            continue
-        errors.append(actual - ref["mean"])
-        weeks.append(w.isoformat())
-        if len(errors) == SPREAD_WEEKS:
-            return errors, weeks
-    raise NotPostable(f"only {len(errors)} of {SPREAD_WEEKS} past target weeks "
-                      f"qualify for the spread of {d} within "
-                      f"{SPREAD_SEARCH_WEEKS} weeks; the round is not posted")
+    weeks = [d - timedelta(days=7 * k) for k in range(2, 2 + SPREAD_SEARCH_WEEKS)]
+
+    def actual(w):
+        t = week_total(cd, w)
+        return None if t is None or outage_days(cd, w) else t
+    try:
+        pairs, used = baselines.spread_errors(
+            weeks, actual, lambda w: reference(cd, w), SPREAD_WEEKS)
+    except NotPostable as e:
+        raise NotPostable(f"{e}: {d}, searched {SPREAD_SEARCH_WEEKS} weeks") from None
+    return [a - m for a, m in pairs], [w.isoformat() for w in used]
 
 
 def rms(errors):
-    return (sum(e * e for e in errors) / len(errors)) ** 0.5
+    return baselines.rms(errors)
 
 
-def with_spread(cd, target_week, reference):
-    """A reference plus its card v3 spread: {mean, sd, spread_weeks, ...}."""
-    out = dict(reference(cd, target_week))
-    errors, weeks = past_errors(cd, target_week, reference)
-    # Floor after rounding: CRPS needs sd > 0, and a perfectly flat history
-    # (only ever a fixture) must not round its floor away.
-    out["sd"] = max(round(rms(errors), 2), 0.01)
+def _legacy_spread(out, ref):
+    out["sd"] = ref["sd"]
     out["spread"] = "rms_13_settled_weeks"
-    out["spread_weeks"] = weeks
+    out["spread_weeks"] = ref["spread_targets"]
     return out
 
 
 def yoy4(cd, target_week):
-    """The ranked zero point `yoy4` as the leaderboard reads it."""
-    out = with_spread(cd, target_week, yoy4_reference)
+    """The ranked zero point `yoy4` as the leaderboard reads it: the preset
+    computed by `baselines.reference`, in the shape card v4 published."""
+    weeks, valid = weekly(cd)
+    ref = baselines.reference(YOY4, weeks, monday(target_week), valid)
+    out = _legacy_yoy(ref)
     out["method"] = "yoy4"
-    return out
+    return _legacy_spread(out, ref)
 
 
 def persistence_shown(cd, target_week):
     """Unranked persistence on D-14, spread the same way from its own errors."""
-    return with_spread(cd, target_week, persistence_settled)
+    weeks, valid = weekly(cd)
+    ref = baselines.reference(PERSISTENCE_SETTLED, weeks, monday(target_week),
+                              valid)
+    out = {"method": "persistence_settled_week", "mean": ref["mean"],
+           "week": ref["window"][0], "step_back": ref["step_back"]}
+    return _legacy_spread(out, ref)
 
 
 def weekly_series(cd):

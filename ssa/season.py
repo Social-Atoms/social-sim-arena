@@ -14,7 +14,7 @@ turns a candidate into an approved round.
 import re
 from datetime import datetime, timedelta, timezone
 
-from . import consumer_round, inventory, profile_round, ranking_round
+from . import baselines, consumer_round, inventory, profile_round, ranking_round
 from .series import SERIES
 
 TARGET_TYPES = {"continuous_normal", "profile_energy", "ranking_list"}
@@ -180,6 +180,13 @@ def _shape_problems(round_data):
                 problems.append(f"{rid}: ranking round also carries `cells`")
         else:
             problems.append(f"{rid}: unknown target_type {target!r}")
+        # The ranked zero point is a closed spec (ssa/baselines.normalize_spec):
+        # an unknown key, family or spread rule is a publication problem here,
+        # not a crash at the first refresh after the round goes live.
+        if "zero_point" in round_data:
+            baselines.normalize_spec(round_data["zero_point"], rid)
+            if target != "continuous_normal":
+                problems.append(f"{rid}: zero_point applies to scalar rounds only")
     except (KeyError, TypeError, ValueError) as err:
         problems.append(str(err))
     return problems
