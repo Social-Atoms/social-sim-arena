@@ -215,6 +215,15 @@ jobs:
       - name: capture Seattle police calls (pilot, non-blocking)
         continue-on-error: true
         run: python -m ssa.adapters.seattle_cad capture
+      # NYC 311 service requests, Urban Track (card nyc-311-requests@v2): one
+      # capture per UTC day, write-once, under sources/nyc311/, staged by the
+      # data commit below. A body Socrata flags X-SODA2-Data-Out-Of-Date: true
+      # is refused, never filed, and the next run tries again; a 403 or 429
+      # from this runner means a local courier (docs/sources/nyc-311.md).
+      - name: capture NYC 311 requests (non-blocking)
+        continue-on-error: true
+        timeout-minutes: 8
+        run: python -m ssa.adapters.nyc311 capture
       - run: python -m ssa.refresh
       # Resolution runs after the refresh so it scores against the series the
       # same run just fetched. It only ever adds, never overwrites, and

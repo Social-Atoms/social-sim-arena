@@ -227,6 +227,47 @@ INVENTORY = {
             "ssa/series.py: the archive runs, the series and rounds wait on "
             "the maintainer decisions listed in the PR."),
     },
+    "nyc311": {
+        "publisher": "NYC 311 and the NYC Office of Technology and Innovation, "
+                     "NYC Open Data",
+        "adapter": "ssa/adapters/nyc311.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        # Proposed by the track's Data Card (nyc-311-requests@v2); maintainers
+        # confirm or change it at review, after the card's PERSON TASK (the
+        # NYC.gov Terms of Use read in a browser). The card's owner approval
+        # covers the question rules, not this verdict.
+        "rights": APPROVED,
+        "evidence": (
+            "Read 2026-11-09. Dataset metadata "
+            "(https://data.cityofnewyork.us/api/views/erm2-nwe9.json, fetched "
+            "2026-11-09T00:58:23Z): attribution \"311\", provenance "
+            "\"official\", custom field \"Automation: Yes\", agency OTI, no "
+            "licenseId. NYC Administrative Code \u00a723-502(b): data sets "
+            "\"shall be in a format that permits automated processing\"; "
+            "\u00a723-502(d): \"made available without any registration "
+            "requirement, license requirement or restrictions on their use\", "
+            "provided a third party may be required to \"explicitly identify "
+            "the source and version of the public data set, and a description "
+            "of any modifications\"; \u00a723-503(a): \"reasonable measures to "
+            "maintain bandwidth availability\" (text read on the "
+            "nyc-laws.readthedocs.io mirror; currency against the official "
+            "code unverified). Open gap: the portal Terms of Use "
+            "(www.nyc.gov/html/data/terms.html), the NYC.gov Terms it binds "
+            "users to, and opendata.cityofnewyork.us/faq/ returned Akamai 403 "
+            "to an honest agent at 2026-11-09T01:10-01:11Z and were not routed "
+            "around; a maintainer reads them in a browser before this merges "
+            "to main (card archive_policy, PERSON TASK). If they bar API "
+            "retrieval the manual weekly download (tools/ingest_nyc311.py) "
+            "replaces the automated capture; if they bar archiving, the "
+            "source stops. Cite \"NYC 311 / NYC Open Data, 311 Service "
+            "Requests from 2020 to Present (erm2-nwe9)\" with the snapshot "
+            "date, archive unmodified. No key, no app token, one request a "
+            "day. No publisher calendar: SSA sets and resolves the metric "
+            "(docs/sources.md section 1.1). Not yet registered in "
+            "ssa/series.py; the proposed rounds are in "
+            "docs/data-cards/nyc-311-requests.rounds.json."),
+    },
     "wikipedia": {
         "publisher": "Wikimedia Foundation",
         "adapter": "ssa/adapters/wikipedia.py",
