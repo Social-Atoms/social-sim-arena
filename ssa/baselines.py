@@ -121,6 +121,8 @@ def all_baselines(history, target_date, names=DEFAULT):
 # - `mean_k`: the mean of the k newest eligible values before the target,
 #   after skipping `lag` newer periods that are not settled at lock. Up to
 #   `search` periods are examined, so an ineligible one is skipped, not filled.
+#   Or `step_back`: a block with an ineligible period shifts back whole, up to
+#   n periods (card nyc-311-requests@v2), never both.
 # - `yoy_k`: R x (last year's target), R = a ratio of sums over k settled
 #   periods ending `lag` periods before the target / the same periods one
 #   year earlier. Never a mean of ratios. k = 0 is plain same-as-last-year.
@@ -164,7 +166,7 @@ FAMILIES = ("persistence", "mean_k", "yoy_k")
 _COMMON = {"name", "family", "period", "k", "lag", "digits", "target", "spread"}
 _KEYS = {
     "persistence": {"name", "family"},
-    "mean_k": _COMMON | {"search"},
+    "mean_k": _COMMON | {"search", "step_back"},
     "yoy_k": _COMMON | {"step_back", "end", "max_lag", "keep", "target_len",
                         "base"},
 }
@@ -237,6 +239,16 @@ def normalize_spec(zp, rid="?"):
         spec.setdefault("search", spec["k"])
         if _int(spec, "search", 1, rid) < spec["k"]:
             raise ValueError(f"{rid}: zero_point `search` must be >= k")
+        # `step_back` shifts the whole block of k periods back, as yoy_k's
+        # does (card nyc-311-requests@v2, policy (3)); `search` instead skips
+        # single periods. Two rules for one gap, so a spec picks one. Absent
+        # rather than defaulted, so every spec written before it normalizes
+        # to the same object.
+        if "step_back" in spec:
+            _int(spec, "step_back", 0, rid)
+            if spec["step_back"] and spec["search"] != spec["k"]:
+                raise ValueError(f"{rid}: zero_point mean_k takes `step_back` "
+                                 "or a `search` wider than k, not both")
     else:
         _int(spec, "step_back", 0, rid)
         _int(spec, "target_len", 1, rid)
@@ -500,8 +512,17 @@ def rms(errors):
 def _point(spec, s, target, bases):
     fam = spec["family"]
     if fam == "mean_k":
-        return mean_k(s, target, spec["k"], spec["lag"], spec["search"],
-                      spec["digits"])
+        steps = spec.get("step_back", 0)
+        for step in range(steps + 1):
+            try:
+                p = mean_k(s, target, spec["k"], spec["lag"] + step,
+                           spec["search"], spec["digits"])
+            except NotPostable:
+                if step == steps:
+                    raise
+                continue
+            p["step_back"] += step
+            return p
     base = None
     if spec["base"] != "same_period":
         fn = (bases or {}).get(spec["base"])
