@@ -30,6 +30,7 @@ from . import ranking_round
 from . import season as season_rules
 from . import series as series_registry
 from . import task_registry
+from . import urban
 from . import entrant_status
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -670,6 +671,8 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
         # baseline filing both key on `baselines` being present.
         if profile_round.is_profile(r):
             attach_profile(row, r, series, now)
+        else:
+            attach_lock_reference(row, r, now)
         if r["round_id"] in resolved:
             row["resolution"] = resolved[r["round_id"]]
         out.append(row)
@@ -2191,20 +2194,10 @@ def published_lists(weeks=12):
         return {}
 
 
-def _bls_cpi_lock_capture(r):
-    from .adapters import bls_cpi
-    bls_cpi.lock_capture(r["lock_at"], bls_cpi.reference_month(r["release_at"]))
-
-
-# A source whose card adds a freshness rule to the lock-time reference, keyed
-# by the round's series source: fn(round) raises baselines.NotPostable when
-# the capture the reference stands on is missing. Checked only once the
-# round has locked, when the archive that answers it can no longer change.
-LOCK_CAPTURE_CHECKS = {
-    # Card bls-cpi-rent@v2, missing-data rule (4): a capture from the 24
-    # hours before the lock must carry M-1.
-    "bls_cpi": _bls_cpi_lock_capture,
-}
+def _urban_rule(r):
+    """The ssa/urban.py registry entry for the round's source, or None."""
+    return urban.get((series_registry.SERIES.get(r.get("series")) or {})
+                     .get("source"))
 
 
 def attach_zero_point(row, r, hist, now=None):
@@ -2222,17 +2215,87 @@ def attach_zero_point(row, r, hist, now=None):
     spec = baselines.zero_point_spec(r)
     if spec["family"] == "persistence" or "target" not in spec:
         return
-    check = LOCK_CAPTURE_CHECKS.get(
-        (series_registry.SERIES.get(r.get("series")) or {}).get("source"))
+    # A source whose card adds a freshness rule to a history-route reference
+    # (CPI rent, bls-cpi-rent@v2 rule (4): a capture from the 24 hours before
+    # the lock must carry M-1) checks it through the registry once the round
+    # has locked, when the archive that answers it can no longer change.
+    rule = _urban_rule(r)
     try:
-        if check and now is not None and now >= parse_iso(r["lock_at"]):
-            check(r)
+        if rule and now is not None and now >= parse_iso(r["lock_at"]):
+            rule.lock_check(r)
         row["baselines"][spec["name"]] = baselines.reference_from_history(spec, hist)
     except baselines.NotPostable as e:
         row["baselines"] = None
         row["scoreable"] = False
         row["baseline_note"] = (f"zero point {spec['name']} cannot be computed "
                                 f"from the history frozen at lock: {e}")
+
+
+def _json_plain(obj):
+    """What the lock snapshot stores: dates as ISO strings, tuples as lists,
+    so a reference read back from the file is the one that was attached."""
+    return json.loads(json.dumps(obj, default=str, sort_keys=True))
+
+
+def attach_lock_reference(row, r, now):
+    """The ranked reference of an Urban Track round whose adapter computes it
+    from the capture archived at lock (ssa/urban.py), frozen once.
+
+    At or after `lock_at` the registry computes it -- reading only captures
+    fetched at or before the lock, so the answer cannot be in it -- and the
+    result, or the card's refusal to post one, is written into the round's
+    lock snapshot (`zero_point_reference`) and never recomputed. Before the
+    lock nothing is attached: the round is not scoreable on a reference that
+    does not exist yet. A refusal leaves the round unscoreable and says why;
+    it is never ranked on another null. A failure that is not the card's
+    refusal (a changed archive, an unreadable body) is reported and not
+    frozen, so the next run tries again.
+    """
+    rule = _urban_rule(r)
+    if rule is None or not rule.has_lock_reference or "zero_point" not in r:
+        return
+    name = baselines.zero_point_name(r)
+    if now is None or now < parse_iso(r["lock_at"]):
+        row["zero_point_reference"] = {
+            "status": "pending", "card": rule.card,
+            "note": f"computed from the capture archived at lock ({r['lock_at']})"}
+        return
+    frozen = (read_lock_snapshot(r["round_id"]) or {}).get("zero_point_reference")
+    if frozen is None:
+        try:
+            frozen = {"status": "posted", "card": rule.card,
+                      "reference": _json_plain(rule.lock_reference(r))}
+        except baselines.NotPostable as e:
+            frozen = {"status": "refused", "card": rule.card, "reason": str(e)}
+        except (OSError, RuntimeError, ValueError, KeyError) as e:
+            row["baselines"] = None
+            row["scoreable"] = False
+            row["baseline_note"] = (f"zero point {name}: the lock capture could "
+                                    f"not be read ({type(e).__name__}: {e}); "
+                                    "retried next run")
+            return
+        _merge_snapshot(r["round_id"], {
+            "round_id": r["round_id"], "lock_at": r["lock_at"],
+            "zero_point_reference": frozen,
+            "zero_point_frozen_at": iso(now)})
+    row["zero_point_reference"] = {k: v for k, v in frozen.items()
+                                   if k != "reference"}
+    if frozen["status"] != "posted":
+        row["baselines"] = None
+        row["scoreable"] = False
+        row["baseline_note"] = (f"zero point {name} was not posted at lock "
+                                f"({frozen['card']}): {frozen['reason']}")
+        return
+    ref = frozen["reference"]
+    ranked = dict(ref["ranked"], method=name)
+    row["baselines"] = dict(row.get("baselines") or {}, **{name: ranked})
+    row["scoreable"] = True
+    row.pop("baseline_note", None)
+    # The citation and the shown (unranked) reference travel with the row.
+    for k in ("snapshot", "sha256", "fetched_at", "capture", "files", "mode",
+              "flags", "note", "shown"):
+        if ref.get(k) is not None:
+            row["zero_point_reference"][k] = ref[k]
 
 
 def build_leaderboard(rounds, resolved):

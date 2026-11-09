@@ -213,37 +213,6 @@ def candidate(r, series):
     return after[0], None
 
 
-def _bls_cpi_resolution(r, now):
-    """Card bls-cpi-rent@v2: the first archived API capture at or after the
-    release whose newest period is M, the change from L_M and L_{M-1} in that
-    same body. Not "the first point after the frozen history": a series
-    rebuilt from a later capture carries revised levels (every February), and
-    the round answers to the release that first printed M."""
-    from .adapters import bls_cpi
-    month = bls_cpi.reference_month(r["release_at"])
-    got = bls_cpi.resolution(month, r["release_at"], now=now)
-    return {
-        "value": got["value"],
-        "observed_date": month + "-01",
-        "series": r["series"],
-        "method": (f"100 x (L_M / L_M-1 - 1) from {got['level']} and "
-                   f"{got['level_prev']} in {got['file']} (fetched "
-                   f"{got['fetched_at']}), the first archived capture at or "
-                   f"after the release carrying {month}; card bls-cpi-rent@v2"),
-        "vintage": got["file"],
-        "vintage_sha256": got["sha256"],
-        "resolved_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
-    }
-
-
-# Sources whose card names the archived capture a round resolves on, keyed by
-# the round's series source: fn(round, now) returns the resolution or raises
-# ValueError with the reason it waits or is cancelled.
-VINTAGE_RESOLVERS = {
-    "bls_cpi": _bls_cpi_resolution,
-}
-
-
 # The two refusals that mean "another resolver owns this round", as opposed to
 # "this round is stuck". They are constants because `main` has to tell the two
 # apart to report them differently, and matching on the shape of a sentence is
@@ -293,12 +262,17 @@ def resolve_round(r, series, now):
             return consumer_round.resolution(r, now=now), None
         except (KeyError, ValueError) as error:
             return None, str(error)
-    vintage = VINTAGE_RESOLVERS.get(_source(r["series"]))
-    if vintage is not None and r.get("round_id") not in HAND_ONLY:
+    # Urban Track sources resolve on the archived capture their card names
+    # (ssa/urban.py): pending, cancelled and review all leave the round
+    # unresolved with the card's reason, never "the first point after the
+    # freeze" of a series rebuilt from a later capture.
+    from . import urban
+    rule = urban.get(_source(r["series"]))
+    if rule is not None and rule.resolves and r.get("round_id") not in HAND_ONLY:
         try:
-            return vintage(r, now), None
-        except ValueError as error:
-            return None, str(error)
+            return rule.resolve(r, now)
+        except (OSError, KeyError, RuntimeError, ValueError) as error:
+            return None, f"{rule.card}: {type(error).__name__}: {error}"
     point, why = candidate(r, series)
     if point is None:
         return None, why

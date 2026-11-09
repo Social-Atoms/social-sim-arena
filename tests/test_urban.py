@@ -145,6 +145,92 @@ def test_seattle_rounds_follow_the_same_rule():
     ok(test_seattle_rounds_follow_the_same_rule)
 
 
+def test_the_lock_reference_is_attached_once_and_frozen():
+    """refresh.attach_lock_reference: nothing before the lock; at the lock
+    the registry's reference is frozen into the lock snapshot and later runs
+    read it back even if the rule would now say something else; a refusal is
+    frozen too and leaves the round unscoreable, never on another null."""
+    import tempfile
+    from datetime import datetime, timezone
+    from ssa import baselines, refresh
+    calls = []
+
+    class Stub:
+        card = "stub@v2"
+        has_lock_reference = True
+
+        def __init__(self, out):
+            self.out = out
+
+        def lock_reference(self, r):
+            calls.append(r["round_id"])
+            if isinstance(self.out, Exception):
+                raise self.out
+            return self.out
+
+    r = {"round_id": "t-urban-ref", "series": "nyc311_requests_weekly",
+         "lock_at": "2026-12-14T04:59:00Z", "zero_point": "yoy4"}
+    saved_locks, saved_get = refresh.LOCKS, urban.get
+    tmp = tempfile.mkdtemp(prefix="ssa-urban-")
+    refresh.LOCKS = tmp
+    try:
+        before = datetime(2026, 12, 13, tzinfo=timezone.utc)
+        after = datetime(2026, 12, 15, tzinfo=timezone.utc)
+        urban.get = lambda key: Stub({"zero_point": "yoy4", "snapshot": "s.json",
+                                      "ranked": {"mean": 100.0, "sd": 5.0}})
+        row = {"baselines": None, "scoreable": False, "baseline_note": "short"}
+        refresh.attach_lock_reference(row, r, before)
+        assert row["zero_point_reference"]["status"] == "pending" and not calls
+        refresh.attach_lock_reference(row, r, after)
+        assert row["baselines"]["yoy4"]["mean"] == 100.0 and row["scoreable"]
+        assert "baseline_note" not in row
+        assert row["zero_point_reference"]["snapshot"] == "s.json"
+        # A later run whose rule would answer differently reads the freeze.
+        urban.get = lambda key: Stub({"zero_point": "yoy4",
+                                      "ranked": {"mean": 1.0, "sd": 1.0}})
+        row2 = {"baselines": {"persistence": {"mean": 9.0, "sd": 1.5}}}
+        refresh.attach_lock_reference(row2, r, after)
+        assert row2["baselines"]["yoy4"]["mean"] == 100.0, "recomputed after lock"
+        assert row2["baselines"]["persistence"]["mean"] == 9.0
+        assert calls == ["t-urban-ref"]
+        # A refusal is the card's answer, frozen like a reference.
+        r2 = dict(r, round_id="t-urban-refused")
+        urban.get = lambda key: Stub(baselines.NotPostable("no capture at lock"))
+        row3 = {"baselines": {"persistence": {"mean": 9.0, "sd": 1.5}}}
+        refresh.attach_lock_reference(row3, r2, after)
+        assert row3["baselines"] is None and row3["scoreable"] is False
+        assert "no capture at lock" in row3["baseline_note"]
+        snap = refresh.read_lock_snapshot("t-urban-refused")
+        assert snap["zero_point_reference"]["status"] == "refused"
+        # A transient failure is reported and not frozen.
+        r3 = dict(r, round_id="t-urban-broken")
+        urban.get = lambda key: Stub(RuntimeError("sha256 mismatch"))
+        row4 = {"baselines": {}}
+        refresh.attach_lock_reference(row4, r3, after)
+        assert "retried next run" in row4["baseline_note"]
+        assert refresh.read_lock_snapshot("t-urban-broken") is None
+    finally:
+        refresh.LOCKS, urban.get = saved_locks, saved_get
+        import shutil
+        shutil.rmtree(tmp)
+    ok(test_the_lock_reference_is_attached_once_and_frozen)
+
+
+def test_the_round_must_name_the_zero_point_the_card_computes():
+    rule = urban.get("nyc311")
+    r = {"round_id": "nyc311-2026-12-20", "zero_point": "yoy4"}
+    saved = rule._reference
+    rule._reference = lambda r, t: {"zero_point": "mean4", "ranked": {}}
+    try:
+        rule.lock_reference(r)
+        raise AssertionError("a round named yoy4 was ranked on mean4")
+    except urban.NotPostable as e:
+        assert "'yoy4'" in str(e) and "'mean4'" in str(e)
+    finally:
+        rule._reference = saved
+    ok(test_the_round_must_name_the_zero_point_the_card_computes)
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_") and callable(fn):
