@@ -4,11 +4,9 @@ They are not in questions/season0.json: they wait for a question batch. This
 checks what can be checked now -- each file cites its card by the hash of the
 committed copy, its zero points are closed specs, the clock matches the
 adapters, and against the season validator (the five series are registered
-in ssa/series.py) the only problems
-left are the two schedule contracts a maintainer has to add: COE locks 53 h
-before the exercise close and the passenger-volume rounds lock ~41 days
-before release, by the cards' owner decisions, where the default contract
-is 48 h.
+in ssa/series.py) every round passes, including the two schedules the
+cards chose on purpose: COE locks 53 h before the exercise close and the
+passenger-volume rounds ~41 days before release (ssa/urban.py).
 """
 import glob
 import json
@@ -78,18 +76,15 @@ def test_the_clock_matches_the_adapters_and_none_is_in_the_season():
     ok(test_the_clock_matches_the_adapters_and_none_is_in_the_season)
 
 
-def test_season_validator_leaves_only_the_two_schedule_contracts():
+def test_the_season_validator_passes_every_round_on_its_cards_schedule():
     for sid, src in SOURCES.items():
         assert series.SERIES[sid]["source"] == src, sid
     rounds = [r for d in docs().values() for r in d["rounds"]]
     problems = season.validate_document({"rounds": rounds})
-    for p in problems:
-        rid = p.split(":")[0]
-        assert "release is" in p and "requires 48h" in p, p
-        assert rid.startswith(("sg-coe-a-", "sg-pv-")), p
-    assert sum(p.startswith("sg-coe-a-") for p in problems) == 2
-    assert sum(p.startswith("sg-pv-") for p in problems) == 6
-    ok(test_season_validator_leaves_only_the_two_schedule_contracts)
+    # COE's 1 h-before-bidding lock and LTA's day-before-the-month lock are
+    # source rules in ssa/urban.py now, so nothing is left.
+    assert problems == [], problems
+    ok(test_the_season_validator_passes_every_round_on_its_cards_schedule)
 
 
 if __name__ == "__main__":

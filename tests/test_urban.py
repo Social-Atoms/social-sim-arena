@@ -13,7 +13,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from ssa import domains, inventory, series, urban            # noqa: E402
+from ssa import domains, inventory, season, series, urban    # noqa: E402
 
 PASSED = []
 
@@ -90,6 +90,59 @@ def test_build_all_takes_injected_rows_and_never_fails_on_an_empty_archive():
     finally:
         series.SERIES = saved
     ok(test_build_all_takes_injected_rows_and_never_fails_on_an_empty_archive)
+
+
+def _shift(stamp, **kw):
+    from datetime import datetime, timedelta
+    t = datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ") + timedelta(**kw)
+    return t.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _schedule(r):
+    return [p for p in season.validate_document({"rounds": [r]})
+            if "invalid schedule" in p]
+
+
+def test_each_source_rule_holds_its_cards_instants_to_the_second():
+    """Every proposed round passes on its card's schedule; moving the lock
+    or the release by one minute, or naming a week that does not end on a
+    Sunday, fails -- for each source with a rule."""
+    rounds = proposed()
+    seen = set()
+    for r in rounds:
+        src = series.SERIES[r["series"]]["source"]
+        rule = urban.get(src)
+        assert _schedule(r) == [], (r["round_id"], _schedule(r))
+        if not rule.has_schedule or src in seen:
+            continue
+        seen.add(src)
+        late = dict(r, lock_at=_shift(r["lock_at"], minutes=1))
+        assert _schedule(late) and rule.card.split(" ")[0] in _schedule(late)[0], late
+        early = dict(r, release_at=_shift(r["release_at"], minutes=-1))
+        assert _schedule(early), r["round_id"]
+    assert seen == {"nyc311", "mta_daily", "tsa_volumes", "sg_coe", "sg_taxi",
+                    "sg_carpark_hdb", "sg_lta_pv"}, seen
+    week = next(r for r in rounds if r["round_id"].startswith("nyc311-"))
+    saturday = dict(week, round_id=week["round_id"][:-2] + "19")
+    assert "not the Sunday" in _schedule(saturday)[0]
+    ok(test_each_source_rule_holds_its_cards_instants_to_the_second)
+
+
+def test_seattle_rounds_follow_the_same_rule():
+    from ssa.adapters import seattle_cad
+    from datetime import date
+    monday = date(2026, 12, 14)
+    r = {"round_id": "seattle-calls-2026-12-20", "tracker": "seattle_cad",
+         "series": "seattle_calls_weekly", "question": "q", "unit": "calls",
+         "release_estimated": False, "target_type": "continuous_normal",
+         "resolve": "the first archived capture (card seattle-community-calls@v4)",
+         "lock_at": urban._iso(seattle_cad.lock_instant(monday)),
+         "release_at": urban._iso(seattle_cad.resolution_instant(monday)),
+         "zero_point": "yoy4"}
+    assert season.validate_document({"rounds": [r]}) == []
+    assert r["lock_at"] == "2026-12-14T07:59:00Z"       # Sun 23:59 PST
+    assert _schedule(dict(r, lock_at=_shift(r["lock_at"], hours=1)))
+    ok(test_seattle_rounds_follow_the_same_rule)
 
 
 if __name__ == "__main__":

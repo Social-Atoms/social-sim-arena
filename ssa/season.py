@@ -15,6 +15,7 @@ import re
 from datetime import datetime, timedelta, timezone
 
 from . import baselines, consumer_round, inventory, profile_round, ranking_round
+from . import urban
 from .series import SERIES
 
 TARGET_TYPES = {"continuous_normal", "profile_energy", "ranking_list"}
@@ -274,6 +275,24 @@ def _schedule_problem(round_data, source):
         except (KeyError, TypeError, ValueError) as err:
             return f"{rid}: invalid consumer contract: {err}"
         return None
+
+    # Urban Track sources whose card fixes its own clock (ssa/urban.py), one
+    # rule per source, each citing its card -- the Wikipedia exception's
+    # pattern, made exact: the measured period is read from the round id and
+    # the lock and release must be the card's instants for it, to the second.
+    #   behavioural weeks (Seattle, NYC 311, MTA, TSA): lock Sunday 23:59
+    #     local before the week starts, release when the card's resolution
+    #     window opens, days after it ends;
+    #   SSA-defined real-time metrics (taxi, carpark): lock 48 h before the
+    #     target minute, which is the release;
+    #   early locks by design: COE locks 1 h before bidding opens (the running
+    #     price is public once it does), LTA passenger volume locks the day
+    #     before the month starts.
+    # A source without such a rule (CPI rent, SCE moving) keeps the default.
+    rule = urban.get(source)
+    if rule is not None and rule.has_schedule:
+        why = rule.schedule_problem(round_data)
+        return f"{rid}: invalid schedule: {why}" if why else None
 
     try:
         measured = _behavior_week(round_data, source)
