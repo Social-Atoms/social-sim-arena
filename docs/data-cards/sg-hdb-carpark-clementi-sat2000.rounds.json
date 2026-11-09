@@ -1,0 +1,148 @@
+{
+  "card": "sg-hdb-carpark-clementi-sat2000@v2",
+  "card_sha256": "332008aa802b666dd10fbcbeb4ad63412c43586c0b5481be5fc5721becb30dd2",
+  "status": "proposed: not in questions/season0.json; for a later question batch reviewed by maintainers",
+  "note": "Pilots 12-12 and 12-19 are go/no-go; 12-26 and 01-02 are posted but unscored; 01-09 is the first scored round, then weekly.",
+  "rounds": [
+    {
+      "round_id": "sg-hdb-clementi-2026-12-12",
+      "tracker": "sg_hdb_carpark",
+      "series": "sg_hdb_occ_clementi_sat2000",
+      "question": "What share of car lots (lot type C) will be occupied, in percent, across the HDB carparks located in the Clementi planning area (URA Master Plan 2019 boundary) in the Carpark Availability snapshot for Saturday 2026-12-12 20:00 Singapore time? Occupied = total lots minus available lots, summed over carparks, divided by total lots. SSA sets and resolves this metric; no publisher releases it.",
+      "unit": "percent of car lots occupied",
+      "release_at": "2026-12-12T12:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-12-10T12:00:00Z",
+      "resolve": "SSA's archived snapshot of the keyless data.gov.sg Carpark Availability endpoint (api.data.gov.sg/v1/transport/carpark-availability?date_time=2026-12-12T20:00:00), captured Saturday 20:30 SGT under sources/lta-rt/carpark-hdb/, metric definition v1 of card sg-hdb-carpark-clementi-sat2000@v2: valid if items is non-empty, the timestamp is at most 120 s before the minute and at least 1,900 car rows; otherwise the minutes 20:01, 20:02, 20:05, 20:10 in turn; car rows updated within 60 minutes, over the 48 HDB carparks the pinned HDB Carpark Information table places in CLEMENTI. Fewer than 36 of them passing, or no valid snapshot: cancelled. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_rms13",
+        "family": "mean_k",
+        "period": "week",
+        "k": 1,
+        "lag": 0,
+        "search": 1,
+        "digits": 3,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      },
+      "scored": false,
+      "pilot": "pilot go/no-go"
+    },
+    {
+      "round_id": "sg-hdb-clementi-2026-12-19",
+      "tracker": "sg_hdb_carpark",
+      "series": "sg_hdb_occ_clementi_sat2000",
+      "question": "What share of car lots (lot type C) will be occupied, in percent, across the HDB carparks located in the Clementi planning area (URA Master Plan 2019 boundary) in the Carpark Availability snapshot for Saturday 2026-12-19 20:00 Singapore time? Occupied = total lots minus available lots, summed over carparks, divided by total lots. SSA sets and resolves this metric; no publisher releases it.",
+      "unit": "percent of car lots occupied",
+      "release_at": "2026-12-19T12:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-12-17T12:00:00Z",
+      "resolve": "SSA's archived snapshot of the keyless data.gov.sg Carpark Availability endpoint (api.data.gov.sg/v1/transport/carpark-availability?date_time=2026-12-19T20:00:00), captured Saturday 20:30 SGT under sources/lta-rt/carpark-hdb/, metric definition v1 of card sg-hdb-carpark-clementi-sat2000@v2: valid if items is non-empty, the timestamp is at most 120 s before the minute and at least 1,900 car rows; otherwise the minutes 20:01, 20:02, 20:05, 20:10 in turn; car rows updated within 60 minutes, over the 48 HDB carparks the pinned HDB Carpark Information table places in CLEMENTI. Fewer than 36 of them passing, or no valid snapshot: cancelled. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_rms13",
+        "family": "mean_k",
+        "period": "week",
+        "k": 1,
+        "lag": 0,
+        "search": 1,
+        "digits": 3,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      },
+      "scored": false,
+      "pilot": "pilot go/no-go"
+    },
+    {
+      "round_id": "sg-hdb-clementi-2026-12-26",
+      "tracker": "sg_hdb_carpark",
+      "series": "sg_hdb_occ_clementi_sat2000",
+      "question": "What share of car lots (lot type C) will be occupied, in percent, across the HDB carparks located in the Clementi planning area (URA Master Plan 2019 boundary) in the Carpark Availability snapshot for Saturday 2026-12-26 20:00 Singapore time? Occupied = total lots minus available lots, summed over carparks, divided by total lots. SSA sets and resolves this metric; no publisher releases it.",
+      "unit": "percent of car lots occupied",
+      "release_at": "2026-12-26T12:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-12-24T12:00:00Z",
+      "resolve": "SSA's archived snapshot of the keyless data.gov.sg Carpark Availability endpoint (api.data.gov.sg/v1/transport/carpark-availability?date_time=2026-12-26T20:00:00), captured Saturday 20:30 SGT under sources/lta-rt/carpark-hdb/, metric definition v1 of card sg-hdb-carpark-clementi-sat2000@v2: valid if items is non-empty, the timestamp is at most 120 s before the minute and at least 1,900 car rows; otherwise the minutes 20:01, 20:02, 20:05, 20:10 in turn; car rows updated within 60 minutes, over the 48 HDB carparks the pinned HDB Carpark Information table places in CLEMENTI. Fewer than 36 of them passing, or no valid snapshot: cancelled. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_rms13",
+        "family": "mean_k",
+        "period": "week",
+        "k": 1,
+        "lag": 0,
+        "search": 1,
+        "digits": 3,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      },
+      "scored": false,
+      "pilot": "unscored (Christmas weekend)"
+    },
+    {
+      "round_id": "sg-hdb-clementi-2027-01-02",
+      "tracker": "sg_hdb_carpark",
+      "series": "sg_hdb_occ_clementi_sat2000",
+      "question": "What share of car lots (lot type C) will be occupied, in percent, across the HDB carparks located in the Clementi planning area (URA Master Plan 2019 boundary) in the Carpark Availability snapshot for Saturday 2027-01-02 20:00 Singapore time? Occupied = total lots minus available lots, summed over carparks, divided by total lots. SSA sets and resolves this metric; no publisher releases it.",
+      "unit": "percent of car lots occupied",
+      "release_at": "2027-01-02T12:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-12-31T12:00:00Z",
+      "resolve": "SSA's archived snapshot of the keyless data.gov.sg Carpark Availability endpoint (api.data.gov.sg/v1/transport/carpark-availability?date_time=2027-01-02T20:00:00), captured Saturday 20:30 SGT under sources/lta-rt/carpark-hdb/, metric definition v1 of card sg-hdb-carpark-clementi-sat2000@v2: valid if items is non-empty, the timestamp is at most 120 s before the minute and at least 1,900 car rows; otherwise the minutes 20:01, 20:02, 20:05, 20:10 in turn; car rows updated within 60 minutes, over the 48 HDB carparks the pinned HDB Carpark Information table places in CLEMENTI. Fewer than 36 of them passing, or no valid snapshot: cancelled. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_rms13",
+        "family": "mean_k",
+        "period": "week",
+        "k": 1,
+        "lag": 0,
+        "search": 1,
+        "digits": 3,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      },
+      "scored": false,
+      "pilot": "unscored (New Year weekend)"
+    },
+    {
+      "round_id": "sg-hdb-clementi-2027-01-09",
+      "tracker": "sg_hdb_carpark",
+      "series": "sg_hdb_occ_clementi_sat2000",
+      "question": "What share of car lots (lot type C) will be occupied, in percent, across the HDB carparks located in the Clementi planning area (URA Master Plan 2019 boundary) in the Carpark Availability snapshot for Saturday 2027-01-09 20:00 Singapore time? Occupied = total lots minus available lots, summed over carparks, divided by total lots. SSA sets and resolves this metric; no publisher releases it.",
+      "unit": "percent of car lots occupied",
+      "release_at": "2027-01-09T12:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2027-01-07T12:00:00Z",
+      "resolve": "SSA's archived snapshot of the keyless data.gov.sg Carpark Availability endpoint (api.data.gov.sg/v1/transport/carpark-availability?date_time=2027-01-09T20:00:00), captured Saturday 20:30 SGT under sources/lta-rt/carpark-hdb/, metric definition v1 of card sg-hdb-carpark-clementi-sat2000@v2: valid if items is non-empty, the timestamp is at most 120 s before the minute and at least 1,900 car rows; otherwise the minutes 20:01, 20:02, 20:05, 20:10 in turn; car rows updated within 60 minutes, over the 48 HDB carparks the pinned HDB Carpark Information table places in CLEMENTI. Fewer than 36 of them passing, or no valid snapshot: cancelled. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_rms13",
+        "family": "mean_k",
+        "period": "week",
+        "k": 1,
+        "lag": 0,
+        "search": 1,
+        "digits": 3,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      },
+      "scored": true,
+      "pilot": "first scored"
+    }
+  ]
+}

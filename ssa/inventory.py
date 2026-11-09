@@ -387,6 +387,75 @@ INVENTORY = {
             "A 403 or challenge page from the refresh runners moves the capture "
             "to a maintainer's Mac (card fallback), which changes no rights."),
     },
+    # --- Singapore (Urban Track), cards sg-*@v2 -----------------------------
+    # All four rights verdicts are proposed by the approved Data Cards and
+    # are for maintainers to confirm or change at review; the cards' owner
+    # approval covers the question rules, not these verdicts.
+    "sg_coe": {
+        "publisher": "Land Transport Authority, via data.gov.sg",
+        "adapter": "ssa/adapters/sg_coe.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        "rights": APPROVED,
+        "evidence": (
+            "Proposed by card sg-coe-cat-a-premium@v2. Read 2026-11-09. "
+            "Singapore Open Data Licence v1.0 (https://data.gov.sg/open-data-"
+            "licence): \"You can use, access, download, copy, distribute, "
+            "transmit, modify and adapt the datasets, or any derived analyses "
+            "or applications, whether commercially or non-commercially\", on "
+            "condition of the attribution notice and no suggestion of "
+            "endorsement. data.gov.sg API Terms of Service (https://data.gov.sg/"
+            "privacy-and-terms): \"You can use, access, call, command, query or "
+            "request the API, whether commercially or non-commercially\"; \"You "
+            "shall not mis-present or mask your API Client's identity\". "
+            "Dataset d_69b3380ad7e51aff3a7dcc84eba52b8a, managedBy Land "
+            "Transport Authority, keyless; HTTP 200 x3 from the card sandbox. "
+            "Retrieval, use and redistribution are licensed, so the bodies "
+            "under `sources/coe` need no blocklist entry; the notice is on "
+            "docs/sources/singapore-coe.md. The OneMotoring schedule PDF is an "
+            "LTA web page, not a licensed dataset: its dates are cited in "
+            "ssa/adapters/sg_coe.SCHEDULE, the PDF is not committed. Not yet "
+            "registered in ssa/series.py; proposed rounds in "
+            "docs/data-cards/sg-coe-cat-a-premium.rounds.json."),
+    },
+    "sg_taxi": {
+        "publisher": "Land Transport Authority, via data.gov.sg (boundary: URA)",
+        "adapter": "ssa/adapters/sg_taxi.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        "rights": APPROVED,
+        "evidence": (
+            "Proposed by card sg-taxi-downtown-fri2300@v2. Read 2026-11-09: the "
+            "same Singapore Open Data Licence v1.0 and data.gov.sg API Terms of "
+            "Service quoted for sg_coe, covering Taxi Availability "
+            "(d_e25662f1a062dd046453926aa284ba64) and the URA Master Plan 2019 "
+            "Planning Area Boundary (No Sea) (d_4765db0e87b9c86336792efe8a1f7a66), "
+            "keyless; 66 past-minute snapshots returned HTTP 200 to an honest "
+            "User-Agent with no 429. The points carry no vehicle ID; no "
+            "personal data was seen. SSA sets and resolves the metric "
+            "(docs/sources.md section 1.1), as stated in every round. Archive "
+            "`sources/lta-rt/taxi`, boundary pinned under `sources/sg-ref`; "
+            "redistribution is licensed, no blocklist entry. GitHub runners "
+            "untested: a 403 or 429 there means a local courier (lesson 3)."),
+    },
+    "sg_carpark_hdb": {
+        "publisher": "Housing & Development Board, via data.gov.sg (boundary: URA)",
+        "adapter": "ssa/adapters/sg_carpark.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        "rights": APPROVED,
+        "evidence": (
+            "Proposed by card sg-hdb-carpark-clementi-sat2000@v2. Read "
+            "2026-11-09: the Singapore Open Data Licence v1.0 and data.gov.sg "
+            "API Terms of Service quoted for sg_coe, covering Carpark "
+            "Availability (d_ca933a644e55d34fe21f28b8052fac63), HDB Carpark "
+            "Information (d_23f946fa557947f93a8043bbef41dd09) and the URA "
+            "boundary, keyless; carpark codes and counts only, no personal "
+            "data. SSA sets and resolves the metric. Archive "
+            "`sources/lta-rt/carpark-hdb`, the attribute table and boundary "
+            "pinned under `sources/sg-ref`; no blocklist entry. Mall carparks "
+            "(DataMall, key required) are out of scope."),
+    },
     "wikipedia": {
         "publisher": "Wikimedia Foundation",
         "adapter": "ssa/adapters/wikipedia.py",

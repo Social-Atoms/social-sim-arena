@@ -18,6 +18,9 @@ One page per source the arena scores against. Each says the same five things, in
 | MTA, on NY Open Data (data.ny.gov) | [mta.md](mta.md) | None yet: downloaded weekly by a person for the Urban Track, no series registered and no rounds scheduled | `ssa/adapters/mta_daily.py`, `tools/ingest_mta_daily.py` |
 | TSA (tsa.gov passenger volumes) | [tsa.md](tsa.md) | None yet: archived daily for the Urban Track, no series registered and no rounds scheduled | `ssa/adapters/tsa_volumes.py` |
 | US Bureau of Labor Statistics (CPI rent) | [bls-cpi-rent.md](bls-cpi-rent.md) | None yet: one series registered (Urban Track, housing), pilot and first scored rounds proposed | `ssa/adapters/bls_cpi.py` |
+| Land Transport Authority (via data.gov.sg) | [singapore-coe.md](singapore-coe.md) | None yet: COE Category A premium, captured around each lock and result; proposed rounds only | `ssa/adapters/sg_coe.py` |
+| Land Transport Authority (via data.gov.sg) | [singapore-taxis.md](singapore-taxis.md) | None yet: free taxis in Downtown Core, Friday 23:00, captured weekly; proposed rounds only | `ssa/adapters/sg_taxi.py` |
+| Housing & Development Board (via data.gov.sg) | [singapore-carparks.md](singapore-carparks.md) | None yet: Clementi HDB carpark occupancy, Saturday 20:00, captured weekly; proposed rounds only | `ssa/adapters/sg_carpark.py` |
 | AAII | [aaii.md](aaii.md) | Investor sentiment | `ssa/adapters/aaii.py` |
 | Google Trends | [google-trends.md](google-trends.md) | Brand search-interest mix | `ssa/adapters/trends.py` |
 | Wikimedia | [wikimedia.md](wikimedia.md) | Wikipedia weekly top 10 | `ssa/adapters/wikipedia.py` |

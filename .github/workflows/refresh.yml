@@ -249,6 +249,15 @@ jobs:
       - name: capture BLS CPI rent (non-blocking)
         continue-on-error: true
         run: python -m ssa.adapters.bls_cpi capture
+      # Singapore COE Category A premium (card sg-coe-cat-a-premium@v2):
+      # keyless data.gov.sg. Costs no request unless a rule needs a capture --
+      # the 12 h before an exercise's lock, or close + 2 h until the result
+      # row is held (ssa/adapters/sg_coe.due) -- and files under sources/coe/,
+      # committed by the data commit below. Non-blocking like Seattle's: a
+      # 403 or 429 here is logged and means a local courier.
+      - name: capture Singapore COE results (pilot, non-blocking)
+        continue-on-error: true
+        run: python -m ssa.adapters.sg_coe capture
       - run: python -m ssa.refresh
       # Resolution runs after the refresh so it scores against the series the
       # same run just fetched. It only ever adds, never overwrites, and

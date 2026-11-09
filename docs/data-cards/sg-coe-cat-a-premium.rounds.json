@@ -1,0 +1,72 @@
+{
+  "card": "sg-coe-cat-a-premium@v2",
+  "card_sha256": "54eb7de69bb6c10b0f465dd0d9314a55cc514009d82d1ee2c932a8fc4cf9e0e6",
+  "status": "proposed: not in questions/season0.json; for a later question batch reviewed by maintainers",
+  "note": "Two unscored pilot rounds. The lock is one hour before bidding opens, 53 h before the close (the card's deliberate departure from release - 48 h, because the running price is public once bidding opens); the season validator's 48 h source contract needs a rule for sg_coe before these can pass it.",
+  "rounds": [
+    {
+      "round_id": "sg-coe-a-2026-12-1",
+      "tracker": "sg_coe",
+      "series": "sg_coe_premium_cat_a",
+      "question": "What will the Category A Certificate of Entitlement quota premium (S$, the clearing price paid by every successful bidder) be at LTA's 2026-12 (1) COE open bidding exercise (Mon 07 Dec 12:00 to Wed 09 Dec 2026 16:00 Singapore time, LTA's published 2026 schedule), as first published in data.gov.sg dataset d_69b3380ad7e51aff3a7dcc84eba52b8a? Category A quota for this exercise: <QUOTA, from LTA's announcement before bidding opens; filled in at posting>.",
+      "unit": "Singapore dollars (S$)",
+      "release_at": "2026-12-09T08:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-12-07T03:00:00Z",
+      "resolve": "the first SSA capture of the data.gov.sg datastore API (dataset d_69b3380ad7e51aff3a7dcc84eba52b8a) at or after the exercise close + 2 h whose archived rows hold month 2026-12, bidding_no 1, Category A with a premium above 0, under sources/coe/; none by close + 48 h: cancelled. release_at is the exercise close; data.gov.sg posts about 1.5 h later. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_rms26",
+        "family": "mean_k",
+        "period": "index",
+        "k": 1,
+        "lag": 0,
+        "search": 1,
+        "digits": 0,
+        "spread": {
+          "rule": "rms",
+          "n": 26,
+          "search": 26
+        }
+      },
+      "scored": false,
+      "pilot": "unscored pilot",
+      "quota_category_a": null
+    },
+    {
+      "round_id": "sg-coe-a-2026-12-2",
+      "tracker": "sg_coe",
+      "series": "sg_coe_premium_cat_a",
+      "question": "What will the Category A Certificate of Entitlement quota premium (S$, the clearing price paid by every successful bidder) be at LTA's 2026-12 (2) COE open bidding exercise (Mon 21 Dec 12:00 to Wed 23 Dec 2026 16:00 Singapore time, LTA's published 2026 schedule), as first published in data.gov.sg dataset d_69b3380ad7e51aff3a7dcc84eba52b8a? Category A quota for this exercise: <QUOTA, from LTA's announcement before bidding opens; filled in at posting>.",
+      "unit": "Singapore dollars (S$)",
+      "release_at": "2026-12-23T08:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-12-21T03:00:00Z",
+      "resolve": "the first SSA capture of the data.gov.sg datastore API (dataset d_69b3380ad7e51aff3a7dcc84eba52b8a) at or after the exercise close + 2 h whose archived rows hold month 2026-12, bidding_no 2, Category A with a premium above 0, under sources/coe/; none by close + 48 h: cancelled. release_at is the exercise close; data.gov.sg posts about 1.5 h later. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_rms26",
+        "family": "mean_k",
+        "period": "index",
+        "k": 1,
+        "lag": 0,
+        "search": 1,
+        "digits": 0,
+        "spread": {
+          "rule": "rms",
+          "n": 26,
+          "search": 26
+        }
+      },
+      "scored": false,
+      "pilot": "unscored pilot",
+      "quota_category_a": null
+    }
+  ],
+  "pending": [
+    {
+      "round_id": "sg-coe-a-2027-01-1",
+      "status": "first scored round; dates wait for LTA's 2027 schedule (COE_Bidding_Schedule_for_Year_2027.pdf returned 404 on 2026-11-09). Add the 2027 exercises to ssa/adapters/sg_coe.SCHEDULE first; lock = start - 1 h."
+    }
+  ]
+}
