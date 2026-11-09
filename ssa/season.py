@@ -78,6 +78,44 @@ _RESOLUTION_ANCHOR = re.compile(
 )
 
 
+# An unscored pilot round (Urban Track, owner decision G3: every new source
+# runs >= 2 of them before its first scored lock). It is posted, locked,
+# sealed, resolved and shown like any other round, and enters no board, no
+# skill mean and no paper-facing count: `refresh` files its per-entrant scores
+# under `pilot_scores`, never `scores`, so every aggregate that reads `scores`
+# -- the server's boards and the site's own sums -- skips it by construction.
+#
+# Two optional fields, closed: `scored` is absent (an ordinary round) or
+# exactly `false`, and `pilot` is the short note the site prints beside the
+# label, present exactly when `scored` is false. `scored: true` is refused
+# rather than accepted as a synonym, so there is one spelling of "ordinary".
+PILOT_NOTE_MAX = 500
+
+
+def is_pilot(round_data):
+    """True for an unscored pilot round (`scored: false`)."""
+    return isinstance(round_data, dict) and round_data.get("scored") is False
+
+
+def _pilot_problems(round_data):
+    rid = round_data.get("round_id", "?")
+    if "scored" not in round_data:
+        if "pilot" in round_data:
+            return [f"{rid}: `pilot` is set but `scored` is not false; an "
+                    "unscored pilot sets both"]
+        return []
+    if round_data["scored"] is not False:
+        return [f"{rid}: `scored` may only be false (an unscored pilot); "
+                "omit it for an ordinary round"]
+    note = round_data.get("pilot")
+    if not isinstance(note, str) or not note.strip():
+        return [f"{rid}: an unscored pilot needs a non-empty `pilot` note"]
+    if len(note) > PILOT_NOTE_MAX:
+        return [f"{rid}: `pilot` note is {len(note)} characters; keep it under "
+                f"{PILOT_NOTE_MAX}, the site prints it beside the label"]
+    return []
+
+
 def _timestamp(value):
     if not isinstance(value, str) or not STAMP.fullmatch(value):
         raise ValueError("must be UTC at second precision with a trailing Z")
@@ -300,6 +338,7 @@ def validate_document(document):
             ids[rid] = index
 
         problems.extend(_shape_problems(round_data))
+        problems.extend(_pilot_problems(round_data))
         if round_data.get("target_type") not in TARGET_TYPES:
             continue
         try:

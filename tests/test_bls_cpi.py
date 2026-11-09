@@ -230,7 +230,7 @@ def test_the_lock_capture_must_be_fresh_and_carry_m_minus_one():
 
 def _pilot():
     with open(ROUNDS) as f:
-        return json.load(f)["pilot_rounds"][0]
+        return json.load(f)["rounds"][0]
 
 
 def test_replay_the_first_pilot_reference_lock_rule_and_resolution():
@@ -312,7 +312,8 @@ def test_the_committed_card_is_the_approved_revision():
 def test_the_proposed_rounds_pass_the_season_validator():
     with open(ROUNDS) as f:
         doc = json.load(f)
-    every = doc["pilot_rounds"] + doc["rounds"]
+    every = doc["rounds"]
+    assert [season.is_pilot(r) for r in every] == [True, True, False]
     assert season.validate_document({"rounds": every}) == []
     for r in every:
         assert r["zero_point"]["name"] == "mean6"

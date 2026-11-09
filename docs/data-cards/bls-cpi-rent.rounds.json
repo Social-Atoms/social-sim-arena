@@ -1,6 +1,6 @@
 {
-  "note": "Proposed rounds for card bls-cpi-rent@v2 (sha256 9a5c42d2fc293ea433cd78590908b95dc017a7b76817ff6fbd2bdfa7b390d4e7), for a later question batch: not in questions/season0.json. `rounds` holds the first scored round (January 2027 data). `pilot_rounds` holds the card's two unscored pilots (November and December 2026 data); the arena has no unscored-round flag, so how a pilot runs without entering the board is a maintainer decision. Every 2027 date is the card's estimate until a person copies the BLS 2027 CPI schedule (https://www.bls.gov/schedule/news_release/cpi.htm) into these rounds and ssa/adapters/bls_cpi.py RELEASES. Lock = release - 48 h at 08:30 America/New_York (13:30Z in standard time).",
-  "pilot_rounds": [
+  "note": "Proposed rounds for card bls-cpi-rent@v2 (sha256 9a5c42d2fc293ea433cd78590908b95dc017a7b76817ff6fbd2bdfa7b390d4e7), for a later question batch: not in questions/season0.json. `rounds` holds the card's two unscored pilots (November and December 2026 data, `scored: false`, ssa/season.is_pilot: run in full, counted on no board) and the first scored round (January 2027 data). Every 2027 date is the card's estimate until a person copies the BLS 2027 CPI schedule (https://www.bls.gov/schedule/news_release/cpi.htm) into these rounds and ssa/adapters/bls_cpi.py RELEASES. Lock = release - 48 h at 08:30 America/New_York (13:30Z in standard time).",
+  "rounds": [
     {
       "round_id": "cpi-rent-2026-11",
       "tracker": "bls_cpi",
@@ -25,7 +25,9 @@
           "search": 14
         },
         "target": "2026-11"
-      }
+      },
+      "scored": false,
+      "pilot": "unscored pilot (card bls-cpi-rent@v2, owner decision G3): posted, locked, sealed and resolved by the full rules, on no board"
     },
     {
       "round_id": "cpi-rent-2026-12",
@@ -51,10 +53,10 @@
           "search": 14
         },
         "target": "2026-12"
-      }
-    }
-  ],
-  "rounds": [
+      },
+      "scored": false,
+      "pilot": "unscored pilot (card bls-cpi-rent@v2, owner decision G3): posted, locked, sealed and resolved by the full rules, on no board"
+    },
     {
       "round_id": "cpi-rent-2027-01",
       "tracker": "bls_cpi",

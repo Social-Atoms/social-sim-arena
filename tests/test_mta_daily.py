@@ -361,14 +361,14 @@ def test_the_proposed_rounds_follow_the_card():
     weeks = [date(2026, 11, 30) + timedelta(days=7 * i) for i in range(6)]
     assert [r["round_id"] for r in rounds] == \
         [f"mta-subway-{(w + timedelta(days=6)).isoformat()}" for w in weeks]
-    assert [r["scored"] for r in rounds] == [False] * 5 + [True]
+    assert [season.is_pilot(r) for r in rounds] == [True] * 5 + [False]
     for r, w in zip(rounds, weeks):
         assert r["lock_at"] == m.lock_instant(w).strftime("%Y-%m-%dT%H:%M:%SZ")
         assert r["release_at"] == m.resolution_window(w)[0].strftime("%Y-%m-%dT%H:%M:%SZ")
         assert r["zero_point"] == "yoy4" and r["card_sha256"] == m.CARD_SHA256
         assert season._shape_problems(r) == []
         flagged = m.holiday_flags(w)
-        assert ("Holiday flag" in r["pilot_note"]) == any(flagged.values())
+        assert ("Holiday flag" in (r.get("pilot") or r["proposal_note"])) == any(flagged.values())
     assert rounds[0]["lock_at"] == "2026-11-30T04:59:00Z"      # Sun 11-29 23:59 ET
     assert rounds[5]["lock_at"] == "2027-01-04T04:59:00Z"      # Sun 01-03 23:59 ET
     # Not publishable yet, for the reasons the PR lists: the series is not

@@ -1,6 +1,6 @@
 {
   "status": "proposed",
-  "note": "Proposed rounds for a later question batch; not in questions/season0.json. `scored`, `pilot_note`, `card` and `card_sha256` are proposal metadata the season has no field for yet.",
+  "note": "Proposed rounds for a later question batch; not in questions/season0.json. `scored: false` + `pilot` mark the unscored pilots (ssa/season.is_pilot); `proposal_note`, `card` and `card_sha256` are proposal metadata.",
   "rounds": [
     {
       "round_id": "tsa-weekly-2026-12-06",
@@ -31,9 +31,9 @@
         }
       },
       "scored": false,
-      "pilot_note": "P1, unscored pilot (go/no-go gate). Posted, locked, hashed and resolved by the full rules, and never scored. Holiday flag (364-day comparison misaligned): Veterans Day 2026-11-11 is compared with 2025-11-12 (the holiday fell on 2025-11-11) in the reference days.",
       "card": "tsa-checkpoint-weekly@v2",
-      "card_sha256": "5c69cafebad1610bb2c8aad0d58f706d28ad8b7cf623828debb916133d01c9f8"
+      "card_sha256": "5c69cafebad1610bb2c8aad0d58f706d28ad8b7cf623828debb916133d01c9f8",
+      "pilot": "P1, unscored pilot (go/no-go gate). Posted, locked, hashed and resolved by the full rules, and never scored. Holiday flag (364-day comparison misaligned): Veterans Day 2026-11-11 is compared with 2025-11-12 (the holiday fell on 2025-11-11) in the reference days."
     },
     {
       "round_id": "tsa-weekly-2026-12-13",
@@ -64,9 +64,9 @@
         }
       },
       "scored": false,
-      "pilot_note": "P2, unscored pilot (go/no-go gate). Posted, locked, hashed and resolved by the full rules, and never scored. Holiday flag (364-day comparison misaligned): Veterans Day 2026-11-11 is compared with 2025-11-12 (the holiday fell on 2025-11-11) in the reference days.",
       "card": "tsa-checkpoint-weekly@v2",
-      "card_sha256": "5c69cafebad1610bb2c8aad0d58f706d28ad8b7cf623828debb916133d01c9f8"
+      "card_sha256": "5c69cafebad1610bb2c8aad0d58f706d28ad8b7cf623828debb916133d01c9f8",
+      "pilot": "P2, unscored pilot (go/no-go gate). Posted, locked, hashed and resolved by the full rules, and never scored. Holiday flag (364-day comparison misaligned): Veterans Day 2026-11-11 is compared with 2025-11-12 (the holiday fell on 2025-11-11) in the reference days."
     },
     {
       "round_id": "tsa-weekly-2026-12-20",
@@ -97,9 +97,9 @@
         }
       },
       "scored": false,
-      "pilot_note": "unscored holiday-week pilot. Posted, locked, hashed and resolved by the full rules, and never scored. Holiday flag (364-day comparison misaligned): Veterans Day 2026-11-11 is compared with 2025-11-12 (the holiday fell on 2025-11-11) in the reference days.",
       "card": "tsa-checkpoint-weekly@v2",
-      "card_sha256": "5c69cafebad1610bb2c8aad0d58f706d28ad8b7cf623828debb916133d01c9f8"
+      "card_sha256": "5c69cafebad1610bb2c8aad0d58f706d28ad8b7cf623828debb916133d01c9f8",
+      "pilot": "unscored holiday-week pilot. Posted, locked, hashed and resolved by the full rules, and never scored. Holiday flag (364-day comparison misaligned): Veterans Day 2026-11-11 is compared with 2025-11-12 (the holiday fell on 2025-11-11) in the reference days."
     },
     {
       "round_id": "tsa-weekly-2026-12-27",
@@ -130,9 +130,9 @@
         }
       },
       "scored": false,
-      "pilot_note": "unscored holiday-week pilot (Christmas week). Posted, locked, hashed and resolved by the full rules, and never scored. Holiday flag (364-day comparison misaligned): Christmas Day 2026-12-25 is compared with 2025-12-26 (the holiday fell on 2025-12-25) in the target week.",
       "card": "tsa-checkpoint-weekly@v2",
-      "card_sha256": "5c69cafebad1610bb2c8aad0d58f706d28ad8b7cf623828debb916133d01c9f8"
+      "card_sha256": "5c69cafebad1610bb2c8aad0d58f706d28ad8b7cf623828debb916133d01c9f8",
+      "pilot": "unscored holiday-week pilot (Christmas week). Posted, locked, hashed and resolved by the full rules, and never scored. Holiday flag (364-day comparison misaligned): Christmas Day 2026-12-25 is compared with 2025-12-26 (the holiday fell on 2025-12-25) in the target week."
     },
     {
       "round_id": "tsa-weekly-2027-01-03",
@@ -163,9 +163,9 @@
         }
       },
       "scored": false,
-      "pilot_note": "unscored holiday-week pilot (New Year week). Posted, locked, hashed and resolved by the full rules, and never scored. Holiday flag (364-day comparison misaligned): New Year's Day 2027-01-01 is compared with 2026-01-02 (the holiday fell on 2026-01-01) in the target week; Christmas Day 2026-12-25 is compared with 2025-12-26 (the holiday fell on 2025-12-25) in the reference days.",
       "card": "tsa-checkpoint-weekly@v2",
-      "card_sha256": "5c69cafebad1610bb2c8aad0d58f706d28ad8b7cf623828debb916133d01c9f8"
+      "card_sha256": "5c69cafebad1610bb2c8aad0d58f706d28ad8b7cf623828debb916133d01c9f8",
+      "pilot": "unscored holiday-week pilot (New Year week). Posted, locked, hashed and resolved by the full rules, and never scored. Holiday flag (364-day comparison misaligned): New Year's Day 2027-01-01 is compared with 2026-01-02 (the holiday fell on 2026-01-01) in the target week; Christmas Day 2026-12-25 is compared with 2025-12-26 (the holiday fell on 2025-12-25) in the reference days."
     },
     {
       "round_id": "tsa-weekly-2027-01-10",
@@ -195,10 +195,9 @@
           "end": "nominal"
         }
       },
-      "scored": true,
-      "pilot_note": "first scored round. Scored only if the maintainer's pilot verdict of 2026-12-18 is go; on no-go it runs unscored, announced before its lock. Holiday flag (364-day comparison misaligned): Christmas Day 2026-12-25 is compared with 2025-12-26 (the holiday fell on 2025-12-25) in the reference days; New Year's Day 2027-01-01 is compared with 2026-01-02 (the holiday fell on 2026-01-01) in the reference days.",
       "card": "tsa-checkpoint-weekly@v2",
-      "card_sha256": "5c69cafebad1610bb2c8aad0d58f706d28ad8b7cf623828debb916133d01c9f8"
+      "card_sha256": "5c69cafebad1610bb2c8aad0d58f706d28ad8b7cf623828debb916133d01c9f8",
+      "proposal_note": "first scored round. Scored only if the maintainer's pilot verdict of 2026-12-18 is go; on no-go it runs unscored, announced before its lock. Holiday flag (364-day comparison misaligned): Christmas Day 2026-12-25 is compared with 2025-12-26 (the holiday fell on 2025-12-25) in the reference days; New Year's Day 2027-01-01 is compared with 2026-01-02 (the holiday fell on 2026-01-01) in the reference days."
     }
   ]
 }

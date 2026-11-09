@@ -27,6 +27,7 @@ from . import average, backtest, baselines, batches, domains, envfile, harness, 
 from . import participants
 from . import profile_round
 from . import ranking_round
+from . import season as season_rules
 from . import series as series_registry
 from . import task_registry
 from . import entrant_status
@@ -547,6 +548,12 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
             # every reader of the payload score on the rule the round named.
             if isinstance(r["zero_point"], dict):
                 row["zero_point_spec"] = baselines.zero_point_spec(r)
+        # An unscored pilot (ssa/season.is_pilot) carries its two fields so the
+        # site can label it; copied only when set, so every other round's
+        # payload is unchanged.
+        if season_rules.is_pilot(r):
+            row["scored"] = False
+            row["pilot"] = r["pilot"]
         row["deadline"] = iso(batches.effective_deadline(r["lock_at"]))
         # When this round is listed, and which week it displays under. The
         # deadline is its own lock; the week is only how the site groups it,
@@ -2099,7 +2106,8 @@ def build_main_board(rounds, start=SEASON0_MAIN_START):
     rather than silently dropped from it.
     """
     scored = [r for r in rounds
-              if r.get("lock_at", "") >= start and r.get("scores")]
+              if r.get("lock_at", "") >= start and r.get("scores")
+              and not season_rules.is_pilot(r)]
     per, crps = {}, {}
     for r in scored:
         for entrant, sc in r["scores"].items():
@@ -2143,12 +2151,17 @@ def attach_round_scores(rounds, profile_board, ranking_board):
     by_id = {r["round_id"]: r for r in rounds}
     for block, keys in ((profile_board, ("energy", "skill")),
                         (ranking_board, ("loss", "skill"))):
-        for pr in (block or {}).get("rounds", []):
+        listed = [(pr, "scores") for pr in (block or {}).get("rounds", [])]
+        # An unscored pilot resolves and shows its scores like any round, under
+        # `pilot_scores`, which no aggregate reads (build_leaderboard).
+        listed += [(pr, "pilot_scores")
+                   for pr in (block or {}).get("pilot_rounds", [])]
+        for pr, key in listed:
             r = by_id.get(pr["round_id"])
             if r is None:
                 continue
-            r["scores"] = {e["entrant"]: {k: e[k] for k in keys if k in e}
-                           for e in pr.get("entries", [])}
+            r[key] = {e["entrant"]: {k: e[k] for k in keys if k in e}
+                      for e in pr.get("entries", [])}
             r["status"] = "resolved"
             resolution = dict(r.get("resolution") or {})
             resolution.update(pr.get("resolution") or {})
@@ -2239,6 +2252,7 @@ def build_leaderboard(rounds, resolved):
         rdir = os.path.join(FORECASTS, r["round_id"])
         if not os.path.isdir(rdir):
             continue
+        pilot = season_rules.is_pilot(r)
         # The round keeps every entrant's own score, so the site can draw the season
         # question by question, not only the means the board averages.
         scores = {}
@@ -2252,12 +2266,18 @@ def build_leaderboard(rounds, resolved):
             if not scoreable_forecast(fc):
                 continue
             c = scoring.crps_forecast(fc["topline"], outcome)
+            scores[fc["entrant"]] = {"crps": round(c, 4),
+                                     "skill": round(scoring.skill(c, per_crps), 4)}
+            if pilot:
+                continue        # shown on the round, counted on no board
             e = entries.setdefault(fc["entrant"], {"crps": [], "skill": []})
             e["crps"].append(c)
             e["skill"].append(scoring.skill(c, per_crps))
-            scores[fc["entrant"]] = {"crps": round(c, 4),
-                                     "skill": round(scoring.skill(c, per_crps), 4)}
-        r["scores"] = scores
+        # A pilot's scores go under their own key. Every aggregate -- this
+        # board, build_main_board, the site's own sums and pairwise.js -- reads
+        # `scores`, so a pilot is left out of all of them without each one
+        # having to remember the rule.
+        r["pilot_scores" if pilot else "scores"] = scores
         name = baselines.zero_point_name(r)
         if name == baselines.DEFAULT_ZERO_POINT:
             r["persistence_crps"] = round(per_crps, 4)
@@ -2278,6 +2298,24 @@ def build_leaderboard(rounds, resolved):
         })
     board.sort(key=lambda x: -x["mean_skill"])
     return board
+
+
+def leaderboard_block(rounds, board):
+    """`data.leaderboard`: the number board and how many rounds have resolved.
+
+    An unscored pilot resolves but is not a scored round, so it is left out
+    of `resolved_rounds` -- the count the site and the paper cite next to the
+    board -- and counted under `pilot_resolved`, a key present only when one
+    has resolved, so a season without pilots publishes exactly what it did.
+    """
+    done = [r for r in rounds if r.get("status") == "resolved"]
+    block = {"resolved_rounds": sum(1 for r in done
+                                    if not season_rules.is_pilot(r)),
+             "entries": board}
+    pilots = sum(1 for r in done if season_rules.is_pilot(r))
+    if pilots:
+        block["pilot_resolved"] = pilots
+    return block
 
 
 def profile_outcome(r, resolved, series):
@@ -2315,11 +2353,12 @@ def build_profile_leaderboard(rounds, resolved, series):
     a model that sat out the hard weeks cannot flatter itself with an average
     over the easy ones.
     """
-    per_round, entries, skipped = [], {}, []
+    per_round, entries, skipped, pilot_rounds = [], {}, [], []
     scored_rounds = 0
     for r in rounds:
         if not profile_round.is_profile(r):
             continue
+        pilot = season_rules.is_pilot(r)
         nulls = (r.get("profile") or {}).get("baselines") or {}
         if not nulls.get("persistence"):
             skipped.append((r["round_id"], r.get("baseline_note")
@@ -2368,6 +2407,8 @@ def build_profile_leaderboard(rounds, resolved, series):
                 "mean_cell_crps": round(sc["mean_cell_crps"], 4),
             }
             rows.append(row)
+            if pilot:
+                continue        # shown on the round, counted on no board
             e = entries.setdefault(fc["entrant"],
                                    {"energy": [], "skill": [], "level": [],
                                     "structure": [], "rounds": []})
@@ -2377,9 +2418,10 @@ def build_profile_leaderboard(rounds, resolved, series):
         if not rows:
             skipped.append((r["round_id"], "no scoreable profile submissions"))
             continue
-        scored_rounds += 1
+        if not pilot:
+            scored_rounds += 1
         rows.sort(key=lambda x: -x["skill"])
-        per_round.append({
+        (pilot_rounds if pilot else per_round).append({
             "round_id": r["round_id"],
             "release_at": r["release_at"],
             "cells": list(cells),
@@ -2410,7 +2452,7 @@ def build_profile_leaderboard(rounds, resolved, series):
 
     matched_names = [n for n, e in entries.items()
                      if len(e["rounds"]) == scored_rounds] if scored_rounds else []
-    return {
+    out = {
         "scored_rounds": scored_rounds,
         "rounds": per_round,
         "board": board_from(list(entries)),
@@ -2422,6 +2464,12 @@ def build_profile_leaderboard(rounds, resolved, series):
                  "`matched` holds only entrants who answered every scored "
                  "profile round."),
     }
+    # Unscored pilots, scored the same way and kept off `rounds`, the boards
+    # and every count above. The key exists only when one does, so a payload
+    # without pilots is unchanged.
+    if pilot_rounds:
+        out["pilot_rounds"] = pilot_rounds
+    return out
 
 
 def ranking_outcome(r, resolved, spec):
@@ -2457,11 +2505,12 @@ def build_ranking_leaderboard(rounds, resolved, ranking_obs=None):
     `matched` is the table to cite, for the reason `ssa/model_backtest.py`
     gives: it holds only entrants who answered *every* scored ranking round.
     """
-    per_round, entries, skipped = [], {}, []
+    per_round, entries, skipped, pilot_rounds = [], {}, [], []
     scored_rounds = 0
     for r in rounds:
         if not ranking_round.is_ranking(r):
             continue
+        pilot = season_rules.is_pilot(r)
         nulls = (r.get("ranking") or {}).get("baselines") or {}
         if not nulls.get("persistence"):
             skipped.append((r["round_id"], r.get("baseline_note")
@@ -2521,6 +2570,8 @@ def build_ranking_leaderboard(rounds, resolved, ranking_obs=None):
                 if k in sc:
                     row[k] = sc[k]
             rows.append(row)
+            if pilot:
+                continue        # shown on the round, counted on no board
             e = entries.setdefault(fc["entrant"],
                                    {"loss": [], "skill": [], "rounds": []})
             e["loss"].append(row["loss"])
@@ -2529,9 +2580,10 @@ def build_ranking_leaderboard(rounds, resolved, ranking_obs=None):
         if not rows:
             skipped.append((r["round_id"], "no scoreable ranking submissions"))
             continue
-        scored_rounds += 1
+        if not pilot:
+            scored_rounds += 1
         rows.sort(key=lambda x: -x["skill"])
-        per_round.append({
+        (pilot_rounds if pilot else per_round).append({
             "round_id": r["round_id"],
             "release_at": r["release_at"],
             "kind": spec["kind"],
@@ -2562,7 +2614,7 @@ def build_ranking_leaderboard(rounds, resolved, ranking_obs=None):
 
     matched_names = [n for n, e in entries.items()
                      if len(e["rounds"]) == scored_rounds] if scored_rounds else []
-    return {
+    out = {
         "scored_rounds": scored_rounds,
         "rounds": per_round,
         "board": board_from(list(entries)),
@@ -2578,6 +2630,9 @@ def build_ranking_leaderboard(rounds, resolved, ranking_obs=None):
                  "(`scoring.skill`) scores every entrant 0 for that round; "
                  "`persistence_loss` is published so that is visible."),
     }
+    if pilot_rounds:
+        out["pilot_rounds"] = pilot_rounds      # as in the profile board
+    return out
 
 
 def michigan_history():
@@ -3133,10 +3188,7 @@ def main():
         "entrants": load_entrants(),
         # Who has left the arena and since when; the board's Standard view keeps to the rest.
         "retired": retirement(rounds, load_entrants(), now),
-        "leaderboard": {
-            "resolved_rounds": sum(1 for r in rounds if r["status"] == "resolved"),
-            "entries": board,
-        },
+        "leaderboard": leaderboard_block(rounds, board),
         # Season 0 main board: every shape, from one common start (build_main_board).
         "season0_main": main_board,
         # The joint sixteen-cell rounds, scored with the energy score. A

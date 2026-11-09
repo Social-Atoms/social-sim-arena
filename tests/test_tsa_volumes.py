@@ -327,7 +327,7 @@ def test_the_proposed_rounds_follow_the_card():
     weeks = [date(2026, 11, 30) + timedelta(days=7 * i) for i in range(6)]
     assert [r["round_id"] for r in rounds] == \
         [f"tsa-weekly-{(w + timedelta(days=6)).isoformat()}" for w in weeks]
-    assert [r["scored"] for r in rounds] == [False] * 5 + [True]
+    assert [season.is_pilot(r) for r in rounds] == [True] * 5 + [False]
     for r, w in zip(rounds, weeks):
         assert r["lock_at"] == t.lock_instant(w).strftime("%Y-%m-%dT%H:%M:%SZ")
         assert r["release_at"] == t.resolution_instant(w).strftime("%Y-%m-%dT%H:%M:%SZ")

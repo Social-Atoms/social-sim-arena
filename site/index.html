@@ -928,6 +928,9 @@ const typeWord = t => t==='llm' ? 'LLM' : t==='baseline' ? 'Baseline' : t==='par
 const initOf = id => INITIALS[id] || String(id).slice(0,2).toUpperCase();
 
 const esc = s => { const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; };
+// An unscored pilot round (`scored: false`, ssa/season.is_pilot): shown like any question, counted on no
+// board. Its scores arrive as `pilot_scores`, never `scores`, so no sum on this page can pick them up.
+const pilotTag = r => (r && r.scored===false) ? '<span class="replay-tag" title="'+esc(r.pilot||'')+'">pilot, unscored</span>' : '';
 const attr = s => esc(s).replace(/"/g,'&quot;');   // for attribute values
 const fmtCountdown = ms => {
   if(ms<=0) return 'locked';
@@ -1080,7 +1083,9 @@ function renderEntrant(id){
     const f=r.forecasts[id], t=taskForRound(r), rel=(r.resolution||{}).value;
     // The published score, as on the question and forecast pages; the per-task means below sum it.
     const s=forecastScore(r,id,f);
-    return {r,t,f,rel,err:s.err,crps:s.crps};
+    // An unscored pilot is listed but never summed: its error and CRPS stay out of the per-task means.
+    const unscored=r.scored===false;
+    return {r,t,f,rel,err:unscored?null:s.err,crps:unscored?null:s.crps};
   }).sort((a,b)=>deadlineOf(b.r).localeCompare(deadlineOf(a.r)));
   const pct=(a,b)=>b?Math.round(100*a/b):0;
   // Coverage inside a window: the questions that closed in it, against the ones this entrant answered.
@@ -1214,7 +1219,8 @@ function roundKind(r){ return r.target_type==='profile_energy'?'profile':r.targe
 // the published 5.52 on umich-2026-08-prelim, once shown on two pages of the same site).
 function forecastScore(r, entrantId, f){
   const kind=roundKind(r), metric=kind==='profile'?'energy':kind==='ranking'?'loss':'crps';
-  const published=(r.scores||{})[entrantId]||null, rel=(r.resolution||{}).value;
+  // A pilot's scores are published as `pilot_scores` (shown on its own page, summed nowhere).
+  const published=(r.scores||(r.scored===false?r.pilot_scores:null)||{})[entrantId]||null, rel=(r.resolution||{}).value;
   const skill=published&&typeof published.skill==='number'?published.skill:null;
   if(kind!=='number') return {kind, metric, err:null, crps:null, skill, score:published&&typeof published[metric]==='number'?published[metric]:null};
   const err=(typeof rel==='number'&&f&&typeof f.mean==='number')?Math.abs(f.mean-rel):null;
@@ -1248,6 +1254,7 @@ function renderQuestion(roundId){
   const st=(data.stamps||{})[r.round_id];
   let h='<div class="eyebrow page-eyebrow">Question'+(o?' '+o.n+' of '+o.of+' on this task':'')+'</div><h2 class="page-title"><a href="#leaderboard/'+esc(key)+'/all">'+esc(t.label)+'</a></h2>'
     +'<p class="lede page-description">'+esc(r.question)+'</p>'
+    +(r.scored===false?'<p class="sub">'+pilotTag(r)+' '+esc(r.pilot||'')+'</p>':'')
     +'<p class="ent-meta">'+state+(key!=='agg'?'<span><a href="#questions/task/'+esc(key)+'">all questions on this task</a></span>':'')+(r.batch_id?'<span><a href="#questions/'+esc(r.batch_id)+'">week of '+esc(fmtDate(r.batch_id.replace('batch-','')))+'</a></span>':'')+'<span>source '+(t.srcUrl?'<a href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span class="dim">'+esc(r.round_id)+'</span></p>';
   if(r.attribution) h+='<p class="sub">'+esc(r.attribution)+'</p>';
   h+='<div class="tiles">'
@@ -2035,7 +2042,7 @@ function renderTaskHeader(data,key){
     return;
   }
   const due=deadlineOf(r), state=active.includes(r)?(key==='agg'?'NEXT TO CLOSE':'OPEN'):'LATEST';
-  document.getElementById('task-question-summary').innerHTML='<span class="replay-tag">'+state+'</span><span class="qtext" title="'+esc(r.round_id)+'">'+esc(questionText(r))+'</span><time datetime="'+esc(due)+'">due '+esc(fmtLocal(due))+'</time>';
+  document.getElementById('task-question-summary').innerHTML='<span class="replay-tag">'+state+'</span>'+pilotTag(r)+'<span class="qtext" title="'+esc(r.round_id)+'">'+esc(questionText(r))+'</span><time datetime="'+esc(due)+'">due '+esc(fmtLocal(due))+'</time>';
   document.getElementById('task-question-body').innerHTML='<p>'+esc(r.question)+'</p><div class="qfoot">'
     +'<span>'+shapeChip(r)+(r.target_type==='profile_energy'?(r.cells||[]).length+' cells':r.target_type==='ranking_list'?'ordered list':'predictive distribution')+'</span>'
     +'<span>releases '+esc(fmtLocal(r.release_at))+'</span><span>'+esc(r.n_forecasts||0)+' forecasts filed</span>'
