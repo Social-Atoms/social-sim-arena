@@ -58,7 +58,8 @@ from zoneinfo import ZoneInfo
 
 import requests
 
-from .. import baselines, provenance
+from .. import baselines
+from .. import capture as archive_store
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 NAME = "seattle_cad"
@@ -67,8 +68,8 @@ FETCHES = os.path.join(ARCHIVE, "fetches.json")
 
 DATASET = "33kz-ixgy"
 BASE = f"https://cos-data.seattle.gov/resource/{DATASET}.json"
-UA = "social-simulation-arena/1.0 (research benchmark; contact via repository)"
-TIMEOUT = 120
+UA = archive_store.UA
+TIMEOUT = archive_store.TIMEOUT
 TZ = ZoneInfo("America/Los_Angeles")
 
 # Card v2, target.population. Frozen at season start: changing either tuple is
@@ -161,12 +162,8 @@ def grace_end(week_start):
     return _pt(monday(week_start) + timedelta(days=18), 12, 0)
 
 
-def _iso(dt):
-    return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-
-def _parse_iso(s):
-    return datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+_iso = archive_store.iso
+_parse_iso = archive_store.parse_iso
 
 
 # ---------------------------------------------------------------- fetching
@@ -189,25 +186,16 @@ def request_url(fetch_day):
 
 
 def fetch_text(fetch_day, timeout=TIMEOUT, get=requests.get):
-    """(body exactly as served, as bytes; the URL it came from).
+    """(body exactly as served, as bytes; the URL it came from), with the
+    response's freshness headers on `.headers` (ssa/capture.py).
 
     An HTTP error is raised as it came (a 403 from a datacenter runner is a
     finding: the source then needs a local courier, docs/sources.md and lesson
     3). A dropped connection is retried once, never more (docs/sources.md §2.5).
+    A body Socrata flags as out of date is refused (archive_store.Stale).
     """
-    url = request_url(fetch_day)
-    for attempt in (1, 2):
-        try:
-            r = get(url, headers={"User-Agent": UA, "Accept": "application/json"},
-                    timeout=timeout, allow_redirects=False)
-        except (requests.ConnectionError, requests.Timeout):
-            if attempt == 2:
-                raise
-            continue
-        if r.status_code != 200:
-            raise requests.HTTPError(
-                f"seattle_cad: HTTP {r.status_code} from {url}", response=r)
-        return r.content, url
+    return archive_store.get(request_url(fetch_day), name=NAME,
+                       accept="application/json", timeout=timeout, get=get)
 
 
 # ---------------------------------------------------------------- parsing
@@ -466,26 +454,31 @@ def weekly_series(cd):
 
 # ---------------------------------------------------------------- archive
 
+def _store():
+    """The shared write-once daily archive (ssa/capture.py), built per call so
+    tests that point ROOT / ARCHIVE / FETCHES at a sandbox are honoured."""
+    return archive_store.DailyArchive(NAME, ext="json", archive=ARCHIVE,
+                                fetches=FETCHES, root=ROOT)
+
+
 def archive_path(day):
-    return os.path.join(ARCHIVE, f"{as_date(day).isoformat()}.json")
+    return _store().path(as_date(day).isoformat())
 
 
 def load_fetches(path=None):
-    try:
-        with open(path or FETCHES) as f:
-            return json.load(f)
-    except (OSError, ValueError):
-        return {}
+    if path:
+        return archive_store.DailyArchive(NAME, fetches=path, root=ROOT).load()
+    return _store().load()
 
 
-def _save_fetches(rows, path=None):
-    path = path or FETCHES
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    tmp = path + ".tmp"
-    with open(tmp, "w") as f:
-        json.dump(rows, f, indent=2, sort_keys=True)
-        f.write("\n")
-    os.replace(tmp, path)
+def _describe(daily):
+    row = {"newest_day": newest_day(daily).isoformat()}
+    unknown = unknown_types(daily)
+    if unknown:
+        row["unknown_types"] = unknown
+    if UNDATED in daily:
+        row["undated_events"] = sum(daily[UNDATED].values())
+    return row
 
 
 def capture(now=None, fetch=fetch_text):
@@ -493,56 +486,25 @@ def capture(now=None, fetch=fetch_text):
 
     A day already held costs no request. The body is parsed *before* it is
     filed, so a malformed answer fails the run instead of entering the record;
-    a body is filed exactly as served.
+    a body is filed exactly as served (ssa/capture.py).
     """
-    now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
-    day = now.date().isoformat()
-    rows = load_fetches()
-    if day in rows and os.path.exists(archive_path(day)):
-        return rows[day]
-    if os.path.exists(archive_path(day)):
-        raise RuntimeError(f"seattle_cad: {provenance.rel(archive_path(day))} "
-                           "exists without a fetches.json row; refusing to "
-                           "overwrite a capture whose fetch time is unknown")
-    body, url = fetch(day)
-    daily = parse(body)
-    block = provenance.record(NAME, url, body, fetched_at=_iso(now), ext="json",
-                              day=day)
-    rows[day] = {"fetched_at": block["fetched_at"], "url": url,
-                 "sha256": block["sha256"], "bytes": block["bytes"],
-                 "file": block["file"], "newest_day": newest_day(daily).isoformat()}
-    unknown = unknown_types(daily)
-    if unknown:
-        rows[day]["unknown_types"] = unknown
-    if UNDATED in daily:
-        rows[day]["undated_events"] = sum(daily[UNDATED].values())
-    _save_fetches(rows)
-    return rows[day]
+    return _store().capture(fetch, parse=parse, describe=_describe, now=now)
 
 
 def read_capture(day, fetches=None):
     """(parsed daily, fetches row) for one archived day; checks the hash."""
-    fetches = fetches if fetches is not None else load_fetches()
-    row = fetches[day]
-    with open(os.path.join(ROOT, row["file"]), "rb") as f:
-        body = f.read()
-    if provenance.digest(body) != row["sha256"]:
-        raise RuntimeError(f"seattle_cad: {row['file']} does not match its "
-                           "recorded sha256; refusing a changed archive")
+    body, row = _store().read(day, fetches)
     return parse(body), row
 
 
 def snapshot_at_or_before(fetches, instant):
     """The newest capture day whose fetched_at is at or before `instant`."""
-    days = [d for d, r in fetches.items() if _parse_iso(r["fetched_at"]) <= instant]
-    return max(days, key=lambda d: fetches[d]["fetched_at"]) if days else None
+    return archive_store.DailyArchive.snapshot_at_or_before(fetches, instant)
 
 
 def snapshots_between(fetches, start, end):
     """Capture days with start <= fetched_at <= end, earliest first."""
-    days = [d for d, r in fetches.items()
-            if start <= _parse_iso(r["fetched_at"]) <= end]
-    return sorted(days, key=lambda d: fetches[d]["fetched_at"])
+    return archive_store.DailyArchive.snapshots_between(fetches, start, end)
 
 
 # ---------------------------------------------------------------- rounds
