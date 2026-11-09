@@ -116,15 +116,49 @@ def test_the_metric_and_its_cancel_rules():
         raise AssertionError("a zero hour 06-22 was scored")
     except pv.Cancel:
         pass
-    # The guide's sample writes merged interchanges with a hyphen; the card's
-    # code is 'EW24/NS1' and no alias is announced, so that file cancels.
-    h = pv.parse(pv_zip("train", "2027-01", code="EW24-NS1"), "train", "2027-01")
+    # The guide's sample writes merged interchanges with a hyphen. By owner
+    # decision both spellings name the station (ALIASES), and give the same
+    # number; any other code still cancels.
+    h = pv.parse(pv_zip("train", "2027-01", per_hour=1000, code="EW24-NS1"),
+                 "train", "2027-01")
+    assert pv.weekday_average(h, "train") == got
+    other = pv.parse(pv_zip("train", "2027-01", code="EW24"), "train", "2027-01")
     try:
-        pv.weekday_average(h, "train")
-        raise AssertionError("'EW24-NS1' was read as the card's 'EW24/NS1'")
+        pv.weekday_average(other, "train")
+        raise AssertionError("'EW24' was read as the card's 'EW24/NS1'")
     except pv.Cancel as e:
-        assert "EW24/NS1" in str(e)
+        assert "EW24/NS1" in str(e) and "EW24-NS1" in str(e)
     ok(test_the_metric_and_its_cancel_rules)
+
+
+def test_station_and_stop_aliases_one_table_both_spellings_never_twice():
+    """Owner decision 2026-11-08: 'EW24/NS1' and the DataMall sample's
+    'EW24-NS1' are one station; a bus stop code keeps its leading zero as
+    text and a file that drops it names the same stop. One file carrying
+    both spellings cancels rather than summing the station twice."""
+    assert pv.code_forms("train", "EW24/NS1") == ("EW24/NS1", "EW24-NS1")
+    assert pv.code_forms("bus", "22009") == ("22009",)
+    assert pv.code_forms("bus", "01012") == ("01012", "1012")
+    assert pv.code_forms("bus", "1012") == ("1012", "01012")
+
+    def rows(code, n=1000):
+        return [{"YEAR_MONTH": "202701", "DAY_TYPE": "WEEKDAY", "TIME_PER_HOUR": h,
+                 "PT_TYPE": "TRAIN", "PT_CODE": code, "TOTAL_TAP_IN_VOLUME": n,
+                 "TOTAL_TAP_OUT_VOLUME": n} for h in range(5, 24)]
+    one = {"month": "2027-01", "rows": rows("EW24/NS1")}
+    hyphen = {"month": "2027-01", "rows": rows("EW24-NS1")}
+    assert pv.weekday_average(one, "train") == pv.weekday_average(hyphen, "train")
+    both = {"month": "2027-01", "rows": rows("EW24/NS1") + rows("EW24-NS1")}
+    try:
+        pv.weekday_average(both, "train")
+        raise AssertionError("one station was summed under two spellings")
+    except pv.Cancel as e:
+        assert "2 spellings" in str(e)
+    bus = {"month": "2027-01", "rows": [dict(r, PT_TYPE="BUS", PT_CODE="1012")
+                                        for r in rows("x")]}
+    got = pv.weekday_average(bus, "bus", code="01012")
+    assert got["total_tap_in"] == 19 * 1000
+    ok(test_station_and_stop_aliases_one_table_both_spellings_never_twice)
 
 
 def test_no_key_no_request_and_the_key_never_reaches_the_archive():

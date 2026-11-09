@@ -35,12 +35,14 @@ and rows with an empty TIME_PER_HOUR are dropped and counted.
 **Metric.** Sum TOTAL_TAP_IN_VOLUME over WEEKDAY rows of the code, divided by
 the Monday-Friday dates of the month that are not gazetted public holidays
 (the round freezes its list at posting; `PUBLIC_HOLIDAYS` is MOM's list),
-rounded to a whole tap. The station code is the card's, exactly:
-'EW24/NS1'. NOTE for maintainers: the guide's own sample writes a merged
-interchange as 'EW14-NS26' (hyphen), so the real file may say 'EW24-NS1'.
-The card allows an alias only if announced before the lock, so `ALIASES` is
-empty and a file without 'EW24/NS1' cancels the round until the card or the
-alias table is revised on first download.
+rounded to a whole tap. The station code is the card's, 'EW24/NS1'. The
+guide's own sample writes a merged interchange as 'EW14-NS26' (hyphen), so
+the real file may say 'EW24-NS1': by owner decision (integration, 2026-11-08)
+both spellings name the station, through `ALIASES` -- an announced alias in
+the card's sense (policy (4)), not a guess at a renamed code. A bus stop
+code is five digits kept as text; a file that drops the leading zero names
+the same stop (`code_forms`). A file holding the same station under two
+spellings cancels the round rather than adding them.
 
 **Zero point** mean_k(k=1, lag=1) on months: the newest archived month at
 lock, two before the target. Spread: an interim relative sd (train 5.43%,
@@ -76,9 +78,26 @@ KINDS = {
             "code": "22009", "series": "sg_pv_bus_22009_weekday_tapin",
             "card": "sg-lta-pv-bus-boon-lay-int@v2", "interim_cv": 0.0666},
 }
-# Alias codes announced by LTA before a lock (card policy (4)). Empty: none
-# has been announced. See the module note on 'EW24-NS1'.
-ALIASES = {"train": (), "bus": ()}
+# Other spellings of a card's code, by kind and code (card policy (4): an
+# alias announced before the lock). 'EW24-NS1' is the DataMall sample's
+# hyphenated form of the card's 'EW24/NS1' (owner decision, 2026-11-08). A
+# code LTA actually changes (a new line stage) is added here, with the date
+# it was announced, before the first lock it applies to.
+ALIASES = {"train": {"EW24/NS1": ("EW24-NS1",)}, "bus": {}}
+
+
+def code_forms(kind, code):
+    """Every spelling of `code` a file may carry, the card's own first.
+
+    Train: the card's code plus its ALIASES. Bus: a stop code is five digits
+    kept as text (Annex A), so '01012' and '1012' are one stop; plus ALIASES.
+    """
+    forms = [code] + list(ALIASES.get(kind, {}).get(code, ()))
+    if kind == "bus" and code.isdigit():
+        for f in (code.zfill(5), code.lstrip("0") or "0"):
+            if f not in forms:
+                forms.append(f)
+    return tuple(forms)
 
 INTERIM_AFTER = 12                  # resolved months before the own-error spread
 
@@ -222,10 +241,16 @@ class Cancel(Exception):
 def weekday_average(parsed, kind, holidays=None, code=None):
     """The card's value for the file's month. Raises Cancel under policy (2)."""
     spec = KINDS[kind]
-    codes = (code or spec["code"],) + tuple(ALIASES.get(kind, ()))
+    codes = code_forms(kind, code or spec["code"])
     mine = [r for r in parsed["rows"] if r["PT_CODE"] in codes and r["DAY_TYPE"] == WEEKDAY]
     if not mine:
-        raise Cancel(f"{spec['code']} has no WEEKDAY rows in the {parsed['month']} file")
+        raise Cancel(f"{spec['code']} (or {', '.join(codes[1:]) or 'no alias'}) "
+                     f"has no WEEKDAY rows in the {parsed['month']} file")
+    spellings = sorted({r["PT_CODE"] for r in mine})
+    if len(spellings) > 1:
+        raise Cancel(f"the {parsed['month']} file carries {spec['code']} under "
+                     f"{len(spellings)} spellings {spellings}: one station, "
+                     "never summed twice")
     by_hour = {}
     for r in mine:
         by_hour[r["TIME_PER_HOUR"]] = by_hour.get(r["TIME_PER_HOUR"], 0) + r["TOTAL_TAP_IN_VOLUME"]
