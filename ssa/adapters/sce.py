@@ -34,7 +34,9 @@ changelog, month-granular), so the vintage is named by the day it was captured
 -- provenance.py's "a day is the unit" rule -- and the data's own as-of is the
 newest reference month inside it, which `history` checks. The first capture of
 a day wins; a re-fetch on the same day never rewrites the file, so a vintage a
-resolution cites can never change under it.
+resolution cites can never change under it. A scheduled release day also keeps
+`<day>.post.xlsx`, the first capture after the release that holds the new
+month, so the bytes a round resolves on are archived (see `archive`).
 
 **Serving is archive-first on failure, fail-loud on staleness.** A fetch
 failure serves the newest committed vintage with a printed warning: a monthly
@@ -46,11 +48,13 @@ what that cost once), and a warning on the fallback path does not cover a
 *live* workbook that quietly stopped being updated.
 """
 import io
+import json
 import os
 import re
 import zipfile
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import datetime, time, timezone
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -300,6 +304,26 @@ def _month_index(iso):
 # `sources/sce/<fetch day, UTC>.xlsx`, committed. Write-once per day: the
 # first capture wins, and a vintage a resolution cites can never change
 # under it.
+#
+# **Except on a scheduled release day, which keeps a second capture.** The
+# refresh runs at 00:17, 06:17, 12:17 and 18:17Z and the NY Fed releases at
+# 11:00 ET (15:00Z in daylight time, 16:00Z in standard time), so the day's
+# first capture always predates the release and the file named for release
+# day held the previous month: the bytes a round resolved on were archived
+# nowhere (found by the housing track research pass, 2026-11-08). On a release
+# day, a capture taken at or after the release instant whose newest reference
+# month is newer than the day's first file is filed once more as
+# `sources/sce/<day>.post.xlsx`, itself write-once. A post-release fetch
+# that still holds the old month (the release is late) files nothing, so the
+# next run can still catch it. The release instant is the later of the
+# rounds' `release_at` and 11:00 America/New_York that day: the stored hour
+# is 15:00Z all year, an hour early in standard time.
+
+POST = ".post"
+SEASON = os.path.join(ROOT, "questions", "season0.json")
+TRACKER = "ny_fed_sce"
+RELEASE_LOCAL = (11, 0)
+NY = ZoneInfo("America/New_York")
 
 
 def _utc_today():
@@ -310,38 +334,108 @@ def archive_path(day):
     return os.path.join(ARCHIVE, f"{day}.xlsx")
 
 
-def archive(body, day=None):
-    """File one workbook under its capture day. Returns the path.
+def post_path(day):
+    """The release day's second capture (see the notes above)."""
+    return os.path.join(ARCHIVE, f"{day}{POST}.xlsx")
+
+
+def release_instants(season_path=None):
+    """{UTC day: release instant} for every scheduled SCE release in the
+    season, read from the frozen round definitions (never edited here)."""
+    try:
+        with open(season_path or SEASON) as f:
+            rounds = json.load(f).get("rounds", [])
+    except (OSError, ValueError):
+        return {}
+    out = {}
+    for r in rounds:
+        if r.get("tracker") != TRACKER or not r.get("release_at"):
+            continue
+        at = datetime.strptime(r["release_at"], "%Y-%m-%dT%H:%M:%SZ") \
+            .replace(tzinfo=timezone.utc)
+        day = at.date()
+        local = datetime.combine(day, time(*RELEASE_LOCAL), NY).astimezone(timezone.utc)
+        key = day.isoformat()
+        out[key] = max(out.get(key, at), at, local)
+    return out
+
+
+def _newest_month(body):
+    return parse(body)[-1]["date"]
+
+
+def archive(body, day=None, now=None, releases=None, newest=None):
+    """File one workbook under its capture day. Returns the path it is in.
 
     An existing vintage for the day is left untouched -- not compared, not
     rewritten -- so nothing downstream of a morning capture can be changed by
-    an afternoon one.
+    an afternoon one. The one exception is a scheduled release day (`releases`,
+    default `release_instants()`): a capture at or after the release instant
+    whose newest month (`newest`, else parsed) is newer than the day's file
+    is filed once as `<day>.post.xlsx`.
     """
     if not isinstance(body, (bytes, bytearray)):
         raise TypeError("archive takes the workbook body as bytes")
-    day = day or _utc_today()
+    now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    today = now.date().isoformat()
+    day = day or today
     path = archive_path(day)
-    if os.path.exists(path):
+    if not os.path.exists(path):
+        _write(path, body)
         return path
-    os.makedirs(ARCHIVE, exist_ok=True)
+    if day != today:
+        return path                        # a second capture is only ever today's
+    release = (release_instants() if releases is None else releases).get(day)
+    if release is None or now < release:
+        return path
+    post = post_path(day)
+    if os.path.exists(post):
+        return post
+    with open(path, "rb") as f:
+        first = f.read()
+    try:
+        held = _newest_month(first)
+    except RuntimeError:
+        held = ""                          # an unreadable morning file: keep the new one
+    if (newest or _newest_month(bytes(body))) <= held:
+        return path                        # the release has not landed yet
+    _write(post, body)
+    return post
+
+
+def _write(path, body):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     tmp = path + ".tmp"
     with open(tmp, "wb") as f:
         f.write(bytes(body))
     os.replace(tmp, path)
-    return path
 
 
 def archived_days():
-    """Vintages held, oldest first, as `YYYY-MM-DD` strings."""
+    """Capture days held, oldest first, as `YYYY-MM-DD` strings."""
     if not os.path.isdir(ARCHIVE):
         return []
     return sorted(fn[:-5] for fn in os.listdir(ARCHIVE)
                   if fn.endswith(".xlsx") and len(fn) == 15)
 
 
+def archived_vintages():
+    """Every vintage held, oldest first, as paths: a day's `.post` capture
+    sorts after that day's first one."""
+    if not os.path.isdir(ARCHIVE):
+        return []
+    out = []
+    for fn in os.listdir(ARCHIVE):
+        if fn.endswith(".xlsx") and len(fn) == 15:
+            out.append((fn[:10], 0, fn))
+        elif fn.endswith(POST + ".xlsx") and len(fn) == 15 + len(POST):
+            out.append((fn[:10], 1, fn))
+    return [os.path.join(ARCHIVE, fn) for _, _, fn in sorted(out)]
+
+
 def newest_archived():
-    days = archived_days()
-    return archive_path(days[-1]) if days else None
+    vintages = archived_vintages()
+    return vintages[-1] if vintages else None
 
 
 def read_archived(path=None):
@@ -392,7 +486,7 @@ def history(fetch=True, today=None, diagnostics=None):
             # that arrived but no longer satisfies the parser contract, or one
             # we could not preserve, is unusable and must fail the refresh.
             rows = parse(body)
-            archive(body)
+            archive(body, newest=rows[-1]["date"])
     if rows is None:
         rows = load()
     stale = _month_index(today or _utc_today()) - _month_index(rows[-1]["date"])
