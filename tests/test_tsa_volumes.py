@@ -335,7 +335,8 @@ def test_the_proposed_rounds_follow_the_card():
         assert season._shape_problems(r) == []
     assert rounds[1]["release_at"] == "2026-12-15T17:00:00Z"   # P2, Tue 12-15 12:00 ET
     problems = season.validate_document(doc)
-    assert problems and all("neither registered nor audited" in p for p in problems)
+    assert problems and all("rights are 'unresolved'" in p or "invalid schedule" in p
+                            for p in problems), problems
     ok(test_the_proposed_rounds_follow_the_card)
 
 

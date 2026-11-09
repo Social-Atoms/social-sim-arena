@@ -267,15 +267,10 @@ def archive_phrase(cells):
 # resolves on an archived vintage, and its reference must end at the month
 # before it (card nyfed-sce-moving@v2: "if the newest vintage before the lock
 # does not carry month M-1, the round refuses to post its reference").
-def _sce_moving_month(r):
-    from .adapters import sce
-    return sce.survey_month(r["release_at"])
-
-
-def _sce_moving_resolution(r, cells):
+def sce_moving_resolution(r, cells):
     import os
     from .adapters import sce
-    month = _sce_moving_month(r)
+    month = sce.survey_month(r["release_at"])
     header = {c: series_registry.SERIES[c]["sce_moving"]["cell"] for c in cells}
     try:
         got = sce.moving_resolution(month, r["release_at"],
@@ -302,17 +297,16 @@ def _sce_moving_resolution(r, cells):
     }
 
 
-MONTH_LABELLED = {
-    "sce_moving": {"month": _sce_moving_month,
-                   "resolve": _sce_moving_resolution},
-}
-
-
 def month_labelled(cells):
-    """The MONTH_LABELLED hooks when every cell comes from one such source."""
+    """The profile hooks of ssa/urban.py's registry entry when every cell
+    comes from one such source (today: sce_moving), else None."""
+    from . import urban
     sources = {series_registry.SERIES[c]["source"] for c in cells
                if c in series_registry.SERIES}
-    return MONTH_LABELLED.get(sources.pop()) if len(sources) == 1 else None
+    if len(sources) != 1:
+        return None
+    src = urban.get(sources.pop())
+    return src.profile if src is not None else None
 
 
 def reference_profile(r, hist_by_cell, cells=None):

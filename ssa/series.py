@@ -19,6 +19,7 @@ filters were implicit in adapter code, which had two consequences worth naming:
 Adding a tracker means adding a row here, and nothing else.
 """
 from . import crosstab
+from . import urban
 from .adapters import aaii as aaii_adapter
 from .adapters import bls_cpi as bls_cpi_adapter
 from .adapters import civiqs as civiqs_adapter
@@ -1317,6 +1318,205 @@ SERIES["cpi_rent_sa_mom"] = {
         "change. Source: U.S. Bureau of Labor Statistics."),
 }
 
+# ---------------------------------------------------------------- Urban Track
+#
+# The Urban Track sources (ssa/urban.py), one series each and two for LTA's
+# passenger volumes. Every one is read from SSA's own write-once archive under
+# sources/<name>/, never the network: capturing is a separate, non-blocking
+# step (refresh.yml, sg-timed-capture.yml, nyc311-capture.yml) or a person's
+# download, so a 403 can stop a capture but never the refresh. The history
+# here is what an entrant is shown; a round is ranked on the reference its
+# adapter computes from the capture archived at lock (urban.lock_reference),
+# never on this list.
+#
+# `archive_pending`: a source with no capture yet (MTA waits on a person's
+# first download, LTA on a DataMall key) builds to an empty series rather than
+# failing the run. Its rounds then post no reference and say so; nothing is
+# substituted. Every other series still refuses to build to zero points.
+
+def _urban(sid, *, label, tracker, publisher, source, unit, cadence,
+           question, methodology, card):
+    SERIES[sid] = {"label": label, "tracker": tracker, "publisher": publisher,
+                   "source": source, "unit": unit, "cadence": cadence,
+                   "question": question, "methodology": methodology,
+                   "card": card, "archive_pending": True}
+    return sid
+
+
+_urban(
+    "seattle_calls_weekly", card="seattle-community-calls@v4",
+    label="Seattle community-initiated police calls, weekly",
+    tracker="seattle_cad", source="seattle_cad",
+    publisher=("Seattle Police Department, on the City of Seattle Open Data "
+               "Portal (cos-data.seattle.gov, dataset 33kz-ixgy)."),
+    unit="calls per Monday-to-Sunday week (distinct CAD events)",
+    cadence=("daily capture of the trailing 630 days; a week is posted about "
+             "three days after it ends and resolved eight days after"),
+    question=("Seattle Police Department: community-initiated calls for "
+              "service (distinct CAD events received by 911, non-emergency "
+              "telephone, text message or in-person complaint) with an "
+              "original queue time in the Monday-to-Sunday week, Seattle "
+              "local time"),
+    methodology=(
+        "Counted from the City of Seattle's Call Data (33kz-ixgy): "
+        "count(distinct cad_event_number) per day for call_type 911, "
+        "'TELEPHONE OTHER, NOT 911', 'TEXT MESSAGE' and 'IN PERSON "
+        "COMPLAINT'; officer-initiated activity, alarm-company signals and "
+        "administrative entries are excluded. A day under 40% of the "
+        "trailing 28-day level counts as an outage, never as a quiet day. "
+        "SSA sets and resolves the metric from its archived daily capture; "
+        "no publisher releases a weekly number."))
+
+_urban(
+    "nyc311_requests_weekly", card="nyc-311-requests@v2",
+    label="NYC 311 service requests, weekly",
+    tracker="nyc_311", source="nyc311",
+    publisher=("NYC 311 and the NYC Office of Technology and Innovation, NYC "
+               "Open Data (data.cityofnewyork.us, dataset erm2-nwe9)."),
+    unit="service requests per Monday-to-Sunday week",
+    cadence=("daily capture of the trailing 280 days; the portal loads once "
+             "a day at about 02:40Z"),
+    question=("NYC 311 service requests (rows of NYC Open Data erm2-nwe9, all "
+              "complaint types, agencies and statuses) with a created_date in "
+              "the Monday-to-Sunday week, New York local time"),
+    methodology=(
+        "Every row of erm2-nwe9, counted per day of created_date (a floating "
+        "timestamp read as New York time) and summed over the week. The "
+        "dataset holds only requests that can be routed to an agency, not "
+        "general information calls. A capture Socrata marks out of date is "
+        "never filed. SSA sets and resolves the metric from its archived "
+        "daily capture."))
+
+_urban(
+    "mta_subway_weekly", card="mta-subway-weekly@v2",
+    label="NYC subway ridership, weekly (MTA estimate)",
+    tracker="mta_daily", source="mta_daily",
+    publisher=("Metropolitan Transportation Authority, on NY Open Data "
+               "(data.ny.gov, dataset sayj-mze2)."),
+    unit="riders per Monday-to-Sunday week (MTA estimated subway ridership)",
+    cadence=("downloaded by a person each weekend; the dataset posts each "
+             "day with a lag of about a week"),
+    question=("Total of MTA's daily 'Subway' ridership estimates (data.ny.gov "
+              "sayj-mze2, which includes the Staten Island Railway) over the "
+              "Monday-to-Sunday week, New York time"),
+    methodology=(
+        "MTA's published daily estimate for the 'Subway' mode, summed over "
+        "seven days. Estimates are modelled from fare-gate taps and are "
+        "revised; a round resolves on the first archived download holding "
+        "all seven days and later revisions never change it."))
+
+_urban(
+    "tsa_checkpoint_weekly", card="tsa-checkpoint-weekly@v2",
+    label="TSA checkpoint throughput, weekly (national)",
+    tracker="tsa", source="tsa_volumes",
+    publisher=("Transportation Security Administration, tsa.gov passenger "
+               "volumes page."),
+    unit="travelers screened per Monday-to-Sunday week",
+    cadence="daily capture; TSA posts the previous day's number each morning",
+    question=("Travelers screened at TSA checkpoints nationwide, TSA's daily "
+              "'Numbers', summed over the Monday-to-Sunday week"),
+    methodology=(
+        "TSA's single national daily number from https://www.tsa.gov/travel/"
+        "passenger-volumes, summed over seven dates. TSA does not state the "
+        "day boundary or whether crew are included. Resolved on SSA's first "
+        "archived capture holding all seven dates."))
+
+_urban(
+    "sg_coe_premium_cat_a", card="sg-coe-cat-a-premium@v2",
+    label="Singapore COE Category A quota premium",
+    tracker="sg_coe", source="sg_coe",
+    publisher=("Land Transport Authority, on data.gov.sg (dataset "
+               "d_69b3380ad7e51aff3a7dcc84eba52b8a). Contains information "
+               "accessed from data.gov.sg under the Singapore Open Data "
+               "Licence version 1.0."),
+    unit="Singapore dollars (S$)",
+    cadence="two open bidding exercises a month, on LTA's published schedule",
+    question=("The Category A Certificate of Entitlement quota premium (S$), "
+              "the clearing price every successful bidder pays, at one LTA "
+              "open bidding exercise"),
+    methodology=(
+        "Category A: non-fully-electric cars up to 1,600 cc and 97 kW, and "
+        "fully electric cars up to 110 kW. The premium is set by all bids in "
+        "the category in that exercise. Resolved on SSA's first archived "
+        "capture of the data.gov.sg datastore after the close that carries "
+        "the exercise's row."))
+
+_urban(
+    "sg_taxi_free_downtown_fri2300", card="sg-taxi-downtown-fri2300@v2",
+    label="Singapore free taxis in Downtown Core, Friday 23:00",
+    tracker="sg_lta_rt", source="sg_taxi",
+    publisher=("Land Transport Authority, Taxi Availability on data.gov.sg; "
+               "boundary: URA Master Plan 2019 planning areas. Contains "
+               "information accessed from data.gov.sg under the Singapore "
+               "Open Data Licence version 1.0."),
+    unit="taxis available for hire",
+    cadence="one snapshot a week, Friday 23:00 Singapore time",
+    question=("Taxis available for hire inside the Downtown Core planning "
+              "area in LTA's Taxi Availability snapshot for Friday 23:00 "
+              "Singapore time (fewer free taxis means more demand)"),
+    methodology=(
+        "Counted by SSA from the feed's taxi positions inside the URA 2019 "
+        "Downtown Core polygon; private-hire cars are not in the feed. The "
+        "snapshot must be fresh, complete and not implausibly low, with "
+        "fallback minutes 23:01, 23:02, 23:05 and 23:10. SSA sets and "
+        "resolves the metric; no publisher releases it."))
+
+_urban(
+    "sg_hdb_occ_clementi_sat2000", card="sg-hdb-carpark-clementi-sat2000@v2",
+    label="Singapore HDB carpark occupancy in Clementi, Saturday 20:00",
+    tracker="sg_hdb_carpark", source="sg_carpark_hdb",
+    publisher=("Housing & Development Board, Carpark Availability and HDB "
+               "Carpark Information on data.gov.sg; boundary: URA Master Plan "
+               "2019 planning areas. Contains information accessed from "
+               "data.gov.sg under the Singapore Open Data Licence version "
+               "1.0."),
+    unit="percent of car lots occupied",
+    cadence="one snapshot a week, Saturday 20:00 Singapore time",
+    question=("Share of car lots occupied across the HDB carparks in the "
+              "Clementi planning area in the Carpark Availability snapshot "
+              "for Saturday 20:00 Singapore time"),
+    methodology=(
+        "Occupied = total lots minus available lots, summed over the pinned "
+        "list of Clementi HDB carparks (lot type C), divided by total lots. "
+        "Season and visitor parking are not distinguished. SSA sets and "
+        "resolves the metric; no publisher releases it."))
+
+_urban(
+    "sg_pv_train_ew24ns1_weekday_tapin", card="sg-lta-pv-train-jurong-east@v2",
+    label="Jurong East MRT, weekday average daily tap-ins",
+    tracker="sg_lta_pv", source="sg_lta_pv",
+    publisher=("Land Transport Authority, LTA DataMall Passenger Volume by "
+               "Train Stations."),
+    unit="tap-ins per weekday (average, public holidays excluded)",
+    cadence="monthly; DataMall posts a month's file around the 10th of the next",
+    question=("Average daily fare-card tap-ins at Jurong East MRT station "
+              "(EW24/NS1) on weekdays that are not public holidays, over the "
+              "month"),
+    methodology=(
+        "Sum of TOTAL_TAP_IN_VOLUME over the station's WEEKDAY rows in the "
+        "month's DataMall file, divided by the Monday-to-Friday dates that "
+        "are not gazetted public holidays. Transfers inside the paid area "
+        "are not taps."))
+
+_urban(
+    "sg_pv_bus_22009_weekday_tapin", card="sg-lta-pv-bus-boon-lay-int@v2",
+    label="Boon Lay Interchange buses, weekday average daily boardings",
+    tracker="sg_lta_pv", source="sg_lta_pv",
+    publisher=("Land Transport Authority, LTA DataMall Passenger Volume by "
+               "Bus Stops."),
+    unit="boardings per weekday (average, public holidays excluded)",
+    cadence="monthly; DataMall posts a month's file around the 10th of the next",
+    question=("Average daily bus boardings (fare-card tap-ins) at Boon Lay "
+              "Interchange (bus stop 22009) on weekdays that are not public "
+              "holidays, over the month"),
+    methodology=(
+        "Sum of TOTAL_TAP_IN_VOLUME over the stop's WEEKDAY rows in the "
+        "month's DataMall file, divided by the Monday-to-Friday dates that "
+        "are not gazetted public holidays."))
+
+URBAN_SERIES = tuple(sid for sid, s in SERIES.items() if s.get("archive_pending"))
+
+
 # European Commission consumer survey (DG ECFIN). One release zip per month
 # carries every country, so the twelve series below share a single request
 # per release, and none at all once the month's release is archived. The EU
@@ -1975,6 +2175,12 @@ def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
     # (`python -m ssa.adapters.bls_cpi capture`), so a 403 on the runner can
     # stop the capture but never the refresh.
     load("bls_cpi", bls_cpi_adapter.history)
+    # The Urban Track sources (ssa/urban.py), each read from its own archive.
+    #  is a per-series override map, the Civiqs shape, which is
+    # what tests inject; anything not in it is built from the archive.
+    for _name in sorted({s["source"] for s in SERIES.values()
+                         if s.get("archive_pending")}):
+        load(_name, dict)
     # One release zip carries all twelve EC consumer series. Write-once per
     # release under `sources/ecbcs/`, and a month whose release is already
     # archived costs no request at all.
@@ -2052,6 +2258,15 @@ def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
             elif source == "sce_moving":
                 out[sid] = sce_adapter.moving_series(
                     src["sce_moving"], spec["sce_moving"]["cell"])
+            elif spec.get("archive_pending") and urban.get(source):
+                given = src[source].get(sid)
+                out[sid] = (list(given) if given is not None else
+                            urban.get(source).history(dict(spec, sid=sid)))
+                if not out[sid]:
+                    # No capture yet: an empty series, never a failed run
+                    # (see the Urban Track block above). Its rounds post no
+                    # reference until the archive holds one.
+                    continue
             elif source == "ecbcs":
                 out[sid] = ecbcs_adapter.to_series(src["ecbcs"],
                                                    spec["ecbcs"]["geo"])

@@ -3,8 +3,8 @@
 They are not in questions/season0.json: they wait for a question batch. This
 checks what can be checked now -- each file cites its card by the hash of the
 committed copy, its zero points are closed specs, the clock matches the
-adapters, and against the season validator (with the five series registered
-in a stub, since ssa/series.py does not carry them yet) the only problems
+adapters, and against the season validator (the five series are registered
+in ssa/series.py) the only problems
 left are the two schedule contracts a maintainer has to add: COE locks 53 h
 before the exercise close and the passenger-volume rounds lock ~41 days
 before release, by the cards' owner decisions, where the default contract
@@ -79,17 +79,10 @@ def test_the_clock_matches_the_adapters_and_none_is_in_the_season():
 
 
 def test_season_validator_leaves_only_the_two_schedule_contracts():
-    added = []
-    try:
-        for sid, src in SOURCES.items():
-            assert sid not in series.SERIES
-            series.SERIES[sid] = {"source": src}
-            added.append(sid)
-        rounds = [r for d in docs().values() for r in d["rounds"]]
-        problems = season.validate_document({"rounds": rounds})
-    finally:
-        for sid in added:
-            del series.SERIES[sid]
+    for sid, src in SOURCES.items():
+        assert series.SERIES[sid]["source"] == src, sid
+    rounds = [r for d in docs().values() for r in d["rounds"]]
+    problems = season.validate_document({"rounds": rounds})
     for p in problems:
         rid = p.split(":")[0]
         assert "release is" in p and "requires 48h" in p, p

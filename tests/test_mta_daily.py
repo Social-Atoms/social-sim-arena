@@ -371,10 +371,11 @@ def test_the_proposed_rounds_follow_the_card():
         assert ("Holiday flag" in (r.get("pilot") or r["proposal_note"])) == any(flagged.values())
     assert rounds[0]["lock_at"] == "2026-11-30T04:59:00Z"      # Sun 11-29 23:59 ET
     assert rounds[5]["lock_at"] == "2027-01-04T04:59:00Z"      # Sun 01-03 23:59 ET
-    # Not publishable yet, for the reasons the PR lists: the series is not
-    # registered (and then the rights and the 48-hour schedule rule).
+    # Not publishable yet: the rights wait on a maintainer, and the default
+    # 48-hour schedule rule has no behavioural-week exception for MTA yet.
     problems = season.validate_document(doc)
-    assert problems and all("neither registered nor audited" in p for p in problems)
+    assert problems and all("rights are 'unresolved'" in p or "invalid schedule" in p
+                            for p in problems), problems
     ok(test_the_proposed_rounds_follow_the_card)
 
 
