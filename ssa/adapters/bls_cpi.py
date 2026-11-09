@@ -99,10 +99,22 @@ MIN_LEVEL, MAX_LEVEL = 50.0, 5000.0
 # 2027 dates are the card's estimates until a person copies them from
 # https://www.bls.gov/schedule/news_release/cpi.htm (card task G4). A round in
 # the season with tracker bls_cpi adds its own release day to these.
+# Copied from https://www.bls.gov/schedule/news_release/cpi.htm and
+# https://www.bls.gov/schedule/2027/home.htm on 2026-11-09 (both 200 to an honest UA).
 RELEASES = {
     "2026-11": "2026-12-10",
     "2026-12": "2027-01-13",
     "2027-01": "2027-02-11",
+    "2027-02": "2027-03-10",
+    "2027-03": "2027-04-13",
+    "2027-04": "2027-05-12",
+    "2027-05": "2027-06-10",
+    "2027-06": "2027-07-14",
+    "2027-07": "2027-08-11",
+    "2027-08": "2027-09-14",
+    "2027-09": "2027-10-14",
+    "2027-10": "2027-11-10",
+    "2027-11": "2027-12-10",
 }
 
 _STAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{4}Z$")
