@@ -14,6 +14,7 @@ One page per source the arena scores against. Each says the same five things, in
 | European Commission (DG ECFIN) | [ec-consumer-survey.md](ec-consumer-survey.md) | None yet: twelve series registered (EU, euro area, ten countries), no rounds scheduled | `ssa/adapters/ecbcs.py` |
 | Seattle Police Department (City of Seattle) | [seattle-police-calls.md](seattle-police-calls.md) | None yet: archived daily for the Urban Track pilot, no series registered and no rounds scheduled | `ssa/adapters/seattle_cad.py` |
 | NYC 311 (NYC Open Data) | [nyc-311.md](nyc-311.md) | None yet: archived daily for the Urban Track, no series registered; proposed rounds in [nyc-311-requests.rounds.json](../data-cards/nyc-311-requests.rounds.json) | `ssa/adapters/nyc311.py` |
+| MTA, on NY Open Data (data.ny.gov) | [mta.md](mta.md) | None yet: downloaded weekly by a person for the Urban Track, no series registered and no rounds scheduled | `ssa/adapters/mta_daily.py`, `tools/ingest_mta_daily.py` |
 | AAII | [aaii.md](aaii.md) | Investor sentiment | `ssa/adapters/aaii.py` |
 | Google Trends | [google-trends.md](google-trends.md) | Brand search-interest mix | `ssa/adapters/trends.py` |
 | Wikimedia | [wikimedia.md](wikimedia.md) | Wikipedia weekly top 10 | `ssa/adapters/wikipedia.py` |

@@ -268,6 +268,43 @@ INVENTORY = {
             "ssa/series.py; the proposed rounds are in "
             "docs/data-cards/nyc-311-requests.rounds.json."),
     },
+    "mta_daily": {
+        "publisher": ("Metropolitan Transportation Authority, on NY Open Data "
+                      "(data.ny.gov, OPEN-NY, operated by NYS ITS)"),
+        "adapter": "ssa/adapters/mta_daily.py",
+        "role": TARGET,
+        "state": PERMISSION_NEEDED,
+        # Not granted. Card mta-subway-weekly@v2 proposes `approved` for its
+        # route B (a person downloads the CSV weekly, the archive is published
+        # with attribution) and `permission-needed` for route A (a scheduled
+        # fetch) until a written answer; maintainers decide at review. Until
+        # then the gate reads `unresolved` and no round can be generated.
+        "rights": UNRESOLVED,
+        "proposed_rights": {"route_b_manual": APPROVED,
+                            "route_a_automated": PERMISSION_NEEDED},
+        "evidence": (
+            "Card mta-subway-weekly@v2, archive_policy, read 2026-11-09. "
+            "OPEN-NY Terms of Use (last modified 2013-03-08; data.ny.gov/api/"
+            "views/77gx-ii52, fetched 2026-11-09T01:01:12Z): preamble 'So long "
+            "as you are not doing anything malicious with NYS data, you may use "
+            "it as you wish, subject to no other requirements'; Contract 'You "
+            "are welcome to freely download and use this Content'. Under "
+            "'Public Participation', scoped 'To the extent OPEN-NY activates a "
+            "module or forum for public comment or the uploading of Content', "
+            "one bullet bars accessing the site 'by using an automated device, "
+            "script, bot, spider, crawler or scraper' -- so automated retrieval "
+            "is unclear and no workflow fetches the file. Dataset metadata "
+            "licenseId null; MTA's own terms (mta.info/open-data) returned 403 "
+            "to the research fetch and were not read. Manual weekly ingest: "
+            "tools/ingest_mta_daily.py. The export URL answered with "
+            "'Sunset: Tue, 22 Dec 2026' and a Deprecation header on "
+            "2026-11-09T00:59:27Z (docs/sources/mta.md)."),
+        "revisit": (
+            "Card person tasks 1 and 2: MTA's own terms read in a browser, and a "
+            "written answer from OpenData@mtahq.org on scheduled download and "
+            "on publishing the archive. A yes to both makes route B `approved` "
+            "and route A a card revision."),
+    },
     "wikipedia": {
         "publisher": "Wikimedia Foundation",
         "adapter": "ssa/adapters/wikipedia.py",
