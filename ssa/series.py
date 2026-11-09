@@ -20,6 +20,7 @@ Adding a tracker means adding a row here, and nothing else.
 """
 from . import crosstab
 from .adapters import aaii as aaii_adapter
+from .adapters import bls_cpi as bls_cpi_adapter
 from .adapters import civiqs as civiqs_adapter
 from .adapters import ecbcs as ecbcs_adapter
 from .adapters import hhpoll as hhpoll_adapter
@@ -1282,6 +1283,40 @@ SERIES["sce_moving_national"] = {
     "methodology": _SCE_MOVING_METHODOLOGY,
 }
 
+# BLS CPI rent of primary residence, US city average, seasonally adjusted
+# (card bls-cpi-rent@v2, sha256
+# 9a5c42d2fc293ea433cd78590908b95dc017a7b76817ff6fbd2bdfa7b390d4e7): the
+# one-month percent change, computed from two index levels of one archived
+# API response (ssa/adapters/bls_cpi.py). Rows are dated by the reference
+# month, so the lock snapshot, not the date filter, freezes it -- as for
+# Michigan and the SCE. Ranked on zero point mean6, never persistence sd 1.5:
+# on a series that moves about 0.06 a month, sd 1.5 is no reference at all.
+SERIES["cpi_rent_sa_mom"] = {
+    "label": "BLS CPI rent of primary residence, monthly change (SA)",
+    "tracker": "bls_cpi",
+    "publisher": ("The US Bureau of Labor Statistics: the Consumer Price "
+                  "Index, published monthly at 08:30 ET on a release "
+                  "schedule BLS announces for the calendar year."),
+    "source": "bls_cpi",
+    "unit": "percent, one-month change, seasonally adjusted",
+    "cadence": ("monthly; the CPI for month M is released between about the "
+                "10th and the 15th of M+1 at 08:30 ET"),
+    "question": ("BLS CPI-U rent of primary residence, US city average, "
+                 "seasonally adjusted (CUSR0000SEHA): one-month percent change "
+                 "computed from the two published index levels"),
+    "methodology": (
+        "Consumer Price Index for All Urban Consumers, US Bureau of Labor "
+        "Statistics. Rent of primary residence measures contract rents paid "
+        "by tenants in the CPI housing sample, not asking rents; each sampled "
+        "unit is re-priced every six months, so a month's change mixes the "
+        "six-month changes of one panel. The arena computes 100 x "
+        "(L_M / L_{M-1} - 1) from the two seasonally adjusted index levels in "
+        "one release response, unrounded (the press table prints one "
+        "decimal). October 2025 was not published (the 2025 lapse in "
+        "appropriations), so October and November 2025 have no one-month "
+        "change. Source: U.S. Bureau of Labor Statistics."),
+}
+
 # European Commission consumer survey (DG ECFIN). One release zip per month
 # carries every country, so the twelve series below share a single request
 # per release, and none at all once the month's release is archived. The EU
@@ -1935,6 +1970,11 @@ def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
     # never fetched. Its own source key, so a malformed moving sheet fails
     # alone and the inflation series stand.
     load("sce_moving", sce_adapter.moving_history)
+    # BLS CPI rent (card bls-cpi-rent@v2): the newest archived API capture,
+    # never the network. Capturing is a separate, non-blocking workflow step
+    # (`python -m ssa.adapters.bls_cpi capture`), so a 403 on the runner can
+    # stop the capture but never the refresh.
+    load("bls_cpi", bls_cpi_adapter.history)
     # One release zip carries all twelve EC consumer series. Write-once per
     # release under `sources/ecbcs/`, and a month whose release is already
     # archived costs no request at all.
@@ -2007,6 +2047,8 @@ def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
             elif source == "sce":
                 out[sid] = sce_adapter.to_series(src["sce"],
                                                  spec["sce"]["horizon"])
+            elif source == "bls_cpi":
+                out[sid] = list(src["bls_cpi"])
             elif source == "sce_moving":
                 out[sid] = sce_adapter.moving_series(
                     src["sce_moving"], spec["sce_moving"]["cell"])

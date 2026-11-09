@@ -641,7 +641,7 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
             target = r["release_at"][:10]
             row["baselines"] = baselines.all_baselines(hist, target)
             row["scoreable"] = True
-            attach_zero_point(row, r, hist)
+            attach_zero_point(row, r, hist, now)
         else:
             row["baselines"] = None
             # Named rather than merely empty. Skill is defined as a ratio
@@ -2178,7 +2178,23 @@ def published_lists(weeks=12):
         return {}
 
 
-def attach_zero_point(row, r, hist):
+def _bls_cpi_lock_capture(r):
+    from .adapters import bls_cpi
+    bls_cpi.lock_capture(r["lock_at"], bls_cpi.reference_month(r["release_at"]))
+
+
+# A source whose card adds a freshness rule to the lock-time reference, keyed
+# by the round's series source: fn(round) raises baselines.NotPostable when
+# the capture the reference stands on is missing. Checked only once the
+# round has locked, when the archive that answers it can no longer change.
+LOCK_CAPTURE_CHECKS = {
+    # Card bls-cpi-rent@v2, missing-data rule (4): a capture from the 24
+    # hours before the lock must carry M-1.
+    "bls_cpi": _bls_cpi_lock_capture,
+}
+
+
+def attach_zero_point(row, r, hist, now=None):
     """A round whose zero point is a spec with a `target` gets that reference
     computed from `hist`, the same frozen history every other null reads.
 
@@ -2193,7 +2209,11 @@ def attach_zero_point(row, r, hist):
     spec = baselines.zero_point_spec(r)
     if spec["family"] == "persistence" or "target" not in spec:
         return
+    check = LOCK_CAPTURE_CHECKS.get(
+        (series_registry.SERIES.get(r.get("series")) or {}).get("source"))
     try:
+        if check and now is not None and now >= parse_iso(r["lock_at"]):
+            check(r)
         row["baselines"][spec["name"]] = baselines.reference_from_history(spec, hist)
     except baselines.NotPostable as e:
         row["baselines"] = None

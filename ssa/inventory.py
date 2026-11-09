@@ -158,6 +158,33 @@ INVENTORY = {
             "dates are preannounced on the NY Fed economic-indicators "
             "calendar, which is what §1.1 asks for."),
     },
+    "bls_cpi": {
+        "publisher": "US Bureau of Labor Statistics",
+        "adapter": "ssa/adapters/bls_cpi.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        # Proposed by the track's Data Card (bls-cpi-rent@v2); maintainers
+        # confirm or change it at review. The card's owner approval covers
+        # the question rules, not this verdict.
+        "rights": APPROVED,
+        "evidence": (
+            "Read 2026-11-09. CPI data are a work of the US federal "
+            "government, which has no US copyright (17 U.S.C. section 105); "
+            "that is an inference, as the BLS copyright page "
+            "(https://www.bls.gov/opub/copyright-information.htm) answered "
+            "HTTP 403 to an honest client at 2026-11-09T01:02:44Z and its "
+            "wording is not quoted (card task G4: a person pastes it into the "
+            "PR). Retrieval: the keyless Public Data API v1 "
+            "(https://api.bls.gov/publicAPI/v1/timeseries/data/) is the route "
+            "BLS provides for programs, limited to 25 queries a day; it "
+            "answered HTTP 200 REQUEST_SUCCEEDED at 2026-11-09T01:00:56Z and "
+            "02:04:58Z. www.bls.gov and download.bls.gov answered 403 to the "
+            "same client, so whether the API answers GitHub runners is "
+            "unmeasured: a 403 there means a local courier (lesson 3). "
+            "Attribution: \"Source: U.S. Bureau of Labor Statistics\". FRED "
+            "carries the series but its terms bar archiving, so it is a "
+            "cross-check only."),
+    },
     "sce_moving": {
         "publisher": "Federal Reserve Bank of New York",
         "adapter": "ssa/adapters/sce.py",

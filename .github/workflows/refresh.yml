@@ -240,6 +240,15 @@ jobs:
       # - name: capture MTA daily ridership (route A, non-blocking)
       #   continue-on-error: true
       #   run: python -m ssa.adapters.mta_daily capture
+      # BLS CPI rent (card bls-cpi-rent@v2): at most one keyless API query a
+      # UTC day under sources/bls_cpi/, plus a post-release capture on a CPI
+      # release day if this run is the first after 08:30 ET. The release-day
+      # capture at 08:45 ET is .github/workflows/bls-cpi.yml. The series reads
+      # the archive, never the network, so a 403 or 429 here is logged and the
+      # refresh goes on; a 403 means the capture moves to a local courier.
+      - name: capture BLS CPI rent (non-blocking)
+        continue-on-error: true
+        run: python -m ssa.adapters.bls_cpi capture
       - run: python -m ssa.refresh
       # Resolution runs after the refresh so it scores against the series the
       # same run just fetched. It only ever adds, never overwrites, and

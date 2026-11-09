@@ -100,6 +100,10 @@ _assign("consumer",
         "sce_moving_region_south", "sce_moving_region_northeast",
         "sce_moving_national")
 
+# BLS CPI rent (card bls-cpi-rent@v2): a household price, filed with the
+# consumer questions until the board has a housing subject.
+_assign("consumer", "cpi_rent_sa_mom")
+
 _assign("attention",
         "wiki_top10_en", "wiki_views_trump", "wiki_views_taylor_swift",
         "trends_iphone", "trends_tesla",
