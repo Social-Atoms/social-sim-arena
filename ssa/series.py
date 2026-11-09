@@ -1193,6 +1193,95 @@ SERIES["sce_inflation_3y"] = {
     "methodology": _SCE_METHODOLOGY,
 }
 
+# NY Fed SCE moving expectations (card nyfed-sce-moving@v2, sha256
+# bd4130d2434db06cd3620aa3d6cef9e92165e08c081c0fe38b31f1f0f2faf676): the
+# same archived workbook as the two inflation series, two more sheets, and no
+# request of its own. Its own source key, `sce_moving`, so that a malformed
+# moving sheet is isolated from the inflation series at the source boundary
+# rather than taking them down with it. Ten cells scored together as one
+# profile (SCE_MOVING_CELLS), plus the national mean, shown and not scored.
+
+_SCE_MOVING_METHODOLOGY = (
+    "Survey of Consumer Expectations, Federal Reserve Bank of New York; "
+    "rotating internet panel of about 1,300 US household heads. Each "
+    "respondent gives the percent chance that they will move to a different "
+    "primary residence over the next 12 months; the published number is the "
+    "mean across respondents in the cell, as the bank weights it. A stated "
+    "intention, not an observed move. Rows are dated by the survey month; "
+    "the release lands early the following month at 11:00 ET, on a date "
+    "preannounced on the NY Fed calendar. Source: Survey of Consumer "
+    "Expectations, \u00a9 2013-2026 Federal Reserve Bank of New York (FRBNY). "
+    "The SCE data are available without charge at "
+    "http://www.newyorkfed.org/microeconomics/sce and may be used subject to "
+    "license terms posted there. FRBNY disclaims any responsibility for this "
+    "analysis and interpretation of Survey of Consumer Expectations data.")
+
+# (workbook header, series suffix, who the cell is, noise m, real movement s):
+# scoring.noise_floor per cell over the 36 target months 2023-10 to 2026-09,
+# as measured on the 2026-11-08 capture by the card (Baseline). A cell whose
+# s is 0.00 moves within its own sampling noise; the card keeps it anyway.
+_SCE_MOVING_ROWS = (
+    ("Age Under 40", "age_under_40", "household heads under 40", 1.44, 0.00),
+    ("Age 40-60", "age_40_60", "household heads aged 40 to 60", 0.40, 0.97),
+    ("Age Over 60", "age_over_60", "household heads over 60", 0.42, 0.87),
+    ("Income under 50k", "income_under_50k",
+     "households with income under $50,000", 0.52, 1.32),
+    ("Income 50-100k", "income_50_100k",
+     "households with income of $50,000 to $100,000", 1.01, 0.54),
+    ("Income Over 100k", "income_over_100k",
+     "households with income over $100,000", 0.00, 1.18),
+    ("Region West", "region_west", "household heads in the West", 0.00, 1.54),
+    ("Region Midwest", "region_midwest", "household heads in the Midwest",
+     0.99, 1.25),
+    ("Region South", "region_south", "household heads in the South", 0.40,
+     1.13),
+    ("Region Northeast", "region_northeast",
+     "household heads in the Northeast", 1.12, 0.88),
+)
+
+
+def _sce_moving(header, sfx, who, noise, movement):
+    sid = f"sce_moving_{sfx}"
+    SERIES[sid] = {
+        "label": f"NY Fed SCE chance of moving, {header}",
+        "tracker": "ny_fed_sce",
+        "publisher": SERIES["sce_inflation_1y"]["publisher"],
+        "source": "sce_moving",
+        "sce_moving": {"cell": header},
+        "unit": "percent chance, mean across respondents",
+        "cadence": SERIES["sce_inflation_1y"]["cadence"],
+        "question": ("NY Fed Survey of Consumer Expectations: mean percent "
+                     "chance of moving to a different primary residence over "
+                     f"the next 12 months, {who}"),
+        "methodology": _SCE_MOVING_METHODOLOGY,
+        # Printed for every cell in the round's question text (card, Scoring);
+        # kept here so the question and the registry can be checked together.
+        "noise_floor": {"m": noise, "s": movement,
+                        "window": "2023-10/2026-09"},
+    }
+    return sid
+
+
+SCE_MOVING_CELLS = tuple(_sce_moving(*row) for row in _SCE_MOVING_ROWS)
+assert [SERIES[c]["sce_moving"]["cell"] for c in SCE_MOVING_CELLS] == \
+    list(sce_adapter.MOVING_CELLS), \
+    "the registered SCE moving cells no longer match sce.MOVING_CELLS"
+
+SERIES["sce_moving_national"] = {
+    "label": "NY Fed SCE chance of moving, all household heads",
+    "tracker": "ny_fed_sce",
+    "publisher": SERIES["sce_inflation_1y"]["publisher"],
+    "source": "sce_moving",
+    "sce_moving": {"cell": sce_adapter.MOVING_NATIONAL},
+    "unit": "percent chance, mean across respondents",
+    "cadence": SERIES["sce_inflation_1y"]["cadence"],
+    "question": ("NY Fed Survey of Consumer Expectations: mean percent chance "
+                 "of moving to a different primary residence over the next "
+                 "12 months, all household heads (shown with the profile, "
+                 "not scored: card nyfed-sce-moving@v2)"),
+    "methodology": _SCE_MOVING_METHODOLOGY,
+}
+
 # European Commission consumer survey (DG ECFIN). One release zip per month
 # carries every country, so the twelve series below share a single request
 # per release, and none at all once the month's release is archived. The EU
@@ -1841,6 +1930,11 @@ def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
     # capture on success, newest archived vintage (with a loud warning) on
     # fetch failure: fetch what is there, never go dark when it is not.
     load("sce", lambda: sce_adapter.history(diagnostics=diagnostic_rows))
+    # The moving sheets of the same workbook (card nyfed-sce-moving@v2): read
+    # from the newest archived vintage, which the line above has just filed,
+    # never fetched. Its own source key, so a malformed moving sheet fails
+    # alone and the inflation series stand.
+    load("sce_moving", sce_adapter.moving_history)
     # One release zip carries all twelve EC consumer series. Write-once per
     # release under `sources/ecbcs/`, and a month whose release is already
     # archived costs no request at all.
@@ -1913,6 +2007,9 @@ def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
             elif source == "sce":
                 out[sid] = sce_adapter.to_series(src["sce"],
                                                  spec["sce"]["horizon"])
+            elif source == "sce_moving":
+                out[sid] = sce_adapter.moving_series(
+                    src["sce_moving"], spec["sce_moving"]["cell"])
             elif source == "ecbcs":
                 out[sid] = ecbcs_adapter.to_series(src["ecbcs"],
                                                    spec["ecbcs"]["geo"])

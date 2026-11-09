@@ -89,6 +89,17 @@ _assign("consumer",
         "civiqs_net_econ_now", "civiqs_net_econ_direction",
         "civiqs_net_family_finances", "civiqs_net_inflation_concern")
 
+# NY Fed SCE moving expectations (card nyfed-sce-moving@v2): household
+# expectations from the same survey as the inflation series, so filed with
+# them until the board has an urban/housing subject (a maintainer decision).
+_assign("consumer",
+        "sce_moving_age_under_40", "sce_moving_age_40_60",
+        "sce_moving_age_over_60", "sce_moving_income_under_50k",
+        "sce_moving_income_50_100k", "sce_moving_income_over_100k",
+        "sce_moving_region_west", "sce_moving_region_midwest",
+        "sce_moving_region_south", "sce_moving_region_northeast",
+        "sce_moving_national")
+
 _assign("attention",
         "wiki_top10_en", "wiki_views_trump", "wiki_views_taylor_swift",
         "trends_iphone", "trends_tesla",

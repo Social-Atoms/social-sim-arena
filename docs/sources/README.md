@@ -11,6 +11,7 @@ One page per source the arena scores against. Each says the same five things, in
 | Harvard CAPS / Harris | [harvard-harris.md](harvard-harris.md) | Harvard / Harris approval | `ssa/adapters/hhpoll.py` |
 | University of Michigan | [michigan.md](michigan.md) | Michigan consumer sentiment, Sentiment by party | `ssa/adapters/umich.py`, `ssa/adapters/umichparty.py` |
 | New York Fed SCE | [ny-fed-sce.md](ny-fed-sce.md) | Household inflation expectations | `ssa/adapters/sce.py` |
+| New York Fed SCE, moving expectations | [ny-fed-sce.md](ny-fed-sce.md#moving-expectations-ten-cell-profile) | None yet: ten-cell profile registered (Urban Track, housing), first round proposed for the 2026-12-05 lock | `ssa/adapters/sce.py` |
 | European Commission (DG ECFIN) | [ec-consumer-survey.md](ec-consumer-survey.md) | None yet: twelve series registered (EU, euro area, ten countries), no rounds scheduled | `ssa/adapters/ecbcs.py` |
 | Seattle Police Department (City of Seattle) | [seattle-police-calls.md](seattle-police-calls.md) | None yet: archived daily for the Urban Track pilot, no series registered and no rounds scheduled | `ssa/adapters/seattle_cad.py` |
 | NYC 311 (NYC Open Data) | [nyc-311.md](nyc-311.md) | None yet: archived daily for the Urban Track, no series registered; proposed rounds in [nyc-311-requests.rounds.json](../data-cards/nyc-311-requests.rounds.json) | `ssa/adapters/nyc311.py` |

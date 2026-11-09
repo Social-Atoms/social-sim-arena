@@ -158,6 +158,32 @@ INVENTORY = {
             "dates are preannounced on the NY Fed economic-indicators "
             "calendar, which is what §1.1 asks for."),
     },
+    "sce_moving": {
+        "publisher": "Federal Reserve Bank of New York",
+        "adapter": "ssa/adapters/sce.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        # Proposed by the track's Data Card (nyfed-sce-moving@v2); maintainers
+        # confirm or change it at review. Same file and licence as `sce`, and
+        # no request of its own: it reads the workbooks `sce` archives.
+        "rights": APPROVED,
+        "evidence": (
+            "Read 2026-11-08 from the archived workbook's own 'License' sheet "
+            "(sources/sce/2026-11-08.xlsx): \"FRBNY grants users, who may be "
+            "individuals or entities, a worldwide, royalty-free, nonexclusive "
+            "right to reproduce, use, and distribute the SCE questions and "
+            "FRBNY-published SCE data, in whole or in part, and to produce, "
+            "reproduce, and distribute work derived from or based on the SCE "
+            "questions and the FRBNY-published SCE data.\" Conditions: no FRBNY "
+            "logo or trademark, no implied endorsement, and the attribution "
+            "carried in ssa/series.py _SCE_MOVING_METHODOLOGY. The licence "
+            "does not address automated retrieval in words; retrieval here is "
+            "the `sce` row's existing daily fetch of the same file, nothing "
+            "new. The NY Fed terms-of-use page could not be read "
+            "(https://www.newyorkfed.org/terms-of-use answered 302 to "
+            "/errors/404 at 2026-11-09T01:06:05Z); a person pasting its "
+            "automated-access sentence into the PR is the card's open G4 task."),
+    },
     "ecbcs": {
         "publisher": "European Commission, DG ECFIN",
         "adapter": "ssa/adapters/ecbcs.py",

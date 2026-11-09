@@ -9,3 +9,13 @@
 **How a question resolves.** On the named month's row in the vintage archived on the release day.
 
 **What to watch.** Like Michigan, a month-labelled series cannot be frozen by a date filter; a question relies on the lock snapshot.
+
+## Moving expectations (ten-cell profile)
+
+**What the number is.** The mean percent chance that a household head will move to a different primary residence over the next 12 months, in each of ten demographic cells (age under 40, 40-60, over 60; income under $50k, $50-100k, over $100k; region West, Midwest, South, Northeast), scored together as one profile. A stated intention, not an observed move. The national mean is shown, not scored. The rules are the approved Data Card [`nyfed-sce-moving@v2`](../data-cards/nyfed-sce-moving.json) (sha256 `bd4130d2434db06cd3620aa3d6cef9e92165e08c081c0fe38b31f1f0f2faf676`) of the Urban Track (housing).
+
+**How the arena reads it.** No request of its own: [`ssa/adapters/sce.py`](../../ssa/adapters/sce.py) `parse_moving` reads two more sheets of the workbook archived above, `Moving expectations Demo` and `Moving expectations`, by sheet name and exact header string, at full stored precision. The series (`sce_moving_*`, source key `sce_moving`) come from the newest archived vintage, after the day's capture is filed. A missing or renamed header, a non-numeric cell or a value outside 0-100 raises.
+
+**How a question resolves.** Each cell on its month-M row in **the first archived workbook carrying month M**, on or after the release day (a release day's `<day>.post.xlsx` sorts after its morning file), not the file named for release day, whose capture predates the 11:00 ET release. No vintage carrying M by release + 7 days cancels the round; it never resolves from a later month. The reference is per-cell persistence with sd 1.5 (the arena default, measured within 0.3% of an honest spread), and it refuses to post unless every cell's history ends at month M-1. Rounds lock at release − 48 h, 11:00 America/New_York (16:00Z in standard time). Proposed rounds: [`nyfed-sce-moving.rounds.json`](../data-cards/nyfed-sce-moving.rounds.json).
+
+**What to watch.** Three of the ten cells (age under 40, income $50-100k, Northeast) move by less than or about their own sampling noise; the question text prints every cell's noise floor. Attribution required with any publication: *Source: Survey of Consumer Expectations, © 2013-2026 Federal Reserve Bank of New York (FRBNY).* followed by the licence's availability and disclaimer sentences.

@@ -725,7 +725,7 @@ def attach_profile(row, r, series, now=None):
     row["baselines"] = None
     try:
         block["baselines"] = {"persistence":
-                              profile_round.persistence_profile(hist, cells)}
+                              profile_round.reference_profile(r, hist, cells)}
         row["scoreable"] = True
         row.pop("baseline_note", None)
     except ValueError as e:
