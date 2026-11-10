@@ -1,5 +1,8 @@
 # BLS CPI: rent of primary residence (US Bureau of Labor Statistics)
 
+> **Owner update, 2026-11-10:** revision 3 removes unscored trials. All admitted future rounds are scored, starting with `cpi-rent-2026-11` (lock `2026-12-08T13:30:00Z`). The older trial/start-date discussion below is historical; current rules and byte hashes are in the v3 card and rounds file. Capture validity, references and cancellation rules remain mandatory.
+
+
 **What the number is.** The one-month percent change in the seasonally adjusted CPI-U index for rent of primary residence, US city average (series `CUSR0000SEHA`), computed as 100 × (L_M / L_{M-1} − 1) from the two published index levels, unrounded; the BLS press table prints one decimal. It measures contract rents paid by tenants in the CPI housing sample, not asking rents, and each unit is re-priced every six months, so the series is smooth: the ranked reference misses by about 0.06 points a month. National only at launch; a ten-metro profile of the not-seasonally-adjusted metro indexes is future work. The rules are the approved Data Card [`bls-cpi-rent@v3`](../data-cards/bls-cpi-rent.json) (sha256 `64302aae05f22f1bea8f007fa8e0ded3ec5c0998b28278b3a249c67985d953cb`) of the Urban Track (housing).
 
 **Where it is published.** The monthly CPI news release at 08:30 ET, on a schedule BLS announces for the calendar year ([bls.gov/schedule/news_release/cpi.htm](https://www.bls.gov/schedule/news_release/cpi.htm)), and the keyless [BLS Public Data API v1](https://api.bls.gov/publicAPI/v1/timeseries/data/). CPI data are a work of the US government (17 U.S.C. §105). Cite *Source: U.S. Bureau of Labor Statistics.*
