@@ -1,5 +1,5 @@
-"""LTA DataMall Passenger Volume (cards sg-lta-pv-train-jurong-east@v2,
-sg-lta-pv-bus-boon-lay-int@v2).
+"""LTA DataMall Passenger Volume (cards sg-lta-pv-train-jurong-east@v3,
+sg-lta-pv-bus-boon-lay-int@v3).
 
 SSA has no DataMall AccountKey yet, so every body here is a fixture shaped
 like the documented response (API User Guide v6.11, sections 2.5 and 2.8,

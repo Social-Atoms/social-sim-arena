@@ -438,7 +438,7 @@ _register(Source(
                   "which is the release"))
 
 _register(Source(
-    "sg_lta_pv", "sg-lta-pv-train-jurong-east@v2 / sg-lta-pv-bus-boon-lay-int@v2",
+    "sg_lta_pv", "sg-lta-pv-train-jurong-east@v3 / sg-lta-pv-bus-boon-lay-int@v3",
     "early lock by design",
     target=_lta_target,
     lock=lambda t: _adapter("sg_lta_pv").lock_instant(t[1]).astimezone(timezone.utc),

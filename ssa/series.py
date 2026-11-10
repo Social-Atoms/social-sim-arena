@@ -1482,7 +1482,7 @@ _urban(
         "resolves the metric; no publisher releases it."))
 
 _urban(
-    "sg_pv_train_ew24ns1_weekday_tapin", card="sg-lta-pv-train-jurong-east@v2",
+    "sg_pv_train_ew24ns1_weekday_tapin", card="sg-lta-pv-train-jurong-east@v3",
     label="Jurong East MRT, weekday average daily tap-ins",
     tracker="sg_lta_pv", source="sg_lta_pv",
     publisher=("Land Transport Authority, LTA DataMall Passenger Volume by "
@@ -1499,7 +1499,7 @@ _urban(
         "are not taps."))
 
 _urban(
-    "sg_pv_bus_22009_weekday_tapin", card="sg-lta-pv-bus-boon-lay-int@v2",
+    "sg_pv_bus_22009_weekday_tapin", card="sg-lta-pv-bus-boon-lay-int@v3",
     label="Boon Lay Interchange buses, weekday average daily boardings",
     tracker="sg_lta_pv", source="sg_lta_pv",
     publisher=("Land Transport Authority, LTA DataMall Passenger Volume by "

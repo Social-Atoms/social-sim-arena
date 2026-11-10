@@ -258,6 +258,19 @@ jobs:
       - name: capture Singapore COE results (pilot, non-blocking)
         continue-on-error: true
         run: python -m ssa.adapters.sg_coe capture
+      # LTA monthly passenger volumes: archive missing months continuously.
+      # Separate steps ensure a train failure does not skip the bus capture.
+      # Missing credentials fail visibly without stopping unrelated sources.
+      - name: capture LTA train passenger volumes (non-blocking)
+        continue-on-error: true
+        env:
+          LTA_API_KEY: ${{ secrets.LTA_API_KEY }}
+        run: python -m ssa.adapters.sg_lta_pv capture train
+      - name: capture LTA bus passenger volumes (non-blocking)
+        continue-on-error: true
+        env:
+          LTA_API_KEY: ${{ secrets.LTA_API_KEY }}
+        run: python -m ssa.adapters.sg_lta_pv capture bus
       - run: python -m ssa.refresh
       # Resolution runs after the refresh so it scores against the series the
       # same run just fetched. It only ever adds, never overwrites, and

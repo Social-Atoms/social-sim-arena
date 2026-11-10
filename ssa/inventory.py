@@ -460,15 +460,15 @@ INVENTORY = {
         "publisher": "Land Transport Authority, LTA DataMall",
         "adapter": "ssa/adapters/sg_lta_pv.py",
         "role": TARGET,
-        "state": PERMISSION_NEEDED,
+        "state": INTEGRATED,
         "rights": APPROVED,
         "evidence": (
-            "Proposed by cards sg-lta-pv-train-jurong-east@v2 and "
-            "sg-lta-pv-bus-boon-lay-int@v2 (one row and one key for both). "
-            "Blocked on an account, not on the terms: DataMall needs an "
-            "AccountKey, which SSA has not registered (without one, "
-            "datamall2.mytransport.sg/ltaodataservice/PV/Train answered HTTP "
-            "404 on 2026-11-09). API Terms of Service (datamall.lta.gov.sg/"
+            "Proposed by cards sg-lta-pv-train-jurong-east@v3 and "
+            "sg-lta-pv-bus-boon-lay-int@v3 (one row and one key for both). "
+            "AccountKey access verified 2026-11-10; August–October train and bus "
+            "files archived. Independent continuous capture steps configured in "
+            "refresh.yml, requiring the LTA_API_KEY repository secret. "
+            "API Terms of Service (datamall.lta.gov.sg/"
             "content/datamall/en/api-terms-of-service.html, read 2026-11-09): "
             "\"Use of the datasets is governed by the Singapore Open Data "
             "Licence\"; \"you can use, access, call, command, query or request "
@@ -478,14 +478,13 @@ INVENTORY = {
             "reproduction of the website's Contents; the cards read them as "
             "covering the site's own pages, not licensed datasets, which is "
             "an inference a maintainer may confirm with LTA (question drafted "
-            "in the cards, not sent). The adapter is not wired into any "
-            "workflow."),
+            "in revision 2, not sent). Both capture kinds are now configured "
+            "in refresh.yml."),
         "revisit": (
-            "The day a maintainer registers for a DataMall AccountKey and "
-            "stores it as the secret LTA_API_KEY: start archiving at once "
-            "(DataMall serves only the last three months), then wire "
-            "`python -m ssa.adapters.sg_lta_pv capture train|bus` "
-            "(docs/sources/singapore-passenger-volume.md)."),
+            "Keep LTA_API_KEY configured and confidential; watch the monthly "
+            "release and archive within the three-month retention period. "
+            "No unscored pilots: first proposed scored target December 2026; "
+            "publication on main remains pending review."),
     },
     "wikipedia": {
         "publisher": "Wikimedia Foundation",

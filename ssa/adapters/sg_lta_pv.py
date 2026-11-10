@@ -1,12 +1,11 @@
 """LTA DataMall monthly Passenger Volume files: train stations and bus stops.
 
-**Not wired into any workflow.** DataMall needs an AccountKey, which SSA does
-not have yet. This module is written and tested against fixtures shaped like
-DataMall's documented response (API User Guide v6.11, sections 2.5 and 2.8,
-Annex A); it reads the key from the environment variable LTA_API_KEY and
-refuses to run without it. See docs/sources/singapore-passenger-volume.md for
-the maintainer's registration steps and why archiving must start the day the
-key exists: DataMall serves only the last three months.
+Production capture is configured in refresh.yml for train and bus. Access
+was verified with real August–October 2026 files. LTA_API_KEY is required;
+the command refuses to run without it. DataMall serves only three months,
+so capture runs continuously and retrieves only months not already held.
+No unscored pilot requirement (owner decision 2026-11-10); the first
+prospective target is December 2026. See docs/sources/singapore-passenger-volume.md.
 
   GET https://datamall2.mytransport.sg/ltaodataservice/PV/Train?Date=YYYYMM
   GET https://datamall2.mytransport.sg/ltaodataservice/PV/Bus?Date=YYYYMM
@@ -19,10 +18,10 @@ zip is downloaded at once. It holds one CSV (Annex A):
   YEAR_MONTH, DAY_TYPE, TIME_PER_HOUR, PT_TYPE, PT_CODE, TOTAL_TAP_IN_VOLUME,
   TOTAL_TAP_OUT_VOLUME
 
-The rules are the approved Data Cards `sg-lta-pv-train-jurong-east@v2`
-(sha256 643a964dace5d09507d8660c97d921636f5110a0806f568ada10951704f5003e)
-and `sg-lta-pv-bus-boon-lay-int@v2` (sha256
-67073fb81a518a661b19fd9c0ac17e6f937332f6c664f3b9190632abaa84ba9f).
+The rules are the approved Data Cards `sg-lta-pv-train-jurong-east@v3`
+(sha256 95cc55301288ecf813100c71f64f0f619c122abb89872e728a40be8a10ac59d0)
+and `sg-lta-pv-bus-boon-lay-int@v3` (sha256
+db79ef39a0abf079ad23b997feb032f85102cc1cf6ec8823fe6cbee433a0d90b).
 
 **Archive.** `sources/lta-pv/<train|bus>/<YYYYMM>.zip`, the zip as served,
 write-once per month (different bytes for a held month are refused), with
@@ -73,10 +72,10 @@ CHECK_HOURS = range(6, 23)          # policy (2): zero tap-ins in any hour 06-22
 KINDS = {
     "train": {"path": "Train", "pt_type": "TRAIN", "min_codes": 150,
               "code": "EW24/NS1", "series": "sg_pv_train_ew24ns1_weekday_tapin",
-              "card": "sg-lta-pv-train-jurong-east@v2", "interim_cv": 0.0543},
+              "card": "sg-lta-pv-train-jurong-east@v3", "interim_cv": 0.0543},
     "bus": {"path": "Bus", "pt_type": "BUS", "min_codes": 4500,
             "code": "22009", "series": "sg_pv_bus_22009_weekday_tapin",
-            "card": "sg-lta-pv-bus-boon-lay-int@v2", "interim_cv": 0.0666},
+            "card": "sg-lta-pv-bus-boon-lay-int@v3", "interim_cv": 0.0666},
 }
 # Other spellings of a card's code, by kind and code (card policy (4): an
 # alias announced before the lock). 'EW24-NS1' is the DataMall sample's

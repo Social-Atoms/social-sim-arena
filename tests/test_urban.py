@@ -71,9 +71,10 @@ def test_the_committed_archives_build_and_missing_ones_build_empty():
         assert len(h) >= 30, (sid, len(h))
         assert all(h[i]["date"] < h[i + 1]["date"] for i in range(len(h) - 1))
         assert all(isinstance(p["value"], float) and p["value"] > 0 for p in h)
-    # No capture yet (manual MTA, keyless LTA, SG weekly captures not run).
+    # Manual MTA has no capture; LTA has verified August–October 2026 files.
     assert built["mta_subway_weekly"] == []
-    assert built["sg_pv_train_ew24ns1_weekday_tapin"] == []
+    assert [p["value"] for p in built["sg_pv_train_ew24ns1_weekday_tapin"]] == [71875.0, 71040.0, 71262.0]
+    assert [p["value"] for p in built["sg_pv_bus_22009_weekday_tapin"]] == [66079.0, 64578.0, 63827.0]
     ok(test_the_committed_archives_build_and_missing_ones_build_empty)
 
 
