@@ -8,9 +8,9 @@
 Keyless. Every row is one (month, bidding_no, vehicle_class) with quota,
 bids_success, bids_received and premium, all as text.
 
-The rules are the approved Data Card `sg-coe-cat-a-premium@v2`
+The rules are the approved Data Card `sg-coe-cat-a-premium@v3`
 (docs/data-cards/sg-coe-cat-a-premium.json, sha256
-54eb7de69bb6c10b0f465dd0d9314a55cc514009d82d1ee2c932a8fc4cf9e0e6).
+45cea946aedf80a2b76e985f3811613faa39200b83189120cf9ac3d06e7a44ea).
 
 **Archive.** `sources/coe/<YYYY-MM-DDTHHMM>Z/`: the metadata body and every
 datastore page exactly as served, each hashed into `sources/coe/fetches.json`

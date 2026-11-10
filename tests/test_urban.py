@@ -238,7 +238,13 @@ def test_every_rounds_file_passes_the_real_validator_but_for_two_rights():
     and TSA's, whose rights verdicts wait on a maintainer."""
     with open(os.path.join(ROOT, "questions", "season0.json")) as f:
         reviewed = season.rounds_from(json.load(f))
-    problems = season.validate_document({"rounds": reviewed + proposed()})
+    seen = {r["round_id"]: r for r in reviewed}
+    for r in proposed():
+        if r["round_id"] in seen:
+            assert seen[r["round_id"]] == r, r["round_id"]
+        else:
+            seen[r["round_id"]] = r
+    problems = season.validate_document({"rounds": list(seen.values())})
     left = {p.split(":")[0] for p in problems}
     assert all("rights are 'unresolved'" in p for p in problems), problems
     assert {rid.rsplit("-", 3)[0] for rid in left} == {"mta-subway", "tsa-weekly"}, left

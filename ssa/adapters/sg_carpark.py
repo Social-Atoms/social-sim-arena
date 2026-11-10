@@ -8,9 +8,9 @@ update_datetime (no zone: Singapore time) and carpark_info[] {lot_type,
 total_lots, lots_available}, all as text. Past minutes are served, so the
 archive can be filled after the fact; those bodies are labelled `backfill`.
 
-The rules are the approved Data Card `sg-hdb-carpark-clementi-sat2000@v2`
+The rules are the approved Data Card `sg-hdb-carpark-clementi-sat2000@v3`
 (docs/data-cards/sg-hdb-carpark-clementi-sat2000.json, sha256
-332008aa802b666dd10fbcbeb4ad63412c43586c0b5481be5fc5721becb30dd2). SSA both
+7af26df3290884a52743959da7cf28a2e94fa8cd9ec4495c8acdcb8c9997ade3). SSA both
 sets and resolves this metric.
 
 **Metric definition v1** (card target.calculation): (1) request

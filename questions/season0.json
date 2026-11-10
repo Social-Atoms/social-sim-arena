@@ -2321,72 +2321,6 @@
       "unit": "percent approving"
     },
     {
-      "round_id": "consumer-sce-2026-10-spending",
-      "tracker": "ny_fed_sce",
-      "series": "sce_spending_growth",
-      "question": "What median expected one-year household spending growth will the New York Fed Survey of Consumer Expectations publish for October 2026 on November 9? Forecast the published household expectation, not realized spending growth.",
-      "unit": "percent expected spending growth",
-      "target_type": "continuous_normal",
-      "publisher": "Federal Reserve Bank of New York, Survey of Consumer Expectations",
-      "methodology": "National rotating panel of approximately 1,300 US household heads. HH Spending Change worksheet, Median point prediction column. The reference month labels responses, not the publication date.",
-      "cadence": "monthly, official New York Fed economic-indicators calendar",
-      "lock_at": "2026-11-07T16:00:00Z",
-      "release_at": "2026-11-09T16:00:00Z",
-      "release_estimated": false,
-      "resolve": "First archived official SCE workbook captured from November 9 at 16:00 UTC through November 10 at 16:00 UTC containing the October 2026 median household spending growth. Match the exact worksheet, header and reference month; preserve that captured artifact and ignore subsequent revisions.",
-      "consumer": {
-        "source": "sce",
-        "reference_date": "2026-10-01",
-        "capture_until": "2026-11-10T16:00:00Z",
-        "population": "US household heads",
-        "calendar_url": "https://www.newyorkfed.org/research/calendars/nationalecon_cal"
-      }
-    },
-    {
-      "round_id": "consumer-sce-2026-10-stocks",
-      "tracker": "ny_fed_sce",
-      "series": "sce_stock_prices_rise",
-      "question": "What mean probability that US stock prices will be higher one year ahead will the New York Fed Survey of Consumer Expectations publish for October 2026 on November 9? Forecast the survey's mean probability on a 0-100 scale, not the actual stock-market outcome.",
-      "unit": "percent probability",
-      "target_type": "continuous_normal",
-      "publisher": "Federal Reserve Bank of New York, Survey of Consumer Expectations",
-      "methodology": "National rotating panel of US household heads. Stock Prices worksheet; exact mean-probability column for higher US stock prices one year ahead. The mean subjective probability is a continuous survey aggregate.",
-      "cadence": "monthly, official New York Fed economic-indicators calendar",
-      "lock_at": "2026-11-07T16:00:00Z",
-      "release_at": "2026-11-09T16:00:00Z",
-      "release_estimated": false,
-      "resolve": "First archived official SCE workbook captured from November 9 at 16:00 UTC through November 10 at 16:00 UTC containing October 2026 stock-price expectations. Read the exact mean probability of higher prices one year ahead; subsequent revisions do not replace the captured result.",
-      "consumer": {
-        "source": "sce",
-        "reference_date": "2026-10-01",
-        "capture_until": "2026-11-10T16:00:00Z",
-        "population": "US household heads",
-        "calendar_url": "https://www.newyorkfed.org/research/calendars/nationalecon_cal"
-      }
-    },
-    {
-      "round_id": "consumer-sce-2026-10-unemployment",
-      "tracker": "ny_fed_sce",
-      "series": "sce_unemployment_rise",
-      "question": "What mean probability that the US unemployment rate will be higher one year ahead will the New York Fed Survey of Consumer Expectations publish for October 2026 on November 9? Forecast the survey's mean probability on a 0-100 scale, not the actual unemployment outcome.",
-      "unit": "percent probability",
-      "target_type": "continuous_normal",
-      "publisher": "Federal Reserve Bank of New York, Survey of Consumer Expectations",
-      "methodology": "National rotating panel of US household heads. Unemployment Expectations worksheet; exact mean-probability column for a higher US unemployment rate one year ahead. This is the population's expectation rather than realized unemployment.",
-      "cadence": "monthly, official New York Fed economic-indicators calendar",
-      "lock_at": "2026-11-07T16:00:00Z",
-      "release_at": "2026-11-09T16:00:00Z",
-      "release_estimated": false,
-      "resolve": "First archived official SCE workbook captured from November 9 at 16:00 UTC through November 10 at 16:00 UTC containing October 2026 unemployment expectations. Match the exact mean probability and reference month; preserve the captured artifact against later revisions.",
-      "consumer": {
-        "source": "sce",
-        "reference_date": "2026-10-01",
-        "capture_until": "2026-11-10T16:00:00Z",
-        "population": "US household heads",
-        "calendar_url": "https://www.newyorkfed.org/research/calendars/nationalecon_cal"
-      }
-    },
-    {
       "round_id": "ec-2026-11-cci-eu",
       "tracker": "ec_consumer_survey",
       "series": "ec_cci_eu",
@@ -3033,6 +2967,849 @@
       "target_type": "continuous_normal",
       "tracker": "ny_fed_sce",
       "unit": "percent, median expected inflation"
+    },
+    {
+      "round_id": "cpi-rent-2026-11",
+      "tracker": "bls_cpi",
+      "series": "cpi_rent_sa_mom",
+      "question": "US Bureau of Labor Statistics, Consumer Price Index: by how much will the seasonally adjusted CPI-U index for rent of primary residence, US city average (series CUSR0000SEHA), change from the month before to November 2026, in percent, computed from the two published index levels (not the one-decimal figure in the BLS press table)? The series is smooth: the ranked reference, the mean of the six latest one-month changes, has missed by about 0.06 points on average since mid-2023. The release is scheduled for 2026-12-10 at 08:30 ET (date from third-party calendars and the owner doc; bls.gov was not readable).",
+      "unit": "percent, one-month change, seasonally adjusted",
+      "release_at": "2026-12-10T13:30:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-12-08T13:30:00Z",
+      "resolve": "100 x (L_M / L_M-1 - 1) for M = November 2026, both CUSR0000SEHA index levels taken from the first BLS Public Data API response archived under sources/bls_cpi/ at or after the 08:30 ET release whose newest period is M; never rounded, and later revisions (including the February seasonal re-estimation) never change it. A release cancelled, delayed past release + 45 days, or a missing M-1 level cancels the round; it is never built from a two-month change.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean6",
+        "family": "mean_k",
+        "period": "month",
+        "k": 6,
+        "search": 8,
+        "digits": 3,
+        "spread": {
+          "rule": "rms",
+          "n": 12,
+          "search": 14
+        },
+        "target": "2026-11"
+      }
+    },
+    {
+      "round_id": "cpi-rent-2026-12",
+      "tracker": "bls_cpi",
+      "series": "cpi_rent_sa_mom",
+      "question": "US Bureau of Labor Statistics, Consumer Price Index: by how much will the seasonally adjusted CPI-U index for rent of primary residence, US city average (series CUSR0000SEHA), change from the month before to December 2026, in percent, computed from the two published index levels (not the one-decimal figure in the BLS press table)? The series is smooth: the ranked reference, the mean of the six latest one-month changes, has missed by about 0.06 points on average since mid-2023. The release is scheduled for 2027-01-13 at 08:30 ET.",
+      "unit": "percent, one-month change, seasonally adjusted",
+      "release_at": "2027-01-13T13:30:00Z",
+      "release_estimated": false,
+      "lock_at": "2027-01-11T13:30:00Z",
+      "resolve": "100 x (L_M / L_M-1 - 1) for M = December 2026, both CUSR0000SEHA index levels taken from the first BLS Public Data API response archived under sources/bls_cpi/ at or after the 08:30 ET release whose newest period is M; never rounded, and later revisions (including the February seasonal re-estimation) never change it. A release cancelled, delayed past release + 45 days, or a missing M-1 level cancels the round; it is never built from a two-month change.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean6",
+        "family": "mean_k",
+        "period": "month",
+        "k": 6,
+        "search": 8,
+        "digits": 3,
+        "spread": {
+          "rule": "rms",
+          "n": 12,
+          "search": 14
+        },
+        "target": "2026-12"
+      }
+    },
+    {
+      "round_id": "cpi-rent-2027-01",
+      "tracker": "bls_cpi",
+      "series": "cpi_rent_sa_mom",
+      "question": "US Bureau of Labor Statistics, Consumer Price Index: by how much will the seasonally adjusted CPI-U index for rent of primary residence, US city average (series CUSR0000SEHA), change from the month before to January 2027, in percent, computed from the two published index levels (not the one-decimal figure in the BLS press table)? The series is smooth: the ranked reference, the mean of the six latest one-month changes, has missed by about 0.06 points on average since mid-2023. The release is scheduled for 2027-02-11 at 08:30 ET.",
+      "unit": "percent, one-month change, seasonally adjusted",
+      "release_at": "2027-02-11T13:30:00Z",
+      "release_estimated": false,
+      "lock_at": "2027-02-09T13:30:00Z",
+      "resolve": "100 x (L_M / L_M-1 - 1) for M = January 2027, both CUSR0000SEHA index levels taken from the first BLS Public Data API response archived under sources/bls_cpi/ at or after the 08:30 ET release whose newest period is M; never rounded, and later revisions (including the February seasonal re-estimation) never change it. A release cancelled, delayed past release + 45 days, or a missing M-1 level cancels the round; it is never built from a two-month change.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean6",
+        "family": "mean_k",
+        "period": "month",
+        "k": 6,
+        "search": 8,
+        "digits": 3,
+        "spread": {
+          "rule": "rms",
+          "n": 12,
+          "search": 14
+        },
+        "target": "2027-01"
+      }
+    },
+    {
+      "round_id": "nyc311-2026-12-20",
+      "tracker": "nyc_311",
+      "series": "nyc311_requests_weekly",
+      "question": "How many NYC 311 service requests will have a created_date in the week Monday 2026-12-14 to Sunday 2026-12-20, New York local time? Count every row of NYC Open Data dataset erm2-nwe9 (311 Service Requests from 2020 to Present): all complaint types, agencies, statuses and channels, citywide. There is no publisher release calendar: SSA sets and resolves this metric from its own archive of the dataset (docs/sources.md section 1.1), under card nyc-311-requests@v2. Ranked reference: mean4, the mean of the four settled weeks starting 2026-11-09 to 2026-11-30, with sd the root-mean-square of its own errors over 13 settled weeks; its mean, sd and four weekly counts are published and hashed at lock. Mode: automated daily capture.",
+      "unit": "service requests (rows) per Monday-to-Sunday week",
+      "lock_at": "2026-12-14T04:59:00Z",
+      "release_at": "2026-12-29T17:00:00Z",
+      "release_estimated": false,
+      "resolve": "sum over the seven target days of the first fresh snapshot archived under sources/nyc311/ (X-SODA2-Data-Out-Of-Date false) at or after Tuesday 12:00 America/New_York eight days after the week ends, whose X-SODA2-Truth-Last-Modified is after Monday 18:00 ET; a target day under 40% of the 28-day median or with no rows for NYPD, HPD, DSNY, DOT or DEP moves to the next fresh snapshot until Friday 12:00 ET, after which the round is cancelled (ssa/adapters/nyc311.py resolve, mode auto)",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean4",
+        "family": "mean_k",
+        "period": "week",
+        "k": 4,
+        "lag": 1,
+        "step_back": 1,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      }
+    },
+    {
+      "round_id": "nyc311-2026-12-27",
+      "tracker": "nyc_311",
+      "series": "nyc311_requests_weekly",
+      "question": "How many NYC 311 service requests will have a created_date in the week Monday 2026-12-21 to Sunday 2026-12-27, New York local time? Count every row of NYC Open Data dataset erm2-nwe9 (311 Service Requests from 2020 to Present): all complaint types, agencies, statuses and channels, citywide. There is no publisher release calendar: SSA sets and resolves this metric from its own archive of the dataset (docs/sources.md section 1.1), under card nyc-311-requests@v2. Ranked reference: mean4, the mean of the four settled weeks starting 2026-11-16 to 2026-12-07, with sd the root-mean-square of its own errors over 13 settled weeks; its mean, sd and four weekly counts are published and hashed at lock. Mode: automated daily capture. Note: this is the Christmas week, the hardest week of the year for every simple reference: in 2025 mean4 missed the Christmas week by 34% (card v2, baseline).",
+      "unit": "service requests (rows) per Monday-to-Sunday week",
+      "lock_at": "2026-12-21T04:59:00Z",
+      "release_at": "2027-01-05T17:00:00Z",
+      "release_estimated": false,
+      "resolve": "sum over the seven target days of the first fresh snapshot archived under sources/nyc311/ (X-SODA2-Data-Out-Of-Date false) at or after Tuesday 12:00 America/New_York eight days after the week ends, whose X-SODA2-Truth-Last-Modified is after Monday 18:00 ET; a target day under 40% of the 28-day median or with no rows for NYPD, HPD, DSNY, DOT or DEP moves to the next fresh snapshot until Friday 12:00 ET, after which the round is cancelled (ssa/adapters/nyc311.py resolve, mode auto)",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean4",
+        "family": "mean_k",
+        "period": "week",
+        "k": 4,
+        "lag": 1,
+        "step_back": 1,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      }
+    },
+    {
+      "round_id": "sce-2026-11-moving",
+      "tracker": "ny_fed_sce",
+      "profile_noun": "subgroup",
+      "series": "sce_moving_age_under_40",
+      "cells": [
+        "sce_moving_age_under_40",
+        "sce_moving_age_40_60",
+        "sce_moving_age_over_60",
+        "sce_moving_income_under_50k",
+        "sce_moving_income_50_100k",
+        "sce_moving_income_over_100k",
+        "sce_moving_region_west",
+        "sce_moving_region_midwest",
+        "sce_moving_region_south",
+        "sce_moving_region_northeast"
+      ],
+      "question": "NY Fed Survey of Consumer Expectations, produced by the Federal Reserve Bank of New York from its rotating panel of about 1,300 US household heads: for the November 2026 survey month, the mean reported percent chance that a household head will move to a different primary residence over the next 12 months, in each of ten cells (age under 40, 40-60, over 60; income under $50k, $50-100k, over $100k; region West, Midwest, South, Northeast). Forecast all ten; the profile is scored as one with the energy score. Noise floor per cell (sampling noise m / real movement s, points, 2023-10 to 2026-09): under 40 1.44/0.00, 40-60 0.40/0.97, over 60 0.42/0.87, under $50k 0.52/1.32, $50-100k 1.01/0.54, over $100k 0.00/1.18, West 0.00/1.54, Midwest 0.99/1.25, South 0.40/1.13, Northeast 1.12/0.88. The national mean is shown, not scored. The release date 2026-12-07 is announced on the bank's calendar.",
+      "unit": "percent chance, mean across respondents",
+      "release_at": "2026-12-07T16:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-12-05T16:00:00Z",
+      "resolve": "for each of the ten cells, the November 2026 row of the 'Moving expectations Demo' sheet, at full stored precision, in the first frbny-sce-data.xlsx vintage archived under sources/sce/ on or after the release day that carries November 2026 (a release day's <day>.post.xlsx sorts after its morning file). A cell missing, non-numeric or outside 0-100 holds the whole round for a maintainer; no vintage carrying November 2026 by 2026-12-14 cancels it, and it never resolves from a later month. The release date is preannounced on the NY Fed economic-indicators calendar, the hour (11:00 ET, 16:00Z in standard time) is convention, hence release_estimated",
+      "target_type": "profile_energy"
+    },
+    {
+      "round_id": "sg-coe-a-2026-12-1",
+      "tracker": "sg_coe",
+      "series": "sg_coe_premium_cat_a",
+      "question": "What will the Category A Certificate of Entitlement quota premium (S$, the clearing price paid by every successful bidder) be at LTA's 2026-12 (1) COE open bidding exercise (Mon 07 Dec 12:00 to Wed 09 Dec 2026 16:00 Singapore time, LTA's published 2026 schedule), as first published in data.gov.sg dataset d_69b3380ad7e51aff3a7dcc84eba52b8a? Category A quota for this exercise: <QUOTA, from LTA's announcement before bidding opens; filled in at posting>.",
+      "unit": "Singapore dollars (S$)",
+      "release_at": "2026-12-09T08:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-12-07T03:00:00Z",
+      "resolve": "the first SSA capture of the data.gov.sg datastore API (dataset d_69b3380ad7e51aff3a7dcc84eba52b8a) at or after the exercise close + 2 h whose archived rows hold month 2026-12, bidding_no 1, Category A with a premium above 0, under sources/coe/; none by close + 48 h: cancelled. release_at is the exercise close; data.gov.sg posts about 1.5 h later. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_rms26",
+        "family": "mean_k",
+        "period": "index",
+        "k": 1,
+        "lag": 0,
+        "search": 1,
+        "digits": 0,
+        "spread": {
+          "rule": "rms",
+          "n": 26,
+          "search": 26
+        }
+      },
+      "quota_category_a": null
+    },
+    {
+      "round_id": "sg-coe-a-2026-12-2",
+      "tracker": "sg_coe",
+      "series": "sg_coe_premium_cat_a",
+      "question": "What will the Category A Certificate of Entitlement quota premium (S$, the clearing price paid by every successful bidder) be at LTA's 2026-12 (2) COE open bidding exercise (Mon 21 Dec 12:00 to Wed 23 Dec 2026 16:00 Singapore time, LTA's published 2026 schedule), as first published in data.gov.sg dataset d_69b3380ad7e51aff3a7dcc84eba52b8a? Category A quota for this exercise: <QUOTA, from LTA's announcement before bidding opens; filled in at posting>.",
+      "unit": "Singapore dollars (S$)",
+      "release_at": "2026-12-23T08:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-12-21T03:00:00Z",
+      "resolve": "the first SSA capture of the data.gov.sg datastore API (dataset d_69b3380ad7e51aff3a7dcc84eba52b8a) at or after the exercise close + 2 h whose archived rows hold month 2026-12, bidding_no 2, Category A with a premium above 0, under sources/coe/; none by close + 48 h: cancelled. release_at is the exercise close; data.gov.sg posts about 1.5 h later. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_rms26",
+        "family": "mean_k",
+        "period": "index",
+        "k": 1,
+        "lag": 0,
+        "search": 1,
+        "digits": 0,
+        "spread": {
+          "rule": "rms",
+          "n": 26,
+          "search": 26
+        }
+      },
+      "quota_category_a": null
+    },
+    {
+      "round_id": "sg-hdb-clementi-2026-12-12",
+      "tracker": "sg_hdb_carpark",
+      "series": "sg_hdb_occ_clementi_sat2000",
+      "question": "What share of car lots (lot type C) will be occupied, in percent, across the HDB carparks located in the Clementi planning area (URA Master Plan 2019 boundary) in the Carpark Availability snapshot for Saturday 2026-12-12 20:00 Singapore time? Occupied = total lots minus available lots, summed over carparks, divided by total lots. SSA sets and resolves this metric; no publisher releases it.",
+      "unit": "percent of car lots occupied",
+      "release_at": "2026-12-12T12:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-12-10T12:00:00Z",
+      "resolve": "SSA's archived snapshot of the keyless data.gov.sg Carpark Availability endpoint (api.data.gov.sg/v1/transport/carpark-availability?date_time=2026-12-12T20:00:00), captured Saturday 20:30 SGT under sources/lta-rt/carpark-hdb/, metric definition v1 of card sg-hdb-carpark-clementi-sat2000@v2: valid if items is non-empty, the timestamp is at most 120 s before the minute and at least 1,900 car rows; otherwise the minutes 20:01, 20:02, 20:05, 20:10 in turn; car rows updated within 60 minutes, over the 48 HDB carparks the pinned HDB Carpark Information table places in CLEMENTI. Fewer than 36 of them passing, or no valid snapshot: cancelled. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_rms13",
+        "family": "mean_k",
+        "period": "week",
+        "k": 1,
+        "lag": 0,
+        "search": 1,
+        "digits": 3,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      }
+    },
+    {
+      "round_id": "sg-hdb-clementi-2026-12-19",
+      "tracker": "sg_hdb_carpark",
+      "series": "sg_hdb_occ_clementi_sat2000",
+      "question": "What share of car lots (lot type C) will be occupied, in percent, across the HDB carparks located in the Clementi planning area (URA Master Plan 2019 boundary) in the Carpark Availability snapshot for Saturday 2026-12-19 20:00 Singapore time? Occupied = total lots minus available lots, summed over carparks, divided by total lots. SSA sets and resolves this metric; no publisher releases it.",
+      "unit": "percent of car lots occupied",
+      "release_at": "2026-12-19T12:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-12-17T12:00:00Z",
+      "resolve": "SSA's archived snapshot of the keyless data.gov.sg Carpark Availability endpoint (api.data.gov.sg/v1/transport/carpark-availability?date_time=2026-12-19T20:00:00), captured Saturday 20:30 SGT under sources/lta-rt/carpark-hdb/, metric definition v1 of card sg-hdb-carpark-clementi-sat2000@v2: valid if items is non-empty, the timestamp is at most 120 s before the minute and at least 1,900 car rows; otherwise the minutes 20:01, 20:02, 20:05, 20:10 in turn; car rows updated within 60 minutes, over the 48 HDB carparks the pinned HDB Carpark Information table places in CLEMENTI. Fewer than 36 of them passing, or no valid snapshot: cancelled. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_rms13",
+        "family": "mean_k",
+        "period": "week",
+        "k": 1,
+        "lag": 0,
+        "search": 1,
+        "digits": 3,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      }
+    },
+    {
+      "round_id": "sg-hdb-clementi-2026-12-26",
+      "tracker": "sg_hdb_carpark",
+      "series": "sg_hdb_occ_clementi_sat2000",
+      "question": "What share of car lots (lot type C) will be occupied, in percent, across the HDB carparks located in the Clementi planning area (URA Master Plan 2019 boundary) in the Carpark Availability snapshot for Saturday 2026-12-26 20:00 Singapore time? Occupied = total lots minus available lots, summed over carparks, divided by total lots. SSA sets and resolves this metric; no publisher releases it.",
+      "unit": "percent of car lots occupied",
+      "release_at": "2026-12-26T12:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-12-24T12:00:00Z",
+      "resolve": "SSA's archived snapshot of the keyless data.gov.sg Carpark Availability endpoint (api.data.gov.sg/v1/transport/carpark-availability?date_time=2026-12-26T20:00:00), captured Saturday 20:30 SGT under sources/lta-rt/carpark-hdb/, metric definition v1 of card sg-hdb-carpark-clementi-sat2000@v2: valid if items is non-empty, the timestamp is at most 120 s before the minute and at least 1,900 car rows; otherwise the minutes 20:01, 20:02, 20:05, 20:10 in turn; car rows updated within 60 minutes, over the 48 HDB carparks the pinned HDB Carpark Information table places in CLEMENTI. Fewer than 36 of them passing, or no valid snapshot: cancelled. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_rms13",
+        "family": "mean_k",
+        "period": "week",
+        "k": 1,
+        "lag": 0,
+        "search": 1,
+        "digits": 3,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      }
+    },
+    {
+      "round_id": "sg-hdb-clementi-2027-01-02",
+      "tracker": "sg_hdb_carpark",
+      "series": "sg_hdb_occ_clementi_sat2000",
+      "question": "What share of car lots (lot type C) will be occupied, in percent, across the HDB carparks located in the Clementi planning area (URA Master Plan 2019 boundary) in the Carpark Availability snapshot for Saturday 2027-01-02 20:00 Singapore time? Occupied = total lots minus available lots, summed over carparks, divided by total lots. SSA sets and resolves this metric; no publisher releases it.",
+      "unit": "percent of car lots occupied",
+      "release_at": "2027-01-02T12:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-12-31T12:00:00Z",
+      "resolve": "SSA's archived snapshot of the keyless data.gov.sg Carpark Availability endpoint (api.data.gov.sg/v1/transport/carpark-availability?date_time=2027-01-02T20:00:00), captured Saturday 20:30 SGT under sources/lta-rt/carpark-hdb/, metric definition v1 of card sg-hdb-carpark-clementi-sat2000@v2: valid if items is non-empty, the timestamp is at most 120 s before the minute and at least 1,900 car rows; otherwise the minutes 20:01, 20:02, 20:05, 20:10 in turn; car rows updated within 60 minutes, over the 48 HDB carparks the pinned HDB Carpark Information table places in CLEMENTI. Fewer than 36 of them passing, or no valid snapshot: cancelled. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_rms13",
+        "family": "mean_k",
+        "period": "week",
+        "k": 1,
+        "lag": 0,
+        "search": 1,
+        "digits": 3,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      }
+    },
+    {
+      "round_id": "sg-hdb-clementi-2027-01-09",
+      "tracker": "sg_hdb_carpark",
+      "series": "sg_hdb_occ_clementi_sat2000",
+      "question": "What share of car lots (lot type C) will be occupied, in percent, across the HDB carparks located in the Clementi planning area (URA Master Plan 2019 boundary) in the Carpark Availability snapshot for Saturday 2027-01-09 20:00 Singapore time? Occupied = total lots minus available lots, summed over carparks, divided by total lots. SSA sets and resolves this metric; no publisher releases it.",
+      "unit": "percent of car lots occupied",
+      "release_at": "2027-01-09T12:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2027-01-07T12:00:00Z",
+      "resolve": "SSA's archived snapshot of the keyless data.gov.sg Carpark Availability endpoint (api.data.gov.sg/v1/transport/carpark-availability?date_time=2027-01-09T20:00:00), captured Saturday 20:30 SGT under sources/lta-rt/carpark-hdb/, metric definition v1 of card sg-hdb-carpark-clementi-sat2000@v2: valid if items is non-empty, the timestamp is at most 120 s before the minute and at least 1,900 car rows; otherwise the minutes 20:01, 20:02, 20:05, 20:10 in turn; car rows updated within 60 minutes, over the 48 HDB carparks the pinned HDB Carpark Information table places in CLEMENTI. Fewer than 36 of them passing, or no valid snapshot: cancelled. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_rms13",
+        "family": "mean_k",
+        "period": "week",
+        "k": 1,
+        "lag": 0,
+        "search": 1,
+        "digits": 3,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      }
+    },
+    {
+      "round_id": "sg-pv-bus-bl-2026-12",
+      "tracker": "sg_lta_pv",
+      "series": "sg_pv_bus_22009_weekday_tapin",
+      "question": "What will the average daily number of bus boardings (tap-ins) at Boon Lay Interchange (bus stop code 22009) be on weekdays that are not public holidays in 2026-12, as given by LTA DataMall's Passenger Volume by Bus Stops file for that month? Weekdays counted: 22 (Monday to Friday, excluding the public holidays listed in this round).",
+      "unit": "boardings per weekday (average)",
+      "release_at": "2027-01-09T16:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-11-30T15:59:00Z",
+      "resolve": "the first DataMall PV/Bus zip for YEAR_MONTH 2026-12 archived under sources/lta-pv/bus/ at or after 00:00 SGT on the 10th of the next month: sum of TOTAL_TAP_IN_VOLUME over WEEKDAY rows of PT_CODE 22009 divided by the weekdays counted; none archived by 23:59 SGT on the 17th: cancelled. Retrieved with a DataMall AccountKey. Contains information accessed from LTA DataMall under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_lag1_interim",
+        "family": "mean_k",
+        "period": "month",
+        "k": 1,
+        "lag": 1,
+        "search": 1,
+        "digits": 0,
+        "spread": {
+          "rule": "relative_fixed",
+          "cv": 0.0666
+        }
+      },
+      "public_holidays": [
+        "2026-12-25"
+      ],
+      "proposal_note": "first scored"
+    },
+    {
+      "round_id": "sg-pv-bus-bl-2027-01",
+      "tracker": "sg_lta_pv",
+      "series": "sg_pv_bus_22009_weekday_tapin",
+      "question": "What will the average daily number of bus boardings (tap-ins) at Boon Lay Interchange (bus stop code 22009) be on weekdays that are not public holidays in 2027-01, as given by LTA DataMall's Passenger Volume by Bus Stops file for that month? Weekdays counted: 20 (Monday to Friday, excluding the public holidays listed in this round).",
+      "unit": "boardings per weekday (average)",
+      "release_at": "2027-02-09T16:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-12-31T15:59:00Z",
+      "resolve": "the first DataMall PV/Bus zip for YEAR_MONTH 2027-01 archived under sources/lta-pv/bus/ at or after 00:00 SGT on the 10th of the next month: sum of TOTAL_TAP_IN_VOLUME over WEEKDAY rows of PT_CODE 22009 divided by the weekdays counted; none archived by 23:59 SGT on the 17th: cancelled. Retrieved with a DataMall AccountKey. Contains information accessed from LTA DataMall under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_lag1_interim",
+        "family": "mean_k",
+        "period": "month",
+        "k": 1,
+        "lag": 1,
+        "search": 1,
+        "digits": 0,
+        "spread": {
+          "rule": "relative_fixed",
+          "cv": 0.0666
+        }
+      },
+      "public_holidays": [
+        "2027-01-01"
+      ]
+    },
+    {
+      "round_id": "sg-pv-bus-bl-2027-02",
+      "tracker": "sg_lta_pv",
+      "series": "sg_pv_bus_22009_weekday_tapin",
+      "question": "What will the average daily number of bus boardings (tap-ins) at Boon Lay Interchange (bus stop code 22009) be on weekdays that are not public holidays in 2027-02, as given by LTA DataMall's Passenger Volume by Bus Stops file for that month? Weekdays counted: 19 (Monday to Friday, excluding the public holidays listed in this round).",
+      "unit": "boardings per weekday (average)",
+      "release_at": "2027-03-09T16:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2027-01-31T15:59:00Z",
+      "resolve": "the first DataMall PV/Bus zip for YEAR_MONTH 2027-02 archived under sources/lta-pv/bus/ at or after 00:00 SGT on the 10th of the next month: sum of TOTAL_TAP_IN_VOLUME over WEEKDAY rows of PT_CODE 22009 divided by the weekdays counted; none archived by 23:59 SGT on the 17th: cancelled. Retrieved with a DataMall AccountKey. Contains information accessed from LTA DataMall under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_lag1_interim",
+        "family": "mean_k",
+        "period": "month",
+        "k": 1,
+        "lag": 1,
+        "search": 1,
+        "digits": 0,
+        "spread": {
+          "rule": "relative_fixed",
+          "cv": 0.0666
+        }
+      },
+      "public_holidays": [
+        "2027-02-06",
+        "2027-02-07",
+        "2027-02-08"
+      ]
+    },
+    {
+      "round_id": "sg-pv-bus-bl-2027-03",
+      "tracker": "sg_lta_pv",
+      "series": "sg_pv_bus_22009_weekday_tapin",
+      "question": "What will the average daily number of bus boardings (tap-ins) at Boon Lay Interchange (bus stop code 22009) be on weekdays that are not public holidays in 2027-03, as given by LTA DataMall's Passenger Volume by Bus Stops file for that month? Weekdays counted: 21 (Monday to Friday, excluding the public holidays listed in this round).",
+      "unit": "boardings per weekday (average)",
+      "release_at": "2027-04-09T16:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2027-02-28T15:59:00Z",
+      "resolve": "the first DataMall PV/Bus zip for YEAR_MONTH 2027-03 archived under sources/lta-pv/bus/ at or after 00:00 SGT on the 10th of the next month: sum of TOTAL_TAP_IN_VOLUME over WEEKDAY rows of PT_CODE 22009 divided by the weekdays counted; none archived by 23:59 SGT on the 17th: cancelled. Retrieved with a DataMall AccountKey. Contains information accessed from LTA DataMall under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_lag1_interim",
+        "family": "mean_k",
+        "period": "month",
+        "k": 1,
+        "lag": 1,
+        "search": 1,
+        "digits": 0,
+        "spread": {
+          "rule": "relative_fixed",
+          "cv": 0.0666
+        }
+      },
+      "public_holidays": [
+        "2027-03-10",
+        "2027-03-26"
+      ]
+    },
+    {
+      "round_id": "sg-pv-train-je-2026-12",
+      "tracker": "sg_lta_pv",
+      "series": "sg_pv_train_ew24ns1_weekday_tapin",
+      "question": "What will the average daily number of tap-ins at Jurong East MRT station (PT_CODE EW24/NS1) be on weekdays that are not public holidays in 2026-12, as given by LTA DataMall's Passenger Volume by Train Stations file for that month? Weekdays counted: 22 (Monday to Friday, excluding the public holidays listed in this round).",
+      "unit": "tap-ins per weekday (average)",
+      "release_at": "2027-01-09T16:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-11-30T15:59:00Z",
+      "resolve": "the first DataMall PV/Train zip for YEAR_MONTH 2026-12 archived under sources/lta-pv/train/ at or after 00:00 SGT on the 10th of the next month: sum of TOTAL_TAP_IN_VOLUME over WEEKDAY rows of PT_CODE EW24/NS1 divided by the weekdays counted; none archived by 23:59 SGT on the 17th: cancelled. Retrieved with a DataMall AccountKey. Contains information accessed from LTA DataMall under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_lag1_interim",
+        "family": "mean_k",
+        "period": "month",
+        "k": 1,
+        "lag": 1,
+        "search": 1,
+        "digits": 0,
+        "spread": {
+          "rule": "relative_fixed",
+          "cv": 0.0543
+        }
+      },
+      "public_holidays": [
+        "2026-12-25"
+      ],
+      "proposal_note": "first scored"
+    },
+    {
+      "round_id": "sg-pv-train-je-2027-01",
+      "tracker": "sg_lta_pv",
+      "series": "sg_pv_train_ew24ns1_weekday_tapin",
+      "question": "What will the average daily number of tap-ins at Jurong East MRT station (PT_CODE EW24/NS1) be on weekdays that are not public holidays in 2027-01, as given by LTA DataMall's Passenger Volume by Train Stations file for that month? Weekdays counted: 20 (Monday to Friday, excluding the public holidays listed in this round).",
+      "unit": "tap-ins per weekday (average)",
+      "release_at": "2027-02-09T16:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-12-31T15:59:00Z",
+      "resolve": "the first DataMall PV/Train zip for YEAR_MONTH 2027-01 archived under sources/lta-pv/train/ at or after 00:00 SGT on the 10th of the next month: sum of TOTAL_TAP_IN_VOLUME over WEEKDAY rows of PT_CODE EW24/NS1 divided by the weekdays counted; none archived by 23:59 SGT on the 17th: cancelled. Retrieved with a DataMall AccountKey. Contains information accessed from LTA DataMall under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_lag1_interim",
+        "family": "mean_k",
+        "period": "month",
+        "k": 1,
+        "lag": 1,
+        "search": 1,
+        "digits": 0,
+        "spread": {
+          "rule": "relative_fixed",
+          "cv": 0.0543
+        }
+      },
+      "public_holidays": [
+        "2027-01-01"
+      ]
+    },
+    {
+      "round_id": "sg-pv-train-je-2027-02",
+      "tracker": "sg_lta_pv",
+      "series": "sg_pv_train_ew24ns1_weekday_tapin",
+      "question": "What will the average daily number of tap-ins at Jurong East MRT station (PT_CODE EW24/NS1) be on weekdays that are not public holidays in 2027-02, as given by LTA DataMall's Passenger Volume by Train Stations file for that month? Weekdays counted: 19 (Monday to Friday, excluding the public holidays listed in this round).",
+      "unit": "tap-ins per weekday (average)",
+      "release_at": "2027-03-09T16:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2027-01-31T15:59:00Z",
+      "resolve": "the first DataMall PV/Train zip for YEAR_MONTH 2027-02 archived under sources/lta-pv/train/ at or after 00:00 SGT on the 10th of the next month: sum of TOTAL_TAP_IN_VOLUME over WEEKDAY rows of PT_CODE EW24/NS1 divided by the weekdays counted; none archived by 23:59 SGT on the 17th: cancelled. Retrieved with a DataMall AccountKey. Contains information accessed from LTA DataMall under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_lag1_interim",
+        "family": "mean_k",
+        "period": "month",
+        "k": 1,
+        "lag": 1,
+        "search": 1,
+        "digits": 0,
+        "spread": {
+          "rule": "relative_fixed",
+          "cv": 0.0543
+        }
+      },
+      "public_holidays": [
+        "2027-02-06",
+        "2027-02-07",
+        "2027-02-08"
+      ]
+    },
+    {
+      "round_id": "sg-pv-train-je-2027-03",
+      "tracker": "sg_lta_pv",
+      "series": "sg_pv_train_ew24ns1_weekday_tapin",
+      "question": "What will the average daily number of tap-ins at Jurong East MRT station (PT_CODE EW24/NS1) be on weekdays that are not public holidays in 2027-03, as given by LTA DataMall's Passenger Volume by Train Stations file for that month? Weekdays counted: 21 (Monday to Friday, excluding the public holidays listed in this round).",
+      "unit": "tap-ins per weekday (average)",
+      "release_at": "2027-04-09T16:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2027-02-28T15:59:00Z",
+      "resolve": "the first DataMall PV/Train zip for YEAR_MONTH 2027-03 archived under sources/lta-pv/train/ at or after 00:00 SGT on the 10th of the next month: sum of TOTAL_TAP_IN_VOLUME over WEEKDAY rows of PT_CODE EW24/NS1 divided by the weekdays counted; none archived by 23:59 SGT on the 17th: cancelled. Retrieved with a DataMall AccountKey. Contains information accessed from LTA DataMall under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean1_lag1_interim",
+        "family": "mean_k",
+        "period": "month",
+        "k": 1,
+        "lag": 1,
+        "search": 1,
+        "digits": 0,
+        "spread": {
+          "rule": "relative_fixed",
+          "cv": 0.0543
+        }
+      },
+      "public_holidays": [
+        "2027-03-10",
+        "2027-03-26"
+      ]
+    },
+    {
+      "round_id": "sg-taxi-dtc-2026-12-11",
+      "tracker": "sg_lta_rt",
+      "series": "sg_taxi_free_downtown_fri2300",
+      "question": "How many taxis available for hire will SSA count inside the Downtown Core planning area (URA Master Plan 2019 boundary) in LTA's Taxi Availability snapshot for Friday 2026-12-11 23:00 Singapore time? Free taxis are those not hired and not busy, so a lower number means higher demand. SSA sets and resolves this metric; no publisher releases it.",
+      "unit": "free taxis (count of points)",
+      "release_at": "2026-12-11T15:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-12-09T15:00:00Z",
+      "resolve": "SSA's archived snapshot of the keyless data.gov.sg Taxi Availability endpoint (api.data.gov.sg/v1/transport/taxi-availability?date_time=2026-12-11T23:00:00), captured Friday 23:30 SGT under sources/lta-rt/taxi/, metric definition v1 of card sg-taxi-downtown-fri2300@v2: valid if the timestamp is at most 120 s before the minute and the island count is at least 30% of the median of the last 4 valid Fridays, otherwise the minutes 23:01, 23:02, 23:05, 23:10 in turn; points counted in DOWNTOWN CORE of the pinned URA boundary (sha256 f23856251b46...). No valid snapshot among the five minutes: cancelled. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean4_rms13",
+        "family": "mean_k",
+        "period": "week",
+        "k": 4,
+        "lag": 0,
+        "search": 6,
+        "digits": 2,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      }
+    },
+    {
+      "round_id": "sg-taxi-dtc-2026-12-18",
+      "tracker": "sg_lta_rt",
+      "series": "sg_taxi_free_downtown_fri2300",
+      "question": "How many taxis available for hire will SSA count inside the Downtown Core planning area (URA Master Plan 2019 boundary) in LTA's Taxi Availability snapshot for Friday 2026-12-18 23:00 Singapore time? Free taxis are those not hired and not busy, so a lower number means higher demand. SSA sets and resolves this metric; no publisher releases it.",
+      "unit": "free taxis (count of points)",
+      "release_at": "2026-12-18T15:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-12-16T15:00:00Z",
+      "resolve": "SSA's archived snapshot of the keyless data.gov.sg Taxi Availability endpoint (api.data.gov.sg/v1/transport/taxi-availability?date_time=2026-12-18T23:00:00), captured Friday 23:30 SGT under sources/lta-rt/taxi/, metric definition v1 of card sg-taxi-downtown-fri2300@v2: valid if the timestamp is at most 120 s before the minute and the island count is at least 30% of the median of the last 4 valid Fridays, otherwise the minutes 23:01, 23:02, 23:05, 23:10 in turn; points counted in DOWNTOWN CORE of the pinned URA boundary (sha256 f23856251b46...). No valid snapshot among the five minutes: cancelled. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean4_rms13",
+        "family": "mean_k",
+        "period": "week",
+        "k": 4,
+        "lag": 0,
+        "search": 6,
+        "digits": 2,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      }
+    },
+    {
+      "round_id": "sg-taxi-dtc-2026-12-25",
+      "tracker": "sg_lta_rt",
+      "series": "sg_taxi_free_downtown_fri2300",
+      "question": "How many taxis available for hire will SSA count inside the Downtown Core planning area (URA Master Plan 2019 boundary) in LTA's Taxi Availability snapshot for Friday 2026-12-25 23:00 Singapore time? Free taxis are those not hired and not busy, so a lower number means higher demand. SSA sets and resolves this metric; no publisher releases it. Christmas Day.",
+      "unit": "free taxis (count of points)",
+      "release_at": "2026-12-25T15:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-12-23T15:00:00Z",
+      "resolve": "SSA's archived snapshot of the keyless data.gov.sg Taxi Availability endpoint (api.data.gov.sg/v1/transport/taxi-availability?date_time=2026-12-25T23:00:00), captured Friday 23:30 SGT under sources/lta-rt/taxi/, metric definition v1 of card sg-taxi-downtown-fri2300@v2: valid if the timestamp is at most 120 s before the minute and the island count is at least 30% of the median of the last 4 valid Fridays, otherwise the minutes 23:01, 23:02, 23:05, 23:10 in turn; points counted in DOWNTOWN CORE of the pinned URA boundary (sha256 f23856251b46...). No valid snapshot among the five minutes: cancelled. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean4_rms13",
+        "family": "mean_k",
+        "period": "week",
+        "k": 4,
+        "lag": 0,
+        "search": 6,
+        "digits": 2,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      }
+    },
+    {
+      "round_id": "sg-taxi-dtc-2027-01-01",
+      "tracker": "sg_lta_rt",
+      "series": "sg_taxi_free_downtown_fri2300",
+      "question": "How many taxis available for hire will SSA count inside the Downtown Core planning area (URA Master Plan 2019 boundary) in LTA's Taxi Availability snapshot for Friday 2027-01-01 23:00 Singapore time? Free taxis are those not hired and not busy, so a lower number means higher demand. SSA sets and resolves this metric; no publisher releases it. New Year's Day.",
+      "unit": "free taxis (count of points)",
+      "release_at": "2027-01-01T15:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-12-30T15:00:00Z",
+      "resolve": "SSA's archived snapshot of the keyless data.gov.sg Taxi Availability endpoint (api.data.gov.sg/v1/transport/taxi-availability?date_time=2027-01-01T23:00:00), captured Friday 23:30 SGT under sources/lta-rt/taxi/, metric definition v1 of card sg-taxi-downtown-fri2300@v2: valid if the timestamp is at most 120 s before the minute and the island count is at least 30% of the median of the last 4 valid Fridays, otherwise the minutes 23:01, 23:02, 23:05, 23:10 in turn; points counted in DOWNTOWN CORE of the pinned URA boundary (sha256 f23856251b46...). No valid snapshot among the five minutes: cancelled. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean4_rms13",
+        "family": "mean_k",
+        "period": "week",
+        "k": 4,
+        "lag": 0,
+        "search": 6,
+        "digits": 2,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      }
+    },
+    {
+      "round_id": "sg-taxi-dtc-2027-01-08",
+      "tracker": "sg_lta_rt",
+      "series": "sg_taxi_free_downtown_fri2300",
+      "question": "How many taxis available for hire will SSA count inside the Downtown Core planning area (URA Master Plan 2019 boundary) in LTA's Taxi Availability snapshot for Friday 2027-01-08 23:00 Singapore time? Free taxis are those not hired and not busy, so a lower number means higher demand. SSA sets and resolves this metric; no publisher releases it.",
+      "unit": "free taxis (count of points)",
+      "release_at": "2027-01-08T15:00:00Z",
+      "release_estimated": false,
+      "lock_at": "2027-01-06T15:00:00Z",
+      "resolve": "SSA's archived snapshot of the keyless data.gov.sg Taxi Availability endpoint (api.data.gov.sg/v1/transport/taxi-availability?date_time=2027-01-08T23:00:00), captured Friday 23:30 SGT under sources/lta-rt/taxi/, metric definition v1 of card sg-taxi-downtown-fri2300@v2: valid if the timestamp is at most 120 s before the minute and the island count is at least 30% of the median of the last 4 valid Fridays, otherwise the minutes 23:01, 23:02, 23:05, 23:10 in turn; points counted in DOWNTOWN CORE of the pinned URA boundary (sha256 f23856251b46...). No valid snapshot among the five minutes: cancelled. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean4_rms13",
+        "family": "mean_k",
+        "period": "week",
+        "k": 4,
+        "lag": 0,
+        "search": 6,
+        "digits": 2,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      }
+    },
+    {
+      "round_id": "seattle-calls-2026-12-20",
+      "tracker": "seattle_cad",
+      "series": "seattle_calls_weekly",
+      "question": "Seattle Police Department: number of distinct community-initiated calls for service with original queue time from 2026-12-14 through 2026-12-20, inclusive, Seattle local time. Count only the community-initiated call types in card seattle-community-calls@v4; exclude officer-initiated and administrative activity.",
+      "unit": "calls per Monday-to-Sunday week",
+      "release_estimated": false,
+      "target_type": "continuous_normal",
+      "resolve": "First eligible archived City of Seattle Call Data capture under card seattle-community-calls@v4; use its outage, delay and cancellation rules.",
+      "lock_at": "2026-12-14T07:59:00Z",
+      "release_at": "2026-12-29T20:00:00Z",
+      "zero_point": "yoy4"
+    },
+    {
+      "round_id": "seattle-calls-2026-12-27",
+      "tracker": "seattle_cad",
+      "series": "seattle_calls_weekly",
+      "question": "Seattle Police Department: number of distinct community-initiated calls for service with original queue time from 2026-12-21 through 2026-12-27, inclusive, Seattle local time. Count only the community-initiated call types in card seattle-community-calls@v4; exclude officer-initiated and administrative activity.",
+      "unit": "calls per Monday-to-Sunday week",
+      "release_estimated": false,
+      "target_type": "continuous_normal",
+      "resolve": "First eligible archived City of Seattle Call Data capture under card seattle-community-calls@v4; use its outage, delay and cancellation rules.",
+      "lock_at": "2026-12-21T07:59:00Z",
+      "release_at": "2027-01-05T20:00:00Z",
+      "zero_point": "yoy4"
+    },
+    {
+      "round_id": "seattle-calls-2027-01-03",
+      "tracker": "seattle_cad",
+      "series": "seattle_calls_weekly",
+      "question": "Seattle Police Department: number of distinct community-initiated calls for service with original queue time from 2026-12-28 through 2027-01-03, inclusive, Seattle local time. Count only the community-initiated call types in card seattle-community-calls@v4; exclude officer-initiated and administrative activity.",
+      "unit": "calls per Monday-to-Sunday week",
+      "release_estimated": false,
+      "target_type": "continuous_normal",
+      "resolve": "First eligible archived City of Seattle Call Data capture under card seattle-community-calls@v4; use its outage, delay and cancellation rules.",
+      "lock_at": "2026-12-28T07:59:00Z",
+      "release_at": "2027-01-12T20:00:00Z",
+      "zero_point": "yoy4"
+    },
+    {
+      "round_id": "seattle-calls-2027-01-10",
+      "tracker": "seattle_cad",
+      "series": "seattle_calls_weekly",
+      "question": "Seattle Police Department: number of distinct community-initiated calls for service with original queue time from 2027-01-04 through 2027-01-10, inclusive, Seattle local time. Count only the community-initiated call types in card seattle-community-calls@v4; exclude officer-initiated and administrative activity.",
+      "unit": "calls per Monday-to-Sunday week",
+      "release_estimated": false,
+      "target_type": "continuous_normal",
+      "resolve": "First eligible archived City of Seattle Call Data capture under card seattle-community-calls@v4; use its outage, delay and cancellation rules.",
+      "lock_at": "2027-01-04T07:59:00Z",
+      "release_at": "2027-01-19T20:00:00Z",
+      "zero_point": "yoy4"
+    },
+    {
+      "round_id": "seattle-calls-2027-01-17",
+      "tracker": "seattle_cad",
+      "series": "seattle_calls_weekly",
+      "question": "Seattle Police Department: number of distinct community-initiated calls for service with original queue time from 2027-01-11 through 2027-01-17, inclusive, Seattle local time. Count only the community-initiated call types in card seattle-community-calls@v4; exclude officer-initiated and administrative activity.",
+      "unit": "calls per Monday-to-Sunday week",
+      "release_estimated": false,
+      "target_type": "continuous_normal",
+      "resolve": "First eligible archived City of Seattle Call Data capture under card seattle-community-calls@v4; use its outage, delay and cancellation rules.",
+      "lock_at": "2027-01-11T07:59:00Z",
+      "release_at": "2027-01-26T20:00:00Z",
+      "zero_point": "yoy4"
+    },
+    {
+      "round_id": "seattle-calls-2027-01-24",
+      "tracker": "seattle_cad",
+      "series": "seattle_calls_weekly",
+      "question": "Seattle Police Department: number of distinct community-initiated calls for service with original queue time from 2027-01-18 through 2027-01-24, inclusive, Seattle local time. Count only the community-initiated call types in card seattle-community-calls@v4; exclude officer-initiated and administrative activity.",
+      "unit": "calls per Monday-to-Sunday week",
+      "release_estimated": false,
+      "target_type": "continuous_normal",
+      "resolve": "First eligible archived City of Seattle Call Data capture under card seattle-community-calls@v4; use its outage, delay and cancellation rules.",
+      "lock_at": "2027-01-18T07:59:00Z",
+      "release_at": "2027-02-02T20:00:00Z",
+      "zero_point": "yoy4"
+    },
+    {
+      "round_id": "consumer-sce-2026-11-spending",
+      "tracker": "ny_fed_sce",
+      "series": "sce_spending_growth",
+      "question": "What median expected one-year household spending growth will the New York Fed Survey of Consumer Expectations publish for November 2026 on December 7? Forecast the published household expectation, not realized spending growth.",
+      "unit": "percent expected spending growth",
+      "target_type": "continuous_normal",
+      "publisher": "Federal Reserve Bank of New York, Survey of Consumer Expectations",
+      "methodology": "National rotating panel of approximately 1,300 US household heads. HH Spending Change worksheet, Median point prediction column. The reference month labels responses, not the publication date.",
+      "cadence": "monthly, official New York Fed economic-indicators calendar",
+      "lock_at": "2026-12-05T16:00:00Z",
+      "release_at": "2026-12-07T16:00:00Z",
+      "release_estimated": false,
+      "resolve": "First archived official SCE workbook captured from December 7 at 16:00 UTC through December 8 at 16:00 UTC containing the November 2026 median household spending growth. Match the exact worksheet, header and reference month; preserve that captured artifact and ignore subsequent revisions.",
+      "consumer": {
+        "source": "sce",
+        "reference_date": "2026-11-01",
+        "capture_until": "2026-12-08T16:00:00Z",
+        "population": "US household heads",
+        "calendar_url": "https://www.newyorkfed.org/research/calendars/i-dec26.html"
+      }
+    },
+    {
+      "round_id": "consumer-sce-2026-11-stocks",
+      "tracker": "ny_fed_sce",
+      "series": "sce_stock_prices_rise",
+      "question": "What mean probability that US stock prices will be higher one year ahead will the New York Fed Survey of Consumer Expectations publish for November 2026 on December 7? Forecast the survey's mean probability on a 0-100 scale, not the actual stock-market outcome.",
+      "unit": "percent probability",
+      "target_type": "continuous_normal",
+      "publisher": "Federal Reserve Bank of New York, Survey of Consumer Expectations",
+      "methodology": "National rotating panel of US household heads. Stock Prices worksheet; exact mean-probability column for higher US stock prices one year ahead. The mean subjective probability is a continuous survey aggregate.",
+      "cadence": "monthly, official New York Fed economic-indicators calendar",
+      "lock_at": "2026-12-05T16:00:00Z",
+      "release_at": "2026-12-07T16:00:00Z",
+      "release_estimated": false,
+      "resolve": "First archived official SCE workbook captured from December 7 at 16:00 UTC through December 8 at 16:00 UTC containing November 2026 stock-price expectations. Read the exact mean probability of higher prices one year ahead; subsequent revisions do not replace the captured result.",
+      "consumer": {
+        "source": "sce",
+        "reference_date": "2026-11-01",
+        "capture_until": "2026-12-08T16:00:00Z",
+        "population": "US household heads",
+        "calendar_url": "https://www.newyorkfed.org/research/calendars/i-dec26.html"
+      }
+    },
+    {
+      "round_id": "consumer-sce-2026-11-unemployment",
+      "tracker": "ny_fed_sce",
+      "series": "sce_unemployment_rise",
+      "question": "What mean probability that the US unemployment rate will be higher one year ahead will the New York Fed Survey of Consumer Expectations publish for November 2026 on December 7? Forecast the survey's mean probability on a 0-100 scale, not the actual unemployment outcome.",
+      "unit": "percent probability",
+      "target_type": "continuous_normal",
+      "publisher": "Federal Reserve Bank of New York, Survey of Consumer Expectations",
+      "methodology": "National rotating panel of US household heads. Unemployment Expectations worksheet; exact mean-probability column for a higher US unemployment rate one year ahead. This is the population's expectation rather than realized unemployment.",
+      "cadence": "monthly, official New York Fed economic-indicators calendar",
+      "lock_at": "2026-12-05T16:00:00Z",
+      "release_at": "2026-12-07T16:00:00Z",
+      "release_estimated": false,
+      "resolve": "First archived official SCE workbook captured from December 7 at 16:00 UTC through December 8 at 16:00 UTC containing November 2026 unemployment expectations. Match the exact mean probability and reference month; preserve the captured artifact against later revisions.",
+      "consumer": {
+        "source": "sce",
+        "reference_date": "2026-11-01",
+        "capture_until": "2026-12-08T16:00:00Z",
+        "population": "US household heads",
+        "calendar_url": "https://www.newyorkfed.org/research/calendars/i-dec26.html"
+      }
     }
   ]
 }

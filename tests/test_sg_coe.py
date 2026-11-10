@@ -1,4 +1,4 @@
-"""Singapore COE Category A premium (card sg-coe-cat-a-premium@v2).
+"""Singapore COE Category A premium (card sg-coe-cat-a-premium@v3).
 
 Real fixtures (tests/fixtures/sg/coe/: the two datastore pages and the
 metadata body fetched at the card stage on 2026-11-09, 1,995 rows to the

@@ -1,4 +1,4 @@
-"""HDB carpark occupancy in Clementi, Saturday 20:00 (card sg-hdb-carpark-clementi-sat2000@v2).
+"""HDB carpark occupancy in Clementi, Saturday 20:00 (card sg-hdb-carpark-clementi-sat2000@v3).
 
 A real fixture (tests/fixtures/sg/carpark/, the data.gov.sg snapshot for
 2026-11-07 20:00 fetched at the card stage) and bodies derived from it;

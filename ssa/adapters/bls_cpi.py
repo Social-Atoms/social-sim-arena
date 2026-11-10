@@ -8,9 +8,9 @@ day, up to 10 years per query. One query returns the monthly index levels of
 CUSR0000SEHA (CPI-U, rent of primary residence, US city average, SA). The
 arena scores the one-month change, 100 x (L_M / L_{M-1} - 1), computed from
 the two index levels **in the same response** and never rounded. The rules
-are the approved Data Card `bls-cpi-rent@v2`
+are the approved Data Card `bls-cpi-rent@v3`
 (docs/data-cards/bls-cpi-rent.json, sha256
-9a5c42d2fc293ea433cd78590908b95dc017a7b76817ff6fbd2bdfa7b390d4e7); this
+64302aae05f22f1bea8f007fa8e0ded3ec5c0998b28278b3a249c67985d953cb); this
 module implements them and nothing else.
 
 **Why both levels from one response.** Every February BLS re-estimates five
@@ -94,7 +94,7 @@ LOCK_FRESH_HOURS = 24
 MIN_LEVEL, MAX_LEVEL = 50.0, 5000.0
 
 # CPI release dates by reference month, America/New_York, 08:30. From the card
-# (bls-cpi-rent@v2, Lock): 2026-12-10 agrees across third-party calendars and
+# (bls-cpi-rent@v3, Lock): 2026-12-10 agrees across third-party calendars and
 # the owner doc but is unverified against bls.gov, which answered 403; the
 # 2027 dates are the card's estimates until a person copies them from
 # https://www.bls.gov/schedule/news_release/cpi.htm (card task G4). A round in

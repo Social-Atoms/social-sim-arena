@@ -1,4 +1,4 @@
-"""Singapore free taxis in Downtown Core, Friday 23:00 (card sg-taxi-downtown-fri2300@v2).
+"""Singapore free taxis in Downtown Core, Friday 23:00 (card sg-taxi-downtown-fri2300@v3).
 
 Real fixtures (tests/fixtures/sg/taxi/, data.gov.sg past-minute snapshots
 fetched at the card stage on 2026-11-09) plus synthetic bodies; nothing here

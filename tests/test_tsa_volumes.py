@@ -206,16 +206,14 @@ def test_january_asks_for_the_two_years_before_the_newest_date():
     ok(test_january_asks_for_the_two_years_before_the_newest_date)
 
 
-def test_the_refresh_captures_daily_and_never_blocks_on_it():
-    import yaml
+def test_unresolved_rights_do_not_start_automated_capture():
+    from ssa import inventory
+    from tools import fetch_track_data
+    assert inventory.rights_table()["tsa_volumes"] == inventory.UNRESOLVED
     with open(os.path.join(ROOT, ".github", "workflows", "refresh.yml")) as f:
-        wf = yaml.safe_load(f)
-    steps = [st for job in wf["jobs"].values() for st in job.get("steps", [])]
-    runs = [st.get("run", "") for st in steps]
-    i = runs.index("python -m ssa.adapters.tsa_volumes capture")
-    assert steps[i].get("continue-on-error") is True
-    assert i < runs.index("python -m ssa.refresh"), "capture after the refresh"
-    ok(test_the_refresh_captures_daily_and_never_blocks_on_it)
+        assert "python -m ssa.adapters.tsa_volumes capture" not in f.read()
+    assert all(source != "tsa_volumes" for _, source, _ in fetch_track_data.COLLECTORS)
+    ok(test_unresolved_rights_do_not_start_automated_capture)
 
 
 # ------------------------------------------------------------------ the reference

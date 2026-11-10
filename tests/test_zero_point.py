@@ -1,9 +1,9 @@
 """The ranked zero point: a new key that must not move a single existing score.
 
 `zero_point` lets a round name which reference is its skill denominator
-(ssa/baselines.py). Every round in the season predates it and is ranked on
-persistence; these tests hold that to the byte, on the committed season and the
-committed published payload, against a copy of the formula as it stood.
+(ssa/baselines.py). Legacy rounds are ranked on persistence; these tests hold that to the byte
+against the prior formula, while newly reviewed Urban rounds may declare their
+own reference without changing any historical score.
 """
 import copy
 import json
@@ -73,13 +73,17 @@ def _leaderboard_before(rounds, resolved):
     return board
 
 
-def test_no_season_round_names_a_zero_point():
+def test_legacy_rounds_keep_persistence_and_new_references_are_valid():
     with open(os.path.join(ROOT, "questions", "season0.json")) as f:
         rounds = json.load(f)["rounds"]
-    assert len(rounds) > 50, "season looks empty; this test would pass vacuously"
-    assert not [r["round_id"] for r in rounds if "zero_point" in r]
-    assert {baselines.zero_point_name(r) for r in rounds} == {"persistence"}
-    ok(test_no_season_round_names_a_zero_point)
+    legacy = [r for r in rounds if r['lock_at'] < '2026-11-10T00:00:00Z']
+    assert len(legacy) > 50, "legacy season looks empty"
+    assert all('zero_point' not in r for r in legacy)
+    assert {baselines.zero_point_name(r) for r in legacy} == {'persistence'}
+    for r in rounds:
+        if 'zero_point' in r:
+            baselines.normalize_spec(r['zero_point'], r['round_id'])
+    ok(test_legacy_rounds_keep_persistence_and_new_references_are_valid)
 
 
 def test_every_published_round_scores_exactly_as_before():
@@ -92,14 +96,16 @@ def test_every_published_round_scores_exactly_as_before():
     dump = lambda x: json.dumps(x, sort_keys=True, separators=(",", ":"))  # noqa: E731
     assert dump(board_after) == dump(board_before)
     assert dump(after) == dump(before), "a round's payload moved"
-    assert not any("zero_point" in r or "zero_point_crps" in r for r in after)
+    assert not any("zero_point" in r or "zero_point_crps" in r for r in after
+                   if r.get("lock_at", "") < "2026-11-10T00:00:00Z")
     ok(test_every_published_round_scores_exactly_as_before)
 
 
 def test_the_payload_of_an_existing_round_has_no_new_key():
     """build_rounds copies `zero_point` only when the definition sets it."""
     rounds, _ = _published()
-    assert not [r["round_id"] for r in rounds if "zero_point" in r]
+    assert not [r["round_id"] for r in rounds if "zero_point" in r
+                and r.get("lock_at", "") < "2026-11-10T00:00:00Z"]
     src = open(os.path.join(ROOT, "ssa", "refresh.py")).read()
     assert 'if "zero_point" in r:' in src
     ok(test_the_payload_of_an_existing_round_has_no_new_key)

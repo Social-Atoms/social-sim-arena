@@ -8,9 +8,9 @@ returns a GeoJSON FeatureCollection with one feature: `properties.timestamp`,
 available for hire. The endpoint serves any past minute, so the archive can
 be filled after the fact; those bodies are labelled `backfill`.
 
-The rules are the approved Data Card `sg-taxi-downtown-fri2300@v2`
+The rules are the approved Data Card `sg-taxi-downtown-fri2300@v3`
 (docs/data-cards/sg-taxi-downtown-fri2300.json, sha256
-e1d4489709326c3bbdb8f71ad205cadcab92ce036014deb5939da7b97efe2b8e). SSA both
+0b03bf5c55e44dbcec3537ad155c86b767544c1d9d70a865697a4332d02d6c43). SSA both
 sets and resolves this metric; no publisher releases it.
 
 **Metric definition v1** (card target.calculation):

@@ -1,4 +1,4 @@
-"""BLS CPI rent of primary residence (card bls-cpi-rent@v2). No network.
+"""BLS CPI rent of primary residence (card bls-cpi-rent@v3). No network.
 
 Run: PYTHONPATH=. python tests/test_bls_cpi.py
 
@@ -24,7 +24,7 @@ from ssa.adapters import bls_cpi                               # noqa: E402
 REAL = os.path.join(ROOT, "sources", "bls_cpi", "2026-11-09T0204Z.json")
 CARD = os.path.join(ROOT, "docs", "data-cards", "bls-cpi-rent.json")
 ROUNDS = os.path.join(ROOT, "docs", "data-cards", "bls-cpi-rent.rounds.json")
-CARD_SHA = "9a5c42d2fc293ea433cd78590908b95dc017a7b76817ff6fbd2bdfa7b390d4e7"
+CARD_SHA = "64302aae05f22f1bea8f007fa8e0ded3ec5c0998b28278b3a249c67985d953cb"
 
 
 def real_body():
@@ -313,7 +313,7 @@ def test_the_proposed_rounds_pass_the_season_validator():
     with open(ROUNDS) as f:
         doc = json.load(f)
     every = doc["rounds"]
-    assert [season.is_pilot(r) for r in every] == [True, True, False]
+    assert not any(season.is_pilot(r) for r in every)
     assert season.validate_document({"rounds": every}) == []
     for r in every:
         assert r["zero_point"]["name"] == "mean6"

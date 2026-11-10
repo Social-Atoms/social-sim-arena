@@ -403,7 +403,7 @@ _register(Source(
                   "12:00 ET after it"))
 
 _register(Source(
-    "sg_coe", "sg-coe-cat-a-premium@v2", "early lock by design",
+    "sg_coe", "sg-coe-cat-a-premium@v3", "early lock by design",
     target=_coe_target,
     lock=lambda t: _adapter("sg_coe").lock_instant(*t).astimezone(timezone.utc),
     release=_coe_close,
@@ -415,7 +415,7 @@ _register(Source(
                   "close"))
 
 _register(Source(
-    "sg_taxi", "sg-taxi-downtown-fri2300@v2", "SSA-defined real-time metric",
+    "sg_taxi", "sg-taxi-downtown-fri2300@v3", "SSA-defined real-time metric",
     target=lambda r: _id_day(r, 4, "target Friday"),
     lock=lambda d: _adapter("sg_taxi").lock_instant(d).astimezone(timezone.utc),
     release=_minute_release("sg_taxi"),
@@ -426,7 +426,7 @@ _register(Source(
                   "which is the release"))
 
 _register(Source(
-    "sg_carpark_hdb", "sg-hdb-carpark-clementi-sat2000@v2",
+    "sg_carpark_hdb", "sg-hdb-carpark-clementi-sat2000@v3",
     "SSA-defined real-time metric",
     target=lambda r: _id_day(r, 5, "target Saturday"),
     lock=lambda d: _adapter("sg_carpark").lock_instant(d).astimezone(timezone.utc),
@@ -450,7 +450,7 @@ _register(Source(
                   "month's file from the 10th of the next"))
 
 _register(Source(
-    "bls_cpi", "bls-cpi-rent@v2", "scheduled release",
+    "bls_cpi", "bls-cpi-rent@v3", "scheduled release",
     target=lambda r: _adapter("bls_cpi").reference_month(r["release_at"]),
     lock_check=_bls_lock_check, resolver=_bls_resolve,
     observed=lambda month: month + "-01"))

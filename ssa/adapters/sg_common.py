@@ -5,8 +5,8 @@
   against: URA Master Plan 2019 Planning Area Boundary (No Sea) and HDB
   Carpark Information, both keyless data.gov.sg files archived once for the
   season under `sources/sg-ref/` and refused if their bytes change;
-- point-in-polygon in file order (cards sg-taxi-downtown-fri2300@v2 and
-  sg-hdb-carpark-clementi-sat2000@v2, target.calculation) and the SVY21 to
+- point-in-polygon in file order (cards sg-taxi-downtown-fri2300@v3 and
+  sg-hdb-carpark-clementi-sat2000@v3, target.calculation) and the SVY21 to
   WGS84 conversion the carpark card states;
 - `MinuteArchive`: the write-once record of past-minute snapshots,
   `sources/<name>/<YYYY-MM-DD>/<HHMM>.json` keyed by the Singapore-time

@@ -163,7 +163,7 @@ INVENTORY = {
         "adapter": "ssa/adapters/bls_cpi.py",
         "role": TARGET,
         "state": INTEGRATED,
-        # Proposed by the track's Data Card (bls-cpi-rent@v2); maintainers
+        # Proposed by the track's Data Card (bls-cpi-rent@v3); maintainers
         # confirm or change it at review. The card's owner approval covers
         # the question rules, not this verdict.
         "rights": APPROVED,
@@ -398,7 +398,7 @@ INVENTORY = {
         "state": INTEGRATED,
         "rights": APPROVED,
         "evidence": (
-            "Proposed by card sg-coe-cat-a-premium@v2. Read 2026-11-09. "
+            "Proposed by card sg-coe-cat-a-premium@v3. Read 2026-11-09. "
             "Singapore Open Data Licence v1.0 (https://data.gov.sg/open-data-"
             "licence): \"You can use, access, download, copy, distribute, "
             "transmit, modify and adapt the datasets, or any derived analyses "
@@ -425,7 +425,7 @@ INVENTORY = {
         "state": INTEGRATED,
         "rights": APPROVED,
         "evidence": (
-            "Proposed by card sg-taxi-downtown-fri2300@v2. Read 2026-11-09: the "
+            "Proposed by card sg-taxi-downtown-fri2300@v3. Read 2026-11-09: the "
             "same Singapore Open Data Licence v1.0 and data.gov.sg API Terms of "
             "Service quoted for sg_coe, covering Taxi Availability "
             "(d_e25662f1a062dd046453926aa284ba64) and the URA Master Plan 2019 "
@@ -445,7 +445,7 @@ INVENTORY = {
         "state": INTEGRATED,
         "rights": APPROVED,
         "evidence": (
-            "Proposed by card sg-hdb-carpark-clementi-sat2000@v2. Read "
+            "Proposed by card sg-hdb-carpark-clementi-sat2000@v3. Read "
             "2026-11-09: the Singapore Open Data Licence v1.0 and data.gov.sg "
             "API Terms of Service quoted for sg_coe, covering Carpark "
             "Availability (d_ca933a644e55d34fe21f28b8052fac63), HDB Carpark "

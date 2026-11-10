@@ -326,7 +326,7 @@ def test_tsa_checkpoint_end_to_end():
 # ---------------------------------------------------------------- Singapore
 
 def test_coe_premium_end_to_end():
-    """Card sg-coe-cat-a-premium@v2 on the committed real datastore pages
+    """Card sg-coe-cat-a-premium@v3 on the committed real datastore pages
     (newest exercise 2026-11 (1)): that exercise locks 1 h before bidding
     opened on the table without its own row, and resolves on the full table
     captured after the close + 2 h."""
@@ -387,7 +387,7 @@ def _taxi_body(stamp, dtc, other):
 
 
 def test_taxi_downtown_end_to_end():
-    """Card sg-taxi-downtown-fri2300@v2: 30 synthetic past Fridays (the
+    """Card sg-taxi-downtown-fri2300@v3: 30 synthetic past Fridays (the
     weekly capture has not run yet, so no real history exists), and the
     target Friday 2026-11-06 resolved on the committed real 23:00 snapshot."""
     target = date(2026, 11, 6)
@@ -434,7 +434,7 @@ def _carpark_shifted(real, day, delta):
 
 
 def test_hdb_carpark_clementi_end_to_end():
-    """Card sg-hdb-carpark-clementi-sat2000@v2: past Saturdays are the
+    """Card sg-hdb-carpark-clementi-sat2000@v3: past Saturdays are the
     committed real 2026-11-07 20:00 snapshot moved back whole weeks with
     Clementi availability varied (no weekly archive exists yet); the target
     Saturday 2026-11-07 resolves on the real snapshot as served."""

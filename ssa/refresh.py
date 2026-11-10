@@ -2216,7 +2216,7 @@ def attach_zero_point(row, r, hist, now=None):
     if spec["family"] == "persistence" or "target" not in spec:
         return
     # A source whose card adds a freshness rule to a history-route reference
-    # (CPI rent, bls-cpi-rent@v2 rule (4): a capture from the 24 hours before
+    # (CPI rent, bls-cpi-rent@v3 rule (4): a capture from the 24 hours before
     # the lock must carry M-1) checks it through the registry once the round
     # has locked, when the archive that answers it can no longer change.
     rule = _urban_rule(r)
@@ -3237,7 +3237,7 @@ def main():
                             if name in ("umich_sentiment", "ec_cci_eu", "ec_cci_ea")
                             else series[name])
     for sid, points in series.items():
-        if sid in consumer_round.SERIES_SOURCE:
+        if sid in consumer_round.SERIES_SOURCE or domains.domain_of(sid, strict=False) == 'urban':
             charts[sid] = [{"date": p['date'], 'value': p['value']} for p in points[-24:]]
 
     # The task registry is checked before anything is written: a task that names a

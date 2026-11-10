@@ -38,7 +38,10 @@ class ActivationTests(unittest.TestCase):
         self.assertTrue(all(consumer_round.source_for(r) == 'consumer_sce_extensions'
                             for r in definitions))
         examples = [r for r in season_with_examples()['rounds'] if 'consumer' in r]
-        self.assertEqual(len(examples), 3)
+        fixture = json.loads((consumer.ROOT / 'tests/fixtures/consumer_sce_rounds.json').read_text())['rounds']
+        expected = {r['round_id'] for r in definitions + fixture}
+        self.assertEqual({r['round_id'] for r in examples}, expected)
+        self.assertEqual(len(examples), len(expected))
         self.assertEqual(season.validate_document({'rounds': examples}), [])
 
     def test_automated_collection_deduplicates_workbook_and_does_not_fetch_permission_sources(self):
@@ -71,7 +74,8 @@ class ActivationTests(unittest.TestCase):
             self.assertIn(old['rounds'][0], new['rounds'])
             self.assertEqual(old['leaderboard'], new['leaderboard'])
             self.assertEqual(old['sources'], new['sources'])
-            self.assertEqual(len(new['rounds']), 4)  # the old round plus three SCE
+            expected_ids = {'existing-round'} | {r['round_id'] for r in doc['rounds'] if 'consumer' in r}
+            self.assertEqual({r['round_id'] for r in new['rounds']}, expected_ids)
 
     def test_private_evidence_survives_a_fresh_runner_and_is_ciphertext_only_in_git(self):
         with tempfile.TemporaryDirectory() as directory:

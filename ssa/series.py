@@ -1285,8 +1285,8 @@ SERIES["sce_moving_national"] = {
 }
 
 # BLS CPI rent of primary residence, US city average, seasonally adjusted
-# (card bls-cpi-rent@v2, sha256
-# 9a5c42d2fc293ea433cd78590908b95dc017a7b76817ff6fbd2bdfa7b390d4e7): the
+# (card bls-cpi-rent@v3, sha256
+# 64302aae05f22f1bea8f007fa8e0ded3ec5c0998b28278b3a249c67985d953cb): the
 # one-month percent change, computed from two index levels of one archived
 # API response (ssa/adapters/bls_cpi.py). Rows are dated by the reference
 # month, so the lock snapshot, not the date filter, freezes it -- as for
@@ -1422,7 +1422,7 @@ _urban(
         "archived capture holding all seven dates."))
 
 _urban(
-    "sg_coe_premium_cat_a", card="sg-coe-cat-a-premium@v2",
+    "sg_coe_premium_cat_a", card="sg-coe-cat-a-premium@v3",
     label="Singapore COE Category A quota premium",
     tracker="sg_coe", source="sg_coe",
     publisher=("Land Transport Authority, on data.gov.sg (dataset "
@@ -1442,7 +1442,7 @@ _urban(
         "the exercise's row."))
 
 _urban(
-    "sg_taxi_free_downtown_fri2300", card="sg-taxi-downtown-fri2300@v2",
+    "sg_taxi_free_downtown_fri2300", card="sg-taxi-downtown-fri2300@v3",
     label="Singapore free taxis in Downtown Core, Friday 23:00",
     tracker="sg_lta_rt", source="sg_taxi",
     publisher=("Land Transport Authority, Taxi Availability on data.gov.sg; "
@@ -1462,7 +1462,7 @@ _urban(
         "resolves the metric; no publisher releases it."))
 
 _urban(
-    "sg_hdb_occ_clementi_sat2000", card="sg-hdb-carpark-clementi-sat2000@v2",
+    "sg_hdb_occ_clementi_sat2000", card="sg-hdb-carpark-clementi-sat2000@v3",
     label="Singapore HDB carpark occupancy in Clementi, Saturday 20:00",
     tracker="sg_hdb_carpark", source="sg_carpark_hdb",
     publisher=("Housing & Development Board, Carpark Availability and HDB "
@@ -2170,7 +2170,7 @@ def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
     # never fetched. Its own source key, so a malformed moving sheet fails
     # alone and the inflation series stand.
     load("sce_moving", sce_adapter.moving_history)
-    # BLS CPI rent (card bls-cpi-rent@v2): the newest archived API capture,
+    # BLS CPI rent (card bls-cpi-rent@v3): the newest archived API capture,
     # never the network. Capturing is a separate, non-blocking workflow step
     # (`python -m ssa.adapters.bls_cpi capture`), so a 403 on the runner can
     # stop the capture but never the refresh.

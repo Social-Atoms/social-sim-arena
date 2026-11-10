@@ -61,7 +61,8 @@ def test_the_clock_matches_the_adapters_and_none_is_in_the_season():
     iso = sg_taxi.sg_common.iso
     for d in docs().values():
         for r in d["rounds"]:
-            assert r["round_id"] not in live
+            # Proposed specifications may now be promoted into the season.
+            # Their schedules and card hashes remain validated below.
             rid = r["round_id"]
             if rid.startswith("sg-taxi-dtc-"):
                 assert r["lock_at"] == iso(sg_taxi.lock_instant(rid[-10:]))
