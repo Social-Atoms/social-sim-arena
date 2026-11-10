@@ -877,18 +877,18 @@ const VENDORS = [
   [/^kimi/, 'kimi', 'Moonshot'],
   // External entrants: one row per team, matched on the ids the team registered.
   [/^vac-|^worldvac/, 'astraculum', 'Astraculum'], [/^h2oai/, 'h2oai', 'H2O.ai'], [/^apodex/, 'apodex', 'Apodex'],
-  [/^yulan/, 'yulan', 'Renmin University of China'], [/^zhengzheng/, 'ucsd', 'UC San Diego']
+  [/^yulan/, 'yulan', 'Renmin University of China'], [/^zhengzheng/, 'ucsd', 'UC San Diego'], [/^xumi/, 'renlab', 'Renlab']
 ];
 const VCOLOR_MODEL_VENDORS = new Set(['claude','openai','gemini','grok','deepseek','qwen','zhipu','kimi']);
 const vendorOf = id => { for(const [re,key] of VENDORS) if(re.test(id)) return key; return null; };
 // The mark each vendor wears, by file: SVG where the vendor publishes a vector mark, PNG where
 // it does not (sources in logos/README.md). The crowd wears its own mark, in the site's green.
 const LOGO_FILES = {claude:'claude.svg', openai:'openai.svg', gemini:'gemini.svg', grok:'grok.svg', deepseek:'deepseek.svg', qwen:'qwen.svg', zhipu:'zhipu.svg', kimi:'kimi.svg', crowd:'crowd.svg',
-  astraculum:'astraculum.svg', h2oai:'h2oai.svg', apodex:'apodex.png', yulan:'yulan.png', ucsd:'ucsd.svg'};
+  astraculum:'astraculum.svg', h2oai:'h2oai.svg', apodex:'apodex.png', yulan:'yulan.png', ucsd:'ucsd.svg', renlab:'renlab.svg'};
 const logoSrc = v => LOGO_FILES[v] ? 'logos/'+LOGO_FILES[v]+'?r3' : null;
 const vendorName = key => { for(const [,k,n] of VENDORS) if(k===key) return n; return key; };
 const VCOLOR = {claude:'#C87B60', openai:'#3F9581', gemini:'#6B92D4', grok:'#111110', deepseek:'#7783D8', qwen:'#907FD2', zhipu:'#588FBE', kimi:'#4C8A99', crowd:'#15803d',
-  astraculum:'#3b4a5c', h2oai:'#d9a300', apodex:'#002c47', yulan:'#aa0227', ucsd:'#c69214'};
+  astraculum:'#3b4a5c', h2oai:'#d9a300', apodex:'#002c47', yulan:'#aa0227', ucsd:'#c69214', renlab:'#c6402a'};
 // A team whose published mark sits on its own ground keeps that ground on the tile, while its
 // lines use VCOLOR: ink for Astraculum's mark, H2O.ai's yellow, UC San Diego navy under the trident.
 const TILE = {astraculum:'#111110', h2oai:'#ffe600', ucsd:'#182b49'};
