@@ -43,7 +43,7 @@ def collect(execute=False, runner=None):
                 # Keys are inherited environment variables, never arguments.
                 # Raw collector output is deliberately not copied into the log.
                 result = runner([sys.executable, *command], cwd=ROOT,
-                                capture_output=True, text=True, timeout=480)
+                                capture_output=True, text=True, timeout=120)
                 row.update(status='captured' if result.returncode == 0 else 'failed',
                            exit_code=result.returncode)
             except (OSError, subprocess.TimeoutExpired) as error:
