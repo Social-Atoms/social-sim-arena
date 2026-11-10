@@ -57,7 +57,7 @@
         "unit": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 300,
+          "maxLength": 500,
           "description": "The unit every number in the answer is in. An answer in the wrong unit scores as a wrong answer, which is why the unit travels with the question rather than being looked up."
         },
         "target_type": {
@@ -87,6 +87,16 @@
           "minLength": 1,
           "maxLength": 2000,
           "description": "The resolution rule, verbatim from the round definition: which source, which value, which adjustment."
+        },
+        "scored": {
+          "const": false,
+          "description": "Present only on an unscored pilot round (ssa/season.is_pilot): answered, sealed and resolved like any other question, and counted on no board. Absent means the question is scored."
+        },
+        "pilot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "Present exactly when `scored` is false: why the round is a pilot, verbatim from the round definition."
         },
         "cells": {
           "type": "array",

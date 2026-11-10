@@ -11,7 +11,17 @@ One page per source the arena scores against. Each says the same five things, in
 | Harvard CAPS / Harris | [harvard-harris.md](harvard-harris.md) | Harvard / Harris approval | `ssa/adapters/hhpoll.py` |
 | University of Michigan | [michigan.md](michigan.md) | Michigan consumer sentiment, Sentiment by party | `ssa/adapters/umich.py`, `ssa/adapters/umichparty.py` |
 | New York Fed SCE | [ny-fed-sce.md](ny-fed-sce.md) | Household inflation expectations | `ssa/adapters/sce.py` |
+| New York Fed SCE, moving expectations | [ny-fed-sce.md](ny-fed-sce.md#moving-expectations-ten-cell-profile) | None yet: ten-cell profile registered (Urban Track, housing), first round proposed for the 2026-12-05 lock | `ssa/adapters/sce.py` |
 | European Commission (DG ECFIN) | [ec-consumer-survey.md](ec-consumer-survey.md) | None yet: twelve series registered (EU, euro area, ten countries), no rounds scheduled | `ssa/adapters/ecbcs.py` |
+| Seattle Police Department (City of Seattle) | [seattle-police-calls.md](seattle-police-calls.md) | None yet: archived daily for the Urban Track pilot; series `seattle_calls_weekly` registered and wired (`ssa/urban.py`), no rounds scheduled | `ssa/adapters/seattle_cad.py` |
+| NYC 311 (NYC Open Data) | [nyc-311.md](nyc-311.md) | None yet: archived daily for the Urban Track; series registered and wired (`ssa/urban.py`); proposed rounds in [nyc-311-requests.rounds.json](../data-cards/nyc-311-requests.rounds.json) | `ssa/adapters/nyc311.py` |
+| MTA, on NY Open Data (data.ny.gov) | [mta.md](mta.md) | None yet: downloaded weekly by a person for the Urban Track; series registered and wired (`ssa/urban.py`), rights unresolved, no rounds scheduled | `ssa/adapters/mta_daily.py`, `tools/ingest_mta_daily.py` |
+| TSA (tsa.gov passenger volumes) | [tsa.md](tsa.md) | None yet: archived daily for the Urban Track; series registered and wired (`ssa/urban.py`), rights unresolved, no rounds scheduled | `ssa/adapters/tsa_volumes.py` |
+| US Bureau of Labor Statistics (CPI rent) | [bls-cpi-rent.md](bls-cpi-rent.md) | None yet: one series registered (Urban Track, housing), pilot and first scored rounds proposed | `ssa/adapters/bls_cpi.py` |
+| Land Transport Authority (via data.gov.sg) | [singapore-coe.md](singapore-coe.md) | None yet: COE Category A premium, captured around each lock and result; proposed rounds only | `ssa/adapters/sg_coe.py` |
+| Land Transport Authority (via data.gov.sg) | [singapore-taxis.md](singapore-taxis.md) | None yet: free taxis in Downtown Core, Friday 23:00, captured weekly; proposed rounds only | `ssa/adapters/sg_taxi.py` |
+| Housing & Development Board (via data.gov.sg) | [singapore-carparks.md](singapore-carparks.md) | None yet: Clementi HDB carpark occupancy, Saturday 20:00, captured weekly; proposed rounds only | `ssa/adapters/sg_carpark.py` |
+| Land Transport Authority (DataMall) | [singapore-passenger-volume.md](singapore-passenger-volume.md) | None: blocked until a maintainer registers for a DataMall key; adapter written, not wired | `ssa/adapters/sg_lta_pv.py` |
 | AAII | [aaii.md](aaii.md) | Investor sentiment | `ssa/adapters/aaii.py` |
 | Google Trends | [google-trends.md](google-trends.md) | Brand search-interest mix | `ssa/adapters/trends.py` |
 | Wikimedia | [wikimedia.md](wikimedia.md) | Wikipedia weekly top 10 | `ssa/adapters/wikipedia.py` |

@@ -7,13 +7,15 @@ published the figure. A reader looking at the board wants neither: they want
 to know whether the arena asks about elections, or about how people say the
 economy feels, or about what the country looked up last week.
 
-So this is a third axis, and it is deliberately small. Four domains, each one
+So this is a third axis, and it is deliberately small. Five domains, each one
 a claim about the world that a forecaster would prepare for differently:
 
   elections        a vote, a margin, a seat count -- settled by a ballot
   public-opinion   approval and issue attitudes, national and by cut
   consumer         how households and investors say the economy feels
   attention        what people looked up, as an order rather than a level
+  urban            what city populations do: travel, calls, housing (the
+                   Urban Track, ssa/urban.py)
 
 **Keyed on the series, not the tracker.** One publisher asks about several
 things: Civiqs runs both the presidential approval tracker and four questions
@@ -46,6 +48,8 @@ DOMAINS = (
      "What the country looked up, asked as an order rather than a level."),
     ("elections", "Elections",
      "Margins and seat counts: the questions a ballot settles."),
+    ("urban", "Urban life",
+     "What city populations do -- travel, calls, housing -- counted from city data."),
 )
 
 # Not a fifth domain: a marker that something reached the site the taxonomy
@@ -88,6 +92,24 @@ _assign("consumer",
         "ec_cci_pl", "ec_cci_at", "ec_cci_be", "ec_cci_se", "ec_cci_ie",
         "civiqs_net_econ_now", "civiqs_net_econ_direction",
         "civiqs_net_family_finances", "civiqs_net_inflation_concern")
+
+# The Urban Track (ssa/urban.py). The owner's track document files the NY Fed
+# moving expectations and CPI rent under the track's Consumption sub-track
+# with ZORI, so they are urban questions too, not consumer sentiment.
+_assign("urban",
+        "sce_moving_age_under_40", "sce_moving_age_40_60",
+        "sce_moving_age_over_60", "sce_moving_income_under_50k",
+        "sce_moving_income_50_100k", "sce_moving_income_over_100k",
+        "sce_moving_region_west", "sce_moving_region_midwest",
+        "sce_moving_region_south", "sce_moving_region_northeast",
+        "sce_moving_national")
+
+_assign("urban", "cpi_rent_sa_mom",
+        "seattle_calls_weekly", "nyc311_requests_weekly",
+        "mta_subway_weekly", "tsa_checkpoint_weekly",
+        "sg_coe_premium_cat_a", "sg_taxi_free_downtown_fri2300",
+        "sg_hdb_occ_clementi_sat2000",
+        "sg_pv_train_ew24ns1_weekday_tapin", "sg_pv_bus_22009_weekday_tapin")
 
 _assign("attention",
         "wiki_top10_en", "wiki_views_trump", "wiki_views_taylor_swift",

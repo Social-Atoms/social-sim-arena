@@ -19,7 +19,9 @@ filters were implicit in adapter code, which had two consequences worth naming:
 Adding a tracker means adding a row here, and nothing else.
 """
 from . import crosstab
+from . import urban
 from .adapters import aaii as aaii_adapter
+from .adapters import bls_cpi as bls_cpi_adapter
 from .adapters import civiqs as civiqs_adapter
 from .adapters import ecbcs as ecbcs_adapter
 from .adapters import hhpoll as hhpoll_adapter
@@ -1193,6 +1195,328 @@ SERIES["sce_inflation_3y"] = {
     "methodology": _SCE_METHODOLOGY,
 }
 
+# NY Fed SCE moving expectations (card nyfed-sce-moving@v2, sha256
+# bd4130d2434db06cd3620aa3d6cef9e92165e08c081c0fe38b31f1f0f2faf676): the
+# same archived workbook as the two inflation series, two more sheets, and no
+# request of its own. Its own source key, `sce_moving`, so that a malformed
+# moving sheet is isolated from the inflation series at the source boundary
+# rather than taking them down with it. Ten cells scored together as one
+# profile (SCE_MOVING_CELLS), plus the national mean, shown and not scored.
+
+_SCE_MOVING_METHODOLOGY = (
+    "Survey of Consumer Expectations, Federal Reserve Bank of New York; "
+    "rotating internet panel of about 1,300 US household heads. Each "
+    "respondent gives the percent chance that they will move to a different "
+    "primary residence over the next 12 months; the published number is the "
+    "mean across respondents in the cell, as the bank weights it. A stated "
+    "intention, not an observed move. Rows are dated by the survey month; "
+    "the release lands early the following month at 11:00 ET, on a date "
+    "preannounced on the NY Fed calendar. Source: Survey of Consumer "
+    "Expectations, \u00a9 2013-2026 Federal Reserve Bank of New York (FRBNY). "
+    "The SCE data are available without charge at "
+    "http://www.newyorkfed.org/microeconomics/sce and may be used subject to "
+    "license terms posted there. FRBNY disclaims any responsibility for this "
+    "analysis and interpretation of Survey of Consumer Expectations data.")
+
+# (workbook header, series suffix, who the cell is, noise m, real movement s):
+# scoring.noise_floor per cell over the 36 target months 2023-10 to 2026-09,
+# as measured on the 2026-11-08 capture by the card (Baseline). A cell whose
+# s is 0.00 moves within its own sampling noise; the card keeps it anyway.
+_SCE_MOVING_ROWS = (
+    ("Age Under 40", "age_under_40", "household heads under 40", 1.44, 0.00),
+    ("Age 40-60", "age_40_60", "household heads aged 40 to 60", 0.40, 0.97),
+    ("Age Over 60", "age_over_60", "household heads over 60", 0.42, 0.87),
+    ("Income under 50k", "income_under_50k",
+     "households with income under $50,000", 0.52, 1.32),
+    ("Income 50-100k", "income_50_100k",
+     "households with income of $50,000 to $100,000", 1.01, 0.54),
+    ("Income Over 100k", "income_over_100k",
+     "households with income over $100,000", 0.00, 1.18),
+    ("Region West", "region_west", "household heads in the West", 0.00, 1.54),
+    ("Region Midwest", "region_midwest", "household heads in the Midwest",
+     0.99, 1.25),
+    ("Region South", "region_south", "household heads in the South", 0.40,
+     1.13),
+    ("Region Northeast", "region_northeast",
+     "household heads in the Northeast", 1.12, 0.88),
+)
+
+
+def _sce_moving(header, sfx, who, noise, movement):
+    sid = f"sce_moving_{sfx}"
+    SERIES[sid] = {
+        "label": f"NY Fed SCE chance of moving, {header}",
+        "tracker": "ny_fed_sce",
+        "publisher": SERIES["sce_inflation_1y"]["publisher"],
+        "source": "sce_moving",
+        "sce_moving": {"cell": header},
+        "unit": "percent chance, mean across respondents",
+        "cadence": SERIES["sce_inflation_1y"]["cadence"],
+        "question": ("NY Fed Survey of Consumer Expectations: mean percent "
+                     "chance of moving to a different primary residence over "
+                     f"the next 12 months, {who}"),
+        "methodology": _SCE_MOVING_METHODOLOGY,
+        # Printed for every cell in the round's question text (card, Scoring);
+        # kept here so the question and the registry can be checked together.
+        "noise_floor": {"m": noise, "s": movement,
+                        "window": "2023-10/2026-09"},
+    }
+    return sid
+
+
+SCE_MOVING_CELLS = tuple(_sce_moving(*row) for row in _SCE_MOVING_ROWS)
+assert [SERIES[c]["sce_moving"]["cell"] for c in SCE_MOVING_CELLS] == \
+    list(sce_adapter.MOVING_CELLS), \
+    "the registered SCE moving cells no longer match sce.MOVING_CELLS"
+
+SERIES["sce_moving_national"] = {
+    "label": "NY Fed SCE chance of moving, all household heads",
+    "tracker": "ny_fed_sce",
+    "publisher": SERIES["sce_inflation_1y"]["publisher"],
+    "source": "sce_moving",
+    "sce_moving": {"cell": sce_adapter.MOVING_NATIONAL},
+    "unit": "percent chance, mean across respondents",
+    "cadence": SERIES["sce_inflation_1y"]["cadence"],
+    "question": ("NY Fed Survey of Consumer Expectations: mean percent chance "
+                 "of moving to a different primary residence over the next "
+                 "12 months, all household heads (shown with the profile, "
+                 "not scored: card nyfed-sce-moving@v2)"),
+    "methodology": _SCE_MOVING_METHODOLOGY,
+}
+
+# BLS CPI rent of primary residence, US city average, seasonally adjusted
+# (card bls-cpi-rent@v3, sha256
+# 64302aae05f22f1bea8f007fa8e0ded3ec5c0998b28278b3a249c67985d953cb): the
+# one-month percent change, computed from two index levels of one archived
+# API response (ssa/adapters/bls_cpi.py). Rows are dated by the reference
+# month, so the lock snapshot, not the date filter, freezes it -- as for
+# Michigan and the SCE. Ranked on zero point mean6, never persistence sd 1.5:
+# on a series that moves about 0.06 a month, sd 1.5 is no reference at all.
+SERIES["cpi_rent_sa_mom"] = {
+    "label": "BLS CPI rent of primary residence, monthly change (SA)",
+    "tracker": "bls_cpi",
+    "publisher": ("The US Bureau of Labor Statistics: the Consumer Price "
+                  "Index, published monthly at 08:30 ET on a release "
+                  "schedule BLS announces for the calendar year."),
+    "source": "bls_cpi",
+    "unit": "percent, one-month change, seasonally adjusted",
+    "cadence": ("monthly; the CPI for month M is released between about the "
+                "10th and the 15th of M+1 at 08:30 ET"),
+    "question": ("BLS CPI-U rent of primary residence, US city average, "
+                 "seasonally adjusted (CUSR0000SEHA): one-month percent change "
+                 "computed from the two published index levels"),
+    "methodology": (
+        "Consumer Price Index for All Urban Consumers, US Bureau of Labor "
+        "Statistics. Rent of primary residence measures contract rents paid "
+        "by tenants in the CPI housing sample, not asking rents; each sampled "
+        "unit is re-priced every six months, so a month's change mixes the "
+        "six-month changes of one panel. The arena computes 100 x "
+        "(L_M / L_{M-1} - 1) from the two seasonally adjusted index levels in "
+        "one release response, unrounded (the press table prints one "
+        "decimal). October 2025 was not published (the 2025 lapse in "
+        "appropriations), so October and November 2025 have no one-month "
+        "change. Source: U.S. Bureau of Labor Statistics."),
+}
+
+# ---------------------------------------------------------------- Urban Track
+#
+# The Urban Track sources (ssa/urban.py), one series each and two for LTA's
+# passenger volumes. Every one is read from SSA's own write-once archive under
+# sources/<name>/, never the network: capturing is a separate, non-blocking
+# step (refresh.yml, sg-timed-capture.yml, nyc311-capture.yml) or a person's
+# download, so a 403 can stop a capture but never the refresh. The history
+# here is what an entrant is shown; a round is ranked on the reference its
+# adapter computes from the capture archived at lock (urban.lock_reference),
+# never on this list.
+#
+# `archive_pending`: a source with no capture yet (MTA waits on a person's
+# first download, LTA on a DataMall key) builds to an empty series rather than
+# failing the run. Its rounds then post no reference and say so; nothing is
+# substituted. Every other series still refuses to build to zero points.
+
+def _urban(sid, *, label, tracker, publisher, source, unit, cadence,
+           question, methodology, card):
+    SERIES[sid] = {"label": label, "tracker": tracker, "publisher": publisher,
+                   "source": source, "unit": unit, "cadence": cadence,
+                   "question": question, "methodology": methodology,
+                   "card": card, "archive_pending": True}
+    return sid
+
+
+_urban(
+    "seattle_calls_weekly", card="seattle-community-calls@v4",
+    label="Seattle community-initiated police calls, weekly",
+    tracker="seattle_cad", source="seattle_cad",
+    publisher=("Seattle Police Department, on the City of Seattle Open Data "
+               "Portal (cos-data.seattle.gov, dataset 33kz-ixgy)."),
+    unit="calls per Monday-to-Sunday week (distinct CAD events)",
+    cadence=("daily capture of the trailing 630 days; a week is posted about "
+             "three days after it ends and resolved eight days after"),
+    question=("Seattle Police Department: community-initiated calls for "
+              "service (distinct CAD events received by 911, non-emergency "
+              "telephone, text message or in-person complaint) with an "
+              "original queue time in the Monday-to-Sunday week, Seattle "
+              "local time"),
+    methodology=(
+        "Counted from the City of Seattle's Call Data (33kz-ixgy): "
+        "count(distinct cad_event_number) per day for call_type 911, "
+        "'TELEPHONE OTHER, NOT 911', 'TEXT MESSAGE' and 'IN PERSON "
+        "COMPLAINT'; officer-initiated activity, alarm-company signals and "
+        "administrative entries are excluded. A day under 40% of the "
+        "trailing 28-day level counts as an outage, never as a quiet day. "
+        "SSA sets and resolves the metric from its archived daily capture; "
+        "no publisher releases a weekly number."))
+
+_urban(
+    "nyc311_requests_weekly", card="nyc-311-requests@v2",
+    label="NYC 311 service requests, weekly",
+    tracker="nyc_311", source="nyc311",
+    publisher=("NYC 311 and the NYC Office of Technology and Innovation, NYC "
+               "Open Data (data.cityofnewyork.us, dataset erm2-nwe9)."),
+    unit="service requests per Monday-to-Sunday week",
+    cadence=("daily capture of the trailing 280 days; the portal loads once "
+             "a day at about 02:40Z"),
+    question=("NYC 311 service requests (rows of NYC Open Data erm2-nwe9, all "
+              "complaint types, agencies and statuses) with a created_date in "
+              "the Monday-to-Sunday week, New York local time"),
+    methodology=(
+        "Every row of erm2-nwe9, counted per day of created_date (a floating "
+        "timestamp read as New York time) and summed over the week. The "
+        "dataset holds only requests that can be routed to an agency, not "
+        "general information calls. A capture Socrata marks out of date is "
+        "never filed. SSA sets and resolves the metric from its archived "
+        "daily capture."))
+
+_urban(
+    "mta_subway_weekly", card="mta-subway-weekly@v2",
+    label="NYC subway ridership, weekly (MTA estimate)",
+    tracker="mta_daily", source="mta_daily",
+    publisher=("Metropolitan Transportation Authority, on NY Open Data "
+               "(data.ny.gov, dataset sayj-mze2)."),
+    unit="riders per Monday-to-Sunday week (MTA estimated subway ridership)",
+    cadence=("downloaded by a person each weekend; the dataset posts each "
+             "day with a lag of about a week"),
+    question=("Total of MTA's daily 'Subway' ridership estimates (data.ny.gov "
+              "sayj-mze2, which includes the Staten Island Railway) over the "
+              "Monday-to-Sunday week, New York time"),
+    methodology=(
+        "MTA's published daily estimate for the 'Subway' mode, summed over "
+        "seven days. Estimates are modelled from fare-gate taps and are "
+        "revised; a round resolves on the first archived download holding "
+        "all seven days and later revisions never change it."))
+
+_urban(
+    "tsa_checkpoint_weekly", card="tsa-checkpoint-weekly@v2",
+    label="TSA checkpoint throughput, weekly (national)",
+    tracker="tsa", source="tsa_volumes",
+    publisher=("Transportation Security Administration, tsa.gov passenger "
+               "volumes page."),
+    unit="travelers screened per Monday-to-Sunday week",
+    cadence="daily capture; TSA posts the previous day's number each morning",
+    question=("Travelers screened at TSA checkpoints nationwide, TSA's daily "
+              "'Numbers', summed over the Monday-to-Sunday week"),
+    methodology=(
+        "TSA's single national daily number from https://www.tsa.gov/travel/"
+        "passenger-volumes, summed over seven dates. TSA does not state the "
+        "day boundary or whether crew are included. Resolved on SSA's first "
+        "archived capture holding all seven dates."))
+
+_urban(
+    "sg_coe_premium_cat_a", card="sg-coe-cat-a-premium@v3",
+    label="Singapore COE Category A quota premium",
+    tracker="sg_coe", source="sg_coe",
+    publisher=("Land Transport Authority, on data.gov.sg (dataset "
+               "d_69b3380ad7e51aff3a7dcc84eba52b8a). Contains information "
+               "accessed from data.gov.sg under the Singapore Open Data "
+               "Licence version 1.0."),
+    unit="Singapore dollars (S$)",
+    cadence="two open bidding exercises a month, on LTA's published schedule",
+    question=("The Category A Certificate of Entitlement quota premium (S$), "
+              "the clearing price every successful bidder pays, at one LTA "
+              "open bidding exercise"),
+    methodology=(
+        "Category A: non-fully-electric cars up to 1,600 cc and 97 kW, and "
+        "fully electric cars up to 110 kW. The premium is set by all bids in "
+        "the category in that exercise. Resolved on SSA's first archived "
+        "capture of the data.gov.sg datastore after the close that carries "
+        "the exercise's row."))
+
+_urban(
+    "sg_taxi_free_downtown_fri2300", card="sg-taxi-downtown-fri2300@v3",
+    label="Singapore free taxis in Downtown Core, Friday 23:00",
+    tracker="sg_lta_rt", source="sg_taxi",
+    publisher=("Land Transport Authority, Taxi Availability on data.gov.sg; "
+               "boundary: URA Master Plan 2019 planning areas. Contains "
+               "information accessed from data.gov.sg under the Singapore "
+               "Open Data Licence version 1.0."),
+    unit="taxis available for hire",
+    cadence="one snapshot a week, Friday 23:00 Singapore time",
+    question=("Taxis available for hire inside the Downtown Core planning "
+              "area in LTA's Taxi Availability snapshot for Friday 23:00 "
+              "Singapore time (fewer free taxis means more demand)"),
+    methodology=(
+        "Counted by SSA from the feed's taxi positions inside the URA 2019 "
+        "Downtown Core polygon; private-hire cars are not in the feed. The "
+        "snapshot must be fresh, complete and not implausibly low, with "
+        "fallback minutes 23:01, 23:02, 23:05 and 23:10. SSA sets and "
+        "resolves the metric; no publisher releases it."))
+
+_urban(
+    "sg_hdb_occ_clementi_sat2000", card="sg-hdb-carpark-clementi-sat2000@v3",
+    label="Singapore HDB carpark occupancy in Clementi, Saturday 20:00",
+    tracker="sg_hdb_carpark", source="sg_carpark_hdb",
+    publisher=("Housing & Development Board, Carpark Availability and HDB "
+               "Carpark Information on data.gov.sg; boundary: URA Master Plan "
+               "2019 planning areas. Contains information accessed from "
+               "data.gov.sg under the Singapore Open Data Licence version "
+               "1.0."),
+    unit="percent of car lots occupied",
+    cadence="one snapshot a week, Saturday 20:00 Singapore time",
+    question=("Share of car lots occupied across the HDB carparks in the "
+              "Clementi planning area in the Carpark Availability snapshot "
+              "for Saturday 20:00 Singapore time"),
+    methodology=(
+        "Occupied = total lots minus available lots, summed over the pinned "
+        "list of Clementi HDB carparks (lot type C), divided by total lots. "
+        "Season and visitor parking are not distinguished. SSA sets and "
+        "resolves the metric; no publisher releases it."))
+
+_urban(
+    "sg_pv_train_ew24ns1_weekday_tapin", card="sg-lta-pv-train-jurong-east@v3",
+    label="Jurong East MRT, weekday average daily tap-ins",
+    tracker="sg_lta_pv", source="sg_lta_pv",
+    publisher=("Land Transport Authority, LTA DataMall Passenger Volume by "
+               "Train Stations."),
+    unit="tap-ins per weekday (average, public holidays excluded)",
+    cadence="monthly; DataMall posts a month's file around the 10th of the next",
+    question=("Average daily fare-card tap-ins at Jurong East MRT station "
+              "(EW24/NS1) on weekdays that are not public holidays, over the "
+              "month"),
+    methodology=(
+        "Sum of TOTAL_TAP_IN_VOLUME over the station's WEEKDAY rows in the "
+        "month's DataMall file, divided by the Monday-to-Friday dates that "
+        "are not gazetted public holidays. Transfers inside the paid area "
+        "are not taps."))
+
+_urban(
+    "sg_pv_bus_22009_weekday_tapin", card="sg-lta-pv-bus-boon-lay-int@v3",
+    label="Boon Lay Interchange buses, weekday average daily boardings",
+    tracker="sg_lta_pv", source="sg_lta_pv",
+    publisher=("Land Transport Authority, LTA DataMall Passenger Volume by "
+               "Bus Stops."),
+    unit="boardings per weekday (average, public holidays excluded)",
+    cadence="monthly; DataMall posts a month's file around the 10th of the next",
+    question=("Average daily bus boardings (fare-card tap-ins) at Boon Lay "
+              "Interchange (bus stop 22009) on weekdays that are not public "
+              "holidays, over the month"),
+    methodology=(
+        "Sum of TOTAL_TAP_IN_VOLUME over the stop's WEEKDAY rows in the "
+        "month's DataMall file, divided by the Monday-to-Friday dates that "
+        "are not gazetted public holidays."))
+
+URBAN_SERIES = tuple(sid for sid, s in SERIES.items() if s.get("archive_pending"))
+
+
 # European Commission consumer survey (DG ECFIN). One release zip per month
 # carries every country, so the twelve series below share a single request
 # per release, and none at all once the month's release is archived. The EU
@@ -1841,6 +2165,22 @@ def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
     # capture on success, newest archived vintage (with a loud warning) on
     # fetch failure: fetch what is there, never go dark when it is not.
     load("sce", lambda: sce_adapter.history(diagnostics=diagnostic_rows))
+    # The moving sheets of the same workbook (card nyfed-sce-moving@v2): read
+    # from the newest archived vintage, which the line above has just filed,
+    # never fetched. Its own source key, so a malformed moving sheet fails
+    # alone and the inflation series stand.
+    load("sce_moving", sce_adapter.moving_history)
+    # BLS CPI rent (card bls-cpi-rent@v3): the newest archived API capture,
+    # never the network. Capturing is a separate, non-blocking workflow step
+    # (`python -m ssa.adapters.bls_cpi capture`), so a 403 on the runner can
+    # stop the capture but never the refresh.
+    load("bls_cpi", bls_cpi_adapter.history)
+    # The Urban Track sources (ssa/urban.py), each read from its own archive.
+    #  is a per-series override map, the Civiqs shape, which is
+    # what tests inject; anything not in it is built from the archive.
+    for _name in sorted({s["source"] for s in SERIES.values()
+                         if s.get("archive_pending")}):
+        load(_name, dict)
     # One release zip carries all twelve EC consumer series. Write-once per
     # release under `sources/ecbcs/`, and a month whose release is already
     # archived costs no request at all.
@@ -1913,6 +2253,20 @@ def build_all(sources=None, *, unavailable_sources=(), isolate_failures=False,
             elif source == "sce":
                 out[sid] = sce_adapter.to_series(src["sce"],
                                                  spec["sce"]["horizon"])
+            elif source == "bls_cpi":
+                out[sid] = list(src["bls_cpi"])
+            elif source == "sce_moving":
+                out[sid] = sce_adapter.moving_series(
+                    src["sce_moving"], spec["sce_moving"]["cell"])
+            elif spec.get("archive_pending") and urban.get(source):
+                given = src[source].get(sid)
+                out[sid] = (list(given) if given is not None else
+                            urban.get(source).history(dict(spec, sid=sid)))
+                if not out[sid]:
+                    # No capture yet: an empty series, never a failed run
+                    # (see the Urban Track block above). Its rounds post no
+                    # reference until the archive holds one.
+                    continue
             elif source == "ecbcs":
                 out[sid] = ecbcs_adapter.to_series(src["ecbcs"],
                                                    spec["ecbcs"]["geo"])

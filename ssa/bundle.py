@@ -237,6 +237,11 @@ def question_from_round(round_data):
             lock_at, _require(round_data, "release_at")), 3),
         "resolve": _require(round_data, "resolve"),
     }
+    # An unscored pilot says so to the participant, verbatim; an ordinary
+    # round's question carries neither key, so its bundle is unchanged.
+    if round_data.get("scored") is False:
+        question["scored"] = False
+        question["pilot"] = _require(round_data, "pilot")
     if target == PROFILE_TARGET_TYPE:
         cells = round_data.get("cells")
         if not cells:

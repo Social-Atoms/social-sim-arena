@@ -61,14 +61,18 @@ def collect_source(source, root, timeout, fetch_sce=False, url=None, request_con
                    "data_request": {"include_basic_info": True}, "page_start": 0, "page_count": 100}
         params = {"key": key, "input_json": json.dumps(payload)}
     if source == "sce" and not fetch_sce:
-        files = sorted((ROOT / "sources/sce").glob("????-??-??.xlsx"))
+        # Name order, with a release day's `.post` capture after that day's
+        # first one (ssa/adapters/sce.py): the newest is the newest vintage.
+        files = sorted((ROOT / "sources/sce").glob("????-??-??*.xlsx"),
+                       key=lambda p: (p.name[:10], p.name != p.name[:10] + ".xlsx"))
+        files = [p for p in files if p.name[10:] in (".xlsx", ".post.xlsx")]
         if not files:
             consumer.record_attempt(root, source, "missing_archive", "No existing SCE workbook")
             return
         path = files[-1]
         consumer.ingest(source, path.read_bytes(), url, root)
         consumer.record_attempt(root, source, "collected", "Reused committed official workbook; capture day only",
-                                repository_file=str(path.relative_to(ROOT)), repository_capture_day=path.stem)
+                                repository_file=str(path.relative_to(ROOT)), repository_capture_day=path.name[:10])
         return
     try:
         response = requests.get(url, params=params, timeout=(min(timeout, 10), timeout),

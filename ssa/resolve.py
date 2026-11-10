@@ -262,6 +262,17 @@ def resolve_round(r, series, now):
             return consumer_round.resolution(r, now=now), None
         except (KeyError, ValueError) as error:
             return None, str(error)
+    # Urban Track sources resolve on the archived capture their card names
+    # (ssa/urban.py): pending, cancelled and review all leave the round
+    # unresolved with the card's reason, never "the first point after the
+    # freeze" of a series rebuilt from a later capture.
+    from . import urban
+    rule = urban.get(_source(r["series"]))
+    if rule is not None and rule.resolves and r.get("round_id") not in HAND_ONLY:
+        try:
+            return rule.resolve(r, now)
+        except (OSError, KeyError, RuntimeError, ValueError) as error:
+            return None, f"{rule.card}: {type(error).__name__}: {error}"
     point, why = candidate(r, series)
     if point is None:
         return None, why

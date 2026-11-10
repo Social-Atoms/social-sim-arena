@@ -8,6 +8,38 @@
     "sha256": "a84db06aa837c8e7bf089fe781383955c98b020bc89f1cfeb735a810650ada8e",
     "url": "https://www.aaii.com/sentimentsurvey/sent_results"
   },
+  "bls_cpi": {
+    "bytes": 4173,
+    "changed_at": "2026-11-09T02:04:58Z",
+    "fetched_at": "2026-11-09T02:04:58Z",
+    "file": "sources/bls_cpi/2026-11-09T0204Z.json",
+    "sha256": "576923edb825b682680186b40d32c0f55eb2840693361a815eb8584b846fe817",
+    "url": "https://api.bls.gov/publicAPI/v1/timeseries/data/"
+  },
+  "lta-pv/bus": {
+    "bytes": 1800049,
+    "changed_at": "2026-11-10T03:54:35Z",
+    "fetched_at": "2026-11-10T03:54:35Z",
+    "file": "sources/lta-pv/bus/202610.zip",
+    "sha256": "2a1baf567f1a0fa713535567e51c646a77b5981b49acf3cb6a369637d3d63368",
+    "url": "https://ltafarecard.s3.ap-southeast-1.amazonaws.com/202610/transport_node_bus_202610.zip"
+  },
+  "lta-pv/train": {
+    "bytes": 73234,
+    "changed_at": "2026-11-10T03:54:24Z",
+    "fetched_at": "2026-11-10T03:54:24Z",
+    "file": "sources/lta-pv/train/202610.zip",
+    "sha256": "daca4e7db49f093d8f2ddf463487d2c0252e8686a7b81a4b2ae4c75dc6b0499c",
+    "url": "https://ltafarecard.s3.ap-southeast-1.amazonaws.com/202610/transport_node_train_202610.zip"
+  },
+  "nyc311": {
+    "bytes": 222261,
+    "changed_at": "2026-11-09T01:59:05Z",
+    "fetched_at": "2026-11-09T01:59:05Z",
+    "file": "sources/nyc311/2026-11-09.json",
+    "sha256": "9fec16f70dbbb2d818e9efa0cf415cf836bb29e21d6b49a2a80917a54f02e1cc",
+    "url": "https://data.cityofnewyork.us/resource/erm2-nwe9.json?%24select=date_trunc_ymd%28created_date%29+as+d%2C+agency%2C+count%28%2A%29+as+n&%24where=created_date+%3E%3D+%272026-02-02T00%3A00%3A00%27&%24group=d%2C+agency&%24order=d%2C+agency&%24limit=50000"
+  },
   "sb_approval": {
     "bytes": 1784682,
     "changed_at": "2026-11-10T19:41:56Z",
@@ -25,6 +57,40 @@
     "note": "Silver Bulletin generic-ballot database, published as a Google Sheet",
     "sha256": "5a0ff534563f708376cf8ad6f79d6ef199cf5d965427d25b30c9e2d8387dca9d",
     "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv"
+  },
+  "seattle_cad": {
+    "bytes": 145607,
+    "changed_at": "2026-11-08T22:26:39Z",
+    "fetched_at": "2026-11-08T22:26:39Z",
+    "file": "sources/seattle_cad/2026-11-08.json",
+    "sha256": "77ee14e6a5f87115e977064b0b84937020af2b6bd4b057f38ecac3381d294fea",
+    "url": "https://cos-data.seattle.gov/resource/33kz-ixgy.json?%24select=date_trunc_ymd%28cad_event_original_time_queued%29+as+d%2C+call_type%2C+count%28distinct+cad_event_number%29+as+n&%24where=cad_event_original_time_queued+%3E%3D+%272025-08-25T00%3A00%3A00%27&%24group=d%2C+call_type&%24order=d%2C+call_type&%24limit=50000"
+  },
+  "sg-ref/hdb-carpark-info": {
+    "bytes": 100143,
+    "changed_at": "2026-11-09T01:12:56Z",
+    "fetched_at": "2026-11-09T01:12:56Z",
+    "file": "sources/sg-ref/hdb-carpark-info/2026-11-09-p2.json",
+    "note": "card-stage fetch (sg-hdb-carpark-clementi-sat2000@v2), pinned for the season by sha256",
+    "sha256": "36a36709bf50eba31b2f26b386962769b2d6355b036ccf22781128b83993f5b9",
+    "url": "https://data.gov.sg/api/action/datastore_search?resource_id=d_23f946fa557947f93a8043bbef41dd09&limit=1000&offset=2000"
+  },
+  "sg-ref/ura-mp2019-planning-area-nosea": {
+    "bytes": 2092229,
+    "changed_at": "2026-11-09T01:02:11Z",
+    "fetched_at": "2026-11-09T01:02:11Z",
+    "file": "sources/sg-ref/ura-mp2019-planning-area-nosea/2026-11-09.geojson",
+    "note": "card-stage fetch (sg-taxi-downtown-fri2300@v2), pinned for the season by sha256",
+    "sha256": "f23856251b467089f788d0fff72ef5a38e753f21aa69b4352401d7ed50d380cc",
+    "url": "https://s3.ap-southeast-1.amazonaws.com/blobs.data.gov.sg/d_4765db0e87b9c86336792efe8a1f7a66.geojson (via https://api-open.data.gov.sg/v1/public/api/datasets/d_4765db0e87b9c86336792efe8a1f7a66/poll-download; signature removed)"
+  },
+  "tsa_volumes": {
+    "bytes": 197250,
+    "changed_at": "2026-11-09T02:05:57Z",
+    "fetched_at": "2026-11-09T02:05:57Z",
+    "file": "sources/tsa_volumes/2026-11-09/current.html",
+    "sha256": "f16cf7796091b48e9d9cc2e313acab251bd099b3af71a7675698e9ac619ffba2",
+    "url": "https://www.tsa.gov/travel/passenger-volumes"
   },
   "umich": {
     "bytes": 14420,

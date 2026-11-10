@@ -3,6 +3,10 @@
   PYTHONPATH=. python3 tools/validate_season.py
   PYTHONPATH=. python3 tools/validate_season.py questions/candidates/batch-X.json
 
+A round may be an unscored pilot (`"scored": false` plus a short `"pilot"`
+note, ssa/season.is_pilot): validated like any other round, counted on no
+board.
+
 The command is offline and read-only.  Exit status is non-zero for every
 problem, so the same gate can be used by a maintainer and by CI.
 """
@@ -59,6 +63,11 @@ def main(argv=None):
     print(f"OK semantic validation: {args.path}")
     print(f"  {len(rounds)} rounds; "
           + ", ".join(f"{n} {kind}" for kind, n in shapes.items()))
+    pilots = [r["round_id"] for r in rounds if season.is_pilot(r)]
+    if pilots:
+        # Said out loud: a pilot is a published round that no board counts.
+        print(f"  {len(pilots)} unscored pilot(s), on no board: "
+              + ", ".join(pilots))
     return 0
 
 

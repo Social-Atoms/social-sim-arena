@@ -928,6 +928,9 @@ const typeWord = t => t==='llm' ? 'LLM' : t==='baseline' ? 'Baseline' : t==='par
 const initOf = id => INITIALS[id] || String(id).slice(0,2).toUpperCase();
 
 const esc = s => { const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; };
+// An unscored pilot round (`scored: false`, ssa/season.is_pilot): shown like any question, counted on no
+// board. Its scores arrive as `pilot_scores`, never `scores`, so no sum on this page can pick them up.
+const pilotTag = r => (r && r.scored===false) ? '<span class="replay-tag" title="'+esc(r.pilot||'')+'">pilot, unscored</span>' : '';
 const attr = s => esc(s).replace(/"/g,'&quot;');   // for attribute values
 const fmtCountdown = ms => {
   if(ms<=0) return 'locked';
@@ -950,13 +953,14 @@ function submissionLink(track){
   return 'submit.html';
 }
 
-/* Subject first, answer shape second. The four groups are the public task map;
+/* Subject first, answer shape second. The groups are the public task map;
    each task then names its population and its own scoring shape. */
 const TASK_GROUPS = [
   {id:'opinion', label:'Public opinion', short:'approval + elections'},
   {id:'sentiment', label:'Sentiment & expectations', short:'consumers + investors'},
   {id:'population', label:'Population profiles', short:'subgroups jointly'},
   {id:'attention', label:'Collective attention', short:'search + reading ranks'},
+  {id:'urban', label:'Urban life', short:'travel + calls + housing'},
 ];
 const CIVIQS_PROFILE_CELLS = [
   'civiqs_net_approval_dem','civiqs_net_approval_ind','civiqs_net_approval_rep',
@@ -978,6 +982,16 @@ const YOUGOV_PROFILE_CELLS = [
 ];
 const TREND_CELLS = ['trends_share_tesla','trends_share_iphone','trends_share_samsung','trends_share_netflix','trends_share_disney'];
 const TASKS = {
+  seattle_calls_weekly:{chart:'seattle_calls_weekly',unit:"calls per Monday-to-Sunday week (distinct CAD events)",match:r=>r.series==='seattle_calls_weekly'},
+  nyc311_requests_weekly:{chart:'nyc311_requests_weekly',unit:"service requests per Monday-to-Sunday week",match:r=>r.series==='nyc311_requests_weekly'},
+  mta_subway_weekly:{chart:'mta_subway_weekly',unit:"riders per Monday-to-Sunday week (MTA estimated subway ridership)",match:r=>r.series==='mta_subway_weekly'},
+  tsa_checkpoint_weekly:{chart:'tsa_checkpoint_weekly',unit:"travelers screened per Monday-to-Sunday week",match:r=>r.series==='tsa_checkpoint_weekly'},
+  sg_coe_premium_cat_a:{chart:'sg_coe_premium_cat_a',unit:"Singapore dollars (S$)",match:r=>r.series==='sg_coe_premium_cat_a'},
+  sg_taxi_free_downtown_fri2300:{chart:'sg_taxi_free_downtown_fri2300',unit:"taxis available for hire",match:r=>r.series==='sg_taxi_free_downtown_fri2300'},
+  sg_hdb_occ_clementi_sat2000:{chart:'sg_hdb_occ_clementi_sat2000',unit:"percent of car lots occupied",match:r=>r.series==='sg_hdb_occ_clementi_sat2000'},
+  sg_pv_train_ew24ns1_weekday_tapin:{chart:'sg_pv_train_ew24ns1_weekday_tapin',unit:"tap-ins per weekday (average, public holidays excluded)",match:r=>r.series==='sg_pv_train_ew24ns1_weekday_tapin'},
+  sg_pv_bus_22009_weekday_tapin:{chart:'sg_pv_bus_22009_weekday_tapin',unit:"boardings per weekday (average, public holidays excluded)",match:r=>r.series==='sg_pv_bus_22009_weekday_tapin'},
+  urban_sce_moving:{kind:'profile',chart:'sce_moving_national',cells:['sce_moving_age_under_40', 'sce_moving_age_40_60', 'sce_moving_age_over_60', 'sce_moving_income_under_50k', 'sce_moving_income_50_100k', 'sce_moving_income_over_100k', 'sce_moving_region_west', 'sce_moving_region_midwest', 'sce_moving_region_south', 'sce_moving_region_northeast'],match:r=>/^sce_moving_/.test(r.series)},
   consumer_sce:{chart:'sce_spending_growth',unit:'%',match:r=>['sce_spending_growth','sce_stock_prices_rise','sce_unemployment_rise'].includes(r.series)},
   ec_consumer:{chart:'ec_cci_eu',unit:' pts',match:r=>['ec_cci_eu','ec_cci_ea'].includes(r.series)},
   consumer_michigan:{chart:'umich_inflation_1y_final',unit:'%',match:r=>/^umich_inflation_1y_/.test(r.series)},
@@ -1036,7 +1050,7 @@ function crpsNormal(mu, sd, y){
 // Where a vendor's model comes from, for the entrant page; a registration's own homepage wins when it names one.
 const VENDOR_HOME={astraculum:['Astraculum','https://astraculum.com'], h2oai:['H2O.ai','https://h2o.ai'], apodex:['Apodex','https://apodex.com'], yulan:['YuLan-OneSim','https://github.com/RUC-GSAI/YuLan-OneSim'], ucsd:['UC San Diego','https://ucsd.edu'],
   claude:['Anthropic','https://www.anthropic.com'], openai:['OpenAI','https://openai.com'], gemini:['Google DeepMind','https://deepmind.google'], grok:['xAI','https://x.ai'], deepseek:['DeepSeek','https://www.deepseek.com'], qwen:['Qwen','https://qwen.ai'], zhipu:['Zhipu AI','https://www.zhipuai.cn'], kimi:['Moonshot AI','https://www.moonshot.ai']};
-const DOMAIN_LABEL={'public-opinion':'Public opinion',consumer:'Sentiment & expectations',attention:'Collective attention',elections:'Elections'};
+const DOMAIN_LABEL={'public-opinion':'Public opinion',consumer:'Sentiment & expectations',attention:'Collective attention',elections:'Elections',urban:'Urban life'};
 function rankChart(traj, id){
   // The entrant's rank at each checkpoint of the backtest, 1 at the top. Drawn at a fixed
   // viewBox; the page scales it. Below two points there is nothing to draw.
@@ -1080,7 +1094,9 @@ function renderEntrant(id){
     const f=r.forecasts[id], t=taskForRound(r), rel=(r.resolution||{}).value;
     // The published score, as on the question and forecast pages; the per-task means below sum it.
     const s=forecastScore(r,id,f);
-    return {r,t,f,rel,err:s.err,crps:s.crps};
+    // An unscored pilot is listed but never summed: its error and CRPS stay out of the per-task means.
+    const unscored=r.scored===false;
+    return {r,t,f,rel,err:unscored?null:s.err,crps:unscored?null:s.crps};
   }).sort((a,b)=>deadlineOf(b.r).localeCompare(deadlineOf(a.r)));
   const pct=(a,b)=>b?Math.round(100*a/b):0;
   // Coverage inside a window: the questions that closed in it, against the ones this entrant answered.
@@ -1214,7 +1230,8 @@ function roundKind(r){ return r.target_type==='profile_energy'?'profile':r.targe
 // the published 5.52 on umich-2026-08-prelim, once shown on two pages of the same site).
 function forecastScore(r, entrantId, f){
   const kind=roundKind(r), metric=kind==='profile'?'energy':kind==='ranking'?'loss':'crps';
-  const published=(r.scores||{})[entrantId]||null, rel=(r.resolution||{}).value;
+  // A pilot's scores are published as `pilot_scores` (shown on its own page, summed nowhere).
+  const published=(r.scores||(r.scored===false?r.pilot_scores:null)||{})[entrantId]||null, rel=(r.resolution||{}).value;
   const skill=published&&typeof published.skill==='number'?published.skill:null;
   if(kind!=='number') return {kind, metric, err:null, crps:null, skill, score:published&&typeof published[metric]==='number'?published[metric]:null};
   const err=(typeof rel==='number'&&f&&typeof f.mean==='number')?Math.abs(f.mean-rel):null;
@@ -1248,6 +1265,7 @@ function renderQuestion(roundId){
   const st=(data.stamps||{})[r.round_id];
   let h='<div class="eyebrow page-eyebrow">Question'+(o?' '+o.n+' of '+o.of+' on this task':'')+'</div><h2 class="page-title"><a href="#leaderboard/'+esc(key)+'/all">'+esc(t.label)+'</a></h2>'
     +'<p class="lede page-description">'+esc(r.question)+'</p>'
+    +(r.scored===false?'<p class="sub">'+pilotTag(r)+' '+esc(r.pilot||'')+'</p>':'')
     +'<p class="ent-meta">'+state+(key!=='agg'?'<span><a href="#questions/task/'+esc(key)+'">all questions on this task</a></span>':'')+(r.batch_id?'<span><a href="#questions/'+esc(r.batch_id)+'">week of '+esc(fmtDate(r.batch_id.replace('batch-','')))+'</a></span>':'')+'<span>source '+(t.srcUrl?'<a href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span class="dim">'+esc(r.round_id)+'</span></p>';
   if(r.attribution) h+='<p class="sub">'+esc(r.attribution)+'</p>';
   h+='<div class="tiles">'
@@ -2035,7 +2053,7 @@ function renderTaskHeader(data,key){
     return;
   }
   const due=deadlineOf(r), state=active.includes(r)?(key==='agg'?'NEXT TO CLOSE':'OPEN'):'LATEST';
-  document.getElementById('task-question-summary').innerHTML='<span class="replay-tag">'+state+'</span><span class="qtext" title="'+esc(r.round_id)+'">'+esc(questionText(r))+'</span><time datetime="'+esc(due)+'">due '+esc(fmtLocal(due))+'</time>';
+  document.getElementById('task-question-summary').innerHTML='<span class="replay-tag">'+state+'</span>'+pilotTag(r)+'<span class="qtext" title="'+esc(r.round_id)+'">'+esc(questionText(r))+'</span><time datetime="'+esc(due)+'">due '+esc(fmtLocal(due))+'</time>';
   document.getElementById('task-question-body').innerHTML='<p>'+esc(r.question)+'</p><div class="qfoot">'
     +'<span>'+shapeChip(r)+(r.target_type==='profile_energy'?(r.cells||[]).length+' cells':r.target_type==='ranking_list'?'ordered list':'predictive distribution')+'</span>'
     +'<span>releases '+esc(fmtLocal(r.release_at))+'</span><span>'+esc(r.n_forecasts||0)+' forecasts filed</span>'

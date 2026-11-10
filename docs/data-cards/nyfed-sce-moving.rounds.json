@@ -1,0 +1,30 @@
+{
+  "note": "Proposed rounds for card nyfed-sce-moving@v2 (sha256 bd4130d2434db06cd3620aa3d6cef9e92165e08c081c0fe38b31f1f0f2faf676), for a later question batch: not in questions/season0.json. No unscored pilot (card, Lock). First scored round: the November 2026 survey. The December 2026 survey (released early January 2027) follows on the same template once the NY Fed 2027 calendar is copied into tools/generate_rounds.py SCE_RELEASES; its lock is release minus 48 hours at 16:00Z. Times are 11:00 America/New_York in standard time (16:00Z), not the 15:00Z the existing November SCE inflation rounds store (card, sce-capture-bug.md).",
+  "rounds": [
+    {
+      "round_id": "sce-2026-11-moving",
+      "tracker": "ny_fed_sce",
+      "profile_noun": "subgroup",
+      "series": "sce_moving_age_under_40",
+      "cells": [
+        "sce_moving_age_under_40",
+        "sce_moving_age_40_60",
+        "sce_moving_age_over_60",
+        "sce_moving_income_under_50k",
+        "sce_moving_income_50_100k",
+        "sce_moving_income_over_100k",
+        "sce_moving_region_west",
+        "sce_moving_region_midwest",
+        "sce_moving_region_south",
+        "sce_moving_region_northeast"
+      ],
+      "question": "NY Fed Survey of Consumer Expectations, produced by the Federal Reserve Bank of New York from its rotating panel of about 1,300 US household heads: for the November 2026 survey month, the mean reported percent chance that a household head will move to a different primary residence over the next 12 months, in each of ten cells (age under 40, 40-60, over 60; income under $50k, $50-100k, over $100k; region West, Midwest, South, Northeast). Forecast all ten; the profile is scored as one with the energy score. Noise floor per cell (sampling noise m / real movement s, points, 2023-10 to 2026-09): under 40 1.44/0.00, 40-60 0.40/0.97, over 60 0.42/0.87, under $50k 0.52/1.32, $50-100k 1.01/0.54, over $100k 0.00/1.18, West 0.00/1.54, Midwest 0.99/1.25, South 0.40/1.13, Northeast 1.12/0.88. The national mean is shown, not scored. The release date 2026-12-07 is announced on the bank's calendar.",
+      "unit": "percent chance, mean across respondents",
+      "release_at": "2026-12-07T16:00:00Z",
+      "release_estimated": true,
+      "lock_at": "2026-12-05T16:00:00Z",
+      "resolve": "for each of the ten cells, the November 2026 row of the 'Moving expectations Demo' sheet, at full stored precision, in the first frbny-sce-data.xlsx vintage archived under sources/sce/ on or after the release day that carries November 2026 (a release day's <day>.post.xlsx sorts after its morning file). A cell missing, non-numeric or outside 0-100 holds the whole round for a maintainer; no vintage carrying November 2026 by 2026-12-14 cancels it, and it never resolves from a later month. The release date is preannounced on the NY Fed economic-indicators calendar, the hour (11:00 ET, 16:00Z in standard time) is convention, hence release_estimated",
+      "target_type": "profile_energy"
+    }
+  ]
+}

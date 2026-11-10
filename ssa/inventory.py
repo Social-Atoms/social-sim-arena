@@ -158,6 +158,59 @@ INVENTORY = {
             "dates are preannounced on the NY Fed economic-indicators "
             "calendar, which is what §1.1 asks for."),
     },
+    "bls_cpi": {
+        "publisher": "US Bureau of Labor Statistics",
+        "adapter": "ssa/adapters/bls_cpi.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        # Proposed by the track's Data Card (bls-cpi-rent@v3); maintainers
+        # confirm or change it at review. The card's owner approval covers
+        # the question rules, not this verdict.
+        "rights": APPROVED,
+        "evidence": (
+            "Read 2026-11-09. CPI data are a work of the US federal "
+            "government, which has no US copyright (17 U.S.C. section 105); "
+            "that is an inference, as the BLS copyright page "
+            "(https://www.bls.gov/opub/copyright-information.htm) answered "
+            "HTTP 403 to an honest client at 2026-11-09T01:02:44Z and its "
+            "wording is not quoted (card task G4: a person pastes it into the "
+            "PR). Retrieval: the keyless Public Data API v1 "
+            "(https://api.bls.gov/publicAPI/v1/timeseries/data/) is the route "
+            "BLS provides for programs, limited to 25 queries a day; it "
+            "answered HTTP 200 REQUEST_SUCCEEDED at 2026-11-09T01:00:56Z and "
+            "02:04:58Z. www.bls.gov and download.bls.gov answered 403 to the "
+            "same client, so whether the API answers GitHub runners is "
+            "unmeasured: a 403 there means a local courier (lesson 3). "
+            "Attribution: \"Source: U.S. Bureau of Labor Statistics\". FRED "
+            "carries the series but its terms bar archiving, so it is a "
+            "cross-check only."),
+    },
+    "sce_moving": {
+        "publisher": "Federal Reserve Bank of New York",
+        "adapter": "ssa/adapters/sce.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        # Proposed by the track's Data Card (nyfed-sce-moving@v2); maintainers
+        # confirm or change it at review. Same file and licence as `sce`, and
+        # no request of its own: it reads the workbooks `sce` archives.
+        "rights": APPROVED,
+        "evidence": (
+            "Read 2026-11-08 from the archived workbook's own 'License' sheet "
+            "(sources/sce/2026-11-08.xlsx): \"FRBNY grants users, who may be "
+            "individuals or entities, a worldwide, royalty-free, nonexclusive "
+            "right to reproduce, use, and distribute the SCE questions and "
+            "FRBNY-published SCE data, in whole or in part, and to produce, "
+            "reproduce, and distribute work derived from or based on the SCE "
+            "questions and the FRBNY-published SCE data.\" Conditions: no FRBNY "
+            "logo or trademark, no implied endorsement, and the attribution "
+            "carried in ssa/series.py _SCE_MOVING_METHODOLOGY. The licence "
+            "does not address automated retrieval in words; retrieval here is "
+            "the `sce` row's existing daily fetch of the same file, nothing "
+            "new. The NY Fed terms-of-use page could not be read "
+            "(https://www.newyorkfed.org/terms-of-use answered 302 to "
+            "/errors/404 at 2026-11-09T01:06:05Z); a person pasting its "
+            "automated-access sentence into the PR is the card's open G4 task."),
+    },
     "ecbcs": {
         "publisher": "European Commission, DG ECFIN",
         "adapter": "ssa/adapters/ecbcs.py",
@@ -187,6 +240,251 @@ INVENTORY = {
             "calendar (ec.europa.eu/economy_finance/db_indicators/surveys/"
             "documents/calendar/Publication%20dates%202026.pdf), which is "
             "what docs/sources.md section 1.1 asks for."),
+    },
+    "seattle_cad": {
+        "publisher": "Seattle Police Department, City of Seattle Open Data",
+        "adapter": "ssa/adapters/seattle_cad.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        # Proposed by the track's Data Card (seattle-community-calls@v2);
+        # maintainers confirm or change it at review. The card's owner
+        # approval covers the question rules, not this verdict.
+        "rights": APPROVED,
+        "evidence": (
+            "Read 2026-11-08. Dataset metadata "
+            "(https://cos-data.seattle.gov/api/views/33kz-ixgy.json, fetched "
+            "2026-11-08T22:03:57Z): licenseId PUBLIC_DOMAIN, license name "
+            "\"Public Domain\", attribution \"City of Seattle\". City of "
+            "Seattle Open Data Policy OD-1 v1.0, 2016-02-01 "
+            "(https://www.seattle.gov/documents/Departments/Tech/OpenData/"
+            "COS_OpenDataPolicy.pdf), section D: datasets on the portal "
+            "\"shall be made available without registration requirement, "
+            "license requirement or restrictions on their use provided that "
+            "the department may require a third party providing to the public "
+            "any public data set ... to explicitly identify the source and "
+            "version of the public data set, and a description of any "
+            "modifications made\"; section E: \"An open license on a dataset "
+            "signifies there are no restrictions on copying, publishing, "
+            "further distributing, modifying or using the data for a "
+            "noncommercial or commercial purpose.\" Retrieval: the policy "
+            "publishes in machine-readable form for automated discovery and "
+            "names no bot or scraping restriction; reading that as permission "
+            "for keyless SODA queries is an inference, and the portal "
+            "operator's (Tyler/Socrata) platform terms were not read. "
+            "Redistribution is open, so the bodies under `sources/seattle_cad` "
+            "need no blocklist entry; attribution and the snapshot date are "
+            "carried in the source page. No publisher calendar: the series is "
+            "posted daily, so SSA sets and resolves the metric "
+            "(docs/sources.md section 1.1), as stated on "
+            "docs/sources/seattle-police-calls.md. Not yet registered in "
+            "ssa/series.py: the archive runs, the series and rounds wait on "
+            "the maintainer decisions listed in the PR."),
+    },
+    "nyc311": {
+        "publisher": "NYC 311 and the NYC Office of Technology and Innovation, "
+                     "NYC Open Data",
+        "adapter": "ssa/adapters/nyc311.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        # Proposed by the track's Data Card (nyc-311-requests@v2); maintainers
+        # confirm or change it at review, after the card's PERSON TASK (the
+        # NYC.gov Terms of Use read in a browser). The card's owner approval
+        # covers the question rules, not this verdict.
+        "rights": APPROVED,
+        "evidence": (
+            "Read 2026-11-09. Dataset metadata "
+            "(https://data.cityofnewyork.us/api/views/erm2-nwe9.json, fetched "
+            "2026-11-09T00:58:23Z): attribution \"311\", provenance "
+            "\"official\", custom field \"Automation: Yes\", agency OTI, no "
+            "licenseId. NYC Administrative Code \u00a723-502(b): data sets "
+            "\"shall be in a format that permits automated processing\"; "
+            "\u00a723-502(d): \"made available without any registration "
+            "requirement, license requirement or restrictions on their use\", "
+            "provided a third party may be required to \"explicitly identify "
+            "the source and version of the public data set, and a description "
+            "of any modifications\"; \u00a723-503(a): \"reasonable measures to "
+            "maintain bandwidth availability\" (text read on the "
+            "nyc-laws.readthedocs.io mirror; currency against the official "
+            "code unverified). Open gap: the portal Terms of Use "
+            "(www.nyc.gov/html/data/terms.html), the NYC.gov Terms it binds "
+            "users to, and opendata.cityofnewyork.us/faq/ returned Akamai 403 "
+            "to an honest agent at 2026-11-09T01:10-01:11Z and were not routed "
+            "around; a maintainer reads them in a browser before this merges "
+            "to main (card archive_policy, PERSON TASK). If they bar API "
+            "retrieval the manual weekly download (tools/ingest_nyc311.py) "
+            "replaces the automated capture; if they bar archiving, the "
+            "source stops. Cite \"NYC 311 / NYC Open Data, 311 Service "
+            "Requests from 2020 to Present (erm2-nwe9)\" with the snapshot "
+            "date, archive unmodified. No key, no app token, one request a "
+            "day. No publisher calendar: SSA sets and resolves the metric "
+            "(docs/sources.md section 1.1). Not yet registered in "
+            "ssa/series.py; the proposed rounds are in "
+            "docs/data-cards/nyc-311-requests.rounds.json."),
+    },
+    "mta_daily": {
+        "publisher": ("Metropolitan Transportation Authority, on NY Open Data "
+                      "(data.ny.gov, OPEN-NY, operated by NYS ITS)"),
+        "adapter": "ssa/adapters/mta_daily.py",
+        "role": TARGET,
+        "state": PERMISSION_NEEDED,
+        # Not granted. Card mta-subway-weekly@v2 proposes `approved` for its
+        # route B (a person downloads the CSV weekly, the archive is published
+        # with attribution) and `permission-needed` for route A (a scheduled
+        # fetch) until a written answer; maintainers decide at review. Until
+        # then the gate reads `unresolved` and no round can be generated.
+        "rights": UNRESOLVED,
+        "proposed_rights": {"route_b_manual": APPROVED,
+                            "route_a_automated": PERMISSION_NEEDED},
+        "evidence": (
+            "Card mta-subway-weekly@v2, archive_policy, read 2026-11-09. "
+            "OPEN-NY Terms of Use (last modified 2013-03-08; data.ny.gov/api/"
+            "views/77gx-ii52, fetched 2026-11-09T01:01:12Z): preamble 'So long "
+            "as you are not doing anything malicious with NYS data, you may use "
+            "it as you wish, subject to no other requirements'; Contract 'You "
+            "are welcome to freely download and use this Content'. Under "
+            "'Public Participation', scoped 'To the extent OPEN-NY activates a "
+            "module or forum for public comment or the uploading of Content', "
+            "one bullet bars accessing the site 'by using an automated device, "
+            "script, bot, spider, crawler or scraper' -- so automated retrieval "
+            "is unclear and no workflow fetches the file. Dataset metadata "
+            "licenseId null; MTA's own terms (mta.info/open-data) returned 403 "
+            "to the research fetch and were not read. Manual weekly ingest: "
+            "tools/ingest_mta_daily.py. The export URL answered with "
+            "'Sunset: Tue, 22 Dec 2026' and a Deprecation header on "
+            "2026-11-09T00:59:27Z (docs/sources/mta.md)."),
+        "revisit": (
+            "Card person tasks 1 and 2: MTA's own terms read in a browser, and a "
+            "written answer from OpenData@mtahq.org on scheduled download and "
+            "on publishing the archive. A yes to both makes route B `approved` "
+            "and route A a card revision."),
+    },
+    "tsa_volumes": {
+        "publisher": "Transportation Security Administration (DHS), www.tsa.gov",
+        "adapter": "ssa/adapters/tsa_volumes.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        # Not granted. Card tsa-checkpoint-weekly@v2 proposes `approved`;
+        # maintainers decide at review. Until then the gate reads
+        # `unresolved` and no round can be generated.
+        "rights": UNRESOLVED,
+        "proposed_rights": APPROVED,
+        "evidence": (
+            "Card tsa-checkpoint-weekly@v2, archive_policy, read 2026-11-09. "
+            "TSA site notice (https://www.tsa.gov/privacy-policy, fetched "
+            "2026-11-09T01:06:24Z): 'Information presented on the website is "
+            "considered public information and may be distributed or copied.' "
+            "Its only access restriction is against 'attempts ... to defeat or "
+            "circumvent security features', which an honest single fetch does "
+            "not do; no clause against automated access was found. robots.txt "
+            "(User-agent: *) disallows only Drupal system paths, not /travel/ "
+            "(fetched 01:06:01Z). The numbers are a work of the US government "
+            "(17 U.S.C. 105; inferred, the page is not labelled). Daily capture "
+            "of three pages with the arena's User-Agent, never a browser "
+            "User-Agent or a headless browser; a 403 means a local courier "
+            "(docs/sources/tsa.md). The TSA logo is not reused. Not yet "
+            "registered in ssa/series.py."),
+        "revisit": (
+            "A 403 or challenge page from the refresh runners moves the capture "
+            "to a maintainer's Mac (card fallback), which changes no rights."),
+    },
+    # --- Singapore (Urban Track), cards sg-*@v2 -----------------------------
+    # All four rights verdicts are proposed by the approved Data Cards and
+    # are for maintainers to confirm or change at review; the cards' owner
+    # approval covers the question rules, not these verdicts.
+    "sg_coe": {
+        "publisher": "Land Transport Authority, via data.gov.sg",
+        "adapter": "ssa/adapters/sg_coe.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        "rights": APPROVED,
+        "evidence": (
+            "Proposed by card sg-coe-cat-a-premium@v3. Read 2026-11-09. "
+            "Singapore Open Data Licence v1.0 (https://data.gov.sg/open-data-"
+            "licence): \"You can use, access, download, copy, distribute, "
+            "transmit, modify and adapt the datasets, or any derived analyses "
+            "or applications, whether commercially or non-commercially\", on "
+            "condition of the attribution notice and no suggestion of "
+            "endorsement. data.gov.sg API Terms of Service (https://data.gov.sg/"
+            "privacy-and-terms): \"You can use, access, call, command, query or "
+            "request the API, whether commercially or non-commercially\"; \"You "
+            "shall not mis-present or mask your API Client's identity\". "
+            "Dataset d_69b3380ad7e51aff3a7dcc84eba52b8a, managedBy Land "
+            "Transport Authority, keyless; HTTP 200 x3 from the card sandbox. "
+            "Retrieval, use and redistribution are licensed, so the bodies "
+            "under `sources/coe` need no blocklist entry; the notice is on "
+            "docs/sources/singapore-coe.md. The OneMotoring schedule PDF is an "
+            "LTA web page, not a licensed dataset: its dates are cited in "
+            "ssa/adapters/sg_coe.SCHEDULE, the PDF is not committed. Not yet "
+            "registered in ssa/series.py; proposed rounds in "
+            "docs/data-cards/sg-coe-cat-a-premium.rounds.json."),
+    },
+    "sg_taxi": {
+        "publisher": "Land Transport Authority, via data.gov.sg (boundary: URA)",
+        "adapter": "ssa/adapters/sg_taxi.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        "rights": APPROVED,
+        "evidence": (
+            "Proposed by card sg-taxi-downtown-fri2300@v3. Read 2026-11-09: the "
+            "same Singapore Open Data Licence v1.0 and data.gov.sg API Terms of "
+            "Service quoted for sg_coe, covering Taxi Availability "
+            "(d_e25662f1a062dd046453926aa284ba64) and the URA Master Plan 2019 "
+            "Planning Area Boundary (No Sea) (d_4765db0e87b9c86336792efe8a1f7a66), "
+            "keyless; 66 past-minute snapshots returned HTTP 200 to an honest "
+            "User-Agent with no 429. The points carry no vehicle ID; no "
+            "personal data was seen. SSA sets and resolves the metric "
+            "(docs/sources.md section 1.1), as stated in every round. Archive "
+            "`sources/lta-rt/taxi`, boundary pinned under `sources/sg-ref`; "
+            "redistribution is licensed, no blocklist entry. GitHub runners "
+            "untested: a 403 or 429 there means a local courier (lesson 3)."),
+    },
+    "sg_carpark_hdb": {
+        "publisher": "Housing & Development Board, via data.gov.sg (boundary: URA)",
+        "adapter": "ssa/adapters/sg_carpark.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        "rights": APPROVED,
+        "evidence": (
+            "Proposed by card sg-hdb-carpark-clementi-sat2000@v3. Read "
+            "2026-11-09: the Singapore Open Data Licence v1.0 and data.gov.sg "
+            "API Terms of Service quoted for sg_coe, covering Carpark "
+            "Availability (d_ca933a644e55d34fe21f28b8052fac63), HDB Carpark "
+            "Information (d_23f946fa557947f93a8043bbef41dd09) and the URA "
+            "boundary, keyless; carpark codes and counts only, no personal "
+            "data. SSA sets and resolves the metric. Archive "
+            "`sources/lta-rt/carpark-hdb`, the attribute table and boundary "
+            "pinned under `sources/sg-ref`; no blocklist entry. Mall carparks "
+            "(DataMall, key required) are out of scope."),
+    },
+    "sg_lta_pv": {
+        "publisher": "Land Transport Authority, LTA DataMall",
+        "adapter": "ssa/adapters/sg_lta_pv.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        "rights": APPROVED,
+        "evidence": (
+            "Proposed by cards sg-lta-pv-train-jurong-east@v3 and "
+            "sg-lta-pv-bus-boon-lay-int@v3 (one row and one key for both). "
+            "AccountKey access verified 2026-11-10; August–October train and bus "
+            "files archived. Independent continuous capture steps configured in "
+            "refresh.yml, requiring the LTA_API_KEY repository secret. "
+            "API Terms of Service (datamall.lta.gov.sg/"
+            "content/datamall/en/api-terms-of-service.html, read 2026-11-09): "
+            "\"Use of the datasets is governed by the Singapore Open Data "
+            "Licence\"; \"you can use, access, call, command, query or request "
+            "the API, whether commercially or non-commercially\"; cl. 10(b) "
+            "keep credentials confidential. Unclear scope (lesson 10): the "
+            "DataMall website Terms of Use cl. 5, 21 and 23 restrict "
+            "reproduction of the website's Contents; the cards read them as "
+            "covering the site's own pages, not licensed datasets, which is "
+            "an inference a maintainer may confirm with LTA (question drafted "
+            "in revision 2, not sent). Both capture kinds are now configured "
+            "in refresh.yml."),
+        "revisit": (
+            "Keep LTA_API_KEY configured and confidential; watch the monthly "
+            "release and archive within the three-month retention period. "
+            "No unscored pilots: first proposed scored target December 2026; "
+            "publication on main remains pending review."),
     },
     "wikipedia": {
         "publisher": "Wikimedia Foundation",
