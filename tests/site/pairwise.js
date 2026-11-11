@@ -361,5 +361,55 @@ assert(els['pairwise-table'].hidden);assert(!els['legacy-leaderboard'].hidden);
 window.__ranking='pairwise';window.__tab='civiqs-approval';renderBoard('all');
 assert(els['pairwise-controls'].hidden);assert(els['pairwise-table'].hidden);
 assert.deepEqual(leaks(els),[]);
-console.log('pairwise calculation, cohort/window switching, and page rendering pass');
+
+// Closing boundary is inclusive, based on lock rather than release/settlement.
+{
+  const scores={a:sc(1),b:sc(2)};
+  const rr=[{...round('last',scores,'2026-11-15T14:00:00Z'),release_at:'2026-12-20T00:00:00Z'},
+    round('next',scores,'2026-11-15T14:00:01Z'),
+    {...round('pending',{},'2026-11-15T14:00:00Z'),status:'awaiting_resolution'}];
+  assert.deepEqual(build(rr,'s0').round_ids,['last']);
+  assert.deepEqual(build(rr,'all').round_ids.sort(),['last','next']);
+  assert.equal(build(rr,'s0').trajectory.at(-1).date,'2026-12-20');
+  assert.equal(build(rr,'s0').entries[0].pairwise,100);
+  const config=JSON.parse(fs.readFileSync(path.join(root,'registry/season0.json'),'utf8'));
+  assert.deepEqual([...pw.foundingEntrants],config.founding_entrant_ids);
+  for(const id of config.founding_entrant_ids)assert(pw.isFoundingEntrant(id));
+  assert(pw.isFoundingEntrant('vac-combined'));
+  for(const id of ['xumi','anon-a1','anonymous-combined','gpt-5.6-luna-web'])assert(!pw.isFoundingEntrant(id));
+  assert.equal(typeWord('participant','xumi'),'Participant');
+  assert.equal(typeWord('participant','apodex-futureflow'),'Season 0 founding entrant');
+  assert.equal(typeWord('baseline','persistence'),'Baseline');
+  assert.equal(pw.inSeason0({lock_at:config.until}),true);
+  assert.equal(pw.inSeason0({lock_at:'2026-11-15T14:00:01Z'}),false);
+}
+// Formal dispositions affect S0 only, and task curves share their board window.
+{
+  const scores={a:sc(1),b:sc(2)};
+  const rr=[round('keep',scores),round('disposed',scores)];
+  const data={rounds:rr,season0_main:{dispositions:[{round_id:'disposed',status:'cancelled'}]}};
+  assert.deepEqual(pw.build(data,{scope:'s0',roster}).round_ids,['keep']);
+  assert.equal(pw.build(data,{scope:'all',roster}).scored_rounds,2);
+  const task='closeout_fixture'; TASKS[task]={match:r=>r.series===task};
+  const shaped=[{...round('last',{a:{energy:1,skill:.5}},'2026-11-15T14:00:00Z'),series:task,target_type:'profile_energy'},
+    {...round('next',{a:{energy:20,skill:-9}},'2026-11-15T14:00:01Z'),series:task,target_type:'profile_energy'}];
+  assert.equal(liveTrajectory({rounds:shaped},task,'s0').length,1);
+  assert.equal(scopedShapeBoard({rounds:shaped},task,'s0','energy')[0].mean_energy,1);
+  assert.equal(scopedShapeBoard({rounds:shaped},task,'all','energy')[0].mean_energy,10.5);
+  delete TASKS[task];
+}
+// Exercise the actual range-button callback: update board mode before chart rendering.
+{
+  const query=document.querySelectorAll, oldTab=setTab, oldBoard=renderBoard;
+  const buttons=[0,-1].map(range=>({dataset:{range:String(range)},classList:{toggle(){}}}));
+  document.querySelectorAll=selector=>selector==='#range-seg [data-range]'?buttons:[];
+  const handler=script.match(/document.querySelectorAll\('#range-seg \[data-range\]'\)\.forEach\(b=> b.onclick = \(\)=>\{[\s\S]*?\n\}\);/)[0];
+  vm.runInThisContext(handler);
+  const seen=[];
+  setTab=()=>seen.push(window.__board);renderBoard=mode=>{window.__board=mode;};
+  window.__data=published;window.__board='all';buttons[1].onclick();buttons[0].onclick();
+  assert.deepEqual(seen,['s0','all']);
+  document.querySelectorAll=query;setTab=oldTab;renderBoard=oldBoard;
+}
+console.log('pairwise calculation, closeout boundaries, identity labels, scopes and rendering pass');
 process.exit(0);
