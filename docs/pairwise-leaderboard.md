@@ -155,3 +155,35 @@ observed loss or skill, never average the six scores, and count at most one
 answer/opponent/Top 3 credit for the team per question. Registration must be
 approved separately; defining this group does not itself admit its accounts.
 Vac's existing overlap error remains unchanged.
+
+## Season 0 closeout (11 November 2026)
+
+S0 uses the inclusive lock window **30 September 2026 00:00 UTC through
+15 November 2026 14:00 UTC**, the last three YouGov deadlines (22:00 Beijing).
+A later release/settlement remains in S0 when its lock belongs to that window.
+Later locks and already filed future submissions remain in All. The fixed
+24-method eligibility and Common's all-history intersection are unchanged.
+
+After answering closes the ranking is preliminary and continues updating as
+outcomes arrive. Pending questions do not enter the scored-question denominator;
+this does not change the zero for missing answers on a comparable scored question.
+`season0_main` publishes the window, phase and per-question pending list. A missing
+baseline or `scoreable:false` does not silently dispose of a question.
+
+The first post-close refresh saves `site/seasons/season0/preliminary.json`, once.
+It stores the exact public scores, registry/retirement state, both metrics and
+input hash; no forecast/receipt is copied. Final publication requires explicit
+organizer sign-off in `registry/season0.json`, official certification evidence
+URLs for both election questions, and every S0 question scored or explicitly
+cancelled/withdrawn with a reason, evidence and approver. Reaching a date or
+having no currently scoreable pending question is not final approval. The final
+snapshot is also write-once. `python tools/publish_season0.py` performs this
+publication offline, without source, model or participant calls.
+
+Founding status belongs only to the ten original registered team accounts
+listed in `registry/season0.json` (Apodex, H2O.ai, Vac/Astraculum, YuLan and
+ZhengZheng), plus the derived Vac combined row. Later participants, including
+xumi and Anonymous, are labelled Participant. Model/baseline labels are unchanged.
+The identity evidence is Chance's founding-label commit
+`0cab3e860ce985de5dad425f4940366f3e32a6f1`; team identity is distinct from the
+24-method scoring cohort.

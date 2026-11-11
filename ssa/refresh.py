@@ -31,6 +31,7 @@ from . import season as season_rules
 from . import series as series_registry
 from . import task_registry
 from . import urban
+from . import season0
 from . import entrant_status
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -2095,10 +2096,11 @@ NOT_A_COMPETITOR = BASELINE_IDS | HOUSE_TEST_IDS
 # the first lock after the last of the current teams registered (YuLan-OneSim,
 # 2026-09-28; h2oai-marina, 2026-09-29). From here every team was able to answer
 # every round, so the board compares everyone on the same questions.
-SEASON0_MAIN_START = "2026-09-30T00:00:00Z"
+SEASON0_MAIN_START = season0.load()["since"]
+SEASON0_MAIN_END = season0.load()["until"]
 
 
-def build_main_board(rounds, start=SEASON0_MAIN_START):
+def build_main_board(rounds, start=SEASON0_MAIN_START, end=SEASON0_MAIN_END, now=None):
     """One board over every shape since `start`, on the shared unit: skill.
 
     Number, profile and ranking rounds are scored by different rules, but each
@@ -2109,7 +2111,7 @@ def build_main_board(rounds, start=SEASON0_MAIN_START):
     rather than silently dropped from it.
     """
     scored = [r for r in rounds
-              if r.get("lock_at", "") >= start and r.get("scores")
+              if season0.in_window(r, start, end) and r.get("scores")
               and not season_rules.is_pilot(r)]
     per, crps = {}, {}
     for r in scored:
@@ -2131,7 +2133,8 @@ def build_main_board(rounds, start=SEASON0_MAIN_START):
                 "crps_rounds": len(crps.get(e, []))}
                for e, v in per.items()]
     entries.sort(key=lambda x: -x["mean_skill"])
-    return {"since": start, "scored_rounds": len(scored),
+    config = dict(season0.load(), since=start, until=end)
+    return {**season0.metadata(rounds, now, config), "scored_rounds": len(scored),
             "round_ids": [r["round_id"] for r in scored], "entries": entries}
 
 
@@ -3296,6 +3299,7 @@ def main():
     }
     # Last gate before a public artifact. See `assert_site_contract`.
     assert_site_contract(data["rounds"])
+    season0.publish_artifacts(data)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, "w") as f:
         json.dump(data, f, indent=1)

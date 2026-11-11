@@ -37,6 +37,23 @@
     'persistence', 'trend', 'ewma', 'climatology', 'crowd'
   ]);
   const season0Eligible = new Set(SEASON0_METHODS);
+  const SEASON0_SINCE = '2026-09-30T00:00:00Z';
+  const SEASON0_UNTIL = '2026-11-15T14:00:00Z';
+  const FOUNDING_ENTRANTS = Object.freeze([
+    'apodex-futureflow','h2oai-superagent','h2oai-marina','worldvac-base',
+    'vac-public-opinion','vac-sentiment-expectations','vac-population-profiles',
+    'vac-collective-attention','yulan-onesim','zhengzheng-agent'
+  ]);
+  function inSeason0(r, data = {}) {
+    const meta = data.season0_main || {};
+    if ((meta.dispositions || []).some(d => d.round_id === r.round_id)) return false;
+    return (meta.since || SEASON0_SINCE) <= (r.lock_at || '') &&
+      (r.lock_at || '') <= (meta.until || SEASON0_UNTIL);
+  }
+  function isFoundingEntrant(id) {
+    return id === 'vac-combined' || FOUNDING_ENTRANTS.includes(id);
+  }
+
 
   function lossOf(score) {
     if (!score) return null;
@@ -50,6 +67,7 @@
     const registered = new Map((data.entrants || []).map(e => [e.entrant_id, e]));
     const answered = new Set();
     for (const r of data.rounds || []) {
+      if (scope === 's0' && !inSeason0(r, data)) continue;
       if (r.status && r.status !== 'resolved') continue;
       for (const [id, score] of Object.entries(r.scores || {})) {
         if (lossOf(score) !== null) answered.add(id);
@@ -93,12 +111,16 @@
     if (!['mixed', 'external'].includes(field) || !['all', 's0', 'matched'].includes(scope)) {
       throw new Error('Unknown pairwise field or question window');
     }
+    const closed = data.season0_main || {};
+    if(scope === 's0' && field === 'mixed' && closed.phase === 'final' && closed.frozen_standings)
+      return JSON.parse(JSON.stringify(closed.frozen_standings));
     const roster = options.roster || rosterOf(data, field, scope);
     const ids = roster.map(m => m.id), accounts = roster.flatMap(m => m.members || [m.id]);
     if (new Set(ids).size !== ids.length || new Set(accounts).size !== accounts.length) {
       throw new Error('An account cannot occupy two comparison slots');
     }
-    const since = (data.season0_main || {}).since || '2026-09-30T00:00:00Z';
+    const since = (data.season0_main || {}).since || SEASON0_SINCE;
+    const until = (data.season0_main || {}).until || SEASON0_UNTIL;
     const acc = new Map(ids.map(id => [id, {answered: 0, points: 0, top3: 0, skill: 0, skillN: 0, crps: 0, crpsN: 0}]));
     const roundIds = [], candidates = [], seen = new Set(), trajectory = [];
     let excluded = 0;
@@ -108,7 +130,7 @@
       dateOf(a).localeCompare(dateOf(b)) || String(a.round_id).localeCompare(String(b.round_id)));
     for (const r of rounds) {
       if (!r.scores || (r.status && r.status !== 'resolved')) continue;
-      if (scope === 's0' && (!r.lock_at || r.lock_at < since)) continue;
+      if (scope === 's0' && !inSeason0(r, data)) continue;
       if (seen.has(r.round_id)) throw new Error('Duplicate scored question: ' + r.round_id);
       seen.add(r.round_id);
       const scores = new Map();
@@ -168,8 +190,8 @@
       if (rankValue - entries[i].pairwise > 1e-9) { rank = i + 1; rankValue = entries[i].pairwise; }
       entries[i].rank = rank;
     }
-    return {field, scope, since, entries, trajectory, scored_rounds: n, round_ids: roundIds,
+    return {field, scope, since, until, entries, trajectory, scored_rounds: n, round_ids: roundIds,
       comparable_rounds: candidates.length, excluded_rounds: excluded, methods: roster.length};
   }
-  return {build, lossOf, rosterOf, external: EXTERNAL, season0Methods: SEASON0_METHODS};
+  return {build, lossOf, rosterOf, external: EXTERNAL, season0Methods: SEASON0_METHODS, inSeason0, isFoundingEntrant, foundingEntrants: FOUNDING_ENTRANTS};
 });
