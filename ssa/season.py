@@ -14,7 +14,8 @@ turns a candidate into an approved round.
 import re
 from datetime import datetime, timedelta, timezone
 
-from . import inventory, profile_round, ranking_round
+from . import baselines, consumer_round, inventory, profile_round, ranking_round
+from . import urban
 from .series import SERIES
 
 TARGET_TYPES = {"continuous_normal", "profile_energy", "ranking_list"}
@@ -31,10 +32,16 @@ SPECIAL_SERIES_SOURCE = {
     "generic_ballot_margin": "certified_election_results",
     "house_seats": "certified_election_results",
     "wiki_top10_en": "wikipedia",
+    "netflix_us_top10": "consumer_netflix",
+    "acsi_company_scores": "acsi",
+    **{sid: consumer_round.SOURCE_KEYS[source]
+       for sid, source in consumer_round.SERIES_SOURCE.items()},
 }
 RANKING_KIND_SOURCE = {
     "wiki_top10": "wikipedia",
     "trends_basket": "trends_basket",
+    "nyt_bestsellers": "consumer_nyt",
+    "steam_weekly": "consumer_steam",
 }
 
 # Rounds hand-reviewed and frozen before the source inventory acquired a rights
@@ -72,6 +79,44 @@ _RESOLUTION_ANCHOR = re.compile(
 )
 
 
+# An unscored pilot round (Urban Track, owner decision G3: every new source
+# runs >= 2 of them before its first scored lock). It is posted, locked,
+# sealed, resolved and shown like any other round, and enters no board, no
+# skill mean and no paper-facing count: `refresh` files its per-entrant scores
+# under `pilot_scores`, never `scores`, so every aggregate that reads `scores`
+# -- the server's boards and the site's own sums -- skips it by construction.
+#
+# Two optional fields, closed: `scored` is absent (an ordinary round) or
+# exactly `false`, and `pilot` is the short note the site prints beside the
+# label, present exactly when `scored` is false. `scored: true` is refused
+# rather than accepted as a synonym, so there is one spelling of "ordinary".
+PILOT_NOTE_MAX = 500
+
+
+def is_pilot(round_data):
+    """True for an unscored pilot round (`scored: false`)."""
+    return isinstance(round_data, dict) and round_data.get("scored") is False
+
+
+def _pilot_problems(round_data):
+    rid = round_data.get("round_id", "?")
+    if "scored" not in round_data:
+        if "pilot" in round_data:
+            return [f"{rid}: `pilot` is set but `scored` is not false; an "
+                    "unscored pilot sets both"]
+        return []
+    if round_data["scored"] is not False:
+        return [f"{rid}: `scored` may only be false (an unscored pilot); "
+                "omit it for an ordinary round"]
+    note = round_data.get("pilot")
+    if not isinstance(note, str) or not note.strip():
+        return [f"{rid}: an unscored pilot needs a non-empty `pilot` note"]
+    if len(note) > PILOT_NOTE_MAX:
+        return [f"{rid}: `pilot` note is {len(note)} characters; keep it under "
+                f"{PILOT_NOTE_MAX}, the site prints it beside the label"]
+    return []
+
+
 def _timestamp(value):
     if not isinstance(value, str) or not STAMP.fullmatch(value):
         raise ValueError("must be UTC at second precision with a trailing Z")
@@ -94,6 +139,10 @@ def source_for(round_data):
     """The audited source key for one round, raising when it is unknowable."""
     target = round_data.get("target_type")
     rid = round_data.get("round_id", "?")
+    if "consumer" in round_data:
+        return consumer_round.source_for(round_data)
+    if round_data.get("series") in consumer_round.SERIES_SOURCE:
+        raise ValueError(f"{rid}: consumer target requires its period and vintage contract")
     if target == "ranking_list":
         kind = (round_data.get("ranking") or {}).get("kind")
         source = RANKING_KIND_SOURCE.get(kind)
@@ -127,6 +176,10 @@ def source_for(round_data):
 def target_key(round_data):
     """Identity of the scored observation, independent of ``round_id``."""
     target = round_data["target_type"]
+    if "consumer" in round_data:
+        spec = consumer_round.spec_for(round_data)
+        return (target, round_data["series"], spec["reference_date"],
+                spec.get("product_id"), spec.get("list_name"), spec.get("country"))
     if target == "profile_energy":
         identity = tuple(sorted(round_data.get("cells") or ()))
         release = round_data.get("release_at", "")[:10]
@@ -166,6 +219,13 @@ def _shape_problems(round_data):
                 problems.append(f"{rid}: ranking round also carries `cells`")
         else:
             problems.append(f"{rid}: unknown target_type {target!r}")
+        # The ranked zero point is a closed spec (ssa/baselines.normalize_spec):
+        # an unknown key, family or spread rule is a publication problem here,
+        # not a crash at the first refresh after the round goes live.
+        if "zero_point" in round_data:
+            baselines.normalize_spec(round_data["zero_point"], rid)
+            if target != "continuous_normal":
+                problems.append(f"{rid}: zero_point applies to scalar rounds only")
     except (KeyError, TypeError, ValueError) as err:
         problems.append(str(err))
     return problems
@@ -209,6 +269,30 @@ def _schedule_problem(round_data, source):
         return f"{rid}: invalid schedule: {err}"
     if lock >= release:
         return f"{rid}: invalid schedule: lock_at must be before release_at"
+    if "consumer" in round_data:
+        try:
+            consumer_round.spec_for(round_data)
+        except (KeyError, TypeError, ValueError) as err:
+            return f"{rid}: invalid consumer contract: {err}"
+        return None
+
+    # Urban Track sources whose card fixes its own clock (ssa/urban.py), one
+    # rule per source, each citing its card -- the Wikipedia exception's
+    # pattern, made exact: the measured period is read from the round id and
+    # the lock and release must be the card's instants for it, to the second.
+    #   behavioural weeks (Seattle, NYC 311, MTA, TSA): lock Sunday 23:59
+    #     local before the week starts, release when the card's resolution
+    #     window opens, days after it ends;
+    #   SSA-defined real-time metrics (taxi, carpark): lock 48 h before the
+    #     target minute, which is the release;
+    #   early locks by design: COE locks 1 h before bidding opens (the running
+    #     price is public once it does), LTA passenger volume locks the day
+    #     before the month starts.
+    # A source without such a rule (CPI rent, SCE moving) keeps the default.
+    rule = urban.get(source)
+    if rule is not None and rule.has_schedule:
+        why = rule.schedule_problem(round_data)
+        return f"{rid}: invalid schedule: {why}" if why else None
 
     try:
         measured = _behavior_week(round_data, source)
@@ -273,6 +357,7 @@ def validate_document(document):
             ids[rid] = index
 
         problems.extend(_shape_problems(round_data))
+        problems.extend(_pilot_problems(round_data))
         if round_data.get("target_type") not in TARGET_TYPES:
             continue
         try:

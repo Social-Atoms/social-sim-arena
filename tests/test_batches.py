@@ -169,7 +169,14 @@ def test_the_real_season_splits_into_weekly_batches():
     # lock before it starts, which is a property of those questions.
     two_day = sum(1 for h in horizons if abs(h - 2.0) < 0.05)
     assert two_day > len(rounds) * 0.75, two_day
-    assert max(horizons) < 40, max(horizons)
+    # Monthly LTA behavior locks before the target month; release is on the
+    # following month's 10th, so its horizon can exceed 40 days.
+    for r in rounds:
+        if r['tracker'] == 'sg_lta_pv':
+            from ssa.adapters import sg_lta_pv
+            assert r['lock_at'] == sg_lta_pv.sg_common.iso(sg_lta_pv.lock_instant(r['round_id'][-7:]))
+        else:
+            assert batches.horizon_days(r['lock_at'], r['release_at']) < 40, r['round_id']
     governed = [r for r in rounds if batches.governed_by_batch(r["lock_at"])]
     print(f"ok test_the_real_season_splits_into_weekly_batches "
           f"({two_day}/{len(rounds)} at a 48-hour horizon, "

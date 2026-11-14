@@ -237,6 +237,11 @@ def question_from_round(round_data):
             lock_at, _require(round_data, "release_at")), 3),
         "resolve": _require(round_data, "resolve"),
     }
+    # An unscored pilot says so to the participant, verbatim; an ordinary
+    # round's question carries neither key, so its bundle is unchanged.
+    if round_data.get("scored") is False:
+        question["scored"] = False
+        question["pilot"] = _require(round_data, "pilot")
     if target == PROFILE_TARGET_TYPE:
         cells = round_data.get("cells")
         if not cells:
@@ -245,6 +250,8 @@ def question_from_round(round_data):
                 "`cells`; the energy score is over the whole vector, so a "
                 "roster nobody published is a round nobody can answer")
         question["cells"] = list(cells)
+    if "consumer" in round_data:
+        question["consumer"] = dict(round_data["consumer"])
     if target == RANKING_TARGET_TYPE:
         spec = round_data.get("ranking") or {}
         length = spec.get("length") or len(spec.get("items") or [])
@@ -253,6 +260,10 @@ def question_from_round(round_data):
                 f"ranking round '{question['round_id']}' names neither a "
                 "`ranking.length` nor an item basket")
         question["ranking_length"] = length
+        if "consumer" in round_data:
+            from . import ranking_round
+            question["item_format"] = ranking_round.question_universe(
+                ranking_round.spec_for(round_data))
         if spec.get("items"):
             question["items"] = list(spec["items"])
         elif spec.get("exclusions"):

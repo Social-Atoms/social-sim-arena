@@ -101,7 +101,11 @@ def build_manifest(round_id, lock_at, forecasts_dir=None, locks_dir=None):
             continue
         with open(os.path.join(fdir, name)) as f:
             entries[name[:-5]] = canonical_sha256(json.load(f))
-    lock_file = os.path.join(locks_dir or LOCKS, f"{round_id}.json")
+    if locks_dir is None and round_id.startswith("consumer-"):
+        from . import consumer
+        lock_file = str(consumer.DEFAULT_ARCHIVE / "locks" / f"{round_id}.json")
+    else:
+        lock_file = os.path.join(locks_dir or LOCKS, f"{round_id}.json")
     lock_hash = None
     if os.path.exists(lock_file):
         with open(lock_file) as f:

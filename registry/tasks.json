@@ -3,6 +3,178 @@
   "note": "The one place a task is described: what the site shows in a task header and on a question card, and which series ids belong to it. Edit here; refresh.py publishes it as data.tasks and the site reads that. Order is display order; the site matches a round against tasks in this order, first match wins.",
   "tasks": [
     {
+      "id": "consumer_sce",
+      "label": "Household spending and market expectations",
+      "group": "sentiment",
+      "domain": "consumer",
+      "population": "US household heads",
+      "cadence": "monthly, on the New York Fed calendar",
+      "question_type": "number",
+      "unit": "%",
+      "source": {
+        "name": "New York Fed SCE",
+        "url": "https://www.newyorkfed.org/microeconomics/sce"
+      },
+      "match": {
+        "series": [
+          "sce_spending_growth",
+          "sce_stock_prices_rise",
+          "sce_unemployment_rise"
+        ]
+      },
+      "status": "active",
+      "note": "Three measures: expected spending growth, higher-stock-price probability and higher-unemployment probability."
+    },
+    {
+      "id": "ec_consumer",
+      "label": "EU consumer confidence",
+      "group": "sentiment",
+      "domain": "consumer",
+      "population": "EU and euro-area consumers",
+      "cadence": "monthly; flash a week before month end",
+      "question_type": "number",
+      "unit": " pts",
+      "source": {
+        "name": "European Commission, DG ECFIN",
+        "url": "https://economy-finance.ec.europa.eu/economic-forecast-and-surveys/business-and-consumer-surveys_en"
+      },
+      "match": {
+        "series": [
+          "ec_cci_eu",
+          "ec_cci_ea"
+        ]
+      },
+      "status": "active",
+      "note": "Consumer confidence indicator, seasonally adjusted balance. Rounds lock before the flash and score the first print in the full release. Credit: European Commission, DG ECFIN, Business and Consumer Surveys."
+    },
+    {
+      "id": "consumer_michigan",
+      "label": "Michigan inflation expectations",
+      "group": "sentiment",
+      "domain": "consumer",
+      "population": "US survey households",
+      "cadence": "monthly preliminary and final releases",
+      "question_type": "number",
+      "unit": "%",
+      "source": {
+        "name": "University of Michigan",
+        "url": "https://www.sca.isr.umich.edu/"
+      },
+      "match": {
+        "series": [
+          "umich_inflation_1y_preliminary",
+          "umich_inflation_1y_final"
+        ]
+      },
+      "status": "permission-needed",
+      "note": "Registered; on hold until the Surveys of Consumers team confirms the requested use. No new questions open for this source. The existing Michigan sentiment track is unchanged."
+    },
+    {
+      "id": "consumer_mint",
+      "label": "US Mint weekly net sales",
+      "group": "sentiment",
+      "domain": "consumer",
+      "population": "Buyers of an eligible fixed-supply product",
+      "cadence": "weekly, through Sunday",
+      "question_type": "number",
+      "unit": "units",
+      "source": {
+        "name": "United States Mint",
+        "url": "https://www.usmint.gov/about/production-sales-figures/cumulative-sales"
+      },
+      "match": {
+        "series": [
+          "mint_weekly_net_sales"
+        ]
+      },
+      "status": "preparing",
+      "note": "Registered. Manual official reports and an eligible product with sufficient weekly history are required before questions open."
+    },
+    {
+      "id": "consumer_nyt",
+      "label": "NYT Best Sellers",
+      "group": "attention",
+      "domain": "consumer",
+      "population": "Purchases represented in the Hardcover Fiction list",
+      "cadence": "weekly",
+      "question_type": "ranking",
+      "unit": "ordered ISBN editions",
+      "source": {
+        "name": "The New York Times",
+        "url": "https://developer.nytimes.com/docs/books-product/1/overview"
+      },
+      "match": {
+        "series": [
+          "nyt_bestsellers"
+        ]
+      },
+      "status": "preparing",
+      "note": "Registered. Official API access and an evidenced sales/publication window are required before questions open. Data provided by The New York Times."
+    },
+    {
+      "id": "consumer_steam",
+      "label": "Steam Weekly Top Sellers",
+      "group": "attention",
+      "domain": "consumer",
+      "population": "US Steam purchasing activity",
+      "cadence": "weekly, Tuesday 1 a.m. Pacific",
+      "question_type": "ranking",
+      "unit": "ordered store IDs",
+      "source": {
+        "name": "Steam",
+        "url": "https://store.steampowered.com/charts/topsellers/US"
+      },
+      "match": {
+        "series": [
+          "steam_weekly_top_sellers"
+        ]
+      },
+      "status": "preparing",
+      "note": "Registered. Authenticated official API access and the measurement window must be configured before questions open. Data from Steam."
+    },
+    {
+      "id": "consumer_netflix",
+      "label": "Netflix Top 10",
+      "group": "attention",
+      "domain": "consumer",
+      "population": "Netflix viewers in the United States",
+      "cadence": "weekly",
+      "question_type": "ranking",
+      "unit": "ordered titles or seasons",
+      "source": {
+        "name": "Netflix",
+        "url": "https://www.netflix.com/tudum/top10/"
+      },
+      "match": {
+        "series": [
+          "netflix_us_top10"
+        ]
+      },
+      "status": "permission-needed",
+      "note": "Registered; awaiting written permission for research benchmark use. No forecasts are accepted or scored for this source."
+    },
+    {
+      "id": "consumer_acsi",
+      "label": "ACSI customer satisfaction",
+      "group": "sentiment",
+      "domain": "consumer",
+      "population": "Customers of the named companies and industry",
+      "cadence": "usually annual per company, industries released throughout the year",
+      "question_type": "profile",
+      "unit": "ACSI points",
+      "source": {
+        "name": "American Customer Satisfaction Index",
+        "url": "https://theacsi.com/news-and-resources/press-releases/"
+      },
+      "match": {
+        "series": [
+          "acsi_company_scores"
+        ]
+      },
+      "status": "permission-needed",
+      "note": "Registered; awaiting written permission for archival and public research display. No forecasts are accepted or scored for this source. One industry release will form one joint question."
+    },
+    {
       "id": "yougov_approval",
       "label": "Economist / YouGov approval",
       "group": "opinion",
@@ -478,6 +650,226 @@
       },
       "status": "retired",
       "note": "Both wiki_views templates are retired (generate_rounds.RETIRED_TEMPLATES)."
+    },
+    {
+      "id": "seattle_calls_weekly",
+      "label": "Seattle community-initiated police calls, weekly",
+      "group": "urban",
+      "domain": "urban",
+      "population": "Population represented in the source metric",
+      "cadence": "daily capture of the trailing 630 days; a week is posted about three days after it ends and resolved eight days after",
+      "question_type": "number",
+      "unit": "calls per Monday-to-Sunday week (distinct CAD events)",
+      "source": {
+        "name": "Seattle Police Department, on the City of Seattle Open Data Portal (cos-data.seattle.gov, dataset 33kz-ixgy).",
+        "url": "https://cos-data.seattle.gov/Public-Safety/Call-Data/33kz-ixgy/about_data"
+      },
+      "match": {
+        "series": [
+          "seattle_calls_weekly"
+        ]
+      },
+      "status": "active",
+      "note": "Counted from the City of Seattle's Call Data (33kz-ixgy): count(distinct cad_event_number) per day for call_type 911, 'TELEPHONE OTHER, NOT 911', 'TEXT MESSAGE' and 'IN PERSON COMPLAINT'; officer-initiated activity, alarm-company signals and administrative entries are excluded. A day under 40% of the trailing 28-day level counts as an outage, never as a quiet day. SSA sets and resolves the metric from its archived daily capture; no publisher releases a weekly number."
+    },
+    {
+      "id": "nyc311_requests_weekly",
+      "label": "NYC 311 service requests, weekly",
+      "group": "urban",
+      "domain": "urban",
+      "population": "Population represented in the source metric",
+      "cadence": "daily capture of the trailing 280 days; the portal loads once a day at about 02:40Z",
+      "question_type": "number",
+      "unit": "service requests per Monday-to-Sunday week",
+      "source": {
+        "name": "NYC 311 and the NYC Office of Technology and Innovation, NYC Open Data (data.cityofnewyork.us, dataset erm2-nwe9).",
+        "url": "https://data.cityofnewyork.us/d/erm2-nwe9"
+      },
+      "match": {
+        "series": [
+          "nyc311_requests_weekly"
+        ]
+      },
+      "status": "active",
+      "note": "Every row of erm2-nwe9, counted per day of created_date (a floating timestamp read as New York time) and summed over the week. The dataset holds only requests that can be routed to an agency, not general information calls. A capture Socrata marks out of date is never filed. SSA sets and resolves the metric from its archived daily capture."
+    },
+    {
+      "id": "mta_subway_weekly",
+      "label": "NYC subway ridership, weekly (MTA estimate)",
+      "group": "urban",
+      "domain": "urban",
+      "population": "Population represented in the source metric",
+      "cadence": "downloaded by a person each weekend; the dataset posts each day with a lag of about a week",
+      "question_type": "number",
+      "unit": "riders per Monday-to-Sunday week (MTA estimated subway ridership)",
+      "source": {
+        "name": "Metropolitan Transportation Authority, on NY Open Data (data.ny.gov, dataset sayj-mze2).",
+        "url": "https://data.ny.gov/d/sayj-mze2"
+      },
+      "match": {
+        "series": [
+          "mta_subway_weekly"
+        ]
+      },
+      "status": "permission-needed",
+      "note": "MTA's published daily estimate for the 'Subway' mode, summed over seven days. Estimates are modelled from fare-gate taps and are revised; a round resolves on the first archived download holding all seven days and later revisions never change it."
+    },
+    {
+      "id": "tsa_checkpoint_weekly",
+      "label": "TSA checkpoint throughput, weekly (national)",
+      "group": "urban",
+      "domain": "urban",
+      "population": "Population represented in the source metric",
+      "cadence": "daily capture; TSA posts the previous day's number each morning",
+      "question_type": "number",
+      "unit": "travelers screened per Monday-to-Sunday week",
+      "source": {
+        "name": "Transportation Security Administration, tsa.gov passenger volumes page.",
+        "url": "https://www.tsa.gov/travel/passenger-volumes"
+      },
+      "match": {
+        "series": [
+          "tsa_checkpoint_weekly"
+        ]
+      },
+      "status": "permission-needed",
+      "note": "TSA's single national daily number from https://www.tsa.gov/travel/passenger-volumes, summed over seven dates. TSA does not state the day boundary or whether crew are included. Resolved on SSA's first archived capture holding all seven dates."
+    },
+    {
+      "id": "sg_coe_premium_cat_a",
+      "label": "Singapore COE Category A quota premium",
+      "group": "urban",
+      "domain": "urban",
+      "population": "Population represented in the source metric",
+      "cadence": "two open bidding exercises a month, on LTA's published schedule",
+      "question_type": "number",
+      "unit": "Singapore dollars (S$)",
+      "source": {
+        "name": "Land Transport Authority, on data.gov.sg (dataset d_69b3380ad7e51aff3a7dcc84eba52b8a). Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+        "url": "https://data.gov.sg/datasets?query=COE&resultId=d_69b3380ad7e51aff3a7dcc84eba52b8a"
+      },
+      "match": {
+        "series": [
+          "sg_coe_premium_cat_a"
+        ]
+      },
+      "status": "active",
+      "note": "Category A: non-fully-electric cars up to 1,600 cc and 97 kW, and fully electric cars up to 110 kW. The premium is set by all bids in the category in that exercise. Resolved on SSA's first archived capture of the data.gov.sg datastore after the close that carries the exercise's row."
+    },
+    {
+      "id": "sg_taxi_free_downtown_fri2300",
+      "label": "Singapore free taxis in Downtown Core, Friday 23:00",
+      "group": "urban",
+      "domain": "urban",
+      "population": "Population represented in the source metric",
+      "cadence": "one snapshot a week, Friday 23:00 Singapore time",
+      "question_type": "number",
+      "unit": "taxis available for hire",
+      "source": {
+        "name": "Land Transport Authority, Taxi Availability on data.gov.sg; boundary: URA Master Plan 2019 planning areas. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+        "url": "https://data.gov.sg/datasets/d_e25662f1a062dd046453926aa284ba64/view"
+      },
+      "match": {
+        "series": [
+          "sg_taxi_free_downtown_fri2300"
+        ]
+      },
+      "status": "active",
+      "note": "Counted by SSA from the feed's taxi positions inside the URA 2019 Downtown Core polygon; private-hire cars are not in the feed. The snapshot must be fresh, complete and not implausibly low, with fallback minutes 23:01, 23:02, 23:05 and 23:10. SSA sets and resolves the metric; no publisher releases it."
+    },
+    {
+      "id": "sg_hdb_occ_clementi_sat2000",
+      "label": "Singapore HDB carpark occupancy in Clementi, Saturday 20:00",
+      "group": "urban",
+      "domain": "urban",
+      "population": "Population represented in the source metric",
+      "cadence": "one snapshot a week, Saturday 20:00 Singapore time",
+      "question_type": "number",
+      "unit": "percent of car lots occupied",
+      "source": {
+        "name": "Housing & Development Board, Carpark Availability and HDB Carpark Information on data.gov.sg; boundary: URA Master Plan 2019 planning areas. Contains information accessed from data.gov.sg under the Singapore Open Data Licence version 1.0.",
+        "url": "https://data.gov.sg/datasets/d_ca933a644e55d34fe21f28b8052fac63/view"
+      },
+      "match": {
+        "series": [
+          "sg_hdb_occ_clementi_sat2000"
+        ]
+      },
+      "status": "active",
+      "note": "Occupied = total lots minus available lots, summed over the pinned list of Clementi HDB carparks (lot type C), divided by total lots. Season and visitor parking are not distinguished. SSA sets and resolves the metric; no publisher releases it."
+    },
+    {
+      "id": "sg_pv_train_ew24ns1_weekday_tapin",
+      "label": "Jurong East MRT, weekday average daily tap-ins",
+      "group": "urban",
+      "domain": "urban",
+      "population": "Population represented in the source metric",
+      "cadence": "monthly; DataMall posts a month's file around the 10th of the next",
+      "question_type": "number",
+      "unit": "tap-ins per weekday (average, public holidays excluded)",
+      "source": {
+        "name": "Land Transport Authority, LTA DataMall Passenger Volume by Train Stations.",
+        "url": "https://datamall.lta.gov.sg/content/datamall/en/dynamic-data.html"
+      },
+      "match": {
+        "series": [
+          "sg_pv_train_ew24ns1_weekday_tapin"
+        ]
+      },
+      "status": "active",
+      "note": "Sum of TOTAL_TAP_IN_VOLUME over the station's WEEKDAY rows in the month's DataMall file, divided by the Monday-to-Friday dates that are not gazetted public holidays. Transfers inside the paid area are not taps."
+    },
+    {
+      "id": "sg_pv_bus_22009_weekday_tapin",
+      "label": "Boon Lay Interchange buses, weekday average daily boardings",
+      "group": "urban",
+      "domain": "urban",
+      "population": "Population represented in the source metric",
+      "cadence": "monthly; DataMall posts a month's file around the 10th of the next",
+      "question_type": "number",
+      "unit": "boardings per weekday (average, public holidays excluded)",
+      "source": {
+        "name": "Land Transport Authority, LTA DataMall Passenger Volume by Bus Stops.",
+        "url": "https://datamall.lta.gov.sg/content/datamall/en/dynamic-data.html"
+      },
+      "match": {
+        "series": [
+          "sg_pv_bus_22009_weekday_tapin"
+        ]
+      },
+      "status": "active",
+      "note": "Sum of TOTAL_TAP_IN_VOLUME over the stop's WEEKDAY rows in the month's DataMall file, divided by the Monday-to-Friday dates that are not gazetted public holidays."
+    },
+    {
+      "id": "urban_sce_moving",
+      "label": "Household moving expectations",
+      "group": "urban",
+      "domain": "urban",
+      "population": "US household heads, by age, income and region",
+      "cadence": "monthly",
+      "question_type": "profile",
+      "unit": "percent chance",
+      "source": {
+        "name": "New York Fed SCE",
+        "url": "https://www.newyorkfed.org/microeconomics/sce"
+      },
+      "match": {
+        "series_prefix": "sce_moving_"
+      },
+      "cells": [
+        "sce_moving_age_under_40",
+        "sce_moving_age_40_60",
+        "sce_moving_age_over_60",
+        "sce_moving_income_under_50k",
+        "sce_moving_income_50_100k",
+        "sce_moving_income_over_100k",
+        "sce_moving_region_west",
+        "sce_moving_region_midwest",
+        "sce_moving_region_south",
+        "sce_moving_region_northeast"
+      ],
+      "status": "active",
+      "note": "One joint forecast across ten demographic cells; the national mean is context only."
     }
   ]
 }

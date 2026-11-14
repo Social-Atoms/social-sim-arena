@@ -1,0 +1,57 @@
+{
+  "card": "nyc-311-requests@v2",
+  "card_sha256": "ea4176dc4eb4c1c46084c38f85419a53f620325a52877942c90a60ffd5774e22",
+  "note": "Proposed rounds for a later question batch, not part of questions/season0.json. No unscored pilot: owner rule G3 waives it because fill-in was measured directly. The first scored lock is Sun 2026-12-13 23:59 ET, the same night as the Seattle calls family, and is scored only if the fill-in confirmation passes: on Fri 2026-12-11 a maintainer runs `python -m ssa.adapters.nyc311 fillin 2026-11-23` (+8 against +11 snapshots, growth under 0.5%); if it fails, nyc311-2026-12-20 runs unscored, announced before its lock. Needs the adapter and these rounds on main with the scheduled refresh running by Sun 2026-11-29 (14 days for participants). If the lock capture shows a reference week failing the outage check, the block steps back one week and the question text must say so before posting. Each round is posted only if `python -m ssa.adapters.nyc311 reference <monday>` succeeds on the fresh capture of the 24 h before its lock. Manual mode, if maintainers choose it, resolves on the Sunday download six days after the week ends and its question and resolve text change accordingly; a round never switches mode.",
+  "rounds": [
+    {
+      "round_id": "nyc311-2026-12-20",
+      "tracker": "nyc_311",
+      "series": "nyc311_requests_weekly",
+      "question": "How many NYC 311 service requests will have a created_date in the week Monday 2026-12-14 to Sunday 2026-12-20, New York local time? Count every row of NYC Open Data dataset erm2-nwe9 (311 Service Requests from 2020 to Present): all complaint types, agencies, statuses and channels, citywide. There is no publisher release calendar: SSA sets and resolves this metric from its own archive of the dataset (docs/sources.md section 1.1), under card nyc-311-requests@v2. Ranked reference: mean4, the mean of the four settled weeks starting 2026-11-09 to 2026-11-30, with sd the root-mean-square of its own errors over 13 settled weeks; its mean, sd and four weekly counts are published and hashed at lock. Mode: automated daily capture.",
+      "unit": "service requests (rows) per Monday-to-Sunday week",
+      "lock_at": "2026-12-14T04:59:00Z",
+      "release_at": "2026-12-29T17:00:00Z",
+      "release_estimated": false,
+      "resolve": "sum over the seven target days of the first fresh snapshot archived under sources/nyc311/ (X-SODA2-Data-Out-Of-Date false) at or after Tuesday 12:00 America/New_York eight days after the week ends, whose X-SODA2-Truth-Last-Modified is after Monday 18:00 ET; a target day under 40% of the 28-day median or with no rows for NYPD, HPD, DSNY, DOT or DEP moves to the next fresh snapshot until Friday 12:00 ET, after which the round is cancelled (ssa/adapters/nyc311.py resolve, mode auto)",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean4",
+        "family": "mean_k",
+        "period": "week",
+        "k": 4,
+        "lag": 1,
+        "step_back": 1,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      }
+    },
+    {
+      "round_id": "nyc311-2026-12-27",
+      "tracker": "nyc_311",
+      "series": "nyc311_requests_weekly",
+      "question": "How many NYC 311 service requests will have a created_date in the week Monday 2026-12-21 to Sunday 2026-12-27, New York local time? Count every row of NYC Open Data dataset erm2-nwe9 (311 Service Requests from 2020 to Present): all complaint types, agencies, statuses and channels, citywide. There is no publisher release calendar: SSA sets and resolves this metric from its own archive of the dataset (docs/sources.md section 1.1), under card nyc-311-requests@v2. Ranked reference: mean4, the mean of the four settled weeks starting 2026-11-16 to 2026-12-07, with sd the root-mean-square of its own errors over 13 settled weeks; its mean, sd and four weekly counts are published and hashed at lock. Mode: automated daily capture. Note: this is the Christmas week, the hardest week of the year for every simple reference: in 2025 mean4 missed the Christmas week by 34% (card v2, baseline).",
+      "unit": "service requests (rows) per Monday-to-Sunday week",
+      "lock_at": "2026-12-21T04:59:00Z",
+      "release_at": "2027-01-05T17:00:00Z",
+      "release_estimated": false,
+      "resolve": "sum over the seven target days of the first fresh snapshot archived under sources/nyc311/ (X-SODA2-Data-Out-Of-Date false) at or after Tuesday 12:00 America/New_York eight days after the week ends, whose X-SODA2-Truth-Last-Modified is after Monday 18:00 ET; a target day under 40% of the 28-day median or with no rows for NYPD, HPD, DSNY, DOT or DEP moves to the next fresh snapshot until Friday 12:00 ET, after which the round is cancelled (ssa/adapters/nyc311.py resolve, mode auto)",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean4",
+        "family": "mean_k",
+        "period": "week",
+        "k": 4,
+        "lag": 1,
+        "step_back": 1,
+        "spread": {
+          "rule": "rms",
+          "n": 13,
+          "search": 26
+        }
+      }
+    }
+  ]
+}

@@ -107,6 +107,12 @@ def test_a_conditional_approval_names_the_archive_it_must_not_publish():
         f"{sorted(conditional - listed)}; blocklist entries whose row no "
         f"longer carries it: {sorted(listed - conditional)}")
     for source, path in sorted(inventory.PUBLISH_BLOCKLIST.items()):
+        if path.startswith('.local/'):
+            import subprocess
+            assert subprocess.run(['git', 'check-ignore', path + '/raw.bin'],
+                                  cwd=ROOT, capture_output=True).returncode == 0
+            assert '.local' in open(os.path.join(ROOT, '.vercelignore')).read().splitlines()
+            continue
         assert os.path.isdir(os.path.join(ROOT, path)), \
             f"{source}: blocklist names {path}, which does not exist"
     print("ok test_a_conditional_approval_names_the_archive_it_must_not_publish")
@@ -128,7 +134,7 @@ def test_the_blocked_archives_are_not_reachable_from_the_published_site():
     for source, path in sorted(inventory.PUBLISH_BLOCKLIST.items()):
         leaked = sorted(n for n in served if n.startswith(os.path.basename(path)))
         assert not leaked, f"{source}: {path} bodies are inside site/: {leaked}"
-        bodies = os.listdir(os.path.join(ROOT, path))
+        bodies = os.listdir(os.path.join(ROOT, path)) if os.path.isdir(os.path.join(ROOT, path)) else []
         for b in bodies:
             assert b not in served, \
                 f"{source}: {b} from {path} is served by site/"

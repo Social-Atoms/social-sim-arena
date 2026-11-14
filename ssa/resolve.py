@@ -256,6 +256,23 @@ def resolve_round(r, series, now):
         # that the number actually answers. `refresh.build_profile_leaderboard`
         # reads the vector from the cells' own series instead.
         return None, ELSEWHERE_PROFILE
+    if "consumer" in r:
+        from . import consumer_round
+        try:
+            return consumer_round.resolution(r, now=now), None
+        except (KeyError, ValueError) as error:
+            return None, str(error)
+    # Urban Track sources resolve on the archived capture their card names
+    # (ssa/urban.py): pending, cancelled and review all leave the round
+    # unresolved with the card's reason, never "the first point after the
+    # freeze" of a series rebuilt from a later capture.
+    from . import urban
+    rule = urban.get(_source(r["series"]))
+    if rule is not None and rule.resolves and r.get("round_id") not in HAND_ONLY:
+        try:
+            return rule.resolve(r, now)
+        except (OSError, KeyError, RuntimeError, ValueError) as error:
+            return None, f"{rule.card}: {type(error).__name__}: {error}"
     point, why = candidate(r, series)
     if point is None:
         return None, why
@@ -291,15 +308,19 @@ def resolve_all(season, series, resolved, now):
         # Keyed on (series, date, value): a revision to the same row is a
         # different observation, which is exactly how Michigan's preliminary
         # and final stay distinct while sharing a date.
-        key = (rd["series"], res["observed_date"], res["value"])
+        key = ((rd["series"], tuple(res["consumer_target"]))
+               if "consumer_target" in res else
+               (rd["series"], res["observed_date"], res["value"]))
         # A voided resolution (#178) no longer answers anything, so it cannot
         # hold an observation against a live round.
         owner = claimed.get(key) or next(
             (o for o, v in resolved.items()
              if not v.get("voided")
              and v.get("series") == rd["series"]
-             and v.get("observed_date") == res["observed_date"]
-             and v.get("value") == res["value"]), None)
+             and (v.get("consumer_target") == res["consumer_target"]
+                  if "consumer_target" in res else
+                  v.get("observed_date") == res["observed_date"]
+                  and v.get("value") == res["value"])), None)
         if owner:
             skipped.append((rid, f"observation {res['observed_date']}={res['value']} "
                                  f"is already the resolution for {owner}; two "

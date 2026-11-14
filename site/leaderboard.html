@@ -530,18 +530,23 @@ function render(data){
   ];
   const DOMAIN_LABEL = {'public-opinion':'Public opinion', 'consumer':'Consumer sentiment',
                         'attention':'Attention', 'elections':'Elections',
+                        'urban':'Urban life',
                         // Not a subject: a round whose series the taxonomy has
                         // never seen. Shown rather than dropped, so a gap is
                         // visible on the page instead of silently thinning a
                         // count somebody reads as the batch's real shape.
                         'unplaced':'Unclassified'};
-  const DOMAIN_ORDER = ['public-opinion','consumer','attention','elections','unplaced'];
+  const DOMAIN_ORDER = ['public-opinion','consumer','attention','elections','urban','unplaced'];
   const TRACKER_LABEL = {civiqs:'Civiqs', economist_yougov:'Economist/YouGov',
     morning_consult:'Morning Consult', google_trends:'Google Trends',
     wikipedia:'Wikipedia', aaii:'AAII', umich_sentiment:'Michigan',
     umich_party:'Michigan by party', ny_fed_sce:'NY Fed SCE',
     harvard_harris:'Harvard Harris', midterm_special:'Midterms',
-    yougov_xtab:'YouGov crosstab'};
+    yougov_xtab:'YouGov crosstab', bls_cpi:'BLS CPI rent',
+    // The Urban Track (ssa/urban.py).
+    seattle_cad:'Seattle police calls', nyc_311:'NYC 311', mta_daily:'MTA subway',
+    tsa:'TSA checkpoints', sg_coe:'Singapore COE', sg_lta_rt:'Singapore taxis',
+    sg_hdb_carpark:'Singapore HDB carparks', sg_lta_pv:'Singapore passenger volume'};
 
   const bars = items => {
     const max = Math.max(1, ...items.map(x => x[1]));

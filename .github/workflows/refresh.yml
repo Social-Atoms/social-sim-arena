@@ -34,6 +34,8 @@ jobs:
       SSA_AGE_RECIPIENT: ${{ vars.SSA_AGE_RECIPIENT }}
       SSA_AGE_KEY_ID: ${{ vars.SSA_AGE_KEY_ID }}
       SSA_AGE_IDENTITIES: ${{ secrets.SSA_AGE_IDENTITIES }}
+      NYT_API_KEY: ${{ secrets.NYT_API_KEY }}
+      STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }}
       # Route A: every request to a participant endpoint is signed with this
       # Ed25519 key (ssa/signing.py); the public half is site/keys.json.
       # Unset, no participant is called -- never an unsigned request.
@@ -192,6 +194,77 @@ jobs:
               python tools/sync_platform_seals.py pull
               ;;
           esac
+      # Consumer evidence is optional for the run: a failed restore skips only
+      # consumer collection and archiving, never the refresh of every other round.
+      - name: restore private consumer evidence
+        id: consumer_restore
+        continue-on-error: true
+        run: python tools/sync_consumer_archive.py pull
+      - name: collect admitted consumer releases
+        if: steps.consumer_restore.outcome == 'success'
+        run: python tools/collect_consumer_rounds.py
+      - name: freeze consumer inputs for future release questions
+        if: steps.consumer_restore.outcome == 'success'
+        run: python tools/publish_consumer.py
+      # Seattle police calls, the Urban Track pilot (card
+      # seattle-community-calls@v4): one capture per UTC day, write-once, under
+      # sources/seattle_cad/, committed by the data commit below (it stages
+      # sources/). It feeds no series or round yet, so it must never stop the
+      # refresh: a 403 or 429 from this runner is logged here and means the
+      # capture moves to a local courier (docs/sources/seattle-police-calls.md).
+      - name: capture Seattle police calls (pilot, non-blocking)
+        continue-on-error: true
+        run: python -m ssa.adapters.seattle_cad capture
+      # NYC 311 service requests, Urban Track (card nyc-311-requests@v2): one
+      # capture per UTC day, write-once, under sources/nyc311/, staged by the
+      # data commit below. A body Socrata flags X-SODA2-Data-Out-Of-Date: true
+      # is refused, never filed, and the next run tries again; a 403 or 429
+      # from this runner means a local courier (docs/sources/nyc-311.md).
+      - name: capture NYC 311 requests (non-blocking)
+        continue-on-error: true
+        timeout-minutes: 8
+        run: python -m ssa.adapters.nyc311 capture
+      # TSA capture remains disabled while inventory rights are unresolved.
+      # Its source implementation and proposed rounds await a separate review.
+      # MTA daily ridership (card mta-subway-weekly@v2) is downloaded by a
+      # person each weekend (tools/ingest_mta_daily.py): automated retrieval
+      # is not cleared. Once a card revision clears route A and sets
+      # mta_daily.AUTOMATED_CLEARED, enable this step; until then the command
+      # itself refuses to fetch.
+      # - name: capture MTA daily ridership (route A, non-blocking)
+      #   continue-on-error: true
+      #   run: python -m ssa.adapters.mta_daily capture
+      # BLS CPI rent (card bls-cpi-rent@v2): at most one keyless API query a
+      # UTC day under sources/bls_cpi/, plus a post-release capture on a CPI
+      # release day if this run is the first after 08:30 ET. The release-day
+      # capture at 08:45 ET is .github/workflows/bls-cpi.yml. The series reads
+      # the archive, never the network, so a 403 or 429 here is logged and the
+      # refresh goes on; a 403 means the capture moves to a local courier.
+      - name: capture BLS CPI rent (non-blocking)
+        continue-on-error: true
+        run: python -m ssa.adapters.bls_cpi capture
+      # Singapore COE Category A premium (card sg-coe-cat-a-premium@v2):
+      # keyless data.gov.sg. Costs no request unless a rule needs a capture --
+      # the 12 h before an exercise's lock, or close + 2 h until the result
+      # row is held (ssa/adapters/sg_coe.due) -- and files under sources/coe/,
+      # committed by the data commit below. Non-blocking like Seattle's: a
+      # 403 or 429 here is logged and means a local courier.
+      - name: capture Singapore COE results (pilot, non-blocking)
+        continue-on-error: true
+        run: python -m ssa.adapters.sg_coe capture
+      # LTA monthly passenger volumes: archive missing months continuously.
+      # Separate steps ensure a train failure does not skip the bus capture.
+      # Missing credentials fail visibly without stopping unrelated sources.
+      - name: capture LTA train passenger volumes (non-blocking)
+        continue-on-error: true
+        env:
+          LTA_API_KEY: ${{ secrets.LTA_API_KEY }}
+        run: python -m ssa.adapters.sg_lta_pv capture train
+      - name: capture LTA bus passenger volumes (non-blocking)
+        continue-on-error: true
+        env:
+          LTA_API_KEY: ${{ secrets.LTA_API_KEY }}
+        run: python -m ssa.adapters.sg_lta_pv capture bus
       - run: python -m ssa.refresh
       # Resolution runs after the refresh so it scores against the series the
       # same run just fetched. It only ever adds, never overwrites, and
@@ -245,8 +318,15 @@ jobs:
           case "${SSA_SEAL_FORECASTS,,}" in
             1|true|yes|on) python tools/sync_platform_seals.py push ;;
           esac
+      - name: persist encrypted consumer evidence
+        id: consumer_archive_push
+        if: always() && steps.consumer_restore.outcome == 'success'
+        run: python tools/sync_consumer_archive.py push
+      # A skipped consumer push (restore failed, so nothing new was collected)
+      # does not block the public commit; a failed push does, because public
+      # consumer results would then have no persisted evidence behind them.
       - name: commit if changed
-        if: always() && steps.platform_seal_push.outcome == 'success'
+        if: always() && steps.platform_seal_push.outcome == 'success' && steps.consumer_archive_push.outcome != 'failure'
         run: |
           git config user.name "ssa-bot"
           git config user.email "actions@github.com"

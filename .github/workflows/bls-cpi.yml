@@ -1,0 +1,52 @@
+name: bls-cpi-capture
+# The BLS CPI release-day capture (card bls-cpi-rent@v2, ssa/adapters/bls_cpi.py).
+# CPI is released at 08:30 America/New_York and a round resolves on the first
+# archived API response at or after the release that carries the new month.
+# The six-hourly refresh runs at :17 past 00/06/12/18 UTC and cannot be at
+# 08:45 ET, so this job runs the same capture at 12:45 and 13:45 UTC: 08:45 ET
+# in daylight time and in standard time. On any day that is not a CPI release
+# day, or once the day's post-release capture is held, the command sends no
+# request at all (one keyless API v1 query at most; the API allows 25 a day).
+#
+# It only captures and commits sources/bls_cpi/. Each capture is its own pair
+# of files (<stamp>.json, <stamp>.meta.json), so nothing here rewrites a file
+# the refresh also writes, and the provenance manifest is left to the refresh
+# (--no-manifest): the data commit of a concurrent refresh then rebases
+# cleanly over this one. continue-on-error: a 403 or 429 from this runner is a
+# finding (the source needs a local courier), never a retry.
+on:
+  schedule:
+    - cron: "45 12,13 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bls-cpi-capture
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: capture BLS CPI rent if due (non-blocking)
+        continue-on-error: true
+        run: python -m ssa.adapters.bls_cpi capture --no-manifest
+      - name: commit if changed
+        run: |
+          git config user.name "ssa-bot"
+          git config user.email "actions@github.com"
+          git add -A sources/bls_cpi
+          if git diff --cached --quiet; then
+            echo "no new capture"
+          else
+            git commit -m "bls_cpi capture $(date -u +%Y-%m-%dT%H:%MZ)"
+            git -c rebase.autoStash=true pull --rebase origin "$GITHUB_REF_NAME"
+            git push
+          fi
