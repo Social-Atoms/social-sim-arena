@@ -98,6 +98,7 @@ Social Simulation Arena is a project initiated by [Social Atoms](https://github.
 <a href="https://github.com/mmalohlava" title="mmalohlava"><img src="brand/contributors/mmalohlava.svg" width="64" height="64" alt="mmalohlava"></a>
 <a href="https://github.com/anzy-renlab-ai" title="anzy-renlab-ai"><img src="brand/contributors/anzy-renlab-ai.svg" width="64" height="64" alt="anzy-renlab-ai"></a>
 <a href="https://github.com/a3030765513-oss" title="a3030765513-oss"><img src="brand/contributors/a3030765513-oss.svg" width="64" height="64" alt="a3030765513-oss"></a>
+<a href="https://github.com/Y4ngzhang" title="Y4ngzhang"><img src="brand/contributors/Y4ngzhang.svg" width="64" height="64" alt="Y4ngzhang"></a>
 <a href="https://github.com/testing-shang" title="testing-shang"><img src="brand/contributors/testing-shang.svg" width="64" height="64" alt="testing-shang"></a>
 <a href="https://github.com/rain21232" title="rain21232"><img src="brand/contributors/rain21232.svg" width="64" height="64" alt="rain21232"></a>
 <a href="https://github.com/miracle121388-a11y" title="miracle121388-a11y"><img src="brand/contributors/miracle121388-a11y.svg" width="64" height="64" alt="miracle121388-a11y"></a>
@@ -106,6 +107,7 @@ Social Simulation Arena is a project initiated by [Social Atoms](https://github.
 <a href="https://github.com/hiddensev" title="hiddensev"><img src="brand/contributors/hiddensev.svg" width="64" height="64" alt="hiddensev"></a>
 <a href="https://github.com/SudalaiRajkumar" title="SudalaiRajkumar"><img src="brand/contributors/SudalaiRajkumar.svg" width="64" height="64" alt="SudalaiRajkumar"></a>
 <a href="https://github.com/SocialAI-X" title="SocialAI-X"><img src="brand/contributors/SocialAI-X.svg" width="64" height="64" alt="SocialAI-X"></a>
+<a href="https://github.com/SiyaoZheng" title="SiyaoZheng"><img src="brand/contributors/SiyaoZheng.svg" width="64" height="64" alt="SiyaoZheng"></a>
 <a href="https://github.com/Scarlett51951" title="Scarlett51951"><img src="brand/contributors/Scarlett51951.svg" width="64" height="64" alt="Scarlett51951"></a>
 <a href="https://github.com/Paitesanshi" title="Paitesanshi"><img src="brand/contributors/Paitesanshi.svg" width="64" height="64" alt="Paitesanshi"></a>
 <a href="https://github.com/chenchenplus" title="chenchenplus"><img src="brand/contributors/chenchenplus.svg" width="64" height="64" alt="chenchenplus"></a>
