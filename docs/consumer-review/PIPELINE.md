@@ -8,7 +8,11 @@ Michigan's November final one-year inflation expectation (release November 20,
 2026, 10 a.m. Eastern). Dates are from the official New York Fed calendar.
 
 SCE and Mint have attribution-based approval. Michigan, NYT and Steam are
-approved for the documented private-original-data route. Netflix and ACSI keep
+approved for the documented private-original-data route. Michigan's November
+final question was withdrawn on 2026-11-04 pending the publisher's reply; the
+project lead granted the source on 2026-11-15 under the usage agreement's
+organization-use clause, so new Michigan inflation questions need only a
+reviewed round with an official release date. Netflix and ACSI keep
 their permission blocks and have no live question, collector or scoring target.
 Their website task registration explicitly says that forecasts are not accepted.
 Mint awaits an eligible product and sufficient adjacent manual reports; NYT

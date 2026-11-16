@@ -33,7 +33,8 @@ class ActivationTests(unittest.TestCase):
         self.assertEqual(len([key for key in tasks if key.startswith('consumer_')]), 7)
         self.assertEqual(tasks['consumer_netflix']['status'], 'permission-needed')
         self.assertEqual(tasks['consumer_acsi']['status'], 'permission-needed')
-        self.assertEqual(tasks['consumer_michigan']['status'], 'permission-needed')
+        # Rights granted 2026-11-15; no reviewed round yet, so preparing.
+        self.assertEqual(tasks['consumer_michigan']['status'], 'preparing')
         # Only SCE may have live questions: Michigan waits for its permission reply.
         self.assertTrue(all(consumer_round.source_for(r) == 'consumer_sce_extensions'
                             for r in definitions))

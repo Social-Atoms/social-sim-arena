@@ -896,14 +896,45 @@ INVENTORY = {
             "catching up since, so lock times come from the published "
             "calendar, never from a rule."),
     },
+    # --- cleared 2026-11-15 by the project lead (same standard as above) ---
     "consumer_michigan_inflation": {
         "publisher": "University of Michigan Surveys of Consumers",
         "adapter": "ssa/adapters/consumer.py",
         "role": TARGET,
-        "state": PERMISSION_NEEDED,
+        "state": INTEGRATED,
         "rights": APPROVED_NO_REDISTRIBUTION,
-        "evidence": "Team review permits research use with attribution; public redistribution of original CSVs needs permission from umsurvey@umich.edu. The pipeline keeps originals and input snapshots private and separates preliminary/final targets and captured vintages. Permission email drafts also disclose the 67 previously public CSVs. Rights remain subject to maintainer sign-off; see docs/consumer-review/PIPELINE.md.",
-        "revisit": "Approve the named 1-year series after release-calendar and first-print checks.",
+        "conditions": (
+            "University of Michigan usage agreement "
+            "(https://data.sca.isr.umich.edu/agreement.php): (1) the original "
+            "CSVs (tbmpx1px5.csv, tbcpx1px5.csv) and input snapshots are never "
+            "published: they stay in the private consumer archive "
+            "(.local/consumer), persisted only as age ciphertext on `sealed`; "
+            "(2) only derived values, sha256 hashes and scores are public; (3) "
+            "'University of Michigan Surveys of Consumers' credit with the "
+            "copyright line (source_notices.MICHIGAN) on every page showing a "
+            "number."),
+        "evidence": (
+            "GRANTED by Haoyang Shang (project lead), 2026-11-15, under the "
+            "rights standard of that day: usable unless the terms prohibit "
+            "SSA's fetch route, SSA keeping an archived copy of what it scored, "
+            "or publishing scores. The usage agreement grants use -- \"The data "
+            "and materials obtained from the website may be displayed, "
+            "reformatted, and printed for your organization's use\" -- and "
+            "reserves written consent only for reproducing, retransmitting, "
+            "distributing or publishing the data and materials themselves. "
+            "Nothing in it bars fetching the two published CSVs from the "
+            "official tables page or keeping a private copy; deriving and "
+            "scoring the one-year median is the same use already approved for "
+            "`umichparty`. Republishing the raw files would need consent, so "
+            "the raw archive stays private (PUBLISH_BLOCKLIST), as for "
+            "`umichparty`. Preliminary and final are separate targets and "
+            "captured vintages; a final never settles a preliminary question. "
+            "Previously `permission-needed` (hold of 2026-11-04 pending a reply "
+            "from the Surveys of Consumers team, no longer a gate)."),
+        "revisit": (
+            "A request from the University of Michigan to stop, or a change to "
+            "the agreement's organization-use grant, stops the source; rounds "
+            "are withdrawn before posting."),
     },
     "consumer_sce_extensions": {
         "publisher": "Federal Reserve Bank of New York",

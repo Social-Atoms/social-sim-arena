@@ -11,7 +11,7 @@ One page per source the arena scores against. Each says the same five things, in
 | Silver Bulletin poll database | [silver-bulletin.md](silver-bulletin.md) | Generic ballot & midterm; the poll-level records behind the two approval tasks above | `ssa/adapters/silverbulletin.py`, `ssa/average.py` |
 | Civiqs | [civiqs.md](civiqs.md) | Civiqs approval, the five Civiqs sentiment trackers, Civiqs 16-cell profile | `ssa/adapters/civiqs.py` |
 | Harvard CAPS / Harris | [harvard-harris.md](harvard-harris.md) | Harvard / Harris approval | `ssa/adapters/hhpoll.py` |
-| University of Michigan | [michigan.md](michigan.md) | Michigan consumer sentiment, Sentiment by party | `ssa/adapters/umich.py`, `ssa/adapters/umichparty.py` |
+| University of Michigan | [michigan.md](michigan.md) | Michigan consumer sentiment, Sentiment by party; inflation expectations (rights granted 2026-11-15, original CSVs private, no round yet) | `ssa/adapters/umich.py`, `ssa/adapters/umichparty.py`, `ssa/adapters/consumer.py` |
 | New York Fed SCE | [ny-fed-sce.md](ny-fed-sce.md) | Household inflation expectations | `ssa/adapters/sce.py` |
 | New York Fed SCE, moving expectations | [ny-fed-sce.md](ny-fed-sce.md#moving-expectations-ten-cell-profile) | None yet: ten-cell profile registered (Urban Track, housing), first round proposed for the 2026-12-05 lock | `ssa/adapters/sce.py` |
 | European Commission (DG ECFIN) | [ec-consumer-survey.md](ec-consumer-survey.md) | None yet: twelve series registered (EU, euro area, ten countries), no rounds scheduled | `ssa/adapters/ecbcs.py` |
