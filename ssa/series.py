@@ -1384,14 +1384,15 @@ _urban(
         "daily capture."))
 
 _urban(
-    "mta_subway_weekly", card="mta-subway-weekly@v2",
+    "mta_subway_weekly", card="mta-subway-weekly@v3",
     label="NYC subway ridership, weekly (MTA estimate)",
     tracker="mta_daily", source="mta_daily",
     publisher=("Metropolitan Transportation Authority, on NY Open Data "
                "(data.ny.gov, dataset sayj-mze2)."),
     unit="riders per Monday-to-Sunday week (MTA estimated subway ridership)",
-    cadence=("downloaded by a person each weekend; the dataset posts each "
-             "day with a lag of about a week"),
+    cadence=("daily automated capture of the full export (a person's weekend "
+             "download is the fallback); the dataset posts each day with a lag "
+             "of about a week"),
     question=("Total of MTA's daily 'Subway' ridership estimates (data.ny.gov "
               "sayj-mze2, which includes the Staten Island Railway) over the "
               "Monday-to-Sunday week, New York time"),
@@ -1402,7 +1403,7 @@ _urban(
         "all seven days and later revisions never change it."))
 
 _urban(
-    "tsa_checkpoint_weekly", card="tsa-checkpoint-weekly@v2",
+    "tsa_checkpoint_weekly", card="tsa-checkpoint-weekly@v3",
     label="TSA checkpoint throughput, weekly (national)",
     tracker="tsa", source="tsa_volumes",
     publisher=("Transportation Security Administration, tsa.gov passenger "

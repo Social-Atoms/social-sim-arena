@@ -19,6 +19,8 @@ from ssa import inventory
 COLLECTORS = (
     ('seattle', 'seattle_cad', ['-m', 'ssa.adapters.seattle_cad', 'capture']),
     ('nyc311', 'nyc311', ['-m', 'ssa.adapters.nyc311', 'capture']),
+    ('mta', 'mta_daily', ['-m', 'ssa.adapters.mta_daily', 'capture']),
+    ('tsa', 'tsa_volumes', ['-m', 'ssa.adapters.tsa_volumes', 'capture']),
     ('bls_rent', 'bls_cpi', ['-m', 'ssa.adapters.bls_cpi', 'capture']),
     ('coe', 'sg_coe', ['-m', 'ssa.adapters.sg_coe', 'capture']),
     ('lta_train', 'sg_lta_pv', ['-m', 'ssa.adapters.sg_lta_pv', 'capture', 'train']),

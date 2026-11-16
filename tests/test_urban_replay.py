@@ -263,7 +263,7 @@ def test_nyc311_end_to_end():
 
 
 def test_mta_subway_end_to_end():
-    """Card mta-subway-weekly@v2 on the committed real export (newest day
+    """Card mta-subway-weekly@v3 on the committed real export (newest day
     11-03): the week of 10-26, locked on the weekend download (posted
     through 10-18, the card's D-8), resolved on a download from Saturday
     11-07. MTA's rights are unresolved, so the validator's rights line is
@@ -294,7 +294,7 @@ def test_mta_subway_end_to_end():
 
 
 def test_tsa_checkpoint_end_to_end():
-    """Card tsa-checkpoint-weekly@v2 on the three committed real pages
+    """Card tsa-checkpoint-weekly@v3 on the three committed real pages
     (newest date 11-05): the week of 10-26, locked on a Saturday capture
     posted through 10-24, resolved after Tuesday 11-03 12:00 ET. TSA's
     rights are unresolved; only that validator line is allowed."""

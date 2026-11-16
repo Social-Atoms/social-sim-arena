@@ -224,16 +224,12 @@ jobs:
         continue-on-error: true
         timeout-minutes: 8
         run: python -m ssa.adapters.nyc311 capture
-      # TSA capture remains disabled while inventory rights are unresolved.
-      # Its source implementation and proposed rounds await a separate review.
-      # MTA daily ridership (card mta-subway-weekly@v2) is downloaded by a
-      # person each weekend (tools/ingest_mta_daily.py): automated retrieval
-      # is not cleared. Once a card revision clears route A and sets
-      # mta_daily.AUTOMATED_CLEARED, enable this step; until then the command
-      # itself refuses to fetch.
-      # - name: capture MTA daily ridership (route A, non-blocking)
-      #   continue-on-error: true
-      #   run: python -m ssa.adapters.mta_daily capture
+      # MTA daily ridership (card mta-subway-weekly@v3) and TSA checkpoint
+      # numbers (card tsa-checkpoint-weekly@v3) were admitted on 2026-11-15.
+      # Their daily captures run in market-urban-data-fetch
+      # (tools/fetch_track_data.py, collectors `mta` and `tsa`), which checks
+      # inventory rights before each collector; they are not repeated here.
+      # A person's MTA download (tools/ingest_mta_daily.py) is the fallback.
       # BLS CPI rent (card bls-cpi-rent@v2): at most one keyless API query a
       # UTC day under sources/bls_cpi/, plus a post-release capture on a CPI
       # release day if this run is the first after 08:30 ET. The release-day

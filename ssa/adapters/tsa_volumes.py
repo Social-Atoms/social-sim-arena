@@ -6,9 +6,9 @@
 Each page is one HTML table, header `Date | Numbers`, dates M/D/YYYY and counts
 with thousands separators; the current page runs newest first and restarts at
 1/1 every January, when the old year moves to its own page. The rules are the
-approved Data Card `tsa-checkpoint-weekly@v2`
+approved Data Card `tsa-checkpoint-weekly@v3`
 (docs/data-cards/tsa-checkpoint-weekly.json, sha256
-5c69cafebad1610bb2c8aad0d58f706d28ad8b7cf623828debb916133d01c9f8); this module
+6bdb1a94bb42c632630077d170948bafafff999bf6d0f056141db15b4322fc30); this module
 implements them and nothing else.
 
 **One capture a day, three pages.** The current page, then the two previous
@@ -59,8 +59,8 @@ ARCHIVE = os.path.join(ROOT, "sources", NAME)
 FETCHES = os.path.join(ARCHIVE, "fetches.json")
 FAILURES = os.path.join(ARCHIVE, "failures.json")
 
-CARD = "tsa-checkpoint-weekly@v2"
-CARD_SHA256 = "5c69cafebad1610bb2c8aad0d58f706d28ad8b7cf623828debb916133d01c9f8"
+CARD = "tsa-checkpoint-weekly@v3"
+CARD_SHA256 = "6bdb1a94bb42c632630077d170948bafafff999bf6d0f056141db15b4322fc30"
 BASE = "https://www.tsa.gov/travel/passenger-volumes"
 TZ = ZoneInfo("America/New_York")
 HEADER = ["Date", "Numbers"]

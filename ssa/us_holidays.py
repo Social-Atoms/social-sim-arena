@@ -3,8 +3,8 @@
 The year-over-year references (`baselines.yoy_k`) compare a week with the
 week 364 days earlier: the same weekdays, so a holiday defined by its weekday
 (Thanksgiving, Labor Day) usually lines up and one defined by its date
-(Christmas, New Year's Day) moves by a day. Cards mta-subway-weekly@v2 and
-tsa-checkpoint-weekly@v2 keep the 364-day shift and *flag* the weeks where it
+(Christmas, New Year's Day) moves by a day. Cards mta-subway-weekly@v3 and
+tsa-checkpoint-weekly@v3 keep the 364-day shift and *flag* the weeks where it
 misaligns a holiday in the round text (owner decision rev 2), rather than
 changing the rule. `misaligned` is that flag, computed rather than remembered.
 

@@ -4,6 +4,15 @@ This release adds a future question batch to the current arena. It preserves
 published questions, results, scoring and the frozen S0/Common cohort. It does
 not reset the leaderboard or create a separate Season 1.
 
+## Rights standard (15 November)
+
+A source is usable unless its terms prohibit the route SSA fetches it by, SSA
+keeping an archived copy of what it scored, or publishing scores. Attribution,
+disclaimer and indemnity clauses are conditions, not prohibitions; maintainers
+confirm each verdict in `ssa/inventory.py`. Every credit line and required
+disclaimer is written once in `ssa/source_notices.py` and printed on each
+question page and under "Data sources & terms" in the docs.
+
 ## Admitted launch
 
 | Track | Sources | Question status |
@@ -11,11 +20,16 @@ not reset the leaderboard or create a separate Season 1.
 | Market | New York Fed household spending, stock-price expectations and unemployment expectations | November survey, released 7 December; lock 5 December 16:00 UTC |
 | Market | European Commission consumer confidence, EU and euro area | Existing dev definitions, lock 18 November; no country profile |
 | Urban | Seattle community calls, NYC 311, NY Fed moving profile, BLS CPI rent, Singapore COE, taxis, HDB carparks, LTA train and bus | 32 new future rounds, plus the three market SCE rounds above |
+| Urban | MTA subway ridership and TSA checkpoint numbers (rights granted 15 November) | 12 new future rounds, six each, weekly locks Sunday 29 November to Sunday 3 January 23:59 ET; all scored |
 
-All 35 newly added rounds count toward scoring. The owner's 10 November decision
+All 47 newly added rounds count toward scoring. The owner's 10 November decision
 removes unscored trial requirements. Capture completeness, a valid reference,
 pre-behavior locks, missing-data rules and cancellation checks still apply.
-The first new Urban lock is 30 November 15:59 UTC (LTA December targets).
+The first new Urban locks are 30 November 04:59 UTC (MTA and TSA, Sunday
+29 November 23:59 ET) and 15:59 UTC (LTA December targets). Questions are
+listed a week before they lock, so main needs this release by about 22
+November; if it slips, move the 29 November MTA/TSA rounds forward or drop
+them before they are published.
 The three October SCE definitions that never reached main before their locks
 are withdrawn from the dev manifest and replaced by future November targets.
 Every question already on main remains unchanged.
@@ -24,13 +38,11 @@ Every question already on main remains unchanged.
 
 | Sources | What is still needed |
 | --- | --- |
-| MTA and TSA | Rights admission; MTA also needs a weekly manual-download operator |
 | Michigan inflation, Netflix, ACSI | Written source permission and source-specific release contracts |
 | NYT | Evidence for the sales/publication window; API key is configured |
 | Steam | Production key and reviewed measurement window |
 | US Mint | Eligible product evidence and adjacent manual reports |
-| Texas, Chicago CTA | Written source permission, then implementation; cards exist |
-| Zillow | Written permission, then card approval and implementation |
+| Texas, Chicago CTA, Zillow | Rights granted 15 November; implementation is on a separate dev branch, not in this release |
 | OpenTable | Parked; no collection or activation |
 
 These sources are not added as live questions. Disabled reusable adapters may
@@ -51,7 +63,7 @@ No provider keys or participant signing keys are supplied to this workflow.
 The existing six-hour forecast/resolve refresh is retained. The additional
 NYC pre-lock captures, BLS release-hour captures and Singapore Friday/Saturday
 captures remain scheduled. Manual MTA/Mint routes are not replaced by scraping.
-Unresolved TSA rights now prevent automatic capture.
+MTA and TSA are captured once a UTC day by the same collector since their rights were granted (15 November); a refused MTA fetch falls back to a person's weekend download (`tools/ingest_mta_daily.py`), a refused TSA fetch to a maintainer's Mac. The MTA export moved to `data.ny.gov/api/v3/views/sayj-mze2/export.csv`; the old `rows.csv` export is retired on 22 December 2026 (its `Sunset` header).
 
 GitHub schedule triggers run only after the workflows reach the default branch
 (main). A dev merge or preview is not production activation. LTA_API_KEY and

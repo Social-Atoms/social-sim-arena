@@ -147,6 +147,17 @@ NOTICES = {
         "Present (erm2-nwe9); weekly totals computed by SSA from the snapshot "
         "dated on each question.",
         "https://data.cityofnewyork.us/d/erm2-nwe9", "nyc-311.md"),
+    "mta_daily": _n(
+        "Metropolitan Transportation Authority",
+        "Source: Metropolitan Transportation Authority, MTA Daily Ridership and "
+        "Traffic: Beginning 2020 (sayj-mze2), data.ny.gov; weekly totals "
+        "computed by SSA from the download dated on each question.",
+        "https://data.ny.gov/d/sayj-mze2", "mta.md"),
+    "tsa_volumes": _n(
+        "Transportation Security Administration",
+        "Source: Transportation Security Administration, TSA checkpoint travel "
+        "numbers (tsa.gov); weekly totals computed by SSA.",
+        "https://www.tsa.gov/travel/passenger-volumes", "tsa.md"),
     # --- urban: Singapore ----------------------------------------------------
     "sg_coe": _n(
         "Land Transport Authority (data.gov.sg)",

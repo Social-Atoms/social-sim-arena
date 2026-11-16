@@ -71,7 +71,8 @@ def test_the_committed_archives_build_and_missing_ones_build_empty():
         assert len(h) >= 30, (sid, len(h))
         assert all(h[i]["date"] < h[i + 1]["date"] for i in range(len(h) - 1))
         assert all(isinstance(p["value"], float) and p["value"] > 0 for p in h)
-    # Manual MTA has no capture; LTA has verified August–October 2026 files.
+    # MTA has no capture committed yet (route A starts on main); LTA has verified
+    # August–October 2026 files.
     assert built["mta_subway_weekly"] == []
     assert [p["value"] for p in built["sg_pv_train_ew24ns1_weekday_tapin"]] == [71875.0, 71040.0, 71262.0]
     assert [p["value"] for p in built["sg_pv_bus_22009_weekday_tapin"]] == [66079.0, 64578.0, 63827.0]
@@ -232,10 +233,10 @@ def test_the_round_must_name_the_zero_point_the_card_computes():
     ok(test_the_round_must_name_the_zero_point_the_card_computes)
 
 
-def test_every_rounds_file_passes_the_real_validator_but_for_two_rights():
+def test_every_rounds_file_passes_the_real_validator():
     """With the series registered and the source schedules in place, every
-    proposed round is publishable against the reviewed season except MTA's
-    and TSA's, whose rights verdicts wait on a maintainer."""
+    proposed round is publishable against the reviewed season. MTA and TSA
+    were the two exceptions until their rights were granted on 2026-11-15."""
     with open(os.path.join(ROOT, "questions", "season0.json")) as f:
         reviewed = season.rounds_from(json.load(f))
     seen = {r["round_id"]: r for r in reviewed}
@@ -245,11 +246,8 @@ def test_every_rounds_file_passes_the_real_validator_but_for_two_rights():
         else:
             seen[r["round_id"]] = r
     problems = season.validate_document({"rounds": list(seen.values())})
-    left = {p.split(":")[0] for p in problems}
-    assert all("rights are 'unresolved'" in p for p in problems), problems
-    assert {rid.rsplit("-", 3)[0] for rid in left} == {"mta-subway", "tsa-weekly"}, left
-    assert len(left) == 12
-    ok(test_every_rounds_file_passes_the_real_validator_but_for_two_rights)
+    assert problems == [], problems
+    ok(test_every_rounds_file_passes_the_real_validator)
 
 
 if __name__ == "__main__":

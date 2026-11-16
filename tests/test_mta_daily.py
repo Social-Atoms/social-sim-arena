@@ -1,4 +1,4 @@
-"""MTA weekly subway riders (card mta-subway-weekly@v2): parse, ingest, reference, resolution.
+"""MTA weekly subway riders (card mta-subway-weekly@v3): parse, ingest, reference, resolution.
 
 No network. The fixture tests/fixtures/mta_daily/2026-11-09T005927Z.csv is the
 real export the card's research fetched once (HTTP 200, 417,544 bytes, sha256
@@ -76,7 +76,8 @@ def test_the_card_is_committed_byte_identical():
     body = open(p, "rb").read()
     assert hashlib.sha256(body).hexdigest() == m.CARD_SHA256
     card = json.loads(body)
-    assert card["status"] == "approved" and card["revision"] == 2
+    assert card["status"] == "approved" and card["revision"] == 3
+    assert card["source"]["archive_policy"].startswith("GRANTED by Haoyang Shang (project lead), 2026-11-15")
     assert f"{card['id']}@v{card['revision']}" == m.CARD
     assert hashlib.sha256(BODY).hexdigest().startswith("af6e2834")
     ok(test_the_card_is_committed_byte_identical)
@@ -203,27 +204,49 @@ def test_ingest_files_a_manual_capture_write_once():
     ok(test_ingest_files_a_manual_capture_write_once)
 
 
-def test_route_a_refuses_until_cleared():
-    assert m.AUTOMATED_CLEARED is False
-    called = []
+def test_route_a_is_cleared_and_files_a_daily_capture():
+    """Card v3 (2026-11-15): the lead cleared automated retrieval. The daily
+    capture files the export write-once per UTC day, and a capture taken in
+    the Saturday-Sunday window serves the lock exactly like a download."""
+    from ssa import inventory
+    assert m.AUTOMATED_CLEARED is True
+    assert inventory.rights_table()["mta_daily"] == inventory.APPROVED
+    assert m.URL == "https://data.ny.gov/api/v3/views/sayj-mze2/export.csv"
+    calls = []
+    with Sandbox():
+        sat = utc(2026, 11, 15, 0, 37)              # Sat 11-14 19:37 ET
+        row = m.capture(now=sat, fetch=lambda: calls.append(1) or (BODY, m.URL))
+        assert row["file"] == "sources/mta_daily/2026-11-15.csv"
+        assert row["newest_posted"]["Subway"] == "2026-11-03"
+        assert m.capture(now=utc(2026, 11, 15, 6, 37), fetch=lambda: calls.append(1)) == row
+        assert calls == [1]                          # one request per UTC day
+        assert m.lock_capture(date(2026, 11, 16), m.load_fetches()) == "2026-11-15"
+    # The switch stays a card decision: unset, the command refuses to fetch.
+    m.AUTOMATED_CLEARED = False
     try:
-        m.capture(fetch=lambda: called.append(1))
-        raise AssertionError("route A ran")
+        m.capture(fetch=lambda: calls.append(1))
+        raise AssertionError("route A ran while not cleared")
     except RuntimeError as e:
         assert "not cleared" in str(e)
-    assert not called
-    ok(test_route_a_refuses_until_cleared)
+    finally:
+        m.AUTOMATED_CLEARED = True
+    assert calls == [1]
+    ok(test_route_a_is_cleared_and_files_a_daily_capture)
 
 
-def test_no_workflow_fetches_mta():
+def test_only_the_rights_gated_collector_fetches_mta():
+    """Card v3: route A runs from tools/fetch_track_data.py, which checks the
+    inventory before each collector. No workflow step calls the adapter
+    directly, so revoking the row stops every automated fetch."""
+    from tools import fetch_track_data
     wf_dir = os.path.join(ROOT, ".github", "workflows")
     for fn in os.listdir(wf_dir):
         for line in open(os.path.join(wf_dir, fn)):
             if "mta_daily" in line or "sayj-mze2" in line:
                 assert line.lstrip().startswith("#"), (fn, line)
-    src = open(os.path.join(wf_dir, "refresh.yml")).read()
-    assert "#   run: python -m ssa.adapters.mta_daily capture" in src
-    ok(test_no_workflow_fetches_mta)
+    assert [c for c in fetch_track_data.COLLECTORS if c[1] == "mta_daily"] == [
+        ("mta", "mta_daily", ["-m", "ssa.adapters.mta_daily", "capture"])]
+    ok(test_only_the_rights_gated_collector_fetches_mta)
 
 
 # ------------------------------------------------------------------ the reference
@@ -377,21 +400,25 @@ def test_the_proposed_rounds_follow_the_card():
     weeks = [date(2026, 11, 30) + timedelta(days=7 * i) for i in range(6)]
     assert [r["round_id"] for r in rounds] == \
         [f"mta-subway-{(w + timedelta(days=6)).isoformat()}" for w in weeks]
-    assert [season.is_pilot(r) for r in rounds] == [True] * 5 + [False]
+    # Owner decision 2026-11-10: no unscored trials, every round is scored.
+    assert not any(season.is_pilot(r) for r in rounds)
+    assert doc["card"] == m.CARD and doc["card_sha256"] == m.CARD_SHA256
+    published = {r["round_id"]: r for r in json.load(
+        open(os.path.join(ROOT, "questions", "season0.json")))["rounds"]}
     for r, w in zip(rounds, weeks):
         assert r["lock_at"] == m.lock_instant(w).strftime("%Y-%m-%dT%H:%M:%SZ")
         assert r["release_at"] == m.resolution_window(w)[0].strftime("%Y-%m-%dT%H:%M:%SZ")
-        assert r["zero_point"] == "yoy4" and r["card_sha256"] == m.CARD_SHA256
+        assert r["zero_point"] == "yoy4" and m.CARD in r["resolve"]
         assert season._shape_problems(r) == []
+        # Card rev 2: a misaligned holiday is named in the round text itself.
         flagged = m.holiday_flags(w)
-        assert ("Holiday flag" in (r.get("pilot") or r["proposal_note"])) == any(flagged.values())
+        assert ("Holiday flag" in r["question"]) == any(flagged.values())
+        # Admitted verbatim: the season carries exactly the card's round.
+        assert published[r["round_id"]] == r
     assert rounds[0]["lock_at"] == "2026-11-30T04:59:00Z"      # Sun 11-29 23:59 ET
     assert rounds[5]["lock_at"] == "2027-01-04T04:59:00Z"      # Sun 01-03 23:59 ET
-    problems = season.validate_document(doc)
-    # The card's behavioural-week schedule passes (ssa/urban.py); only the
-    # rights verdict, which waits on a maintainer, keeps them unpublishable.
-    assert len(problems) == len(rounds) and all(
-        "rights are 'unresolved'" in p for p in problems), problems
+    # Rights granted 2026-11-15: the rounds now pass the season validator.
+    assert season.validate_document(doc) == []
     ok(test_the_proposed_rounds_follow_the_card)
 
 

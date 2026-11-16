@@ -381,7 +381,7 @@ _register(Source(
                   "12:00 ET eight days after it"))
 
 _register(Source(
-    "mta_daily", "mta-subway-weekly@v2", "behavioral week",
+    "mta_daily", "mta-subway-weekly@v3", "behavioral week",
     target=_week_monday,
     lock=lambda m: _adapter("mta_daily").lock_instant(m),
     release=_mta_release,
@@ -392,7 +392,7 @@ _register(Source(
                   "Saturday 00:00 ET download twelve days after it starts"))
 
 _register(Source(
-    "tsa_volumes", "tsa-checkpoint-weekly@v2", "behavioral week",
+    "tsa_volumes", "tsa-checkpoint-weekly@v3", "behavioral week",
     target=_week_monday,
     lock=lambda m: _adapter("tsa_volumes").lock_instant(m),
     release=lambda m: _adapter("tsa_volumes").resolution_instant(m),

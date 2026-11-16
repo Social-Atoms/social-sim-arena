@@ -1,4 +1,4 @@
-"""TSA weekly checkpoint numbers (card tsa-checkpoint-weekly@v2): parse, capture, reference, resolution.
+"""TSA weekly checkpoint numbers (card tsa-checkpoint-weekly@v3): parse, capture, reference, resolution.
 
 No network. tests/fixtures/tsa_volumes/2026-11-09/ holds the three pages the
 card's research fetched once (2026-11-09T01:01:26Z to 01:02:22Z, HTTP 200,
@@ -78,6 +78,8 @@ def test_the_card_is_committed_byte_identical():
     assert hashlib.sha256(body).hexdigest() == t.CARD_SHA256
     card = json.loads(body)
     assert card["status"] == "approved" and f"{card['id']}@v{card['revision']}" == t.CARD
+    assert card["revision"] == 3 and card["source"]["archive_policy"].startswith(
+        "GRANTED by Haoyang Shang (project lead), 2026-11-15")
     ok(test_the_card_is_committed_byte_identical)
 
 
@@ -206,14 +208,17 @@ def test_january_asks_for_the_two_years_before_the_newest_date():
     ok(test_january_asks_for_the_two_years_before_the_newest_date)
 
 
-def test_unresolved_rights_do_not_start_automated_capture():
+def test_granted_rights_start_the_daily_capture_in_one_place():
+    """Rights granted 2026-11-15 (card v3). The capture runs from the rights-
+    gated collector only, never from a second unguarded workflow step."""
     from ssa import inventory
     from tools import fetch_track_data
-    assert inventory.rights_table()["tsa_volumes"] == inventory.UNRESOLVED
+    assert inventory.rights_table()["tsa_volumes"] == inventory.APPROVED
     with open(os.path.join(ROOT, ".github", "workflows", "refresh.yml")) as f:
         assert "python -m ssa.adapters.tsa_volumes capture" not in f.read()
-    assert all(source != "tsa_volumes" for _, source, _ in fetch_track_data.COLLECTORS)
-    ok(test_unresolved_rights_do_not_start_automated_capture)
+    assert [c for c in fetch_track_data.COLLECTORS if c[1] == "tsa_volumes"] == [
+        ("tsa", "tsa_volumes", ["-m", "ssa.adapters.tsa_volumes", "capture"])]
+    ok(test_granted_rights_start_the_daily_capture_in_one_place)
 
 
 # ------------------------------------------------------------------ the reference
@@ -325,18 +330,21 @@ def test_the_proposed_rounds_follow_the_card():
     weeks = [date(2026, 11, 30) + timedelta(days=7 * i) for i in range(6)]
     assert [r["round_id"] for r in rounds] == \
         [f"tsa-weekly-{(w + timedelta(days=6)).isoformat()}" for w in weeks]
-    assert [season.is_pilot(r) for r in rounds] == [True] * 5 + [False]
+    # Owner decision 2026-11-10: no unscored trials, every round is scored.
+    assert not any(season.is_pilot(r) for r in rounds)
+    assert doc["card"] == t.CARD and doc["card_sha256"] == t.CARD_SHA256
+    published = {r["round_id"]: r for r in json.load(
+        open(os.path.join(ROOT, "questions", "season0.json")))["rounds"]}
     for r, w in zip(rounds, weeks):
         assert r["lock_at"] == t.lock_instant(w).strftime("%Y-%m-%dT%H:%M:%SZ")
         assert r["release_at"] == t.resolution_instant(w).strftime("%Y-%m-%dT%H:%M:%SZ")
         assert baselines.normalize_spec(r["zero_point"]) == baselines.normalize_spec(t.YOY)
-        assert season._shape_problems(r) == []
-    assert rounds[1]["release_at"] == "2026-12-15T17:00:00Z"   # P2, Tue 12-15 12:00 ET
-    problems = season.validate_document(doc)
-    # The card's behavioural-week schedule passes (ssa/urban.py); only the
-    # rights verdict, which waits on a maintainer, keeps them unpublishable.
-    assert len(problems) == len(rounds) and all(
-        "rights are 'unresolved'" in p for p in problems), problems
+        assert season._shape_problems(r) == [] and t.CARD in r["resolve"]
+        assert published[r["round_id"]] == r
+    assert rounds[0]["lock_at"] == "2026-11-30T04:59:00Z"      # Sun 11-29 23:59 ET
+    assert rounds[1]["release_at"] == "2026-12-15T17:00:00Z"   # Tue 12-15 12:00 ET
+    # Rights granted 2026-11-15: the rounds now pass the season validator.
+    assert season.validate_document(doc) == []
     ok(test_the_proposed_rounds_follow_the_card)
 
 

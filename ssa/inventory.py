@@ -326,66 +326,70 @@ INVENTORY = {
                       "(data.ny.gov, OPEN-NY, operated by NYS ITS)"),
         "adapter": "ssa/adapters/mta_daily.py",
         "role": TARGET,
-        "state": PERMISSION_NEEDED,
-        # Not granted. Card mta-subway-weekly@v2 proposes `approved` for its
-        # route B (a person downloads the CSV weekly, the archive is published
-        # with attribution) and `permission-needed` for route A (a scheduled
-        # fetch) until a written answer; maintainers decide at review. Until
-        # then the gate reads `unresolved` and no round can be generated.
-        "rights": UNRESOLVED,
-        "proposed_rights": {"route_b_manual": APPROVED,
-                            "route_a_automated": PERMISSION_NEEDED},
+        "state": INTEGRATED,
+        # Granted 2026-11-15 by Haoyang Shang (project lead) under the new
+        # rights standard: usable unless the terms prohibit our fetch route,
+        # our keeping an archived copy, or publishing scores. Card
+        # mta-subway-weekly@v3 records it and clears route A (automated).
+        "rights": APPROVED,
         "evidence": (
-            "Card mta-subway-weekly@v2, archive_policy, read 2026-11-09. "
+            "Granted 2026-11-15 by Haoyang Shang (project lead), card "
+            "mta-subway-weekly@v3 archive_policy: usable, automated retrieval "
+            "and manual download, archive kept and published, scores published. "
             "OPEN-NY Terms of Use (last modified 2013-03-08; data.ny.gov/api/"
-            "views/77gx-ii52, fetched 2026-11-09T01:01:12Z): preamble 'So long "
+            "views/77gx-ii52, PDF sha256 9437c849705d58df008f01fc23f404444becce"
+            "6b86676adc3974f9160a4cb650, re-read 2026-11-15): preamble 'So long "
             "as you are not doing anything malicious with NYS data, you may use "
             "it as you wish, subject to no other requirements'; Contract 'You "
-            "are welcome to freely download and use this Content'. Under "
-            "'Public Participation', scoped 'To the extent OPEN-NY activates a "
-            "module or forum for public comment or the uploading of Content', "
-            "one bullet bars accessing the site 'by using an automated device, "
-            "script, bot, spider, crawler or scraper' -- so automated retrieval "
-            "is unclear and no workflow fetches the file. Dataset metadata "
-            "licenseId null; MTA's own terms (mta.info/open-data) returned 403 "
-            "to the research fetch and were not read. Manual weekly ingest: "
-            "tools/ingest_mta_daily.py. The export URL answered with "
-            "'Sunset: Tue, 22 Dec 2026' and a Deprecation header on "
-            "2026-11-09T00:59:27Z (docs/sources/mta.md)."),
+            "are welcome to freely download and use this Content'. The 'Public "
+            "Participation' bullet against automated devices is scoped 'To the "
+            "extent OPEN-NY activates a module or forum for public comment or "
+            "the uploading of Content', which the dataset export is not; the "
+            "lead reads it as no prohibition of the route. Nothing bars keeping "
+            "or publishing the archive or the scores. Route A: one honest GET a "
+            "UTC day of the v3 export (data.ny.gov/api/v3/views/sayj-mze2/"
+            "export.csv; the old rows.csv export answered 'Sunset: Tue, 22 Dec "
+            "2026' on 2026-11-09), collector `mta` in tools/fetch_track_data.py; "
+            "route B, tools/ingest_mta_daily.py, is the fallback on a 403. "
+            "Credit from ssa/source_notices.py on every question page. The "
+            "verdict before 2026-11-15 was `unresolved` (rev 2 proposed "
+            "`approved` for manual download only)."),
         "revisit": (
-            "Card person tasks 1 and 2: MTA's own terms read in a browser, and a "
-            "written answer from OpenData@mtahq.org on scheduled download and "
-            "on publishing the archive. A yes to both makes route B `approved` "
-            "and route A a card revision."),
+            "A written request from MTA or NYS ITS to stop, or an OPEN-NY terms "
+            "revision that bars scripted export downloads or archiving; either "
+            "stops the source (route B does not route around a stop request)."),
     },
     "tsa_volumes": {
         "publisher": "Transportation Security Administration (DHS), www.tsa.gov",
         "adapter": "ssa/adapters/tsa_volumes.py",
         "role": TARGET,
         "state": INTEGRATED,
-        # Not granted. Card tsa-checkpoint-weekly@v2 proposes `approved`;
-        # maintainers decide at review. Until then the gate reads
-        # `unresolved` and no round can be generated.
-        "rights": UNRESOLVED,
-        "proposed_rights": APPROVED,
+        # Granted 2026-11-15 by Haoyang Shang (project lead) under the new
+        # rights standard; card tsa-checkpoint-weekly@v3 records it.
+        "rights": APPROVED,
         "evidence": (
-            "Card tsa-checkpoint-weekly@v2, archive_policy, read 2026-11-09. "
-            "TSA site notice (https://www.tsa.gov/privacy-policy, fetched "
-            "2026-11-09T01:06:24Z): 'Information presented on the website is "
-            "considered public information and may be distributed or copied.' "
-            "Its only access restriction is against 'attempts ... to defeat or "
-            "circumvent security features', which an honest single fetch does "
-            "not do; no clause against automated access was found. robots.txt "
-            "(User-agent: *) disallows only Drupal system paths, not /travel/ "
-            "(fetched 01:06:01Z). The numbers are a work of the US government "
+            "Granted 2026-11-15 by Haoyang Shang (project lead), card "
+            "tsa-checkpoint-weekly@v3 archive_policy: usable, automated "
+            "retrieval, archive kept and published, scores published. TSA site "
+            "notice (https://www.tsa.gov/privacy-policy, re-read 2026-11-15): "
+            "'Information presented on the website is considered public "
+            "information and may be distributed or copied.' Its only access "
+            "restriction is against 'attempts ... to defeat or circumvent "
+            "security features', which an honest single fetch does not do; no "
+            "clause against automated access. robots.txt (User-agent: *) "
+            "disallows only Drupal system paths, not /travel/ (fetched "
+            "2026-11-09T01:06:01Z). The numbers are a work of the US government "
             "(17 U.S.C. 105; inferred, the page is not labelled). Daily capture "
             "of three pages with the arena's User-Agent, never a browser "
-            "User-Agent or a headless browser; a 403 means a local courier "
-            "(docs/sources/tsa.md). The TSA logo is not reused. Not yet "
-            "registered in ssa/series.py."),
+            "User-Agent or a headless browser, collector `tsa` in "
+            "tools/fetch_track_data.py; a 403 means a local courier "
+            "(docs/sources/tsa.md). The TSA logo is not reused. Credit from "
+            "ssa/source_notices.py on every question page. The verdict before "
+            "2026-11-15 was `unresolved` (rev 2 proposed `approved`)."),
         "revisit": (
-            "A 403 or challenge page from the refresh runners moves the capture "
-            "to a maintainer's Mac (card fallback), which changes no rights."),
+            "A 403 or challenge page from the runners moves the capture to a "
+            "maintainer's Mac (card fallback), which changes no rights; a TSA "
+            "request to stop stops the source."),
     },
     # --- Singapore (Urban Track), cards sg-*@v2 -----------------------------
     # All four rights verdicts are proposed by the approved Data Cards and

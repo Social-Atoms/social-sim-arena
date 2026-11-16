@@ -1,9 +1,11 @@
-"""File a manually downloaded MTA daily ridership CSV (card mta-subway-weekly@v2, route B).
+"""File a manually downloaded MTA daily ridership CSV (card mta-subway-weekly@v3, route B, the fallback).
 
-Once a week, between Saturday 00:00 and Sunday 20:00 New York time, a person
-opens https://data.ny.gov/d/sayj-mze2, clicks Export > CSV (or opens
-https://data.ny.gov/api/v3/views/sayj-mze2/export.csv in a
-browser), notes the time, and runs:
+Route A (the scheduled collector) is the operating route since card v3; use
+this when the runner is refused or a weekend window has no capture. Between
+Saturday 00:00 and Sunday 20:00 New York time, a person opens
+https://data.ny.gov/d/sayj-mze2, clicks Export > CSV (or opens
+https://data.ny.gov/api/v3/views/sayj-mze2/export.csv in a browser), notes
+the time, and runs:
 
   PYTHONPATH=. python tools/ingest_mta_daily.py ~/Downloads/MTA_Daily_Ridership_and_Traffic__Beginning_2020.csv \\
       --downloaded-at 2026-11-28T15:04:00Z

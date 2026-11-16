@@ -1,25 +1,28 @@
 """MTA Daily Ridership and Traffic (data.ny.gov `sayj-mze2`): weekly subway riders.
 
-  https://data.ny.gov/api/views/sayj-mze2/rows.csv?accessType=DOWNLOAD
+  https://data.ny.gov/api/v3/views/sayj-mze2/export.csv   (legacy rows.csv export: Sunset 2026-12-22)
 
 The portal's own "Export > CSV": one file, ~417 KB, every day since
 2020-03-01 for nine modes, header `Date,Mode,Count`, dates MM/DD/YYYY, a
 count or an empty cell ("not yet posted"). The rules are the approved Data
-Card `mta-subway-weekly@v2` (docs/data-cards/mta-subway-weekly.json,
-sha256 20269fe1b4524a3133e614048a0baabf3b16b91becc3a89c7b79c4b61843f575);
+Card `mta-subway-weekly@v3` (docs/data-cards/mta-subway-weekly.json,
+sha256 0d2442ce4c47c7782b4d3c7b847c448da8777b78e0a30d786807efc4aa4b6dca);
 this module implements them and nothing else.
 
-**Route B: a person downloads it, weekly.** The OPEN-NY terms are clear for
-use and for manual download and unclear for automated retrieval (card,
-archive_policy), so no workflow fetches this file. A person downloads it once
-a week between Saturday 00:00 and Sunday 20:00 New York time and files it with
-`tools/ingest_mta_daily.py`, which runs `check_download` before anything is
-written and archives the bytes as `sources/mta_daily/<capture day, UTC>.csv`
-through `ssa/capture.ingest_manual` (write-once, monotonic, hashed, manifest
-row, a `fetches.json` row marked manual). `capture` -- the Route A daily fetch
--- exists so switching routes changes no round, and refuses to run until
-`AUTOMATED_CLEARED` is set by the card revision that clears it; the
-refresh.yml step that would call it is committed commented out.
+**Route A, the operating route (card v3, cleared 2026-11-15).** The project
+lead granted the rights and cleared automated retrieval, so `capture` runs from
+the scheduled collector (tools/fetch_track_data.py, collector `mta`): one
+honest GET a UTC day of the v3 export, parsed before it is filed, write-once
+per UTC day (`ssa/capture.DailyArchive`). A capture is a lock or resolution
+capture by its fetch instant, exactly like a person's download.
+
+**Route B, the fallback.** If the runner is refused or a weekend window has no
+capture, a person downloads the same file between Saturday 00:00 and Sunday
+20:00 New York time and files it with `tools/ingest_mta_daily.py`, which runs
+`check_download` before anything is written and archives the bytes as
+`sources/mta_daily/<capture day, UTC>.csv` through `ssa/capture.ingest_manual`
+(write-once, monotonic, hashed, manifest row, a `fetches.json` row marked
+manual). Same file, same rules: the route changes no round.
 
 **One download serves two rounds.** It is the lock capture for the week
 starting the coming Monday D (lock Sunday D-1 23:59 ET), and the resolution
@@ -56,8 +59,8 @@ ARCHIVE = os.path.join(ROOT, "sources", NAME)
 FETCHES = os.path.join(ARCHIVE, "fetches.json")
 EXT = "csv"
 
-CARD = "mta-subway-weekly@v2"
-CARD_SHA256 = "20269fe1b4524a3133e614048a0baabf3b16b91becc3a89c7b79c4b61843f575"
+CARD = "mta-subway-weekly@v3"
+CARD_SHA256 = "0d2442ce4c47c7782b4d3c7b847c448da8777b78e0a30d786807efc4aa4b6dca"
 DATASET = "sayj-mze2"
 # The v2 export (rows.csv?accessType=DOWNLOAD) answers with `Sunset: Tue, 22 Dec
 # 2026` (Socrata deprecation notice). Its successor, checked 2026-11-09, serves the
@@ -75,10 +78,10 @@ MODES = ("AAR", "BT", "Bus", "CBD Entries", "CRZ Entries", "LIRR", "MNR",
          "SIR", "Subway")
 TARGET_MODE = "Subway"
 
-# Route A, the scheduled daily fetch, waits on the publisher's or the
-# maintainers' written clearance (card archive_policy, person task 2). Setting
-# this is a card revision, never an edit on its own.
-AUTOMATED_CLEARED = False
+# Route A, the scheduled daily fetch. Cleared by the project lead on
+# 2026-11-15 (card mta-subway-weekly@v3, archive_policy). Changing this is a
+# card revision, never an edit on its own.
+AUTOMATED_CLEARED = True
 
 # The ranked reference and the unranked one shown beside it (card baseline).
 ZERO_POINT = "yoy4"
@@ -314,12 +317,11 @@ def fetch_text(timeout=archive_store.TIMEOUT, get=None):
 
 
 def capture(now=None, fetch=None):
-    """Route A daily capture. Refuses while AUTOMATED_CLEARED is False."""
+    """Route A daily capture (cleared, card v3). Refuses if AUTOMATED_CLEARED is unset."""
     if not AUTOMATED_CLEARED:
         raise RuntimeError(
-            f"{NAME}: automated retrieval is not cleared (card {CARD}, route "
-            "A waits on a written answer); download it by hand and run "
-            "tools/ingest_mta_daily.py")
+            f"{NAME}: automated retrieval is not cleared (card {CARD}); "
+            "download it by hand and run tools/ingest_mta_daily.py")
     return _store().capture(lambda day: (fetch or fetch_text)(), parse=parse,
                             describe=lambda p: {"newest_posted": newest_posted(p)},
                             now=now)
