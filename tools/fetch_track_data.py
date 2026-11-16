@@ -25,6 +25,10 @@ COLLECTORS = (
     ('lta_bus', 'sg_lta_pv', ['-m', 'ssa.adapters.sg_lta_pv', 'capture', 'bus']),
     ('sce', 'sce', ['-c', 'from ssa.adapters import sce; b=sce.fetch_bytes(); r=sce.parse(b); sce.archive(b, newest=r[-1]["date"])']),
     ('ec_consumer', 'ecbcs', ['-c', 'from ssa.adapters import ecbcs; d=[]; ecbcs.history(diagnostics=d); raise SystemExit(bool(d))']),
+    # Cleared 2026-11-15. Zillow has no collector: its terms bar automated
+    # queries, so a person downloads it (tools/ingest_zori.py).
+    ('tx_mixbev', 'tx_mixbev', ['-m', 'ssa.adapters.tx_mixbev', 'capture']),
+    ('cta_daily', 'cta_daily', ['-m', 'ssa.adapters.cta_daily', 'capture']),
 )
 
 

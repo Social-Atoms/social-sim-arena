@@ -1,23 +1,40 @@
 # Source activation decisions awaiting approval
 
-This PR remains unmerged until the relevant evidence or permission arrives.
-It does not alter the inventory, collectors, task status or season manifest.
-The approved launch is described in `docs/market-urban-rollout.md` on dev.
+The sources still listed in the table below wait for evidence or permission;
+nothing here alters the inventory, collectors, task status or season manifest
+for them. The sources cleared on 2026-11-15 are listed after the table. The
+approved launch is described in `docs/market-urban-rollout.md`.
 
 | Source | Existing implementation | Required decision or evidence |
 | --- | --- | --- |
-| MTA subway weekly | Adapter, manual ingest and proposed round templates on dev | Rights admission and a weekly manual collection owner/backup; API automation is not authorized |
-| TSA checkpoints | Adapter and proposed round templates on dev; automatic collection disabled | Rights admission and verified runner access or a manual courier |
+| MTA subway weekly | Adapter, manual ingest and round templates on dev | Granted 2026-11-15 (automated route cleared); activated on the Market/Urban release branch, not here |
+| TSA checkpoints | Adapter and round templates on dev | Granted 2026-11-15; activated on the Market/Urban release branch, not here |
 | Michigan inflation | Disabled parser and production contract on dev | Publisher permission before any new inflation question |
 | Netflix Top 10 | Inactive task registration; no live collector/target | Written authorization covering research benchmarking, retrieval and retention |
 | ACSI | Inactive task registration; no live collector/target | Written permission, forward release calendar, first-print completeness |
 | NYT Books | API adapter, private evidence and ordered-list contract on dev; key configured | Exact sales/publication window evidence and a reviewed future round |
 | Steam weekly | API adapter, private evidence and ordered-list contract on dev | Production key, authenticated response verification and measurement boundaries |
 | US Mint | Manual importer and increment contract on dev | Eligible fixed-supply product evidence, adjacent reports and collection owner |
-| Texas mixed beverage | Specification card attached; no adapter | Written permission, then implementation and a reviewed round |
-| Chicago CTA | Specification card attached; no adapter | Written permission, then implementation and a reviewed round; currently deferred by the owner |
-| Zillow ZORI | Unapproved specification card attached; no adapter | Written permission and card review, then implementation |
-| OpenTable | Parked specification card attached; no collector | Explicit authorization for the proposed use before reopening |
+| OpenTable | Parked specification card attached; no collector | Parked (decision of 2026-11-15 unchanged): explicit authorization for the proposed use before reopening |
+
+## Cleared on 2026-11-15
+
+The project lead set a new rights standard: a source is usable unless its terms
+prohibit SSA's fetch route, SSA keeping an archived copy of what it scored, or
+publishing scores; attribution, disclaimer and indemnity clauses are conditions,
+not prohibitions, and maintainers confirm. Under it, three cards left this
+folder for `docs/data-cards/` with their `archive_policy` rewritten as granted
+(approver Haoyang Shang, project lead, 2026-11-15):
+
+| Source | Verdict | Conditions | Where it is now |
+| --- | --- | --- | --- |
+| Texas mixed beverage (naix-2893) | approved, automated | Credit "Texas Comptroller of Public Accounts" | `texas-mixed-beverage-austin@v3`, `ssa/adapters/tx_mixbev.py`, three scored rounds |
+| Chicago CTA (6iiy-9s97) | approved, automated | City of Chicago Data Terms accepted: verbatim City disclaimer on every page, stop on request, indemnity | `chicago-cta-rail-monthly@v3`, `ssa/adapters/cta_daily.py`, three scored rounds |
+| Zillow ZORI | approved-no-redistribution, manual only | No automated query; raw CSV only as age ciphertext on `sealed`; "Data Provided by Zillow Group" | `zillow-zori-metro@v3`, `tools/ingest_zori.py`; rounds wait on the first file and the Market Report dates |
+
+MTA and TSA were granted the same day on the Market/Urban release branch. The
+credit and disclaimer text for every source lives once, in
+`ssa/source_notices.py`.
 
 ## Approval procedure
 

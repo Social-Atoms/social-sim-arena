@@ -27,6 +27,9 @@ One page per source the arena scores against. Each says the same five things, in
 | AAII | [aaii.md](aaii.md) | Investor sentiment | `ssa/adapters/aaii.py` |
 | Google Trends | [google-trends.md](google-trends.md) | Brand search-interest mix | `ssa/adapters/trends.py` |
 | Wikimedia | [wikimedia.md](wikimedia.md) | Wikipedia weekly top 10 | `ssa/adapters/wikipedia.py` |
+| Texas Comptroller (Texas Open Data, naix-2893) | [card](../data-cards/texas-mixed-beverage-austin.json) | Austin mixed-beverage receipts index: rights granted 2026-11-15; daily automated capture; three scored rounds, locks 2027-01-31 to 2027-03-31 | `ssa/adapters/tx_mixbev.py` |
+| Chicago Transit Authority (City of Chicago Data Portal, 6iiy-9s97) | [card](../data-cards/chicago-cta-rail-monthly.json) | CTA rail boardings, monthly: rights granted 2026-11-15 with the City's Data Terms conditions (verbatim disclaimer on every page, stop on request, indemnity); daily automated capture; three scored rounds, locks 2027-01-31 to 2027-03-31 | `ssa/adapters/cta_daily.py` |
+| Zillow Research (ZORI metro file) | [card](../data-cards/zillow-zori-metro.json) | None yet: rights granted 2026-11-15 for a person's monthly browser download; raw file only as ciphertext on `sealed`, sha256 and derived changes public, 'Data Provided by Zillow Group'; rounds wait on the first file and the Market Report dates | `ssa/adapters/zillow_zori.py`, `tools/ingest_zori.py` |
 
 Two rules hold across every page. A number is read from an archive the arena keeps, never from whatever the publisher shows at the moment of scoring, so every resolution can be checked later. And a source that goes quiet fails loudly rather than serving something stale; [sources.md](../sources.md) is the process for adding a source and says why.
 

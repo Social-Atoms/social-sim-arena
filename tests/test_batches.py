@@ -165,10 +165,18 @@ def test_the_real_season_splits_into_weekly_batches():
         h = batches.horizon_days(lock, r["release_at"])
         assert h > 0, f"{r['round_id']}: closes after it releases"
         horizons.append(h)
-    # 94 of 116 lock at release - 48h; the rest ask about a period and must
-    # lock before it starts, which is a property of those questions.
-    two_day = sum(1 for h in horizons if abs(h - 2.0) < 0.05)
-    assert two_day > len(rounds) * 0.75, two_day
+    # Most lock at release - 48h; the rest ask about a period and must lock
+    # before it starts, which is a property of those questions. A source
+    # whose card fixes its own lock (ssa/urban.py) is that kind by
+    # construction, so the share is measured over the other rounds.
+    from ssa import series as series_registry, urban
+
+    def card_scheduled(r):
+        rule = urban.get((series_registry.SERIES.get(r["series"]) or {}).get("source"))
+        return bool(rule and rule.has_schedule)
+    generic = [h for r, h in zip(rounds, horizons) if not card_scheduled(r)]
+    two_day = sum(1 for h in generic if abs(h - 2.0) < 0.05)
+    assert two_day > len(generic) * 0.75, (two_day, len(generic))
     # Monthly LTA behavior locks before the target month; release is on the
     # following month's 10th, so its horizon can exceed 40 days.
     for r in rounds:
@@ -176,7 +184,10 @@ def test_the_real_season_splits_into_weekly_batches():
             from ssa.adapters import sg_lta_pv
             assert r['lock_at'] == sg_lta_pv.sg_common.iso(sg_lta_pv.lock_instant(r['round_id'][-7:]))
         else:
-            assert batches.horizon_days(r['lock_at'], r['release_at']) < 40, r['round_id']
+            # A monthly card-scheduled source (Texas, CTA) locks before the
+            # month and resolves weeks after it: its horizon is the card's.
+            assert (batches.horizon_days(r['lock_at'], r['release_at']) < 40
+                    or card_scheduled(r)), r['round_id']
     governed = [r for r in rounds if batches.governed_by_batch(r["lock_at"])]
     print(f"ok test_the_real_season_splits_into_weekly_batches "
           f"({two_day}/{len(rounds)} at a 48-hour horizon, "

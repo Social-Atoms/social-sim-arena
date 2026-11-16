@@ -1,0 +1,77 @@
+{
+  "card": "texas-mixed-beverage-austin@v3",
+  "card_sha256": "b63badbf106d2fb40a62f9edff0085d29a8e4f57df3e6e874c0d118fbf66a459",
+  "status": "admitted: in questions/season0.json as ordinary scored rounds",
+  "note": "Owner decisions 2026-11-10 (no unscored trials) and 2026-11-15 (rights granted). First lock kept at the card's first scored date, Sun 2027-01-31, so the daily collector has run on main for weeks before the lock capture. Each round is posted only if `python -m ssa.adapters.tx_mixbev reference <YYYY-MM>` succeeds on the capture before its lock (policy (3)).",
+  "rounds": [
+    {
+      "round_id": "austin-mixbev-2027-02",
+      "tracker": "tx_comptroller",
+      "series": "austin_mixbev_yoy",
+      "question": "What will Austin's mixed-beverage receipts index be for February 2027: 100 x (Austin's total reported mixed-beverage gross receipts for the reporting month ending 2027-02-28 / the same total for February 2026)? Austin means location_city AUSTIN in the Texas Comptroller's Mixed Beverage Gross Receipts (naix-2893, Texas Open Data Portal), all permits and receipt categories (liquor, wine, beer, cover charges), summed as published. The February 2026 total is read from SSA's capture archived at lock and published with the question. There is no publisher release calendar: SSA sets and resolves this metric from its own daily archive (docs/sources.md section 1.1), under card texas-mixed-beverage-austin@v3. Ranked reference: same as last year (index 100), with sd the root-mean-square of (index - 100) over the 12 newest months complete in the lock capture. Mode: automated daily capture.",
+      "unit": "index points (100 = same nominal receipts as the same month last year)",
+      "lock_at": "2027-02-01T05:59:00Z",
+      "release_at": "2027-03-31T17:00:00Z",
+      "release_estimated": false,
+      "resolve": "100 x Austin's summed total_receipts for 2027-02 in the first capture archived under sources/tx_mixbev/ at or after 2027-03-31T17:00:00Z whose Austin record count for 2027-02 is at least 97% of 2026-02's in the lock capture, over 2026-02's total in the lock capture; none within 24 hours and the round is void (ssa/adapters/tx_mixbev.py resolve)",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "yoy_k0_rms12",
+        "family": "yoy_k",
+        "period": "month",
+        "k": 0,
+        "lag": 2,
+        "spread": {
+          "rule": "rms",
+          "n": 12
+        }
+      }
+    },
+    {
+      "round_id": "austin-mixbev-2027-03",
+      "tracker": "tx_comptroller",
+      "series": "austin_mixbev_yoy",
+      "question": "What will Austin's mixed-beverage receipts index be for March 2027: 100 x (Austin's total reported mixed-beverage gross receipts for the reporting month ending 2027-03-31 / the same total for March 2026)? Austin means location_city AUSTIN in the Texas Comptroller's Mixed Beverage Gross Receipts (naix-2893, Texas Open Data Portal), all permits and receipt categories (liquor, wine, beer, cover charges), summed as published. The March 2026 total is read from SSA's capture archived at lock and published with the question. There is no publisher release calendar: SSA sets and resolves this metric from its own daily archive (docs/sources.md section 1.1), under card texas-mixed-beverage-austin@v3. Ranked reference: same as last year (index 100), with sd the root-mean-square of (index - 100) over the 12 newest months complete in the lock capture. Mode: automated daily capture.",
+      "unit": "index points (100 = same nominal receipts as the same month last year)",
+      "lock_at": "2027-03-01T05:59:00Z",
+      "release_at": "2027-04-30T17:00:00Z",
+      "release_estimated": false,
+      "resolve": "100 x Austin's summed total_receipts for 2027-03 in the first capture archived under sources/tx_mixbev/ at or after 2027-04-30T17:00:00Z whose Austin record count for 2027-03 is at least 97% of 2026-03's in the lock capture, over 2026-03's total in the lock capture; none within 24 hours and the round is void (ssa/adapters/tx_mixbev.py resolve)",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "yoy_k0_rms12",
+        "family": "yoy_k",
+        "period": "month",
+        "k": 0,
+        "lag": 2,
+        "spread": {
+          "rule": "rms",
+          "n": 12
+        }
+      }
+    },
+    {
+      "round_id": "austin-mixbev-2027-04",
+      "tracker": "tx_comptroller",
+      "series": "austin_mixbev_yoy",
+      "question": "What will Austin's mixed-beverage receipts index be for April 2027: 100 x (Austin's total reported mixed-beverage gross receipts for the reporting month ending 2027-04-30 / the same total for April 2026)? Austin means location_city AUSTIN in the Texas Comptroller's Mixed Beverage Gross Receipts (naix-2893, Texas Open Data Portal), all permits and receipt categories (liquor, wine, beer, cover charges), summed as published. The April 2026 total is read from SSA's capture archived at lock and published with the question. There is no publisher release calendar: SSA sets and resolves this metric from its own daily archive (docs/sources.md section 1.1), under card texas-mixed-beverage-austin@v3. Ranked reference: same as last year (index 100), with sd the root-mean-square of (index - 100) over the 12 newest months complete in the lock capture. Mode: automated daily capture.",
+      "unit": "index points (100 = same nominal receipts as the same month last year)",
+      "lock_at": "2027-04-01T04:59:00Z",
+      "release_at": "2027-05-31T17:00:00Z",
+      "release_estimated": false,
+      "resolve": "100 x Austin's summed total_receipts for 2027-04 in the first capture archived under sources/tx_mixbev/ at or after 2027-05-31T17:00:00Z whose Austin record count for 2027-04 is at least 97% of 2026-04's in the lock capture, over 2026-04's total in the lock capture; none within 24 hours and the round is void (ssa/adapters/tx_mixbev.py resolve)",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "yoy_k0_rms12",
+        "family": "yoy_k",
+        "period": "month",
+        "k": 0,
+        "lag": 2,
+        "spread": {
+          "rule": "rms",
+          "n": 12
+        }
+      }
+    }
+  ]
+}

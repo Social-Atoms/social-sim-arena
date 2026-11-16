@@ -870,6 +870,48 @@
       ],
       "status": "active",
       "note": "One joint forecast across ten demographic cells; the national mean is context only."
+    },
+    {
+      "id": "austin_mixbev_yoy",
+      "label": "Austin mixed-beverage receipts, year over year",
+      "group": "urban",
+      "domain": "urban",
+      "population": "Population represented in the source metric",
+      "cadence": "daily capture; the Comptroller loads on Saturdays, most of a month arriving around the 20th of the next",
+      "question_type": "number",
+      "unit": "index points (100 = same nominal receipts as the same month last year)",
+      "source": {
+        "name": "Texas Comptroller of Public Accounts, Texas Open Data Portal (data.texas.gov, dataset naix-2893).",
+        "url": "https://data.texas.gov/dataset/Mixed-Beverage-Gross-Receipts/naix-2893"
+      },
+      "match": {
+        "series": [
+          "austin_mixbev_yoy"
+        ]
+      },
+      "status": "active",
+      "note": "Austin's total mixed-beverage gross receipts for the reporting month over the same month a year earlier, x 100. The year-earlier month is frozen at lock; the target month resolves on the first capture holding at least 97% of the year-earlier record count. SSA sets and resolves the metric from its archived daily capture."
+    },
+    {
+      "id": "cta_rail_monthly",
+      "label": "Chicago CTA rail boardings, monthly",
+      "group": "urban",
+      "domain": "urban",
+      "population": "Population represented in the source metric",
+      "cadence": "daily capture; CTA posts months in batches 40 to 150 days after they end",
+      "question_type": "number",
+      "unit": "rail boardings per calendar month",
+      "source": {
+        "name": "Chicago Transit Authority, City of Chicago Data Portal (data.cityofchicago.org, dataset 6iiy-9s97).",
+        "url": "https://data.cityofchicago.org/Transportation/CTA-Ridership-Daily-Boarding-Totals/6iiy-9s97"
+      },
+      "match": {
+        "series": [
+          "cta_rail_monthly"
+        ]
+      },
+      "status": "active",
+      "note": "CTA rail boardings summed over every service date of the month, from the first archived snapshot holding all of them; void if the month is still incomplete 100 days after it ends. Shown with the City of Chicago's data disclaimer."
     }
   ]
 }

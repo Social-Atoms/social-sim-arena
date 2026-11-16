@@ -3668,6 +3668,153 @@
       }
     },
     {
+      "round_id": "austin-mixbev-2027-02",
+      "tracker": "tx_comptroller",
+      "series": "austin_mixbev_yoy",
+      "question": "What will Austin's mixed-beverage receipts index be for February 2027: 100 x (Austin's total reported mixed-beverage gross receipts for the reporting month ending 2027-02-28 / the same total for February 2026)? Austin means location_city AUSTIN in the Texas Comptroller's Mixed Beverage Gross Receipts (naix-2893, Texas Open Data Portal), all permits and receipt categories (liquor, wine, beer, cover charges), summed as published. The February 2026 total is read from SSA's capture archived at lock and published with the question. There is no publisher release calendar: SSA sets and resolves this metric from its own daily archive (docs/sources.md section 1.1), under card texas-mixed-beverage-austin@v3. Ranked reference: same as last year (index 100), with sd the root-mean-square of (index - 100) over the 12 newest months complete in the lock capture. Mode: automated daily capture.",
+      "unit": "index points (100 = same nominal receipts as the same month last year)",
+      "lock_at": "2027-02-01T05:59:00Z",
+      "release_at": "2027-03-31T17:00:00Z",
+      "release_estimated": false,
+      "resolve": "100 x Austin's summed total_receipts for 2027-02 in the first capture archived under sources/tx_mixbev/ at or after 2027-03-31T17:00:00Z whose Austin record count for 2027-02 is at least 97% of 2026-02's in the lock capture, over 2026-02's total in the lock capture; none within 24 hours and the round is void (ssa/adapters/tx_mixbev.py resolve)",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "yoy_k0_rms12",
+        "family": "yoy_k",
+        "period": "month",
+        "k": 0,
+        "lag": 2,
+        "spread": {
+          "rule": "rms",
+          "n": 12
+        }
+      }
+    },
+    {
+      "round_id": "austin-mixbev-2027-03",
+      "tracker": "tx_comptroller",
+      "series": "austin_mixbev_yoy",
+      "question": "What will Austin's mixed-beverage receipts index be for March 2027: 100 x (Austin's total reported mixed-beverage gross receipts for the reporting month ending 2027-03-31 / the same total for March 2026)? Austin means location_city AUSTIN in the Texas Comptroller's Mixed Beverage Gross Receipts (naix-2893, Texas Open Data Portal), all permits and receipt categories (liquor, wine, beer, cover charges), summed as published. The March 2026 total is read from SSA's capture archived at lock and published with the question. There is no publisher release calendar: SSA sets and resolves this metric from its own daily archive (docs/sources.md section 1.1), under card texas-mixed-beverage-austin@v3. Ranked reference: same as last year (index 100), with sd the root-mean-square of (index - 100) over the 12 newest months complete in the lock capture. Mode: automated daily capture.",
+      "unit": "index points (100 = same nominal receipts as the same month last year)",
+      "lock_at": "2027-03-01T05:59:00Z",
+      "release_at": "2027-04-30T17:00:00Z",
+      "release_estimated": false,
+      "resolve": "100 x Austin's summed total_receipts for 2027-03 in the first capture archived under sources/tx_mixbev/ at or after 2027-04-30T17:00:00Z whose Austin record count for 2027-03 is at least 97% of 2026-03's in the lock capture, over 2026-03's total in the lock capture; none within 24 hours and the round is void (ssa/adapters/tx_mixbev.py resolve)",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "yoy_k0_rms12",
+        "family": "yoy_k",
+        "period": "month",
+        "k": 0,
+        "lag": 2,
+        "spread": {
+          "rule": "rms",
+          "n": 12
+        }
+      }
+    },
+    {
+      "round_id": "austin-mixbev-2027-04",
+      "tracker": "tx_comptroller",
+      "series": "austin_mixbev_yoy",
+      "question": "What will Austin's mixed-beverage receipts index be for April 2027: 100 x (Austin's total reported mixed-beverage gross receipts for the reporting month ending 2027-04-30 / the same total for April 2026)? Austin means location_city AUSTIN in the Texas Comptroller's Mixed Beverage Gross Receipts (naix-2893, Texas Open Data Portal), all permits and receipt categories (liquor, wine, beer, cover charges), summed as published. The April 2026 total is read from SSA's capture archived at lock and published with the question. There is no publisher release calendar: SSA sets and resolves this metric from its own daily archive (docs/sources.md section 1.1), under card texas-mixed-beverage-austin@v3. Ranked reference: same as last year (index 100), with sd the root-mean-square of (index - 100) over the 12 newest months complete in the lock capture. Mode: automated daily capture.",
+      "unit": "index points (100 = same nominal receipts as the same month last year)",
+      "lock_at": "2027-04-01T04:59:00Z",
+      "release_at": "2027-05-31T17:00:00Z",
+      "release_estimated": false,
+      "resolve": "100 x Austin's summed total_receipts for 2027-04 in the first capture archived under sources/tx_mixbev/ at or after 2027-05-31T17:00:00Z whose Austin record count for 2027-04 is at least 97% of 2026-04's in the lock capture, over 2026-04's total in the lock capture; none within 24 hours and the round is void (ssa/adapters/tx_mixbev.py resolve)",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "yoy_k0_rms12",
+        "family": "yoy_k",
+        "period": "month",
+        "k": 0,
+        "lag": 2,
+        "spread": {
+          "rule": "rms",
+          "n": 12
+        }
+      }
+    },
+    {
+      "round_id": "cta-rail-2027-02",
+      "tracker": "cta",
+      "series": "cta_rail_monthly",
+      "question": "How many rail boardings will CTA report for February 2027, summing rail_boardings over every service date of the month in the City of Chicago Data Portal dataset 6iiy-9s97 (CTA - Ridership - Daily Boarding Totals), read from the first daily snapshot SSA archived that holds every day of the month? CTA posts months 40 to 150 days after they end; a month still incomplete 100 days after it ends voids the round. There is no publisher release calendar: SSA sets and resolves this metric from its own daily archive (docs/sources.md section 1.1), under card chicago-cta-rail-monthly@v3. Ranked reference: the calendar-aware same month last year (days of each type times last year's mean per type) times the trend of the three newest complete months, sd the reference times the RMS relative error of the same rule over 12 months. CTA holidays in the month (coded as Sundays): none. Mode: automated daily capture.",
+      "unit": "rail boardings per calendar month",
+      "lock_at": "2027-02-01T05:59:00Z",
+      "release_at": "2027-04-09T14:00:00Z",
+      "release_estimated": true,
+      "resolve": "the sum of rail_boardings over every service date of 2027-02 in the first capture archived under sources/cta_daily/ after 2027-02 ends that holds all of them; later re-publications never change it; an unexpected day type or bus + rail != total_rides holds it for maintainer review; incomplete at 2027-06-08T23:59:00Z (day 100) and the round is void (ssa/adapters/cta_daily.py resolve)",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "cal_yoy3_rms12",
+        "family": "yoy_k",
+        "period": "month",
+        "k": 3,
+        "lag": 1,
+        "end": "newest",
+        "max_lag": 5,
+        "base": "cta_day_type",
+        "spread": {
+          "rule": "rms_relative",
+          "n": 12
+        }
+      }
+    },
+    {
+      "round_id": "cta-rail-2027-03",
+      "tracker": "cta",
+      "series": "cta_rail_monthly",
+      "question": "How many rail boardings will CTA report for March 2027, summing rail_boardings over every service date of the month in the City of Chicago Data Portal dataset 6iiy-9s97 (CTA - Ridership - Daily Boarding Totals), read from the first daily snapshot SSA archived that holds every day of the month? CTA posts months 40 to 150 days after they end; a month still incomplete 100 days after it ends voids the round. There is no publisher release calendar: SSA sets and resolves this metric from its own daily archive (docs/sources.md section 1.1), under card chicago-cta-rail-monthly@v3. Ranked reference: the calendar-aware same month last year (days of each type times last year's mean per type) times the trend of the three newest complete months, sd the reference times the RMS relative error of the same rule over 12 months. CTA holidays in the month (coded as Sundays): none. Mode: automated daily capture.",
+      "unit": "rail boardings per calendar month",
+      "lock_at": "2027-03-01T05:59:00Z",
+      "release_at": "2027-05-10T14:00:00Z",
+      "release_estimated": true,
+      "resolve": "the sum of rail_boardings over every service date of 2027-03 in the first capture archived under sources/cta_daily/ after 2027-03 ends that holds all of them; later re-publications never change it; an unexpected day type or bus + rail != total_rides holds it for maintainer review; incomplete at 2027-07-09T23:59:00Z (day 100) and the round is void (ssa/adapters/cta_daily.py resolve)",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "cal_yoy3_rms12",
+        "family": "yoy_k",
+        "period": "month",
+        "k": 3,
+        "lag": 1,
+        "end": "newest",
+        "max_lag": 5,
+        "base": "cta_day_type",
+        "spread": {
+          "rule": "rms_relative",
+          "n": 12
+        }
+      }
+    },
+    {
+      "round_id": "cta-rail-2027-04",
+      "tracker": "cta",
+      "series": "cta_rail_monthly",
+      "question": "How many rail boardings will CTA report for April 2027, summing rail_boardings over every service date of the month in the City of Chicago Data Portal dataset 6iiy-9s97 (CTA - Ridership - Daily Boarding Totals), read from the first daily snapshot SSA archived that holds every day of the month? CTA posts months 40 to 150 days after they end; a month still incomplete 100 days after it ends voids the round. There is no publisher release calendar: SSA sets and resolves this metric from its own daily archive (docs/sources.md section 1.1), under card chicago-cta-rail-monthly@v3. Ranked reference: the calendar-aware same month last year (days of each type times last year's mean per type) times the trend of the three newest complete months, sd the reference times the RMS relative error of the same rule over 12 months. CTA holidays in the month (coded as Sundays): none. Mode: automated daily capture.",
+      "unit": "rail boardings per calendar month",
+      "lock_at": "2027-04-01T04:59:00Z",
+      "release_at": "2027-06-09T14:00:00Z",
+      "release_estimated": true,
+      "resolve": "the sum of rail_boardings over every service date of 2027-04 in the first capture archived under sources/cta_daily/ after 2027-04 ends that holds all of them; later re-publications never change it; an unexpected day type or bus + rail != total_rides holds it for maintainer review; incomplete at 2027-08-08T23:59:00Z (day 100) and the round is void (ssa/adapters/cta_daily.py resolve)",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "cal_yoy3_rms12",
+        "family": "yoy_k",
+        "period": "month",
+        "k": 3,
+        "lag": 1,
+        "end": "newest",
+        "max_lag": 5,
+        "base": "cta_day_type",
+        "spread": {
+          "rule": "rms_relative",
+          "n": 12
+        }
+      }
+    },
+    {
       "round_id": "seattle-calls-2026-12-20",
       "tracker": "seattle_cad",
       "series": "seattle_calls_weekly",
