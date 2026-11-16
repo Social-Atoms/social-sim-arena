@@ -122,7 +122,7 @@ def test_each_source_rule_holds_its_cards_instants_to_the_second():
         early = dict(r, release_at=_shift(r["release_at"], minutes=-1))
         assert _schedule(early), r["round_id"]
     assert seen == {"nyc311", "mta_daily", "tsa_volumes", "sg_coe", "sg_taxi",
-                    "sg_carpark_hdb", "sg_lta_pv"}, seen
+                    "sg_carpark_hdb", "sg_lta_pv", "tx_mixbev", "cta_daily"}, seen
     week = next(r for r in rounds if r["round_id"].startswith("nyc311-"))
     saturday = dict(week, round_id=week["round_id"][:-2] + "19")
     assert "not the Sunday" in _schedule(saturday)[0]

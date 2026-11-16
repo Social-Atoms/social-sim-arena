@@ -996,6 +996,8 @@ const TASKS = {
   sg_pv_train_ew24ns1_weekday_tapin:{chart:'sg_pv_train_ew24ns1_weekday_tapin',unit:"tap-ins per weekday (average, public holidays excluded)",match:r=>r.series==='sg_pv_train_ew24ns1_weekday_tapin'},
   sg_pv_bus_22009_weekday_tapin:{chart:'sg_pv_bus_22009_weekday_tapin',unit:"boardings per weekday (average, public holidays excluded)",match:r=>r.series==='sg_pv_bus_22009_weekday_tapin'},
   urban_sce_moving:{kind:'profile',chart:'sce_moving_national',cells:['sce_moving_age_under_40', 'sce_moving_age_40_60', 'sce_moving_age_over_60', 'sce_moving_income_under_50k', 'sce_moving_income_50_100k', 'sce_moving_income_over_100k', 'sce_moving_region_west', 'sce_moving_region_midwest', 'sce_moving_region_south', 'sce_moving_region_northeast'],match:r=>/^sce_moving_/.test(r.series)},
+  austin_mixbev_yoy:{chart:'austin_mixbev_yoy',unit:"index points (100 = same nominal receipts as the same month last year)",match:r=>r.series==='austin_mixbev_yoy'},
+  cta_rail_monthly:{chart:'cta_rail_monthly',unit:"rail boardings per calendar month",match:r=>r.series==='cta_rail_monthly'},
   consumer_sce:{chart:'sce_spending_growth',unit:'%',match:r=>['sce_spending_growth','sce_stock_prices_rise','sce_unemployment_rise'].includes(r.series)},
   ec_consumer:{chart:'ec_cci_eu',unit:' pts',match:r=>['ec_cci_eu','ec_cci_ea'].includes(r.series)},
   consumer_michigan:{chart:'umich_inflation_1y_final',unit:'%',match:r=>/^umich_inflation_1y_/.test(r.series)},

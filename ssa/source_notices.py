@@ -172,6 +172,24 @@ NOTICES = {
         "made available under the Singapore Open Data Licence version 1.0 "
         "(https://datamall.lta.gov.sg/content/datamall/en/SingaporeOpenDataLicence.html).",
         "https://datamall.lta.gov.sg/", "singapore-passenger-volume.md"),
+    # --- urban: cleared 2026-11-15 ---------------------------------------------
+    "tx_mixbev": _n(
+        "Texas Comptroller of Public Accounts",
+        "Source: Texas Comptroller of Public Accounts, Mixed Beverage Gross "
+        "Receipts (naix-2893), Texas Open Data Portal; Austin index computed by "
+        "SSA from the snapshot dated on each question.",
+        "https://data.texas.gov/dataset/Mixed-Beverage-Gross-Receipts/naix-2893"),
+    "cta_daily": _n(
+        "Chicago Transit Authority (City of Chicago Data Portal)",
+        "Source: Chicago Transit Authority, CTA - Ridership - Daily Boarding "
+        "Totals (6iiy-9s97), City of Chicago Data Portal; monthly totals "
+        "computed by SSA from the snapshot dated on each question.",
+        "https://data.cityofchicago.org/Transportation/"
+        "CTA-Ridership-Daily-Boarding-Totals/6iiy-9s97",
+        disclaimer=CHICAGO_DISCLAIMER),
+    "zillow_zori": _n(
+        "Zillow Group", "Data Provided by Zillow Group.",
+        "https://www.zillow.com/research/data/"),
 }
 
 # Rounds whose series is not in `ssa/series.SERIES` (ranking, election and

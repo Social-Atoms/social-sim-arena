@@ -1,0 +1,86 @@
+{
+  "card": "chicago-cta-rail-monthly@v3",
+  "card_sha256": "2aa2beddb4ff0bfac6e21d7277e7400349c6fcb7f5eb5f0a14b5a379ebfc9a86",
+  "status": "admitted: in questions/season0.json as ordinary scored rounds",
+  "note": "Owner decisions 2026-11-10 (no unscored trials) and 2026-11-15 (rights granted, City of Chicago Data Terms conditions accepted). First lock Sun 2027-01-31 so the daily collector has run on main before the lock capture. Every page showing these rounds carries the City's disclaimer verbatim (ssa/source_notices.py).",
+  "rounds": [
+    {
+      "round_id": "cta-rail-2027-02",
+      "tracker": "cta",
+      "series": "cta_rail_monthly",
+      "question": "How many rail boardings will CTA report for February 2027, summing rail_boardings over every service date of the month in the City of Chicago Data Portal dataset 6iiy-9s97 (CTA - Ridership - Daily Boarding Totals), read from the first daily snapshot SSA archived that holds every day of the month? CTA posts months 40 to 150 days after they end; a month still incomplete 100 days after it ends voids the round. There is no publisher release calendar: SSA sets and resolves this metric from its own daily archive (docs/sources.md section 1.1), under card chicago-cta-rail-monthly@v3. Ranked reference: the calendar-aware same month last year (days of each type times last year's mean per type) times the trend of the three newest complete months, sd the reference times the RMS relative error of the same rule over 12 months. CTA holidays in the month (coded as Sundays): none. Mode: automated daily capture.",
+      "unit": "rail boardings per calendar month",
+      "lock_at": "2027-02-01T05:59:00Z",
+      "release_at": "2027-04-09T14:00:00Z",
+      "release_estimated": true,
+      "resolve": "the sum of rail_boardings over every service date of 2027-02 in the first capture archived under sources/cta_daily/ after 2027-02 ends that holds all of them; later re-publications never change it; an unexpected day type or bus + rail != total_rides holds it for maintainer review; incomplete at 2027-06-08T23:59:00Z (day 100) and the round is void (ssa/adapters/cta_daily.py resolve)",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "cal_yoy3_rms12",
+        "family": "yoy_k",
+        "period": "month",
+        "k": 3,
+        "lag": 1,
+        "end": "newest",
+        "max_lag": 5,
+        "base": "cta_day_type",
+        "spread": {
+          "rule": "rms_relative",
+          "n": 12
+        }
+      }
+    },
+    {
+      "round_id": "cta-rail-2027-03",
+      "tracker": "cta",
+      "series": "cta_rail_monthly",
+      "question": "How many rail boardings will CTA report for March 2027, summing rail_boardings over every service date of the month in the City of Chicago Data Portal dataset 6iiy-9s97 (CTA - Ridership - Daily Boarding Totals), read from the first daily snapshot SSA archived that holds every day of the month? CTA posts months 40 to 150 days after they end; a month still incomplete 100 days after it ends voids the round. There is no publisher release calendar: SSA sets and resolves this metric from its own daily archive (docs/sources.md section 1.1), under card chicago-cta-rail-monthly@v3. Ranked reference: the calendar-aware same month last year (days of each type times last year's mean per type) times the trend of the three newest complete months, sd the reference times the RMS relative error of the same rule over 12 months. CTA holidays in the month (coded as Sundays): none. Mode: automated daily capture.",
+      "unit": "rail boardings per calendar month",
+      "lock_at": "2027-03-01T05:59:00Z",
+      "release_at": "2027-05-10T14:00:00Z",
+      "release_estimated": true,
+      "resolve": "the sum of rail_boardings over every service date of 2027-03 in the first capture archived under sources/cta_daily/ after 2027-03 ends that holds all of them; later re-publications never change it; an unexpected day type or bus + rail != total_rides holds it for maintainer review; incomplete at 2027-07-09T23:59:00Z (day 100) and the round is void (ssa/adapters/cta_daily.py resolve)",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "cal_yoy3_rms12",
+        "family": "yoy_k",
+        "period": "month",
+        "k": 3,
+        "lag": 1,
+        "end": "newest",
+        "max_lag": 5,
+        "base": "cta_day_type",
+        "spread": {
+          "rule": "rms_relative",
+          "n": 12
+        }
+      }
+    },
+    {
+      "round_id": "cta-rail-2027-04",
+      "tracker": "cta",
+      "series": "cta_rail_monthly",
+      "question": "How many rail boardings will CTA report for April 2027, summing rail_boardings over every service date of the month in the City of Chicago Data Portal dataset 6iiy-9s97 (CTA - Ridership - Daily Boarding Totals), read from the first daily snapshot SSA archived that holds every day of the month? CTA posts months 40 to 150 days after they end; a month still incomplete 100 days after it ends voids the round. There is no publisher release calendar: SSA sets and resolves this metric from its own daily archive (docs/sources.md section 1.1), under card chicago-cta-rail-monthly@v3. Ranked reference: the calendar-aware same month last year (days of each type times last year's mean per type) times the trend of the three newest complete months, sd the reference times the RMS relative error of the same rule over 12 months. CTA holidays in the month (coded as Sundays): none. Mode: automated daily capture.",
+      "unit": "rail boardings per calendar month",
+      "lock_at": "2027-04-01T04:59:00Z",
+      "release_at": "2027-06-09T14:00:00Z",
+      "release_estimated": true,
+      "resolve": "the sum of rail_boardings over every service date of 2027-04 in the first capture archived under sources/cta_daily/ after 2027-04 ends that holds all of them; later re-publications never change it; an unexpected day type or bus + rail != total_rides holds it for maintainer review; incomplete at 2027-08-08T23:59:00Z (day 100) and the round is void (ssa/adapters/cta_daily.py resolve)",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "cal_yoy3_rms12",
+        "family": "yoy_k",
+        "period": "month",
+        "k": 3,
+        "lag": 1,
+        "end": "newest",
+        "max_lag": 5,
+        "base": "cta_day_type",
+        "spread": {
+          "rule": "rms_relative",
+          "n": 12
+        }
+      }
+    }
+  ]
+}

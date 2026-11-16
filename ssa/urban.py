@@ -336,6 +336,13 @@ def _sce_month(r):
     return _adapter("sce").survey_month(r["release_at"])
 
 
+def _month_target(r):
+    m = _MONTH.search(r.get("round_id", ""))
+    if not m:
+        raise ValueError("round id does not end with the month it asks about")
+    return m.group(1)
+
+
 SOURCES = {}
 
 # Per-source keyword arguments passed to the adapter's lock_reference and
@@ -469,3 +476,34 @@ _register(Source(
 def get(source):
     """The registry entry for a source key, or None for every other source."""
     return SOURCES.get(source)
+
+
+# ---------------------------------------------------------------- cleared 2026-11-15
+#
+# Texas mixed beverage (Austin) and CTA rail: monthly, SSA-defined, locked
+# before the month starts and resolved from SSA's own daily captures.
+
+_register(Source(
+    "tx_mixbev", "texas-mixed-beverage-austin@v3", "SSA-defined monthly metric",
+    target=_month_target,
+    lock=lambda m: _adapter("tx_mixbev").lock_instant(m),
+    release=lambda m: _adapter("tx_mixbev").resolution_instant(m),
+    reference=lambda r, m: _adapter("tx_mixbev").lock_reference(m, **_io("tx_mixbev")),
+    resolver=lambda r, m, now: _adapter("tx_mixbev").resolve(m, now, **_io("tx_mixbev")),
+    history=lambda spec: _adapter("tx_mixbev").history(**_io("tx_mixbev")),
+    observed=lambda m: m + "-01",
+    schedule_rule="locks 23:59 CT on the last day of the month before, resolves "
+                  "12:00 CT on the last day of the month after"))
+
+_register(Source(
+    "cta_daily", "chicago-cta-rail-monthly@v3", "SSA-defined monthly metric",
+    target=_month_target,
+    lock=lambda m: _adapter("cta_daily").lock_instant(m),
+    release=lambda m: _adapter("cta_daily").release_instant(m),
+    reference=lambda r, m: _adapter("cta_daily").lock_reference(m, **_io("cta_daily")),
+    resolver=lambda r, m, now: _adapter("cta_daily").resolve(m, now, **_io("cta_daily")),
+    history=lambda spec: _adapter("cta_daily").history(**_io("cta_daily")),
+    observed=lambda m: m + "-01",
+    schedule_rule="locks 23:59 CT on the last day of the month before; release "
+                  "estimated 14:00 UTC forty days after the month ends, resolved "
+                  "from the first complete snapshot, void at day 100"))

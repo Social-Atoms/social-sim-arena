@@ -1510,6 +1510,46 @@ _urban(
         "month's DataMall file, divided by the Monday-to-Friday dates that "
         "are not gazetted public holidays."))
 
+# Cleared 2026-11-15 (rights standard of that day): Texas mixed beverage and
+# CTA rail, cards texas-mixed-beverage-austin@v3 and chicago-cta-rail-monthly@v3.
+_urban(
+    "austin_mixbev_yoy", card="texas-mixed-beverage-austin@v3",
+    label="Austin mixed-beverage receipts, year over year",
+    tracker="tx_comptroller", source="tx_mixbev",
+    publisher=("Texas Comptroller of Public Accounts, on the Texas Open Data "
+               "Portal (data.texas.gov, dataset naix-2893)."),
+    unit="index points (100 = same nominal receipts as the same month last year)",
+    cadence=("daily capture; the Comptroller loads on Saturdays, most of a "
+             "month arriving around the 20th of the next"),
+    question=("100 x Austin's total reported mixed-beverage gross receipts for "
+              "the reporting month over the same month a year earlier"),
+    methodology=(
+        "Sum of total_receipts (liquor, wine, beer and cover charges) over "
+        "naix-2893 rows with location_city AUSTIN for the reporting month, as "
+        "published; the year-earlier month is read from the capture archived "
+        "at lock, the target month from the first capture at or after 12:00 "
+        "CT on the last day of the next month holding at least 97% of the "
+        "year-earlier record count. SSA sets and resolves the metric; no "
+        "publisher releases the index."))
+
+_urban(
+    "cta_rail_monthly", card="chicago-cta-rail-monthly@v3",
+    label="Chicago CTA rail boardings, monthly",
+    tracker="cta", source="cta_daily",
+    publisher=("Chicago Transit Authority, on the City of Chicago Data Portal "
+               "(data.cityofchicago.org, dataset 6iiy-9s97)."),
+    unit="rail boardings per calendar month",
+    cadence=("daily capture; CTA posts months in batches 40 to 150 days after "
+             "they end"),
+    question=("CTA rail boardings (entries plus cross-platform transfers) "
+              "summed over every service date of the calendar month"),
+    methodology=(
+        "Sum of rail_boardings over the month's service dates in the first "
+        "daily snapshot that holds every one of them; later re-publications "
+        "never change it, and a month still incomplete 100 days after it ends "
+        "is void. SSA sets and resolves the metric; no publisher releases a "
+        "monthly number."))
+
 URBAN_SERIES = tuple(sid for sid, s in SERIES.items() if s.get("archive_pending"))
 
 

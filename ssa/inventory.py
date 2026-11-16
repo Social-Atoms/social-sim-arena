@@ -78,6 +78,8 @@ PUBLISH_BLOCKLIST = {
     "consumer_michigan_inflation": ".local/consumer",
     "consumer_nyt": ".local/consumer",
     "consumer_steam": ".local/consumer",
+    # Raw ZORI files: age ciphertext on `sealed` only (card zillow-zori-metro@v3).
+    "zillow_zori": ".local/consumer",
 }
 
 INVENTORY = {
@@ -485,6 +487,105 @@ INVENTORY = {
             "release and archive within the three-month retention period. "
             "No unscored pilots: first proposed scored target December 2026; "
             "publication on main remains pending review."),
+    },
+    # --- cleared 2026-11-15 by the project lead (Urban Track) ---------------
+    # Rights standard of that day: usable unless the terms prohibit our fetch
+    # route, our keeping an archived copy, or publishing scores; attribution,
+    # disclaimer and indemnity clauses are conditions, not prohibitions.
+    "tx_mixbev": {
+        "publisher": ("Texas Comptroller of Public Accounts, on the Texas Open "
+                      "Data Portal (data.texas.gov, Texas DIR on Tyler/Socrata)"),
+        "adapter": "ssa/adapters/tx_mixbev.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        "rights": APPROVED,
+        "evidence": (
+            "Granted 2026-11-15 by Haoyang Shang (project lead), card "
+            "texas-mixed-beverage-austin@v3 archive_policy: usable, automated "
+            "retrieval, archive kept and published, scores published. The "
+            "Comptroller's site policy (comptroller.texas.gov/about/policies/"
+            "privacy.php, read 2026-11-15): \"Information on CPA's sites is "
+            "public domain and may be copied and used as permitted by law, with "
+            "the exception of pictures, official symbols, and registered service "
+            "marked names and logos.\" None of those is reused. Dataset naix-2893 "
+            "metadata: attribution 'Texas Comptroller of Public Accounts', "
+            "licenseId null; nothing read on data.texas.gov or the DIR portal "
+            "pages prohibits SODA retrieval, archiving or publishing derived "
+            "values. Keyless grouped query once a UTC day (collector "
+            "`tx_mixbev`); a 403 means a local courier. Credit from "
+            "ssa/source_notices.py: 'Source: Texas Comptroller of Public "
+            "Accounts'. Previously `permission-needed` (card rev 2)."),
+        "revisit": (
+            "A request from the Comptroller or DIR to stop, or terms that bar "
+            "scripted access or archiving, stops the source."),
+    },
+    "cta_daily": {
+        "publisher": ("Chicago Transit Authority, on the City of Chicago Data "
+                      "Portal (data.cityofchicago.org, Tyler/Socrata)"),
+        "adapter": "ssa/adapters/cta_daily.py",
+        "role": TARGET,
+        "state": INTEGRATED,
+        "rights": APPROVED,
+        # Granted with conditions the lead accepted; tests/test_source_notices.py
+        # checks that the disclaimer condition is met on every page.
+        "conditions": (
+            "City of Chicago Data Terms of Use, accepted 2026-11-15: (1) the "
+            "City's disclaimer, verbatim, on every page that shows the data or "
+            "a number derived from it (source_notices.CHICAGO_DISCLAIMER); (2) "
+            "stop all display, distribution and use if the City requires it; "
+            "(3) the indemnity clause binds SSA as a user."),
+        "evidence": (
+            "Granted 2026-11-15 by Haoyang Shang (project lead), card "
+            "chicago-cta-rail-monthly@v3 archive_policy, with the City's Data "
+            "Terms conditions accepted (see `conditions`). Terms read "
+            "2026-11-15 at www.chicago.gov/city/en/narr/foia/data_disclaimer"
+            ".html: 'USE OF DATA: The City may require a user of this data to "
+            "terminate any and all display, distribution or other use of any or "
+            "all of the data provided at this website for any reason'; "
+            "applications must show the disclaimer 'This site provides "
+            "applications using data that has been modified for use from its "
+            "original source, www.cityofchicago.org ...'; 'INDEMNITY: ... any "
+            "user of the data provided at this website shall indemnify and hold "
+            "harmless the City'. No clause on bots, scraping or API retrieval; "
+            "the portal publishes the SODA API. Dataset 6iiy-9s97, attribution "
+            "'Chicago Transit Authority', licence 'See Terms of Use'. Keyless "
+            "daily query (collector `cta_daily`); a 403 means a local courier. "
+            "Previously `permission-needed` (card rev 2)."),
+        "revisit": (
+            "A City or CTA request to stop: all display, distribution and use "
+            "stop (condition 2), rounds are withdrawn before posting."),
+    },
+    "zillow_zori": {
+        "publisher": "Zillow Research (Zillow Group, Inc.)",
+        "adapter": "ssa/adapters/zillow_zori.py",
+        "role": TARGET,
+        # Not yet feeding a series: the universe is frozen by the first manual
+        # file and the lock waits on the Market Report dates (card v3).
+        "state": PERMISSION_NEEDED,
+        "rights": APPROVED_NO_REDISTRIBUTION,
+        "conditions": (
+            "Zillow Terms of Use: (1) no automated query of any Zillow service, "
+            "so a person downloads the file in a browser (tools/ingest_zori.py, "
+            "no collector); (2) the raw CSV is never published: it is kept only "
+            "as age ciphertext on the private `sealed` branch, via the consumer "
+            "archive (.local/consumer); (3) 'Data Provided by Zillow Group' on "
+            "every page showing a derived number."),
+        "evidence": (
+            "Granted 2026-11-15 by Haoyang Shang (project lead), usable-manual, "
+            "card zillow-zori-metro@v3 archive_policy. Zillow Terms of Use "
+            "(zillow.com/z/corp/terms, read 2026-11-15) section 5 bars "
+            "'automated queries (including screen and database scraping, "
+            "spiders, robots, crawlers ...)'; section 4.C permits displaying "
+            "derivative works of Aggregate Data 'only so long as the Zillow "
+            "Companies are cited as a source on every page where the Aggregate "
+            "Data are displayed, including \"Data Provided by Zillow Group.\"'; "
+            "section 4.A grants no licence to distribute otherwise, hence "
+            "approved-no-redistribution. Public record: sha256 and derived "
+            "month-over-month changes under sources/zillow_zori/."),
+        "revisit": (
+            "Register the series and rounds once the first manual file freezes "
+            "the universe by RegionID and a maintainer copies the Market Report "
+            "dates into the card; a Zillow request to stop stops the source."),
     },
     "wikipedia": {
         "publisher": "Wikimedia Foundation",

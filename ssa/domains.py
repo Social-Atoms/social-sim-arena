@@ -111,6 +111,9 @@ _assign("urban", "cpi_rent_sa_mom",
         "sg_hdb_occ_clementi_sat2000",
         "sg_pv_train_ew24ns1_weekday_tapin", "sg_pv_bus_22009_weekday_tapin")
 
+# Cleared 2026-11-15: Texas mixed beverage (Austin) and CTA rail.
+_assign("urban", "austin_mixbev_yoy", "cta_rail_monthly")
+
 _assign("attention",
         "wiki_top10_en", "wiki_views_trump", "wiki_views_taylor_swift",
         "trends_iphone", "trends_tesla",

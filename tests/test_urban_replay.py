@@ -502,6 +502,63 @@ def test_lta_passenger_volume_end_to_end():
     ok(test_lta_passenger_volume_end_to_end)
 
 
+# ---------------------------------------------------------------- cleared 2026-11-15
+
+def test_texas_mixed_beverage_end_to_end():
+    """Card texas-mixed-beverage-austin@v3 on the one real answer committed as
+    a fixture (2026-11-16, months 2024-09 to 2026-11). September 2026 locks on
+    a capture cut to July; its spread needs 2024-08, which the 800-day answer
+    of that day would hold but this later one does not, so the reference is
+    refused at lock and the round, resolved from the real answer (index
+    115.78, 1,477 of 1,415 year-earlier records), is never scored."""
+    from ssa.adapters import tx_mixbev
+    with open(os.path.join(ROOT, "tests", "fixtures", "tx_mixbev", "2026-11-16.json"), "rb") as f:
+        months = tx_mixbev.parse(f.read())
+
+    def real_reader(day, fetches):
+        return dict(months), {"file": "tests/fixtures/tx_mixbev/2026-11-16.json",
+                              "sha256": "replay"}
+    r = replay_round(proposed("texas-mixed-beverage-austin")[0], "austin-mixbev-2026-09",
+                     "tx_mixbev")
+    lock, res_at = tx_mixbev.lock_instant("2026-09"), tx_mixbev.resolution_instant("2026-09")
+    fake = {"2026-08-31": {"fetched_at": iso(lock - timedelta(hours=5)),
+                           "posted_through": "2026-07"},
+            "2026-10-31": {"fetched_at": iso(res_at + timedelta(hours=7))}}
+    urban.IO["tx_mixbev"] = {"fetches": fake,
+                             "reader": truncating(real_reader, None, None)}
+    _, res, _ = run(r, "tx_mixbev", lock_now=lock, resolve_now=res_at + timedelta(hours=8),
+                    refused="policy (3)")
+    assert round(res["value"], 2) == 115.78
+    ok(test_texas_mixed_beverage_end_to_end)
+
+
+def test_cta_rail_end_to_end():
+    """Card chicago-cta-rail-monthly@v3 on the one real answer committed as a
+    fixture (2026-11-16, days 2024-05-30 to 2026-08-31). August 2026 locks on
+    a capture posted through May (L = M-3, the usual lag); the spread's oldest
+    trend month, 2024-01, is outside that 900-day answer, so the reference is
+    refused at lock. August resolves from the real answer: 13,462,479."""
+    from ssa.adapters import cta_daily
+    with open(os.path.join(ROOT, "tests", "fixtures", "cta_daily", "2026-11-16.json"), "rb") as f:
+        daily = cta_daily.parse(f.read())
+
+    def real_reader(day, fetches):
+        return dict(daily), {"file": "tests/fixtures/cta_daily/2026-11-16.json",
+                             "sha256": "replay"}
+    r = replay_round(proposed("chicago-cta-rail-monthly")[0], "cta-rail-2026-08", "cta_daily")
+    lock = cta_daily.lock_instant("2026-08")
+    fake = {"2026-07-31": {"fetched_at": iso(lock - timedelta(hours=5)),
+                           "posted_through": "2026-05-31"},
+            "2026-11-16": {"fetched_at": "2026-11-16T03:13:47Z"}}
+    urban.IO["cta_daily"] = {"fetches": fake,
+                             "reader": truncating(real_reader, None, None)}
+    _, res, _ = run(r, "cta_daily", lock_now=lock,
+                    resolve_now=datetime(2026, 11, 17, tzinfo=timezone.utc),
+                    refused="missing a day")
+    assert res["value"] == 13462479.0
+    ok(test_cta_rail_end_to_end)
+
+
 def test_every_wired_source_was_replayed():
     wired = {k for k, s in urban.SOURCES.items() if s.has_lock_reference}
     assert wired == set(RESULTS), sorted(wired ^ set(RESULTS))
