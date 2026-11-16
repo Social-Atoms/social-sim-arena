@@ -16,8 +16,10 @@ history is sparse in earlier years; missing months are explicitly recorded.
 current-table headings, dates, duplicates, finite values, and preliminary marker.
 The bridge appends a current preliminary only if a final for that month is absent.
 An immutable snapshot retains both original files independently. Existing
-Michigan retrieval/rights evidence should be reused and checked for these exact
-files; this change does not issue a new approval.
+Michigan retrieval/rights evidence was checked for these exact files: rights
+were granted on 2026-11-15 by the project lead (approved-no-redistribution, as for
+the party series); originals stay private, derived values and scores are public.
+See `ssa/inventory.py` (`consumer_michigan_inflation`).
 
 **How a question resolves.** Proposed: resolve a preliminary question from its
 captured preliminary and a final question from its named final release. Timeline:
