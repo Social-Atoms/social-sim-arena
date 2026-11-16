@@ -2,6 +2,8 @@
 
 One page per source the arena scores against. Each says the same five things, in the same order: what the number is, where it is published, how the arena reads it, how a question on it resolves, and what to watch out for. The page is the reader's entry; the adapter it links is the code that does the reading.
 
+**Credit and disclaimers.** Each source's credit line, and any disclaimer its terms require word for word, is written once in `ssa/source_notices.py` (decision of 2026-11-15: one standardized notice everywhere). `tools/publish_source_notices.py` publishes it as `site/sources.json`; every question and forecast page ends with that source's block and the general SSA notice, and the docs list all of them under [Data sources & terms](https://social-simulation-arena.com/docs.html#data-sources). Edit the notice there, never on a page.
+
 | Source | Page | Tasks on the site | Reader |
 | --- | --- | --- | --- |
 | Economist / YouGov | [yougov.md](yougov.md) | Economist / YouGov approval, YouGov measured crosstabs, the YouGov half of Generic ballot & midterm | `ssa/adapters/silverbulletin.py`, `ssa/adapters/yougov_xtab.py` |

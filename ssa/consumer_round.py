@@ -8,7 +8,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from . import batches, consumer
+from . import batches, consumer, source_notices
 from .adapters import consumer as adapters
 
 SOURCE_KEYS = {
@@ -25,19 +25,10 @@ SERIES_SOURCE = {
     "mint_weekly_net_sales": "mint", "nyt_bestsellers": "nyt",
     "steam_weekly_top_sellers": "steam",
 }
-ATTRIBUTION = {
-    "sce": (
-        "Source: Survey of Consumer Expectations, \u00a9 2013-2026 Federal Reserve Bank "
-        "of New York (FRBNY). The SCE data are available without charge at "
-        "http://www.newyorkfed.org/microeconomics/sce and may be used subject to "
-        "license terms posted there. FRBNY disclaims any responsibility for this "
-        "analysis and interpretation of Survey of Consumer Expectations data."),
-    "mint": "Source: United States Mint.",
-    "nyt": "Data provided by The New York Times.",
-    "steam": "Data from Steam. This project is not endorsed by Valve.",
-    "michigan_current": "Source: Surveys of Consumers. Copyright \u00a9 2026, The Regents of the University of Michigan. All Rights Reserved.",
-    "michigan_finals": "Source: Surveys of Consumers. Copyright \u00a9 2026, The Regents of the University of Michigan. All Rights Reserved.",
-}
+# The credit line for each consumer source is written once, in
+# ssa/source_notices.py (decision of 2026-11-15: one standardized notice).
+ATTRIBUTION = {key: source_notices.text(source)
+               for key, source in source_notices.CONSUMER_SOURCE.items()}
 
 
 def timestamp(value):
