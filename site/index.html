@@ -355,6 +355,10 @@ table.lb .probe-run:hover{text-decoration:underline;}
 .ent-sec{margin:20px 0 0;}
 .ent-sec h3{margin:0 0 8px;font-size:14px;color:var(--ink);}
 .ent-sec .sub{font-size:12.5px;color:var(--mut);margin:0 0 10px;}
+.src-notice{border-top:1px solid var(--line);padding-top:14px;}
+.src-notice .sub{max-width:78ch;line-height:1.55;}
+.src-notice .sub a{color:var(--accent-ink);text-decoration:underline;text-underline-offset:2px;}
+.src-notice .src-disclaimer{color:var(--ink2);font-style:italic;}
 .ent-cov{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;}
 table.ent{width:100%;border-collapse:collapse;font-size:12.5px;}
 table.ent th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);font-weight:700;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap;}
@@ -1238,6 +1242,26 @@ function forecastScore(r, entrantId, f){
   const crps=published&&typeof published.crps==='number'?published.crps:(entrantId==='crowd'?null:(err!==null&&typeof f.sd==='number')?crpsNormal(f.mean,f.sd,rel):null);
   return {kind, metric, err, crps, skill, score:null};
 }
+// ---- the data-source notice: one block per source, written once in ssa/source_notices.py and
+// published as site/sources.json; every question and forecast page prints it the same way ----
+function sourceNoticeFor(r){
+  const n=window.__notices, sid=(r&&r.series)||'';
+  const src=n&&n.series?n.series[sid]:null, row=src?(n.sources||[]).find(x=>x.source===src):null;
+  if(row) return row;
+  // A consumer round carries its credit line in data.json; it is the same text, from the same table.
+  return r&&r.attribution?{attribution:r.attribution, disclaimer:null, url:null}:null;
+}
+function sourceNoticeBlock(r){
+  const row=sourceNoticeFor(r), n=window.__notices;
+  if(!row&&!(n&&n.general)) return '';
+  let h='<div class="ent-sec src-notice"><h3>Data source and terms</h3>';
+  if(row){
+    h+='<p class="sub">'+esc(row.attribution)+(row.url?' <a href="'+esc(row.url)+'" target="_blank" rel="noopener">Publisher page</a>':'')+'</p>';
+    if(row.disclaimer) h+='<p class="sub src-disclaimer">'+esc(row.disclaimer)+'</p>';
+  }
+  h+='<p class="sub">'+(n&&n.general?esc(n.general)+' ':'')+'<a href="docs.html#data-sources">Data sources &amp; terms</a></p></div>';
+  return h;
+}
 // ---- one question: what was asked, who answered when, what came out, who was closest ----
 function renderQuestion(roundId){
   const data=window.__data, host=document.getElementById('question-col'); if(!data||!host) return;
@@ -1267,7 +1291,6 @@ function renderQuestion(roundId){
     +'<p class="lede page-description">'+esc(r.question)+'</p>'
     +(r.scored===false?'<p class="sub">'+pilotTag(r)+' '+esc(r.pilot||'')+'</p>':'')
     +'<p class="ent-meta">'+state+(key!=='agg'?'<span><a href="#questions/task/'+esc(key)+'">all questions on this task</a></span>':'')+(r.batch_id?'<span><a href="#questions/'+esc(r.batch_id)+'">week of '+esc(fmtDate(r.batch_id.replace('batch-','')))+'</a></span>':'')+'<span>source '+(t.srcUrl?'<a href="'+esc(t.srcUrl)+'" target="_blank" rel="noopener">'+esc(t.srcName||t.label)+'</a>':esc(t.srcName||t.label))+'</span><span class="dim">'+esc(r.round_id)+'</span></p>';
-  if(r.attribution) h+='<p class="sub">'+esc(r.attribution)+'</p>';
   h+='<div class="tiles">'
     +tile('Released', resolved?(kind==='number'?fmtNum(rel,u):kind==='profile'?Object.keys(outcome).length+' cells':'top '+outcome.length):'·', resolved?esc(fmtDay(r.release_at))+(kind==='number'?'':' · the released '+(kind==='profile'?'profile':'list')+' is below'):(active?'after the lock at '+esc(fmtLocal(deadlineOf(r))):'expected '+esc(fmtLocal(r.release_at))))
     +(kind==='number'?tile('What the models say', cons!==null?fmtNum(cons,u):'·', cons!==null?'median of '+mm.length+' number forecast'+(mm.length===1?'':'s'):'no number forecasts')
@@ -1293,6 +1316,7 @@ function renderQuestion(roundId){
       return '<tr class="link" data-href="'+href+'" data-e="'+esc(row.k)+'" data-lbl="'+esc(lbl)+'"><td class="num dim">'+(ranked?i+1:'·')+'</td><td><a class="row" href="#entrant/'+esc(row.k)+'"><span class="q">'+esc(nameOf(row.k))+'</span></a>'+(row.base?' <span class="dim">baseline</span>':'')+'</td><td class="dim col-filed">'+(x.filed?esc(fmtLocal(x.filed)):'·')+'</td><td class="num">'+what+'</td><td class="num">'+c1+'</td><td class="num">'+c2+'</td></tr>'; }).join('')
     +'</tbody></table></div>';
   if(!ids.length) h+='<div class="ent-sec"><p class="sub">No forecasts filed yet.</p></div>';
+  h+=sourceNoticeBlock(r);
   host.innerHTML=h;
   host.querySelectorAll('tr.link').forEach(tr=>{ tr.onclick=ev=>{ if(ev.target.closest('a')) return; location.hash=tr.dataset.href; }; });
   // A row and its mark on the strip light up together: the mark gets a ring and its label, the row a tint.
@@ -1329,7 +1353,6 @@ function renderForecast(roundId, entrantId){
   const tile=(k,v,sub)=>'<div class="tile"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="s">'+sub+'</div></div>';
   let h='<div class="eyebrow page-eyebrow">Forecast</div><h2 class="page-title"><a href="#entrant/'+esc(entrantId)+'">'+esc(name)+'</a> on <a href="#leaderboard/'+esc(taskKeyForRound(r))+'/all">'+esc(t.label)+'</a></h2>'
     +'<p class="lede page-description">'+esc(r.question)+'</p><p class="ent-meta">'+state+'<span>question <b>'+esc(r.round_id)+'</b></span><span>entrant <b>'+esc(entrantId)+'</b></span></p>';
-  if(r.attribution) h+='<p class="sub">'+esc(r.attribution)+'</p>';
   if(!f){
     h+='<div class="ent-sec"><p class="sub">No forecast from this entrant on this question.</p></div>';
   } else {
@@ -1379,6 +1402,7 @@ function renderForecast(roundId, entrantId){
       +'<p class="sub" style="margin:10px 0 0">The manifest lists every forecast\'s hash at the lock and was submitted to OpenTimestamps then; a matching hash proves this exact file existed before the answer. <a href="'+REPO+'docs/timestamps.md" target="_blank" rel="noopener">How the proof works</a>.</p></div>';
   }
   h+='</div>';
+  h+=sourceNoticeBlock(r);
   host.innerHTML=h;
   if(typeof syncHash==='function') syncHash();
 }
@@ -3349,7 +3373,10 @@ const loads=[
   previewHost ? Promise.reject('preview uses its own branch data') : fetch(RAW, {cache:'no-store'}).then(r => { if(!r.ok) throw 0; return r.json(); }),
 ];
 if(previewHost)loads.push(fetch('agent-probes.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0;return r.json();}));
-Promise.allSettled(loads).then(results => {
+// The data-source notices (site/sources.json) travel with the page, not with data.json; a page that cannot load them still renders.
+const noticesLoad=fetch('sources.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);
+Promise.all([Promise.allSettled(loads), noticesLoad]).then(([results, notices]) => {
+  window.__notices=notices;
   const ok = results.slice(0,2).filter(x => x.status==='fulfilled').map(x => x.value);
   if(!ok.length) throw new Error('no data source reachable');
   ok.sort((a,b) => (b.generated_at||'').localeCompare(a.generated_at||''));

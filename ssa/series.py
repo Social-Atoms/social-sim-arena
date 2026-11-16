@@ -19,6 +19,7 @@ filters were implicit in adapter code, which had two consequences worth naming:
 Adding a tracker means adding a row here, and nothing else.
 """
 from . import crosstab
+from . import source_notices
 from . import urban
 from .adapters import aaii as aaii_adapter
 from .adapters import bls_cpi as bls_cpi_adapter
@@ -1211,12 +1212,7 @@ _SCE_MOVING_METHODOLOGY = (
     "mean across respondents in the cell, as the bank weights it. A stated "
     "intention, not an observed move. Rows are dated by the survey month; "
     "the release lands early the following month at 11:00 ET, on a date "
-    "preannounced on the NY Fed calendar. Source: Survey of Consumer "
-    "Expectations, \u00a9 2013-2026 Federal Reserve Bank of New York (FRBNY). "
-    "The SCE data are available without charge at "
-    "http://www.newyorkfed.org/microeconomics/sce and may be used subject to "
-    "license terms posted there. FRBNY disclaims any responsibility for this "
-    "analysis and interpretation of Survey of Consumer Expectations data.")
+    "preannounced on the NY Fed calendar. " + source_notices.FRBNY_SCE)
 
 # (workbook header, series suffix, who the cell is, noise m, real movement s):
 # scoring.noise_floor per cell over the 36 target months 2023-10 to 2026-09,
