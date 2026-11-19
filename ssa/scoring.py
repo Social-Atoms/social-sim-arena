@@ -127,7 +127,11 @@ def pool_samples(forecasts):
     xs = []
     for fc in forecasts:
         t = fc["topline"]
-        if "quantiles" in t and t["quantiles"]:
+        if t.get("quantile_grid") is not None:
+            items = list(zip(GRID21_LEVELS, (float(v) for v in t["quantile_grid"])))
+            for lv in QUANT_LEVELS:
+                xs.append(_interp_quantile(items, lv))
+        elif "quantiles" in t and t["quantiles"]:
             items = sorted((float(k), float(v)) for k, v in t["quantiles"].items())
             # interpolate onto the fixed levels for equal weighting
             for lv in QUANT_LEVELS:
@@ -153,9 +157,84 @@ def _interp_quantile(items, level):
 def crps_forecast(forecast_topline, outcome):
     """Score any accepted topline format."""
     t = forecast_topline
+    if t.get("quantile_grid") is not None:
+        return crps_grid21(t, outcome)      # a grid has only one score
     if "quantiles" in t and t["quantiles"]:
         return crps_from_quantiles(t["quantiles"], outcome)
     return crps_normal(t["mean"], t["sd"], outcome)
+
+
+# --- the fixed 21-point quantile grid (rounds marked `"scoring": "grid21"`) ---
+#
+# Why a fixed grid. Scoring the levels an entrant chose (`crps_from_quantiles`)
+# is gameable: three extreme levels scored a N(0,1) belief 47% better than its
+# own exact CRPS. With one grid for everyone there is nothing to choose.
+#
+# Why these 21 levels. Midpoints tau_i = (i - 1/2) / 21, i = 1..21: 2.381% to
+# 97.619%, the median is the 11th. The score is S_21 = (2/21) sum_i
+# pinball(tau_i, q_i, y), the midpoint rule for CRPS = 2 int_0^1 pinball dtau.
+# Offline (devlog-assets/analysis/quantile-grid-2026-11-13 and
+# evaluation-notes-2026-11-13/non_gaussian_check.py): against exact CRPS the
+# P95 error is 0.50% on the season's Gaussian forecasts and under 0.95% on the
+# worst of nine skewed / heavy-tailed / bimodal shapes; 99 levels would cut
+# that to ~0.1% at ~5x the numbers to submit.
+#
+# A {mean, sd} answer on such a round is converted to the same 21 values
+# through the normal (q_i = mean + sd * z_i) and scored by the same formula, so
+# the two formats differ only in what they can express, never in how they are
+# scored. Rounds without the marker keep the exact rules they were opened
+# under; no published round changes score.
+
+GRID21 = "grid21"
+GRID21_K = 21
+GRID21_LEVELS = [(2 * i - 1) / (2 * GRID21_K) for i in range(1, GRID21_K + 1)]
+
+
+def round_rule(round_def):
+    """The scoring rule a round was opened under: "grid21" or "exact"."""
+    return GRID21 if (round_def or {}).get("scoring") == GRID21 else "exact"
+
+
+def grid21_values(dist):
+    """Any accepted distribution -> its 21 values at GRID21_LEVELS.
+
+    `quantile_grid` is taken as submitted; `{mean, sd}` goes through the normal;
+    a legacy `quantiles` map (only the crowd's pooled file carries one) is
+    interpolated onto the grid.
+    """
+    if dist.get("quantile_grid") is not None:
+        q = [float(v) for v in dist["quantile_grid"]]
+        if len(q) != GRID21_K:
+            raise ValueError(f"quantile_grid needs {GRID21_K} values, got {len(q)}")
+        return q
+    if dist.get("quantiles"):
+        items = sorted((float(k), float(v)) for k, v in dist["quantiles"].items())
+        return [_interp_quantile(items, lv) for lv in GRID21_LEVELS]
+    mean, sd = float(dist["mean"]), float(dist["sd"])
+    return [normal_quantile(mean, sd, lv) for lv in GRID21_LEVELS]
+
+
+def grid21_summary(values):
+    """{mean, sd} read off a 21-point grid, for display only (the score never
+    uses them). Midpoint-rule moments: each value stands for 1/21 of the mass."""
+    q = [float(v) for v in values]
+    mean = sum(q) / len(q)
+    sd = (sum((v - mean) ** 2 for v in q) / len(q)) ** 0.5
+    return {"mean": round(mean, 4), "sd": round(max(sd, 1e-6), 4)}
+
+
+def crps_grid21(dist, outcome):
+    """S_21: 2/21 * sum of pinball losses on the fixed grid."""
+    q = grid21_values(dist)
+    return 2.0 * sum(pinball(lv, v, outcome)
+                     for lv, v in zip(GRID21_LEVELS, q)) / GRID21_K
+
+
+def crps_for_round(dist, outcome, round_def):
+    """Score one topline under the rule its round was opened with."""
+    if round_rule(round_def) == GRID21:
+        return crps_grid21(dist, outcome)
+    return crps_forecast(dist, outcome)
 
 
 # --- Profile scoring: a wave's whole subgroup structure, scored jointly ------
@@ -302,6 +381,10 @@ def cell_samples(cells, seed=PROFILE_SEED, draws=PROFILE_DRAWS):
 
 def _inv_cdf(cell):
     """A cell forecast -> its quantile function. Rejects a point forecast."""
+    g = cell.get("quantile_grid") if isinstance(cell, dict) else None
+    if g is not None:
+        items = list(zip(GRID21_LEVELS, (float(v) for v in g)))
+        return lambda lv: _interp_quantile(items, lv)
     q = cell.get("quantiles") if isinstance(cell, dict) else None
     if q:
         items = sorted((float(k), float(v)) for k, v in q.items())

@@ -11,7 +11,7 @@
   "definitions": {
     "distribution": {
       "type": "object",
-      "description": "A normal: a mean and a strictly positive sd, scored with CRPS (a topline) or pooled into the energy score (a profile cell). A point guess is not a forecast and is refused. Quantile sets are not accepted from an endpoint -- schema/forecast.schema.json still allows one in a committed file, but the live contract is one shape.",
+      "description": "A normal: a mean and a strictly positive sd, scored with CRPS (a topline) or pooled into the energy score (a profile cell). A point guess is not a forecast and is refused. Quantile sets are not accepted from an endpoint -- schema/forecast.schema.json still allows one in a committed file, but the live contract is one shape. On a round marked \"scoring\": \"grid21\" the answer may instead be `quantile_grid` (21 values at fixed levels; see that property), never both.",
       "additionalProperties": false,
       "properties": {
         "mean": {
@@ -21,11 +21,48 @@
           "type": "number",
           "exclusiveMinimum": 0,
           "maximum": 1000000000
+        },
+        "quantile_grid": {
+          "type": "array",
+          "minItems": 21,
+          "maxItems": 21,
+          "items": {
+            "type": "number"
+          },
+          "description": "The forecast's quantiles at the 21 fixed levels (i - 1/2)/21, i = 1..21 (2.381% .. 97.619%; the 11th value is the median), non-decreasing. Accepted only on rounds marked \"scoring\": \"grid21\"; replaces mean and sd, never accompanies them."
         }
       },
-      "required": [
-        "mean",
-        "sd"
+      "oneOf": [
+        {
+          "required": [
+            "mean",
+            "sd"
+          ],
+          "not": {
+            "required": [
+              "quantile_grid"
+            ]
+          }
+        },
+        {
+          "required": [
+            "quantile_grid"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "mean"
+                ]
+              },
+              {
+                "required": [
+                  "sd"
+                ]
+              }
+            ]
+          }
+        }
       ]
     }
   },

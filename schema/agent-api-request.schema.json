@@ -87,6 +87,26 @@
         },
         "ranking": {
           "type": "object"
+        },
+        "quantile_grid": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "levels"
+          ],
+          "properties": {
+            "levels": {
+              "type": "array",
+              "minItems": 21,
+              "maxItems": 21,
+              "items": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "exclusiveMaximum": 1
+              }
+            }
+          },
+          "description": "Present only on rounds scored on the fixed 21-point grid. The reply may then give `quantile_grid`: 21 non-decreasing values at exactly these levels, instead of mean and sd. Both are scored on the same grid."
         }
       }
     },

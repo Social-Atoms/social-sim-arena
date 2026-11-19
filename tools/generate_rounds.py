@@ -60,6 +60,7 @@ sys.path.insert(0, ROOT)
 
 from ssa import batches                                    # noqa: E402
 from ssa import inventory                                  # noqa: E402
+from ssa import scoring                                    # noqa: E402
 from ssa import profile_round                             # noqa: E402
 from ssa import ranking_round                              # noqa: E402
 from ssa.adapters import silverbulletin as sb              # noqa: E402
@@ -100,6 +101,24 @@ MIN_REAL_MOVEMENT = 0.0
 # explicit operator override for a reviewed season horizon; it is date-bounded
 # and still writes candidates only, never approved rounds.
 MAX_WEEKS_AHEAD = 8
+
+# The first batch opened under the fixed 21-point quantile grid
+# (ssa/scoring.py, GRID21_*). Every generated round in this batch or later
+# carries `"scoring": "grid21"`: entrants may answer with `quantile_grid`, and
+# every answer -- mean/sd included -- is scored on the same 21 levels. Earlier
+# batches keep the rules they were published under. A ranking round has no
+# distribution to grid and is never marked. Announce at least a week before
+# the batch is published (ssa/batches.published_at).
+GRID21_FIRST_BATCH = "batch-2026-12-07"
+
+
+def mark_scoring(r):
+    """Stamp the round with the scoring rule its batch opens under."""
+    if r.get("target_type") == "ranking_list":
+        return r
+    if batches.batch_of(r["lock_at"]) >= GRID21_FIRST_BATCH:
+        r["scoring"] = scoring.GRID21
+    return r
 
 # Rights state per source, read from the source inventory.
 #
@@ -1420,6 +1439,8 @@ def main():
         refused.extend((sid, why) for sid in SCE_HORIZONS)
     refused.sort(key=lambda x: x[0])
 
+    for r in made:
+        mark_scoring(r)
     made.sort(key=lambda r: (r["lock_at"], r["round_id"]))
     by_batch = collections.defaultdict(list)
     for r in made:

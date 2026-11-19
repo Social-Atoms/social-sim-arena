@@ -13,7 +13,7 @@
   "definitions": {
     "distribution": {
       "type": "object",
-      "description": "A normal: mean and a strictly positive sd. Quantile sets are not accepted (see tools/validate_submission.py `refuse_quantiles`): with entrant-chosen levels the score rewarded the choice of levels rather than the forecast. A point guess is not a distribution and is refused -- CRPS on a spike is just absolute error, and a forecaster who never states an uncertainty cannot be told apart from one who is always sure.",
+      "description": "A normal: mean and a strictly positive sd. Quantile sets are not accepted (see tools/validate_submission.py `refuse_quantiles`): with entrant-chosen levels the score rewarded the choice of levels rather than the forecast. On a round marked \"scoring\": \"grid21\" the answer may instead be `quantile_grid` (21 values at fixed levels; see that property), never both. A point guess is not a distribution and is refused -- CRPS on a spike is just absolute error, and a forecaster who never states an uncertainty cannot be told apart from one who is always sure.",
       "additionalProperties": false,
       "properties": {
         "mean": {
@@ -25,11 +25,48 @@
           "exclusiveMinimum": 0,
           "maximum": 1000000,
           "description": "Standard deviation, strictly positive."
+        },
+        "quantile_grid": {
+          "type": "array",
+          "minItems": 21,
+          "maxItems": 21,
+          "items": {
+            "type": "number"
+          },
+          "description": "The forecast's quantiles at the 21 fixed levels (i - 1/2)/21, i = 1..21 (2.381% .. 97.619%; the 11th value is the median), non-decreasing. Accepted only on rounds marked \"scoring\": \"grid21\"; replaces mean and sd, never accompanies them."
         }
       },
-      "required": [
-        "mean",
-        "sd"
+      "oneOf": [
+        {
+          "required": [
+            "mean",
+            "sd"
+          ],
+          "not": {
+            "required": [
+              "quantile_grid"
+            ]
+          }
+        },
+        {
+          "required": [
+            "quantile_grid"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "mean"
+                ]
+              },
+              {
+                "required": [
+                  "sd"
+                ]
+              }
+            ]
+          }
+        }
       ]
     },
     "answer": {
