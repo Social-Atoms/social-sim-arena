@@ -552,6 +552,10 @@ def build_rounds(season, series, resolved, now, ranking_obs=None):
         # An unscored pilot (ssa/season.is_pilot) carries its two fields so the
         # site can label it; copied only when set, so every other round's
         # payload is unchanged.
+        # The scoring rule the round was opened under (scoring.round_rule).
+        # Copied only when set, so every existing round's payload is unchanged.
+        if r.get("scoring"):
+            row["scoring"] = r["scoring"]
         if season_rules.is_pilot(r):
             row["scored"] = False
             row["pilot"] = r["pilot"]
@@ -1956,6 +1960,13 @@ def retirement(rounds, entrants, now):
     return out
 
 
+def _cell_display(v):
+    """A profile cell as the site draws it: mean and sd, from a grid if need be."""
+    if "quantile_grid" in v:
+        return scoring.grid21_summary(v["quantile_grid"])
+    return {"mean": v.get("mean"), "sd": v.get("sd")}
+
+
 def count_forecasts(rounds):
     added = first_commit_times(FORECASTS)
     """Attach filed forecasts to each round: count + per-entrant toplines
@@ -1985,9 +1996,15 @@ def count_forecasts(rounds):
                         entry = {"filed": stamp} if stamp else {}
                         if isinstance(fc.get("topline"), dict) and "mean" in fc["topline"]:
                             entry.update({"shape": "number", "mean": fc["topline"]["mean"], "sd": fc["topline"].get("sd", 2.0)})
+                        elif isinstance(fc.get("topline"), dict) and "quantile_grid" in fc["topline"]:
+                            # A 21-point answer: the chart draws mean +- sd, so
+                            # it gets the grid's own moments, and the grid itself.
+                            g = fc["topline"]["quantile_grid"]
+                            entry.update({"shape": "number", **scoring.grid21_summary(g),
+                                          "quantile_grid": list(g)})
                         elif isinstance(fc.get("profile"), dict):
                             entry.update({"shape": "profile", "cells_n": len(fc["profile"]),
-                                          "cells": {k: ({"mean": v.get("mean"), "sd": v.get("sd")} if isinstance(v, dict) else v)
+                                          "cells": {k: (_cell_display(v) if isinstance(v, dict) else v)
                                                     for k, v in fc["profile"].items()}})
                         elif isinstance(fc.get("ranking"), list):
                             entry.update({"shape": "ranking", "items_n": len(fc["ranking"]), "items": list(fc["ranking"])})
@@ -2311,7 +2328,9 @@ def build_leaderboard(rounds, resolved):
         # before the Seattle family. `persistence_crps` keeps meaning what it
         # says; a round ranked on another reference also publishes that one.
         zp = baselines.zero_point(r)
-        per_crps = scoring.crps_normal(zp["mean"], zp["sd"], outcome)
+        # A round opened under the 21-point grid scores its zero point on the
+        # same grid, so skill compares like with like.
+        per_crps = scoring.crps_for_round(zp, outcome, r)
         rdir = os.path.join(FORECASTS, r["round_id"])
         if not os.path.isdir(rdir):
             continue
@@ -2328,7 +2347,7 @@ def build_leaderboard(rounds, resolved):
                 fc = json.load(f)
             if not scoreable_forecast(fc):
                 continue
-            c = scoring.crps_forecast(fc["topline"], outcome)
+            c = scoring.crps_for_round(fc["topline"], outcome, r)
             scores[fc["entrant"]] = {"crps": round(c, 4),
                                      "skill": round(scoring.skill(c, per_crps), 4)}
             if pilot:
@@ -2349,8 +2368,8 @@ def build_leaderboard(rounds, resolved):
             r["zero_point_crps"] = round(per_crps, 4)
             shown = r["baselines"].get("persistence")
             if shown:
-                r["persistence_crps"] = round(scoring.crps_normal(
-                    shown["mean"], shown["sd"], outcome), 4)
+                r["persistence_crps"] = round(scoring.crps_for_round(
+                    shown, outcome, r), 4)
     board = []
     for name, e in entries.items():
         board.append({

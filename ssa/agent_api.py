@@ -43,6 +43,7 @@ from . import harness
 from . import participants
 from . import profile_round
 from . import ranking_round
+from . import scoring
 from .adapters import wikipedia as wikipedia_adapter
 
 SCHEMA_VERSION = "ssa-agent-api-v2"
@@ -165,6 +166,10 @@ def build_envelope(entrant, r, history=None, profile_history=None,
         "lock_at": deadline.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "context": _context(r, history, profile_history, ranking_history),
     }
+    # A round scored on the fixed 21-point grid says so, with the levels, so an
+    # endpoint can answer with `quantile_grid` instead of mean and sd.
+    if scoring.round_rule(r) == scoring.GRID21:
+        block["quantile_grid"] = {"levels": list(scoring.GRID21_LEVELS)}
     if tt == "profile_energy":
         block["cells"] = list(profile_round.cells_for(r))
     elif tt == "ranking_list":
@@ -232,14 +237,14 @@ def _payload(text):
     return fc
 
 
-def parse_scalar(text):
-    """A scalar round's answer: `{mean, sd}`, scored with CRPS. One shape, so
-    that an endpoint has one thing to build and the arena one thing to check --
-    see `harness.answer` for what the second shape cost and why it went."""
-    return harness.answer(_payload(text), "forecast")
+def parse_scalar(text, grid_ok=False):
+    """A scalar round's answer: `{mean, sd}`, scored with CRPS -- or, on a
+    round scored on the fixed 21-point grid, `{quantile_grid}`. Levels are the
+    arena's, never the endpoint's: see `harness.answer`."""
+    return harness.answer(_payload(text), "forecast", grid_ok=grid_ok)
 
 
-def parse_profile(text, cells):
+def parse_profile(text, cells, grid_ok=False):
     fc = _payload(text)
     prof = fc.get("profile")
     if not isinstance(prof, dict):
@@ -251,7 +256,7 @@ def parse_profile(text, cells):
         raise ValueError(
             f"profile is missing {len(missing)} of {len(cells)} cells: "
             f"{missing[:4]}")
-    return harness.parse_profile(json.dumps(prof), cells)
+    return harness.parse_profile(json.dumps(prof), cells, grid_ok=grid_ok)
 
 
 def parse_ranking(text, spec):
@@ -284,16 +289,17 @@ def forecast(entrant, r, history=None, previous=None, profile_history=None,
             and not (previous.get("notes") or "").startswith("MOCK"):
         return previous
 
+    grid_ok = scoring.round_rule(r) == scoring.GRID21
     if tt == "profile_energy":
         cells = list(profile_round.cells_for(r))
-        parse = lambda text: parse_profile(text, cells)          # noqa: E731
+        parse = lambda text: parse_profile(text, cells, grid_ok)  # noqa: E731
         key = "profile"          # the forecast schema's key, same as our own
     elif tt == "ranking_list":
         spec = ranking_round.spec_for(r)
         parse = lambda text: parse_ranking(text, spec)           # noqa: E731
         key = "ranking"
     else:
-        parse = parse_scalar
+        parse = lambda text: parse_scalar(text, grid_ok)         # noqa: E731
         key = "topline"
 
     with _lock_for(entrant):

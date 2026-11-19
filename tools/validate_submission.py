@@ -343,7 +343,7 @@ def check_shape(rel, label, t):
     """mean+sd (sd > 0) or quantiles. The no-jsonschema fallback only."""
     if not isinstance(t, dict):
         fail(f"{rel}: {label} is not an object")
-    if "quantiles" not in t:
+    if "quantiles" not in t and "quantile_grid" not in t:
         sd = t.get("sd")
         if isinstance(sd, bool) or not isinstance(sd, (int, float)) or sd <= 0:
             fail(f"{rel}: {label} needs mean+sd (sd > 0) or quantiles")
@@ -363,9 +363,52 @@ def refuse_quantiles(rel, label, t):
              "with mean and sd (sd > 0)")
 
 
+# The fixed quantile grid (ssa/scoring.py, GRID21_*). Kept as literals here
+# because this file must run without the ssa package; a test pins the two.
+GRID21 = "grid21"
+GRID21_K = 21
+
+
+def check_grid(rel, label, t):
+    """`quantile_grid`: exactly 21 finite numbers, non-decreasing, alone.
+
+    The values are the forecast's quantiles at levels (i - 1/2)/21, i = 1..21
+    (2.381% .. 97.619%; the 11th is the median). Only on a round opened with
+    `"scoring": "grid21"` -- `check_answer_matches_round` enforces that part.
+    It replaces mean+sd rather than accompanying it: two answers in one block
+    leave it unclear which one is scored.
+    """
+    if not isinstance(t, dict) or "quantile_grid" not in t:
+        return
+    g = t["quantile_grid"]
+    if not isinstance(g, list) or len(g) != GRID21_K:
+        fail(f"{rel}: {label} quantile_grid must be a list of exactly "
+             f"{GRID21_K} numbers")
+    if any(isinstance(v, bool) or not isinstance(v, (int, float))
+           or v != v or v in (float("inf"), float("-inf")) for v in g):
+        fail(f"{rel}: {label} quantile_grid values must be finite numbers")
+    if any(b < a for a, b in zip(g, g[1:])):
+        fail(f"{rel}: {label} quantile_grid values must be non-decreasing")
+    both = [k for k in ("mean", "sd", "quantiles") if k in t]
+    if both:
+        fail(f"{rel}: {label} carries quantile_grid and {', '.join(both)}; "
+             "send one format, not both")
+
+
+def check_grid_allowed(rel, fc, rnd):
+    """A quantile_grid answer only on a round opened under the grid rule."""
+    if rnd.get("scoring") == GRID21:
+        return
+    for label, t in answer_blocks(fc):
+        if isinstance(t, dict) and "quantile_grid" in t:
+            fail(f"{rel}: round '{rnd['round_id']}' was opened before the "
+                 "21-point quantile rule; answer with mean and sd (sd > 0)")
+
+
 def check_quantiles(rel, label, t):
     """Semantic rules the JSON schema cannot express: the median is present,
     levels are strictly inside (0, 1), and values do not decrease."""
+    check_grid(rel, label, t)
     q = (t or {}).get("quantiles")
     if not q:
         return
@@ -481,6 +524,7 @@ def check_answer_matches_round(rel, fc, rnd):
     if target == RANKING_TARGET_TYPE:
         check_ranking(rel, fc, rnd)
         return
+    check_grid_allowed(rel, fc, rnd)
     is_profile = target == PROFILE_TARGET_TYPE
     if "ranking" in fc:
         fail(f"{rel}: round '{rnd['round_id']}' is not a ranking round; this "

@@ -2350,7 +2350,31 @@ def _distribution(mean, sd, where=""):
     return {"mean": mean, "sd": sd}
 
 
-def answer(obj, where=""):
+def _grid(values, where=""):
+    """A `quantile_grid` reply -> the stored form, or a raise.
+
+    Exactly `scoring.GRID21_K` finite, non-decreasing numbers: the forecast's
+    quantiles at `scoring.GRID21_LEVELS`. The levels are the arena's, never the
+    entrant's -- choosing them was what made the old quantile form gameable.
+    """
+    from . import scoring
+    at = f"{where}: " if where else ""
+    if not isinstance(values, list) or len(values) != scoring.GRID21_K:
+        raise ValueError(f"{at}quantile_grid needs exactly {scoring.GRID21_K} numbers")
+    out = []
+    for v in values:
+        if isinstance(v, bool) or not isinstance(v, (int, float)):
+            raise ValueError(f"{at}quantile_grid values must be numbers")
+        v = float(v)
+        if not (v == v and abs(v) <= 1e7):
+            raise ValueError(f"{at}quantile_grid value out of range: {v}")
+        out.append(v)
+    if any(b < a for a, b in zip(out, out[1:])):
+        raise ValueError(f"{at}quantile_grid values must be non-decreasing")
+    return {"quantile_grid": out}
+
+
+def answer(obj, where="", grid_ok=False):
     """One accepted distribution from a reply object: `{mean, sd}`.
 
     **One shape, for every live answer.** A reply could once be a normal *or* a
@@ -2376,6 +2400,15 @@ def answer(obj, where=""):
         raise ValueError(
             f"{at}quantiles are no longer accepted from an endpoint; answer "
             f"with mean and sd")
+    # The fixed 21-point grid, on rounds opened under it (scoring.round_rule):
+    # one shape per answer, never both.
+    if "quantile_grid" in obj:
+        if not grid_ok:
+            raise ValueError(f"{at}this round is not scored on the 21-point "
+                             "grid; answer with mean and sd")
+        if "mean" in obj or "sd" in obj:
+            raise ValueError(f"{at}send quantile_grid or mean and sd, not both")
+        return _grid(obj["quantile_grid"], where)
     if "mean" not in obj or "sd" not in obj:
         raise ValueError(f"{at}needs mean and sd; got keys {sorted(obj)}")
     return _distribution(obj["mean"], obj["sd"], where)
@@ -2431,7 +2464,7 @@ def _json_object(text):
     raise ValueError("no JSON object in reply")
 
 
-def parse_profile(text, cells):
+def parse_profile(text, cells, grid_ok=False):
     """A profile reply -> {cell: {mean, sd}} for exactly `cells`. Or a raise.
 
     **Nothing is ever filled in.** A reply carrying fifteen of sixteen cells is
@@ -2463,7 +2496,7 @@ def parse_profile(text, cells):
     for c in cells:
         cell = obj[c]
         try:
-            out[c] = answer(cell, c)
+            out[c] = answer(cell, c, grid_ok=grid_ok)
         except (TypeError, ValueError) as e:
             raise ValueError(str(e)) from e
     return out
