@@ -1,7 +1,9 @@
 # Registering an entrant
 
-No OAuth, no account database, no typed-in username, and no bot with write access
-to anything. A participant generates an Ed25519 key pair locally with
+No OAuth, no account database and no typed-in username. The only bot with write
+access merges a pull request that changes nothing but its author's own
+`entrants/<id>.json` and passes `tools/validate_submission.py`; see
+"Automatic merge" below. A participant generates an Ed25519 key pair locally with
 `ssh-keygen` and only ever publishes the public half --
 see [generating-a-key.md](generating-a-key.md).
 
@@ -23,8 +25,11 @@ see [generating-a-key.md](generating-a-key.md).
    That records the binding in Git history, by your own hand. No username is ever
    typed. A pull request opened from the wrong account should be closed and
    resubmitted from the right one.
-5. The existing ownership and schema checks then pass, and a maintainer reviews
-   and merges.
+5. The existing ownership and schema checks then pass, and
+   `registration-intake.yml` merges the pull request by itself and replies with
+   what to do next. If a check fails, the same reply says exactly what to fix;
+   push the fix to the same pull request and it runs again. A pull request that
+   changes anything besides `entrants/<id>.json` is left for a maintainer.
 
 ## Why the base branch is `main`
 
@@ -56,3 +61,25 @@ contents. Its only write permission is `pull-requests: write`, which is to say
 comments. It must live on the default branch to be discoverable.
 
 Existing entrants are never rebound automatically.
+
+## Automatic merge
+
+`registration-intake.yml` runs on `pull_request_target`, because GitHub holds an
+ordinary `pull_request` run from a first-time contributor's fork until a
+maintainer approves it, and registrants are first-time contributors by
+definition. It checks out `main`, not the pull request, and runs
+`tools/auto_merge.py --pr <n>`:
+
+1. Every changed path must be `entrants/<id>.json` (added or modified, never
+   removed or renamed). Anything else gets a reply and the `needs-maintainer`
+   label.
+2. Only those JSON files are copied from the pull request's head commit into
+   main's tree, as data. Nothing from the pull request is executed.
+3. `tools/validate_submission.py --author <PR author> --base origin/main` runs
+   on them: schema, file name, keys, reserved ids, and the ownership rule.
+4. Pass: one reply with next steps, the `registration-accepted` label, and a
+   squash merge pinned to the validated head commit, made by
+   `github-actions[bot]` (allowed by `main-guard.yml`). Fail: the same reply,
+   edited in place, quotes the check and the usual fixes, with the
+   `registration-needs-fix` label.
+
