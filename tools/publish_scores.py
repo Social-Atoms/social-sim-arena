@@ -27,6 +27,8 @@ def main(path=os.path.join(ROOT, "site", "data.json")):
     board = refresh.build_leaderboard(rounds, resolved)
     data["leaderboard"] = refresh.leaderboard_block(rounds, board)
     refresh.attach_round_scores(rounds, data.get("profile"), data.get("ranking"))
+    data["crowds"] = refresh.build_subcrowds(rounds, resolved, data.get("profile"),
+                                             data.get("ranking"))
     data["lists"] = refresh.published_lists()
     data["retired"] = refresh.retirement(rounds, refresh.load_entrants(), refresh.now_utc())
     data["entrant_status"] = refresh.entrant_status.build(rounds, refresh.load_entrants())

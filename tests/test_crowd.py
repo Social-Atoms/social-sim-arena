@@ -134,6 +134,105 @@ def test_retirement_follows_the_filings_and_the_registration():
     assert "e" in refresh.retirement(edge, [], datetime(2026, 9, 11, 0, 1, tzinfo=timezone.utc))
 
 
+REG = {"p1": {"type": "participant"}, "p2": {"type": "participant"},
+       "vac-public-opinion": {"type": "participant"},
+       "vac-population-profiles": {"type": "participant"},
+       "persistence": {"type": "baseline"}}
+
+
+def test_sub_crowd_membership_follows_registry_then_harness_ids():
+    g = refresh.crowd_group
+    assert g("p1", REG) == ("crowd-participants", "p1")
+    # a team's accounts are one method, as on the pairwise board
+    assert g("vac-public-opinion", REG) == ("crowd-participants", "vac-combined")
+    assert g("grok-web", REG) == ("crowd-llm-retrieval", "grok")
+    assert g("grok-web-superfc", REG) == ("crowd-llm-retrieval", "grok")
+    assert g("gemini-pro-news", REG) == ("crowd-llm-retrieval", "gemini-pro")
+    assert g("claude-sonnet", REG) == ("crowd-llm-closed", "claude-sonnet")
+    for out in ("claude-sonnet-zeroshot", "claude-sonnet-persona", "persistence",
+                "crowd", "test-jay", "ssa-testing-team", "example-entrant_web"):
+        assert g(out, REG) == (None, None), out
+
+
+def test_the_team_grouping_matches_the_pairwise_board():
+    js = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                           "site", "pairwise.js")).read()
+    for team, members in refresh.PARTICIPANT_METHODS.items():
+        assert f"id: '{team}'" in js, team
+        for m in members:
+            assert f"'{m}'" in js, m
+
+
+def _topline(mean, sd=1.0):
+    return {"topline": {"mean": mean, "sd": sd}}
+
+
+def test_one_vote_per_base_model():
+    # grok answers twice (direct and superfc) at 10; two other models at 20.
+    # Pooled per model first, grok weighs a third, not a half.
+    members = [{"entrant": e, "round_id": "t", **_topline(m)} for e, m in
+               (("grok-web", 10), ("grok-web-superfc", 10), ("gemini-pro-web", 20))]
+    unit = {"grok-web": "grok", "grok-web-superfc": "grok", "gemini-pro-web": "gemini-pro"}
+    try:
+        refresh.subcrowd_answer(ROUND, members, unit.get)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("three files from two models are two votes, not a crowd")
+    for e, u in (("claude-sonnet-web", "claude-sonnet"), ("deepseek-pro-web", "deepseek-pro")):
+        members.append({"entrant": e, "round_id": "t", **_topline(20)})
+        unit[e] = u
+    answer, n = refresh.subcrowd_answer(ROUND, members, unit.get)
+    assert n == 4
+    assert abs(answer["topline"]["mean"] - (10 + 20 * 3) / 4) < 0.05
+    flat, _ = refresh.crowd_answer(ROUND, members)
+    assert abs(flat["topline"]["mean"] - (10 * 2 + 20 * 3) / 5) < 0.05
+
+
+def test_insufficient_when_units_are_few_and_legacy_untouched():
+    def run(tmp):
+        rid = "t-num-1"
+        for e, m in (("p1", 10), ("p2", 12), ("grok-web", 11), ("crowd", 11)):
+            _file(tmp, rid, e, _topline(m))
+        r = dict(ROUND, status="resolved", persistence_crps=1.0,
+                 scores={"crowd": {"crps": 0.5, "skill": 0.5}})
+        before = json.dumps(r, sort_keys=True)
+        keep = refresh.load_entrants
+        refresh.load_entrants = lambda: [dict(v, entrant_id=k) for k, v in REG.items()]
+        try:
+            summary = refresh.build_subcrowds([r], {rid: {"value": 11.0}}, {}, {})
+        finally:
+            refresh.load_entrants = keep
+        c = r["crowds"]
+        assert c["crowd-participants"]["status"] == "insufficient"
+        assert c["crowd-participants"]["members"] == ["p1", "p2"]
+        assert c["crowd-llm-retrieval"]["n_units"] == 1
+        assert all(v.get("retrospective") for v in c.values())
+        assert json.dumps({k: v for k, v in r.items() if k != "crowds"},
+                          sort_keys=True) == before
+        assert "crowds" not in r["scores"] and summary["min_units"] == 3
+        assert not [f for f in os.listdir(os.path.join(tmp, rid)) if f.startswith("crowd-")]
+    _with_tree(run)
+
+
+def test_real_payload_keeps_every_legacy_field():
+    import copy
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                        "site", "data.json")
+    data = json.load(open(path))
+    before = copy.deepcopy(data["rounds"])
+    rounds = data["rounds"]
+    resolved = {r["round_id"]: r["resolution"] for r in rounds
+                if r.get("status") == "resolved" and isinstance(r.get("resolution"), dict)
+                and "value" in r["resolution"]}
+    summary = refresh.build_subcrowds(rounds, resolved, data.get("profile"),
+                                      data.get("ranking"))
+    for r, b in zip(rounds, before):
+        assert {k: v for k, v in r.items() if k != "crowds"} == b, r["round_id"]
+        assert "crowd-participants" not in (r.get("scores") or {})
+    assert any(g["rounds_ok"] for g in summary["groups"])
+
+
 if __name__ == "__main__":
     for name, fn in sorted(globals().items()):
         if name.startswith("test_") and callable(fn):

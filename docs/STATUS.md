@@ -137,7 +137,7 @@ selected policy and the per-model trust decision in its output.
 ### Baselines and reference forecasters (5)
 
 `persistence` (the reference, skill = 0 by definition), `trend`, `ewma`,
-`climatology`, and `crowd` (equal-weight pool of all submissions).
+`climatology`, and `crowd` (equal-weight pool of all submissions, shown as "Crowd (all submissions)"). Beside it, three reference sub-crowds (participants; LLM retrieval; LLM closed-book), one vote per model or team, never ranked: see `docs/pairwise-leaderboard.md`, Crowds.
 
 ---
 

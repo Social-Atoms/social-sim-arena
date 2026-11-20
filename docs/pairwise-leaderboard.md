@@ -155,3 +155,28 @@ observed loss or skill, never average the six scores, and count at most one
 answer/opponent/Top 3 credit for the team per question. Registration must be
 approved separately; defining this group does not itself admit its accounts.
 Vac's existing overlap error remains unchanged.
+
+## Crowds (reference rows, not opponents)
+
+The pooled `crowd` is unchanged: same id, same files, same scores, and it keeps
+its comparison slot. It is now labelled "Crowd (all submissions)" because three
+sub-crowds sit beside it. They are reference rows only, published under
+`rounds[].crowds` and a top-level `crowds` summary, never under
+`rounds[].scores`, so `pairwise.js` never sees them and no win rate changes.
+
+- `crowd-participants`: registered participants, one vote per method (Vac and
+  Anonymous are one vote each, the grouping above).
+- `crowd-llm-retrieval`: house LLM conditions with web or news context, one vote
+  per base model (direct and superfc are pooled first).
+- `crowd-llm-closed`: house LLM conditions with the recent-10 context only, one
+  vote per base model.
+
+Zero-shot (an ablation) and persona elicitation are in no crowd; nor are
+baselines, house tests, `ssa-testing-team`, or ids the harness cannot build. A
+sub-crowd needs at least 3 distinct models or teams on a round, otherwise it is
+marked insufficient. Members are recorded on the round. Sub-crowds are computed
+at build time from the locked forecasts of resolved rounds, write no file under
+`forecasts/`, and rounds that locked before 2026-11-20 are labelled
+retrospective. Compare crowds only through the paired table (rounds both
+scored), never through means over different round sets.
+

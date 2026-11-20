@@ -188,6 +188,25 @@ footer a{color:var(--ink2);}
   </div>
 </section>
 
+<section id="crowds">
+  <h2>Crowds</h2>
+  <p class="lede">The crowd split by who answered. Each one pools the locked forecasts of one group, one vote per model or per team, and is shown here for reference only: it is not ranked and does not enter any board.</p>
+  <div class="card scroll">
+    <table>
+      <thead><tr><th>Crowd</th><th class="num" title="Resolved rounds where this crowd had enough members to score.">Rounds scored</th><th class="num" title="Resolved rounds with fewer than the minimum number of distinct models or teams.">Too few members</th><th class="num" title="Median number of distinct models or teams pooled on a scored round.">Median votes</th><th class="num" title="Mean skill over the rounds this crowd scored. Different crowds score different rounds; compare them with the paired table below.">Mean skill</th></tr></thead>
+      <tbody id="crowds-body"><tr><td colspan="5" style="color:var(--mut);">loading…</td></tr></tbody>
+    </table>
+  </div>
+  <h3 class="sub">Paired differences</h3>
+  <div class="card scroll">
+    <table>
+      <thead><tr><th>Comparison</th><th class="num">Shared rounds</th><th class="num" title="Mean of (first skill minus second skill) over rounds where both crowds scored. Above 0: the first crowd did better.">Skill difference</th></tr></thead>
+      <tbody id="crowds-paired"><tr><td colspan="3" style="color:var(--mut);">loading…</td></tr></tbody>
+    </table>
+  </div>
+  <p class="note" id="crowds-note"></p>
+</section>
+
 <section id="targets">
   <h2>Targets</h2>
   <p class="lede">What entrants forecast: real trackers, refreshed every 6 hours, each stamped with its true as-of date. Below each: how the baseline models score on that target.</p>
@@ -340,6 +359,32 @@ function targetCards(data){
   defs.forEach((d,i)=>{ if(ca[d.chart]) drawSpark('tcard-'+i, ca[d.chart], d.unit, !!d.zero); });
 }
 
+// Sub-crowds: reference rows with their coverage, and paired differences over
+// shared rounds only (ssa/refresh.py build_subcrowds). Absent on an older
+// data.json, in which case the section says so rather than staying "loading".
+function renderCrowds(c){
+  const body = document.getElementById('crowds-body');
+  const paired = document.getElementById('crowds-paired');
+  const note = document.getElementById('crowds-note');
+  if(!body) return;
+  if(!c || !c.groups){
+    body.innerHTML = '<tr><td colspan="5" style="color:var(--mut);">Not in this build yet.</td></tr>';
+    paired.innerHTML = '<tr><td colspan="3" style="color:var(--mut);">Not in this build yet.</td></tr>';
+    return;
+  }
+  const label = {crowd: c.crowd_label || 'Crowd'};
+  c.groups.forEach(g => { label[g.id] = g.label; });
+  const pct = v => (typeof v==='number') ? ((v>0?'+':'')+(v*100).toFixed(1)+'%') : '<span style="color:var(--mut);">·</span>';
+  body.innerHTML = c.groups.map(g => '<tr><td><b class="model-name" style="color:var(--ink);font-weight:500;">'+esc(g.label)+'</b><span class="ref-chip">reference</span></td>'
+    + '<td class="num">'+g.rounds_ok+'</td><td class="num">'+g.rounds_insufficient+'</td>'
+    + '<td class="num">'+(g.rounds_ok ? g.median_units : '·')+'</td><td class="num skill">'+pct(g.mean_skill)+'</td></tr>').join('');
+  paired.innerHTML = (c.paired||[]).length ? c.paired.map(p => '<tr><td>'+esc(label[p.a]||p.a)+' minus '+esc(label[p.b]||p.b)+'</td>'
+    + '<td class="num">'+p.rounds+'</td><td class="num skill">'+pct(p.mean_skill_diff)+'</td></tr>').join('')
+    : '<tr><td colspan="3" style="color:var(--mut);">No two crowds have scored the same round yet.</td></tr>';
+  note.textContent = 'A crowd needs at least '+c.min_units+' distinct models or teams on a round; below that it is not scored. '
+    + 'Rounds that locked before '+String(c.since||'').slice(0,10)+' are computed after the fact from forecasts that were already locked.';
+}
+
 function render(data){
   window.__data = data;
   const currentOpen = ()=>data.rounds.filter(r=>r.status==='open'&&Date.parse(r.deadline||r.lock_at)>Date.now()).sort((a,b)=>(a.deadline||a.lock_at).localeCompare(b.deadline||b.lock_at));
@@ -365,6 +410,10 @@ function render(data){
 
   const nameOf = {}, typeOf = {};
   (data.entrants||[]).forEach(e => { nameOf[e.entrant_id]=e.name; typeOf[e.entrant_id]=e.type; });
+  // The pooled crowd keeps its id and every score; only its name says what it
+  // pools, now that the sub-crowds below exist beside it.
+  if(data.crowds && data.crowds.crowd_label) nameOf.crowd = data.crowds.crowd_label;
+  renderCrowds(data.crowds);
   // The third number is a CRPS in points on the scalar boards, an energy score
   // in cell-space on the profile board, and a rank-distance on the ranking
   // board. They are not comparable, which is why the column is relabelled
@@ -375,7 +424,7 @@ function render(data){
     const ref = id==='persistence' ? '<span class="ref-chip">reference</span>' : '';
     const loss = s && s[lossKey||'mean_crps'];
     return '<tr><td class="num">'+(rank||'·')+'</td>'
-      + '<td><b class="model-name" style="color:var(--ink);font-weight:500;">'+esc((nameOf[id]||id).split(' (')[0])+'</b>'+ref+'</td>'
+      + '<td><b class="model-name" style="color:var(--ink);font-weight:500;">'+esc(id==='crowd' ? (nameOf[id]||id) : (nameOf[id]||id).split(' (')[0])+'</b>'+ref+'</td>'
       + '<td class="type">'+esc(typeOf[id]||'baseline')+'</td>'
       + '<td class="num skill">'+(s ? ((s.mean_skill>0?'+':'')+(s.mean_skill*100).toFixed(1)+'%') : '<span style="color:var(--mut);">pending</span>')+'</td>'
       + '<td class="num">'+(typeof loss==='number' ? loss.toFixed(2) : '·')+'</td>'
