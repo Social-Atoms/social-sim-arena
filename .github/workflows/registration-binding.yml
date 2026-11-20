@@ -34,5 +34,5 @@ jobs:
               const replacement = lines[index].replace('""', JSON.stringify(login));
               await github.rest.pulls.createReviewComment({...args, commit_id:pr.head.sha,
                 path:file.filename, line:index+1, side:'RIGHT',
-                body:marker+'\nThis registration will be bound to **@'+login+'**, the author of this PR. Check the public key in the file, then click **Commit suggestion** to confirm. If this is the wrong account, close this PR and submit from the intended account. Maintainer review is still required.\n\n```suggestion\n'+replacement+'\n```'});
+                body:marker+'\nThis registration will be bound to **@'+login+'**, the author of this PR. Check the public key in the file, then click **Commit suggestion** to confirm. If this is the wrong account, close this PR and submit from the intended account. Once you commit it, the checks run again and a passing registration is merged automatically.\n\n```suggestion\n'+replacement+'\n```'});
             }

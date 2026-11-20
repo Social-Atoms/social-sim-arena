@@ -1,8 +1,16 @@
 """Merge a participant's pull request into main once CI has validated it.
 
-Run by `.github/workflows/auto-merge.yml` after `validate-submissions` succeeds
-on a pull request. It decides, with no person online, whether that pull
-request is one the arena merges by itself:
+Run two ways, with the same rules:
+
+  - by `.github/workflows/registration-intake.yml` (`--pr N`) as soon as a
+    registration pull request is opened or updated. That workflow is
+    `pull_request_target`, so it runs for a first-time contributor's fork
+    without a maintainer approving the run;
+  - by `.github/workflows/auto-merge.yml` (`--sha`) after `validate-submissions`
+    succeeds on a pull request.
+
+It decides, with no person online, whether that pull request is one the arena
+merges by itself:
 
   - the base branch is `main` and the pull request is not a draft;
   - every changed file is a registration (`entrants/<id>.json`), none
@@ -43,11 +51,20 @@ def gh(*args, input_text=None):
     return proc.stdout
 
 
+PR_FIELDS = ("{number, draft, state, base: .base.ref, head: .head.sha, "
+             "author: .user.login, title}")
+
+
 def pull_requests_for(sha):
     out = gh("api", f"repos/{os.environ['GITHUB_REPOSITORY']}/commits/{sha}/pulls",
-             "--jq", ".[] | {number, draft, base: .base.ref, head: .head.sha, "
-                     "author: .user.login, title}")
+             "--jq", ".[] | " + PR_FIELDS)
     return [json.loads(line) for line in out.splitlines() if line.strip()]
+
+
+def pull_request(number):
+    out = gh("api", f"repos/{os.environ['GITHUB_REPOSITORY']}/pulls/{number}",
+             "--jq", PR_FIELDS)
+    return json.loads(out)
 
 
 def changed_files(number):
@@ -76,12 +93,17 @@ def classify(files):
     return True, ""
 
 
-def fetch_head_files(number, files):
-    """Check out only the changed JSON files from the pull request head."""
+def fetch_head_files(number, files, sha=None):
+    """Copy only the changed JSON files from the pull request head into main's tree.
+
+    Data, never code: `classify` has already refused any path that is not
+    `entrants/<id>.json`, and nothing from the pull request is executed. With
+    `sha`, the files come from exactly that commit, the one the merge is pinned to.
+    """
     subprocess.run(["git", "fetch", "-q", "origin", f"pull/{number}/head:refs/pr/{number}"],
                    cwd=ROOT, check=True)
     names = [f["filename"] for f in files]
-    subprocess.run(["git", "checkout", "-q", f"refs/pr/{number}", "--", *names],
+    subprocess.run(["git", "checkout", "-q", sha or f"refs/pr/{number}", "--", *names],
                    cwd=ROOT, check=True)
     return names
 
@@ -94,27 +116,94 @@ def validate(names, received, author):
     return proc.returncode == 0, (proc.stdout + proc.stderr).strip()
 
 
+# One reply per pull request, edited in place on every run, so a registrant
+# who pushes three fixes sees one current answer rather than three old ones.
+MARKER = "<!-- ssa-registration-intake -->"
+LABELS = {
+    "accepted": ("registration-accepted", "0e8a16",
+                 "Registration passed the checks and was merged"),
+    "fix": ("registration-needs-fix", "d93f0b",
+            "Registration failed a check; the bot reply says what to change"),
+    "maintainer": ("needs-maintainer", "fbca04",
+                   "Not a registration the bot merges; a maintainer will look"),
+}
+
+
+def reply_body(state, author, detail=""):
+    """The sticky reply for one outcome. Pure, so it is tested directly."""
+    if state == "accepted":
+        text = (f"Thanks @{author}. Your registration passed every check and is "
+                "merged into `main` automatically; nobody needs to approve it.\n\n"
+                "Next: send signed forecasts with the private key that matches "
+                "the public key in your file. See `docs/participant-quickstart.md` "
+                "and `docs/signed-submissions.md`. Your entrant appears on the "
+                "board after its first scored question.")
+    elif state == "fix":
+        text = (f"Thanks @{author}. The registration did not pass yet, so it is "
+                "not merged. Push a fix to this same pull request and the check "
+                "runs again by itself.\n\nWhat the check said:\n\n```\n"
+                f"{detail[-3000:]}\n```\n\nCommon fixes: `\"github\"` must be "
+                f"`\"{author}\"` (the author of this pull request); the file name "
+                "must be `<entrant_id>.json`; each key needs a unique `id`, "
+                "`\"alg\": \"ed25519\"` and the 44-character base64 public key "
+                "ending in `=`.")
+    else:
+        text = (f"Thanks @{author}. This pull request is not one the bot merges "
+                f"by itself ({detail}). A maintainer will look at it.")
+    return f"{MARKER}\n{text}"
+
+
 def comment(number, text):
+    """Create the sticky reply, or edit it if this pull request already has one."""
+    repo = os.environ["GITHUB_REPOSITORY"]
+    out = gh("api", "--paginate", f"repos/{repo}/issues/{number}/comments",
+             "--jq", ".[] | {id, login: .user.login, body}")
+    for line in out.splitlines():
+        if not line.strip():
+            continue
+        c = json.loads(line)
+        if c["login"] == "github-actions[bot]" and MARKER in (c["body"] or ""):
+            gh("api", "-X", "PATCH", f"repos/{repo}/issues/comments/{c['id']}",
+               "-f", f"body={text}")
+            return
     gh("pr", "comment", str(number), "--body", text)
+
+
+def label(number, state):
+    """Leave exactly one of the intake labels on the pull request."""
+    name, color, desc = LABELS[state]
+    gh("label", "create", name, "--color", color, "--description", desc, "--force")
+    others = [LABELS[k][0] for k in LABELS if k != state]
+    gh("pr", "edit", str(number), "--add-label", name,
+       *sum((["--remove-label", o] for o in others), []))
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--sha", required=True, help="head sha the validation ran on")
+    which = ap.add_mutually_exclusive_group(required=True)
+    which.add_argument("--sha", help="head sha the validation ran on")
+    which.add_argument("--pr", type=int,
+                       help="pull request number (registration-intake.yml)")
     ap.add_argument("--received", required=True,
-                    help="ISO-8601 time the validation run was created")
-    ap.add_argument("--run-url", default="", help="link to the validation run")
+                    help="ISO-8601 time the submission was received")
+    ap.add_argument("--run-url", default="", help="link to the run")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
 
-    prs = [p for p in pull_requests_for(args.sha) if p["head"] == args.sha]
-    if not prs:
-        print(f"no open pull request has head {args.sha}; nothing to do")
-        return 0
-    pr = prs[0]
-    number, author = pr["number"], pr["author"]
+    if args.pr is not None:
+        pr = pull_request(args.pr)
+    else:
+        prs = [p for p in pull_requests_for(args.sha) if p["head"] == args.sha]
+        if not prs:
+            print(f"no pull request has head {args.sha}; nothing to do")
+            return 0
+        pr = prs[0]
+    number, author, sha = pr["number"], pr["author"], pr["head"]
     print(f"pull request #{number} by @{author}: {pr['title']}")
 
+    if pr.get("state", "open") != "open":
+        print(f"pull request is {pr['state']}; nothing to do")
+        return 0
     if pr["base"] != "main":
         print(f"base is {pr['base']}, not main; a person merges this")
         return 0
@@ -122,34 +211,39 @@ def main(argv=None):
         print("draft; not merged")
         return 0
 
+    def answer(state, detail=""):
+        if args.dry_run:
+            print(f"dry run: would reply [{state}] and label it")
+            return
+        comment(number, reply_body(state, author, detail))
+        label(number, state)
+
     files = changed_files(number)
     ok, why = classify(files)
     if not ok:
         print(f"not a submission-only pull request: {why}")
-        if not args.dry_run:
-            comment(number, f"Not merged automatically: {why}. A maintainer "
-                            "will look at it.")
+        answer("maintainer", why)
         return 0
 
-    names = fetch_head_files(number, files)
+    names = fetch_head_files(number, files, sha)
     valid, report = validate(names, args.received, author)
     print(report)
     if not valid:
-        if not args.dry_run:
-            comment(number, "Validation failed at receipt time "
-                            f"{args.received}, so this was not merged:\n\n```\n"
-                            f"{report[-3000:]}\n```")
+        answer("fix", report)
         return 1
 
     if args.dry_run:
         print(f"dry run: would merge #{number}")
         return 0
+    answer("accepted")
     body = (f"Received-At: {args.received}\n"
-            f"Auto-merged after validation of {args.sha[:12]}"
+            f"Auto-merged after validation of {sha[:12]}"
             + (f" ({args.run_url})" if args.run_url else ""))
     # --squash, not --merge: the ruleset on main requires a linear history, so a
     # merge commit is refused. One commit per pull request, authored by its opener.
-    gh("pr", "merge", str(number), "--squash",
+    # --match-head-commit: if the author pushed again after this run read the
+    # files, the merge is refused and the next run judges the new head.
+    gh("pr", "merge", str(number), "--squash", "--match-head-commit", sha,
        "--subject", f"Merge #{number} from @{author}: {pr['title']}",
        "--body", body)
     print(f"merged #{number}")
