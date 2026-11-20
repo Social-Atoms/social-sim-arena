@@ -1748,6 +1748,12 @@ def first_commit_times(root):
 # file, no coverage and no submissions page.
 CROWD_ID = "crowd"
 CROWD_MIN = 2            # a pool of one is that one entrant, not a crowd
+# Accounts kept out of every crowd filed from 2026-11-20 on. `ssa-testing-team`
+# is excluded on the pairwise board (site/pairwise.js) but was not in
+# HOUSE_TEST_IDS, so it could enter a crowd pool. It is not added to
+# HOUSE_TEST_IDS because that would also change round scores already
+# published; filed crowd files are never rewritten either.
+CROWD_EXCLUDED_ACCOUNTS = frozenset({"ssa-testing-team"})
 RETIRE_AFTER_DAYS = 14   # nothing filed for this long: retired, until it files again
 
 
@@ -1774,7 +1780,7 @@ def _pooled_distribution(xs):
     return {"mean": round(mean, 4), "sd": round(max(sd, 1e-6), 4), "quantiles": quantiles}
 
 
-def crowd_answer(r, members):
+def crowd_answer(r, members, minimum=CROWD_MIN):
     """The crowd's submission for one round, in the round's own format.
 
     A number pools the members' quantiles (`scoring.pool_samples`, the same
@@ -1791,7 +1797,7 @@ def crowd_answer(r, members):
                 cols.append(profile_round.submission_cells(fc, cells))
             except (ValueError, KeyError):
                 continue
-        if len(cols) < CROWD_MIN:
+        if len(cols) < minimum:
             raise ValueError(f"only {len(cols)} complete profiles to pool")
         profile = {}
         for i, cell in enumerate(cells):
@@ -1806,7 +1812,7 @@ def crowd_answer(r, members):
                 lists.append(ranking_round.submission_list(fc, spec))
             except (ValueError, KeyError, RuntimeError):
                 continue
-        if len(lists) < CROWD_MIN:
+        if len(lists) < minimum:
             raise ValueError(f"only {len(lists)} rankings to pool")
         cnt, pos = {}, {}
         for items in lists:
@@ -1816,7 +1822,7 @@ def crowd_answer(r, members):
         consensus = sorted(cnt, key=lambda t: (-cnt[t], pos[t] / cnt[t], t))[:spec["length"]]
         return {"ranking": consensus}, len(lists)
     toplines = [fc for fc in members if isinstance(fc.get("topline"), dict)]
-    if len(toplines) < CROWD_MIN:
+    if len(toplines) < minimum:
         raise ValueError(f"only {len(toplines)} toplines to pool")
     return {"topline": _pooled_distribution(scoring.pool_samples(toplines))}, len(toplines)
 
@@ -1870,6 +1876,8 @@ def file_crowd_forecasts(rounds, now, backfill=False):
                 continue
             if fc.get("entrant") in NOT_A_COMPETITOR or fc.get("entrant") == CROWD_ID:
                 continue
+            if fc.get("entrant") in CROWD_EXCLUDED_ACCOUNTS:
+                continue              # forward only: filed crowds are never rewritten
             members.append(fc)
         if len(members) < CROWD_MIN:
             continue
@@ -1912,6 +1920,232 @@ def finalize_locked_forecasts(rounds, now):
     count_forecasts(rounds)
     stamped = stamp_locked_rounds(rounds)
     return platform, signed, crowd, stamped
+
+
+# --- sub-crowds: the crowd split by who answered ------------------------------
+#
+# The legacy `crowd` pools every submission at lock, equal-weight. With dozens
+# of house LLM conditions and participants who answer few questions, it is in
+# practice an LLM crowd, and a difference against it cannot be told apart from
+# a difference in who answered what. The sub-crowds below split it by source.
+# They are reference rows, never entrants: they live under `rounds[].crowds`,
+# never under `rounds[].scores`, so no board, aggregate or pairwise.js sees them
+# and no published score or win rate changes. They are computed at build time
+# from the locked forecasts of a resolved round (after reveal, so nothing sealed
+# can leak) and write no file under `forecasts/`.
+#
+# Rules (reviewed 2026-11-20):
+# - membership by registry type, then harness.resolve(id) -> (model, context,
+#   elicitation); never by prefix;
+# - closed-book = context recent10; retrieval = web or news; `none` (zeroshot,
+#   an ablation) and `persona` elicitation are in no crowd; superfc stays in
+#   its context group;
+# - one vote per base model (LLM crowds) or per method (participants, the same
+#   team grouping as site/pairwise.js): a unit's members are pooled first,
+#   then the units, both equal-weight on scoring.QUANT_LEVELS;
+# - a crowd needs SUBCROWD_MIN distinct units on a round, else "insufficient";
+# - member ids are recorded, so a later retirement cannot change a past crowd;
+# - rounds that locked before SUBCROWDS_SINCE are labelled retrospective.
+
+SUBCROWD_MIN = 3
+SUBCROWDS_SINCE = "2026-11-20T00:00:00Z"
+SUBCROWDS = (
+    ("crowd-participants", "Participant crowd"),
+    ("crowd-llm-retrieval", "LLM crowd, retrieval (web, news)"),
+    ("crowd-llm-closed", "LLM crowd, closed-book"),
+)
+CROWD_LABEL = "Crowd (all submissions)"
+# The team grouping site/pairwise.js uses, so a team with several accounts is
+# one vote. tests/test_crowd.py checks the two lists agree.
+PARTICIPANT_METHODS = {
+    "vac-combined": ("vac-public-opinion", "vac-sentiment-expectations",
+                     "vac-population-profiles", "vac-collective-attention"),
+    "anonymous-combined": ("anon-a1", "anon-a2", "anon-a3", "anon-a4",
+                           "anon-a5", "anon-a6"),
+}
+_METHOD_OF = {m: team for team, ms in PARTICIPANT_METHODS.items() for m in ms}
+
+
+def crowd_group(entrant, registry):
+    """(sub-crowd id, vote unit) for one entrant, or (None, None)."""
+    if entrant in NOT_A_COMPETITOR or entrant in CROWD_EXCLUDED_ACCOUNTS \
+            or entrant == CROWD_ID:
+        return None, None
+    kind = (registry.get(entrant) or {}).get("type")
+    if kind == "participant":
+        return "crowd-participants", _METHOD_OF.get(entrant, entrant)
+    # House LLM conditions are not all registered (the -web cells have no
+    # entrants/ file); an id the harness can build is one, anything else --
+    # baselines, examples, unknown ids -- is in no crowd.
+    if kind not in (None, "llm"):
+        return None, None
+    try:
+        model, context, eli = harness.resolve(entrant)
+    except (KeyError, ValueError):
+        return None, None
+    if eli == "persona":
+        return None, None
+    if context in ("web", "news"):
+        return "crowd-llm-retrieval", model
+    if context == "recent10":
+        return "crowd-llm-closed", model
+    return None, None
+
+
+def subcrowd_answer(r, members, unit_of):
+    """Two-stage pool: each unit's members, then the units. (answer, n_units)."""
+    by_unit = {}
+    for fc in members:
+        by_unit.setdefault(unit_of(fc["entrant"]), []).append(fc)
+    unit_answers = []
+    for unit in sorted(by_unit):
+        try:
+            answer, _ = crowd_answer(r, by_unit[unit], minimum=1)
+        except (ValueError, KeyError, RuntimeError):
+            continue
+        unit_answers.append(dict(answer, entrant=unit, round_id=r["round_id"]))
+    answer, n = crowd_answer(r, unit_answers, minimum=SUBCROWD_MIN)
+    return answer, n
+
+
+def _subcrowd_score(r, answer, scored):
+    """{metric, skill} for a sub-crowd answer, by the round's own rule, or None."""
+    kind, data = scored
+    if kind == "number":
+        outcome, per = data
+        c = scoring.crps_for_round(answer["topline"], outcome, r)
+        return {"crps": round(c, 4), "skill": round(scoring.skill(c, per), 4)}
+    if kind == "profile":
+        cells, outcome, per = data
+        sc = profile_round.score_submission(answer, outcome, cells)
+        return {"energy": round(sc["energy"], 4),
+                "skill": round(scoring.profile_skill(sc["energy"], per), 4)}
+    spec, outcome, per = data
+    sc = ranking_round.score_submission(answer, outcome, spec)
+    return {"loss": round(sc["loss"], 4),
+            "skill": round(ranking_round.ranking_skill(sc["loss"], per), 4)}
+
+
+def build_subcrowds(rounds, resolved, profile_board, ranking_board):
+    """Write `r["crowds"]` on every resolved round; return the season summary."""
+    registry = {e.get("entrant_id"): e for e in load_entrants()}
+    prof = {pr["round_id"]: pr for key in ("rounds", "pilot_rounds")
+            for pr in (profile_board or {}).get(key, [])}
+    rank = {pr["round_id"]: pr for key in ("rounds", "pilot_rounds")
+            for pr in (ranking_board or {}).get(key, [])}
+    for r in rounds:
+        rid = r["round_id"]
+        if profile_round.is_profile(r):
+            pr = prof.get(rid)
+            if not pr:
+                continue
+            cells = list(pr["cells"])
+            scored = ("profile", (cells, [pr["outcome"][c] for c in cells],
+                                  pr["persistence_energy"]))
+        elif ranking_round.is_ranking(r):
+            pr = rank.get(rid)
+            if not pr:
+                continue
+            scored = ("ranking", (ranking_round.spec_for(r), list(pr["outcome"]),
+                                  pr["persistence_loss"]))
+        else:
+            res = resolved.get(rid)
+            per = r.get("zero_point_crps", r.get("persistence_crps"))
+            if not res or per is None or not (r.get("scores") or r.get("pilot_scores")):
+                continue
+            scored = ("number", (res["value"], per))
+        rdir = os.path.join(FORECASTS, rid)
+        if not os.path.isdir(rdir):
+            continue
+        groups = {cid: [] for cid, _ in SUBCROWDS}
+        units = {}
+        for fn in sorted(os.listdir(rdir)):
+            if not fn.endswith(".json"):
+                continue
+            fc = read_available_forecast(os.path.join(rdir, fn))
+            if not fc or not scoreable_forecast(fc):
+                continue
+            cid, unit = crowd_group(fc.get("entrant"), registry)
+            if cid is None:
+                continue
+            groups[cid].append(fc)
+            units[fc["entrant"]] = unit
+        out = {}
+        retro = r["lock_at"] < SUBCROWDS_SINCE
+        for cid, _label in SUBCROWDS:
+            members = groups[cid]
+            n_units = len({units[fc["entrant"]] for fc in members})
+            row = {"members": sorted(fc["entrant"] for fc in members),
+                   "n_members": len(members), "n_units": n_units}
+            if retro:
+                row["retrospective"] = True
+            if n_units < SUBCROWD_MIN:
+                row["status"] = "insufficient"
+                out[cid] = row
+                continue
+            try:
+                answer, n = subcrowd_answer(r, members, units.get)
+                score = _subcrowd_score(r, answer, scored)
+            except (ValueError, KeyError, RuntimeError) as e:
+                row.update(status="insufficient", reason=str(e))
+                out[cid] = row
+                continue
+            row.update(status="ok", n_units=n, answer=answer, score=score)
+            out[cid] = row
+        r["crowds"] = out
+    return crowds_summary(rounds)
+
+
+def crowds_summary(rounds):
+    """Coverage per sub-crowd and paired skill differences on shared rounds.
+
+    Only rounds that count (not pilots) enter the summary. A difference is
+    always paired: the mean of (a - b) over rounds where both have a skill,
+    never two means over different round sets.
+    """
+    counted = [r for r in rounds if r.get("crowds") and not season_rules.is_pilot(r)]
+
+    def skill_of(r, cid):
+        if cid == CROWD_ID:
+            s = (r.get("scores") or {}).get(CROWD_ID) or {}
+            return s.get("skill") if isinstance(s.get("skill"), (int, float)) else None
+        c = (r.get("crowds") or {}).get(cid) or {}
+        return (c.get("score") or {}).get("skill") if c.get("status") == "ok" else None
+
+    groups = []
+    for cid, label in SUBCROWDS:
+        ok = [r for r in counted if r["crowds"].get(cid, {}).get("status") == "ok"]
+        units = sorted(r["crowds"][cid]["n_units"] for r in ok)
+        med = (units[len(units) // 2] if len(units) % 2
+               else (units[len(units) // 2 - 1] + units[len(units) // 2]) / 2) if units else 0
+        skills = [skill_of(r, cid) for r in ok]
+        groups.append({"id": cid, "label": label, "rounds_ok": len(ok),
+                       "rounds_insufficient": len(counted) - len(ok),
+                       "median_units": med,
+                       "mean_skill": round(sum(skills) / len(skills), 4) if skills else None})
+    ids = [CROWD_ID] + [cid for cid, _ in SUBCROWDS]
+    paired = []
+    for i, a in enumerate(ids):
+        for b in ids[i + 1:]:
+            diffs = [skill_of(r, a) - skill_of(r, b) for r in counted
+                     if skill_of(r, a) is not None and skill_of(r, b) is not None]
+            if diffs:
+                paired.append({"a": a, "b": b, "rounds": len(diffs),
+                               "mean_skill_diff": round(sum(diffs) / len(diffs), 4)})
+    return {
+        "crowd_label": CROWD_LABEL,
+        "groups": groups,
+        "paired": paired,
+        "min_units": SUBCROWD_MIN,
+        "since": SUBCROWDS_SINCE,
+        "note": ("Reference rows, not entrants: never ranked and never in the "
+                 "pairwise board. Each sub-crowd pools one vote per base model "
+                 "(LLM) or per method (participants), equal-weight, from the "
+                 "locked forecasts; fewer than min_units on a round is "
+                 "insufficient. Rounds locked before `since` are retrospective, "
+                 "derived after the fact from forecasts that were locked. "
+                 "Differences are paired over rounds where both exist."),
+    }
 
 
 def _filed_at(stamp):
@@ -3156,6 +3390,7 @@ def main():
     profile_board = build_profile_leaderboard(rounds, resolved, series)
     ranking_board = build_ranking_leaderboard(rounds, resolved, ranking_obs)
     attach_round_scores(rounds, profile_board, ranking_board)
+    crowds = build_subcrowds(rounds, resolved, profile_board, ranking_board)
     main_board = build_main_board(rounds)
     replay_series = {
         name: series[name]
@@ -3282,6 +3517,9 @@ def main():
         # the same reason `profile` is separate: only `skill` is comparable
         # across the three sections.
         "ranking": ranking_board,
+        # The crowd split by source: reference rows with coverage and paired
+        # differences, kept out of every board (build_subcrowds).
+        "crowds": crowds,
         "backtest": bt,
         "charts": charts,
         "series_tail": {k: v[-8:] for k, v in series.items()},
