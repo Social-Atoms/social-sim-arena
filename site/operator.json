@@ -1,17 +1,87 @@
 {
   "alerts": [
     {
-      "id": "aaii",
-      "kind": "source",
-      "last_error": "AAII response carries no Date header; refusing to infer the rows' year from the local clock",
-      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
-      "state": "stale"
+      "id": "yougov-2026-w48-rv-approval/claude-sonnet-web-superfc",
+      "kind": "entrant_round",
+      "last_error": "provider timeout",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "state": "retryable_failure"
+    },
+    {
+      "id": "yougov-2026-w48-rv-approval/gemini-pro-web-superfc",
+      "kind": "entrant_round",
+      "last_error": "provider call failed",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "state": "retryable_failure"
+    },
+    {
+      "id": "yougov-2026-w48-strong-approval/deepseek-pro-web",
+      "kind": "entrant_round",
+      "last_error": "provider timeout",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "state": "retryable_failure"
+    },
+    {
+      "id": "yougov-2026-w48-strong-approval/gemini-pro-web",
+      "kind": "entrant_round",
+      "last_error": "provider timeout",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "state": "retryable_failure"
+    },
+    {
+      "id": "yougov-xtab-2026-w48/claude-sonnet-web",
+      "kind": "entrant_round",
+      "last_error": "provider timeout",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "state": "retryable_failure"
+    },
+    {
+      "id": "yougov-xtab-2026-w48/claude-sonnet-web-superfc",
+      "kind": "entrant_round",
+      "last_error": "provider timeout",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "state": "retryable_failure"
+    },
+    {
+      "id": "yougov-xtab-2026-w48/deepseek-pro-web",
+      "kind": "entrant_round",
+      "last_error": "provider timeout",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "state": "retryable_failure"
+    },
+    {
+      "id": "yougov-xtab-2026-w48/deepseek-pro-web-superfc",
+      "kind": "entrant_round",
+      "last_error": "provider timeout",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "state": "retryable_failure"
+    },
+    {
+      "id": "yougov-xtab-2026-w48/gemini-pro-web",
+      "kind": "entrant_round",
+      "last_error": "provider call failed",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "state": "retryable_failure"
+    },
+    {
+      "id": "yougov-xtab-2026-w48/gpt-5.6-luna-web",
+      "kind": "entrant_round",
+      "last_error": "provider timeout",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "state": "retryable_failure"
+    },
+    {
+      "id": "yougov-xtab-2026-w48/gpt-5.6-luna-web-superfc",
+      "kind": "entrant_round",
+      "last_error": "provider timeout",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "state": "retryable_failure"
     },
     {
       "id": "civiqs",
       "kind": "source",
-      "last_error": null,
-      "required_action": "inspect upstream freshness; do not resolve a new round until the source moves",
+      "last_error": "economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us",
+      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
       "state": "stale"
     },
     {
@@ -26,53 +96,593 @@
     "entrant_rounds": {
       "missed_lock": 0,
       "queued": 0,
-      "retryable_failure": 0,
+      "retryable_failure": 11,
       "running": 0,
-      "succeeded": 0,
+      "succeeded": 22,
       "terminal_failure": 0
     },
     "sources": {
       "deadline_risk": 0,
-      "healthy": 10,
+      "healthy": 11,
       "retryable_failure": 0,
-      "stale": 3,
+      "stale": 2,
       "unresolvable": 0
     }
   },
-  "entrant_round_states": [],
-  "generated_at": "2026-11-21T07:04:54Z",
-  "source_states": [
+  "entrant_round_states": [
     {
-      "alert": true,
+      "alert": false,
       "attempts": 1,
-      "estimated_spend": 0.0,
+      "entrant": "claude-sonnet-web",
+      "estimated_spend": 0.07065,
       "evidence": [
-        "fetched_days=0.5; changed_days=0.5; fetch_budget=3; change_budget=12",
-        "live attempt failed; same-source archive used",
-        "same-source sources/aaii/2026-11-20.html sha256=926735759bfe31db9b9a4229bcda879bfe948a81245e2604db033e86bb760d83 parsed_asof=2026-11-20"
-      ],
-      "last_error": "AAII response carries no Date header; refusing to infer the rows' year from the local clock",
-      "next_deadline": "2026-11-22T14:00:00Z",
-      "next_lock": "2026-11-22T14:00:00Z",
-      "next_retry": "2026-11-21T13:04:54Z",
-      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
-      "route": "https://www.aaii.com/sentimentsurvey/sent_results",
-      "source": "aaii",
-      "state": "stale"
-    },
-    {
-      "alert": true,
-      "attempts": 1,
-      "estimated_spend": 0.0,
-      "evidence": [
-        "22 validated non-empty series",
-        "fetched_days=0.3; changed_days=5.3; fetch_budget=2; change_budget=4; stale_keys=economy_family_retro"
+        "forecast=sealed/yougov-2026-w48-rv-approval/claude-sonnet-web.json"
       ],
       "last_error": null,
       "next_deadline": "2026-11-22T14:00:00Z",
       "next_lock": "2026-11-22T14:00:00Z",
       "next_retry": null,
-      "required_action": "inspect upstream freshness; do not resolve a new round until the source moves",
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-rv-approval",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": true,
+      "attempts": 1,
+      "entrant": "claude-sonnet-web-superfc",
+      "estimated_spend": 0.07065,
+      "evidence": [],
+      "last_error": "provider timeout",
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": "2026-11-22T01:10:49Z",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "round_id": "yougov-2026-w48-rv-approval",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "retryable_failure"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "deepseek-pro-web",
+      "estimated_spend": 0.010348,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-rv-approval/deepseek-pro-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-rv-approval",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "deepseek-pro-web-superfc",
+      "estimated_spend": 0.010348,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-rv-approval/deepseek-pro-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-rv-approval",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gemini-pro-web",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-rv-approval/gemini-pro-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-rv-approval",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": true,
+      "attempts": 1,
+      "entrant": "gemini-pro-web-superfc",
+      "estimated_spend": 0.046875,
+      "evidence": [],
+      "last_error": "provider call failed",
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": "2026-11-22T01:10:49Z",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "round_id": "yougov-2026-w48-rv-approval",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "retryable_failure"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gpt-5.6-luna-web",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-rv-approval/gpt-5.6-luna-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-rv-approval",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gpt-5.6-luna-web-superfc",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-rv-approval/gpt-5.6-luna-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-rv-approval",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "test-jay",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-rv-approval/test-jay.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-rv-approval",
+      "route": "participant:social-simulation-arena.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "worldvac-base",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-rv-approval/worldvac-base.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-rv-approval",
+      "route": "participant:worldvac-ssa-agent.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "zhengzheng-agent",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-rv-approval/zhengzheng-agent.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-rv-approval",
+      "route": "participant:zhengzhengqimen.top",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "claude-sonnet-web",
+      "estimated_spend": 0.07065,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-strong-approval/claude-sonnet-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-strong-approval",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "claude-sonnet-web-superfc",
+      "estimated_spend": 0.07065,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-strong-approval/claude-sonnet-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-strong-approval",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": true,
+      "attempts": 1,
+      "entrant": "deepseek-pro-web",
+      "estimated_spend": 0.010348,
+      "evidence": [],
+      "last_error": "provider timeout",
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": "2026-11-22T01:10:49Z",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "round_id": "yougov-2026-w48-strong-approval",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "retryable_failure"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "deepseek-pro-web-superfc",
+      "estimated_spend": 0.010348,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-strong-approval/deepseek-pro-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-strong-approval",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": true,
+      "attempts": 1,
+      "entrant": "gemini-pro-web",
+      "estimated_spend": 0.046875,
+      "evidence": [],
+      "last_error": "provider timeout",
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": "2026-11-22T01:10:49Z",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "round_id": "yougov-2026-w48-strong-approval",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "retryable_failure"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gemini-pro-web-superfc",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-strong-approval/gemini-pro-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-strong-approval",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gpt-5.6-luna-web",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-strong-approval/gpt-5.6-luna-web.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-strong-approval",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gpt-5.6-luna-web-superfc",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-strong-approval/gpt-5.6-luna-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-strong-approval",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "test-jay",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-strong-approval/test-jay.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-strong-approval",
+      "route": "participant:social-simulation-arena.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "worldvac-base",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-strong-approval/worldvac-base.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-strong-approval",
+      "route": "participant:worldvac-ssa-agent.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "zhengzheng-agent",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=sealed/yougov-2026-w48-strong-approval/zhengzheng-agent.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-2026-w48-strong-approval",
+      "route": "participant:zhengzhengqimen.top",
+      "state": "succeeded"
+    },
+    {
+      "alert": true,
+      "attempts": 1,
+      "entrant": "claude-sonnet-web",
+      "estimated_spend": 0.07065,
+      "evidence": [],
+      "last_error": "provider timeout",
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": "2026-11-22T01:10:49Z",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "round_id": "yougov-xtab-2026-w48",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "retryable_failure"
+    },
+    {
+      "alert": true,
+      "attempts": 1,
+      "entrant": "claude-sonnet-web-superfc",
+      "estimated_spend": 0.07065,
+      "evidence": [],
+      "last_error": "provider timeout",
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": "2026-11-22T01:10:49Z",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "round_id": "yougov-xtab-2026-w48",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "retryable_failure"
+    },
+    {
+      "alert": true,
+      "attempts": 1,
+      "entrant": "deepseek-pro-web",
+      "estimated_spend": 0.010348,
+      "evidence": [],
+      "last_error": "provider timeout",
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": "2026-11-22T01:10:49Z",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "round_id": "yougov-xtab-2026-w48",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "retryable_failure"
+    },
+    {
+      "alert": true,
+      "attempts": 1,
+      "entrant": "deepseek-pro-web-superfc",
+      "estimated_spend": 0.010348,
+      "evidence": [],
+      "last_error": "provider timeout",
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": "2026-11-22T01:10:49Z",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "round_id": "yougov-xtab-2026-w48",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "retryable_failure"
+    },
+    {
+      "alert": true,
+      "attempts": 1,
+      "entrant": "gemini-pro-web",
+      "estimated_spend": 0.046875,
+      "evidence": [],
+      "last_error": "provider call failed",
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": "2026-11-22T01:10:49Z",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "round_id": "yougov-xtab-2026-w48",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "retryable_failure"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "gemini-pro-web-superfc",
+      "estimated_spend": 0.046875,
+      "evidence": [
+        "forecast=sealed/yougov-xtab-2026-w48/gemini-pro-web-superfc.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-xtab-2026-w48",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "succeeded"
+    },
+    {
+      "alert": true,
+      "attempts": 1,
+      "entrant": "gpt-5.6-luna-web",
+      "estimated_spend": 0.046875,
+      "evidence": [],
+      "last_error": "provider timeout",
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": "2026-11-22T01:10:49Z",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "round_id": "yougov-xtab-2026-w48",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "retryable_failure"
+    },
+    {
+      "alert": true,
+      "attempts": 1,
+      "entrant": "gpt-5.6-luna-web-superfc",
+      "estimated_spend": 0.046875,
+      "evidence": [],
+      "last_error": "provider timeout",
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": "2026-11-22T01:10:49Z",
+      "required_action": "retry on the next refresh; keep other entrants' successes",
+      "round_id": "yougov-xtab-2026-w48",
+      "route": "ppapi:app.ppapi.ai",
+      "state": "retryable_failure"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "test-jay",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=sealed/yougov-xtab-2026-w48/test-jay.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-xtab-2026-w48",
+      "route": "participant:social-simulation-arena.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "worldvac-base",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=sealed/yougov-xtab-2026-w48/worldvac-base.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-xtab-2026-w48",
+      "route": "participant:worldvac-ssa-agent.com",
+      "state": "succeeded"
+    },
+    {
+      "alert": false,
+      "attempts": 1,
+      "entrant": "zhengzheng-agent",
+      "estimated_spend": 0.0,
+      "evidence": [
+        "forecast=sealed/yougov-xtab-2026-w48/zhengzheng-agent.json"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "round_id": "yougov-xtab-2026-w48",
+      "route": "participant:zhengzhengqimen.top",
+      "state": "succeeded"
+    }
+  ],
+  "generated_at": "2026-11-21T19:55:45Z",
+  "source_states": [
+    {
+      "alert": false,
+      "attempts": 1,
+      "estimated_spend": 0.0,
+      "evidence": [
+        "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=12",
+        "sources/aaii/2026-11-21.html sha256=6a97e62ebf6e353cf9eaa712b7e14f965918f25c592c5d795b01f0228d6f00ea"
+      ],
+      "last_error": null,
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": null,
+      "required_action": "none",
+      "route": "https://www.aaii.com/sentimentsurvey/sent_results",
+      "source": "aaii",
+      "state": "healthy"
+    },
+    {
+      "alert": true,
+      "attempts": 1,
+      "estimated_spend": 0.0,
+      "evidence": [
+        "civiqs/describe_feeling_us (81 snapshots; newest 2026-11-21); civiqs/economy_family_retro (82 snapshots; newest 2026-11-21); civiqs/economy_us_direction (82 snapshots; newest 2026-11-21); civiqs/economy_us_now (82 snapshots; newest 2026-11-21); civiqs/inflation_impact (81 snapshots; newest 2026-11-21)",
+        "fetched_days=0.8; changed_days=5.8; fetch_budget=2; change_budget=4; stale_keys=economy_family_retro",
+        "live attempt failed; same-source archive used"
+      ],
+      "last_error": "economy_us_now: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_now; economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us",
+      "next_deadline": "2026-11-22T14:00:00Z",
+      "next_lock": "2026-11-22T14:00:00Z",
+      "next_retry": "2026-11-22T01:55:45Z",
+      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
       "route": "ssa.series:civiqs",
       "source": "civiqs",
       "state": "stale"
@@ -115,7 +725,7 @@
       "estimated_spend": 0.0,
       "evidence": [
         "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
-        "sources/sb_approval/2026-11-21.csv sha256=b07a9ead0c47c17371c90240041392b9e5479ca071f3d21f15c259c71bc18909"
+        "sources/sb_approval/2026-11-21.csv sha256=56ea329440f7abe1f206fc0507ae216cb8a601c2e284f03fb64c206ab5fa0b41"
       ],
       "last_error": null,
       "next_deadline": "2026-11-22T14:00:00Z",
@@ -131,7 +741,7 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=17.3; fetch_budget=2; change_budget=10",
+        "fetched_days=-0.0; changed_days=17.9; fetch_budget=2; change_budget=10",
         "sources/sb_generic/2026-11-21.csv sha256=5a0ff534563f708376cf8ad6f79d6ef199cf5d965427d25b30c9e2d8387dca9d"
       ],
       "last_error": null,
@@ -196,7 +806,7 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=0.5; fetch_budget=3; change_budget=40",
+        "fetched_days=-0.0; changed_days=1.0; fetch_budget=3; change_budget=40",
         "sources/umich/2026-11-21.json sha256=57847136a2cda4acf4bcbdc67418d1a83c8281da1bc6efeb1c37975c8c7868bc"
       ],
       "last_error": null,
