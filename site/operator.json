@@ -1,6 +1,13 @@
 {
   "alerts": [
     {
+      "id": "aaii",
+      "kind": "source",
+      "last_error": "AAII response carries no Date header; refusing to infer the rows' year from the local clock",
+      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
+      "state": "stale"
+    },
+    {
       "id": "civiqs",
       "kind": "source",
       "last_error": null,
@@ -26,31 +33,32 @@
     },
     "sources": {
       "deadline_risk": 0,
-      "healthy": 11,
+      "healthy": 10,
       "retryable_failure": 0,
-      "stale": 2,
+      "stale": 3,
       "unresolvable": 0
     }
   },
   "entrant_round_states": [],
-  "generated_at": "2026-11-20T20:15:39Z",
+  "generated_at": "2026-11-21T07:04:54Z",
   "source_states": [
     {
-      "alert": false,
+      "alert": true,
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=12",
-        "sources/aaii/2026-11-20.html sha256=926735759bfe31db9b9a4229bcda879bfe948a81245e2604db033e86bb760d83"
+        "fetched_days=0.5; changed_days=0.5; fetch_budget=3; change_budget=12",
+        "live attempt failed; same-source archive used",
+        "same-source sources/aaii/2026-11-20.html sha256=926735759bfe31db9b9a4229bcda879bfe948a81245e2604db033e86bb760d83 parsed_asof=2026-11-20"
       ],
-      "last_error": null,
+      "last_error": "AAII response carries no Date header; refusing to infer the rows' year from the local clock",
       "next_deadline": "2026-11-22T14:00:00Z",
       "next_lock": "2026-11-22T14:00:00Z",
-      "next_retry": null,
-      "required_action": "none",
+      "next_retry": "2026-11-21T13:04:54Z",
+      "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
       "route": "https://www.aaii.com/sentimentsurvey/sent_results",
       "source": "aaii",
-      "state": "healthy"
+      "state": "stale"
     },
     {
       "alert": true,
@@ -58,7 +66,7 @@
       "estimated_spend": 0.0,
       "evidence": [
         "22 validated non-empty series",
-        "fetched_days=0.8; changed_days=4.8; fetch_budget=2; change_budget=4; stale_keys=economy_family_retro"
+        "fetched_days=0.3; changed_days=5.3; fetch_budget=2; change_budget=4; stale_keys=economy_family_retro"
       ],
       "last_error": null,
       "next_deadline": "2026-11-22T14:00:00Z",
@@ -106,8 +114,8 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
-        "sources/sb_approval/2026-11-20.csv sha256=1f4cadda5dd1571b27b94a8cdc314679b92bfb8a4bb901012781f467e208401f"
+        "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
+        "sources/sb_approval/2026-11-21.csv sha256=b07a9ead0c47c17371c90240041392b9e5479ca071f3d21f15c259c71bc18909"
       ],
       "last_error": null,
       "next_deadline": "2026-11-22T14:00:00Z",
@@ -123,8 +131,8 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=16.9; fetch_budget=2; change_budget=10",
-        "sources/sb_generic/2026-11-20.csv sha256=5a0ff534563f708376cf8ad6f79d6ef199cf5d965427d25b30c9e2d8387dca9d"
+        "fetched_days=-0.0; changed_days=17.3; fetch_budget=2; change_budget=10",
+        "sources/sb_generic/2026-11-21.csv sha256=5a0ff534563f708376cf8ad6f79d6ef199cf5d965427d25b30c9e2d8387dca9d"
       ],
       "last_error": null,
       "next_deadline": "2026-11-22T14:00:00Z",
@@ -188,8 +196,8 @@
       "attempts": 1,
       "estimated_spend": 0.0,
       "evidence": [
-        "fetched_days=-0.0; changed_days=0.0; fetch_budget=3; change_budget=40",
-        "sources/umich/2026-11-20.json sha256=57847136a2cda4acf4bcbdc67418d1a83c8281da1bc6efeb1c37975c8c7868bc"
+        "fetched_days=-0.0; changed_days=0.5; fetch_budget=3; change_budget=40",
+        "sources/umich/2026-11-21.json sha256=57847136a2cda4acf4bcbdc67418d1a83c8281da1bc6efeb1c37975c8c7868bc"
       ],
       "last_error": null,
       "next_deadline": "2026-11-22T14:00:00Z",
