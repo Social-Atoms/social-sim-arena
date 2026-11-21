@@ -440,6 +440,70 @@ def test_fetch_and_parse_are_separate_as_every_adapter_must_be():
     assert callable(sce.fetch_bytes) and callable(sce.parse)
 
 
+def test_a_release_day_keeps_the_post_release_capture():
+    """sce-capture-bug: the day's first capture predates the 11:00 ET release,
+    so the release day also files the first capture holding the new month."""
+    from datetime import datetime, timezone
+    d = tempfile.mkdtemp(prefix="ssa-sce-")
+    saved = sce.ARCHIVE
+    sce.ARCHIVE = d
+    utc = lambda h, m=0: datetime(2026, 11, 9, h, m, tzinfo=timezone.utc)  # noqa: E731
+    rel = {"2026-11-09": utc(16)}
+    old, new = full_history(159), full_history(160)        # 2026-08 / 2026-09
+    try:
+        first = sce.archive(old, now=utc(0, 17), releases=rel)
+        assert first == sce.archive_path("2026-11-09")
+        # Before the release instant: write-once as ever.
+        assert sce.archive(new, now=utc(15, 30), releases=rel) == first
+        # After it, but the workbook has not moved yet: nothing is filed.
+        assert sce.archive(old, now=utc(16, 5), releases=rel) == first
+        assert not os.path.exists(sce.post_path("2026-11-09"))
+        # The release landed: filed once as <day>.post.xlsx.
+        post = sce.archive(new, now=utc(18, 17), releases=rel)
+        assert post == sce.post_path("2026-11-09")
+        assert post.endswith("2026-11-09.post.xlsx")
+        assert sce.archive(full_history(161), now=utc(23), releases=rel) == post
+        with open(post, "rb") as f:
+            assert f.read() == new
+        with open(first, "rb") as f:
+            assert f.read() == old, "the morning vintage was rewritten"
+        assert sce.archived_days() == ["2026-11-09"]
+        assert sce.newest_archived() == post
+        assert sce.load()[-1]["date"] == "2026-09-01"
+        # Not a release day, or not today: never a second file.
+        nxt = datetime(2026, 11, 10, 18, tzinfo=timezone.utc)
+        sce.archive(old, now=nxt, releases=rel)
+        assert sce.archive(new, now=nxt, releases=rel) == sce.archive_path("2026-11-10")
+        assert sce.archive(new, day="2026-11-09", now=nxt, releases=rel) == \
+            sce.archive_path("2026-11-09")
+        assert sce.archived_vintages() == [sce.archive_path("2026-11-09"), post,
+                                           sce.archive_path("2026-11-10")]
+    finally:
+        sce.ARCHIVE = saved
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def test_the_release_instant_is_eleven_eastern_whatever_the_stored_hour():
+    import json as _json
+    from datetime import datetime, timezone
+    d = tempfile.mkdtemp(prefix="ssa-sce-")
+    path = os.path.join(d, "season.json")
+    with open(path, "w") as f:
+        _json.dump({"rounds": [
+            {"tracker": "ny_fed_sce", "release_at": "2026-10-07T15:00:00Z"},
+            {"tracker": "ny_fed_sce", "release_at": "2026-12-07T15:00:00Z"},
+            {"tracker": "umich", "release_at": "2026-12-11T15:00:00Z"}]}, f)
+    try:
+        got = sce.release_instants(path)
+        assert got == {
+            "2026-10-07": datetime(2026, 10, 7, 15, tzinfo=timezone.utc),  # EDT
+            "2026-12-07": datetime(2026, 12, 7, 16, tzinfo=timezone.utc)}  # EST
+        # The real season names the November release.
+        assert "2026-11-09" in sce.release_instants()
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:

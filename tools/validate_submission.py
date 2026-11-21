@@ -31,6 +31,7 @@ imported from `ssa/profile_round.py` and `ssa/ranking_round.py`, which own them.
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
@@ -430,7 +431,13 @@ def check_ranking(rel, fc, rnd):
              f"submission has {len(got)}")
 
     basket = spec.get("items")
-    if basket:
+    if spec.get("kind") in {"nyt_bestsellers", "steam_weekly"}:
+        pattern = (r"isbn:\d{13}" if spec["kind"] == "nyt_bestsellers"
+                   else r"(?:app|package|bundle):[1-9]\d*")
+        items = [x.strip() for x in got]
+        if any(not re.fullmatch(pattern, x) for x in items):
+            fail(f"{rel}: invalid publisher identifier for {spec['kind']}")
+    elif basket:
         canon = {q.strip().casefold(): q for q in basket}
         items, unknown = [], []
         for x in got:

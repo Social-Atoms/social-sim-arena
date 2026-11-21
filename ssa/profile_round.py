@@ -207,9 +207,13 @@ def cell_outcome(points, release_date, freeze_date, cell):
 # by the cells' registered `source`, because that is what produced the number.
 ARCHIVE_PHRASE = {
     "civiqs": "the archived Civiqs dashboard",
+    "ecbcs": ("the European Commission consumer survey release for the "
+              "reference month, archived under sources/ecbcs/"),
     "trends_basket": "the archived Google Trends comparison snapshots",
     "yougov_xtab": ("the Economist/YouGov tracker workbook, the wave dated "
                     "inside the seven days ending on the release date"),
+    "sce_moving": ("the first NY Fed SCE workbook archived under sources/sce/ "
+                   "that carries the survey month"),
 }
 DEFAULT_ARCHIVE_PHRASE = "the cells' own registered series archives"
 
@@ -254,6 +258,76 @@ def archive_phrase(cells):
     return ARCHIVE_PHRASE.get(sources.pop(), DEFAULT_ARCHIVE_PHRASE)
 
 
+# Sources whose cells are dated by the month they measure (a label date), so
+# neither half of the date rule above fits them. The November survey is dated
+# 2026-11-01 and published on 2026-12-07: against a 2026-12-05 freeze its
+# value "predates the freeze" and `cell_outcome` would refuse the very release
+# the round asks about, and a date filter alone would let it into the null
+# once it lands. Such a source names the month a round asks about and
+# resolves on an archived vintage, and its reference must end at the month
+# before it (card nyfed-sce-moving@v2: "if the newest vintage before the lock
+# does not carry month M-1, the round refuses to post its reference").
+def sce_moving_resolution(r, cells):
+    import os
+    from .adapters import sce
+    month = sce.survey_month(r["release_at"])
+    header = {c: series_registry.SERIES[c]["sce_moving"]["cell"] for c in cells}
+    try:
+        got = sce.moving_resolution(month, r["release_at"],
+                                    cells=tuple(header.values()))
+    except RuntimeError as e:
+        # A misread workbook or a skipped release: the round does not resolve
+        # until a maintainer looks (card, missing-data rule 3), and the
+        # profile board reports it as a skip rather than stopping the run.
+        raise ValueError(f"{r['round_id']}: {e}")
+    vintage = os.path.relpath(got["vintage"], sce.ROOT).replace(os.sep, "/")
+    values = {c: got["values"][header[c]] for c in cells}
+    return {
+        "cells": list(cells),
+        "values": values,
+        "observed_dates": {c: month for c in cells},
+        "vector": [values[c] for c in cells],
+        "release_date": r["release_at"][:10],
+        "vintage": vintage,
+        "vintage_sha256": got["sha256"],
+        "method": (f"each cell's {month[:7]} row in {vintage}, the first "
+                   f"workbook archived on or after the release day that "
+                   f"carries the survey month ({archive_phrase(cells)}); "
+                   "card nyfed-sce-moving@v2"),
+    }
+
+
+def month_labelled(cells):
+    """The profile hooks of ssa/urban.py's registry entry when every cell
+    comes from one such source (today: sce_moving), else None."""
+    from . import urban
+    sources = {series_registry.SERIES[c]["source"] for c in cells
+               if c in series_registry.SERIES}
+    if len(sources) != 1:
+        return None
+    src = urban.get(sources.pop())
+    return src.profile if src is not None else None
+
+
+def reference_profile(r, hist_by_cell, cells=None):
+    """The per-cell persistence null, refusing a month-labelled history that
+    does not end at the month before the one the round asks about."""
+    cells = cells or cells_for(r)
+    hooks = month_labelled(cells)
+    if hooks:
+        month = hooks["month"](r)
+        prev = baselines._month_shift(month[:7], 1) + "-01"
+        wrong = [f"{c} ends {(hist_by_cell.get(c) or [{}])[-1].get('date')}"
+                 for c in cells
+                 if (hist_by_cell.get(c) or [{}])[-1].get("date") != prev]
+        if wrong:
+            raise ValueError(
+                f"the reference must end at {prev[:7]}, the month before the "
+                f"survey month {month[:7]}; refusing to post it: "
+                f"{'; '.join(wrong[:3])}{' ...' if len(wrong) > 3 else ''}")
+    return persistence_profile(hist_by_cell, cells)
+
+
 def resolution(r, series, cells=None):
     """The outcome vector for a profile round, or a raised explanation.
 
@@ -262,6 +336,9 @@ def resolution(r, series, cells=None):
     would reward the entrant with no view on the cell that went missing.
     """
     cells = cells or cells_for(r)
+    hooks = month_labelled(cells)
+    if hooks:
+        return hooks["resolve"](r, cells)
     release_date = r["release_at"][:10]
     freeze_date = batches.freeze_at(r["lock_at"]).strftime("%Y-%m-%d")
     window = wave_window(cells)

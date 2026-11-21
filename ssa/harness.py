@@ -3216,7 +3216,10 @@ def forecast(entrant, r, history=None, previous=None, context=None,
         # null.
         return _forecast_ranking(entrant, r, ranking_history, previous,
                                  context, elicitation, news, search)
-    per = r["baselines"]["persistence"]
+    # The round's zero point: persistence unless the round names another, so a
+    # labelled MOCK placeholder sits on the reference the round is ranked on.
+    from . import baselines as _baselines
+    per = _baselines.zero_point(r)
     if elicitation == "persona":
         return forecast_persona(entrant, r, history, previous)
     if context == "web" and search is None:

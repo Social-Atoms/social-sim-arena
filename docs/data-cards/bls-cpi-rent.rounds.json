@@ -1,0 +1,85 @@
+{
+  "note": "Owner update 2026-11-10: no unscored trials. Ordinary scored rounds from the first eligible future target; original measurement and reference rules retained.",
+  "rounds": [
+    {
+      "round_id": "cpi-rent-2026-11",
+      "tracker": "bls_cpi",
+      "series": "cpi_rent_sa_mom",
+      "question": "US Bureau of Labor Statistics, Consumer Price Index: by how much will the seasonally adjusted CPI-U index for rent of primary residence, US city average (series CUSR0000SEHA), change from the month before to November 2026, in percent, computed from the two published index levels (not the one-decimal figure in the BLS press table)? The series is smooth: the ranked reference, the mean of the six latest one-month changes, has missed by about 0.06 points on average since mid-2023. The release is scheduled for 2026-12-10 at 08:30 ET (date from third-party calendars and the owner doc; bls.gov was not readable).",
+      "unit": "percent, one-month change, seasonally adjusted",
+      "release_at": "2026-12-10T13:30:00Z",
+      "release_estimated": false,
+      "lock_at": "2026-12-08T13:30:00Z",
+      "resolve": "100 x (L_M / L_M-1 - 1) for M = November 2026, both CUSR0000SEHA index levels taken from the first BLS Public Data API response archived under sources/bls_cpi/ at or after the 08:30 ET release whose newest period is M; never rounded, and later revisions (including the February seasonal re-estimation) never change it. A release cancelled, delayed past release + 45 days, or a missing M-1 level cancels the round; it is never built from a two-month change.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean6",
+        "family": "mean_k",
+        "period": "month",
+        "k": 6,
+        "search": 8,
+        "digits": 3,
+        "spread": {
+          "rule": "rms",
+          "n": 12,
+          "search": 14
+        },
+        "target": "2026-11"
+      }
+    },
+    {
+      "round_id": "cpi-rent-2026-12",
+      "tracker": "bls_cpi",
+      "series": "cpi_rent_sa_mom",
+      "question": "US Bureau of Labor Statistics, Consumer Price Index: by how much will the seasonally adjusted CPI-U index for rent of primary residence, US city average (series CUSR0000SEHA), change from the month before to December 2026, in percent, computed from the two published index levels (not the one-decimal figure in the BLS press table)? The series is smooth: the ranked reference, the mean of the six latest one-month changes, has missed by about 0.06 points on average since mid-2023. The release is scheduled for 2027-01-13 at 08:30 ET.",
+      "unit": "percent, one-month change, seasonally adjusted",
+      "release_at": "2027-01-13T13:30:00Z",
+      "release_estimated": false,
+      "lock_at": "2027-01-11T13:30:00Z",
+      "resolve": "100 x (L_M / L_M-1 - 1) for M = December 2026, both CUSR0000SEHA index levels taken from the first BLS Public Data API response archived under sources/bls_cpi/ at or after the 08:30 ET release whose newest period is M; never rounded, and later revisions (including the February seasonal re-estimation) never change it. A release cancelled, delayed past release + 45 days, or a missing M-1 level cancels the round; it is never built from a two-month change.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean6",
+        "family": "mean_k",
+        "period": "month",
+        "k": 6,
+        "search": 8,
+        "digits": 3,
+        "spread": {
+          "rule": "rms",
+          "n": 12,
+          "search": 14
+        },
+        "target": "2026-12"
+      }
+    },
+    {
+      "round_id": "cpi-rent-2027-01",
+      "tracker": "bls_cpi",
+      "series": "cpi_rent_sa_mom",
+      "question": "US Bureau of Labor Statistics, Consumer Price Index: by how much will the seasonally adjusted CPI-U index for rent of primary residence, US city average (series CUSR0000SEHA), change from the month before to January 2027, in percent, computed from the two published index levels (not the one-decimal figure in the BLS press table)? The series is smooth: the ranked reference, the mean of the six latest one-month changes, has missed by about 0.06 points on average since mid-2023. The release is scheduled for 2027-02-11 at 08:30 ET.",
+      "unit": "percent, one-month change, seasonally adjusted",
+      "release_at": "2027-02-11T13:30:00Z",
+      "release_estimated": false,
+      "lock_at": "2027-02-09T13:30:00Z",
+      "resolve": "100 x (L_M / L_M-1 - 1) for M = January 2027, both CUSR0000SEHA index levels taken from the first BLS Public Data API response archived under sources/bls_cpi/ at or after the 08:30 ET release whose newest period is M; never rounded, and later revisions (including the February seasonal re-estimation) never change it. A release cancelled, delayed past release + 45 days, or a missing M-1 level cancels the round; it is never built from a two-month change.",
+      "target_type": "continuous_normal",
+      "zero_point": {
+        "name": "mean6",
+        "family": "mean_k",
+        "period": "month",
+        "k": 6,
+        "search": 8,
+        "digits": 3,
+        "spread": {
+          "rule": "rms",
+          "n": 12,
+          "search": 14
+        },
+        "target": "2027-01"
+      }
+    }
+  ],
+  "card": "bls-cpi-rent@v3",
+  "card_sha256": "64302aae05f22f1bea8f007fa8e0ded3ec5c0998b28278b3a249c67985d953cb"
+}

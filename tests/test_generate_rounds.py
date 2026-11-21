@@ -208,6 +208,25 @@ def test_a_recorded_publication_calendar_schedules_the_tracker():
     """
     import re
     from ssa.series import SERIES
+    # Pinned to a frozen vintage. The newest archived sheet moves every day, and
+    # from 2026-11 the YouGov adult series no longer enters on Tuesdays (a
+    # 72-day gap, then Thursday and Wednesday entries, #187). The guard is right
+    # to refuse new rounds then; this test checks the calendar logic itself, so
+    # it must not depend on whatever the publisher did last week.
+    live_sb_rows = gen.sb_rows
+
+    def frozen_sb_rows(source):
+        with open(os.path.join(gen.ROOT, "sources", source, "2026-09-15.csv")) as fh:
+            return gen.sb.parse(fh.read())
+    gen.sb_rows = frozen_sb_rows
+    try:
+        _check_recorded_calendar(re, SERIES)
+    finally:
+        gen.sb_rows = live_sb_rows
+    print("ok test_a_recorded_publication_calendar_schedules_the_tracker")
+
+
+def _check_recorded_calendar(re, SERIES):
     history = gen.load_history()["yougov_approval"]
     meta = SERIES["yougov_approval"]
     _, reason = gen.schedule_contract("yougov_approval", meta, history)
@@ -239,7 +258,6 @@ def test_a_recorded_publication_calendar_schedules_the_tracker():
         ok, why = gen.gate(sid, row, [])
         assert not ok and why["gate"] == "schedule", (sid, why)
         assert "no publication calendar" in why["detail"], why
-    print("ok test_a_recorded_publication_calendar_schedules_the_tracker")
 
 
 def test_the_calendar_is_checked_against_the_sheet():

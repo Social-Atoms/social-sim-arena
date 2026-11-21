@@ -1,0 +1,54 @@
+name: nyc311-capture
+# Two more chances at the NYC 311 lock capture (card nyc-311-requests@v2).
+#
+# The lock reference is read from a fresh capture taken in the 24 h before the
+# Sunday 23:59 ET lock (04:59Z Monday in EST, 03:59Z in EDT). The archive is
+# write-once per UTC day, so Sunday's own capture (00:17Z) is 28 h too old and
+# only Monday's 00:17Z refresh qualifies; the next refresh, 06:17Z, is after
+# the lock. Socrata answers some queries from a stale replica, which
+# ssa/capture.py refuses (X-SODA2-Data-Out-Of-Date: true), and one refused
+# answer at 00:17Z would leave the week's round unposted.
+#
+# So this runs at 02:17Z and 03:17Z on Mondays -- before the EDT lock even
+# with GitHub's 5-20 minute cron drift. It only captures: when Monday's file
+# is already held it costs no request (write-once), so on a normal week it
+# makes none. Spaced hours apart, never a burst (lesson 5). Non-blocking, and
+# it commits only sources/nyc311 and the manifest, the refresh's commit pattern.
+on:
+  schedule:
+    - cron: "17 2,3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-data        # never race the refresh on the same commit
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: capture NYC 311 requests (non-blocking)
+        id: capture
+        continue-on-error: true
+        run: python -m ssa.adapters.nyc311 capture
+      - name: commit if changed
+        run: |
+          git config user.name "ssa-bot"
+          git config user.email "actions@github.com"
+          git add -A sources/nyc311 sources/manifest.json
+          if git diff --cached --quiet; then
+            echo "no new capture"
+          else
+            git commit -m "nyc311 capture $(date -u +%Y-%m-%dT%H:%MZ)"
+            git -c rebase.autoStash=true pull --rebase origin "$GITHUB_REF_NAME"
+            git push
+          fi

@@ -113,6 +113,11 @@ def _schema_branches(path: Path) -> dict[str, dict[str, Any]]:
 
 
 def _latest_public_reference(round_data: dict[str, Any]) -> dict[str, Any] | None:
+    zero_point = round_data.get("zero_point")
+    if zero_point and zero_point != "persistence":
+        ranked = (round_data.get("baselines") or {}).get(zero_point)
+        if ranked:
+            return ranked
     persistence = (round_data.get("baselines") or {}).get("persistence")
     if not persistence:
         profile = round_data.get("profile") or {}
