@@ -292,7 +292,7 @@ table.lb .probe-pass{display:inline-block;color:#176b3a;background:#e5f5e9;borde
 table.lb .probe-run{color:var(--accent-ink);font-weight:700;text-decoration:none;}
 table.lb .probe-run:hover{text-decoration:underline;}
 .av{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;border-radius:4px;color:#fff;font-weight:800;font-size:10.5px;flex:0 0 auto;position:relative;overflow:hidden;}
-.av .lg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:4px;background:inherit;}
+.av .lg{position:absolute;inset:0;width:100%;height:100%;box-sizing:border-box;object-fit:contain;padding:4px;background:inherit;}
 .lchip .av,.model-option .av{width:18px;height:18px;border-radius:3px;font-size:8px;}
 .lchip .av .lg,.model-option .av .lg{padding:2px;}
 /* The board's title carries the scoring note: hover or focus it. The scope word wears the same dotted line as the column heads. */
@@ -885,7 +885,7 @@ const vendorOf = id => { for(const [re,key] of VENDORS) if(re.test(id)) return k
 // it does not (sources in logos/README.md). The crowd wears its own mark, in the site's green.
 const LOGO_FILES = {claude:'claude.svg', openai:'openai.svg', gemini:'gemini.svg', grok:'grok.svg', deepseek:'deepseek.svg', qwen:'qwen.svg', zhipu:'zhipu.svg', kimi:'kimi.svg', crowd:'crowd.svg',
   astraculum:'astraculum.svg', h2oai:'h2oai.svg', apodex:'apodex.png', yulan:'yulan.png', ucsd:'ucsd.svg', renlab:'renlab.svg'};
-const logoSrc = v => LOGO_FILES[v] ? 'logos/'+LOGO_FILES[v]+'?r3' : null;
+const logoSrc = v => LOGO_FILES[v] ? 'logos/'+LOGO_FILES[v]+'?r4' : null;
 const vendorName = key => { for(const [,k,n] of VENDORS) if(k===key) return n; return key; };
 const VCOLOR = {claude:'#C87B60', openai:'#3F9581', gemini:'#6B92D4', grok:'#111110', deepseek:'#7783D8', qwen:'#907FD2', zhipu:'#588FBE', kimi:'#4C8A99', crowd:'#15803d',
   astraculum:'#3b4a5c', h2oai:'#d9a300', apodex:'#002c47', yulan:'#aa0227', ucsd:'#c69214', renlab:'#c6402a'};
