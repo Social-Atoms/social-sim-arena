@@ -457,7 +457,7 @@ def test_a_failed_fetch_serves_the_archive_but_an_empty_archive_raises(a):
         raise TimeoutError()
     civiqs._get = boom
     try:
-        civiqs.as_displayed(TRACKER, choice="Approve")
+        civiqs.as_displayed(TRACKER, choice="Approve", fetch=True)
         assert False, "no archive and no network must raise"
     except TimeoutError:
         pass
@@ -468,7 +468,7 @@ def test_a_failed_fetch_serves_the_archive_but_an_empty_archive_raises(a):
     # lock on a hard deadline -- so a dead source degrades to a stale series.
     diagnostics = []
     assert len(civiqs.as_displayed(TRACKER, choice="Approve",
-                                   now=at("2026-08-13"),
+                                   now=at("2026-08-13"), fetch=True,
                                    diagnostics=diagnostics)) > 0
     assert diagnostics[0]["source"] == "civiqs"
     assert diagnostics[0]["scope"] == civiqs.archive_key(TRACKER)
@@ -484,11 +484,44 @@ def test_a_malformed_live_civiqs_page_does_not_use_the_archive(a):
     a.serve("<html><body>not a loader payload</body></html>")
     try:
         civiqs.as_displayed(TRACKER, choice="Approve",
-                            now=at("2026-08-13"), diagnostics=[])
+                            now=at("2026-08-13"), fetch=True, diagnostics=[])
     except RuntimeError as e:
         assert "no Civiqs tracker payload" in str(e), e
     else:
         raise AssertionError("a malformed live page used the archive")
+
+
+@with_archive
+def test_the_refresh_reads_the_archive_and_sends_no_request_by_default(a):
+    a.serve(page())
+    civiqs.snapshot(TRACKER, now=at("2026-08-12"))
+    calls = []
+
+    def refused(url):
+        calls.append(url)
+        raise RuntimeError("403 Forbidden")
+    civiqs._get = refused
+    saved = os.environ.pop(civiqs.LIVE_ENV, None)
+    try:
+        diagnostics = []
+        got = civiqs.as_displayed(TRACKER, choice="Approve",
+                                  now=at("2026-08-13"), diagnostics=diagnostics)
+        assert got and calls == [] and diagnostics == []
+        # Three days without a capture is reported, and still served.
+        got = civiqs.as_displayed(TRACKER, choice="Approve",
+                                  now=at("2026-08-15"), diagnostics=diagnostics)
+        assert got and calls == []
+        assert len(diagnostics) == 1
+        assert "3 days old" in str(diagnostics[0]["error"])
+        # Opting in brings the live fetch back.
+        os.environ[civiqs.LIVE_ENV] = "1"
+        civiqs.as_displayed(TRACKER, choice="Approve",
+                            now=at("2026-08-15"), diagnostics=[])
+        assert calls, "SSA_CIVIQS_LIVE=1 must fetch"
+    finally:
+        os.environ.pop(civiqs.LIVE_ENV, None)
+        if saved is not None:
+            os.environ[civiqs.LIVE_ENV] = saved
 
 
 # --- the registry and the rounds that depend on it --------------------------

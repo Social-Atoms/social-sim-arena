@@ -456,6 +456,31 @@ def test_the_house_margin_is_never_resolved_from_a_poll_average():
     assert res is None and "certified" in why, (res, why)
 
 
+def test_a_failed_source_holds_only_its_own_rounds_and_says_so():
+    # 2026-11-21: AAII answered without a Date header and the resolver died,
+    # so no round on any tracker resolved that run. Now the failure is named
+    # on AAII's rounds and leaves every other reason as it was.
+    from ssa import series as series_registry
+    aaii_series = next(k for k, v in series_registry.SERIES.items()
+                       if v.get("source") == "aaii")
+    skipped = [("aaii-2026-09-03", f"no series '{aaii_series}' in the pipeline"),
+               ("umich-2026-09-prelim", "release_at 2026-09-12 has not passed")]
+    error = RuntimeError("AAII response carries no Date header")
+    out = dict(resolve.explain_source_failures(skipped, {"aaii": error}))
+    assert "source aaii failed this run" in out["aaii-2026-09-03"]
+    assert "retried next run" in out["aaii-2026-09-03"]
+    assert out["umich-2026-09-prelim"] == skipped[1][1]
+    assert resolve.explain_source_failures(skipped, {}) == skipped
+
+
+def test_main_isolates_source_failures():
+    # The resolver must ask build_series to isolate failures; without it one
+    # adapter exception aborts every resolution in the run.
+    import inspect
+    src = inspect.getsource(resolve.main)
+    assert "isolate_failures=True" in src
+
+
 if __name__ == "__main__":
     for name, fn in sorted(list(globals().items())):
         if name.startswith("test_") and callable(fn):

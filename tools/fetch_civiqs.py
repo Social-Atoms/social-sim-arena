@@ -98,7 +98,7 @@ def main():
     t0, ok, failed = time.monotonic(), 0, []
     for sid, name, filt in rows:
         try:
-            civiqs.as_displayed(name, filt, net=True, weekday=4)
+            civiqs.as_displayed(name, filt, net=True, weekday=4, fetch=True)
             ok += 1
         except Exception as e:                     # noqa: BLE001 - reported
             failed.append((name, f"{type(e).__name__}: {e}"))
