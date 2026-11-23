@@ -331,6 +331,34 @@ def resolve_all(season, series, resolved, now):
     return new, skipped
 
 
+def explain_source_failures(skipped, source_failures):
+    """Name the failed source in a skipped round's reason.
+
+    Without this a round whose source failed this run reads "no series in the
+    pipeline; resolves by hand", which sends a person to do by hand what the
+    next run will do on its own.
+    """
+    if not source_failures:
+        return skipped
+    sources = _round_sources()
+    out = []
+    for rid, why in skipped:
+        source = sources.get(rid)
+        if source in source_failures:
+            error = source_failures[source]
+            why = (f"source {source} failed this run "
+                   f"({type(error).__name__}: {error}); retried next run")
+        out.append((rid, why))
+    return out
+
+
+def _round_sources():
+    """round_id -> source, from the season file and the series registry."""
+    with open(QUESTIONS) as f:
+        rounds = json.load(f)["rounds"]
+    return {r["round_id"]: _source(r.get("series")) for r in rounds}
+
+
 def write(resolved, new, path=RESOLVED):
     """Merge and write. Existing entries win; this only ever adds."""
     merged = dict(resolved)
@@ -358,16 +386,32 @@ def main(argv=None):
         "sb_generic": sb.fetch(sb.GENERIC_URL),
         "umich": series_registry.michigan_history(),
     }
-    series = refresh.build_series(
+    # One source failing must not hold every other round's resolution. On
+    # 2026-11-21 AAII answered without a Date header, the adapter rightly
+    # refused to guess the year, and the exception took the whole resolver
+    # down with it: no round on any tracker resolved in that run. Isolation
+    # drops every series of the failed source together (ssa.series.build_all),
+    # so its rounds stay unresolved with the reason below and are retried on
+    # the next run; nothing is substituted.
+    series, source_failures = refresh.build_series(
         sb.approval_polls(rows=sources["sb_approval"]),
         sb.generic_ballot_polls(rows=sources["sb_generic"]),
-        sources["umich"], sources)
+        sources["umich"], sources, isolate_failures=True)
 
     with open(QUESTIONS) as f:
         season = json.load(f)
     resolved = load_resolved()
 
     new, skipped = resolve_all(season, series, resolved, now)
+    skipped = explain_source_failures(skipped, source_failures)
+    if source_failures:
+        print("SOURCE FAILED THIS RUN -- its rounds wait for the next run:")
+        for name, error in sorted(source_failures.items()):
+            print(f"  {name}: {type(error).__name__}: {error}")
+            # A GitHub annotation, so the failure shows on the run page even
+            # though the step succeeds for every other source.
+            print(f"::warning title=source {name} failed in ssa.resolve::"
+                  f"{type(error).__name__}: {error}")
 
     print(f"already resolved: {len(resolved)}")
     if new:

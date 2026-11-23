@@ -286,6 +286,10 @@ def test_main_registry_seam_marks_civiqs_403_archive_fallback_degraded():
     # nothing. Declaring the cached vintage stale is what puts a live request
     # back in the path, which is the situation this test is about.
     civiqs._stale = lambda *_a, **_k: True
+    # The refresh no longer fetches Civiqs unless asked to; this test is about
+    # what happens when it is asked and gets refused.
+    saved_live = os.environ.get(civiqs.LIVE_ENV)
+    os.environ[civiqs.LIVE_ENV] = "1"
     status = reliability.RunStatus(NOW)
     try:
         built, failures, source_failures, diagnostics = \
@@ -296,6 +300,10 @@ def test_main_registry_seam_marks_civiqs_403_archive_fallback_degraded():
         series_registry.SERIES = saved_series
         civiqs._get, civiqs._payloads = saved_get, saved_payloads
         civiqs._stale = saved_stale
+        if saved_live is None:
+            os.environ.pop(civiqs.LIVE_ENV, None)
+        else:
+            os.environ[civiqs.LIVE_ENV] = saved_live
     assert built["civiqs_net"] and failures == {}
     assert source_failures == [] and diagnostics[0]["source"] == "civiqs"
     row = source_row(status.as_dict(), "civiqs")

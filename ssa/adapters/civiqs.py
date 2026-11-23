@@ -603,10 +603,54 @@ def _stale(snap, now):
     return age >= RECHECK_SECONDS
 
 
+# --- where today's snapshot comes from -----------------------------------------
+
+# Civiqs sits behind AWS WAF and has refused every scripted request from CI
+# (HTTP 403) since November 2026. The arena does not work around a block, so the
+# refresh no longer asks: the daily snapshot is saved from the maintainer's own
+# browser, filed by the courier's download watcher, and reaches this checkout
+# through the `source-archive` branch. Until 2026-11-22 the refresh still sent
+# 22 requests per run, four runs a day, each one refused, and every refused
+# request turned the run red even though the archive answered it.
+#
+# A live fetch is opt-in (SSA_CIVIQS_LIVE=1), for a machine Civiqs serves.
+LIVE_ENV = "SSA_CIVIQS_LIVE"
+
+# How old the newest archived snapshot may be before the run reports it. The
+# browser capture runs once a day and the refresh pulls it on its next run, so a
+# healthy archive is at most a day behind; two days means a missed capture.
+ARCHIVE_MAX_AGE_DAYS = 2
+
+
+def live_enabled():
+    return os.environ.get(LIVE_ENV, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _archive_age_diagnostic(key, now):
+    """A diagnostic row when the archive for `key` has fallen behind, else None."""
+    days = archive_days(key)
+    if not days:
+        return None                       # the caller raises on an empty archive
+    age = (now.date() - days[-1]).days
+    if age <= ARCHIVE_MAX_AGE_DAYS:
+        return None
+    return {
+        "source": "civiqs",
+        "scope": key,
+        "error": RuntimeError(
+            f"newest Civiqs snapshot is {age} days old ({days[-1].isoformat()}); "
+            "the daily browser capture (courier, civiqs_chrome.py) has not "
+            "filed since. Live fetching is off by design."),
+        "archive_evidence": (
+            f"{os.path.relpath(archive_dir(key), ROOT)} ({len(days)} snapshots; "
+            f"newest {days[-1].isoformat()})"),
+    }
+
+
 # --- what a registered series actually reads --------------------------------
 
 def as_displayed(name, filters=None, choice=None, net=False, weekday=None,
-                 now=None, fetch=True, use_archive=True, diagnostics=None):
+                 now=None, fetch=None, use_archive=True, diagnostics=None):
     """The archive's own series: [{date, value}] oldest first, in points.
 
     `date` is the day we (or, before the archive began, Civiqs) would have shown
@@ -636,10 +680,19 @@ def as_displayed(name, filters=None, choice=None, net=False, weekday=None,
     one place rather than inferred from whatever the page declares that week.
 
     `fetch=False` builds from the archive alone and touches no network, which is
-    what tests and any rerun over committed data want.
+    what tests and any rerun over committed data want. `fetch=None` (the
+    default) fetches only when SSA_CIVIQS_LIVE is set; see `LIVE_ENV`. Without
+    a fetch, an archive more than ARCHIVE_MAX_AGE_DAYS behind is reported in
+    `diagnostics` so a stopped browser capture does not go unnoticed.
     """
     now = now or datetime.now(timezone.utc)
     key = archive_key(name, filters)
+    if fetch is None:
+        fetch = live_enabled()
+        if not fetch and diagnostics is not None:
+            row = _archive_age_diagnostic(key, now)
+            if row is not None:
+                diagnostics.append(row)
     live_errors = []
     if fetch:
         try:
