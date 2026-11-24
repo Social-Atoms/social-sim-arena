@@ -1,0 +1,61 @@
+name: registration-intake
+# A registration pull request (one new or changed entrants/<id>.json, owned by
+# its author) is checked, answered and merged with nobody online.
+#
+# Why pull_request_target: GitHub holds `pull_request` runs from a first-time
+# contributor's fork at "approval required", so validate-submissions and
+# therefore auto-merge.yml never start for exactly the people registering.
+# `pull_request_target` runs in this repository's context without that hold.
+#
+# Why that is safe here:
+#   - the checkout is `main`, never the pull request. The rules that judge the
+#     pull request (tools/auto_merge.py, tools/validate_submission.py,
+#     schema/) are main's copies, so a pull request cannot change them;
+#   - tools/auto_merge.py first refuses any changed path that is not
+#     entrants/<id>.json, then copies only those JSON files from the pinned
+#     head commit into the tree and reads them as data. No contributor code,
+#     script, requirement or workflow is ever run;
+#   - the merge is pinned to the head commit that was validated
+#     (--match-head-commit), squashed, and made by github-actions[bot], which
+#     main-guard.yml allows;
+#   - the credentials are not persisted into the checkout.
+# The ownership rule in tools/validate_submission.py (a new file must carry
+# "github": "<the pull request's author>") is the security boundary, as
+# docs/registration.md says.
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review]
+    branches: [main]
+    paths: ['entrants/*.json']
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: registration-intake-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  intake:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: check, answer and merge if this is a valid registration by its owner
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python tools/auto_merge.py --pr "$PR_NUMBER" \
+            --received "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --run-url "$RUN_URL"
