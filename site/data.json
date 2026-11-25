@@ -1,35 +1,35 @@
 {
- "generated_at": "2026-11-24T09:55:12Z",
+ "generated_at": "2026-11-24T22:33:08Z",
  "season": 0,
  "trackers": {
   "trump_approval_avg": {
    "label": "Trump approval, adjusted average",
    "unit": "% approve",
-   "value": 37.7,
-   "asof": "2026-11-18",
-   "delta_30d": -1.1,
-   "n_polls_window": 40,
+   "value": 37.5,
+   "asof": "2026-11-21",
+   "delta_30d": -1.2,
+   "n_polls_window": 39,
    "source": "Silver Bulletin poll database, house-effect adjusted here, 21-day window"
   },
   "yougov_approval": {
    "label": "Economist/YouGov, latest wave",
    "unit": "% approve",
-   "value": 35.0,
-   "asof": "2026-11-14",
+   "value": 33.0,
+   "asof": "2026-11-21",
    "source": "Silver Bulletin poll database (poll-level)"
   },
   "yougov_rv_approval": {
    "label": "Economist/YouGov registered voters, latest wave",
    "unit": "% approve",
-   "value": 37.0,
-   "asof": "2026-11-14",
+   "value": 35.0,
+   "asof": "2026-11-21",
    "source": "Silver Bulletin poll database (poll-level)"
   },
   "mc_approval": {
    "label": "Morning Consult, latest wave",
    "unit": "% approve",
    "value": 40.0,
-   "asof": "2026-11-14",
+   "asof": "2026-11-21",
    "source": "Silver Bulletin poll database (poll-level)"
   },
   "umich_sentiment": {
@@ -86543,7 +86543,7 @@
    "horizon_days": 11.0,
    "batch_id": "batch-2026-11-09",
    "domain": "attention",
-   "status": "locked",
+   "status": "resolved",
    "baselines": null,
    "scoreable": true,
    "ranking": {
@@ -86781,6 +86781,81 @@
       "Street_Fighter_(2026_film)"
      ]
     }
+   },
+   "scores": {
+    "vac-collective-attention": {
+     "loss": 0.5133,
+     "skill": 0.333
+    },
+    "apodex-futureflow": {
+     "loss": 0.525,
+     "skill": 0.3179
+    },
+    "yulan-onesim": {
+     "loss": 0.5341,
+     "skill": 0.306
+    },
+    "h2oai-superagent": {
+     "loss": 0.5401,
+     "skill": 0.2983
+    },
+    "crowd": {
+     "loss": 0.5664,
+     "skill": 0.264
+    },
+    "xumi": {
+     "loss": 0.6381,
+     "skill": 0.1709
+    },
+    "worldvac-base": {
+     "loss": 0.6696,
+     "skill": 0.1299
+    },
+    "h2oai-marina": {
+     "loss": 0.7355,
+     "skill": 0.0443
+    },
+    "persistence": {
+     "loss": 0.7696,
+     "skill": 0.0
+    },
+    "flower-forecast": {
+     "loss": 0.846,
+     "skill": -0.0993
+    },
+    "zhengzheng-agent": {
+     "loss": 0.9775,
+     "skill": -0.2701
+    }
+   },
+   "resolution": {
+    "method": "the seven archived daily top-1000 lists for the week, summed per article, exclusion rule main_page_and_namespaces_v1 applied, top 10 by weekly total, ties broken by title ascending",
+    "week_start": "2026-11-16",
+    "week_end": "2026-11-22",
+    "outcome": [
+     "Robert_Pattinson",
+     "Ramayana:_Part_1",
+     "Grand_Theft_Auto_VI",
+     "Suki_Waterhouse",
+     "List_of_highest-grossing_Indian_films",
+     "The_Hunger_Games:_Sunrise_on_the_Reaping",
+     ".xxx",
+     "Deaths_in_2026",
+     "Riemann_hypothesis",
+     "The_Body_(TV_series)"
+    ],
+    "items": [
+     "Robert_Pattinson",
+     "Ramayana:_Part_1",
+     "Grand_Theft_Auto_VI",
+     "Suki_Waterhouse",
+     "List_of_highest-grossing_Indian_films",
+     "The_Hunger_Games:_Sunrise_on_the_Reaping",
+     ".xxx",
+     "Deaths_in_2026",
+     "Riemann_hypothesis",
+     "The_Body_(TV_series)"
+    ]
    }
   },
   {
@@ -93198,7 +93273,7 @@
    "horizon_days": 2.0,
    "batch_id": "batch-2026-11-16",
    "domain": "public-opinion",
-   "status": "locked",
+   "status": "resolved",
    "history_source": "window snapshot",
    "baselines": {
     "persistence": {
@@ -93223,6 +93298,13 @@
     }
    },
    "scoreable": true,
+   "resolution": {
+    "method": "first point in the series after the pre-lock history, the same freeze the round's baselines used",
+    "observed_date": "2026-11-21",
+    "resolved_at": "2026-11-24T22:32:48Z",
+    "series": "yougov_rv_approval",
+    "value": 35.0
+   },
    "n_forecasts": 22,
    "forecasts": {
     "apodex-futureflow": {
@@ -93357,7 +93439,94 @@
      "mean": 36.53182044462686,
      "sd": 2.4166666666666665
     }
-   }
+   },
+   "scores": {
+    "apodex-futureflow": {
+     "crps": 1.122,
+     "skill": 0.124
+    },
+    "claude-sonnet-web-superfc": {
+     "crps": 1.1964,
+     "skill": 0.066
+    },
+    "claude-sonnet-web": {
+     "crps": 1.2049,
+     "skill": 0.0593
+    },
+    "climatology": {
+     "crps": 2.3047,
+     "skill": -0.7993
+    },
+    "crowd": {
+     "crps": 1.1627,
+     "skill": 0.0923
+    },
+    "deepseek-pro-web-superfc": {
+     "crps": 1.0705,
+     "skill": 0.1642
+    },
+    "deepseek-pro-web": {
+     "crps": 0.8963,
+     "skill": 0.3003
+    },
+    "ewma": {
+     "crps": 0.8843,
+     "skill": 0.3096
+    },
+    "flower-forecast": {
+     "crps": 0.8141,
+     "skill": 0.3645
+    },
+    "gemini-pro-web-superfc": {
+     "crps": 1.5352,
+     "skill": -0.1985
+    },
+    "gemini-pro-web": {
+     "crps": 1.6484,
+     "skill": -0.2869
+    },
+    "gpt-5.6-luna-web-superfc": {
+     "crps": 0.9311,
+     "skill": 0.2731
+    },
+    "gpt-5.6-luna-web": {
+     "crps": 1.1906,
+     "skill": 0.0705
+    },
+    "h2oai-superagent": {
+     "crps": 1.317,
+     "skill": -0.0282
+    },
+    "persistence": {
+     "crps": 1.2809,
+     "skill": 0.0
+    },
+    "trend": {
+     "crps": 1.043,
+     "skill": 0.1857
+    },
+    "vac-public-opinion": {
+     "crps": 1.1996,
+     "skill": 0.0635
+    },
+    "worldvac-base": {
+     "crps": 1.1899,
+     "skill": 0.0711
+    },
+    "xumi": {
+     "crps": 1.5148,
+     "skill": -0.1826
+    },
+    "yulan-onesim": {
+     "crps": 1.2139,
+     "skill": 0.0523
+    },
+    "zhengzheng-agent": {
+     "crps": 0.9397,
+     "skill": 0.2664
+    }
+   },
+   "persistence_crps": 1.2809
   },
   {
    "round_id": "yougov-2026-w48-strong-approval",
@@ -93375,7 +93544,7 @@
    "horizon_days": 2.0,
    "batch_id": "batch-2026-11-16",
    "domain": "public-opinion",
-   "status": "locked",
+   "status": "awaiting_resolution",
    "history_source": "window snapshot",
    "baselines": {
     "persistence": {
@@ -93570,7 +93739,7 @@
     "yougov_xtab_approve_edu_college_grad",
     "yougov_xtab_approve_edu_postgrad"
    ],
-   "status": "locked",
+   "status": "awaiting_resolution",
    "history_source": "window snapshot",
    "baselines": null,
    "scoreable": true,
@@ -95014,6 +95183,7 @@
    "batch_id": "batch-2026-11-23",
    "domain": "public-opinion",
    "status": "open",
+   "history_source": "window snapshot",
    "baselines": {
     "persistence": {
      "mean": 26.0,
@@ -95037,31 +95207,43 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 7,
+   "n_forecasts": 10,
    "forecasts": {
     "climatology": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 29.2,
      "sd": 1.01
     },
     "ewma": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 27.52,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 26.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 26.83,
      "sd": 2.21
+    },
+    "test-jay": {
+     "filed": "2026-11-24T22:23:12Z",
+     "sealed": true
+    },
+    "worldvac-base": {
+     "filed": "2026-11-24T22:23:12Z",
+     "sealed": true
+    },
+    "zhengzheng-agent": {
+     "filed": "2026-11-24T22:23:13Z",
+     "sealed": true
     },
     "minds-mosaic": {
      "filed": "2026-11-22T16:42:34.423910Z",
@@ -95094,6 +95276,7 @@
    "batch_id": "batch-2026-11-23",
    "domain": "public-opinion",
    "status": "open",
+   "history_source": "window snapshot",
    "baselines": {
     "persistence": {
      "mean": -26.2,
@@ -95117,31 +95300,43 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 7,
+   "n_forecasts": 10,
    "forecasts": {
     "climatology": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": -24.45,
      "sd": 2.39
     },
     "ewma": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": -26.74,
      "sd": 1.01
     },
     "persistence": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": -26.2,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": -26.9,
      "sd": 1.11
+    },
+    "test-jay": {
+     "filed": "2026-11-24T22:23:12Z",
+     "sealed": true
+    },
+    "worldvac-base": {
+     "filed": "2026-11-24T22:23:13Z",
+     "sealed": true
+    },
+    "zhengzheng-agent": {
+     "filed": "2026-11-24T22:23:14Z",
+     "sealed": true
     },
     "minds-mosaic": {
      "filed": "2026-11-22T16:42:38.179823Z",
@@ -95174,6 +95369,7 @@
    "batch_id": "batch-2026-11-23",
    "domain": "consumer",
    "status": "open",
+   "history_source": "window snapshot",
    "baselines": {
     "persistence": {
      "mean": -35.7,
@@ -95197,31 +95393,43 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 7,
+   "n_forecasts": 10,
    "forecasts": {
     "climatology": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": -37.32,
      "sd": 3.5
     },
     "ewma": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": -37.66,
      "sd": 1.02
     },
     "persistence": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": -35.7,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": -35.43,
      "sd": 1.11
+    },
+    "test-jay": {
+     "filed": "2026-11-24T22:23:20Z",
+     "sealed": true
+    },
+    "worldvac-base": {
+     "filed": "2026-11-24T22:23:21Z",
+     "sealed": true
+    },
+    "zhengzheng-agent": {
+     "filed": "2026-11-24T22:23:21Z",
+     "sealed": true
     },
     "minds-mosaic": {
      "filed": "2026-11-22T16:42:44.046512Z",
@@ -95254,6 +95462,7 @@
    "batch_id": "batch-2026-11-23",
    "domain": "consumer",
    "status": "open",
+   "history_source": "window snapshot",
    "baselines": {
     "persistence": {
      "mean": -34.5,
@@ -95277,31 +95486,43 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 7,
+   "n_forecasts": 10,
    "forecasts": {
     "climatology": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": -34.23,
      "sd": 3.09
     },
     "ewma": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": -35.86,
      "sd": 1.07
     },
     "persistence": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": -34.5,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": -34.42,
      "sd": 1.11
+    },
+    "test-jay": {
+     "filed": "2026-11-24T22:23:22Z",
+     "sealed": true
+    },
+    "worldvac-base": {
+     "filed": "2026-11-24T22:23:22Z",
+     "sealed": true
+    },
+    "zhengzheng-agent": {
+     "filed": "2026-11-24T22:23:23Z",
+     "sealed": true
     },
     "minds-mosaic": {
      "filed": "2026-11-22T16:42:47.918061Z",
@@ -95334,6 +95555,7 @@
    "batch_id": "batch-2026-11-23",
    "domain": "consumer",
    "status": "open",
+   "history_source": "window snapshot",
    "baselines": {
     "persistence": {
      "mean": -33.6,
@@ -95357,31 +95579,43 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 7,
+   "n_forecasts": 10,
    "forecasts": {
     "climatology": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": -30.99,
      "sd": 2.34
     },
     "ewma": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": -33.47,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": -33.6,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": -33.22,
      "sd": 1.41
+    },
+    "test-jay": {
+     "filed": "2026-11-24T22:23:23Z",
+     "sealed": true
+    },
+    "worldvac-base": {
+     "filed": "2026-11-24T22:23:24Z",
+     "sealed": true
+    },
+    "zhengzheng-agent": {
+     "filed": "2026-11-24T22:23:25Z",
+     "sealed": true
     },
     "minds-mosaic": {
      "filed": "2026-11-22T16:42:51.336161Z",
@@ -95414,6 +95648,7 @@
    "batch_id": "batch-2026-11-23",
    "domain": "consumer",
    "status": "open",
+   "history_source": "window snapshot",
    "baselines": {
     "persistence": {
      "mean": 57.3,
@@ -95437,31 +95672,43 @@
     }
    },
    "scoreable": true,
-   "n_forecasts": 7,
+   "n_forecasts": 10,
    "forecasts": {
     "climatology": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 58.66,
      "sd": 2.25
     },
     "ewma": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 59.14,
      "sd": 1.71
     },
     "persistence": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 57.3,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 57.84,
      "sd": 2.52
+    },
+    "test-jay": {
+     "filed": "2026-11-24T22:23:25Z",
+     "sealed": true
+    },
+    "worldvac-base": {
+     "filed": "2026-11-24T22:23:25Z",
+     "sealed": true
+    },
+    "zhengzheng-agent": {
+     "filed": "2026-11-24T22:23:27Z",
+     "sealed": true
     },
     "minds-mosaic": {
      "filed": "2026-11-22T16:42:54.934366Z",
@@ -95512,6 +95759,7 @@
     "civiqs_net_approval_female"
    ],
    "status": "open",
+   "history_source": "window snapshot",
    "baselines": null,
    "scoreable": true,
    "profile": {
@@ -95552,23 +95800,24 @@
      "civiqs_net_approval_female": "Civiqs Trump net approval, women"
     },
     "history_points": {
-     "civiqs_net_approval_dem": 96,
-     "civiqs_net_approval_ind": 96,
-     "civiqs_net_approval_rep": 96,
-     "civiqs_net_approval_age_18_34": 96,
-     "civiqs_net_approval_age_35_49": 96,
-     "civiqs_net_approval_age_50_64": 96,
-     "civiqs_net_approval_age_65_up": 96,
-     "civiqs_net_approval_race_white": 96,
-     "civiqs_net_approval_race_black": 96,
-     "civiqs_net_approval_race_hispanic": 96,
-     "civiqs_net_approval_race_other": 96,
-     "civiqs_net_approval_edu_noncollege": 96,
-     "civiqs_net_approval_edu_college": 96,
-     "civiqs_net_approval_edu_postgrad": 96,
-     "civiqs_net_approval_male": 96,
-     "civiqs_net_approval_female": 96
+     "civiqs_net_approval_dem": 60,
+     "civiqs_net_approval_ind": 60,
+     "civiqs_net_approval_rep": 60,
+     "civiqs_net_approval_age_18_34": 60,
+     "civiqs_net_approval_age_35_49": 60,
+     "civiqs_net_approval_age_50_64": 60,
+     "civiqs_net_approval_age_65_up": 60,
+     "civiqs_net_approval_race_white": 60,
+     "civiqs_net_approval_race_black": 60,
+     "civiqs_net_approval_race_hispanic": 60,
+     "civiqs_net_approval_race_other": 60,
+     "civiqs_net_approval_edu_noncollege": 60,
+     "civiqs_net_approval_edu_college": 60,
+     "civiqs_net_approval_edu_postgrad": 60,
+     "civiqs_net_approval_male": 60,
+     "civiqs_net_approval_female": 60
     },
+    "history_source": "window snapshot",
     "baselines": {
      "persistence": {
       "civiqs_net_approval_dem": {
@@ -95654,10 +95903,10 @@
      }
     }
    },
-   "n_forecasts": 3,
+   "n_forecasts": 6,
    "forecasts": {
     "persistence": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -95726,6 +95975,18 @@
        "sd": 1.5
       }
      }
+    },
+    "test-jay": {
+     "filed": "2026-11-24T22:23:27Z",
+     "sealed": true
+    },
+    "worldvac-base": {
+     "filed": "2026-11-24T22:23:27Z",
+     "sealed": true
+    },
+    "zhengzheng-agent": {
+     "filed": "2026-11-24T22:23:28Z",
+     "sealed": true
     },
     "xumi": {
      "filed": "2026-11-17T03:19:57.459763Z",
@@ -95818,7 +96079,7 @@
    "n_forecasts": 2,
    "forecasts": {
     "persistence": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "profile",
      "cells_n": 5,
      "cells": {
@@ -95900,7 +96161,7 @@
    "n_forecasts": 2,
    "forecasts": {
     "persistence": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "ranking",
      "items_n": 10,
      "items": [
@@ -95941,23 +96202,23 @@
    "status": "open",
    "baselines": {
     "persistence": {
-     "mean": 37.0,
+     "mean": 35.0,
      "sd": 1.5,
      "method": "persistence"
     },
     "trend": {
-     "mean": 35.26,
-     "sd": 4.71,
+     "mean": 34.08,
+     "sd": 3.87,
      "method": "trend_ols"
     },
     "ewma": {
-     "mean": 36.41,
+     "mean": 35.85,
      "sd": 2.42,
      "method": "ewma"
     },
     "climatology": {
-     "mean": 38.38,
-     "sd": 2.06,
+     "mean": 38.21,
+     "sd": 2.17,
      "method": "climatology"
     }
    },
@@ -95965,28 +96226,28 @@
    "n_forecasts": 5,
    "forecasts": {
     "climatology": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
-     "mean": 38.38,
-     "sd": 2.06
+     "mean": 38.21,
+     "sd": 2.17
     },
     "ewma": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
-     "mean": 36.41,
+     "mean": 35.85,
      "sd": 2.42
     },
     "persistence": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
-     "mean": 37.0,
+     "mean": 35.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
-     "mean": 35.26,
-     "sd": 4.71
+     "mean": 34.08,
+     "sd": 3.87
     },
     "xumi": {
      "filed": "2026-11-13T00:07:59.396536Z",
@@ -96037,25 +96298,25 @@
    "n_forecasts": 5,
    "forecasts": {
     "climatology": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 19.78,
      "sd": 2.11
     },
     "ewma": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 19.52,
      "sd": 2.12
     },
     "persistence": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 17.0,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 20.96,
      "sd": 4.42
@@ -96246,7 +96507,7 @@
    "n_forecasts": 2,
    "forecasts": {
     "persistence": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "profile",
      "cells_n": 16,
      "cells": {
@@ -96365,25 +96626,25 @@
    "n_forecasts": 6,
    "forecasts": {
     "climatology": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 3.35,
      "sd": 1.0
     },
     "ewma": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 3.79,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 3.91,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 3.91,
      "sd": 1.8
@@ -96441,25 +96702,25 @@
    "n_forecasts": 6,
    "forecasts": {
     "climatology": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 3.06,
      "sd": 1.0
     },
     "ewma": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 3.25,
      "sd": 1.0
     },
     "persistence": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 3.29,
      "sd": 1.5
     },
     "trend": {
-     "filed": "2026-11-24T09:50Z",
+     "filed": "2026-11-24T22:22Z",
      "shape": "number",
      "mean": 3.31,
      "sd": 1.8
@@ -98274,7 +98535,7 @@
   }
  },
  "leaderboard": {
-  "resolved_rounds": 155,
+  "resolved_rounds": 157,
   "entries": [
    {
     "entrant": "vac-sentiment-expectations",
@@ -98290,9 +98551,9 @@
    },
    {
     "entrant": "apodex-futureflow",
-    "rounds": 73,
-    "mean_crps": 0.735,
-    "mean_skill": 0.185
+    "rounds": 74,
+    "mean_crps": 0.74,
+    "mean_skill": 0.184
    },
    {
     "entrant": "h2oai-marina",
@@ -98302,9 +98563,9 @@
    },
    {
     "entrant": "h2oai-superagent",
-    "rounds": 63,
-    "mean_crps": 0.768,
-    "mean_skill": 0.141
+    "rounds": 64,
+    "mean_crps": 0.777,
+    "mean_skill": 0.138
    },
    {
     "entrant": "qwen-3.8-news",
@@ -98314,9 +98575,9 @@
    },
    {
     "entrant": "vac-public-opinion",
-    "rounds": 19,
-    "mean_crps": 0.664,
-    "mean_skill": 0.103
+    "rounds": 20,
+    "mean_crps": 0.69,
+    "mean_skill": 0.101
    },
    {
     "entrant": "minds-mosaic",
@@ -98326,51 +98587,51 @@
    },
    {
     "entrant": "worldvac-base",
-    "rounds": 74,
-    "mean_crps": 1.02,
+    "rounds": 75,
+    "mean_crps": 1.023,
     "mean_skill": 0.051
    },
    {
     "entrant": "flower-forecast",
-    "rounds": 29,
-    "mean_crps": 1.086,
-    "mean_skill": 0.035
+    "rounds": 30,
+    "mean_crps": 1.077,
+    "mean_skill": 0.046
    },
    {
     "entrant": "yulan-onesim",
-    "rounds": 45,
-    "mean_crps": 0.923,
+    "rounds": 46,
+    "mean_crps": 0.93,
     "mean_skill": 0.03
    },
    {
     "entrant": "persistence",
-    "rounds": 115,
-    "mean_crps": 2.207,
+    "rounds": 116,
+    "mean_crps": 2.199,
     "mean_skill": 0.0
    },
    {
     "entrant": "xumi",
-    "rounds": 15,
-    "mean_crps": 1.05,
-    "mean_skill": -0.001
+    "rounds": 16,
+    "mean_crps": 1.079,
+    "mean_skill": -0.012
    },
    {
     "entrant": "gemini-pro-web",
-    "rounds": 94,
-    "mean_crps": 2.016,
-    "mean_skill": -0.017
+    "rounds": 95,
+    "mean_crps": 2.012,
+    "mean_skill": -0.02
    },
    {
     "entrant": "claude-sonnet-web",
-    "rounds": 94,
-    "mean_crps": 2.079,
-    "mean_skill": -0.048
+    "rounds": 95,
+    "mean_crps": 2.069,
+    "mean_skill": -0.047
    },
    {
     "entrant": "claude-sonnet-web-superfc",
-    "rounds": 94,
-    "mean_crps": 2.086,
-    "mean_skill": -0.056
+    "rounds": 95,
+    "mean_crps": 2.076,
+    "mean_skill": -0.055
    },
    {
     "entrant": "gpt-5.6-terra-web",
@@ -98386,33 +98647,33 @@
    },
    {
     "entrant": "gemini-pro-web-superfc",
-    "rounds": 94,
-    "mean_crps": 1.885,
-    "mean_skill": -0.127
+    "rounds": 95,
+    "mean_crps": 1.881,
+    "mean_skill": -0.128
    },
    {
     "entrant": "deepseek-pro-web-superfc",
-    "rounds": 89,
-    "mean_crps": 1.865,
-    "mean_skill": -0.142
+    "rounds": 90,
+    "mean_crps": 1.856,
+    "mean_skill": -0.138
    },
    {
     "entrant": "crowd",
-    "rounds": 114,
-    "mean_crps": 1.812,
-    "mean_skill": -0.147
+    "rounds": 115,
+    "mean_crps": 1.806,
+    "mean_skill": -0.145
    },
    {
     "entrant": "deepseek-pro-web",
-    "rounds": 88,
-    "mean_crps": 1.854,
-    "mean_skill": -0.171
+    "rounds": 89,
+    "mean_crps": 1.843,
+    "mean_skill": -0.166
    },
    {
     "entrant": "gpt-5.6-luna-web-superfc",
-    "rounds": 91,
-    "mean_crps": 1.274,
-    "mean_skill": -0.175
+    "rounds": 92,
+    "mean_crps": 1.271,
+    "mean_skill": -0.17
    },
    {
     "entrant": "glm-web",
@@ -98476,9 +98737,9 @@
    },
    {
     "entrant": "gpt-5.6-luna-web",
-    "rounds": 92,
-    "mean_crps": 1.536,
-    "mean_skill": -0.365
+    "rounds": 93,
+    "mean_crps": 1.532,
+    "mean_skill": -0.361
    },
    {
     "entrant": "kimi-web-superfc",
@@ -98529,16 +98790,16 @@
     "mean_skill": -0.495
    },
    {
+    "entrant": "ewma",
+    "rounds": 116,
+    "mean_crps": 2.201,
+    "mean_skill": -0.522
+   },
+   {
     "entrant": "gemini-flash",
     "rounds": 14,
     "mean_crps": 2.154,
     "mean_skill": -0.525
-   },
-   {
-    "entrant": "ewma",
-    "rounds": 115,
-    "mean_crps": 2.212,
-    "mean_skill": -0.53
    },
    {
     "entrant": "qwen-3.8-superfc",
@@ -98763,16 +99024,16 @@
     "mean_skill": -1.597
    },
    {
+    "entrant": "trend",
+    "rounds": 116,
+    "mean_crps": 3.476,
+    "mean_skill": -1.622
+   },
+   {
     "entrant": "claude-opus-5-superfc",
     "rounds": 9,
     "mean_crps": 3.273,
     "mean_skill": -1.632
-   },
-   {
-    "entrant": "trend",
-    "rounds": 115,
-    "mean_crps": 3.497,
-    "mean_skill": -1.637
    },
    {
     "entrant": "grok-news",
@@ -98806,9 +99067,9 @@
    },
    {
     "entrant": "climatology",
-    "rounds": 115,
-    "mean_crps": 3.16,
-    "mean_skill": -2.406
+    "rounds": 116,
+    "mean_crps": 3.153,
+    "mean_skill": -2.393
    },
    {
     "entrant": "claude-opus-5-news",
@@ -98902,9 +99163,9 @@
    },
    {
     "entrant": "zhengzheng-agent",
-    "rounds": 73,
-    "mean_crps": 5.107,
-    "mean_skill": -5.889
+    "rounds": 74,
+    "mean_crps": 5.051,
+    "mean_skill": -5.806
    },
    {
     "entrant": "gpt-5.6-luna-zeroshot-superfc",
@@ -99024,7 +99285,7 @@
  },
  "season0_main": {
   "since": "2026-09-30T00:00:00Z",
-  "scored_rounds": 87,
+  "scored_rounds": 89,
   "round_ids": [
    "yougov-xtab-2026-w41",
    "yougov-xtab-2026-w42",
@@ -99105,6 +99366,7 @@
    "civiqs-2026-w46-inflation-concern",
    "civiqs-profile-2026-w46",
    "trends-basket-2026-11-21",
+   "wiki-top10-2026-11-22",
    "yougov-2026-w47-rv-approval",
    "civiqs-2026-w47-angry-share",
    "civiqs-2026-w47-approval",
@@ -99112,29 +99374,30 @@
    "civiqs-2026-w47-econ-now",
    "civiqs-2026-w47-family-finances",
    "civiqs-2026-w47-inflation-concern",
-   "civiqs-profile-2026-w47"
+   "civiqs-profile-2026-w47",
+   "yougov-2026-w48-rv-approval"
   ],
   "entries": [
    {
     "entrant": "vac-sentiment-expectations",
     "rounds": 27,
-    "answered": "27/87",
+    "answered": "27/89",
     "mean_skill": 0.3471,
     "mean_crps": 0.5099,
     "crps_rounds": 27
    },
    {
     "entrant": "vac-collective-attention",
-    "rounds": 13,
-    "answered": "13/87",
-    "mean_skill": 0.3006,
+    "rounds": 14,
+    "answered": "14/89",
+    "mean_skill": 0.3029,
     "mean_crps": null,
     "crps_rounds": 0
    },
    {
     "entrant": "51folds-agent",
     "rounds": 7,
-    "answered": "7/87",
+    "answered": "7/89",
     "mean_skill": 0.2788,
     "mean_crps": 0.2726,
     "crps_rounds": 6
@@ -99142,63 +99405,63 @@
    {
     "entrant": "vac-population-profiles",
     "rounds": 9,
-    "answered": "9/87",
+    "answered": "9/89",
     "mean_skill": 0.2064,
     "mean_crps": null,
     "crps_rounds": 0
    },
    {
     "entrant": "h2oai-superagent",
-    "rounds": 85,
-    "answered": "85/87",
-    "mean_skill": 0.1925,
-    "mean_crps": 0.7673,
-    "crps_rounds": 61
+    "rounds": 87,
+    "answered": "87/89",
+    "mean_skill": 0.1912,
+    "mean_crps": 0.7762,
+    "crps_rounds": 62
    },
    {
     "entrant": "vac-public-opinion",
-    "rounds": 17,
-    "answered": "17/87",
-    "mean_skill": 0.1849,
-    "mean_crps": 0.6278,
-    "crps_rounds": 17
+    "rounds": 18,
+    "answered": "18/89",
+    "mean_skill": 0.1782,
+    "mean_crps": 0.6596,
+    "crps_rounds": 18
    },
    {
     "entrant": "apodex-futureflow",
-    "rounds": 87,
-    "answered": "87/87",
-    "mean_skill": 0.1735,
-    "mean_crps": 0.759,
-    "crps_rounds": 63
+    "rounds": 89,
+    "answered": "89/89",
+    "mean_skill": 0.1746,
+    "mean_crps": 0.7647,
+    "crps_rounds": 64
    },
    {
     "entrant": "h2oai-marina",
-    "rounds": 87,
-    "answered": "87/87",
-    "mean_skill": 0.1536,
+    "rounds": 88,
+    "answered": "88/89",
+    "mean_skill": 0.1524,
     "mean_crps": 0.8039,
     "crps_rounds": 63
    },
    {
     "entrant": "worldvac-base",
-    "rounds": 87,
-    "answered": "87/87",
-    "mean_skill": 0.0731,
-    "mean_crps": 0.9113,
-    "crps_rounds": 63
+    "rounds": 89,
+    "answered": "89/89",
+    "mean_skill": 0.0737,
+    "mean_crps": 0.9156,
+    "crps_rounds": 64
    },
    {
     "entrant": "yulan-onesim",
-    "rounds": 62,
-    "answered": "62/87",
-    "mean_skill": 0.0657,
-    "mean_crps": 0.9234,
-    "crps_rounds": 45
+    "rounds": 64,
+    "answered": "64/89",
+    "mean_skill": 0.0692,
+    "mean_crps": 0.9297,
+    "crps_rounds": 46
    },
    {
     "entrant": "minds-mosaic",
     "rounds": 12,
-    "answered": "12/87",
+    "answered": "12/89",
     "mean_skill": 0.0529,
     "mean_crps": 1.407,
     "crps_rounds": 10
@@ -99206,175 +99469,175 @@
    {
     "entrant": "grok-web",
     "rounds": 60,
-    "answered": "60/87",
+    "answered": "60/89",
     "mean_skill": 0.0413,
     "mean_crps": 0.8378,
     "crps_rounds": 42
    },
    {
     "entrant": "xumi",
-    "rounds": 18,
-    "answered": "18/87",
-    "mean_skill": 0.0293,
-    "mean_crps": 1.0497,
-    "crps_rounds": 15
+    "rounds": 20,
+    "answered": "20/89",
+    "mean_skill": 0.0258,
+    "mean_crps": 1.0788,
+    "crps_rounds": 16
    },
    {
     "entrant": "flower-forecast",
-    "rounds": 37,
-    "answered": "37/87",
-    "mean_skill": 0.0169,
-    "mean_crps": 1.0864,
-    "crps_rounds": 29
+    "rounds": 39,
+    "answered": "39/89",
+    "mean_skill": 0.0229,
+    "mean_crps": 1.0773,
+    "crps_rounds": 30
    },
    {
     "entrant": "crowd",
-    "rounds": 87,
-    "answered": "87/87",
-    "mean_skill": 0.0078,
-    "mean_crps": 0.8432,
-    "crps_rounds": 63
+    "rounds": 89,
+    "answered": "89/89",
+    "mean_skill": 0.0116,
+    "mean_crps": 0.8482,
+    "crps_rounds": 64
    },
    {
     "entrant": "deepseek-pro-web-superfc",
-    "rounds": 62,
-    "answered": "62/87",
-    "mean_skill": 0.0025,
-    "mean_crps": 0.8397,
-    "crps_rounds": 44
+    "rounds": 63,
+    "answered": "63/89",
+    "mean_skill": 0.005,
+    "mean_crps": 0.8449,
+    "crps_rounds": 45
    },
    {
     "entrant": "persistence",
-    "rounds": 87,
-    "answered": "87/87",
+    "rounds": 89,
+    "answered": "89/89",
     "mean_skill": 0.0,
-    "mean_crps": 0.9458,
-    "crps_rounds": 63
+    "mean_crps": 0.951,
+    "crps_rounds": 64
    },
    {
     "entrant": "claude-sonnet-web-superfc",
-    "rounds": 68,
-    "answered": "68/87",
-    "mean_skill": -0.0035,
-    "mean_crps": 0.8906,
-    "crps_rounds": 49
+    "rounds": 69,
+    "answered": "69/89",
+    "mean_skill": -0.0025,
+    "mean_crps": 0.8967,
+    "crps_rounds": 50
    },
    {
     "entrant": "gemini-pro-web",
-    "rounds": 68,
-    "answered": "68/87",
-    "mean_skill": -0.0093,
-    "mean_crps": 1.0411,
-    "crps_rounds": 49
+    "rounds": 69,
+    "answered": "69/89",
+    "mean_skill": -0.0133,
+    "mean_crps": 1.0532,
+    "crps_rounds": 50
    },
    {
     "entrant": "gemini-pro-web-superfc",
-    "rounds": 68,
-    "answered": "68/87",
-    "mean_skill": -0.0126,
-    "mean_crps": 0.9789,
-    "crps_rounds": 49
+    "rounds": 69,
+    "answered": "69/89",
+    "mean_skill": -0.0153,
+    "mean_crps": 0.99,
+    "crps_rounds": 50
    },
    {
     "entrant": "glm-web",
     "rounds": 60,
-    "answered": "60/87",
+    "answered": "60/89",
     "mean_skill": -0.0188,
     "mean_crps": 0.9173,
     "crps_rounds": 43
    },
    {
     "entrant": "deepseek-pro-web",
-    "rounds": 61,
-    "answered": "61/87",
-    "mean_skill": -0.0497,
-    "mean_crps": 0.9435,
-    "crps_rounds": 43
+    "rounds": 62,
+    "answered": "62/89",
+    "mean_skill": -0.0441,
+    "mean_crps": 0.9424,
+    "crps_rounds": 44
    },
    {
     "entrant": "gpt-5.6-luna-web-superfc",
-    "rounds": 68,
-    "answered": "68/87",
-    "mean_skill": -0.0608,
-    "mean_crps": 0.9853,
-    "crps_rounds": 49
+    "rounds": 69,
+    "answered": "69/89",
+    "mean_skill": -0.056,
+    "mean_crps": 0.9842,
+    "crps_rounds": 50
    },
    {
     "entrant": "glm-web-superfc",
     "rounds": 66,
-    "answered": "66/87",
+    "answered": "66/89",
     "mean_skill": -0.1183,
     "mean_crps": 0.9969,
     "crps_rounds": 48
    },
    {
     "entrant": "gpt-5.6-luna-web",
-    "rounds": 68,
-    "answered": "68/87",
-    "mean_skill": -0.1376,
-    "mean_crps": 1.0731,
-    "crps_rounds": 49
+    "rounds": 69,
+    "answered": "69/89",
+    "mean_skill": -0.1346,
+    "mean_crps": 1.0755,
+    "crps_rounds": 50
    },
    {
     "entrant": "grok-web-superfc",
     "rounds": 60,
-    "answered": "60/87",
+    "answered": "60/89",
     "mean_skill": -0.139,
     "mean_crps": 0.9981,
     "crps_rounds": 42
    },
    {
     "entrant": "ewma",
-    "rounds": 63,
-    "answered": "63/87",
-    "mean_skill": -0.2763,
-    "mean_crps": 1.0728,
-    "crps_rounds": 63
+    "rounds": 64,
+    "answered": "64/89",
+    "mean_skill": -0.2671,
+    "mean_crps": 1.0698,
+    "crps_rounds": 64
    },
    {
     "entrant": "claude-sonnet-web",
-    "rounds": 68,
-    "answered": "68/87",
-    "mean_skill": -0.4647,
-    "mean_crps": 0.9431,
-    "crps_rounds": 49
+    "rounds": 69,
+    "answered": "69/89",
+    "mean_skill": -0.4571,
+    "mean_crps": 0.9483,
+    "crps_rounds": 50
    },
    {
     "entrant": "trend",
-    "rounds": 63,
-    "answered": "63/87",
-    "mean_skill": -0.7501,
-    "mean_crps": 1.3299,
-    "crps_rounds": 63
+    "rounds": 64,
+    "answered": "64/89",
+    "mean_skill": -0.7355,
+    "mean_crps": 1.3255,
+    "crps_rounds": 64
    },
    {
     "entrant": "jev-direct",
     "rounds": 4,
-    "answered": "4/87",
+    "answered": "4/89",
     "mean_skill": -2.2616,
     "mean_crps": 1.7148,
     "crps_rounds": 4
    },
    {
     "entrant": "climatology",
-    "rounds": 63,
-    "answered": "63/87",
-    "mean_skill": -2.3053,
-    "mean_crps": 1.9206,
-    "crps_rounds": 63
+    "rounds": 64,
+    "answered": "64/89",
+    "mean_skill": -2.2818,
+    "mean_crps": 1.9266,
+    "crps_rounds": 64
    },
    {
     "entrant": "zhengzheng-agent",
-    "rounds": 87,
-    "answered": "87/87",
-    "mean_skill": -4.3434,
-    "mean_crps": 0.9774,
-    "crps_rounds": 63
+    "rounds": 89,
+    "answered": "89/89",
+    "mean_skill": -4.2459,
+    "mean_crps": 0.9768,
+    "crps_rounds": 64
    },
    {
     "entrant": "jev-persona",
     "rounds": 4,
-    "answered": "4/87",
+    "answered": "4/89",
     "mean_skill": -28.8586,
     "mean_crps": 16.7246,
     "crps_rounds": 4
@@ -99382,7 +99645,7 @@
    {
     "entrant": "zcode-random-probe",
     "rounds": 1,
-    "answered": "1/87",
+    "answered": "1/89",
     "mean_skill": -48.0478,
     "mean_crps": 44.3226,
     "crps_rounds": 1
@@ -105860,12 +106123,16 @@
    [
     "yougov-xtab-2026-w47",
     "yougov-xtab-2026-w47: cannot resolve 16 of 16 cells: yougov_xtab_approve_dem: newest observation 2026-10-20 predates the freeze 2026-11-15; nothing has published since the round froze; yougov_xtab_approve_ind: newest observation 2026-10-20 predates the freeze 2026-11-15; nothing has published since the round froze; yougov_xtab_approve_rep: newest observation 2026-10-20 predates the freeze 2026-11-15; nothing has published since the round froze ..."
+   ],
+   [
+    "yougov-xtab-2026-w48",
+    "yougov-xtab-2026-w48: cannot resolve 16 of 16 cells: yougov_xtab_approve_dem: newest observation 2026-10-20 predates the freeze 2026-11-22; nothing has published since the round froze; yougov_xtab_approve_ind: newest observation 2026-10-20 predates the freeze 2026-11-22; nothing has published since the round froze; yougov_xtab_approve_rep: newest observation 2026-10-20 predates the freeze 2026-11-22; nothing has published since the round froze ..."
    ]
   ],
   "note": "energy score (multivariate CRPS) over the round's cell vector; skill = 1 - ES(entrant) / ES(per-cell persistence). `matched` holds only entrants who answered every scored profile round."
  },
  "ranking": {
-  "scored_rounds": 11,
+  "scored_rounds": 12,
   "rounds": [
    {
     "round_id": "wiki-top10-2026-09-06",
@@ -107891,32 +108158,154 @@
       "overlap": 0
      }
     ]
+   },
+   {
+    "round_id": "wiki-top10-2026-11-22",
+    "release_at": "2026-11-24T14:00:00Z",
+    "kind": "wiki_top10",
+    "loss_rule": "rbo",
+    "length": 10,
+    "persistence_loss": 0.7696,
+    "persistence_items": [
+     "Abdul_El-Sayed",
+     "Ramayana:_Part_1",
+     "2026_United_States_elections",
+     "James_Talarico",
+     "Gina_Hinojosa",
+     "Russell_Brand",
+     "Jon_Ossoff",
+     ".xxx",
+     ".xyz",
+     "United_States_midterm_election"
+    ],
+    "outcome": [
+     "Robert_Pattinson",
+     "Ramayana:_Part_1",
+     "Grand_Theft_Auto_VI",
+     "Suki_Waterhouse",
+     "List_of_highest-grossing_Indian_films",
+     "The_Hunger_Games:_Sunrise_on_the_Reaping",
+     ".xxx",
+     "Deaths_in_2026",
+     "Riemann_hypothesis",
+     "The_Body_(TV_series)"
+    ],
+    "resolution": {
+     "method": "the seven archived daily top-1000 lists for the week, summed per article, exclusion rule main_page_and_namespaces_v1 applied, top 10 by weekly total, ties broken by title ascending",
+     "week_start": "2026-11-16",
+     "week_end": "2026-11-22"
+    },
+    "entries": [
+     {
+      "entrant": "vac-collective-attention",
+      "loss": 0.5133,
+      "skill": 0.333,
+      "exact_positions": 2,
+      "overlap": 6
+     },
+     {
+      "entrant": "apodex-futureflow",
+      "loss": 0.525,
+      "skill": 0.3179,
+      "exact_positions": 1,
+      "overlap": 6
+     },
+     {
+      "entrant": "yulan-onesim",
+      "loss": 0.5341,
+      "skill": 0.306,
+      "exact_positions": 1,
+      "overlap": 6
+     },
+     {
+      "entrant": "h2oai-superagent",
+      "loss": 0.5401,
+      "skill": 0.2983,
+      "exact_positions": 0,
+      "overlap": 6
+     },
+     {
+      "entrant": "crowd",
+      "loss": 0.5664,
+      "skill": 0.264,
+      "exact_positions": 2,
+      "overlap": 6
+     },
+     {
+      "entrant": "xumi",
+      "loss": 0.6381,
+      "skill": 0.1709,
+      "exact_positions": 0,
+      "overlap": 4
+     },
+     {
+      "entrant": "worldvac-base",
+      "loss": 0.6696,
+      "skill": 0.1299,
+      "exact_positions": 0,
+      "overlap": 5
+     },
+     {
+      "entrant": "h2oai-marina",
+      "loss": 0.7355,
+      "skill": 0.0443,
+      "exact_positions": 1,
+      "overlap": 3
+     },
+     {
+      "entrant": "persistence",
+      "loss": 0.7696,
+      "skill": 0.0,
+      "exact_positions": 1,
+      "overlap": 2
+     },
+     {
+      "entrant": "flower-forecast",
+      "loss": 0.846,
+      "skill": -0.0993,
+      "exact_positions": 1,
+      "overlap": 3
+     },
+     {
+      "entrant": "zhengzheng-agent",
+      "loss": 0.9775,
+      "skill": -0.2701,
+      "exact_positions": 0,
+      "overlap": 1
+     }
+    ]
    }
   ],
   "board": [
    {
     "entrant": "h2oai-superagent",
-    "rounds": 6,
-    "mean_loss": 0.6571,
-    "mean_skill": 0.3163
+    "rounds": 7,
+    "mean_loss": 0.6404,
+    "mean_skill": 0.3138
    },
    {
     "entrant": "vac-collective-attention",
-    "rounds": 6,
-    "mean_loss": 0.7223,
-    "mean_skill": 0.2459
+    "rounds": 7,
+    "mean_loss": 0.6924,
+    "mean_skill": 0.2583
    },
    {
     "entrant": "apodex-futureflow",
-    "rounds": 7,
-    "mean_loss": 0.7274,
-    "mean_skill": 0.2392
+    "rounds": 8,
+    "mean_loss": 0.7021,
+    "mean_skill": 0.249
    },
    {
     "entrant": "claude-opus-5-web-superfc",
     "rounds": 4,
     "mean_loss": 0.7658,
     "mean_skill": 0.1798
+   },
+   {
+    "entrant": "xumi",
+    "rounds": 1,
+    "mean_loss": 0.6381,
+    "mean_skill": 0.1709
    },
    {
     "entrant": "deepseek-flash-web-superfc",
@@ -107949,28 +108338,28 @@
     "mean_skill": 0.1026
    },
    {
+    "entrant": "crowd",
+    "rounds": 11,
+    "mean_loss": 0.8441,
+    "mean_skill": 0.1016
+   },
+   {
     "entrant": "gemini-flash-web-superfc",
     "rounds": 4,
     "mean_loss": 0.8369,
     "mean_skill": 0.1013
    },
    {
+    "entrant": "worldvac-base",
+    "rounds": 8,
+    "mean_loss": 0.8421,
+    "mean_skill": 0.0979
+   },
+   {
     "entrant": "gemini-flash-web",
     "rounds": 4,
     "mean_loss": 0.8407,
     "mean_skill": 0.0975
-   },
-   {
-    "entrant": "worldvac-base",
-    "rounds": 7,
-    "mean_loss": 0.8667,
-    "mean_skill": 0.0934
-   },
-   {
-    "entrant": "h2oai-marina",
-    "rounds": 6,
-    "mean_loss": 0.868,
-    "mean_skill": 0.0916
    },
    {
     "entrant": "gemini-pro-web",
@@ -107991,10 +108380,16 @@
     "mean_skill": 0.0897
    },
    {
-    "entrant": "crowd",
-    "rounds": 10,
-    "mean_loss": 0.8719,
-    "mean_skill": 0.0854
+    "entrant": "h2oai-marina",
+    "rounds": 7,
+    "mean_loss": 0.8491,
+    "mean_skill": 0.0848
+   },
+   {
+    "entrant": "yulan-onesim",
+    "rounds": 5,
+    "mean_loss": 0.8453,
+    "mean_skill": 0.0797
    },
    {
     "entrant": "gpt-5.6-terra-web-superfc",
@@ -108075,39 +108470,33 @@
     "mean_skill": 0.032
    },
    {
-    "entrant": "yulan-onesim",
-    "rounds": 4,
-    "mean_loss": 0.9231,
-    "mean_skill": 0.0232
-   },
-   {
-    "entrant": "flower-forecast",
-    "rounds": 1,
-    "mean_loss": 0.8834,
-    "mean_skill": 0.0067
-   },
-   {
     "entrant": "persistence",
-    "rounds": 11,
-    "mean_loss": 0.9463,
+    "rounds": 12,
+    "mean_loss": 0.9315,
     "mean_skill": 0.0
    },
    {
     "entrant": "zhengzheng-agent",
-    "rounds": 7,
-    "mean_loss": 0.9594,
-    "mean_skill": -0.0065
+    "rounds": 8,
+    "mean_loss": 0.9617,
+    "mean_skill": -0.0395
+   },
+   {
+    "entrant": "flower-forecast",
+    "rounds": 2,
+    "mean_loss": 0.8647,
+    "mean_skill": -0.0463
    }
   ],
   "matched": [
    {
     "entrant": "persistence",
-    "rounds": 11,
-    "mean_loss": 0.9463,
+    "rounds": 12,
+    "mean_loss": 0.9315,
     "mean_skill": 0.0
    }
   ],
-  "matched_rounds": 11,
+  "matched_rounds": 12,
   "skipped": [],
   "note": "a point-scored ordered list: rank-biased overlap (p fixed in the round) for an open-set top-N, normalized Kendall tau distance for a fixed basket. skill = 1 - loss(entrant) / loss(last week's list). `matched` holds only entrants who answered every scored ranking round. When persistence is perfect the denominator is zero and the convention (`scoring.skill`) scores every entrant 0 for that round; `persistence_loss` is published so that is visible."
  },
@@ -123843,190 +124232,190 @@
    "overall": [
     {
      "entrant": "crowd",
-     "rounds": 314,
-     "mean_crps": 1.607,
+     "rounds": 316,
+     "mean_crps": 1.602,
      "mean_skill": 0.04
     },
     {
      "entrant": "ewma",
-     "rounds": 314,
-     "mean_crps": 1.616,
-     "mean_skill": 0.035
+     "rounds": 316,
+     "mean_crps": 1.609,
+     "mean_skill": 0.036
     },
     {
      "entrant": "persistence",
-     "rounds": 314,
-     "mean_crps": 1.675,
+     "rounds": 316,
+     "mean_crps": 1.669,
      "mean_skill": 0.0
     },
     {
      "entrant": "trend",
-     "rounds": 314,
-     "mean_crps": 1.9,
-     "mean_skill": -0.135
+     "rounds": 316,
+     "mean_crps": 1.891,
+     "mean_skill": -0.133
     },
     {
      "entrant": "climatology",
-     "rounds": 314,
-     "mean_crps": 2.955,
-     "mean_skill": -0.765
+     "rounds": 316,
+     "mean_crps": 2.948,
+     "mean_skill": -0.766
     }
    ],
    "spans": {
     "all": [
      {
       "entrant": "crowd",
-      "rounds": 314,
-      "mean_crps": 1.607,
+      "rounds": 316,
+      "mean_crps": 1.602,
       "mean_skill": 0.04
      },
      {
       "entrant": "ewma",
-      "rounds": 314,
-      "mean_crps": 1.616,
-      "mean_skill": 0.035
+      "rounds": 316,
+      "mean_crps": 1.609,
+      "mean_skill": 0.036
      },
      {
       "entrant": "persistence",
-      "rounds": 314,
-      "mean_crps": 1.675,
+      "rounds": 316,
+      "mean_crps": 1.669,
       "mean_skill": 0.0
      },
      {
       "entrant": "trend",
-      "rounds": 314,
-      "mean_crps": 1.9,
-      "mean_skill": -0.135
+      "rounds": 316,
+      "mean_crps": 1.891,
+      "mean_skill": -0.133
      },
      {
       "entrant": "climatology",
-      "rounds": 314,
-      "mean_crps": 2.955,
-      "mean_skill": -0.765
+      "rounds": 316,
+      "mean_crps": 2.948,
+      "mean_skill": -0.766
      }
     ],
     "m6": [
      {
       "entrant": "ewma",
       "rounds": 53,
-      "mean_crps": 0.847,
-      "mean_skill": 0.282
+      "mean_crps": 0.842,
+      "mean_skill": 0.29
      },
      {
       "entrant": "crowd",
       "rounds": 53,
-      "mean_crps": 0.921,
-      "mean_skill": 0.219
+      "mean_crps": 0.924,
+      "mean_skill": 0.221
      },
      {
       "entrant": "trend",
       "rounds": 53,
-      "mean_crps": 0.992,
-      "mean_skill": 0.158
+      "mean_crps": 0.985,
+      "mean_skill": 0.169
      },
      {
       "entrant": "persistence",
       "rounds": 53,
-      "mean_crps": 1.179,
+      "mean_crps": 1.186,
       "mean_skill": 0.0
      },
      {
       "entrant": "climatology",
       "rounds": 53,
-      "mean_crps": 1.472,
-      "mean_skill": -0.249
+      "mean_crps": 1.494,
+      "mean_skill": -0.26
      }
     ],
     "d30": [
      {
       "entrant": "ewma",
       "rounds": 9,
-      "mean_crps": 0.78,
-      "mean_skill": 0.384
+      "mean_crps": 0.844,
+      "mean_skill": 0.37
      },
      {
       "entrant": "trend",
       "rounds": 9,
-      "mean_crps": 0.842,
-      "mean_skill": 0.335
+      "mean_crps": 0.885,
+      "mean_skill": 0.339
      },
      {
       "entrant": "crowd",
       "rounds": 9,
-      "mean_crps": 0.926,
-      "mean_skill": 0.268
+      "mean_crps": 1.007,
+      "mean_skill": 0.248
      },
      {
       "entrant": "persistence",
       "rounds": 9,
-      "mean_crps": 1.266,
+      "mean_crps": 1.339,
       "mean_skill": 0.0
      },
      {
       "entrant": "climatology",
       "rounds": 9,
-      "mean_crps": 1.583,
-      "mean_skill": -0.25
+      "mean_crps": 1.764,
+      "mean_skill": -0.318
      }
     ],
     "last": [
      {
+      "entrant": "trend",
+      "rounds": 2,
+      "mean_crps": 0.465,
+      "mean_skill": 0.429
+     },
+     {
       "entrant": "ewma",
       "rounds": 2,
-      "mean_crps": 0.528,
-      "mean_skill": 0.583
+      "mean_crps": 0.598,
+      "mean_skill": 0.267
      },
      {
       "entrant": "crowd",
       "rounds": 2,
-      "mean_crps": 0.693,
-      "mean_skill": 0.452
-     },
-     {
-      "entrant": "trend",
-      "rounds": 2,
-      "mean_crps": 0.917,
-      "mean_skill": 0.275
-     },
-     {
-      "entrant": "climatology",
-      "rounds": 2,
-      "mean_crps": 1.093,
-      "mean_skill": 0.136
+      "mean_crps": 0.767,
+      "mean_skill": 0.059
      },
      {
       "entrant": "persistence",
       "rounds": 2,
-      "mean_crps": 1.265,
+      "mean_crps": 0.816,
       "mean_skill": 0.0
+     },
+     {
+      "entrant": "climatology",
+      "rounds": 2,
+      "mean_crps": 1.74,
+      "mean_skill": -1.133
      }
     ]
    },
-   "n_rounds": 314,
+   "n_rounds": 316,
    "trajectory": [
     {
-     "date": "2015-10-01",
-     "n": 10,
+     "date": "2015-11-01",
+     "n": 11,
      "ranks": {
-      "crowd": 1,
-      "ewma": 2,
+      "ewma": 1,
+      "crowd": 2,
       "trend": 3,
       "persistence": 4,
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.146,
-      "ewma": 0.143,
-      "trend": 0.05,
+      "ewma": 0.134,
+      "crowd": 0.127,
+      "trend": 0.018,
       "persistence": 0.0,
-      "climatology": -1.288
+      "climatology": -1.31
      },
      "crps": {
-      "crowd": 2.297,
-      "ewma": 2.306,
-      "trend": 2.555,
-      "persistence": 2.69,
-      "climatology": 6.155
+      "ewma": 2.178,
+      "crowd": 2.197,
+      "trend": 2.471,
+      "persistence": 2.516,
+      "climatology": 5.812
      }
     },
     {
@@ -124055,8 +124444,8 @@
      }
     },
     {
-     "date": "2017-07-01",
-     "n": 31,
+     "date": "2017-08-01",
+     "n": 32,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -124065,18 +124454,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.061,
-      "ewma": 0.035,
+      "crowd": 0.07,
+      "ewma": 0.058,
       "persistence": 0.0,
-      "trend": -0.15,
-      "climatology": -0.842
+      "trend": -0.13,
+      "climatology": -0.804
      },
      "crps": {
-      "crowd": 1.763,
-      "ewma": 1.814,
-      "persistence": 1.879,
-      "trend": 2.161,
-      "climatology": 3.461
+      "crowd": 1.766,
+      "ewma": 1.79,
+      "persistence": 1.9,
+      "trend": 2.147,
+      "climatology": 3.429
      }
     },
     {
@@ -124105,28 +124494,28 @@
      }
     },
     {
-     "date": "2019-04-01",
-     "n": 52,
+     "date": "2019-05-01",
+     "n": 53,
      "ranks": {
-      "ewma": 1,
-      "crowd": 2,
+      "crowd": 1,
+      "ewma": 2,
       "persistence": 3,
       "trend": 4,
       "climatology": 5
      },
      "skills": {
-      "ewma": 0.1,
-      "crowd": 0.099,
+      "crowd": 0.096,
+      "ewma": 0.095,
       "persistence": 0.0,
-      "trend": -0.077,
-      "climatology": -0.561
+      "trend": -0.086,
+      "climatology": -0.547
      },
      "crps": {
-      "ewma": 1.665,
-      "crowd": 1.666,
-      "persistence": 1.85,
-      "trend": 1.993,
-      "climatology": 2.888
+      "crowd": 1.674,
+      "ewma": 1.676,
+      "persistence": 1.852,
+      "trend": 2.012,
+      "climatology": 2.865
      }
     },
     {
@@ -124155,8 +124544,8 @@
      }
     },
     {
-     "date": "2021-01-01",
-     "n": 73,
+     "date": "2021-02-01",
+     "n": 74,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -124165,18 +124554,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.031,
-      "ewma": 0.018,
+      "crowd": 0.025,
+      "ewma": 0.017,
       "persistence": 0.0,
-      "trend": -0.224,
-      "climatology": -0.752
+      "trend": -0.228,
+      "climatology": -0.778
      },
      "crps": {
-      "crowd": 2.231,
-      "ewma": 2.261,
-      "persistence": 2.303,
-      "trend": 2.819,
-      "climatology": 4.035
+      "crowd": 2.233,
+      "ewma": 2.252,
+      "persistence": 2.291,
+      "trend": 2.814,
+      "climatology": 4.075
      }
     },
     {
@@ -124205,8 +124594,8 @@
      }
     },
     {
-     "date": "2022-10-01",
-     "n": 94,
+     "date": "2022-11-01",
+     "n": 95,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -124216,17 +124605,17 @@
      },
      "skills": {
       "crowd": 0.033,
-      "ewma": 0.022,
+      "ewma": 0.027,
       "persistence": 0.0,
-      "trend": -0.142,
-      "climatology": -0.924
+      "trend": -0.141,
+      "climatology": -0.939
      },
      "crps": {
-      "crowd": 2.494,
-      "ewma": 2.523,
-      "persistence": 2.58,
-      "trend": 2.945,
-      "climatology": 4.964
+      "crowd": 2.493,
+      "ewma": 2.509,
+      "persistence": 2.578,
+      "trend": 2.941,
+      "climatology": 4.999
      }
     },
     {
@@ -124255,8 +124644,8 @@
      }
     },
     {
-     "date": "2024-07-01",
-     "n": 115,
+     "date": "2024-08-01",
+     "n": 116,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -124265,18 +124654,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.044,
-      "ewma": 0.02,
+      "crowd": 0.043,
+      "ewma": 0.019,
       "persistence": 0.0,
-      "trend": -0.144,
+      "trend": -0.148,
       "climatology": -0.845
      },
      "crps": {
-      "crowd": 2.571,
-      "ewma": 2.634,
-      "persistence": 2.688,
-      "trend": 3.074,
-      "climatology": 4.959
+      "crowd": 2.558,
+      "ewma": 2.621,
+      "persistence": 2.673,
+      "trend": 3.068,
+      "climatology": 4.931
      }
     },
     {
@@ -124305,8 +124694,8 @@
      }
     },
     {
-     "date": "2025-04-26",
-     "n": 136,
+     "date": "2025-05-01",
+     "n": 137,
      "ranks": {
       "crowd": 1,
       "persistence": 2,
@@ -124315,18 +124704,18 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.013,
+      "crowd": 0.004,
       "persistence": 0.0,
-      "ewma": -0.023,
-      "trend": -0.177,
-      "climatology": -0.856
+      "ewma": -0.037,
+      "trend": -0.184,
+      "climatology": -0.89
      },
      "crps": {
-      "crowd": 2.494,
-      "persistence": 2.526,
-      "ewma": 2.584,
+      "crowd": 2.501,
+      "persistence": 2.51,
+      "ewma": 2.604,
       "trend": 2.973,
-      "climatology": 4.688
+      "climatology": 4.745
      }
     },
     {
@@ -124355,8 +124744,8 @@
      }
     },
     {
-     "date": "2025-07-01",
-     "n": 157,
+     "date": "2025-07-04",
+     "n": 158,
      "ranks": {
       "crowd": 1,
       "persistence": 2,
@@ -124365,23 +124754,23 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.009,
+      "crowd": 0.01,
       "persistence": 0.0,
-      "ewma": -0.026,
-      "trend": -0.213,
-      "climatology": -0.865
+      "ewma": -0.024,
+      "trend": -0.209,
+      "climatology": -0.86
      },
      "crps": {
-      "crowd": 2.309,
-      "persistence": 2.33,
-      "ewma": 2.391,
-      "trend": 2.825,
-      "climatology": 4.345
+      "crowd": 2.302,
+      "persistence": 2.327,
+      "ewma": 2.382,
+      "trend": 2.813,
+      "climatology": 4.327
      }
     },
     {
-     "date": "2025-08-02",
-     "n": 167,
+     "date": "2025-08-09",
+     "n": 169,
      "ranks": {
       "crowd": 1,
       "persistence": 2,
@@ -124390,23 +124779,23 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.015,
+      "crowd": 0.018,
       "persistence": 0.0,
-      "ewma": -0.013,
-      "trend": -0.204,
-      "climatology": -0.858
+      "ewma": -0.009,
+      "trend": -0.199,
+      "climatology": -0.849
      },
      "crps": {
-      "crowd": 2.226,
-      "persistence": 2.26,
-      "ewma": 2.289,
-      "trend": 2.722,
-      "climatology": 4.2
+      "crowd": 2.21,
+      "persistence": 2.25,
+      "ewma": 2.271,
+      "trend": 2.699,
+      "climatology": 4.161
      }
     },
     {
-     "date": "2025-09-06",
-     "n": 178,
+     "date": "2025-09-07",
+     "n": 179,
      "ranks": {
       "crowd": 1,
       "persistence": 2,
@@ -124419,19 +124808,19 @@
       "persistence": 0.0,
       "ewma": -0.008,
       "trend": -0.198,
-      "climatology": -0.854
+      "climatology": -0.853
      },
      "crps": {
-      "crowd": 2.138,
-      "persistence": 2.175,
-      "ewma": 2.191,
-      "trend": 2.605,
-      "climatology": 4.031
+      "crowd": 2.128,
+      "persistence": 2.165,
+      "ewma": 2.182,
+      "trend": 2.593,
+      "climatology": 4.01
      }
     },
     {
-     "date": "2025-10-05",
-     "n": 188,
+     "date": "2025-10-11",
+     "n": 190,
      "ranks": {
       "crowd": 1,
       "persistence": 2,
@@ -124440,23 +124829,23 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.012,
+      "crowd": 0.013,
       "persistence": 0.0,
-      "ewma": -0.011,
-      "trend": -0.2,
-      "climatology": -0.869
+      "ewma": -0.01,
+      "trend": -0.199,
+      "climatology": -0.866
      },
      "crps": {
-      "crowd": 2.064,
-      "persistence": 2.089,
-      "ewma": 2.113,
-      "trend": 2.507,
-      "climatology": 3.906
+      "crowd": 2.047,
+      "persistence": 2.074,
+      "ewma": 2.095,
+      "trend": 2.486,
+      "climatology": 3.872
      }
     },
     {
-     "date": "2025-11-08",
-     "n": 199,
+     "date": "2025-11-10",
+     "n": 200,
      "ranks": {
       "crowd": 1,
       "persistence": 2,
@@ -124465,23 +124854,23 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.009,
+      "crowd": 0.007,
       "persistence": 0.0,
-      "ewma": -0.011,
-      "trend": -0.197,
-      "climatology": -0.882
+      "ewma": -0.014,
+      "trend": -0.199,
+      "climatology": -0.885
      },
      "crps": {
-      "crowd": 1.994,
-      "persistence": 2.013,
+      "crowd": 1.993,
+      "persistence": 2.007,
       "ewma": 2.034,
-      "trend": 2.409,
-      "climatology": 3.787
+      "trend": 2.406,
+      "climatology": 3.782
      }
     },
     {
-     "date": "2025-12-06",
-     "n": 209,
+     "date": "2025-12-13",
+     "n": 211,
      "ranks": {
       "crowd": 1,
       "persistence": 2,
@@ -124490,23 +124879,23 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.011,
+      "crowd": 0.01,
       "persistence": 0.0,
-      "ewma": -0.007,
-      "trend": -0.195,
-      "climatology": -0.874
+      "ewma": -0.01,
+      "trend": -0.196,
+      "climatology": -0.873
      },
      "crps": {
-      "crowd": 1.942,
-      "persistence": 1.965,
-      "ewma": 1.978,
-      "trend": 2.347,
-      "climatology": 3.682
+      "crowd": 1.932,
+      "persistence": 1.951,
+      "ewma": 1.97,
+      "trend": 2.335,
+      "climatology": 3.655
      }
     },
     {
-     "date": "2026-01-10",
-     "n": 220,
+     "date": "2026-01-17",
+     "n": 221,
      "ranks": {
       "crowd": 1,
       "persistence": 2,
@@ -124518,20 +124907,20 @@
       "crowd": 0.015,
       "persistence": 0.0,
       "ewma": -0.004,
-      "trend": -0.193,
-      "climatology": -0.855
+      "trend": -0.191,
+      "climatology": -0.851
      },
      "crps": {
-      "crowd": 1.886,
-      "persistence": 1.914,
-      "ewma": 1.922,
-      "trend": 2.284,
-      "climatology": 3.55
+      "crowd": 1.887,
+      "persistence": 1.915,
+      "ewma": 1.923,
+      "trend": 2.282,
+      "climatology": 3.544
      }
     },
     {
-     "date": "2026-02-11",
-     "n": 230,
+     "date": "2026-02-14",
+     "n": 232,
      "ranks": {
       "crowd": 1,
       "persistence": 2,
@@ -124540,23 +124929,23 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.014,
+      "crowd": 0.016,
       "persistence": 0.0,
-      "ewma": -0.005,
-      "trend": -0.192,
-      "climatology": -0.847
+      "ewma": -0.003,
+      "trend": -0.189,
+      "climatology": -0.845
      },
      "crps": {
-      "crowd": 1.848,
-      "persistence": 1.874,
-      "ewma": 1.883,
-      "trend": 2.234,
-      "climatology": 3.463
+      "crowd": 1.836,
+      "persistence": 1.866,
+      "ewma": 1.871,
+      "trend": 2.219,
+      "climatology": 3.443
      }
     },
     {
-     "date": "2026-03-14",
-     "n": 241,
+     "date": "2026-03-21",
+     "n": 242,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -124565,23 +124954,23 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.019,
-      "ewma": 0.004,
+      "crowd": 0.02,
+      "ewma": 0.005,
       "persistence": 0.0,
       "trend": -0.183,
-      "climatology": -0.835
+      "climatology": -0.834
      },
      "crps": {
-      "crowd": 1.8,
-      "ewma": 1.828,
-      "persistence": 1.836,
-      "trend": 2.173,
-      "climatology": 3.368
+      "crowd": 1.794,
+      "ewma": 1.822,
+      "persistence": 1.831,
+      "trend": 2.166,
+      "climatology": 3.357
      }
     },
     {
-     "date": "2026-04-11",
-     "n": 251,
+     "date": "2026-04-18",
+     "n": 253,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -124590,23 +124979,23 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.021,
-      "ewma": 0.007,
+      "crowd": 0.02,
+      "ewma": 0.006,
       "persistence": 0.0,
-      "trend": -0.175,
-      "climatology": -0.83
+      "trend": -0.176,
+      "climatology": -0.829
      },
      "crps": {
-      "crowd": 1.768,
-      "ewma": 1.793,
-      "persistence": 1.805,
-      "trend": 2.122,
-      "climatology": 3.303
+      "crowd": 1.761,
+      "ewma": 1.786,
+      "persistence": 1.797,
+      "trend": 2.114,
+      "climatology": 3.287
      }
     },
     {
      "date": "2026-05-16",
-     "n": 262,
+     "n": 263,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -124615,23 +125004,23 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.017,
-      "ewma": 0.003,
+      "crowd": 0.016,
+      "ewma": 0.002,
       "persistence": 0.0,
       "trend": -0.174,
       "climatology": -0.834
      },
      "crps": {
-      "crowd": 1.741,
-      "ewma": 1.766,
-      "persistence": 1.771,
-      "trend": 2.079,
-      "climatology": 3.247
+      "crowd": 1.738,
+      "ewma": 1.764,
+      "persistence": 1.767,
+      "trend": 2.074,
+      "climatology": 3.241
      }
     },
     {
-     "date": "2026-06-14",
-     "n": 272,
+     "date": "2026-06-20",
+     "n": 274,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -124640,23 +125029,23 @@
       "climatology": 5
      },
      "skills": {
-      "crowd": 0.023,
-      "ewma": 0.011,
+      "crowd": 0.025,
+      "ewma": 0.015,
       "persistence": 0.0,
-      "trend": -0.165,
-      "climatology": -0.821
+      "trend": -0.161,
+      "climatology": -0.814
      },
      "crps": {
-      "crowd": 1.715,
-      "ewma": 1.735,
-      "persistence": 1.755,
-      "trend": 2.045,
-      "climatology": 3.195
+      "crowd": 1.707,
+      "ewma": 1.725,
+      "persistence": 1.751,
+      "trend": 2.033,
+      "climatology": 3.176
      }
     },
     {
-     "date": "2026-07-18",
-     "n": 283,
+     "date": "2026-07-25",
+     "n": 284,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -124668,20 +125057,20 @@
       "crowd": 0.033,
       "ewma": 0.021,
       "persistence": 0.0,
-      "trend": -0.152,
-      "climatology": -0.782
+      "trend": -0.151,
+      "climatology": -0.781
      },
      "crps": {
-      "crowd": 1.685,
-      "ewma": 1.706,
-      "persistence": 1.742,
-      "trend": 2.007,
-      "climatology": 3.105
+      "crowd": 1.682,
+      "ewma": 1.703,
+      "persistence": 1.739,
+      "trend": 2.002,
+      "climatology": 3.097
      }
     },
     {
-     "date": "2026-08-15",
-     "n": 293,
+     "date": "2026-08-22",
+     "n": 295,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -124693,20 +125082,20 @@
       "crowd": 0.037,
       "ewma": 0.028,
       "persistence": 0.0,
-      "trend": -0.145,
-      "climatology": -0.766
+      "trend": -0.147,
+      "climatology": -0.764
      },
      "crps": {
-      "crowd": 1.661,
-      "ewma": 1.677,
-      "persistence": 1.725,
-      "trend": 1.975,
-      "climatology": 3.047
+      "crowd": 1.653,
+      "ewma": 1.67,
+      "persistence": 1.717,
+      "trend": 1.969,
+      "climatology": 3.029
      }
     },
     {
-     "date": "2026-10-04",
-     "n": 304,
+     "date": "2026-10-10",
+     "n": 305,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -124716,22 +125105,22 @@
      },
      "skills": {
       "crowd": 0.035,
-      "ewma": 0.027,
+      "ewma": 0.028,
       "persistence": 0.0,
       "trend": -0.145,
-      "climatology": -0.777
+      "climatology": -0.776
      },
      "crps": {
-      "crowd": 1.631,
-      "ewma": 1.645,
-      "persistence": 1.69,
-      "trend": 1.936,
-      "climatology": 3.004
+      "crowd": 1.627,
+      "ewma": 1.64,
+      "persistence": 1.687,
+      "trend": 1.932,
+      "climatology": 2.996
      }
     },
     {
-     "date": "2026-11-14",
-     "n": 314,
+     "date": "2026-11-21",
+     "n": 316,
      "ranks": {
       "crowd": 1,
       "ewma": 2,
@@ -124741,17 +125130,17 @@
      },
      "skills": {
       "crowd": 0.04,
-      "ewma": 0.035,
+      "ewma": 0.036,
       "persistence": 0.0,
-      "trend": -0.135,
-      "climatology": -0.765
+      "trend": -0.133,
+      "climatology": -0.766
      },
      "crps": {
-      "crowd": 1.607,
-      "ewma": 1.616,
-      "persistence": 1.675,
-      "trend": 1.9,
-      "climatology": 2.955
+      "crowd": 1.602,
+      "ewma": 1.609,
+      "persistence": 1.669,
+      "trend": 1.891,
+      "climatology": 2.948
      }
     }
    ],
@@ -124791,65 +125180,65 @@
     "yougov_approval": [
      {
       "entrant": "ewma",
-      "rounds": 78,
+      "rounds": 79,
       "mean_crps": 0.853,
-      "mean_skill": 0.159
+      "mean_skill": 0.161
      },
      {
       "entrant": "crowd",
-      "rounds": 78,
-      "mean_crps": 0.905,
-      "mean_skill": 0.107
+      "rounds": 79,
+      "mean_crps": 0.908,
+      "mean_skill": 0.108
      },
      {
       "entrant": "trend",
-      "rounds": 78,
-      "mean_crps": 0.991,
-      "mean_skill": 0.022
+      "rounds": 79,
+      "mean_crps": 0.987,
+      "mean_skill": 0.029
      },
      {
       "entrant": "persistence",
-      "rounds": 78,
-      "mean_crps": 1.014,
+      "rounds": 79,
+      "mean_crps": 1.017,
       "mean_skill": 0.0
      },
      {
       "entrant": "climatology",
-      "rounds": 78,
-      "mean_crps": 1.387,
-      "mean_skill": -0.369
+      "rounds": 79,
+      "mean_crps": 1.395,
+      "mean_skill": -0.372
      }
     ],
     "mc_approval": [
      {
       "entrant": "ewma",
-      "rounds": 93,
-      "mean_crps": 0.639,
+      "rounds": 94,
+      "mean_crps": 0.635,
       "mean_skill": 0.118
      },
      {
       "entrant": "crowd",
-      "rounds": 93,
-      "mean_crps": 0.642,
-      "mean_skill": 0.114
+      "rounds": 94,
+      "mean_crps": 0.639,
+      "mean_skill": 0.112
      },
      {
       "entrant": "trend",
-      "rounds": 93,
-      "mean_crps": 0.679,
-      "mean_skill": 0.061
+      "rounds": 94,
+      "mean_crps": 0.675,
+      "mean_skill": 0.062
      },
      {
       "entrant": "persistence",
-      "rounds": 93,
-      "mean_crps": 0.724,
+      "rounds": 94,
+      "mean_crps": 0.72,
       "mean_skill": 0.0
      },
      {
       "entrant": "climatology",
-      "rounds": 93,
-      "mean_crps": 0.897,
-      "mean_skill": -0.24
+      "rounds": 94,
+      "mean_crps": 0.903,
+      "mean_skill": -0.255
      }
     ]
    }
@@ -132754,324 +133143,324 @@
  "charts": {
   "approval_avg": [
    {
-    "date": "2025-05-14",
-    "value": 45.79
+    "date": "2025-05-17",
+    "value": 45.89
    },
    {
-    "date": "2025-05-21",
-    "value": 46.42
+    "date": "2025-05-24",
+    "value": 46.45
    },
    {
-    "date": "2025-05-28",
-    "value": 47.0
+    "date": "2025-05-31",
+    "value": 47.39
    },
    {
-    "date": "2025-06-04",
-    "value": 47.47
+    "date": "2025-06-07",
+    "value": 46.77
    },
    {
-    "date": "2025-06-11",
-    "value": 46.42
+    "date": "2025-06-14",
+    "value": 46.28
    },
    {
-    "date": "2025-06-18",
-    "value": 46.64
+    "date": "2025-06-21",
+    "value": 46.65
    },
    {
-    "date": "2025-06-25",
-    "value": 46.51
+    "date": "2025-06-28",
+    "value": 46.31
    },
    {
-    "date": "2025-07-02",
-    "value": 46.47
+    "date": "2025-07-05",
+    "value": 46.23
    },
    {
-    "date": "2025-07-09",
-    "value": 45.58
+    "date": "2025-07-12",
+    "value": 45.23
    },
    {
-    "date": "2025-07-16",
-    "value": 45.08
-   },
-   {
-    "date": "2025-07-23",
-    "value": 45.05
-   },
-   {
-    "date": "2025-07-30",
-    "value": 44.81
-   },
-   {
-    "date": "2025-08-06",
-    "value": 44.73
-   },
-   {
-    "date": "2025-08-13",
-    "value": 44.3
-   },
-   {
-    "date": "2025-08-20",
-    "value": 45.18
-   },
-   {
-    "date": "2025-08-27",
-    "value": 45.08
-   },
-   {
-    "date": "2025-09-03",
-    "value": 45.05
-   },
-   {
-    "date": "2025-09-10",
-    "value": 44.88
-   },
-   {
-    "date": "2025-09-17",
-    "value": 45.33
-   },
-   {
-    "date": "2025-09-24",
-    "value": 45.22
-   },
-   {
-    "date": "2025-10-01",
-    "value": 44.79
-   },
-   {
-    "date": "2025-10-08",
-    "value": 44.86
-   },
-   {
-    "date": "2025-10-15",
-    "value": 45.01
-   },
-   {
-    "date": "2025-10-22",
+    "date": "2025-07-19",
     "value": 44.82
    },
    {
-    "date": "2025-10-29",
-    "value": 43.76
+    "date": "2025-07-26",
+    "value": 44.69
    },
    {
-    "date": "2025-11-05",
-    "value": 43.26
+    "date": "2025-08-02",
+    "value": 44.74
    },
    {
-    "date": "2025-11-12",
-    "value": 42.3
+    "date": "2025-08-09",
+    "value": 44.5
    },
    {
-    "date": "2025-11-19",
-    "value": 42.46
+    "date": "2025-08-16",
+    "value": 44.82
    },
    {
-    "date": "2025-11-26",
+    "date": "2025-08-23",
+    "value": 45.02
+   },
+   {
+    "date": "2025-08-30",
+    "value": 45.04
+   },
+   {
+    "date": "2025-09-06",
+    "value": 44.9
+   },
+   {
+    "date": "2025-09-13",
+    "value": 44.98
+   },
+   {
+    "date": "2025-09-20",
+    "value": 45.17
+   },
+   {
+    "date": "2025-09-27",
+    "value": 45.02
+   },
+   {
+    "date": "2025-10-04",
+    "value": 44.7
+   },
+   {
+    "date": "2025-10-11",
+    "value": 44.75
+   },
+   {
+    "date": "2025-10-18",
+    "value": 45.08
+   },
+   {
+    "date": "2025-10-25",
+    "value": 44.29
+   },
+   {
+    "date": "2025-11-01",
+    "value": 43.63
+   },
+   {
+    "date": "2025-11-08",
+    "value": 42.83
+   },
+   {
+    "date": "2025-11-15",
+    "value": 42.41
+   },
+   {
+    "date": "2025-11-22",
+    "value": 42.58
+   },
+   {
+    "date": "2025-11-29",
     "value": 42.45
    },
    {
-    "date": "2025-12-03",
-    "value": 42.57
+    "date": "2025-12-06",
+    "value": 43.08
    },
    {
-    "date": "2025-12-10",
-    "value": 43.11
+    "date": "2025-12-13",
+    "value": 43.35
    },
    {
-    "date": "2025-12-17",
-    "value": 43.24
+    "date": "2025-12-20",
+    "value": 43.31
    },
    {
-    "date": "2025-12-24",
-    "value": 43.15
+    "date": "2025-12-27",
+    "value": 43.33
    },
    {
-    "date": "2025-12-31",
+    "date": "2026-01-03",
+    "value": 42.67
+   },
+   {
+    "date": "2026-01-10",
     "value": 42.89
    },
    {
-    "date": "2026-01-07",
-    "value": 42.79
-   },
-   {
-    "date": "2026-01-14",
-    "value": 42.79
-   },
-   {
-    "date": "2026-01-21",
+    "date": "2026-01-17",
     "value": 42.87
    },
    {
-    "date": "2026-01-28",
-    "value": 42.72
+    "date": "2026-01-24",
+    "value": 42.88
    },
    {
-    "date": "2026-02-04",
-    "value": 42.21
+    "date": "2026-01-31",
+    "value": 42.65
    },
    {
-    "date": "2026-02-11",
-    "value": 41.77
+    "date": "2026-02-07",
+    "value": 41.81
    },
    {
-    "date": "2026-02-18",
-    "value": 42.33
+    "date": "2026-02-14",
+    "value": 41.93
    },
    {
-    "date": "2026-02-25",
-    "value": 42.98
+    "date": "2026-02-21",
+    "value": 42.55
    },
    {
-    "date": "2026-03-04",
-    "value": 42.75
+    "date": "2026-02-28",
+    "value": 42.91
    },
    {
-    "date": "2026-03-11",
-    "value": 42.32
+    "date": "2026-03-07",
+    "value": 42.49
    },
    {
-    "date": "2026-03-18",
-    "value": 41.78
+    "date": "2026-03-14",
+    "value": 41.75
    },
    {
-    "date": "2026-03-25",
-    "value": 41.2
+    "date": "2026-03-21",
+    "value": 41.48
    },
    {
-    "date": "2026-04-01",
-    "value": 40.82
+    "date": "2026-03-28",
+    "value": 40.87
    },
    {
-    "date": "2026-04-08",
-    "value": 41.05
+    "date": "2026-04-04",
+    "value": 40.85
    },
    {
-    "date": "2026-04-15",
-    "value": 40.81
+    "date": "2026-04-11",
+    "value": 40.9
    },
    {
-    "date": "2026-04-22",
-    "value": 40.64
+    "date": "2026-04-18",
+    "value": 40.51
    },
    {
-    "date": "2026-04-29",
-    "value": 40.38
+    "date": "2026-04-25",
+    "value": 40.54
    },
    {
-    "date": "2026-05-06",
-    "value": 39.97
+    "date": "2026-05-02",
+    "value": 40.08
    },
    {
-    "date": "2026-05-13",
-    "value": 39.64
+    "date": "2026-05-09",
+    "value": 40.07
    },
    {
-    "date": "2026-05-20",
-    "value": 39.39
+    "date": "2026-05-16",
+    "value": 39.72
    },
    {
-    "date": "2026-05-27",
-    "value": 39.65
-   },
-   {
-    "date": "2026-06-03",
-    "value": 39.64
-   },
-   {
-    "date": "2026-06-10",
-    "value": 39.51
-   },
-   {
-    "date": "2026-06-17",
-    "value": 39.93
-   },
-   {
-    "date": "2026-06-24",
-    "value": 40.29
-   },
-   {
-    "date": "2026-07-01",
-    "value": 40.15
-   },
-   {
-    "date": "2026-07-08",
-    "value": 40.44
-   },
-   {
-    "date": "2026-07-15",
-    "value": 40.55
-   },
-   {
-    "date": "2026-07-22",
-    "value": 40.44
-   },
-   {
-    "date": "2026-07-29",
-    "value": 40.18
-   },
-   {
-    "date": "2026-08-05",
-    "value": 40.04
-   },
-   {
-    "date": "2026-08-12",
-    "value": 39.65
-   },
-   {
-    "date": "2026-08-19",
+    "date": "2026-05-23",
     "value": 39.68
    },
    {
-    "date": "2026-08-26",
-    "value": 39.44
+    "date": "2026-05-30",
+    "value": 39.75
    },
    {
-    "date": "2026-09-02",
-    "value": 39.64
+    "date": "2026-06-06",
+    "value": 39.57
    },
    {
-    "date": "2026-09-09",
-    "value": 39.7
+    "date": "2026-06-13",
+    "value": 39.67
    },
    {
-    "date": "2026-09-16",
+    "date": "2026-06-20",
+    "value": 40.01
+   },
+   {
+    "date": "2026-06-27",
+    "value": 40.35
+   },
+   {
+    "date": "2026-07-04",
+    "value": 40.2
+   },
+   {
+    "date": "2026-07-11",
+    "value": 40.51
+   },
+   {
+    "date": "2026-07-18",
+    "value": 40.42
+   },
+   {
+    "date": "2026-07-25",
+    "value": 40.21
+   },
+   {
+    "date": "2026-08-01",
+    "value": 40.08
+   },
+   {
+    "date": "2026-08-08",
+    "value": 39.63
+   },
+   {
+    "date": "2026-08-15",
+    "value": 39.76
+   },
+   {
+    "date": "2026-08-22",
+    "value": 39.77
+   },
+   {
+    "date": "2026-08-29",
+    "value": 39.59
+   },
+   {
+    "date": "2026-09-05",
     "value": 39.46
    },
    {
-    "date": "2026-09-23",
-    "value": 38.88
+    "date": "2026-09-12",
+    "value": 39.82
    },
    {
-    "date": "2026-09-30",
-    "value": 38.76
+    "date": "2026-09-19",
+    "value": 38.86
    },
    {
-    "date": "2026-10-07",
+    "date": "2026-09-26",
+    "value": 38.72
+   },
+   {
+    "date": "2026-10-03",
+    "value": 38.66
+   },
+   {
+    "date": "2026-10-10",
+    "value": 38.6
+   },
+   {
+    "date": "2026-10-17",
     "value": 38.58
    },
    {
-    "date": "2026-10-14",
-    "value": 38.88
+    "date": "2026-10-24",
+    "value": 38.72
    },
    {
-    "date": "2026-10-21",
-    "value": 38.7
+    "date": "2026-10-31",
+    "value": 38.81
    },
    {
-    "date": "2026-10-28",
-    "value": 38.8
+    "date": "2026-11-07",
+    "value": 38.53
    },
    {
-    "date": "2026-11-04",
-    "value": 38.85
+    "date": "2026-11-14",
+    "value": 37.66
    },
    {
-    "date": "2026-11-11",
-    "value": 38.22
-   },
-   {
-    "date": "2026-11-18",
-    "value": 37.73
+    "date": "2026-11-21",
+    "value": 37.54
    }
   ],
   "umich_sentiment": [
@@ -133612,6 +134001,10 @@
    {
     "date": "2026-11-14",
     "value": 35.0
+   },
+   {
+    "date": "2026-11-21",
+    "value": 33.0
    }
   ],
   "yougov_rv_approval": [
@@ -133986,6 +134379,10 @@
    {
     "date": "2026-11-14",
     "value": 37.0
+   },
+   {
+    "date": "2026-11-21",
+    "value": 35.0
    }
   ],
   "mc_approval": [
@@ -134392,6 +134789,10 @@
    {
     "date": "2026-11-14",
     "value": 40.0
+   },
+   {
+    "date": "2026-11-21",
+    "value": 40.0
    }
   ]
  },
@@ -134432,10 +134833,6 @@
   ],
   "yougov_approval": [
    {
-    "date": "2026-07-26",
-    "value": 34.0
-   },
-   {
     "date": "2026-08-01",
     "value": 36.0
    },
@@ -134462,13 +134859,13 @@
    {
     "date": "2026-11-14",
     "value": 35.0
+   },
+   {
+    "date": "2026-11-21",
+    "value": 33.0
    }
   ],
   "mc_approval": [
-   {
-    "date": "2026-10-04",
-    "value": 40.84
-   },
    {
     "date": "2026-10-10",
     "value": 41.87
@@ -134495,6 +134892,10 @@
    },
    {
     "date": "2026-11-14",
+    "value": 40.0
+   },
+   {
+    "date": "2026-11-21",
     "value": 40.0
    }
   ],
@@ -134568,10 +134969,6 @@
   ],
   "yougov_rv_approval": [
    {
-    "date": "2026-09-26",
-    "value": 36.0
-   },
-   {
     "date": "2026-10-03",
     "value": 38.0
    },
@@ -134598,13 +134995,13 @@
    {
     "date": "2026-11-14",
     "value": 37.0
+   },
+   {
+    "date": "2026-11-21",
+    "value": 35.0
    }
   ],
   "yougov_strong_approval": [
-   {
-    "date": "2026-07-26",
-    "value": 18.0
-   },
    {
     "date": "2026-08-01",
     "value": 22.0
@@ -134632,6 +135029,10 @@
    {
     "date": "2026-11-14",
     "value": 15.0
+   },
+   {
+    "date": "2026-11-21",
+    "value": 16.0
    }
   ],
   "yougov_rv_strong_approval": [
@@ -134670,10 +135071,6 @@
   ],
   "yougov_weak_approval": [
    {
-    "date": "2026-07-26",
-    "value": 16.0
-   },
-   {
     "date": "2026-08-01",
     "value": 15.0
    },
@@ -134700,6 +135097,10 @@
    {
     "date": "2026-11-14",
     "value": 20.0
+   },
+   {
+    "date": "2026-11-21",
+    "value": 17.0
    }
   ],
   "yougov_cost_approval": [
@@ -134772,10 +135173,6 @@
   ],
   "mc_econ_approval": [
    {
-    "date": "2026-09-26",
-    "value": 36.53
-   },
-   {
     "date": "2026-10-04",
     "value": 37.26
    },
@@ -134802,13 +135199,13 @@
    {
     "date": "2026-11-14",
     "value": 37.0
+   },
+   {
+    "date": "2026-11-21",
+    "value": 38.0
    }
   ],
   "mc_immig_approval": [
-   {
-    "date": "2026-09-26",
-    "value": 45.44
-   },
    {
     "date": "2026-10-04",
     "value": 45.96
@@ -134836,13 +135233,13 @@
    {
     "date": "2026-11-14",
     "value": 46.0
+   },
+   {
+    "date": "2026-11-21",
+    "value": 47.0
    }
   ],
   "mc_trade_approval": [
-   {
-    "date": "2026-09-26",
-    "value": 39.61
-   },
    {
     "date": "2026-10-04",
     "value": 39.62
@@ -134870,6 +135267,10 @@
    {
     "date": "2026-11-14",
     "value": 40.0
+   },
+   {
+    "date": "2026-11-21",
+    "value": 41.0
    }
   ],
   "mc_strong_approval": [
@@ -134942,10 +135343,6 @@
   ],
   "rasmussen_approval": [
    {
-    "date": "2026-11-08",
-    "value": 41.0
-   },
-   {
     "date": "2026-11-09",
     "value": 40.0
    },
@@ -134972,6 +135369,10 @@
    {
     "date": "2026-11-18",
     "value": 42.0
+   },
+   {
+    "date": "2026-11-20",
+    "value": 43.0
    }
   ],
   "rmg_approval": [
@@ -140698,16 +141099,16 @@
   "sb_approval": {
    "source": "sb_approval",
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-FKWVTTFtJT6u56e0bqdfoMcXvDO1DUChsJ3jQAMB2lZk2SMqVfmg7dGjclTYkYWz-Pm5lfcLPjp4/pub?output=csv",
-   "fetched_at": "2026-11-24T09:55:12Z",
-   "sha256": "136bbc689d992b6dacddea3fedec63d2bed064c5653c4ce8e69edcf3c161f121",
-   "bytes": 1813656,
+   "fetched_at": "2026-11-24T22:33:09Z",
+   "sha256": "670004f584e90573914e6d9c002ca15748898d9e7014691395c817e716eb0967",
+   "bytes": 1817561,
    "file": "sources/sb_approval/2026-11-24.csv",
    "note": "Silver Bulletin poll database, published as a Google Sheet"
   },
   "umich": {
    "source": "umich",
    "url": "http://www.sca.isr.umich.edu/files/tbmics.csv",
-   "fetched_at": "2026-11-24T09:55:13Z",
+   "fetched_at": "2026-11-24T22:33:09Z",
    "sha256": "57847136a2cda4acf4bcbdc67418d1a83c8281da1bc6efeb1c37975c8c7868bc",
    "bytes": 14438,
    "file": "sources/umich/2026-11-24.json",
@@ -140716,8 +141117,8 @@
   "aaii": {
    "source": "aaii",
    "url": "https://www.aaii.com/sentimentsurvey/sent_results",
-   "fetched_at": "2026-11-24T09:55:13Z",
-   "sha256": "1baf1b590b81f978595fb578ffcf62d69ad318c1d8a7c3362c678ca18bc75070",
+   "fetched_at": "2026-11-24T22:33:10Z",
+   "sha256": "8334ad07018f129f80f50ea7d80b4efc3252dfb7071a6b77fcad70e855de7998",
    "bytes": 45991,
    "file": "sources/aaii/2026-11-24.html",
    "note": "AAII sentiment survey results page, a ~22-week rolling window parsed against the response's own date 2026-11-24; the full 1987-present .xls is OLE2 and unreadable without a dependency"
@@ -147933,8 +148334,8 @@
   {
    "source": "civiqs",
    "state": "stale",
-   "fetched_days": 0.4,
-   "changed_days": 8.4,
+   "fetched_days": 0.9,
+   "changed_days": 8.9,
    "budget_fetch_days": 2,
    "budget_change_days": 4,
    "url": null,
@@ -147943,176 +148344,176 @@
    "tracker_health": [
     {
      "key": "approve_president_trump_2025",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "approve_president_trump_2025.age-18-34",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "approve_president_trump_2025.age-35-49",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "approve_president_trump_2025.age-50-64",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "approve_president_trump_2025.age-65_",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "approve_president_trump_2025.education-College_Graduate",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "approve_president_trump_2025.education-Non-College_Graduate",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "approve_president_trump_2025.education-Postgraduate",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "approve_president_trump_2025.gender-Female",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "approve_president_trump_2025.gender-Male",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "approve_president_trump_2025.party-Democrat",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "approve_president_trump_2025.party-Independent",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "approve_president_trump_2025.party-Republican",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "approve_president_trump_2025.race-Black_or_African-American",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "approve_president_trump_2025.race-Hispanic_Latino",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "approve_president_trump_2025.race-Other",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "approve_president_trump_2025.race-White",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "describe_feeling_us",
-     "fetched_days": 0.4,
-     "changed_days": 5.4,
+     "fetched_days": 0.9,
+     "changed_days": 5.9,
      "change_budget_days": 10,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-19"
     },
     {
      "key": "economy_family_retro",
-     "fetched_days": 0.4,
-     "changed_days": 8.4,
+     "fetched_days": 0.9,
+     "changed_days": 8.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-16"
     },
     {
      "key": "economy_us_direction",
-     "fetched_days": 0.4,
-     "changed_days": 5.4,
+     "fetched_days": 0.9,
+     "changed_days": 5.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-19"
     },
     {
      "key": "economy_us_now",
-     "fetched_days": 0.4,
-     "changed_days": 1.4,
+     "fetched_days": 0.9,
+     "changed_days": 1.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-23"
     },
     {
      "key": "inflation_impact",
-     "fetched_days": 0.4,
-     "changed_days": 5.4,
+     "fetched_days": 0.9,
+     "changed_days": 5.9,
      "change_budget_days": 4,
      "newest_snapshot": "2026-11-24",
      "newest_reading": "2026-11-19"
@@ -148131,7 +148532,7 @@
   {
    "source": "sb_approval",
    "state": "ok",
-   "fetched_days": 0.0,
+   "fetched_days": -0.0,
    "changed_days": 0.0,
    "budget_fetch_days": 2,
    "budget_change_days": 7,
@@ -148141,8 +148542,8 @@
   {
    "source": "sb_generic",
    "state": "stale",
-   "fetched_days": 0.4,
-   "changed_days": 20.4,
+   "fetched_days": 0.9,
+   "changed_days": 21.0,
    "budget_fetch_days": 2,
    "budget_change_days": 10,
    "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
@@ -148152,7 +148553,7 @@
    "source": "umich",
    "state": "ok",
    "fetched_days": -0.0,
-   "changed_days": 3.6,
+   "changed_days": 4.1,
    "budget_fetch_days": 3,
    "budget_change_days": 40,
    "url": "http://www.sca.isr.umich.edu/files/tbmics.csv",
@@ -148160,7 +148561,7 @@
   }
  ],
  "operator_status": {
-  "generated_at": "2026-11-24T09:55:12Z",
+  "generated_at": "2026-11-24T22:33:08Z",
   "source_states": [
    {
     "attempts": 1,
@@ -148173,7 +148574,7 @@
     "required_action": "none",
     "evidence": [
      "fetched_days=-0.0; changed_days=-0.0; fetch_budget=3; change_budget=12",
-     "sources/aaii/2026-11-24.html sha256=1baf1b590b81f978595fb578ffcf62d69ad318c1d8a7c3362c678ca18bc75070"
+     "sources/aaii/2026-11-24.html sha256=8334ad07018f129f80f50ea7d80b4efc3252dfb7071a6b77fcad70e855de7998"
     ],
     "alert": false,
     "source": "aaii",
@@ -148181,16 +148582,17 @@
    },
    {
     "attempts": 1,
-    "last_error": null,
-    "next_retry": null,
+    "last_error": "economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us",
+    "next_retry": "2026-11-25T04:33:08Z",
     "next_lock": "2026-11-25T14:00:00Z",
     "next_deadline": "2026-11-25T14:00:00Z",
     "route": "ssa.series:civiqs",
     "estimated_spend": 0.0,
-    "required_action": "inspect upstream freshness; do not resolve a new round until the source moves",
+    "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release",
     "evidence": [
-     "22 validated non-empty series",
-     "fetched_days=0.4; changed_days=8.4; fetch_budget=2; change_budget=4; stale_keys=economy_family_retro,economy_us_direction,inflation_impact"
+     "civiqs/describe_feeling_us (83 snapshots; newest 2026-11-24); civiqs/economy_family_retro (84 snapshots; newest 2026-11-24); civiqs/economy_us_direction (84 snapshots; newest 2026-11-24); civiqs/inflation_impact (83 snapshots; newest 2026-11-24)",
+     "fetched_days=0.9; changed_days=8.9; fetch_budget=2; change_budget=4; stale_keys=economy_family_retro,economy_us_direction,inflation_impact",
+     "live attempt failed; same-source archive used"
     ],
     "alert": true,
     "source": "civiqs",
@@ -148238,8 +148640,8 @@
     "estimated_spend": 0.0,
     "required_action": "none",
     "evidence": [
-     "fetched_days=0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
-     "sources/sb_approval/2026-11-24.csv sha256=136bbc689d992b6dacddea3fedec63d2bed064c5653c4ce8e69edcf3c161f121"
+     "fetched_days=-0.0; changed_days=0.0; fetch_budget=2; change_budget=7",
+     "sources/sb_approval/2026-11-24.csv sha256=670004f584e90573914e6d9c002ca15748898d9e7014691395c817e716eb0967"
     ],
     "alert": false,
     "source": "sb_approval",
@@ -148248,14 +148650,14 @@
    {
     "attempts": 1,
     "last_error": "live attempt failed (RuntimeError: sb_generic HTTP 200 but newest observation is 2026-11-02, 22 days old: frozen page exceeds the 21-day freshness limit; refusing to archive changing wrapper bytes as a new release); no valid same-source archive was usable (RuntimeError: sb_generic HTTP 200 but newest observation is 2026-11-02, 22 days old: frozen page exceeds the 21-day freshness limit; refusing to archive changing wrapper bytes as a new release)",
-    "next_retry": "2026-11-24T15:55:12Z",
+    "next_retry": "2026-11-25T04:33:08Z",
     "next_lock": "2026-11-25T14:00:00Z",
     "next_deadline": "2026-11-25T14:00:00Z",
     "route": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRsvXNCZ0ubJr8D_yNcU5q6C0_HBa35K7oDK03KpO7Ca43UwdXaIdvVLWoXEmHHph0EREz5430Hm5yZ/pub?output=csv",
     "estimated_spend": 0.0,
     "required_action": "inspect upstream freshness; do not resolve a new round until the source moves",
     "evidence": [
-     "fetched_days=0.4; changed_days=20.4; fetch_budget=2; change_budget=10"
+     "fetched_days=0.9; changed_days=21.0; fetch_budget=2; change_budget=10"
     ],
     "alert": true,
     "source": "sb_generic",
@@ -148319,7 +148721,7 @@
     "estimated_spend": 0.0,
     "required_action": "none",
     "evidence": [
-     "fetched_days=-0.0; changed_days=3.6; fetch_budget=3; change_budget=40",
+     "fetched_days=-0.0; changed_days=4.1; fetch_budget=3; change_budget=40",
      "sources/umich/2026-11-24.json sha256=57847136a2cda4acf4bcbdc67418d1a83c8281da1bc6efeb1c37975c8c7868bc"
     ],
     "alert": false,
@@ -148375,7 +148777,1205 @@
     "state": "healthy"
    }
   ],
-  "entrant_round_states": [],
+  "entrant_round_states": [
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web",
+    "estimated_spend": 0.07065,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-angry-share",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web-superfc",
+    "estimated_spend": 0.07065,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-angry-share",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web",
+    "estimated_spend": 0.010348,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-angry-share",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web-superfc",
+    "estimated_spend": 0.010348,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-angry-share",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gemini-pro-web",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-angry-share",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gemini-pro-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-angry-share",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-angry-share",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-angry-share",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "test-jay",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-angry-share/test-jay.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-angry-share",
+    "route": "participant:social-simulation-arena.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "worldvac-base",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-angry-share/worldvac-base.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-angry-share",
+    "route": "participant:worldvac-ssa-agent.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "zhengzheng-agent",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-angry-share/zhengzheng-agent.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-angry-share",
+    "route": "participant:zhengzhengqimen.top",
+    "state": "succeeded"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web",
+    "estimated_spend": 0.07065,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-approval",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web-superfc",
+    "estimated_spend": 0.07065,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-approval",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web",
+    "estimated_spend": 0.010348,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-approval",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web-superfc",
+    "estimated_spend": 0.010348,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-approval",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gemini-pro-web",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-approval",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gemini-pro-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-approval",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-approval",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-approval",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "test-jay",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-approval/test-jay.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-approval",
+    "route": "participant:social-simulation-arena.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "worldvac-base",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-approval/worldvac-base.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-approval",
+    "route": "participant:worldvac-ssa-agent.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "zhengzheng-agent",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-approval/zhengzheng-agent.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-approval",
+    "route": "participant:zhengzhengqimen.top",
+    "state": "succeeded"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web",
+    "estimated_spend": 0.07065,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-econ-direction",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web-superfc",
+    "estimated_spend": 0.07065,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-econ-direction",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web",
+    "estimated_spend": 0.010348,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-econ-direction",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web-superfc",
+    "estimated_spend": 0.010348,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-econ-direction",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gemini-pro-web",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-econ-direction",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gemini-pro-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-econ-direction",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-econ-direction",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-econ-direction",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "test-jay",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-econ-direction/test-jay.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-econ-direction",
+    "route": "participant:social-simulation-arena.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "worldvac-base",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-econ-direction/worldvac-base.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-econ-direction",
+    "route": "participant:worldvac-ssa-agent.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "zhengzheng-agent",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-econ-direction/zhengzheng-agent.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-econ-direction",
+    "route": "participant:zhengzhengqimen.top",
+    "state": "succeeded"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web",
+    "estimated_spend": 0.07065,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-econ-now",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web-superfc",
+    "estimated_spend": 0.07065,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-econ-now",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web",
+    "estimated_spend": 0.010348,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-econ-now",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web-superfc",
+    "estimated_spend": 0.010348,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-econ-now",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gemini-pro-web",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-econ-now",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gemini-pro-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-econ-now",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-econ-now",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-econ-now",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "test-jay",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-econ-now/test-jay.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-econ-now",
+    "route": "participant:social-simulation-arena.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "worldvac-base",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-econ-now/worldvac-base.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-econ-now",
+    "route": "participant:worldvac-ssa-agent.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "zhengzheng-agent",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-econ-now/zhengzheng-agent.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-econ-now",
+    "route": "participant:zhengzhengqimen.top",
+    "state": "succeeded"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web",
+    "estimated_spend": 0.07065,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-family-finances",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web-superfc",
+    "estimated_spend": 0.07065,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-family-finances",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web",
+    "estimated_spend": 0.010348,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-family-finances",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web-superfc",
+    "estimated_spend": 0.010348,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-family-finances",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gemini-pro-web",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-family-finances",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gemini-pro-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-family-finances",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-family-finances",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-family-finances",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "test-jay",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-family-finances/test-jay.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-family-finances",
+    "route": "participant:social-simulation-arena.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "worldvac-base",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-family-finances/worldvac-base.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-family-finances",
+    "route": "participant:worldvac-ssa-agent.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "zhengzheng-agent",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-family-finances/zhengzheng-agent.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-family-finances",
+    "route": "participant:zhengzhengqimen.top",
+    "state": "succeeded"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web",
+    "estimated_spend": 0.07065,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-inflation-concern",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web-superfc",
+    "estimated_spend": 0.07065,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-inflation-concern",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web",
+    "estimated_spend": 0.010348,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-inflation-concern",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web-superfc",
+    "estimated_spend": 0.010348,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-inflation-concern",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gemini-pro-web",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-inflation-concern",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gemini-pro-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-inflation-concern",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-inflation-concern",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-2026-w48-inflation-concern",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "test-jay",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-inflation-concern/test-jay.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-inflation-concern",
+    "route": "participant:social-simulation-arena.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "worldvac-base",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-inflation-concern/worldvac-base.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-inflation-concern",
+    "route": "participant:worldvac-ssa-agent.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "zhengzheng-agent",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-2026-w48-inflation-concern/zhengzheng-agent.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T14:00:00Z",
+    "next_lock": "2026-11-25T14:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-2026-w48-inflation-concern",
+    "route": "participant:zhengzhengqimen.top",
+    "state": "succeeded"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web",
+    "estimated_spend": 0.07065,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T22:00:00Z",
+    "next_lock": "2026-11-25T22:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-profile-2026-w48",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "claude-sonnet-web-superfc",
+    "estimated_spend": 0.07065,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T22:00:00Z",
+    "next_lock": "2026-11-25T22:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-profile-2026-w48",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web",
+    "estimated_spend": 0.010348,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T22:00:00Z",
+    "next_lock": "2026-11-25T22:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-profile-2026-w48",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "deepseek-pro-web-superfc",
+    "estimated_spend": 0.010348,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T22:00:00Z",
+    "next_lock": "2026-11-25T22:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-profile-2026-w48",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gemini-pro-web",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T22:00:00Z",
+    "next_lock": "2026-11-25T22:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-profile-2026-w48",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gemini-pro-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T22:00:00Z",
+    "next_lock": "2026-11-25T22:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-profile-2026-w48",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T22:00:00Z",
+    "next_lock": "2026-11-25T22:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-profile-2026-w48",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": true,
+    "attempts": 1,
+    "entrant": "gpt-5.6-luna-web-superfc",
+    "estimated_spend": 0.046875,
+    "evidence": [],
+    "last_error": "provider call failed",
+    "next_deadline": "2026-11-25T22:00:00Z",
+    "next_lock": "2026-11-25T22:00:00Z",
+    "next_retry": "2026-11-25T04:22:44Z",
+    "required_action": "retry on the next refresh; keep other entrants' successes",
+    "round_id": "civiqs-profile-2026-w48",
+    "route": "ppapi:app.ppapi.ai",
+    "state": "retryable_failure"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "test-jay",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-profile-2026-w48/test-jay.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T22:00:00Z",
+    "next_lock": "2026-11-25T22:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-profile-2026-w48",
+    "route": "participant:social-simulation-arena.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "worldvac-base",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-profile-2026-w48/worldvac-base.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T22:00:00Z",
+    "next_lock": "2026-11-25T22:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-profile-2026-w48",
+    "route": "participant:worldvac-ssa-agent.com",
+    "state": "succeeded"
+   },
+   {
+    "alert": false,
+    "attempts": 1,
+    "entrant": "zhengzheng-agent",
+    "estimated_spend": 0.0,
+    "evidence": [
+     "forecast=sealed/civiqs-profile-2026-w48/zhengzheng-agent.json"
+    ],
+    "last_error": null,
+    "next_deadline": "2026-11-25T22:00:00Z",
+    "next_lock": "2026-11-25T22:00:00Z",
+    "next_retry": null,
+    "required_action": "none",
+    "round_id": "civiqs-profile-2026-w48",
+    "route": "participant:zhengzhengqimen.top",
+    "state": "succeeded"
+   }
+  ],
   "counts": {
    "sources": {
     "deadline_risk": 0,
@@ -148387,19 +149987,411 @@
    "entrant_rounds": {
     "missed_lock": 0,
     "queued": 0,
-    "retryable_failure": 0,
+    "retryable_failure": 56,
     "running": 0,
-    "succeeded": 0,
+    "succeeded": 21,
     "terminal_failure": 0
    }
   },
   "alerts": [
    {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-angry-share/claude-sonnet-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-angry-share/claude-sonnet-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-angry-share/deepseek-pro-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-angry-share/deepseek-pro-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-angry-share/gemini-pro-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-angry-share/gemini-pro-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-angry-share/gpt-5.6-luna-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-angry-share/gpt-5.6-luna-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-approval/claude-sonnet-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-approval/claude-sonnet-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-approval/deepseek-pro-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-approval/deepseek-pro-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-approval/gemini-pro-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-approval/gemini-pro-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-approval/gpt-5.6-luna-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-approval/gpt-5.6-luna-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-econ-direction/claude-sonnet-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-econ-direction/claude-sonnet-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-econ-direction/deepseek-pro-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-econ-direction/deepseek-pro-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-econ-direction/gemini-pro-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-econ-direction/gemini-pro-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-econ-direction/gpt-5.6-luna-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-econ-direction/gpt-5.6-luna-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-econ-now/claude-sonnet-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-econ-now/claude-sonnet-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-econ-now/deepseek-pro-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-econ-now/deepseek-pro-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-econ-now/gemini-pro-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-econ-now/gemini-pro-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-econ-now/gpt-5.6-luna-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-econ-now/gpt-5.6-luna-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-family-finances/claude-sonnet-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-family-finances/claude-sonnet-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-family-finances/deepseek-pro-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-family-finances/deepseek-pro-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-family-finances/gemini-pro-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-family-finances/gemini-pro-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-family-finances/gpt-5.6-luna-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-family-finances/gpt-5.6-luna-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-inflation-concern/claude-sonnet-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-inflation-concern/claude-sonnet-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-inflation-concern/deepseek-pro-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-inflation-concern/deepseek-pro-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-inflation-concern/gemini-pro-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-inflation-concern/gemini-pro-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-inflation-concern/gpt-5.6-luna-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-2026-w48-inflation-concern/gpt-5.6-luna-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-profile-2026-w48/claude-sonnet-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-profile-2026-w48/claude-sonnet-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-profile-2026-w48/deepseek-pro-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-profile-2026-w48/deepseek-pro-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-profile-2026-w48/gemini-pro-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-profile-2026-w48/gemini-pro-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-profile-2026-w48/gpt-5.6-luna-web",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
+    "kind": "entrant_round",
+    "id": "civiqs-profile-2026-w48/gpt-5.6-luna-web-superfc",
+    "state": "retryable_failure",
+    "last_error": "provider call failed",
+    "required_action": "retry on the next refresh; keep other entrants' successes"
+   },
+   {
     "kind": "source",
     "id": "civiqs",
     "state": "stale",
-    "last_error": null,
-    "required_action": "inspect upstream freshness; do not resolve a new round until the source moves"
+    "last_error": "economy_us_direction: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_us_direction; economy_family_retro: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/economy_family_retro; inflation_impact: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/inflation_impact; describe_feeling_us: HTTPError: 403 Client Error: Forbidden for url: https://civiqs.com/results/describe_feeling_us",
+    "required_action": "restore live access; the validated same-source archive may support forecasts but is not evidence of a new release"
    },
    {
     "kind": "source",
