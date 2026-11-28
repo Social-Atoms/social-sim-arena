@@ -144,7 +144,7 @@ def test_the_reply_is_edited_in_place_not_repeated():
 
 
 def test_the_workflow_never_checks_out_or_runs_the_pull_request():
-    with open(os.path.join(ROOT, ".github", "workflows", "registration-intake.yml")) as fh:
+    with open(os.path.join(ROOT, ".github", "workflows-disabled", "registration-intake.yml")) as fh:
         wf = fh.read()
     assert "pull_request_target:" in wf and "branches: [main]" in wf
     assert "ref: main" in wf and "persist-credentials: false" in wf
