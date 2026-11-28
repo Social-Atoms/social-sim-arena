@@ -1,0 +1,40 @@
+# Steam Weekly Top Sellers
+
+**Current implementation.** The [pipeline](PIPELINE.md) uses only the official
+weekly Web API with a configured operator key, fixed country/week and private
+raw storage. Forecasts name future members in rank order, including new entries,
+and use RBO. Public results carry Steam attribution. This design does not
+require a Valve permission email; public redistribution of raw responses is
+excluded. The earlier HTML prototype described below is not used.
+
+**What the number is.** Proposed target: the US top ten products by revenue in
+Steam's official weekly chart. The population is Steam US purchasing activity;
+this is neither copies sold nor concurrent players. Hardware and DLC are not
+silently filtered out. App/package/bundle identifiers preserve entity type.
+
+**Where it is published.** `https://store.steampowered.com/charts/topsellers/US`
+and its dated weekly pages. The page states Tuesday 1AM Pacific publication.
+Fifty-two consecutive weekly charts were captured, with starts from 2025-10-21
+through 2026-10-13. Latest measured interval is labeled October 13-20.
+The page's browsing currency/context is not the chart's country definition.
+
+**How the arena reads it.** No code on `dev`. The prototype parser and collector were merged to `dev` and then removed pending source terms; this card is an evaluation record only, and the description below is of that removed code. The offline parser
+read inert `valve-ssr-data` JSON, required the weekly route and
+`weekly.strCountryCode=US`, checked exactly one typed ID per entry, and extracted
+ranks 1-10. Historical requests had to return the requested week. Each original
+HTML page and parsed list was hashed and retained; earlier captured versions were
+never overwritten.
+
+**How a question resolves.** Proposed, not active: a ranking task over the
+publisher's dated US chart, with deadline and visible history frozen before the
+measurement week starts. The compatibility `week_end` is the final included
+Monday; metadata retains both publisher Tuesday labels. `rtWeekStart` is a date
+label, not proof of a midnight-UTC measurement cutoff. Exact Pacific boundaries,
+candidate/new-item rules, and the loss contract need research review.
+
+**What to watch.** Retrieval and redistribution terms remain unresolved. Charts
+can contain purchases, free-to-play revenue, DLC, preorders, and hardware.
+Top-ten churn is measured locally; no first-print historical backtest or live
+readiness is claimed. Initial collection required two transport-gap backfills;
+all 52 weeks now replay from local artifacts. Collection is a bounded local probe,
+not a new cron; maintainers and monitoring budgets are unassigned.

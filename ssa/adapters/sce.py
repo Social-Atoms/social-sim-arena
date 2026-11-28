@@ -34,7 +34,9 @@ changelog, month-granular), so the vintage is named by the day it was captured
 -- provenance.py's "a day is the unit" rule -- and the data's own as-of is the
 newest reference month inside it, which `history` checks. The first capture of
 a day wins; a re-fetch on the same day never rewrites the file, so a vintage a
-resolution cites can never change under it.
+resolution cites can never change under it. A scheduled release day also keeps
+`<day>.post.xlsx`, the first capture after the release that holds the new
+month, so the bytes a round resolves on are archived (see `archive`).
 
 **Serving is archive-first on failure, fail-loud on staleness.** A fetch
 failure serves the newest committed vintage with a printed warning: a monthly
@@ -45,12 +47,15 @@ silently stale source is worse than no source (see ssa/adapters/fredcsv.py for
 what that cost once), and a warning on the fallback path does not cover a
 *live* workbook that quietly stopped being updated.
 """
+import hashlib
 import io
+import json
 import os
 import re
 import zipfile
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import datetime, time, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -300,6 +305,26 @@ def _month_index(iso):
 # `sources/sce/<fetch day, UTC>.xlsx`, committed. Write-once per day: the
 # first capture wins, and a vintage a resolution cites can never change
 # under it.
+#
+# **Except on a scheduled release day, which keeps a second capture.** The
+# refresh runs at 00:17, 06:17, 12:17 and 18:17Z and the NY Fed releases at
+# 11:00 ET (15:00Z in daylight time, 16:00Z in standard time), so the day's
+# first capture always predates the release and the file named for release
+# day held the previous month: the bytes a round resolved on were archived
+# nowhere (found by the housing track research pass, 2026-11-08). On a release
+# day, a capture taken at or after the release instant whose newest reference
+# month is newer than the day's first file is filed once more as
+# `sources/sce/<day>.post.xlsx`, itself write-once. A post-release fetch
+# that still holds the old month (the release is late) files nothing, so the
+# next run can still catch it. The release instant is the later of the
+# rounds' `release_at` and 11:00 America/New_York that day: the stored hour
+# is 15:00Z all year, an hour early in standard time.
+
+POST = ".post"
+SEASON = os.path.join(ROOT, "questions", "season0.json")
+TRACKER = "ny_fed_sce"
+RELEASE_LOCAL = (11, 0)
+NY = ZoneInfo("America/New_York")
 
 
 def _utc_today():
@@ -310,38 +335,108 @@ def archive_path(day):
     return os.path.join(ARCHIVE, f"{day}.xlsx")
 
 
-def archive(body, day=None):
-    """File one workbook under its capture day. Returns the path.
+def post_path(day):
+    """The release day's second capture (see the notes above)."""
+    return os.path.join(ARCHIVE, f"{day}{POST}.xlsx")
+
+
+def release_instants(season_path=None):
+    """{UTC day: release instant} for every scheduled SCE release in the
+    season, read from the frozen round definitions (never edited here)."""
+    try:
+        with open(season_path or SEASON) as f:
+            rounds = json.load(f).get("rounds", [])
+    except (OSError, ValueError):
+        return {}
+    out = {}
+    for r in rounds:
+        if r.get("tracker") != TRACKER or not r.get("release_at"):
+            continue
+        at = datetime.strptime(r["release_at"], "%Y-%m-%dT%H:%M:%SZ") \
+            .replace(tzinfo=timezone.utc)
+        day = at.date()
+        local = datetime.combine(day, time(*RELEASE_LOCAL), NY).astimezone(timezone.utc)
+        key = day.isoformat()
+        out[key] = max(out.get(key, at), at, local)
+    return out
+
+
+def _newest_month(body):
+    return parse(body)[-1]["date"]
+
+
+def archive(body, day=None, now=None, releases=None, newest=None):
+    """File one workbook under its capture day. Returns the path it is in.
 
     An existing vintage for the day is left untouched -- not compared, not
     rewritten -- so nothing downstream of a morning capture can be changed by
-    an afternoon one.
+    an afternoon one. The one exception is a scheduled release day (`releases`,
+    default `release_instants()`): a capture at or after the release instant
+    whose newest month (`newest`, else parsed) is newer than the day's file
+    is filed once as `<day>.post.xlsx`.
     """
     if not isinstance(body, (bytes, bytearray)):
         raise TypeError("archive takes the workbook body as bytes")
-    day = day or _utc_today()
+    now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    today = now.date().isoformat()
+    day = day or today
     path = archive_path(day)
-    if os.path.exists(path):
+    if not os.path.exists(path):
+        _write(path, body)
         return path
-    os.makedirs(ARCHIVE, exist_ok=True)
+    if day != today:
+        return path                        # a second capture is only ever today's
+    release = (release_instants() if releases is None else releases).get(day)
+    if release is None or now < release:
+        return path
+    post = post_path(day)
+    if os.path.exists(post):
+        return post
+    with open(path, "rb") as f:
+        first = f.read()
+    try:
+        held = _newest_month(first)
+    except RuntimeError:
+        held = ""                          # an unreadable morning file: keep the new one
+    if (newest or _newest_month(bytes(body))) <= held:
+        return path                        # the release has not landed yet
+    _write(post, body)
+    return post
+
+
+def _write(path, body):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     tmp = path + ".tmp"
     with open(tmp, "wb") as f:
         f.write(bytes(body))
     os.replace(tmp, path)
-    return path
 
 
 def archived_days():
-    """Vintages held, oldest first, as `YYYY-MM-DD` strings."""
+    """Capture days held, oldest first, as `YYYY-MM-DD` strings."""
     if not os.path.isdir(ARCHIVE):
         return []
     return sorted(fn[:-5] for fn in os.listdir(ARCHIVE)
                   if fn.endswith(".xlsx") and len(fn) == 15)
 
 
+def archived_vintages():
+    """Every vintage held, oldest first, as paths: a day's `.post` capture
+    sorts after that day's first one."""
+    if not os.path.isdir(ARCHIVE):
+        return []
+    out = []
+    for fn in os.listdir(ARCHIVE):
+        if fn.endswith(".xlsx") and len(fn) == 15:
+            out.append((fn[:10], 0, fn))
+        elif fn.endswith(POST + ".xlsx") and len(fn) == 15 + len(POST):
+            out.append((fn[:10], 1, fn))
+    return [os.path.join(ARCHIVE, fn) for _, _, fn in sorted(out)]
+
+
 def newest_archived():
-    days = archived_days()
-    return archive_path(days[-1]) if days else None
+    vintages = archived_vintages()
+    return vintages[-1] if vintages else None
 
 
 def read_archived(path=None):
@@ -392,7 +487,7 @@ def history(fetch=True, today=None, diagnostics=None):
             # that arrived but no longer satisfies the parser contract, or one
             # we could not preserve, is unusable and must fail the refresh.
             rows = parse(body)
-            archive(body)
+            archive(body, newest=rows[-1]["date"])
     if rows is None:
         rows = load()
     stale = _month_index(today or _utc_today()) - _month_index(rows[-1]["date"])
@@ -427,3 +522,248 @@ def to_series(rows, horizon):
     if rows is None:
         rows = load()
     return [{"date": r["date"], "value": r["infl_" + horizon]} for r in rows]
+
+
+# --- moving expectations (card nyfed-sce-moving@v2) --------------------------
+#
+# The same workbook, two more sheets, nothing fetched: the rounds read the
+# vintages `history` above already archives (card nyfed-sce-moving rev 2,
+# sha256 bd4130d2434db06cd3620aa3d6cef9e92165e08c081c0fe38b31f1f0f2faf676,
+# docs/data-cards/nyfed-sce-moving.json). The inflation reader above is left
+# byte-identical; the moving reader shares only its zip/XML helpers.
+#
+# - "Moving expectations Demo": the mean percent chance of moving to a
+#   different primary residence in the next 12 months, by demographic cell.
+#   The card scores ten of its fifteen columns as one profile; education and
+#   numeracy are left out. Located by sheet name and the exact header string.
+# - "Moving expectations": the national mean, shown and not scored.
+#
+# Values are kept at the workbook's full stored precision (float32 written as
+# text, e.g. 25.86676597595215): the card scores them unrounded.
+#
+# **Resolution is "the first archived workbook carrying month M"**, not the
+# file dated release day: the day's first capture predates the 11:00 ET
+# release (sce-capture-bug.md, 74 captures read). `moving_resolution` walks
+# the vintages in order -- a day's `.post` capture after its morning file --
+# and takes the first, on or after the release day, whose newest month is M.
+# In 74 daily captures no published month's value was ever revised, so the
+# first vintage carrying M is also the release-day number.
+
+MOVING_SHEET = "Moving expectations"
+MOVING_DEMO_SHEET = "Moving expectations Demo"
+MOVING_NATIONAL = "national"
+MOVING_NATIONAL_HEADER = ("Mean probability of changing primary residence "
+                          "over the next 12 months")
+# The ten scored cells, in the card's order (age 3, income 3, region 4).
+MOVING_CELLS = (
+    "Age Under 40", "Age 40-60", "Age Over 60",
+    "Income under 50k", "Income 50-100k", "Income Over 100k",
+    "Region West", "Region Midwest", "Region South", "Region Northeast",
+)
+# A percent chance. The card: a value outside 0-100 is a misread, and the
+# round waits for a maintainer rather than resolving on it.
+MOVING_MIN, MOVING_MAX = 0.0, 100.0
+# The card's cancellation window: no vintage carrying M by release + 7 days.
+MOVING_CANCEL_DAYS = 7
+
+
+def _read_columns(xlsx, sheet_name, headers, lo, hi, min_rows, what):
+    """One sheet -> [{date, key: value}] oldest first, columns by exact header.
+
+    The moving sheets' twin of `parse`, with the same refusals: the sheet by
+    name, every column by its full header string, a YYYYMM row that does not
+    read as numbers raises, and the history must be consecutive months from
+    June 2013. Bounds are inclusive (`lo <= value <= hi`).
+    """
+    try:
+        z = zipfile.ZipFile(io.BytesIO(xlsx))
+    except zipfile.BadZipFile:
+        raise RuntimeError(
+            "the SCE body is not a readable xlsx (BadZipFile); refusing to "
+            "parse whatever this is")
+    strings = _shared_strings(z)
+    sheet = ET.fromstring(z.read(_sheet_member(z, sheet_name)))
+    data = sheet.find(_NS + "sheetData")
+    if data is None:
+        raise RuntimeError(f"sheet {sheet_name!r} has no sheetData element")
+    cols, rows = {}, []
+    for row in data.findall(_NS + "row"):
+        cells = _cells(row, strings)
+        if not cols:
+            hit = {key: col for col, val in cells.items()
+                   for key, header in headers.items() if val == header}
+            if hit:
+                missing = set(headers) - set(hit)
+                if missing:
+                    raise RuntimeError(
+                        f"the SCE {sheet_name!r} header row lacks "
+                        f"{sorted(headers[k] for k in missing)!r}; the "
+                        "columns have been renamed or split")
+                cols = hit
+        a = cells.get("A")
+        if a is None or not _YYYYMM.match(a.split(".")[0]):
+            continue
+        if not cols:
+            raise RuntimeError(
+                f"the SCE {sheet_name!r} sheet reached its data rows before "
+                "naming its columns; refusing to read by column position")
+        yyyymm = a.split(".")[0]
+        year, month = int(yyyymm[:4]), int(yyyymm[4:])
+        if not 1 <= month <= 12:
+            raise RuntimeError(f"{yyyymm} is not a YYYYMM reference month")
+        rec = {"date": f"{year:04d}-{month:02d}-01"}
+        for key, header in headers.items():
+            raw = cells.get(cols[key])
+            try:
+                value = float(raw)
+            except (TypeError, ValueError):
+                raise RuntimeError(
+                    f"{rec['date']}: column {cols[key]} ({header!r}) holds "
+                    f"{raw!r}, not a number; a month with no {what} is a "
+                    "misread, not a data point")
+            if not lo <= value <= hi:
+                raise RuntimeError(
+                    f"{rec['date']}: {value} in {header!r} is not a {what} "
+                    f"(expected {lo} to {hi}); a column was read out of the "
+                    "wrong place")
+            rec[key] = value
+        rows.append(rec)
+    if len(rows) < min_rows:
+        raise RuntimeError(
+            f"the SCE {sheet_name!r} sheet parsed to {len(rows)} rows, fewer "
+            f"than the {min_rows} it has carried since 2013")
+    if min_rows >= MIN_ROWS and rows[0]["date"] != FIRST_MONTH:
+        raise RuntimeError(
+            f"the SCE {sheet_name!r} history starts at {rows[0]['date']}, not "
+            f"{FIRST_MONTH}; the workbook was truncated or the wrong sheet read")
+    for prev, cur in zip(rows, rows[1:]):
+        if _month_index(cur["date"]) != _month_index(prev["date"]) + 1:
+            raise RuntimeError(
+                f"the SCE {sheet_name!r} history jumps from {prev['date']} to "
+                f"{cur['date']}; a gap or a duplicate is a misparse")
+    return rows
+
+
+def parse_moving(xlsx, min_rows=MIN_ROWS):
+    """Workbook bytes -> one dict per reference month, oldest first.
+
+        {"date": "2026-09-01", "national": 14.248..., "Age Under 40": 25.866...,
+         ... one key per MOVING_CELLS header}
+
+    The two sheets must cover the same months: a national row without its
+    cells (or the reverse) is a workbook mid-edit, not a release.
+    """
+    demo = _read_columns(xlsx, MOVING_DEMO_SHEET,
+                         {c: c for c in MOVING_CELLS},
+                         MOVING_MIN, MOVING_MAX, min_rows,
+                         "percent chance of moving")
+    nat = _read_columns(xlsx, MOVING_SHEET,
+                        {MOVING_NATIONAL: MOVING_NATIONAL_HEADER},
+                        MOVING_MIN, MOVING_MAX, min_rows,
+                        "percent chance of moving")
+    if [r["date"] for r in demo] != [r["date"] for r in nat]:
+        raise RuntimeError(
+            f"the SCE moving sheets disagree on their months: the demo sheet "
+            f"runs {demo[0]['date']}..{demo[-1]['date']} ({len(demo)} rows), "
+            f"the national sheet {nat[0]['date']}..{nat[-1]['date']} "
+            f"({len(nat)} rows)")
+    return [dict(d, national=n[MOVING_NATIONAL]) for d, n in zip(demo, nat)]
+
+
+def vintage_day(path):
+    """The capture day a vintage's file name carries (`.post` or not)."""
+    return os.path.basename(path)[:10]
+
+
+def moving_history(today=None, path=None, min_rows=MIN_ROWS):
+    """The moving rows from the newest archived vintage. Never the network.
+
+    Run after `history`, which files the day's capture first, so the rows
+    come from the same vintage the rounds resolve on. Raises, like `history`,
+    when the newest month trails `today` by more than MAX_STALE_MONTHS.
+    """
+    body, _ = read_archived(path)
+    rows = parse_moving(body, min_rows=min_rows)
+    stale = _month_index(today or _utc_today()) - _month_index(rows[-1]["date"])
+    if stale > MAX_STALE_MONTHS:
+        raise RuntimeError(
+            f"the newest SCE moving month is {rows[-1]['date']}, {stale} "
+            f"months behind today -- over the {MAX_STALE_MONTHS} allowed")
+    return rows
+
+
+def moving_series(rows, cell):
+    """One cell (a MOVING_CELLS header, or MOVING_NATIONAL) as [{date, value}]."""
+    if cell != MOVING_NATIONAL and cell not in MOVING_CELLS:
+        raise ValueError(f"unknown SCE moving cell {cell!r}; expected one of "
+                         f"{MOVING_CELLS} or {MOVING_NATIONAL!r}")
+    if rows is None:
+        rows = moving_history()
+    return [{"date": r["date"], "value": r[cell]} for r in rows]
+
+
+def survey_month(release_at):
+    """The survey month M a release reports: the month before the release's.
+
+    Every SCE release lands early in M+1 (the December survey in January), so
+    a round needs no separate field to say which month it asks about.
+    """
+    year, month = int(release_at[:4]), int(release_at[5:7])
+    i = year * 12 + (month - 1) - 1
+    return f"{i // 12:04d}-{i % 12 + 1:02d}-01"
+
+
+def first_vintage_carrying(month, release_day, vintages=None, parse=parse_moving):
+    """(path, rows) of the first archived vintage on or after `release_day`
+    whose newest reference month is `month`, or (None, None).
+
+    A vintage that already carries a *later* month than M without any earlier
+    one carrying M means the archive skipped a whole release; that raises for
+    a maintainer rather than reading M out of a later file.
+    """
+    for path in (archived_vintages() if vintages is None else vintages):
+        if vintage_day(path) < release_day:
+            continue
+        with open(path, "rb") as f:
+            rows = parse(f.read())
+        newest = rows[-1]["date"]
+        if newest < month:
+            continue
+        if newest > month:
+            raise RuntimeError(
+                f"{os.path.relpath(path, ROOT)} is the first archived vintage "
+                f"carrying {month[:7]}, but its newest month is {newest[:7]}: "
+                "no archived file holds the release that first printed it")
+        return path, rows
+    return None, None
+
+
+def moving_resolution(month, release_at, cells=MOVING_CELLS, now=None,
+                      vintages=None):
+    """The card's resolution for survey month `month` ("YYYY-MM-01").
+
+    Returns {"values": {cell: value}, "vintage": path, "sha256", "newest"}.
+    Raises -- never a partial profile -- when no vintage carries M yet (with
+    the cancellation date once release + 7 days has passed), or when a cell
+    is missing or out of range in it (parse_moving refuses the whole file).
+    """
+    release_day = release_at[:10]
+    path, rows = first_vintage_carrying(month, release_day, vintages)
+    if path is None:
+        now = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+        release = datetime.strptime(release_at, "%Y-%m-%dT%H:%M:%SZ") \
+            .replace(tzinfo=timezone.utc)
+        deadline = release + timedelta(days=MOVING_CANCEL_DAYS)
+        tail = (f"past the card's cancellation deadline {deadline:%Y-%m-%d}: "
+                "cancel the round, never resolve it from a later month"
+                if now > deadline else
+                f"the round waits; it is cancelled if none arrives by "
+                f"{deadline:%Y-%m-%d}")
+        raise ValueError(
+            f"no archived SCE workbook on or after {release_day} carries "
+            f"{month[:7]} yet; {tail}")
+    row = next(r for r in rows if r["date"] == month)
+    with open(path, "rb") as f:
+        sha = hashlib.sha256(f.read()).hexdigest()
+    return {"values": {c: row[c] for c in cells}, "vintage": path,
+            "sha256": sha, "newest": rows[-1]["date"]}

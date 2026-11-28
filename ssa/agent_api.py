@@ -118,9 +118,19 @@ def _context(r, history, profile_history=None, ranking_history=None):
     was asked.
     """
     ctx = {}
+    if "consumer" in r:
+        ctx["consumer"] = dict(r["consumer"])
+        ctx["attribution"] = r.get("attribution", "")
     nulls = r.get("baselines") or {}
     if nulls.get("persistence"):
         ctx["persistence"] = nulls["persistence"].get("mean")
+    # A round ranked on another reference says so, and hands its spread too:
+    # that is the distribution an entrant has to beat. Absent for every round
+    # without a `zero_point` key, so their envelopes are unchanged.
+    zp = r.get("zero_point")
+    if zp and zp != "persistence" and nulls.get(zp):
+        ctx["zero_point"] = {"name": zp, "mean": nulls[zp].get("mean"),
+                             "sd": nulls[zp].get("sd")}
     if history:
         ctx["history"] = [{"date": p["date"], "value": p["value"]}
                           for p in history[-24:]]
@@ -181,6 +191,8 @@ def build_envelope(entrant, r, history=None, profile_history=None,
         if spec.get("access"):
             block["ranking"]["access"] = spec["access"]
         block["ranking"]["item_format"] = (
+            ranking_round.question_universe(spec)
+            if spec.get("kind") in {"nyt_bestsellers", "steam_weekly"} else
             "Wikipedia article titles as the API writes them: underscores for "
             "spaces, case as on the page (e.g. Elon_Musk). Spaces are accepted "
             "and normalised; each item appears once."

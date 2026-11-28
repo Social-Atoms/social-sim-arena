@@ -78,6 +78,7 @@ history after the fact, which is the failure lock snapshots exist to prevent for
 monthly series.
 """
 from datetime import date, timedelta
+import re
 
 from . import batches
 from . import scoring
@@ -104,6 +105,14 @@ HISTORY_WEEKS = 6
 # Kendall on an open item set is undefined, and RBO on a closed permutation
 # would weight the basket's first position above its last for no reason.
 KINDS = {
+    "nyt_bestsellers": {
+        "losses": ("rbo",), "closed_set": False,
+        "week_starts_on": 6, "week_ends_on": 5,
+    },
+    "steam_weekly": {
+        "losses": ("rbo",), "closed_set": False,
+        "week_starts_on": 1, "week_ends_on": 0,
+    },
     "wiki_top10": {
         "losses": ("rbo",),
         "closed_set": False,
@@ -166,7 +175,19 @@ def spec_for(r):
         "closed_set": meta["closed_set"],
     }
 
-    if kind == "wiki_top10":
+    if kind in {"nyt_bestsellers", "steam_weekly"}:
+        from . import consumer_round
+        contract = consumer_round.spec_for(r)
+        want = "nyt" if kind == "nyt_bestsellers" else "steam"
+        if contract["source"] != want or contract["reference_date"] != end.isoformat():
+            raise ValueError("Ranking kind or week differs from its consumer source contract")
+        if spec.get("items"):
+            raise ValueError("Consumer chart forecasts may include new entries; no fixed candidate list")
+        p = spec.get("rbo_p")
+        if not isinstance(p, (float, int)) or isinstance(p, bool) or not 0 < p < 1:
+            raise ValueError("Consumer ranking requires an RBO parameter strictly between zero and one")
+        out["rbo_p"] = float(p)
+    elif kind == "wiki_top10":
         if spec.get("items"):
             raise ValueError(
                 f"{rid}: a wiki_top10 round must not name `items`. Its answer "
@@ -221,6 +242,13 @@ def _week(rid, spec, meta):
 
 def question_universe(spec):
     """The sentence the prompt uses to say what may appear in the answer."""
+    if spec["kind"] in {"nyt_bestsellers", "steam_weekly"}:
+        identity = ("isbn:<primary ISBN-13>" if spec["kind"] == "nyt_bestsellers"
+                    else "app:<id>, package:<id>, or bundle:<id>")
+        return (f"Predict the next published top {spec['length']} in rank order. "
+                f"Use identifiers of the form {identity}. New entries are eligible; "
+                "you may name items absent from every previous list. The forecast "
+                "is the future ordered list, not which previous entries disappear.\n")
     if spec["kind"] == "wiki_top10":
         return (
             "Any article on the English Wikipedia may appear. Write titles in "
@@ -251,6 +279,9 @@ def observations(r, fetch=False, now=None, spec=None, diagnostics=None):
     cannot succeed and the archive is the answer.
     """
     spec = spec or spec_for(r)
+    if spec["kind"] in {"nyt_bestsellers", "steam_weekly"}:
+        from . import consumer_round
+        return consumer_round.ranking_observations(r, now=now)
     if spec["kind"] == "wiki_top10":
         return _wiki_observations(
             spec, fetch=fetch, now=now, diagnostics=diagnostics)
@@ -328,7 +359,10 @@ def frozen_history(r, obs):
     rounds frozen before that existed.
     """
     lock_date = batches.freeze_at(r["lock_at"]).strftime("%Y-%m-%d")
-    return [o for o in (obs or []) if o["date"] < lock_date]
+    from .consumer_round import timestamp
+    freeze = batches.window_opens_at(r["lock_at"])
+    return [o for o in (obs or []) if o["date"] < lock_date
+            and (not o.get("observed_at") or timestamp(o["observed_at"]) < freeze)]
 
 
 def persistence_list(hist, spec):
@@ -394,6 +428,11 @@ def resolution(r, obs=None, spec=None, fetch=False, now=None):
     existed before they were asked.
     """
     spec = spec or spec_for(r)
+    if spec["kind"] in {"nyt_bestsellers", "steam_weekly"} and obs is None:
+        from . import consumer_round
+        detail = consumer_round.resolution(r, now=now)
+        detail["items"] = normalize(detail["items"], spec, where="publisher resolution")
+        return detail
     week_end = spec["week_end"]
     # The boundary is the freeze, not the lock: `batches.freeze_at` is where
     # this round's persistence null stops reading, and "existed when the round
@@ -487,7 +526,14 @@ def normalize(raw, spec, where="submission"):
         raise ValueError(
             f"{where}: a ranking answer for this round is exactly {n} items, "
             f"got {len(raw)}")
-    if spec["kind"] == "wiki_top10":
+    if spec["kind"] in {"nyt_bestsellers", "steam_weekly"}:
+        pattern = r"isbn:\d{13}" if spec["kind"] == "nyt_bestsellers" else r"(?:app|package|bundle):[1-9]\d*"
+        items = []
+        for item in raw:
+            if not isinstance(item, str) or not re.fullmatch(pattern, item.strip()):
+                raise ValueError(f"{where}: invalid publisher item identifier {item!r}")
+            items.append(item.strip())
+    elif spec["kind"] == "wiki_top10":
         items = [wikipedia_adapter.canonical_title(x) for x in raw]
         bad = [x for x in items
                if wikipedia_adapter.is_excluded(x, spec["exclusions"])]

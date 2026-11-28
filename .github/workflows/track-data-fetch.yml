@@ -1,0 +1,80 @@
+name: market-urban-data-fetch
+# Data only: no forecast filing, model provider or participant endpoint calls.
+on:
+  schedule:
+    - cron: "37 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      LTA_API_KEY: ${{ secrets.LTA_API_KEY }}
+      NYT_API_KEY: ${{ secrets.NYT_API_KEY }}
+      STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }}
+      SSA_AGE_RECIPIENT: ${{ vars.SSA_AGE_RECIPIENT }}
+      SSA_AGE_IDENTITIES: ${{ secrets.SSA_AGE_IDENTITIES }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: restore private consumer evidence
+        id: restore
+        continue-on-error: true
+        run: python tools/sync_consumer_archive.py pull
+      - name: collect approved public sources independently
+        id: public
+        continue-on-error: true
+        run: python tools/fetch_track_data.py --execute
+      - name: collect admitted consumer releases
+        id: consumer
+        if: steps.restore.outcome == 'success'
+        continue-on-error: true
+        run: python tools/collect_consumer_rounds.py
+      - name: persist private consumer evidence even after a source failure
+        id: persist
+        if: always() && steps.restore.outcome == 'success'
+        continue-on-error: true
+        run: python tools/sync_consumer_archive.py push
+      - name: publish archived question data without filing forecasts
+        if: steps.persist.outcome == 'success'
+        run: |
+          python tools/publish_consumer.py
+          python tools/publish_track_questions.py
+      - name: retain successful public captures and failure status
+        if: always()
+        run: |
+          git config user.name ssa-bot
+          git config user.email actions@github.com
+          git add -A sources site/data.json locks
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Archive market and urban source captures"
+          git -c rebase.autoStash=true pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+      - name: report incomplete collection
+        if: always()
+        env:
+          RESTORE: ${{ steps.restore.outcome }}
+          PUBLIC: ${{ steps.public.outcome }}
+          CONSUMER: ${{ steps.consumer.outcome }}
+          PERSIST: ${{ steps.persist.outcome }}
+        run: |
+          python - <<'PY'
+          import os
+          failures = [name for name in ('RESTORE', 'PUBLIC', 'CONSUMER', 'PERSIST')
+                      if os.environ.get(name) == 'failure']
+          if failures:
+              raise SystemExit('Collection incomplete: ' + ', '.join(failures))
+          PY

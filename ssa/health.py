@@ -53,6 +53,15 @@ BUDGETS = {
     # skip; the adapter itself refuses a page whose newest row is over 21
     # days old, so `stale` here fires before the fetch starts failing loudly.
     "aaii": (3, 12),
+    # Singapore (Urban Track). COE is captured only around a lock or a
+    # result, so a three-week gap between exercises (^ in LTA's schedule)
+    # is normal; the taxi and carpark captures are weekly; the two pinned
+    # reference files are fetched once a season and never change.
+    "coe": (22, 22),
+    "lta-rt/taxi": (8, 8),
+    "lta-rt/carpark-hdb": (8, 8),
+    "sg-ref/ura-mp2019-planning-area-nosea": (400, 400),
+    "sg-ref/hdb-carpark-info": (400, 400),
 }
 DEFAULT_BUDGET = (3, 30)
 CIVIQS_WEEKLY_CHANGE_BUDGET_DAYS = 10

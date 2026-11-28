@@ -25,13 +25,56 @@ on:
         description: "Optional resolved scalar round to answer and score once"
         required: false
         type: string
+      consumer_only:
+        description: "Collect, archive and publish consumer preview data on this branch; no participant or model calls"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 jobs:
+  consumer-pipeline-preview:
+    if: inputs.consumer_only && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    concurrency:
+      group: refresh-data
+      cancel-in-progress: false
+    env:
+      SSA_AGE_RECIPIENT: ${{ vars.SSA_AGE_RECIPIENT }}
+      SSA_AGE_IDENTITIES: ${{ secrets.SSA_AGE_IDENTITIES }}
+      NYT_API_KEY: ${{ secrets.NYT_API_KEY }}
+      STEAM_API_KEY: ${{ secrets.STEAM_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: python tools/sync_consumer_archive.py pull
+      - run: python tools/collect_consumer_rounds.py
+      - run: python tools/publish_consumer.py
+      - run: python tools/sync_consumer_archive.py push
+      - name: publish consumer preview data on this branch
+        run: |
+          git config user.name ssa-bot
+          git config user.email actions@github.com
+          git add site/data.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Publish consumer question preview from official sources"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+      - name: deploy the updated preview
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run preview.yml --ref "${GITHUB_REF_NAME}"
   probe:
-    if: ${{ inputs.agent_url == '' && inputs.entrant_id == '' }}
+    if: ${{ !inputs.consumer_only && inputs.agent_url == '' && inputs.entrant_id == '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

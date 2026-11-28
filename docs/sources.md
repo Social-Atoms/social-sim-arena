@@ -107,6 +107,40 @@ at 0.31 points a week; five of the other nine emotions in the same tracker moved
 
 ---
 
+### 1.5 Consumer and market extensions
+
+The consumer/market working agreement uses the rules below. Each live source
+still needs the maintainer-controlled rights verdict in `ssa/inventory.py` and a
+reviewed season entry. Merging a parser does not grant publisher permission.
+
+Supply-side figures such as inventories and production are reference inputs.
+A fixed-supply product can be a demand target when its supply limit is evidenced,
+buyers are the general public, batch releases are known, and it has not already
+sold out. Cumulative totals are retained for diagnostics; score the net change
+between the two named adjacent reports, including negative corrections.
+
+Weekly chart questions lock before the measurement period starts. Forecast the
+next list's members **and their order**, including new entries; do not ask which
+previous entries disappear. A high-churn list is almost always all-new, so an
+"everyone drops out" answer does not measure useful forecasting. The current
+implementation uses open-list RBO, with identity, list length, edition policy,
+week boundaries and capture deadline fixed in the question.
+
+Non-US data uses the existing subject domains and standings. Every question
+states its country/region and population. US persona weights are used only when
+they fit that population; no separate geography leaderboard is created.
+
+An annual release containing many items counts as one profile or ranking round,
+not one round per item. Continuous streams require a prospective observation,
+sampling, missing-data, delay, revision and settlement protocol before admission.
+Kalshi's proposed archived-price baseline remains excluded under its data terms.
+New YouGov products use manual retrieval only, within their applicable public-data
+license; a public-data license does not authorize automated retrieval.
+
+The [consumer pipeline](consumer-review/PIPELINE.md) documents implementation,
+private storage, release contracts and validation. Netflix and ACSI remain
+disabled until written permission is recorded.
+
 ## 2. What the adapter must do
 
 Copy `ssa/adapters/newsdigest.py` or `ssa/adapters/civiqs.py`. Both carry the

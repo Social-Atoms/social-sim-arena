@@ -1,0 +1,62 @@
+name: sg-timed-capture
+# Singapore's two SSA-defined weekly metrics read one minute of a keyless
+# data.gov.sg feed, which the 6-hourly refresh cannot hit:
+#   taxis    Friday 23:00 SGT  (card sg-taxi-downtown-fri2300@v2)
+#            captured Fri 23:30 SGT = 15:30Z, one retry Sat 01:00 SGT = 17:00Z
+#   carparks Saturday 20:00 SGT (card sg-hdb-carpark-clementi-sat2000@v2)
+#            captured Sat 20:30 SGT = 12:30Z, one retry 22:00 SGT = 14:00Z
+# Both endpoints serve past minutes, so a run GitHub delays still reads the
+# same snapshot. Every run calls both commands: each captures only the newest
+# target whose capture time has passed and is not yet archived (a held minute
+# costs no request), and fills up to 12 missing past weeks first, labelled
+# `backfill`, until the archive covers what the references need.
+#
+# Capture only: no series, no rounds, no forecasts. A 403 or 429 from this
+# runner is logged and the step fails on its own (continue-on-error); it means
+# the capture moves to a local courier (lesson 3), never a workaround.
+on:
+  schedule:
+    - cron: "30 15 * * 5"
+    - cron: "0 17 * * 5"
+    - cron: "30 12 * * 6"
+    - cron: "0 14 * * 6"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: capture Singapore taxis (non-blocking)
+        continue-on-error: true
+        run: python -m ssa.adapters.sg_taxi capture
+      - name: capture Singapore HDB carparks (non-blocking)
+        continue-on-error: true
+        run: python -m ssa.adapters.sg_carpark capture
+      # The refresh.yml commit pattern, narrowed to what this job writes.
+      - name: commit if changed
+        run: |
+          git config user.name "ssa-bot"
+          git config user.email "actions@github.com"
+          git add -A sources/lta-rt sources/manifest.json
+          if git diff --cached --quiet; then
+            echo "no new capture"
+          else
+            git commit -m "sg timed capture $(date -u +%Y-%m-%dT%H:%MZ)"
+            git -c rebase.autoStash=true pull --rebase origin "$GITHUB_REF_NAME"
+            python tools/audit_landing.py HEAD^ HEAD
+            git push
+          fi

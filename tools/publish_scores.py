@@ -25,8 +25,7 @@ def main(path=os.path.join(ROOT, "site", "data.json")):
     filed = refresh.file_crowd_forecasts(rounds, refresh.now_utc(), backfill=True)
     refresh.count_forecasts(rounds)
     board = refresh.build_leaderboard(rounds, resolved)
-    data["leaderboard"] = {"resolved_rounds": sum(1 for r in rounds if r.get("status") == "resolved"),
-                           "entries": board}
+    data["leaderboard"] = refresh.leaderboard_block(rounds, board)
     refresh.attach_round_scores(rounds, data.get("profile"), data.get("ranking"))
     data["lists"] = refresh.published_lists()
     data["retired"] = refresh.retirement(rounds, refresh.load_entrants(), refresh.now_utc())
